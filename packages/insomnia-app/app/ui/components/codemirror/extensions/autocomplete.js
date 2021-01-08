@@ -185,10 +185,10 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
  */
 function hint(cm, options) {
   // Add type to all things (except constants, which need to convert to an object)
-  const variablesToMatch = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
-  const snippetsToMatch = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
-  const tagsToMatch = (options.tags || []).map(v => ({ ...v, type: TYPE_TAG }));
-  const constantsToMatch = (options.constants || []).map(s => ({
+  const variablesToMatch = (options.variables || []).map((v) => ({ ...v, type: TYPE_VARIABLE }));
+  const snippetsToMatch = (options.snippets || []).map((v) => ({ ...v, type: TYPE_SNIPPET }));
+  const tagsToMatch = (options.tags || []).map((v) => ({ ...v, type: TYPE_TAG }));
+  const constantsToMatch = (options.constants || []).map((s) => ({
     name: s,
     value: s,
     displayValue: '', // No display since name === value
@@ -231,10 +231,10 @@ function hint(cm, options) {
 
   // Match variables
   if (allowMatchingVariables) {
-    matchSegments(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES).forEach(m =>
+    matchSegments(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES).forEach((m) =>
       lowPriorityMatches.push(m),
     );
-    matchSegments(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES).forEach(m =>
+    matchSegments(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES).forEach((m) =>
       highPriorityMatches.push(m),
     );
   }
@@ -252,7 +252,7 @@ function hint(cm, options) {
 
       if (token.type === 'variable') {
         // We're inside a JSON key
-        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
+        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach((m) =>
           highPriorityMatches.push(m),
         );
       } else if (
@@ -261,13 +261,13 @@ function hint(cm, options) {
         (token.type === 'punctuation' && token.string === '{')
       ) {
         // We're outside of a JSON key
-        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
+        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach((m) =>
           highPriorityMatches.push({ ...m, text: '"' + m.text + '": ' }),
         );
       }
     } else {
       // Otherwise match full segments
-      matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
+      matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS).forEach((m) =>
         highPriorityMatches.push(m),
       );
     }
@@ -275,15 +275,15 @@ function hint(cm, options) {
 
   // Match tags
   if (allowMatchingTags) {
-    matchSegments(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS).forEach(m =>
+    matchSegments(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS).forEach((m) =>
       lowPriorityMatches.push(m),
     );
-    matchSegments(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS).forEach(m =>
+    matchSegments(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS).forEach((m) =>
       highPriorityMatches.push(m),
     );
   }
 
-  matchSegments(snippetsToMatch, nameSegment, TYPE_SNIPPET, MAX_SNIPPETS).forEach(m =>
+  matchSegments(snippetsToMatch, nameSegment, TYPE_SNIPPET, MAX_SNIPPETS).forEach((m) =>
     highPriorityMatches.push(m),
   );
 
@@ -293,7 +293,7 @@ function hint(cm, options) {
   const segment = highPriorityMatches.length ? nameSegmentLong : nameSegment;
 
   const uniqueMatches = matches.reduce(
-    (arr, v) => (arr.find(a => a.text === v.text) ? arr : [...arr, v]),
+    (arr, v) => (arr.find((a) => a.text === v.text) ? arr : [...arr, v]),
     [], // Default value
   );
 
@@ -440,7 +440,7 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
 function replaceWithSurround(text, find, prefix, suffix) {
   const escapedString = escapeRegex(find);
   const re = new RegExp(escapedString, 'gi');
-  return text.replace(re, matched => prefix + matched + suffix);
+  return text.replace(re, (matched) => prefix + matched + suffix);
 }
 
 /**

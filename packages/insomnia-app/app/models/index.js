@@ -86,7 +86,7 @@ export function all() {
 }
 
 export function types(): Array<any> {
-  return all().map(model => model.type);
+  return all().map((model) => model.type);
 }
 
 export function canSync(d: BaseModel): boolean {
@@ -103,7 +103,7 @@ export function canSync(d: BaseModel): boolean {
 }
 
 export function getModel(type: string): Object | null {
-  return all().find(m => m.type === type) || null;
+  return all().find((m) => m.type === type) || null;
 }
 
 export function mustGetModel(type: string): Object {
@@ -140,7 +140,7 @@ export async function initModel<T: BaseModel>(type: string, ...sources: Array<Ob
 
   if (!model) {
     const choices = all()
-      .map(m => m.type)
+      .map((m) => m.type)
       .join(', ');
     throw new Error(`Tried to init invalid model "${type}". Choices are ${choices}`);
   }

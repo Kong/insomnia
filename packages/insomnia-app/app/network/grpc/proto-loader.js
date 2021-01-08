@@ -49,5 +49,5 @@ export const getSelectedMethod = async (request: GrpcRequest): GrpcMethodDefinit
 
   const methods = await loadMethods(protoFile);
 
-  return methods.find(c => c.path === request.protoMethodName);
+  return methods.find((c) => c.path === request.protoMethodName);
 };

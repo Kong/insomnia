@@ -103,7 +103,7 @@ class BodyEditor extends React.PureComponent<Props> {
             <span className="monospace">{newContentType}</span>?
           </p>
         ),
-        onDone: saidYes => {
+        onDone: (saidYes) => {
           if (saidYes) {
             onChangeHeaders(newRequest, headers);
           }

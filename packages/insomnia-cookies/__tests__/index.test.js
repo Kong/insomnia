@@ -2,7 +2,7 @@ const { CookieJar } = require('tough-cookie');
 const { jarFromCookies, cookiesFromJar } = require('..');
 
 describe('jarFromCookies()', () => {
-  it('returns valid cookies', done => {
+  it('returns valid cookies', (done) => {
     const jar = jarFromCookies([
       {
         key: 'foo',
@@ -60,7 +60,7 @@ describe('cookiesFromJar()', () => {
 
     // MemoryStore never actually throws errors, so lets mock the
     // function to force it to this time.
-    jar.store.getAllCookies = cb => cb(new Error('Dummy Error'));
+    jar.store.getAllCookies = (cb) => cb(new Error('Dummy Error'));
     const cookies = await cookiesFromJar(jar);
 
     // Cookies failed to p

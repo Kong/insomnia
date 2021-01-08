@@ -42,7 +42,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
   }
 
   _handleToggleSelect(key: DocumentKey, e: SyntheticEvent<HTMLInputElement>) {
-    const conflicts = this.state.conflicts.map(c => {
+    const conflicts = this.state.conflicts.map((c) => {
       if (c.key !== key) {
         return c;
       }
@@ -84,7 +84,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
               </tr>
             </thead>
             <tbody>
-              {conflicts.map(conflict => (
+              {conflicts.map((conflict) => (
                 <tr key={conflict.key}>
                   <td className="text-left">{conflict.name}</td>
                   <td className="text-left">{conflict.message}</td>
@@ -95,7 +95,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
                         type="radio"
                         value={conflict.mineBlob || ''}
                         checked={conflict.choose === conflict.mineBlob}
-                        onChange={e => this._handleToggleSelect(conflict.key, e)}
+                        onChange={(e) => this._handleToggleSelect(conflict.key, e)}
                       />
                     </label>
                     <label className="no-pad margin-left">
@@ -104,7 +104,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
                         type="radio"
                         value={conflict.theirsBlob || ''}
                         checked={conflict.choose === conflict.theirsBlob}
-                        onChange={e => this._handleToggleSelect(conflict.key, e)}
+                        onChange={(e) => this._handleToggleSelect(conflict.key, e)}
                       />
                     </label>
                   </td>

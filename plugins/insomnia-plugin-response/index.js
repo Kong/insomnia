@@ -48,8 +48,8 @@ module.exports.templateTags = [
       {
         type: 'string',
         encoding: 'base64',
-        hide: args => !isFilterableField(args[0].value),
-        displayName: args => {
+        hide: (args) => !isFilterableField(args[0].value),
+        displayName: (args) => {
           switch (args[0].value) {
             case 'body':
               return 'Filter (JSONPath or XPath)';
@@ -92,7 +92,7 @@ module.exports.templateTags = [
         displayName: 'Max age (seconds)',
         help: 'The maximum age of a response to use before it expires',
         type: 'number',
-        hide: args => {
+        hide: (args) => {
           const triggerBehavior = (args[3] && args[3].value) || defaultTriggerBehaviour;
           return triggerBehavior !== 'when-expired';
         },
@@ -261,10 +261,10 @@ function matchHeader(headers, name) {
     throw new Error('No headers available');
   }
 
-  const header = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
+  const header = headers.find((h) => h.name.toLowerCase() === name.toLowerCase());
 
   if (!header) {
-    const names = headers.map(c => `"${c.name}"`).join(',\n\t');
+    const names = headers.map((c) => `"${c.name}"`).join(',\n\t');
     throw new Error(`No header with name "${name}".\nChoices are [\n\t${names}\n]`);
   }
 

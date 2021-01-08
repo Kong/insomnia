@@ -39,7 +39,7 @@ export const launchDesigner = async () => {
   return await launch(config);
 };
 
-const getLaunchPath = config =>
+const getLaunchPath = (config) =>
   isPackage()
     ? { path: config.packagePath }
     : {
@@ -47,7 +47,7 @@ const getLaunchPath = config =>
         args: [config.buildPath],
       };
 
-const launch = async config => {
+const launch = async (config) => {
   if (!config) {
     throw new Error('Spectron config could not be loaded.');
   }
@@ -81,7 +81,7 @@ const launch = async config => {
   return app;
 };
 
-export const stop = async app => {
+export const stop = async (app) => {
   if (app && app.isRunning()) {
     await app.stop();
   }

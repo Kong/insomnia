@@ -44,7 +44,7 @@ describe('useProtoFileReload', () => {
     const dispatch = jest.fn();
     const r1 = { _id: 'rid', protoFileId: 'pfid' };
 
-    const { rerender } = renderHook(request => useProtoFileReload(state, dispatch, request), {
+    const { rerender } = renderHook((request) => useProtoFileReload(state, dispatch, request), {
       initialProps: r1,
     });
 

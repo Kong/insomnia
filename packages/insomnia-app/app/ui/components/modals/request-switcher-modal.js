@@ -167,8 +167,8 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   /** Return array of path segments for given request or folder */
   _groupOf(requestOrRequestGroup: BaseModel): Array<string> {
     const { workspaceChildren } = this.props;
-    const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
-    const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
+    const requestGroups = workspaceChildren.filter((d) => d.type === models.requestGroup.type);
+    const matchedGroups = requestGroups.filter((g) => g._id === requestOrRequestGroup.parentId);
     const currentGroupName =
       requestOrRequestGroup.type === models.requestGroup.type
         ? `${(requestOrRequestGroup: any).name}`
@@ -226,7 +226,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = workspaceChildren
-      .filter(d => d.type === models.request.type)
+      .filter((d) => d.type === models.request.type)
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
@@ -240,23 +240,23 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
       });
 
     if (hideNeverActiveRequests) {
-      matchedRequests = matchedRequests.filter(r => lastActiveMap[r._id]);
+      matchedRequests = matchedRequests.filter((r) => lastActiveMap[r._id]);
     }
 
     if (searchString) {
       matchedRequests = matchedRequests
-        .map(r => ({
+        .map((r) => ({
           request: r,
           score: this._isMatch((r: any), searchString),
         }))
-        .filter(v => v.score !== null)
+        .filter((v) => v.score !== null)
         .sort((a, b) => (a.score || -Infinity) - (b.score || -Infinity))
-        .map(v => v.request);
+        .map((v) => v.request);
     }
 
     const matchedWorkspaces = workspaces
-      .filter(w => w._id !== workspace._id)
-      .filter(w => {
+      .filter((w) => w._id !== workspace._id)
+      .filter((w) => {
         const name = w.name.toLowerCase();
         const toMatch = searchString.toLowerCase();
         return name.indexOf(toMatch) !== -1;
@@ -265,7 +265,9 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     // Make sure we select the first item but we don't want to select the currently active
     // one because that wouldn't make any sense.
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
-    const indexOfFirstNonActiveRequest = matchedRequests.findIndex(r => r._id !== activeRequestId);
+    const indexOfFirstNonActiveRequest = matchedRequests.findIndex(
+      (r) => r._id !== activeRequestId,
+    );
 
     this.setState({
       searchString,
@@ -381,7 +383,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     } = this.state;
 
     const { workspaceChildren } = this.props;
-    const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
+    const requestGroups = workspaceChildren.filter((d) => d.type === models.requestGroup.type);
 
     return (
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
@@ -422,7 +424,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
             )}
             <ul>
               {matchedRequests.map((r, i) => {
-                const requestGroup = requestGroups.find(rg => rg._id === r.parentId);
+                const requestGroup = requestGroups.find((rg) => rg._id === r.parentId);
                 const buttonClasses = classnames(
                   'btn btn--expandable-small wide text-left pad-bottom',
                   { focus: activeIndex === i },

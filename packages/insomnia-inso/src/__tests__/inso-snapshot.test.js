@@ -20,7 +20,7 @@ describe('Snapshot for', () => {
     'export spec -h',
   ])(
     '"inso %s"',
-    async args => {
+    async (args) => {
       const { stdout } = await execa(getBinPathSync(), args.split(' '));
       expect(stdout).toMatchSnapshot();
     },

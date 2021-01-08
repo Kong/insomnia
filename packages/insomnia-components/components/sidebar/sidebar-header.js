@@ -65,7 +65,7 @@ const SidebarHeader = ({
 }: Props) => {
   const handleFilterClick =
     sectionVisible && toggleFilter // only handle a click if the section is open
-      ? e => {
+      ? (e) => {
           e.stopPropagation(); // Prevent a parent from also handling the click
           toggleFilter();
         }

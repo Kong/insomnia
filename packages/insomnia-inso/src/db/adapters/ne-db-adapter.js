@@ -17,7 +17,7 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
   const types = filterTypes?.length ? filterTypes : Object.keys(db);
 
   const promises = types.map(
-    type =>
+    (type) =>
       new Promise((resolve, reject) => {
         const filePath = path.join(dir, `insomnia.${type}.db`);
         const collection = new NeDB({

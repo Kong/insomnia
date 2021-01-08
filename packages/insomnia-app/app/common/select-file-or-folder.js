@@ -28,7 +28,7 @@ const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<F
   const options = {
     title: title,
     buttonLabel: 'Select',
-    properties: types.map(type => {
+    properties: types.map((type) => {
       if (type === 'file') {
         return 'openFile';
       }

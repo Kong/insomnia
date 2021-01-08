@@ -17,7 +17,7 @@ export const gitRollback = async (vcs: GitVCS, files: Array<FileWithStatus>): Pr
   });
 
   // Rollback existing (versioned) files
-  const existingFiles = files.filter(isNotAdded).map(f => f.filePath);
+  const existingFiles = files.filter(isNotAdded).map((f) => f.filePath);
   if (existingFiles.length) {
     promises.push(vcs.undoPendingChanges(existingFiles));
   }

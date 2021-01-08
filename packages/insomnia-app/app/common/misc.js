@@ -25,7 +25,7 @@ export function filterParameters<T: Parameter>(parameters: Array<T>, name: strin
     return [];
   }
 
-  return parameters.filter(h => (!h || !h.name ? false : h.name === name));
+  return parameters.filter((h) => (!h || !h.name ? false : h.name === name));
 }
 
 export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {
@@ -33,7 +33,7 @@ export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array
     return [];
   }
 
-  return headers.filter(h => {
+  return headers.filter((h) => {
     // Never match against invalid headers
     if (!h || !h.name || typeof h.name !== 'string') {
       return false;
@@ -117,7 +117,7 @@ export function generateId(prefix: string): string {
 }
 
 export function delay(milliseconds: number = DEBOUNCE_MILLIS): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 export function removeVowels(str: string): string {
@@ -155,7 +155,7 @@ export function keyedDebounce(callback: Function, millis: number = DEBOUNCE_MILL
 
 export function debounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   // For regular debounce, just use a keyed debounce with a fixed key
-  return keyedDebounce(results => {
+  return keyedDebounce((results) => {
     callback.apply(null, results.__key__);
   }, millis).bind(null, '__key__');
 }
@@ -268,7 +268,7 @@ export function fuzzyMatchAll(
     return null;
   }
 
-  const words = searchString.split(' ').filter(w => w.trim());
+  const words = searchString.split(' ').filter((w) => w.trim());
   const terms = options.splitSpace ? [...words, searchString] : [searchString];
 
   let maxScore = null;
@@ -276,7 +276,7 @@ export function fuzzyMatchAll(
   let termsMatched = 0;
   for (const term of terms) {
     let matchedTerm = false;
-    for (const text of allText.filter(t => !t || t.trim())) {
+    for (const text of allText.filter((t) => !t || t.trim())) {
       const result = fuzzysort.single(term, text);
       if (!result) {
         continue;
@@ -341,7 +341,7 @@ export function getUserLanguage(): string {
 }
 
 export async function waitForStreamToFinish(s: Readable | Writable): Promise<void> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     if ((s: any)._readableState && (s: any)._readableState.finished) {
       return resolve();
     }

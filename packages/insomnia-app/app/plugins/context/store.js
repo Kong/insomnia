@@ -33,7 +33,7 @@ export function init(plugin: Plugin): { store: PluginStore } {
       },
       async all(): Promise<Array<{ key: string, value: string }>> {
         const docs = await models.pluginData.all(plugin.name);
-        return docs.map(d => ({
+        return docs.map((d) => ({
           value: d.value,
           key: d.key,
         }));

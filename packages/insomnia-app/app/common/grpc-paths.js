@@ -52,4 +52,4 @@ const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
 export const groupGrpcMethodsByPackage = (
   methods: Array<GrpcMethodDefinition>,
 ): GroupedGrpcMethodInfo =>
-  groupBy(methods.map(getMethodInfo), m => m.segments.packageName || NO_PACKAGE_KEY);
+  groupBy(methods.map(getMethodInfo), (m) => m.segments.packageName || NO_PACKAGE_KEY);

@@ -35,11 +35,11 @@ class MethodDropdown extends PureComponent {
       label: 'Name',
       placeholder: 'CUSTOM',
       hints: recentMethods,
-      onDeleteHint: method => {
-        recentMethods = recentMethods.filter(m => m !== method);
+      onDeleteHint: (method) => {
+        recentMethods = recentMethods.filter((m) => m !== method);
         window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
       },
-      onComplete: method => {
+      onComplete: (method) => {
         // Don't add empty methods
         if (!method) {
           return;
@@ -51,7 +51,7 @@ class MethodDropdown extends PureComponent {
         }
 
         // Save method as recent
-        recentMethods = recentMethods.filter(m => m !== method);
+        recentMethods = recentMethods.filter((m) => m !== method);
         recentMethods.unshift(method);
         window.localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(recentMethods));
 
@@ -84,7 +84,7 @@ class MethodDropdown extends PureComponent {
         <DropdownButton type="button" {...extraProps}>
           {buttonLabel} <i className="fa fa-caret-down" />
         </DropdownButton>
-        {constants.HTTP_METHODS.map(method => (
+        {constants.HTTP_METHODS.map((method) => (
           <DropdownItem
             key={method}
             className={`http-method-${method}`}

@@ -33,7 +33,7 @@ describe('onChange()', () => {
     };
 
     const changesSeen = [];
-    const callback = change => {
+    const callback = (change) => {
       changesSeen.push(change);
     };
     db.onChange(callback);
@@ -63,7 +63,7 @@ describe('bufferChanges()', () => {
     };
 
     const changesSeen = [];
-    const callback = change => {
+    const callback = (change) => {
       changesSeen.push(change);
     };
     db.onChange(callback);
@@ -208,7 +208,7 @@ describe('_repairDatabase()', () => {
 
     // Make sure we have everything
     expect((await db.withDescendants(workspace)).length).toBe(8);
-    const descendants = (await db.withDescendants(workspace)).map(d => ({
+    const descendants = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       parentId: d.parentId,
       data: d.data || null,
@@ -228,7 +228,7 @@ describe('_repairDatabase()', () => {
     await db._repairDatabase();
 
     // Make sure things get adjusted
-    const descendants2 = (await db.withDescendants(workspace)).map(d => ({
+    const descendants2 = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       parentId: d.parentId,
       data: d.data || null,
@@ -277,7 +277,7 @@ describe('_repairDatabase()', () => {
 
     // Make sure we have everything
     expect((await db.withDescendants(workspace)).length).toBe(4);
-    const descendants = (await db.withDescendants(workspace)).map(d => ({
+    const descendants = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       cookies: d.cookies || null,
       parentId: d.parentId,
@@ -307,7 +307,7 @@ describe('_repairDatabase()', () => {
     await db._repairDatabase();
 
     // Make sure things get adjusted
-    const descendants2 = (await db.withDescendants(workspace)).map(d => ({
+    const descendants2 = (await db.withDescendants(workspace)).map((d) => ({
       _id: d._id,
       cookies: d.cookies || null,
       parentId: d.parentId,

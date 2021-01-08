@@ -18,7 +18,7 @@ export function onChange(callback) {
 }
 
 export function offChange(callback) {
-  changeListeners = changeListeners.filter(l => l !== callback);
+  changeListeners = changeListeners.filter((l) => l !== callback);
 }
 
 let _changeTimeout = null;
@@ -53,7 +53,7 @@ export async function findResources(query = {}) {
 
 export async function findActiveResources(query) {
   const configs = await findActiveConfigs();
-  const resourceGroupIds = configs.map(c => c.resourceGroupId);
+  const resourceGroupIds = configs.map((c) => c.resourceGroupId);
   return findResources(Object.assign({ resourceGroupId: { $in: resourceGroupIds } }, query));
 }
 

@@ -185,7 +185,7 @@ class CodePromptModal extends PureComponent {
                 <i className="fa fa-caret-down space-left" />
               </DropdownButton>
               <DropdownDivider>Editor Syntax</DropdownDivider>
-              {Object.keys(MODES).map(mode => (
+              {Object.keys(MODES).map((mode) => (
                 <DropdownItem key={mode} value={mode} onClick={this._handleChangeMode}>
                   <i className="fa fa-code" />
                   {MODES[mode]}

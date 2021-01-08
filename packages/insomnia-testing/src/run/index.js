@@ -94,7 +94,7 @@ async function runInternal<T>(
 
         // Clean up temp files
         for (const f of mocha.files) {
-          fs.unlink(f, err => {
+          fs.unlink(f, (err) => {
             if (err) {
               console.log('Failed to clean up test file', f, err);
             }
@@ -130,7 +130,7 @@ export async function runTestsCli(
   testSrc: string | Array<string>,
   { reporter, ...options }: CliOptions = {},
 ): Promise<boolean> {
-  return await runInternal(testSrc, options, reporter, runner => !runner.stats.failures);
+  return await runInternal(testSrc, options, reporter, (runner) => !runner.stats.failures);
 }
 
 /**
@@ -140,5 +140,5 @@ export async function runTests(
   testSrc: string | Array<string>,
   options: InsomniaOptions = {},
 ): Promise<TestResults> {
-  return await runInternal(testSrc, options, JavaScriptReporter, runner => runner.testResults);
+  return await runInternal(testSrc, options, JavaScriptReporter, (runner) => runner.testResults);
 }

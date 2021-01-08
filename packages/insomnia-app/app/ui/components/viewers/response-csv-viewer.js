@@ -28,7 +28,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
 
     Papa.parse(csv, {
       skipEmptyLines: true,
-      complete: result => {
+      complete: (result) => {
         this.setState({ result });
       },
     });
@@ -57,9 +57,9 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
       <div className="pad-sm">
         <table className="table--fancy table--striped table--compact selectable">
           <tbody>
-            {result.data.map(row => (
+            {result.data.map((row) => (
               <tr>
-                {row.map(c => (
+                {row.map((c) => (
                   <td>{c}</td>
                 ))}
               </tr>

@@ -36,11 +36,11 @@ export default class FileSystemDriver implements BaseDriver {
 
       // This method implements atomic writes by first writing to a temporary
       // file (non-atomic) then renaming the file to the final value (atomic)
-      fs.writeFile(tmpPath, value, 'utf8', err => {
+      fs.writeFile(tmpPath, value, 'utf8', (err) => {
         if (err) {
           return reject(err);
         }
-        fs.rename(tmpPath, finalPath, err => {
+        fs.rename(tmpPath, finalPath, (err) => {
           if (err) {
             return reject(err);
           }
@@ -66,7 +66,7 @@ export default class FileSystemDriver implements BaseDriver {
 
   removeItem(key: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      fs.unlink(this._getKeyPath(key), err => {
+      fs.unlink(this._getKeyPath(key), (err) => {
         if (err && err.code === 'ENOENT') {
           resolve();
         } else if (err) {
@@ -95,7 +95,7 @@ export default class FileSystemDriver implements BaseDriver {
   }
 
   async keys(prefix: string, recursive: boolean): Promise<Array<string>> {
-    const next = dir => {
+    const next = (dir) => {
       return new Promise(async (resolve, reject) => {
         let keys: Array<string> = [];
         let names = [];

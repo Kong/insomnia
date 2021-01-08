@@ -130,7 +130,7 @@ const invalidateMany = async (protoFileId: string): Promise<InvalidateManyAction
 
   return {
     type: GrpcActionTypeEnum.invalidateMany,
-    requestIds: impacted.map(g => g._id),
+    requestIds: impacted.map((g) => g._id),
   };
 };
 

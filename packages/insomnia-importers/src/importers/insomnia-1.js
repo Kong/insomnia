@@ -41,7 +41,7 @@ function importItems(items, parentId) {
     resources = [
       ...resources,
       requestGroup,
-      ...item.requests.map(item => importRequestItem(item, requestGroup._id)),
+      ...item.requests.map((item) => importRequestItem(item, requestGroup._id)),
     ];
   }
 
@@ -72,7 +72,7 @@ function importRequestItem(item, parentId) {
   }
 
   const headers = item.headers || [];
-  let contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
+  let contentTypeHeader = headers.find((h) => h.name.toLowerCase() === 'content-type');
   if (item.__insomnia && item.__insomnia.format) {
     const contentType = FORMAT_MAP[item.__insomnia.format];
     if (!contentTypeHeader) {
@@ -88,7 +88,7 @@ function importRequestItem(item, parentId) {
       contentTypeHeader.value.match(/^multipart\/form-encoded/i))
   ) {
     body.mimeType = contentTypeHeader.value.split(';')[0];
-    body.params = (item.body || '').split('&').map(v => {
+    body.params = (item.body || '').split('&').map((v) => {
       const [name, value] = v.split('=');
       return {
         name: decodeURIComponent(name),

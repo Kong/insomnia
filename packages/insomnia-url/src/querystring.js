@@ -173,7 +173,7 @@ module.exports.smartEncodeUrl = function(url, encode) {
     if (parsedUrl.pathname) {
       const segments = parsedUrl.pathname.split('/');
       parsedUrl.pathname = segments
-        .map(s => module.exports.flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST))
+        .map((s) => module.exports.flexibleEncodeComponent(s, URL_PATH_CHARACTER_WHITELIST))
         .join('/');
     }
 

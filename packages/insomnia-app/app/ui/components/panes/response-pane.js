@@ -108,14 +108,14 @@ class ResponsePane extends React.PureComponent<Props> {
     const readStream = models.response.getBodyStream(response);
     const dataBuffers = [];
     if (readStream) {
-      readStream.on('data', data => {
+      readStream.on('data', (data) => {
         dataBuffers.push(data);
       });
       readStream.on('end', () => {
         const to = fs.createWriteStream(outputPath);
         const finalBuffer = Buffer.concat(dataBuffers);
 
-        to.on('error', err => {
+        to.on('error', (err) => {
           showError({
             title: 'Save Failed',
             message: 'Failed to save response body',
@@ -143,8 +143,8 @@ class ResponsePane extends React.PureComponent<Props> {
 
     const timeline = await models.response.getTimeline(response);
     const headers = timeline
-      .filter(v => v.name === 'HEADER_IN')
-      .map(v => v.value)
+      .filter((v) => v.name === 'HEADER_IN')
+      .map((v) => v.value)
       .join('');
 
     const options = {
@@ -163,7 +163,7 @@ class ResponsePane extends React.PureComponent<Props> {
       const to = fs.createWriteStream(filePath);
       to.write(headers);
       readStream.pipe(to);
-      to.on('error', err => {
+      to.on('error', (err) => {
         console.warn('Failed to save full response', err);
       });
     }

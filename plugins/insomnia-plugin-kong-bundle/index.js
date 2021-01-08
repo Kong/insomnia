@@ -4,8 +4,8 @@
  */
 const { dependencies } = require('./package.json');
 const bundledPlugins = Object.keys(dependencies)
-  .filter(name => name.indexOf('insomnia-plugin-') === 0)
-  .map(name => require(name));
+  .filter((name) => name.indexOf('insomnia-plugin-') === 0)
+  .map((name) => require(name));
 
 // Iterate over all plugins
 for (const plugin of bundledPlugins) {

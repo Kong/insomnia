@@ -171,7 +171,7 @@ export class MemPlugin {
     basePath = path.normalize(basePath);
     const entry = this._assertDir(basePath);
 
-    const names = entry.children.map(c => c.name);
+    const names = entry.children.map((c) => c.name);
     names.sort();
     return names;
   }
@@ -186,7 +186,7 @@ export class MemPlugin {
       this._assertDir(path.dirname(dirPath));
     }
 
-    const pathSegments = dirPath.split(path.sep).filter(s => s !== '');
+    const pathSegments = dirPath.split(path.sep).filter((s) => s !== '');
 
     // Recurse over all sub paths, ensure they are all directories,
     // create them if they don't exist
@@ -196,7 +196,7 @@ export class MemPlugin {
       const nextPath = path.join(currentPath, pathSegment);
 
       // Create dir if it doesn't exist yet
-      if (!dirEntry.children.find(e => e.name === pathSegment)) {
+      if (!dirEntry.children.find((e) => e.name === pathSegment)) {
         dirEntry.children.push({
           type: 'dir',
           ino: this.__ino++,
@@ -280,9 +280,9 @@ export class MemPlugin {
     let current = this.__fs;
 
     // Ignore empty and current directory '.' segments
-    const pathSegments = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
+    const pathSegments = filePath.split(path.sep).filter((s) => s !== '' && s !== '.');
     for (const expectedName of pathSegments) {
-      const e = (current.children || []).find(c => c.name === expectedName);
+      const e = (current.children || []).find((c) => c.name === expectedName);
 
       if (!e) {
         return null;
@@ -395,7 +395,7 @@ export class MemPlugin {
 
   _remove(entry: FSEntry) {
     const parentEntry = this._assertDir(path.dirname(entry.path));
-    const index = parentEntry.children.findIndex(c => c === entry);
+    const index = parentEntry.children.findIndex((c) => c === entry);
     if (index < 0) {
       // Should never happen so w/e
       return;

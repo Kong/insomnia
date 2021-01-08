@@ -21,7 +21,7 @@ const parseGitPath = (filePath: string): GitPathSegments => {
   filePath = filePath.replace(_cloneDirRegExp, '');
 
   // Ignore empty and current directory '.' segments
-  const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
+  const [root, type, idRaw] = filePath.split(path.sep).filter((s) => s !== '' && s !== '.');
 
   const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
 

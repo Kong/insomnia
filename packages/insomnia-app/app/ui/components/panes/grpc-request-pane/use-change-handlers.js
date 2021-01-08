@@ -9,10 +9,10 @@ import { showModal } from '../../modals';
 import ProtoFilesModal from '../../modals/proto-files-modal';
 
 type ChangeHandlers = {
-  url: string => Promise<void>,
-  body: string => Promise<void>,
-  method: string => Promise<void>,
-  protoFile: string => Promise<void>,
+  url: (string) => Promise<void>,
+  body: (string) => Promise<void>,
+  method: (string) => Promise<void>,
+  protoFile: (string) => Promise<void>,
 };
 
 // This will create memoized change handlers for the url, body and method selection

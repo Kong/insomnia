@@ -30,7 +30,7 @@ const useSelectedMethod = (
       return;
     }
 
-    const selectedMethod = methods.find(c => c.path === protoMethodName);
+    const selectedMethod = methods.find((c) => c.path === protoMethodName);
 
     const methodType = selectedMethod && getMethodType(selectedMethod);
     const methodTypeLabel = GrpcMethodTypeName[methodType];

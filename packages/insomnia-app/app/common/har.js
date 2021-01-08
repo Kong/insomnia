@@ -372,7 +372,7 @@ function getRequestCookies(renderedRequest: RenderedRequest): Array<HarCookie> {
 function getReponseCookies(response: ResponseModel): Array<HarCookie> {
   return misc
     .getSetCookieHeaders(response.headers)
-    .map(h => {
+    .map((h) => {
       let cookie;
       try {
         cookie = toughCookie.parse(h.value || '');
@@ -443,8 +443,8 @@ function getResponseContent(response: ResponseModel): HarContent {
 
 function getResponseHeaders(response: ResponseModel): Array<HarHeader> {
   return response.headers
-    .filter(header => header.name)
-    .map(h => {
+    .filter((header) => header.name)
+    .map((h) => {
       return {
         name: h.name,
         value: h.value,
@@ -454,8 +454,8 @@ function getResponseHeaders(response: ResponseModel): Array<HarHeader> {
 
 function getRequestHeaders(renderedRequest: RenderedRequest): Array<HarHeader> {
   return renderedRequest.headers
-    .filter(header => header.name)
-    .map(header => {
+    .filter((header) => header.name)
+    .map((header) => {
       return {
         name: header.name,
         value: header.value,
@@ -464,7 +464,7 @@ function getRequestHeaders(renderedRequest: RenderedRequest): Array<HarHeader> {
 }
 
 function getRequestQueryString(renderedRequest: RenderedRequest): Array<HarQueryString> {
-  return renderedRequest.parameters.map(parameter => {
+  return renderedRequest.parameters.map((parameter) => {
     return {
       name: parameter.name,
       value: parameter.value,
@@ -488,7 +488,7 @@ function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | voi
 
   let params = [];
   if (body.params) {
-    params = body.params.map(param => {
+    params = body.params.map((param) => {
       if (param.type === 'file') {
         return {
           name: param.name,

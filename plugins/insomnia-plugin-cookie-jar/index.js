@@ -50,9 +50,9 @@ function getCookieValue(cookieJar, url, name) {
         reject(new Error(`No cookies in store for url "${url}"`));
       }
 
-      const cookie = cookies.find(cookie => cookie.key === name);
+      const cookie = cookies.find((cookie) => cookie.key === name);
       if (!cookie) {
-        const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
+        const names = cookies.map((c) => `"${c.key}"`).join(',\n\t');
         throw new Error(
           `No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`,
         );

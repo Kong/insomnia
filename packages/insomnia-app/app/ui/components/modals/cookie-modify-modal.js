@@ -53,7 +53,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     cookie = cookie[0] || cookie;
 
     const { cookieJar } = this.props;
-    const oldCookie = cookieJar.cookies.find(c => c.id === cookie.id);
+    const oldCookie = cookieJar.cookies.find((c) => c.id === cookie.id);
 
     if (!oldCookie) {
       // Cookie not found in jar
@@ -120,7 +120,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     const cookieJar = clone(this.props.cookieJar);
 
     const { cookies } = cookieJar;
-    const index = cookies.findIndex(c => c.id === cookie.id);
+    const index = cookies.findIndex((c) => c.id === cookie.id);
 
     if (index < 0) {
       console.warn(`Could not find cookie with id=${cookie.id} to edit`);
@@ -206,7 +206,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             isVariableUncovered={isVariableUncovered}
             defaultValue={val || ''}
-            onChange={value => this._handleChange(field, value)}
+            onChange={(value) => this._handleChange(field, value)}
           />
         </label>
       </div>
@@ -259,7 +259,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
                           type="checkbox"
                           name={field}
                           defaultChecked={checked || false}
-                          onChange={e => this._handleChange(field, e)}
+                          onChange={(e) => this._handleChange(field, e)}
                         />
                       </label>
                     );

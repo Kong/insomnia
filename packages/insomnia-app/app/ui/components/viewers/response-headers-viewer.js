@@ -24,7 +24,7 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
   render() {
     const { headers } = this.props;
 
-    const headersString = headers.map(h => `${h.name}: ${h.value}`).join('\n');
+    const headersString = headers.map((h) => `${h.name}: ${h.value}`).join('\n');
 
     return (
       <React.Fragment>

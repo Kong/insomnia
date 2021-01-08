@@ -31,7 +31,7 @@ type State = {|
 
 type ProtoFilesModalOptions = {|
   preselectProtoFileId?: string,
-  onSave: string => Promise<void>,
+  onSave: (string) => Promise<void>,
 |};
 
 const INITIAL_STATE: State = {
@@ -43,7 +43,7 @@ const spinner = <i className="fa fa-spin fa-refresh" />;
 @autobind
 class ProtoFilesModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
-  onSave: (string => Promise<void>) | null;
+  onSave: ((string) => Promise<void>) | null;
 
   constructor(props: Props) {
     super(props);

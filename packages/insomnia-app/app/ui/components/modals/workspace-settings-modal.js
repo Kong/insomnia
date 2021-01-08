@@ -91,7 +91,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
   }
 
   _handleToggleCertificateForm() {
-    this.setState(state => ({
+    this.setState((state) => ({
       showAddCertificateForm: !state.showAddCertificateForm,
       crtPath: '',
       keyPath: '',
@@ -262,8 +262,8 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       isVariableUncovered,
     } = this.props;
 
-    const publicCertificates = clientCertificates.filter(c => !c.isPrivate);
-    const privateCertificates = clientCertificates.filter(c => c.isPrivate);
+    const publicCertificates = clientCertificates.filter((c) => !c.isPrivate);
+    const privateCertificates = clientCertificates.filter((c) => c.isPrivate);
 
     const {
       pfxPath,

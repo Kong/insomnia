@@ -398,7 +398,7 @@ describe('grpcReducer actions', () => {
     );
   });
 
-  it.each([null, undefined])('should do nothing if action is falsey', action => {
+  it.each([null, undefined])('should do nothing if action is falsey', (action) => {
     expect(grpcReducer({}, action)).toStrictEqual({});
   });
 });

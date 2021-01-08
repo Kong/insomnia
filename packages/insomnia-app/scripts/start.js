@@ -13,4 +13,4 @@ promptRun({
       },
     ],
   },
-}).then(childProcess => {});
+}).then((childProcess) => {});

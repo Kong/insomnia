@@ -32,7 +32,7 @@ function convertToPostman(items) {
     },
   };
 
-  out.item = items.map(i => {
+  out.item = items.map((i) => {
     const item = [];
     const url = get(i, 'x-ibm-configuration.assembly.execute.0.proxy.target-url');
     for (const k of Object.keys(i.paths)) {

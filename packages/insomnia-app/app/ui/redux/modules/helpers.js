@@ -20,13 +20,13 @@ export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?:
       case ForceToWorkspaceKeys.current:
         return workspaceId;
       default:
-        return new Promise(resolve => {
+        return new Promise((resolve) => {
           showModal(AskModal, {
             title: 'Import',
             message: 'Do you want to import into the current workspace or a new one?',
             yesText: 'Current',
             noText: 'New Workspace',
-            onDone: yes => {
+            onDone: (yes) => {
               resolve(yes ? workspaceId : null);
             },
           });

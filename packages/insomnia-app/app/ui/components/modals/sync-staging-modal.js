@@ -146,7 +146,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     const lookupMap = {};
     const allKeys = [...Object.keys(status.stage), ...Object.keys(status.unstaged)];
     for (const key of allKeys) {
-      const item = syncItems.find(si => si.key === key);
+      const item = syncItems.find((si) => si.key === key);
       const oldDoc: Object | null = await vcs.blobFromLastSnapshot(key);
       const doc = (item && item.document) || oldDoc;
       const entry = status.stage[key] || status.unstaged[key];
@@ -282,7 +282,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
             </tr>
           </thead>
           <tbody>
-            {keys.map(key => {
+            {keys.map((key) => {
               if (!lookupMap[key]) {
                 return null;
               }

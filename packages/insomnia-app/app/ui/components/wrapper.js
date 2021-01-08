@@ -446,7 +446,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   async _handleActiveWorkspaceClearAllResponses(): Promise<void> {
     const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
-    const requests = docs.filter(doc => doc.type === models.request.type);
+    const requests = docs.filter((doc) => doc.type === models.request.type);
     for (const req of requests) {
       await models.response.removeForRequest(req._id);
     }
@@ -568,7 +568,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           vcs={gitVCS}
           handleInitializeEntities={handleInitializeEntities}
           handleGitBranchChanged={this._handleGitBranchChanged}
-          renderDropdownButton={children => (
+          renderDropdownButton={(children) => (
             <DropdownButton className="btn--clicky-small btn-sync btn-utility">
               {children}
             </DropdownButton>
@@ -789,7 +789,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
 
             <GrpcDispatchModalWrapper>
-              {dispatch => (
+              {(dispatch) => (
                 <ProtoFilesModal
                   ref={registerModal}
                   grpcDispatch={dispatch}

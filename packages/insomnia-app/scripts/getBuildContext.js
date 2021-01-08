@@ -1,4 +1,4 @@
-module.exports.getBuildContext = forceFromGitRef => {
+module.exports.getBuildContext = (forceFromGitRef) => {
   if (forceFromGitRef) {
     return fromGitRef();
   }

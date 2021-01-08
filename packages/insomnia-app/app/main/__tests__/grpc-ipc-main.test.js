@@ -14,7 +14,7 @@ describe('grpcIpcMain', () => {
     grpcIpcMain.init(); // ipcMain is mocked
   });
 
-  it.each(Object.values(GrpcRequestEventEnum))('should add listener for channel: %s', channel => {
+  it.each(Object.values(GrpcRequestEventEnum))('should add listener for channel: %s', (channel) => {
     expect(ipcMain.on).toHaveBeenCalledWith(channel, expect.anything());
   });
 

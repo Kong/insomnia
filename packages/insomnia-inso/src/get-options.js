@@ -35,7 +35,7 @@ export const loadCosmiConfig = (configFile?: string): ConfigFileOptions => {
     if (results && !results?.isEmpty) {
       const options = {};
 
-      OptionsSupportedInConfigFile.forEach(key => {
+      OptionsSupportedInConfigFile.forEach((key) => {
         const value = results.config?.options?.[key];
         if (value) {
           options[key] = value;

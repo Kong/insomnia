@@ -76,7 +76,7 @@ export default class Insomnia {
       return sendRequest(reqId);
     }
 
-    const req = this.requests.find(r => r._id === reqId);
+    const req = this.requests.find((r) => r._id === reqId);
 
     if (!req) {
       throw new Error('Request not provided to test');

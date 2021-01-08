@@ -232,12 +232,12 @@ describe('index', () => {
   describe('generateServicePath()', () => {
     it.each(['', '/'])(
       'returns undefined if base path is [%o] and no specific path exists',
-      serverBasePath => {
+      (serverBasePath) => {
         expect(generateServicePath(serverBasePath)).toBe(undefined);
       },
     );
 
-    it.each(['/api/v1', '/api/v1/'])('adds closing wildcard if base path is [%o]', basePath => {
+    it.each(['/api/v1', '/api/v1/'])('adds closing wildcard if base path is [%o]', (basePath) => {
       expect(generateServicePath(basePath)).toBe('/api/v1/.*');
     });
 
@@ -248,7 +248,7 @@ describe('index', () => {
 
     it.each(['/', '/specificPath'])(
       'does not add closing wildcard if using specific path: [%o]',
-      specificPath => {
+      (specificPath) => {
         const serverBasePath = '/';
         const result = generateServicePath(serverBasePath, specificPath);
         expect(result).toBe(specificPath);

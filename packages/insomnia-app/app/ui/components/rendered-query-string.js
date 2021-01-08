@@ -23,7 +23,7 @@ class RenderedQueryString extends PureComponent {
 
   async _update(props) {
     const { request } = props;
-    const enabledParameters = request.parameters.filter(p => !p.disabled);
+    const enabledParameters = request.parameters.filter((p) => !p.disabled);
 
     let result;
     try {

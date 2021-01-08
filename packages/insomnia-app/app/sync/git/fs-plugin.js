@@ -61,8 +61,8 @@ export default class FSPlugin {
   _callbackAsPromise<T>(fn: Function, filePath: string, ...args: Array<any>): Promise<T> {
     return new Promise((resolve, reject) => {
       filePath = path.join(this._basePath, path.normalize(filePath));
-      const callback = args.find(arg => typeof arg === 'function');
-      const newArgs = args.filter(arg => arg !== callback);
+      const callback = args.find((arg) => typeof arg === 'function');
+      const newArgs = args.filter((arg) => arg !== callback);
 
       fn(filePath, ...newArgs, (err, result) => {
         if (err) reject(err);

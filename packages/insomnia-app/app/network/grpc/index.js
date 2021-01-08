@@ -202,11 +202,11 @@ export const cancel = (requestId: string) => callCache.get(requestId)?.cancel();
 export const cancelMultiple = (requestIds: Array<string>) => requestIds.forEach(cancel);
 
 const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCallbacks) => {
-  call.on('status', s => respond.sendStatus(requestId, s));
+  call.on('status', (s) => respond.sendStatus(requestId, s));
 };
 
 const _setupServerStreamListeners = (call: Call, requestId: string, respond: ResponseCallbacks) => {
-  call.on('data', data => respond.sendData(requestId, data));
+  call.on('data', (data) => respond.sendData(requestId, data));
 
   call.on('error', (error: ServiceError) => {
     if (error && error.code !== GrpcStatusEnum.CANCELLED) {
@@ -245,7 +245,7 @@ const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => 
 
 type WriteCallback = (error: Error | null | undefined) => void;
 
-const _streamWriteCallback: WriteCallback = err => {
+const _streamWriteCallback: WriteCallback = (err) => {
   if (err) {
     console.error('[gRPC] Error when writing to stream', err);
   }

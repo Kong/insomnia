@@ -32,7 +32,7 @@ export function init(
       renderedRequest.url = url;
     },
     setCookie(name: string, value: string): void {
-      const cookie = renderedRequest.cookies.find(c => c.name === name);
+      const cookie = renderedRequest.cookies.find((c) => c.name === name);
       if (cookie) {
         cookie.value = value;
       } else {
@@ -71,7 +71,7 @@ export function init(
       }
     },
     getHeaders(): Array<{ name: string, value: string }> {
-      return renderedRequest.headers.map(h => ({
+      return renderedRequest.headers.map((h) => ({
         name: h.name,
         value: h.value,
       }));
@@ -81,7 +81,7 @@ export function init(
     },
     removeHeader(name: string): void {
       const headers = misc.filterHeaders(renderedRequest.headers, name);
-      renderedRequest.headers = renderedRequest.headers.filter(h => !headers.includes(h));
+      renderedRequest.headers = renderedRequest.headers.filter((h) => !headers.includes(h));
     },
     setHeader(name: string, value: string): void {
       const header = misc.filterHeaders(renderedRequest.headers, name)[0];
@@ -108,7 +108,7 @@ export function init(
       }
     },
     getParameters(): Array<{ name: string, value: string }> {
-      return renderedRequest.parameters.map(p => ({
+      return renderedRequest.parameters.map((p) => ({
         name: p.name,
         value: p.value,
       }));
@@ -118,7 +118,9 @@ export function init(
     },
     removeParameter(name: string): void {
       const parameters = misc.filterParameters(renderedRequest.parameters, name);
-      renderedRequest.parameters = renderedRequest.parameters.filter(p => !parameters.includes(p));
+      renderedRequest.parameters = renderedRequest.parameters.filter(
+        (p) => !parameters.includes(p),
+      );
     },
     setParameter(name: string, value: string): void {
       const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];

@@ -56,7 +56,7 @@ class ResponseCookiesViewer extends PureComponent {
           <tbody>{!headers.length ? this.renderRow(null, -1) : headers.map(this.renderRow)}</tbody>
         </table>
         <p className="pad-top">
-          <button className="pull-right btn btn--clicky" onClick={e => showCookiesModal()}>
+          <button className="pull-right btn btn--clicky" onClick={(e) => showCookiesModal()}>
             Manage Cookies
           </button>
         </p>

@@ -109,7 +109,7 @@ async function buildWebpack(config) {
 async function emptyDir(relPath) {
   return new Promise((resolve, reject) => {
     const dir = path.resolve(__dirname, relPath);
-    rimraf(dir, err => {
+    rimraf(dir, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -125,7 +125,7 @@ async function copyFiles(relSource, relDest) {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
     console.log(`[build] copy "${relSource}" to "${relDest}"`);
-    ncp(source, dest, err => {
+    ncp(source, dest, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -166,7 +166,7 @@ async function buildLicenseList(relSource, relDest) {
             email ? `EMAIL: ${email}` : null,
             '\n' + txt,
           ]
-            .filter(v => v !== null)
+            .filter((v) => v !== null)
             .join('\n');
 
           out.push(`${body}\n\n`);
@@ -188,7 +188,7 @@ async function buildLicenseList(relSource, relDest) {
 }
 
 async function install(relDir) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const prefix = path.resolve(__dirname, relDir);
 
     const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
@@ -196,15 +196,15 @@ async function install(relDir) {
       shell: true,
     });
 
-    p.stdout.on('data', data => {
+    p.stdout.on('data', (data) => {
       console.log(data.toString());
     });
 
-    p.stderr.on('data', data => {
+    p.stderr.on('data', (data) => {
       console.log(data.toString());
     });
 
-    p.on('exit', code => {
+    p.on('exit', (code) => {
       console.log('child process exited with code ' + code.toString());
       resolve();
     });
@@ -244,7 +244,7 @@ function generatePackageJson(relBasePkg, relOutPkg) {
   // Figure out which dependencies to pack
   const allDependencies = Object.keys(basePkg.dependencies);
   const packedDependencies = basePkg.packedDependencies;
-  const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
+  const unpackedDependencies = allDependencies.filter((name) => !packedDependencies.includes(name));
 
   // Add dependencies
   console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);

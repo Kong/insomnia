@@ -262,7 +262,7 @@ export async function getRenderContext(
     ancestors = await _getRequestAncestors(request);
   }
 
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = ancestors.find((doc) => doc.type === models.workspace.type);
   if (!workspace) {
     throw new Error('Failed to render. Could not find workspace');
   }
@@ -335,7 +335,7 @@ export async function getRenderContext(
       return null;
     }
 
-    const p = extraInfo.find(v => v.name === key);
+    const p = extraInfo.find((v) => v.name === key);
     return p ? p.value : null;
   };
 
@@ -407,7 +407,7 @@ export async function getRenderedRequestAndContext(
   extraInfo?: ExtraRenderInfo,
 ): Promise<{ request: RenderedRequest, context: Object }> {
   const ancestors = await _getRequestAncestors(request);
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = ancestors.find((doc) => doc.type === models.workspace.type);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
 
@@ -445,14 +445,14 @@ export async function getRenderedRequestAndContext(
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
 
   // Remove disabled params
-  renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
+  renderedRequest.parameters = renderedRequest.parameters.filter((p) => !p.disabled);
 
   // Remove disabled headers
-  renderedRequest.headers = renderedRequest.headers.filter(p => !p.disabled);
+  renderedRequest.headers = renderedRequest.headers.filter((p) => !p.disabled);
 
   // Remove disabled body params
   if (renderedRequest.body && Array.isArray(renderedRequest.body.params)) {
-    renderedRequest.body.params = renderedRequest.body.params.filter(p => !p.disabled);
+    renderedRequest.body.params = renderedRequest.body.params.filter((p) => !p.disabled);
   }
 
   // Remove disabled authentication

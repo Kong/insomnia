@@ -106,7 +106,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   }
 
   async _toggleAll(items: Array<Item>, forceAdd: boolean = false) {
-    const allStaged = items.every(i => i.staged);
+    const allStaged = items.every((i) => i.staged);
     const doStage = !allStaged;
 
     const newItems = { ...this.state.items };
@@ -277,7 +277,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   async _handleRollback(items: Array<Item>) {
     const { vcs } = this.props;
 
-    const files = items.map(i => ({ filePath: i.path, status: i.status }));
+    const files = items.map((i) => ({ filePath: i.path, status: i.status }));
 
     await gitRollback(vcs, files);
     await this._refresh();
@@ -322,8 +322,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const allStaged = items.every(i => i.staged);
-    const allUnstaged = items.every(i => !i.staged);
+    const allStaged = items.every((i) => i.staged);
+    const allUnstaged = items.every((i) => !i.staged);
 
     return (
       <div className="pad-top">
@@ -372,8 +372,8 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   _renderItems(items: Array<Item>) {
     const { message } = this.state;
 
-    const newItems = items.filter(i => i.status.includes('added'));
-    const existingItems = items.filter(i => !i.status.includes('added'));
+    const newItems = items.filter((i) => i.status.includes('added'));
+    const existingItems = items.filter((i) => !i.status.includes('added'));
 
     return (
       <>
@@ -396,7 +396,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   render() {
     const { items, branch, loading } = this.state;
 
-    const itemsList = Object.keys(items).map(k => items[k]);
+    const itemsList = Object.keys(items).map((k) => items[k]);
     const hasChanges = !!itemsList.length;
 
     return (

@@ -30,7 +30,7 @@ async function start(app, version) {
   const appId = appConfig().appId;
 
   // globs should only use forward slash, so force use of path.posix
-  const distGlob = ext => path.posix.join('dist', appId, '**', `*${ext}`);
+  const distGlob = (ext) => path.posix.join('dist', appId, '**', `*${ext}`);
   const assetGlobs = {
     darwin: [distGlob('.zip'), distGlob('.dmg')],
     win32: [path.posix.join('dist', appId, 'squirrel-windows', '*')],

@@ -45,7 +45,7 @@ export const selectSidebarChildren = createSelector(
         .sort(sortByMetaKeyOrId);
 
       if (children.length > 0) {
-        return children.map(c => {
+        return children.map((c) => {
           const child = {
             doc: c,
             hidden: false,
@@ -77,7 +77,7 @@ export const selectSidebarChildren = createSelector(
         // Gather all parents so we can match them too
         matchChildren(child.children, [...parentNames, child.doc.name]);
 
-        const hasMatchedChildren = child.children.find(c => c.hidden === false);
+        const hasMatchedChildren = child.children.find((c) => c.hidden === false);
 
         // Try to match request attributes
         const name = child.doc.name;

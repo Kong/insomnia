@@ -135,7 +135,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
                   Private <i className="fa fa-caret-down" />
                 </DropdownButton>
               )}
-              {teams.map(team => (
+              {teams.map((team) => (
                 <DropdownItem key={team.id} value={team} onClick={this._handleChangeTeam}>
                   <i className="fa fa-users" /> Share with <strong>{team.name}</strong>
                 </DropdownItem>

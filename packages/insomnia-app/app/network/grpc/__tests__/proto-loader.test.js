@@ -27,7 +27,7 @@ describe('loadMethods', () => {
     expect(writeProtoFile).toHaveBeenCalledWith(protoFile.protoText);
 
     expect(methods).toHaveLength(4);
-    expect(methods.map(c => c.path)).toStrictEqual(
+    expect(methods.map((c) => c.path)).toStrictEqual(
       expect.arrayContaining([
         '/hello.HelloService/SayHello',
         '/hello.HelloService/LotsOfReplies',

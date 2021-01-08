@@ -7,7 +7,7 @@ import * as dropdown from '../modules/dropdown';
 
 import { isPackage, launchDesigner, stop } from '../modules/application';
 
-const itIf = condition => (condition ? it : it.skip);
+const itIf = (condition) => (condition ? it : it.skip);
 it.if = itIf;
 
 describe('Application launch', function() {

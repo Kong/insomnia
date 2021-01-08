@@ -49,7 +49,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
 
   async _handleInputChange(e: SyntheticEvent<HTMLInputElement>) {
     const { name, value } = e.currentTarget;
-    this.setState(state => ({
+    this.setState((state) => ({
       inputs: { ...state.inputs, [name]: value },
     }));
   }
@@ -105,7 +105,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     this.hide();
   }
 
-  show(options: { gitRepository: GitRepository | null, onSubmitEdits: GitRepository => any }) {
+  show(options: { gitRepository: GitRepository | null, onSubmitEdits: (GitRepository) => any }) {
     this._onSubmitEdits = options.onSubmitEdits;
 
     const { gitRepository } = options;

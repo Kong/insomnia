@@ -106,7 +106,7 @@ export async function init(
 
   // This isn't the best place for this but w/e
   // Listen for response deletions and delete corresponding response body files
-  onChange(async changes => {
+  onChange(async (changes) => {
     for (const [type, doc] of changes) {
       const m: Object | null = models.getModel(doc.type);
 
@@ -161,7 +161,7 @@ export function onChange(callback: Function): void {
 }
 
 export function offChange(callback: Function): void {
-  changeListeners = changeListeners.filter(l => l !== callback);
+  changeListeners = changeListeners.filter((l) => l !== callback);
 }
 
 /** buffers database changes and returns false if was already buffering */
@@ -251,7 +251,7 @@ export const findMostRecentlyModified = (database.findMostRecentlyModified = asy
 ): Promise<Array<T>> {
   if (db._empty) return _send('findMostRecentlyModified', ...arguments);
 
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     db[type]
       .find(query)
       .sort({ modified: -1 })
@@ -406,7 +406,7 @@ export const update = (database.update = async function<T: BaseModel>(
       return reject(err);
     }
 
-    db[doc.type].update({ _id: docWithDefaults._id }, docWithDefaults, err => {
+    db[doc.type].update({ _id: docWithDefaults._id }, docWithDefaults, (err) => {
       if (err) {
         return reject(err);
       }
@@ -428,13 +428,13 @@ export const remove = (database.remove = async function<T: BaseModel>(
   const flushId = await database.bufferChanges();
 
   const docs = await database.withDescendants(doc);
-  const docIds = docs.map(d => d._id);
-  const types = [...new Set(docs.map(d => d.type))];
+  const docIds = docs.map((d) => d._id);
+  const types = [...new Set(docs.map((d) => d.type))];
 
   // Don't really need to wait for this to be over;
-  types.map(t => db[t].remove({ _id: { $in: docIds } }, { multi: true }));
+  types.map((t) => db[t].remove({ _id: { $in: docIds } }, { multi: true }));
 
-  docs.map(d => notifyOfChange(CHANGE_REMOVE, d, fromSync));
+  docs.map((d) => notifyOfChange(CHANGE_REMOVE, d, fromSync));
 
   await database.flushChanges(flushId);
 });
@@ -460,13 +460,13 @@ export const removeWhere = (database.removeWhere = async function(
 
   for (const doc of await database.find(type, query)) {
     const docs = await database.withDescendants(doc);
-    const docIds = docs.map(d => d._id);
-    const types = [...new Set(docs.map(d => d.type))];
+    const docIds = docs.map((d) => d._id);
+    const types = [...new Set(docs.map((d) => d.type))];
 
     // Don't really need to wait for this to be over;
-    types.map(t => db[t].remove({ _id: { $in: docIds } }, { multi: true }));
+    types.map((t) => db[t].remove({ _id: { $in: docIds } }, { multi: true }));
 
-    docs.map(d => notifyOfChange(CHANGE_REMOVE, d, false));
+    docs.map((d) => notifyOfChange(CHANGE_REMOVE, d, false));
   }
 
   await database.flushChanges(flushId);
@@ -764,7 +764,7 @@ async function _fixMultipleCookieJars(workspace) {
     }
 
     for (const cookie of cookieJar.cookies) {
-      if (chosenJar.cookies.find(c => c.id === cookie.id)) {
+      if (chosenJar.cookies.find((c) => c.id === cookie.id)) {
         continue;
       }
 

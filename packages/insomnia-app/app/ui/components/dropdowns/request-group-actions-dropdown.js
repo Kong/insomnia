@@ -58,7 +58,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
     showPrompt({
       title: 'Rename Folder',
       defaultValue: requestGroup.name,
-      onComplete: name => {
+      onComplete: (name) => {
         models.requestGroup.update(requestGroup, { name });
       },
     });
@@ -100,7 +100,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handlePluginClick(p: RequestGroupAction) {
-    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
+    this.setState((state) => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
 
     try {
       const { activeEnvironment, requestGroup } = this.props;
@@ -123,7 +123,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
       });
     }
 
-    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
+    this.setState((state) => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
     this._dropdown && this._dropdown.hide();
   }
 

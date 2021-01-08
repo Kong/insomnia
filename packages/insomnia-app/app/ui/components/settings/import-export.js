@@ -14,7 +14,7 @@ class ImportExport extends PureComponent {
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: uri => {
+      onComplete: (uri) => {
         this.props.handleImportUri(uri);
       },
     });

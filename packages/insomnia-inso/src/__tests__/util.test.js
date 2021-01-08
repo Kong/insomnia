@@ -16,7 +16,7 @@ describe('exit()', () => {
   it('should exit 0 if successful result', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
-    await exit(new Promise(resolve => resolve(true)));
+    await exit(new Promise((resolve) => resolve(true)));
 
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
@@ -24,7 +24,7 @@ describe('exit()', () => {
   it('should exit 1 if unsuccessful result', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
 
-    await exit(new Promise(resolve => resolve(false)));
+    await exit(new Promise((resolve) => resolve(false)));
 
     expect(exitSpy).toHaveBeenCalledWith(1);
   });

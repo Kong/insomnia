@@ -11,7 +11,7 @@ export default {
 
 export const _default = () => (
   <AsyncButton
-    onClick={() => new Promise(resolve => setTimeout(resolve, 3000))}
+    onClick={() => new Promise((resolve) => setTimeout(resolve, 3000))}
     variant={select('Variant', ButtonVariantEnum)}
     size={select('Size', ButtonSizeEnum)}
     bg={select('Background', ButtonThemeEnum)}>
@@ -21,7 +21,7 @@ export const _default = () => (
 
 export const customLoader = () => (
   <AsyncButton
-    onClick={() => new Promise(resolve => setTimeout(resolve, 3000))}
+    onClick={() => new Promise((resolve) => setTimeout(resolve, 3000))}
     variant={select('Variant', ButtonVariantEnum)}
     size={select('Size', ButtonSizeEnum)}
     bg={select('Background', ButtonThemeEnum)}

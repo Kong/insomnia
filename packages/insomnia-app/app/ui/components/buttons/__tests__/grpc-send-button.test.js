@@ -64,7 +64,7 @@ describe('<GrpcSendButton />', () => {
 
   it.each([GrpcMethodTypeEnum.bidi, GrpcMethodTypeEnum.server, GrpcMethodTypeEnum.client])(
     'should render start button if streaming RPC: %s',
-    type => {
+    (type) => {
       const handleSend = jest.fn();
       const { getByRole } = render(
         <GrpcSendButton

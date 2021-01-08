@@ -106,7 +106,7 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
 
   async _handleShowSyncModePrompt() {
     showModal(SetupSyncModal, {
-      onSelectSyncMode: async syncMode => {
+      onSelectSyncMode: async (syncMode) => {
         await this._reloadData();
       },
     });

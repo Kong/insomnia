@@ -71,7 +71,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     const tagDefinitions = await templating.getTagDefinitions();
     const activeTagDefinition: NunjucksParsedTag | null =
-      tagDefinitions.find(d => d.name === activeTagData.name) || null;
+      tagDefinitions.find((d) => d.name === activeTagData.name) || null;
 
     // Edit tags raw that we don't know about
     if (!activeTagDefinition) {
@@ -116,9 +116,9 @@ class TagEditor extends React.PureComponent<Props, State> {
   _sortRequests(_models: Array<Request | RequestGroup>, parentId: string) {
     let sortedModels = [];
     _models
-      .filter(model => model.parentId === parentId)
+      .filter((model) => model.parentId === parentId)
       .sort(metaSortKeySort)
-      .forEach(model => {
+      .forEach((model) => {
         if (isRequest(model)) sortedModels.push(model);
         if (isRequestGroup(model))
           sortedModels = sortedModels.concat(this._sortRequests(_models, model._id));
@@ -219,13 +219,13 @@ class TagEditor extends React.PureComponent<Props, State> {
     const existingValue = argData ? argData.value : '';
 
     if (variable) {
-      const variable = variables.find(v => v.value === existingValue);
+      const variable = variables.find((v) => v.value === existingValue);
       const firstVariable = variables.length ? variables[0].name : '';
       const value = variable ? variable.name : firstVariable;
       return this._updateArg(value || 'my_variable', argIndex, 'variable');
     } else {
       const initialType = argDef ? argDef.type : 'string';
-      const variable = variables.find(v => v.name === existingValue);
+      const variable = variables.find((v) => v.name === existingValue);
       const value = variable ? variable.value : '';
       return this._updateArg(value, argIndex, initialType, { quotedBy: "'" });
     }
@@ -276,7 +276,7 @@ class TagEditor extends React.PureComponent<Props, State> {
   async _handleChangeTag(e: SyntheticEvent<HTMLInputElement>) {
     const name = e.currentTarget.value;
     const tagDefinitions = await templating.getTagDefinitions();
-    const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
+    const tagDefinition = tagDefinitions.find((d) => d.name === name) || null;
     this._update(this.state.tagDefinitions, tagDefinition, null, false);
   }
 
@@ -438,7 +438,7 @@ class TagEditor extends React.PureComponent<Props, State> {
         showFileIcon
         showFileName
         className="btn btn--clicky btn--super-compact"
-        onChange={path => this._handleChangeFile(path, argIndex)}
+        onChange={(path) => this._handleChangeFile(path, argIndex)}
         path={value}
         itemtypes={itemTypes}
         extensions={extensions}
@@ -450,14 +450,14 @@ class TagEditor extends React.PureComponent<Props, State> {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
 
     let unsetOption = null;
-    if (!options.find(o => o.value === value)) {
+    if (!options.find((o) => o.value === value)) {
       unsetOption = <option value="">-- Select Option --</option>;
     }
 
     return (
       <select value={value} onChange={this._handleChange}>
         {unsetOption}
-        {options.map(option => {
+        {options.map((option) => {
           let label: string;
           const { description } = option;
           if (description) {
@@ -482,7 +482,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
     do {
       // Get prefix from inner most request group.
-      reqGroup = allRequestGroups.find(rg => rg._id === requestGroupId);
+      reqGroup = allRequestGroups.find((rg) => rg._id === requestGroupId);
       if (reqGroup == null) {
         break;
       }
@@ -516,7 +516,7 @@ class TagEditor extends React.PureComponent<Props, State> {
           // Show paren't folder with name if it's a request
           if (doc.type === models.request.type) {
             const requests = allDocs[models.request.type] || [];
-            const request: any = requests.find(r => r._id === doc._id);
+            const request: any = requests.find((r) => r._id === doc._id);
             const method = request && typeof request.method === 'string' ? request.method : 'GET';
             const parentId = request ? request.parentId : 'n/a';
             const allRequestGroups = allDocs[models.requestGroup.type] || [];

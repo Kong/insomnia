@@ -179,7 +179,7 @@ describe('cleanDeletedResponses()', function() {
     await models.response.cleanDeletedResponses();
 
     expect(fs.unlinkSync.mock.calls.length).toBe(notDbResponseIds.length);
-    Object.keys(notDbResponseIds).map(index => {
+    Object.keys(notDbResponseIds).map((index) => {
       const resId = notDbResponseIds[index];
       const bodyPath = path.join(responsesDir, resId);
       expect(fs.unlinkSync.mock.calls[index][0]).toBe(bodyPath);

@@ -25,7 +25,7 @@ export default async function(lookupName: string): Promise<void> {
 
       // Download the module
       const request = electron.remote.net.request(info.dist.tarball);
-      request.on('error', err => {
+      request.on('error', (err) => {
         reject(new Error(`Failed to make plugin request ${info.dist.tarball}: ${err.message}`));
       });
 
@@ -174,11 +174,11 @@ async function _installPluginToTmpDir(lookupName: string): Promise<{ tmpDir: str
 
 export function containsOnlyDeprecationWarnings(stderr) {
   // Split on line breaks and remove falsy values (null, undefined, 0, -0, NaN, "", false)
-  const arr = stderr.split(/\r?\n/).filter(e => e);
+  const arr = stderr.split(/\r?\n/).filter((e) => e);
   // Retrieve all matching deprecated dependency warning
-  const warnings = arr.filter(e => isDeprecatedDependencies(e));
+  const warnings = arr.filter((e) => isDeprecatedDependencies(e));
   // Print each deprecation warnings to the console, so we don't hide them.
-  warnings.forEach(e => console.warn('[plugins] deprecation warning during installation: ', e));
+  warnings.forEach((e) => console.warn('[plugins] deprecation warning during installation: ', e));
   // If they mismatch, it means there are warnings and errors
   return warnings.length === arr.length;
 }

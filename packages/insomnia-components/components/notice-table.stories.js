@@ -25,8 +25,8 @@ const notices = [
 export const _default = () => (
   <NoticeTable
     notices={notices}
-    onClick={n => window.alert(n.message)}
-    onVisibilityToggle={v => console.log('Visible?', v)}
+    onClick={(n) => window.alert(n.message)}
+    onVisibilityToggle={(v) => console.log('Visible?', v)}
   />
 );
 
@@ -38,8 +38,8 @@ export const manyItems = () => {
   return (
     <NoticeTable
       notices={notices}
-      onClick={n => window.alert(n.message)}
-      onVisibilityToggle={v => console.log('Visible?', v)}
+      onClick={(n) => window.alert(n.message)}
+      onVisibilityToggle={(v) => console.log('Visible?', v)}
     />
   );
 };

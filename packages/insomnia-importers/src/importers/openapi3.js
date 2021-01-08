@@ -184,13 +184,13 @@ function parseEndpoints(document) {
 
   const paths = Object.keys(document.paths);
   const endpointsSchemas = paths
-    .map(path => {
+    .map((path) => {
       const schemasPerMethod = document.paths[path];
       const methods = Object.keys(schemasPerMethod);
 
       return methods
-        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
-        .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
+        .filter((method) => method !== 'parameters' && method.indexOf('x-') !== 0)
+        .map((method) => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce(
       // flat single array
@@ -199,7 +199,7 @@ function parseEndpoints(document) {
     );
 
   const tags = document.tags || [];
-  const folders = tags.map(tag => {
+  const folders = tags.map((tag) => {
     return importFolderItem(tag, defaultParent);
   });
   const folderLookup = {};
@@ -209,7 +209,7 @@ function parseEndpoints(document) {
   }
 
   const requests = [];
-  endpointsSchemas.map(endpointSchema => {
+  endpointsSchemas.map((endpointSchema) => {
     let { tags } = endpointSchema;
 
     if (!tags || tags.length === 0) {
@@ -303,7 +303,7 @@ function pathWithParamsAsVariables(path) {
  * @returns {Object[]} array of parameters definitions
  */
 function prepareQueryParams(endpointSchema) {
-  const isSendInQuery = p => p.in === 'query';
+  const isSendInQuery = (p) => p.in === 'query';
   const parameters = endpointSchema.parameters || [];
   const queryParameters = parameters.filter(isSendInQuery);
   return convertParameters(queryParameters);
@@ -316,7 +316,7 @@ function prepareQueryParams(endpointSchema) {
  * @returns {Object[]} array of parameters definitions
  */
 function prepareHeaders(endpointSchema) {
-  const isSendInHeader = p => p.in === 'header';
+  const isSendInHeader = (p) => p.in === 'header';
   const parameters = endpointSchema.parameters || [];
   const headerParameters = parameters.filter(isSendInHeader);
   return convertParameters(headerParameters);
@@ -339,18 +339,18 @@ function parseSecurity(security, securitySchemes) {
   }
 
   const supportedSchemes = security
-    .map(securityPolicy => {
+    .map((securityPolicy) => {
       const securityName = Object.keys(securityPolicy)[0];
       return securitySchemes[securityName];
     })
     .filter(
-      schemeDetails => schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type),
+      (schemeDetails) => schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type),
     );
 
-  const apiKeySchemes = supportedSchemes.filter(scheme => scheme.type === SECURITY_TYPE.API_KEY);
+  const apiKeySchemes = supportedSchemes.filter((scheme) => scheme.type === SECURITY_TYPE.API_KEY);
   const apiKeyHeaders = apiKeySchemes
-    .filter(scheme => scheme.in === 'header')
-    .map(scheme => {
+    .filter((scheme) => scheme.in === 'header')
+    .map((scheme) => {
       const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
@@ -359,15 +359,15 @@ function parseSecurity(security, securitySchemes) {
       };
     });
   const apiKeyCookies = apiKeySchemes
-    .filter(scheme => scheme.in === 'cookie')
-    .map(scheme => {
+    .filter((scheme) => scheme.in === 'cookie')
+    .map((scheme) => {
       const variableName = changeCase.camelCase(scheme.name);
       return `${scheme.name}={{ ${variableName} }}`;
     });
   const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
   const apiKeyParams = apiKeySchemes
-    .filter(scheme => scheme.in === 'query')
-    .map(scheme => {
+    .filter((scheme) => scheme.in === 'query')
+    .map((scheme) => {
       const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
@@ -382,7 +382,7 @@ function parseSecurity(security, securitySchemes) {
 
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
-      scheme =>
+      (scheme) =>
         [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) &&
         SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
     );
@@ -422,13 +422,13 @@ function getSecurityEnvVariables(securitySchemes) {
   const variables = {};
   const securitySchemesArray = Object.values(securitySchemes);
   const apiKeyVariableNames = securitySchemesArray
-    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
-    .map(scheme => changeCase.camelCase(scheme.name));
+    .filter((scheme) => scheme.type === SECURITY_TYPE.API_KEY)
+    .map((scheme) => changeCase.camelCase(scheme.name));
   const hasHttpBasicScheme = securitySchemesArray.some(
-    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
+    (scheme) => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
   );
   const hasHttpBearerScheme = securitySchemesArray.some(
-    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
+    (scheme) => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
   );
   const oauth2Variables = securitySchemesArray.reduce((acc, scheme) => {
     if (scheme.type === SECURITY_TYPE.OAUTH && scheme.scheme === 'bearer') {
@@ -445,7 +445,7 @@ function getSecurityEnvVariables(securitySchemes) {
     return acc;
   }, {});
 
-  Array.from(new Set(apiKeyVariableNames)).forEach(name => {
+  Array.from(new Set(apiKeyVariableNames)).forEach((name) => {
     variables[name] = name;
   });
 
@@ -476,7 +476,7 @@ function prepareBody(endpointSchema) {
   const content = requestBody.content || {};
   const mimeTypes = Object.keys(content);
 
-  const isAvailable = m => mimeTypes.includes(m);
+  const isAvailable = (m) => mimeTypes.includes(m);
   const supportedMimeType = SUPPORTED_MIME_TYPES.find(isAvailable);
 
   if (supportedMimeType === MIMETYPE_JSON) {
@@ -512,7 +512,7 @@ function prepareBody(endpointSchema) {
  * @returns {Object[]} array of insomnia parameters definitions
  */
 function convertParameters(parameters) {
-  return parameters.map(parameter => {
+  return parameters.map((parameter) => {
     const { required, name, schema } = parameter;
     return {
       name,
@@ -542,7 +542,7 @@ function generateParameterExample(schema) {
     number_double: () => 0.0,
     integer: () => 0,
     boolean: () => true,
-    object: schema => {
+    object: (schema) => {
       const example = {};
       const { properties } = schema;
 
@@ -554,7 +554,7 @@ function generateParameterExample(schema) {
 
       return example;
     },
-    array: schema => {
+    array: (schema) => {
       const value = generateParameterExample(schema.items);
       if (schema.collectionFormat === 'csv') {
         return value;

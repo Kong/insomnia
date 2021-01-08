@@ -82,14 +82,14 @@ export const reference = () => {
 
   return (
     <React.Fragment>
-      {Object.values(ButtonSizeEnum).map(s => (
+      {Object.values(ButtonSizeEnum).map((s) => (
         <Padded>
           <h2>
             <code>size={(s: any)}</code>
           </h2>
-          {Object.values(ButtonVariantEnum).map(v => (
+          {Object.values(ButtonVariantEnum).map((v) => (
             <Wrapper>
-              {Object.values(ButtonThemeEnum).map(b => (
+              {Object.values(ButtonThemeEnum).map((b) => (
                 <Button bg={b} variant={v} size={s} radius={radius}>
                   {b || 'Default'}
                 </Button>

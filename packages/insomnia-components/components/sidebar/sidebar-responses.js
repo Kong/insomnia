@@ -21,7 +21,7 @@ export default class SidebarResponses extends React.Component<Props> {
       return <StyledInvalidSection name={'response'} />;
     }
 
-    const filteredValues = Object.keys(responses).filter(response =>
+    const filteredValues = Object.keys(responses).filter((response) =>
       response.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -31,7 +31,7 @@ export default class SidebarResponses extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(response => (
+        {filteredValues.map((response) => (
           <SidebarItem key={response} onClick={() => onClick('components', 'responses', response)}>
             <div>
               <SvgIcon icon={IconEnum.indentation} />

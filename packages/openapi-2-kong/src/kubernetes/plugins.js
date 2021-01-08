@@ -15,13 +15,13 @@ export function flattenPluginDocuments(plugins: Plugins): Array<KubernetesPlugin
   const { global, servers, paths } = plugins;
 
   all.push(...global);
-  servers.forEach(s => {
+  servers.forEach((s) => {
     all.push(...s.plugins);
   });
-  paths.forEach(s => {
+  paths.forEach((s) => {
     all.push(...s.plugins);
 
-    s.operations.forEach(o => {
+    s.operations.forEach((o) => {
       all.push(...o.plugins);
     });
   });
@@ -57,7 +57,7 @@ export function mapDcPluginsToK8Plugins(
   suffix: string,
   increment: IndexIncrement,
 ): Array<KubernetesPluginConfig> {
-  return dcPlugins.map(dcPlugin => {
+  return dcPlugins.map((dcPlugin) => {
     const k8sPlugin: KubernetesPluginConfig = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
@@ -94,7 +94,7 @@ export function getServerPlugins(
   servers: Array<OA3Server>,
   increment: IndexIncrement,
 ): ServerPlugins {
-  return servers.map(server => ({
+  return servers.map((server) => ({
     server,
     plugins: generateK8PluginConfig(server, PluginNameSuffix.server, increment),
   }));
@@ -105,7 +105,7 @@ export function getPathPlugins(
   increment: IndexIncrement,
   api: OpenApi3Spec,
 ): PathPlugins {
-  const pathPlugins = Object.keys(paths).map(path => {
+  const pathPlugins = Object.keys(paths).map((path) => {
     const pathItem = paths[path];
 
     return {
@@ -125,7 +125,7 @@ export function getOperationPlugins(
 ): OperationPlugins {
   const operationPlugins = Object.keys(pathItem)
     .filter(isHttpMethodKey)
-    .map(key => {
+    .map((key) => {
       // We know this will always, only be OA3Operation (because of the filter above), but Flow doesn't know that...
       const operation: Object = pathItem[key];
 
@@ -191,13 +191,13 @@ const blankPath = { path: '', plugins: [], operations: [blankOperation] };
 
 export function normalizePathPlugins(pathPlugins: PathPlugins): PathPlugins {
   const pluginsExist = pathPlugins.some(
-    p => p.plugins.length || p.operations.some(o => o.plugins.length),
+    (p) => p.plugins.length || p.operations.some((o) => o.plugins.length),
   );
   return pluginsExist ? pathPlugins : [blankPath];
 }
 
 export function normalizeOperationPlugins(operationPlugins: OperationPlugins): OperationPlugins {
-  const pluginsExist = operationPlugins.some(o => o.plugins.length);
+  const pluginsExist = operationPlugins.some((o) => o.plugins.length);
   return pluginsExist ? operationPlugins : [blankOperation];
 }
 
@@ -211,14 +211,14 @@ export function prioritizePlugins(
   const plugins: Array<KubernetesPluginConfig> = [...operation, ...path, ...server, ...global];
 
   // Select first of each type of plugin
-  return distinctByProperty(plugins, p => p.plugin);
+  return distinctByProperty(plugins, (p) => p.plugin);
 }
 
 export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
   const result: Array<T> = [];
   const set = new Set();
 
-  for (const item of arr.filter(i => i)) {
+  for (const item of arr.filter((i) => i)) {
     const selector = propertySelector(item);
     if (set.has(selector)) {
       continue;

@@ -36,7 +36,7 @@ class Modal extends PureComponent {
 
     const closeOnKeyCodes = this.props.closeOnKeyCodes || [];
     const pressedEscape = await pressedHotKey(e, hotKeyRefs.CLOSE_MODAL);
-    const pressedCloseButton = closeOnKeyCodes.find(c => c === e.keyCode);
+    const pressedCloseButton = closeOnKeyCodes.find((c) => c === e.keyCode);
 
     // Pressed escape
     if (pressedEscape || pressedCloseButton) {

@@ -165,7 +165,7 @@ function getThemeBlockCSS(block?: ThemeBlock): string {
     css += `${indent}--${variable}: ${value};\n`;
   };
 
-  const addComment = comment => {
+  const addComment = (comment) => {
     css += `${indent}/* ${comment} */\n`;
   };
 
@@ -245,7 +245,7 @@ export async function setTheme(themeName: string) {
   const themes: Array<Theme> = await getThemes();
 
   // If theme isn't installed for some reason, set to the default
-  if (!themes.find(t => t.theme.name === themeName)) {
+  if (!themes.find((t) => t.theme.name === themeName)) {
     console.log(`[theme] Theme not found ${themeName}`);
     themeName = getAppDefaultTheme();
   }

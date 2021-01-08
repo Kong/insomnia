@@ -113,7 +113,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
         <a
           href="#"
           className="graphql-explorer__header__back-btn"
-          onClick={e => {
+          onClick={(e) => {
             e.preventDefault();
             this._handlePopHistory();
           }}>
@@ -140,7 +140,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
       <a
         href="#"
         className="graphql-explorer__header__back-btn"
-        onClick={e => {
+        onClick={(e) => {
           e.preventDefault();
           this._handlePopHistory();
         }}>

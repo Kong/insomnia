@@ -90,12 +90,12 @@ export async function importUri(
   }
 
   const statements = Object.keys(summary)
-    .map(type => {
+    .map((type) => {
       const count = summary[type].length;
       const name = models.getModelName(type, count);
       return count === 0 ? null : `${count} ${name}`;
     })
-    .filter(s => s !== null);
+    .filter((s) => s !== null);
 
   let message;
   if (statements.length === 0) {
@@ -218,7 +218,7 @@ export async function importRaw(
       resource.body &&
       typeof resource.body.text === 'string' &&
       Array.isArray(resource.headers) &&
-      !resource.headers.find(h => h.name.toLowerCase() === 'content-type')
+      !resource.headers.find((h) => h.name.toLowerCase() === 'content-type')
     ) {
       try {
         JSON.parse(resource.body.text);
@@ -299,7 +299,7 @@ export async function exportRequestsHAR(
       models.workspace.type,
       models.requestGroup.type,
     ]);
-    const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+    const workspace = ancestors.find((ancestor) => ancestor.type === models.workspace.type);
     mapRequestIdToWorkspace[request._id] = workspace;
     if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
       continue;
@@ -347,7 +347,7 @@ export async function exportWorkspacesData(
   format: 'json' | 'yaml',
 ): Promise<string> {
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: Array<BaseModel> = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const requests: Array<BaseModel> = docs.filter((doc) => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
 
@@ -383,7 +383,7 @@ export async function exportRequestsData(
   }
 
   for (const workspace of workspaces) {
-    const descendants: Array<BaseModel> = (await db.withDescendants(workspace)).filter(d => {
+    const descendants: Array<BaseModel> = (await db.withDescendants(workspace)).filter((d) => {
       // Only interested in these additional model types.
       return (
         d.type === models.cookieJar.type ||
@@ -398,7 +398,7 @@ export async function exportRequestsData(
   }
 
   data.resources = docs
-    .filter(d => {
+    .filter((d) => {
       // Only export these model types.
       if (
         !(
@@ -463,7 +463,7 @@ async function getDocWithDescendants(
 ): Promise<Array<BaseModel>> {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(
-    d =>
+    (d) =>
       // Don't include if private, except if we want to
       !(d: any).isPrivate || includePrivateDocs,
   );

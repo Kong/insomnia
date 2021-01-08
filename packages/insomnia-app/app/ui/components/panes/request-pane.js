@@ -170,11 +170,11 @@ class RequestPane extends React.PureComponent<Props> {
 
     let numBodyParams = 0;
     if (request.body && request.body.params) {
-      numBodyParams = request.body.params.filter(p => !p.disabled).length;
+      numBodyParams = request.body.params.filter((p) => !p.disabled).length;
     }
 
-    const numParameters = request.parameters.filter(p => !p.disabled).length;
-    const numHeaders = request.headers.filter(h => !h.disabled).length;
+    const numParameters = request.parameters.filter((p) => !p.disabled).length;
+    const numHeaders = request.headers.filter((h) => !h.disabled).length;
     const urlHasQueryParameters = request.url.indexOf('?') >= 0;
 
     const uniqueKey = `${forceRefreshCounter}::${request._id}`;

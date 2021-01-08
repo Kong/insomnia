@@ -5,13 +5,13 @@ module.exports.templateTags = [
     displayName: 'Prompt',
     name: 'prompt',
     description: 'prompt user for input',
-    disablePreview: args => args[4] && args[4].value === true,
+    disablePreview: (args) => args[4] && args[4].value === true,
     args: [
       {
         displayName: 'Title',
         type: 'string',
         help: 'Title is a unique string used to identify the prompt value',
-        validate: v => (v ? '' : 'Required'),
+        validate: (v) => (v ? '' : 'Required'),
       },
       {
         displayName: 'Label',
@@ -52,7 +52,7 @@ module.exports.templateTags = [
       {
         name: 'Clear',
         icon: 'fa fa-trash',
-        run: context => {
+        run: (context) => {
           console.log(`[prompt] Clear action`);
           return context.store.clear();
         },

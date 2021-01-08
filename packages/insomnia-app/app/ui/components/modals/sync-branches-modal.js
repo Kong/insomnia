@@ -134,7 +134,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
       });
 
       const remoteBranches = (await vcs.getRemoteBranches())
-        .filter(b => !branches.includes(b))
+        .filter((b) => !branches.includes(b))
         .sort();
       this.setState({ remoteBranches });
     } catch (err) {
@@ -198,7 +198,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
                 </tr>
               </thead>
               <tbody>
-                {branches.map(name => (
+                {branches.map((name) => (
                   <tr key={name} className="table--no-outline-row">
                     <td>
                       <span className={classnames({ bold: name === currentBranch })}>{name}</span>
@@ -245,7 +245,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
                   </tr>
                 </thead>
                 <tbody>
-                  {remoteBranches.map(name => (
+                  {remoteBranches.map((name) => (
                     <tr key={name} className="table--no-outline-row">
                       <td>
                         {name}

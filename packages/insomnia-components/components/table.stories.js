@@ -14,7 +14,7 @@ export const _default = () => (
       </TableRow>
     </TableHead>
     <TableBody>
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <TableRow key={i}>
           <TableData>Column 1</TableData>
           <TableData>Column 2</TableData>
@@ -35,7 +35,7 @@ export const striped = () => (
       </TableRow>
     </TableHead>
     <TableBody>
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <TableRow key={i}>
           <TableData>Column 1</TableData>
           <TableData>Column 2</TableData>
@@ -56,7 +56,7 @@ export const stripedAndOutlined = () => (
       </TableRow>
     </TableHead>
     <TableBody>
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <TableRow key={i}>
           <TableData>Column 1</TableData>
           <TableData>Column 2</TableData>
@@ -77,7 +77,7 @@ export const compactAndOutlined = () => (
       </TableRow>
     </TableHead>
     <TableBody>
-      {[1, 2, 3].map(i => (
+      {[1, 2, 3].map((i) => (
         <TableRow key={i}>
           <TableData>Column 1</TableData>
           <TableData>Column 2</TableData>

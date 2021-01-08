@@ -34,7 +34,7 @@ module.exports = {
   },
   externals: [
     // Omit all dependencies in app/package.json (we want them loaded at runtime via NodeJS)
-    ...Object.keys(pkg.dependencies).filter(name => !pkg.packedDependencies.includes(name)),
+    ...Object.keys(pkg.dependencies).filter((name) => !pkg.packedDependencies.includes(name)),
   ],
   resolve: {
     alias: {

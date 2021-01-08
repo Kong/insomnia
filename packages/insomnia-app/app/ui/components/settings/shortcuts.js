@@ -22,7 +22,7 @@ type Props = {
   handleUpdateKeyBindings: Function,
 };
 
-const HOT_KEY_DEFS: Array<HotKeyDefinition> = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
+const HOT_KEY_DEFS: Array<HotKeyDefinition> = Object.keys(hotKeyRefs).map((k) => hotKeyRefs[k]);
 
 @autobind
 class Shortcuts extends PureComponent<Props> {

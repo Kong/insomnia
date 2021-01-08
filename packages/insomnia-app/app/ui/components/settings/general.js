@@ -55,13 +55,13 @@ class General extends React.PureComponent<Props, State> {
 
     // Find regular fonts
     const fonts = allFonts
-      .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
+      .filter((i) => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
       .sort((a, b) => (a.family > b.family ? 1 : -1));
 
     // Find monospaced fonts
     // NOTE: Also include some others:
     //  - https://github.com/Kong/insomnia/issues/1835
-    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
+    const fontsMono = fonts.filter((i) => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
 
     this.setState({
       fonts,

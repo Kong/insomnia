@@ -15,7 +15,7 @@ describe('prepareGrpcRequest', () => {
 
   it.each([GrpcMethodTypeEnum.unary, GrpcMethodTypeEnum.server])(
     'should prepare grpc request with all properties: %s',
-    async methodType => {
+    async (methodType) => {
       const w = await models.workspace.create();
       const env = await models.environment.create({ parentId: w._id });
       const gr = await models.grpcRequest.create({ parentId: w._id });
@@ -37,7 +37,7 @@ describe('prepareGrpcRequest', () => {
 
   it.each([GrpcMethodTypeEnum.client, GrpcMethodTypeEnum.bidi])(
     'should prepare grpc request and ignore body: %s',
-    async methodType => {
+    async (methodType) => {
       const w = await models.workspace.create();
       const env = await models.environment.create({ parentId: w._id });
       const gr = await models.grpcRequest.create({ parentId: w._id });

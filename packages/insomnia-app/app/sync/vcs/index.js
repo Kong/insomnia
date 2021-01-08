@@ -79,7 +79,7 @@ export default class VCS {
 
   async removeProjectsForRoot(rootDocumentId: string): Promise<void> {
     const all = await this._allProjects();
-    const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
+    const toRemove = all.filter((p) => p.rootDocumentId === rootDocumentId);
     for (const project of toRemove) {
       await this._removeProject(project);
     }
@@ -129,7 +129,7 @@ export default class VCS {
       return null;
     }
 
-    const entry = snapshot.state.find(e => e.key === key);
+    const entry = snapshot.state.find((e) => e.key === key);
     if (!entry) {
       return null;
     }
@@ -172,7 +172,7 @@ export default class VCS {
     }
 
     await this._storeBlobs(blobsToStore);
-    console.log(`[sync] Staged ${stageEntries.map(e => e.name).join(', ')}`);
+    console.log(`[sync] Staged ${stageEntries.map((e) => e.name).join(', ')}`);
 
     return stage;
   }
@@ -182,7 +182,7 @@ export default class VCS {
       delete stage[entry.key];
     }
 
-    console.log(`[sync] Unstaged ${stageEntries.map(e => e.name).join(', ')}`);
+    console.log(`[sync] Unstaged ${stageEntries.map((e) => e.name).join(', ')}`);
     return stage;
   }
 
@@ -280,16 +280,16 @@ export default class VCS {
     const delta = stateDelta(latestStateCurrent, latestStateNext);
 
     // Filter out things that should stay dirty
-    const add = delta.add.filter(e => !dirtyMap[e.key]);
-    const update = delta.update.filter(e => !dirtyMap[e.key]);
-    const remove = delta.remove.filter(e => !dirtyMap[e.key]);
+    const add = delta.add.filter((e) => !dirtyMap[e.key]);
+    const update = delta.update.filter((e) => !dirtyMap[e.key]);
+    const remove = delta.remove.filter((e) => !dirtyMap[e.key]);
     const upsert = [...add, ...update];
     console.log(`[sync] Switched to branch ${branchName}`);
 
     // Remove all dirty items from the delta so we keep them around
     return {
-      upsert: await this._getBlobs(upsert.map(e => e.blob)),
-      remove: await this._getBlobs(remove.map(e => e.blob)),
+      upsert: await this._getBlobs(upsert.map((e) => e.blob)),
+      remove: await this._getBlobs(remove.map((e) => e.blob)),
     };
   }
 
@@ -315,7 +315,7 @@ export default class VCS {
       throw new Error('Failed to get latest snapshot for all documents');
     }
 
-    return this._getBlobs(snapshot.state.map(s => s.blob));
+    return this._getBlobs(snapshot.state.map((s) => s.blob));
   }
 
   async rollbackToLatest(
@@ -345,7 +345,7 @@ export default class VCS {
       throw new Error(`Failed to find snapshot by id ${snapshotId}`);
     }
 
-    const potentialNewState: SnapshotState = candidates.map(c => ({
+    const potentialNewState: SnapshotState = candidates.map((c) => ({
       key: c.key,
       blob: hashDocument(c.document).hash,
       name: c.name,
@@ -357,7 +357,7 @@ export default class VCS {
     // yet have been stored as blobs.
     const remove = [];
     for (const e of delta.remove) {
-      const c = candidates.find(c => c.key === e.key);
+      const c = candidates.find((c) => c.key === e.key);
       if (!c) {
         // Should never happen
         throw new Error('Failed to find removal in candidates');
@@ -369,7 +369,7 @@ export default class VCS {
 
     const upsert = [...delta.update, ...delta.add];
     return {
-      upsert: await this._getBlobs(upsert.map(e => e.blob)),
+      upsert: await this._getBlobs(upsert.map((e) => e.blob)),
       remove,
     };
   }
@@ -401,12 +401,12 @@ export default class VCS {
 
   async getRemoteBranches(): Promise<Array<string>> {
     const branches = await this._queryBranches();
-    return branches.map(b => b.name);
+    return branches.map((b) => b.name);
   }
 
   async getBranches(): Promise<Array<string>> {
     const branches = await this._getBranches();
-    return branches.map(b => b.name);
+    return branches.map((b) => b.name);
   }
 
   async merge(
@@ -681,8 +681,8 @@ export default class VCS {
     // Remove all dirty items from the delta so we keep them around
     const dirtyMap = generateCandidateMap(dirty);
     return {
-      upsert: await this._getBlobs(upsert.filter(e => !dirtyMap[e.key]).map(e => e.blob)),
-      remove: await this._getBlobs(remove.filter(e => !dirtyMap[e.key]).map(e => e.blob)),
+      upsert: await this._getBlobs(upsert.filter((e) => !dirtyMap[e.key]).map((e) => e.blob)),
+      remove: await this._getBlobs(remove.filter((e) => !dirtyMap[e.key]).map((e) => e.blob)),
     };
   }
 
@@ -881,7 +881,7 @@ export default class VCS {
         {
           branchName: branch.name,
           projectId: this._projectId(),
-          snapshots: snapshots.map(s => ({
+          snapshots: snapshots.map((s) => ({
             created: s.created,
             name: s.name,
             description: s.description,
@@ -897,7 +897,7 @@ export default class VCS {
       // Store them in case something has changed
       await this._storeSnapshots(snapshotsCreate);
 
-      console.log('[sync] Pushed snapshots', snapshotsCreate.map(s => s.id).join(', '));
+      console.log('[sync] Pushed snapshots', snapshotsCreate.map((s) => s.id).join(', '));
     }
   }
 
@@ -934,7 +934,7 @@ export default class VCS {
     const symmetricKey = await this._getProjectSymmetricKey();
 
     const next = async (items: Array<{ id: string, content: string }>) => {
-      const encodedBlobs = items.map(i => ({
+      const encodedBlobs = items.map((i) => ({
         id: i.id,
         content: i.content,
       }));
@@ -1322,13 +1322,13 @@ export default class VCS {
 
     // First, try finding the project
     const projects = await this._allProjects();
-    let matchedProjects = projects.filter(p => p.rootDocumentId === rootDocumentId);
+    let matchedProjects = projects.filter((p) => p.rootDocumentId === rootDocumentId);
 
     // If there is more than one project for root, try pruning unused ones by branch activity
     if (matchedProjects.length > 1) {
       for (const p of matchedProjects) {
         const branches = await this._getBranches(p.id);
-        if (!branches.find(b => b.snapshots.length > 0)) {
+        if (!branches.find((b) => b.snapshots.length > 0)) {
           await this._removeProject(p);
           matchedProjects = matchedProjects.filter(({ id }) => id !== p.id);
           console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);

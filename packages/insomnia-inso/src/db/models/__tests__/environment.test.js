@@ -104,7 +104,7 @@ describe('Environment', () => {
 
     it.each([generateIdIsh(subEnvironment), subEnvironment._id, subEnvironment.name])(
       'should return the sub environment if matched with id: %s',
-      identifier => {
+      (identifier) => {
         expect(loadEnvironment(db, workspace._id, subEnvironment._id)).toBe(subEnvironment);
       },
     );

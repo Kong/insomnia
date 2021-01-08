@@ -53,15 +53,15 @@ class AsapAuth extends React.PureComponent<Props> {
   }
 
   renderAsapAuthenticationFields(): React.Node {
-    const asapIssuer = this.renderTextInput('Issuer (iss)', 'issuer', 'text/plain', value =>
+    const asapIssuer = this.renderTextInput('Issuer (iss)', 'issuer', 'text/plain', (value) =>
       this._handleChangeProperty('issuer', value),
     );
 
-    const asapSubject = this.renderTextInput('Subject (sub)', 'subject', 'text/plain', value =>
+    const asapSubject = this.renderTextInput('Subject (sub)', 'subject', 'text/plain', (value) =>
       this._handleChangeProperty('subject', value),
     );
 
-    const asapAudience = this.renderTextInput('Audience (aud)', 'audience', 'text/plain', value =>
+    const asapAudience = this.renderTextInput('Audience (aud)', 'audience', 'text/plain', (value) =>
       this._handleChangeProperty('audience', value),
     );
 
@@ -69,10 +69,10 @@ class AsapAuth extends React.PureComponent<Props> {
       'Additional Claims',
       'additionalClaims',
       'application/json',
-      value => this._handleChangeProperty('additionalClaims', value),
+      (value) => this._handleChangeProperty('additionalClaims', value),
     );
 
-    const asapKeyId = this.renderTextInput('Key ID (kid)', 'keyId', 'text/plain', value =>
+    const asapKeyId = this.renderTextInput('Key ID (kid)', 'keyId', 'text/plain', (value) =>
       this._handleChangeProperty('keyId', value),
     );
 

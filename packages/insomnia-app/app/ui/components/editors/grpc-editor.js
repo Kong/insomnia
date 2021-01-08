@@ -5,11 +5,11 @@ import type { Settings } from '../../../models/settings';
 
 type Props = {
   content: string,
-  handleChange: string => Promise<void>,
+  handleChange: (string) => Promise<void>,
   settings: Settings,
   readOnly: boolean,
 
-  handleRender?: string => Promise<string>,
+  handleRender?: (string) => Promise<string>,
   isVariableUncovered?: boolean,
   handleGetRenderContext?: Function,
 };

@@ -104,7 +104,7 @@ class NoticeTable extends React.PureComponent<Props, State> {
   collapse(e: SyntheticEvent<HTMLButtonElement>) {
     const { onVisibilityToggle } = this.props;
     this.setState(
-      state => ({ collapsed: !state.collapsed }),
+      (state) => ({ collapsed: !state.collapsed }),
       () => {
         if (onVisibilityToggle) {
           onVisibilityToggle(!this.state.collapsed);
@@ -132,8 +132,8 @@ class NoticeTable extends React.PureComponent<Props, State> {
       <SvgIcon icon={IconEnum.chevronDown} />
     );
 
-    const errors = notices.filter(n => n.type === 'error');
-    const warnings = notices.filter(n => n.type === 'warning');
+    const errors = notices.filter((n) => n.type === 'error');
+    const warnings = notices.filter((n) => n.type === 'warning');
 
     return (
       <Wrapper>

@@ -40,7 +40,7 @@ document.title = getAppLongName();
   const store = await initStore();
 
   const context = DragDropContext(DNDBackend);
-  const render = Component => {
+  const render = (Component) => {
     const DnDComponent = context(Component);
     ReactDOM.render(
       <AppContainer>
@@ -92,12 +92,12 @@ window['styled-components'] = styledComponents;
 
 // Catch uncaught errors and report them
 if (window && !isDevelopment()) {
-  window.addEventListener('error', e => {
+  window.addEventListener('error', (e) => {
     console.error('Uncaught Error', e);
     trackEvent('Error', 'Uncaught Error');
   });
 
-  window.addEventListener('unhandledrejection', e => {
+  window.addEventListener('unhandledrejection', (e) => {
     console.error('Unhandled Promise', e);
     trackEvent('Error', 'Uncaught Promise');
   });

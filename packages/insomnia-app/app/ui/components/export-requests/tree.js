@@ -38,7 +38,7 @@ class Tree extends React.PureComponent<Props> {
       return null;
     }
 
-    const children = node.children.map(child => this.renderChildren(child));
+    const children = node.children.map((child) => this.renderChildren(child));
 
     // Directly cast to RequestGroup will result in error, so cast it to any first.
     const requestGroup: RequestGroup = ((node.doc: any): RequestGroup);

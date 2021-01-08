@@ -61,7 +61,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">{title}</h2>
         <ul className="graphql-explorer__defs">
-          {types.map(type => (
+          {types.map((type) => (
             <li key={type.name}>
               <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
             </li>
@@ -85,7 +85,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Fields</h2>
         <ul className="graphql-explorer__defs">
-          {fieldKeys.map(key => {
+          {fieldKeys.map((key) => {
             const field: GraphQLField<any, any> = (fields[key]: any);
 
             let argLinks = null;
@@ -94,7 +94,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
               argLinks = (
                 <React.Fragment>
                   (
-                  {args.map(a => (
+                  {args.map((a) => (
                     <div key={a.name} className="graphql-explorer__defs__arg">
                       <span className="info">{a.name}</span>:{' '}
                       <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />

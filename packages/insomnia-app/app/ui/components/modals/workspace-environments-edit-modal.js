@@ -72,7 +72,7 @@ const SidebarListItem = SortableElement(
 
           <Editable
             className="inline-block"
-            onSubmit={name => changeEnvironmentName(environment, name)}
+            onSubmit={(name) => changeEnvironmentName(environment, name)}
             value={environment.name}
           />
         </Button>
@@ -281,7 +281,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     if (rootEnvironment && rootEnvironment._id === selectedEnvironmentId) {
       return rootEnvironment;
     } else {
-      return subEnvironments.find(e => e._id === selectedEnvironmentId) || null;
+      return subEnvironments.find((e) => e._id === selectedEnvironmentId) || null;
     }
   }
 
@@ -290,7 +290,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    db.onChange(async changes => {
+    db.onChange(async (changes) => {
       const { selectedEnvironmentId } = this.state;
 
       for (const change of changes) {
@@ -453,7 +453,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                   <Editable
                     singleClick
                     className="wide"
-                    onSubmit={name =>
+                    onSubmit={(name) =>
                       activeEnvironment &&
                       this._handleChangeEnvironmentName(activeEnvironment, name)
                     }

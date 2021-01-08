@@ -68,7 +68,7 @@ describe('apiSpec', () => {
 
     it.each([generateIdIsh(spec), spec._id, spec.fileName])(
       'should return spec with identifier: %o',
-      identifier => {
+      (identifier) => {
         expect(loadApiSpec(db, identifier)).toBe(spec);
       },
     );

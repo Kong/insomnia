@@ -168,7 +168,7 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
     const allConfigs: PluginConfigMap = settings.pluginConfig;
     const extraPaths = settings.pluginPath
       .split(':')
-      .filter(p => p)
+      .filter((p) => p)
       .map(resolveHomePath);
 
     // Make sure the default directories exist
@@ -176,7 +176,7 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
 
     // Also look in node_modules folder in each directory
     const basePaths = [PLUGIN_PATH, ...extraPaths];
-    const extendedPaths = basePaths.map(p => path.join(p, 'node_modules'));
+    const extendedPaths = basePaths.map((p) => path.join(p, 'node_modules'));
     const allPaths = [...basePaths, ...extendedPaths];
 
     // Store plugins in a map so that plugins with the same
@@ -194,7 +194,7 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
 
     await _traversePluginPath(pluginMap, allPaths, allConfigs);
 
-    plugins = Object.keys(pluginMap).map(name => pluginMap[name]);
+    plugins = Object.keys(pluginMap).map((name) => pluginMap[name]);
   }
 
   return plugins;
@@ -205,14 +205,14 @@ export async function reloadPlugins(): Promise<void> {
 }
 
 async function getActivePlugins(): Promise<Array<Plugin>> {
-  return (await getPlugins()).filter(p => !p.config.disabled);
+  return (await getPlugins()).filter((p) => !p.config.disabled);
 }
 
 export async function getRequestGroupActions(): Promise<Array<RequestGroupAction>> {
   let extensions = [];
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.requestGroupActions || [];
-    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+    extensions = [...extensions, ...actions.map((p) => ({ plugin, ...p }))];
   }
 
   return extensions;
@@ -222,7 +222,7 @@ export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
   let extensions = [];
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.workspaceActions || [];
-    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+    extensions = [...extensions, ...actions.map((p) => ({ plugin, ...p }))];
   }
 
   return extensions;
@@ -232,7 +232,7 @@ export async function getDocumentActions(): Promise<Array<DocumentAction>> {
   let extensions = [];
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.documentActions || [];
-    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+    extensions = [...extensions, ...actions.map((p) => ({ plugin, ...p }))];
   }
 
   return extensions;
@@ -242,7 +242,7 @@ export async function getTemplateTags(): Promise<Array<TemplateTag>> {
   let extensions = [];
   for (const plugin of await getActivePlugins()) {
     const templateTags = plugin.module.templateTags || [];
-    extensions = [...extensions, ...templateTags.map(tt => ({ plugin, templateTag: tt }))];
+    extensions = [...extensions, ...templateTags.map((tt) => ({ plugin, templateTag: tt }))];
   }
 
   return extensions;
@@ -252,7 +252,7 @@ export async function getRequestHooks(): Promise<Array<RequestHook>> {
   let functions = [];
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
-    functions = [...functions, ...moreFunctions.map(hook => ({ plugin, hook }))];
+    functions = [...functions, ...moreFunctions.map((hook) => ({ plugin, hook }))];
   }
 
   return functions;
@@ -262,7 +262,7 @@ export async function getResponseHooks(): Promise<Array<ResponseHook>> {
   let functions = [];
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.responseHooks || [];
-    functions = [...functions, ...moreFunctions.map(hook => ({ plugin, hook }))];
+    functions = [...functions, ...moreFunctions.map((hook) => ({ plugin, hook }))];
   }
 
   return functions;
@@ -272,7 +272,7 @@ export async function getThemes(): Promise<Array<Theme>> {
   let extensions = [];
   for (const plugin of await getActivePlugins()) {
     const themes = plugin.module.themes || [];
-    extensions = [...extensions, ...themes.map(theme => ({ plugin, theme }))];
+    extensions = [...extensions, ...themes.map((theme) => ({ plugin, theme }))];
   }
 
   return extensions;
@@ -282,7 +282,7 @@ export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
   let functions = [];
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.configGenerators || [];
-    functions = [...functions, ...moreFunctions.map(p => ({ plugin, ...p }))];
+    functions = [...functions, ...moreFunctions.map((p) => ({ plugin, ...p }))];
   }
 
   return functions;

@@ -24,15 +24,15 @@ export function generateKongForKubernetesConfigFromSpec(
   // Iterate all global servers
   plugins.servers.forEach((sp, serverIndex) => {
     // Iterate all paths
-    plugins.paths.forEach(pp => {
+    plugins.paths.forEach((pp) => {
       // Iterate methods
-      pp.operations.forEach(o => {
+      pp.operations.forEach((o) => {
         // Prioritize plugins for doc
         const pluginsForDoc = prioritizePlugins(plugins.global, sp.plugins, pp.plugins, o.plugins);
 
         // Identify custom annotations
         const annotations: CustomAnnotations = {
-          pluginNames: pluginsForDoc.map(x => x.metadata.name),
+          pluginNames: pluginsForDoc.map((x) => x.metadata.name),
         };
 
         const method = o.method;
@@ -152,7 +152,7 @@ export function generateRulesForServer(
   const backend = { serviceName, servicePort };
 
   const pathsToUse: Array<string> = (paths?.length && paths) || ['']; // Make flow happy
-  const k8sPaths: Array<K8sPath> = pathsToUse.map(p => {
+  const k8sPaths: Array<K8sPath> = pathsToUse.map((p) => {
     const path = generateServicePath(pathname, p);
 
     return path ? { path, backend } : { backend };
@@ -208,7 +208,7 @@ export function generateServicePort(server: OA3Server): number {
 
   // Return 443
   if (generateTlsConfig(server)) {
-    if (ports.find(p => p.port === 443)) {
+    if (ports.find((p) => p.port === 443)) {
       return 443;
     }
 

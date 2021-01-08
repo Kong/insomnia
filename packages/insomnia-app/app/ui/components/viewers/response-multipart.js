@@ -170,13 +170,13 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       };
 
       const form = new multiparty.Form();
-      form.on('part', part => {
+      form.on('part', (part) => {
         const dataBuffers = [];
-        part.on('data', data => {
+        part.on('data', (data) => {
           dataBuffers.push(data);
         });
 
-        part.on('error', err => {
+        part.on('error', (err) => {
           reject(new Error(`Failed to parse part: ${err.message}`));
         });
 
@@ -186,7 +186,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
             name: part.name,
             filename: part.filename || null,
             bytes: part.byteCount,
-            headers: Object.keys(part.headers).map(name => ({
+            headers: Object.keys(part.headers).map((name) => ({
               name,
               value: part.headers[name],
             })),
@@ -194,7 +194,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
         });
       });
 
-      form.on('error', err => {
+      form.on('error', (err) => {
         reject(err);
       });
 

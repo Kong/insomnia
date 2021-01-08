@@ -25,7 +25,7 @@ module.exports.templateTags = [
       {
         displayName: 'JSONPath Filter',
         help: 'Some OS functions return objects. Use JSONPath queries to extract desired values.',
-        hide: args => !FILTERABLE.includes(args[0].value),
+        hide: (args) => !FILTERABLE.includes(args[0].value),
         type: 'string',
       },
     ],

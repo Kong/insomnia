@@ -180,7 +180,7 @@ export async function create(patch: Object = {}, maxResponses: number = 20) {
 
   // Delete all other responses before creating the new one
   const allResponses = await db.findMostRecentlyModified(type, query, Math.max(1, maxResponses));
-  const recentIds = allResponses.map(r => r._id);
+  const recentIds = allResponses.map((r) => r._id);
 
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, { ...query, _id: { $nin: recentIds } });

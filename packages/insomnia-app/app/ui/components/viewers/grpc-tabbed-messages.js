@@ -18,12 +18,12 @@ type Props = {
   bodyText: string,
   uniquenessKey: string,
 
-  handleBodyChange?: string => Promise<void>,
+  handleBodyChange?: (string) => Promise<void>,
   handleStream?: () => void,
   handleCommit?: () => void,
   showActions?: boolean,
 
-  handleRender: string => Promise<string>,
+  handleRender: (string) => Promise<string>,
   isVariableUncovered: boolean,
   handleGetRenderContext: Function,
 };
@@ -96,7 +96,7 @@ const GrpcTabbedMessages = ({
           />
         </TabPanel>
       )}
-      {orderedMessages.map(m => (
+      {orderedMessages.map((m) => (
         <TabPanel key={m.id} className="react-tabs__tab-panel editor-wrapper">
           <GRPCEditor content={m.text} settings={settings} readOnly />
         </TabPanel>

@@ -531,7 +531,7 @@ async function _setupSessionMocks() {
     return resourceGroups[id];
   });
 
-  network.syncGetResourceGroup = jest.fn(id => {
+  network.syncGetResourceGroup = jest.fn((id) => {
     if (resourceGroups[id]) {
       return resourceGroups[id];
     }
@@ -541,14 +541,14 @@ async function _setupSessionMocks() {
     throw err;
   });
 
-  network.syncPull = jest.fn(body => ({
+  network.syncPull = jest.fn((body) => ({
     updatedResources: [],
     createdResources: [],
     idsToPush: [],
     idsToRemove: [],
   }));
 
-  network.syncPush = jest.fn(body => ({
+  network.syncPush = jest.fn((body) => ({
     conflicts: [],
     updated: [],
     created: [],

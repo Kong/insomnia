@@ -11,21 +11,24 @@ describe('shouldShowInSidebar', () => {
   const supported = [models.request.type, models.requestGroup.type, models.grpcRequest.type];
   const unsupported = difference(allTypes, supported);
 
-  it.each(supported)('should show %s in sidebar', type => {
+  it.each(supported)('should show %s in sidebar', (type) => {
     expect(shouldShowInSidebar({ type })).toBe(true);
   });
 
-  it.each(unsupported)('should not show %s in sidebar', type => {
+  it.each(unsupported)('should not show %s in sidebar', (type) => {
     expect(shouldShowInSidebar({ type })).toBe(false);
   });
 });
 
 describe('shouldIgnoreChildrenOf', () => {
-  it.each([models.request.type, models.grpcRequest.type])('should ignore children of %s', type => {
-    expect(shouldIgnoreChildrenOf({ type })).toBe(true);
-  });
+  it.each([models.request.type, models.grpcRequest.type])(
+    'should ignore children of %s',
+    (type) => {
+      expect(shouldIgnoreChildrenOf({ type })).toBe(true);
+    },
+  );
 
-  it.each([models.requestGroup.type])('should not ignore children of', type => {
+  it.each([models.requestGroup.type])('should not ignore children of', (type) => {
     expect(shouldIgnoreChildrenOf({ type })).toBe(false);
   });
 });

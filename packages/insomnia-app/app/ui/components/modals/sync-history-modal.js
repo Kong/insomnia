@@ -26,7 +26,7 @@ type State = {
 @autobind
 class SyncHistoryModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
-  handleRollback: Snapshot => Promise<void>;
+  handleRollback: (Snapshot) => Promise<void>;
 
   constructor(props: Props) {
     super(props);
@@ -61,7 +61,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { handleRollback: Snapshot => Promise<void> }) {
+  async show(options: { handleRollback: (Snapshot) => Promise<void> }) {
     this.modal && this.modal.show();
     this.handleRollback = options.handleRollback;
     await this.refreshState();
@@ -120,7 +120,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
               </tr>
             </thead>
             <tbody>
-              {history.map(snapshot => (
+              {history.map((snapshot) => (
                 <tr key={snapshot.id}>
                   <td>
                     <Tooltip message={snapshot.id} selectable wide delay={500}>

@@ -21,7 +21,7 @@ export default class SidebarParameters extends React.Component<Props> {
       return <StyledInvalidSection name={'parameter'} />;
     }
 
-    const filteredValues = Object.keys(parameters).filter(parameter =>
+    const filteredValues = Object.keys(parameters).filter((parameter) =>
       parameter.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -31,7 +31,7 @@ export default class SidebarParameters extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(parameter => (
+        {filteredValues.map((parameter) => (
           <React.Fragment key={parameter}>
             <SidebarItem onClick={() => onClick('components', 'parameters', parameter)}>
               <div>

@@ -80,9 +80,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
 
   createTree() {
     const { childObjects } = this.props;
-    const children: Array<Node> = childObjects.map(child => this.createNode(child));
+    const children: Array<Node> = childObjects.map((child) => this.createNode(child));
     const totalRequests = children
-      .map(child => child.totalRequests)
+      .map((child) => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
     const rootFolder: RequestGroup = Object.assign({}, models.requestGroup.init(), {
       _id: 'all',
@@ -104,9 +104,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
   }
 
   createNode(item: Object): Node {
-    const children: Array<Node> = item.children.map(child => this.createNode(child));
+    const children: Array<Node> = item.children.map((child) => this.createNode(child));
     let totalRequests = children
-      .map(child => child.totalRequests)
+      .map((child) => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
 
     const docIsRequest = isRequest(item.doc) || isGrpcRequest(item.doc);
@@ -181,7 +181,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
       const found = this.setItemSelected(child, isSelected, id);
       if (found) {
         node.selectedRequests = node.children
-          .map(ch => ch.selectedRequests)
+          .map((ch) => ch.selectedRequests)
           .reduce((acc, selected) => acc + selected, 0);
         return true;
       }

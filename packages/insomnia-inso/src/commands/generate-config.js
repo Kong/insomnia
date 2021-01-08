@@ -68,7 +68,7 @@ export async function generateConfig(
     return false;
   }
 
-  const yamlDocs = result.documents.map(d => YAML.stringify(d));
+  const yamlDocs = result.documents.map((d) => YAML.stringify(d));
 
   // Join the YAML docs with "---" and strip any extra newlines surrounding them
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');

@@ -71,7 +71,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   };
 
   async _handlePluginClick(p: WorkspaceAction) {
-    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
+    this.setState((state) => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
 
     const { activeEnvironment, activeWorkspace } = this.props;
 
@@ -86,8 +86,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       };
 
       const docs = await db.withDescendants(activeWorkspace);
-      const requests: any = docs.filter(d => d.type === models.request.type && !(d: any).isPrivate);
-      const requestGroups: any = docs.filter(d => d.type === models.requestGroup.type);
+      const requests: any = docs.filter(
+        (d) => d.type === models.request.type && !(d: any).isPrivate,
+      );
+      const requestGroups: any = docs.filter((d) => d.type === models.requestGroup.type);
 
       await p.action(context, { requestGroups, requests, workspace: activeWorkspace });
     } catch (err) {
@@ -97,7 +99,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       });
     }
 
-    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
+    this.setState((state) => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
     this._dropdown && this._dropdown.hide();
   }
 
@@ -140,7 +142,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       throw new Error('VCS is not defined');
     }
 
-    this.setState(state => ({
+    this.setState((state) => ({
       pullingProjects: { ...state.pullingProjects, [project.id]: true },
     }));
 
@@ -187,7 +189,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       });
     }
 
-    this.setState(state => ({
+    this.setState((state) => ({
       pullingProjects: { ...state.pullingProjects, [project.id]: false },
     }));
   }
@@ -226,7 +228,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       defaultValue: 'My Workspace',
       submitName: 'Create',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name) => {
         const workspace = await models.workspace.create({ name });
         this.props.handleSetActiveWorkspace(workspace._id);
       },
@@ -266,8 +268,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     const { remoteProjects, localProjects, pullingProjects } = this.state;
 
     const missingRemoteProjects = remoteProjects.filter(({ id, rootDocumentId }) => {
-      const localProjectExists = localProjects.find(p => p.id === id);
-      const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
+      const localProjectExists = localProjects.find((p) => p.id === id);
+      const workspaceExists = workspaces.find((w) => w._id === rootDocumentId);
 
       // Mark as missing if:
       //   - the project doesn't yet exists locally
@@ -276,9 +278,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
 
     const nonActiveWorkspaces = workspaces
-      .filter(w => w._id !== activeWorkspace._id)
+      .filter((w) => w._id !== activeWorkspace._id)
       .sort((w1, w2) => w1.name.localeCompare(w2.name));
-    const addedWorkspaceNames = unseenWorkspaces.map(w => `"${w.name}"`).join(', ');
+    const addedWorkspaceNames = unseenWorkspaces.map((w) => `"${w.name}"`).join(', ');
     const classes = classnames(className, 'wide', 'workspace-dropdown');
 
     const unseenWorkspacesMessage = (
@@ -326,8 +328,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
           <DropdownDivider>Switch Workspace</DropdownDivider>
 
-          {nonActiveWorkspaces.map(w => {
-            const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
+          {nonActiveWorkspaces.map((w) => {
+            const isUnseen = !!unseenWorkspaces.find((v) => v._id === w._id);
             return (
               <DropdownItem key={w._id} onClick={handleSetActiveWorkspace} value={w._id}>
                 <i className="fa fa-random" /> To <strong>{w.name}</strong>
@@ -354,7 +356,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             </DropdownDivider>
           )}
 
-          {missingRemoteProjects.map(p => (
+          {missingRemoteProjects.map((p) => (
             <DropdownItem
               key={p.id}
               stayOpenAfterClick

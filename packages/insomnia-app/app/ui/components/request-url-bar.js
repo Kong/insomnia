@@ -25,7 +25,7 @@ type Props = {
   handleGenerateCode: Function,
   handleGetRenderContext: Function,
   handleImport: Function,
-  handleRender: string => Promise<string>,
+  handleRender: (string) => Promise<string>,
   handleSend: () => void,
   handleSendAndDownload: (filepath?: string) => Promise<void>,
   handleUpdateDownloadPath: Function,
@@ -192,7 +192,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
       label: 'Delay in seconds',
       defaultValue: 3,
       submitName: 'Start',
-      onComplete: seconds => {
+      onComplete: (seconds) => {
         this._handleStopTimeout();
         this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
         this.setState({ currentTimeout: seconds });
@@ -207,7 +207,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
       label: 'Interval in seconds',
       defaultValue: 3,
       submitName: 'Start',
-      onComplete: seconds => {
+      onComplete: (seconds) => {
         this._handleStopInterval();
         this._sendInterval = setInterval(this._handleSend, seconds * 1000);
         this.setState({ currentInterval: seconds });

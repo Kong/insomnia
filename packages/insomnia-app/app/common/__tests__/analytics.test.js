@@ -16,7 +16,7 @@ import {
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    electron.net.request = jest.fn(url => {
+    electron.net.request = jest.fn((url) => {
       const req = new EventEmitter();
       req.end = function() {};
       return req;

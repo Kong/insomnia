@@ -12,6 +12,6 @@ export function indent(level: number, code: string, tab: string = '  '): string 
   const prefix = new Array(level + 1).join('  ');
   return code
     .split('\n')
-    .map(line => prefix + line)
+    .map((line) => prefix + line)
     .join('\n');
 }

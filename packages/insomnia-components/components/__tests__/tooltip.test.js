@@ -2,9 +2,9 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import Tooltip from '../tooltip';
 
-const pause = time => new Promise(resolve => setTimeout(resolve, time));
+const pause = (time) => new Promise((resolve) => setTimeout(resolve, time));
 
-const expectNoTooltip = queryByRole => {
+const expectNoTooltip = (queryByRole) => {
   expect(queryByRole('tooltip', { hidden: true })).toBeNull();
   expect(queryByRole('tooltip')).toBeNull();
 };

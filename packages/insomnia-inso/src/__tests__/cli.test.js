@@ -54,13 +54,13 @@ describe('cli', () => {
       expect(() => inso('-w')).toThrowError();
     });
 
-    it.each(['-v', '--version'])('inso %s should print version from package.json', args => {
+    it.each(['-v', '--version'])('inso %s should print version from package.json', (args) => {
       logger.wrapAll();
       expect(() => inso(args)).toThrowError(packageJson.version);
       logger.restoreAll();
     });
 
-    it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
+    it.each(['-v', '--version'])('inso %s should print "dev" if running in development', (args) => {
       const oldNodeEnv = process.env.NODE_ENV;
 
       process.env.NODE_ENV = 'development';

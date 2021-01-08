@@ -173,7 +173,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
   render() {
     const { branch: currentBranch, branches, remoteBranches, newBranchName, error } = this.state;
 
-    const remoteOnlyBranches = remoteBranches.filter(b => !branches.includes(b));
+    const remoteOnlyBranches = remoteBranches.filter((b) => !branches.includes(b));
 
     return (
       <Modal ref={this._setModalRef} onHide={this._handleHide}>
@@ -218,7 +218,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
                 </tr>
               </thead>
               <tbody>
-                {branches.map(name => (
+                {branches.map((name) => (
                   <tr key={name} className="table--no-outline-row">
                     <td>
                       <span className={classnames({ bold: name === currentBranch })}>{name}</span>
@@ -264,7 +264,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
                   </tr>
                 </thead>
                 <tbody>
-                  {remoteOnlyBranches.map(name => (
+                  {remoteOnlyBranches.map((name) => (
                     <tr key={name} className="table--no-outline-row">
                       <td>{name}</td>
                       <td className="text-right">

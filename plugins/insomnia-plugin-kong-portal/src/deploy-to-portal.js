@@ -335,7 +335,7 @@ class DeployToPortal extends React.Component<Props, State> {
                 type="text"
                 placeholder="Eg. unique-file-name.yaml"
                 defaultValue=""
-                onChange={evt => {
+                onChange={(evt) => {
                   this.setState({ kongSpecFileName: evt.target.value });
                 }}
               />

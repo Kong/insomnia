@@ -98,7 +98,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         name: 'Send Request By ID',
         displayValue: '',
         value: async () => {
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             showModal(SelectModal, {
               title: 'Select Request',
               message: 'Select a request to fill',
@@ -111,7 +111,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
                   value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
-              onDone: v => resolve(v),
+              onDone: (v) => resolve(v),
             });
           });
         },
@@ -127,7 +127,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       submitName: 'Create Suite',
       label: 'Test Suite Name',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name) => {
         const unitTestSuite = await models.unitTestSuite.create({
           parentId: activeWorkspace._id,
           name,
@@ -145,7 +145,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       submitName: 'New Test',
       label: 'Test Name',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name) => {
         await models.unitTest.create({
           parentId: activeUnitTestSuite._id,
           code: this.generateSendReqSnippet('', ''),
@@ -448,7 +448,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
             </Button>
           </div>
           <ul>
-            {activeUnitTestSuites.map(s => (
+            {activeUnitTestSuites.map((s) => (
               <li key={s._id} className={classnames({ active: s._id === activeId })}>
                 <button key={s._id} onClick={this._handleSetActiveUnitTestSuite.bind(this, s)}>
                   {s.name}

@@ -61,7 +61,7 @@ describe('keyedDebounce()', () => {
 
   it('debounces correctly', () => {
     const resultsList = [];
-    const fn = misc.keyedDebounce(results => {
+    const fn = misc.keyedDebounce((results) => {
       resultsList.push(results);
     }, 100);
 

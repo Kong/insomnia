@@ -148,7 +148,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
                     <i className="fa fa-caret-down" />
                   </DropdownButton>
                 )}
-                {teams.map(team => (
+                {teams.map((team) => (
                   <DropdownItem key={team.id} value={team} onClick={this._handleShareWithTeam}>
                     <i className="fa fa-users" /> Share with <strong>{team.name}</strong>
                   </DropdownItem>

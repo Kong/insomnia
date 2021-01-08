@@ -70,7 +70,7 @@ function _sendUpdateComplete(success: boolean, msg: string) {
 let hasPromptedForUpdates = false;
 
 export async function init() {
-  autoUpdater.on('error', e => {
+  autoUpdater.on('error', (e) => {
     console.warn(`[updater] Error: ${e.message}`);
   });
 
@@ -90,7 +90,7 @@ export async function init() {
     _showUpdateNotification();
   });
 
-  ipcMain.on('updater.check', async e => {
+  ipcMain.on('updater.check', async (e) => {
     await _checkForUpdates(true);
   });
 

@@ -59,9 +59,9 @@ export function init(response: MaybeResponse): { response: Object } {
       },
       getHeader(name: string): string | Array<string> | null {
         const headers = response.headers || [];
-        const matchedHeaders = headers.filter(h => h.name.toLowerCase() === name.toLowerCase());
+        const matchedHeaders = headers.filter((h) => h.name.toLowerCase() === name.toLowerCase());
         if (matchedHeaders.length > 1) {
-          return matchedHeaders.map(h => h.value);
+          return matchedHeaders.map((h) => h.value);
         } else if (matchedHeaders.length === 1) {
           return matchedHeaders[0].value;
         } else {

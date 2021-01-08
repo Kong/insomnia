@@ -39,7 +39,7 @@ export const withChildren = () => {
   const message = (
     <React.Fragment>
       This is a{' '}
-      <a href="#" onClick={e => e.preventDefault()}>
+      <a href="#" onClick={(e) => e.preventDefault()}>
         Link
       </a>
       .

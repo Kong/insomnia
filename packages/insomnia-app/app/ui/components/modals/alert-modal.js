@@ -56,7 +56,7 @@ class AlertModal extends PureComponent {
 
     this._okCallback2 = onConfirm;
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this._okCallback = resolve;
     });
   }

@@ -30,7 +30,7 @@ const ToggleSwitch: React.StatelessFunctionalComponent<Props> = ({
   }, [checkedProp]);
 
   const callback = React.useCallback(
-    c => {
+    (c) => {
       setChecked(c);
       onChange(c);
     },

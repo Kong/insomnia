@@ -186,7 +186,7 @@ class KeyValueEditorRow extends PureComponent {
       onChange: this._handleValueChange,
       enableRender: handleRender || handleGetRenderContext,
       mode: pair.multiline || 'text/plain',
-      onModeChange: mode => {
+      onModeChange: (mode) => {
         this._handleTypeChange(Object.assign({}, pair, { multiline: mode }));
       },
     });

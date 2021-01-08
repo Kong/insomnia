@@ -461,7 +461,7 @@ export function updateStateWithConflictResolutions(
 ): SnapshotState {
   const newStateMap = generateStateMap(state);
   for (const { choose, key, name } of conflicts) {
-    const stateEntry = state.find(e => e.key === key);
+    const stateEntry = state.find((e) => e.key === key);
 
     // Not in the state, but we choose the conflict
     if (!stateEntry && choose !== null) {
@@ -479,7 +479,7 @@ export function updateStateWithConflictResolutions(
     delete newStateMap[key];
   }
 
-  return Object.keys(newStateMap).map(k => newStateMap[k]);
+  return Object.keys(newStateMap).map((k) => newStateMap[k]);
 }
 
 export function describeChanges(a: any, b: any): Array<string> {

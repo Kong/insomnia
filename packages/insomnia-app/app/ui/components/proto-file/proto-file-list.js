@@ -28,7 +28,7 @@ const ProtoFileList = ({
 }: Props) => (
   <ListGroup bordered>
     {!protoFiles.length && <ListGroupItem>No proto files exist for this workspace</ListGroupItem>}
-    {protoFiles.map(p => (
+    {protoFiles.map((p) => (
       <ProtoFileListItem
         key={p._id}
         protoFile={p}

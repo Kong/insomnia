@@ -98,20 +98,20 @@ function parseEndpoints(document) {
 
   const paths = Object.keys(document.paths);
   const endpointsSchemas = paths
-    .map(path => {
+    .map((path) => {
       const schemasPerMethod = document.paths[path];
       const methods = Object.keys(schemasPerMethod);
 
       return methods
-        .filter(method => method !== 'parameters')
-        .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
+        .filter((method) => method !== 'parameters')
+        .map((method) => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce((flat, arr) => flat.concat(arr), []); // flat single array
 
   const tags = document.tags || [];
 
   const implicitTags = endpointsSchemas
-    .map(endpointSchema => endpointSchema.tags)
+    .map((endpointSchema) => endpointSchema.tags)
     .reduce((flat, arr) => flat.concat(arr), []) // flat single array
     .reduce((distinct, value) => {
       if (!distinct.includes(value)) {
@@ -119,20 +119,20 @@ function parseEndpoints(document) {
       }
       return distinct;
     }, []) // remove duplicates
-    .filter(tag => !tags.map(tag => tag.name).includes(tag))
-    .map(tag => ({
+    .filter((tag) => !tags.map((tag) => tag.name).includes(tag))
+    .map((tag) => ({
       name: tag,
       desciption: '',
     }));
 
-  const folders = [...tags, ...implicitTags].map(tag => {
+  const folders = [...tags, ...implicitTags].map((tag) => {
     return importFolderItem(tag, defaultParent);
   });
   const folderLookup = {};
-  folders.forEach(folder => (folderLookup[folder.name] = folder._id));
+  folders.forEach((folder) => (folderLookup[folder.name] = folder._id));
 
   const requests = [];
-  endpointsSchemas.map(endpointSchema => {
+  endpointsSchemas.map((endpointSchema) => {
     let { tags } = endpointSchema;
     if (!tags || tags.length === 0) tags = [''];
     tags.forEach((tag, index) => {
@@ -196,7 +196,7 @@ function importRequest(schema, endpointSchema, globalMimeTypes, id, parentId) {
     parameters: prepareQueryParams(endpointSchema),
   };
 
-  if (request.body.mimeType && !request.headers.find(header => header.name === 'Content-Type')) {
+  if (request.body.mimeType && !request.headers.find((header) => header.name === 'Content-Type')) {
     request.headers = [
       {
         name: 'Content-Type',
@@ -333,7 +333,7 @@ function pathWithParamsAsVariables(path) {
  * @returns {Object[]} array of parameters definitions
  */
 function prepareQueryParams(endpointSchema) {
-  const isSendInQuery = p => p.in === 'query';
+  const isSendInQuery = (p) => p.in === 'query';
   const parameters = endpointSchema.parameters || [];
   const queryParameters = parameters.filter(isSendInQuery);
   return convertParameters(queryParameters);
@@ -346,7 +346,7 @@ function prepareQueryParams(endpointSchema) {
  * @returns {Object[]} array of parameters definitions
  */
 function prepareHeaders(endpointSchema) {
-  const isSendInHeader = p => p.in === 'header';
+  const isSendInHeader = (p) => p.in === 'header';
   const parameters = endpointSchema.parameters || [];
   const headerParameters = parameters.filter(isSendInHeader);
   return convertParameters(headerParameters);
@@ -371,10 +371,10 @@ function resolve$ref(schema, $ref) {
  */
 function prepareBody(schema, endpointSchema, globalMimeTypes) {
   const mimeTypes = endpointSchema.consumes || globalMimeTypes || [];
-  const isAvailable = m => mimeTypes.includes(m);
+  const isAvailable = (m) => mimeTypes.includes(m);
   const supportedMimeType = SUPPORTED_MIME_TYPES.find(isAvailable);
   if (supportedMimeType === MIMETYPE_JSON) {
-    const isSendInBody = p => p.in === 'body';
+    const isSendInBody = (p) => p.in === 'body';
     const parameters = endpointSchema.parameters || [];
     const bodyParameter = parameters.find(isSendInBody);
     if (!bodyParameter) {
@@ -402,7 +402,7 @@ function prepareBody(schema, endpointSchema, globalMimeTypes) {
   }
 
   if (supportedMimeType === MIMETYPE_URLENCODED || supportedMimeType === MIMETYPE_MULTIPART) {
-    const isSendInFormData = p => p.in === 'formData';
+    const isSendInFormData = (p) => p.in === 'formData';
     const parameters = endpointSchema.parameters || [];
     const formDataParameters = parameters.filter(isSendInFormData);
 
@@ -431,7 +431,7 @@ function prepareBody(schema, endpointSchema, globalMimeTypes) {
  * @returns {Object[]} array of insomnia parameters definitions
  */
 function convertParameters(parameters) {
-  return parameters.map(parameter => {
+  return parameters.map((parameter) => {
     const { required, name, type } = parameter;
     if (type === 'file') {
       return {
@@ -468,19 +468,19 @@ function generateParameterExample(schema) {
     number_double: () => 0.0,
     integer: () => 0,
     boolean: () => true,
-    object: schema => {
+    object: (schema) => {
       const example = {};
       const { properties } = schema;
 
       if (properties) {
-        Object.keys(properties).forEach(propertyName => {
+        Object.keys(properties).forEach((propertyName) => {
           example[propertyName] = generateParameterExample(properties[propertyName]);
         });
       }
 
       return example;
     },
-    array: schema => {
+    array: (schema) => {
       const value = generateParameterExample(schema.items);
       if (schema.collectionFormat === 'csv') {
         return value;

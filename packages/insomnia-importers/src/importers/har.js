@@ -24,7 +24,7 @@ function importRequest(request) {
   const headers = mapImporter(request.headers, importHeader);
 
   // Convert cookie value to header
-  const existingCookieHeader = headers.find(h => h.name.toLowerCase() === 'cookie');
+  const existingCookieHeader = headers.find((h) => h.name.toLowerCase() === 'cookie');
   if (cookieHeaderValue && existingCookieHeader) {
     // Has existing cookie header, so let's update it
     existingCookieHeader.value += `; ${cookieHeaderValue}`;
@@ -80,7 +80,7 @@ function importPostData(obj) {
 
   if (obj.params && obj.params.length) {
     const mimeType = obj.mimeType || 'application/x-www-form-urlencoded';
-    const params = obj.params.map(p => {
+    const params = obj.params.map((p) => {
       const item = { name: p.name };
       if (p.fileName) {
         item.fileName = p.fileName;

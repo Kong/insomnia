@@ -68,7 +68,7 @@ class ResponseTimelineViewer extends PureComponent {
     }
 
     const lines = (value + '').replace(/\n$/, '').split('\n');
-    const newLines = lines.filter(l => !l.match(/^\s*$/)).map(l => `${prefix}${l}`);
+    const newLines = lines.filter((l) => !l.match(/^\s*$/)).map((l) => `${prefix}${l}`);
 
     let leadingSpace = '';
 
@@ -86,7 +86,7 @@ class ResponseTimelineViewer extends PureComponent {
     const { timeline, timelineKey } = this.state;
     const rows = timeline
       .map(this.renderRow)
-      .filter(r => r !== null)
+      .filter((r) => r !== null)
       .join('\n')
       .trim();
 

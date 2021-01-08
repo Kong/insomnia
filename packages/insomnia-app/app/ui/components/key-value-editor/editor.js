@@ -40,7 +40,7 @@ class Editor extends PureComponent {
       pairs: pairs,
 
       // If any pair has a description, display description field
-      displayDescription: props.pairs.some(p => p.description),
+      displayDescription: props.pairs.some((p) => p.description),
     };
   }
 
@@ -72,8 +72,8 @@ class Editor extends PureComponent {
       return;
     }
 
-    const withoutPair = this.state.pairs.filter(p => p.id !== pairToMove.id);
-    let toIndex = withoutPair.findIndex(p => p.id === pairToTarget.id);
+    const withoutPair = this.state.pairs.filter((p) => p.id !== pairToMove.id);
+    let toIndex = withoutPair.findIndex((p) => p.id === pairToTarget.id);
 
     // If we're moving below, add 1 to the index
     if (targetOffset < 0) {
@@ -90,7 +90,7 @@ class Editor extends PureComponent {
   }
 
   _handlePairDelete(pair) {
-    const i = this.state.pairs.findIndex(p => p.id === pair.id);
+    const i = this.state.pairs.findIndex((p) => p.id === pair.id);
     this._deletePair(i, true);
   }
 
@@ -322,7 +322,7 @@ class Editor extends PureComponent {
 
   _getPairIndex(pair) {
     if (pair) {
-      return this.state.pairs.findIndex(p => p.id === pair.id);
+      return this.state.pairs.findIndex((p) => p.id === pair.id);
     } else {
       return -1;
     }
@@ -333,7 +333,7 @@ class Editor extends PureComponent {
   }
 
   _getFocusedPair() {
-    return this.state.pairs.find(p => p.id === this._focusedPairId) || null;
+    return this.state.pairs.find((p) => p.id === this._focusedPairId) || null;
   }
 
   _setFocusedPair(pair) {

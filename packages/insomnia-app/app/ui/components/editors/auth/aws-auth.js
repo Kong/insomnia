@@ -14,9 +14,9 @@ type Props = {
   showPasswords: boolean,
   isVariableUncovered: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
-  handleRender: string => Promise<string>,
+  handleRender: (string) => Promise<string>,
   handleGetRenderContext: () => Promise<Object>,
-  handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
+  handleUpdateSettingsShowPasswords: (boolean) => Promise<Settings>,
 };
 
 @autobind

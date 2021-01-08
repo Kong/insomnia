@@ -21,7 +21,7 @@ export default class SidebarHeaders extends React.Component<Props> {
       return <StyledInvalidSection name={'header'} />;
     }
 
-    const filteredValues = Object.keys(headers).filter(header =>
+    const filteredValues = Object.keys(headers).filter((header) =>
       header.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -31,7 +31,7 @@ export default class SidebarHeaders extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(header => (
+        {filteredValues.map((header) => (
           <React.Fragment key={header}>
             <SidebarItem onClick={() => onClick('components', 'headers', header)}>
               <div>

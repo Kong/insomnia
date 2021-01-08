@@ -27,7 +27,7 @@ export default class SidebarRequests extends React.Component<Props> {
       return <StyledInvalidSection name={'request'} />;
     }
 
-    const filteredValues = Object.keys(requests).filter(requestName =>
+    const filteredValues = Object.keys(requests).filter((requestName) =>
       requestName.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -37,7 +37,7 @@ export default class SidebarRequests extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(requestName => {
+        {filteredValues.map((requestName) => {
           const { description, content } = requests[requestName];
           return (
             <React.Fragment key={requestName}>
@@ -53,7 +53,7 @@ export default class SidebarRequests extends React.Component<Props> {
                   </Tooltip>
                 </span>
               </SidebarItem>
-              {Object.keys(content).map(requestFormat => (
+              {Object.keys(content).map((requestFormat) => (
                 <React.Fragment key={requestFormat}>
                   <SidebarItem>
                     <StyledRequestFormat>
@@ -74,7 +74,7 @@ export default class SidebarRequests extends React.Component<Props> {
                   </SidebarItem>
                   {content[requestFormat].examples && (
                     <SidebarItem>
-                      {Object.keys(content[requestFormat].examples).map(requestExample => (
+                      {Object.keys(content[requestFormat].examples).map((requestExample) => (
                         <SidebarBadge
                           key={requestExample}
                           label={requestExample}

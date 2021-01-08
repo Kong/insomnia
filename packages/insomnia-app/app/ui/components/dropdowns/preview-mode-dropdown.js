@@ -7,7 +7,7 @@ import { getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
 type Props = {|
   download: (pretty: boolean) => any,
   fullDownload: (pretty: boolean) => any,
-  updatePreviewMode: string => any,
+  updatePreviewMode: (string) => any,
   previewMode: string,
   showPrettifyOption?: boolean,
 |};

@@ -27,7 +27,7 @@ export const AsyncButton = ({
   const [loading, setLoading] = React.useState(false);
 
   const asyncHandler = React.useCallback(
-    async e => {
+    async (e) => {
       const result = onClick(e);
       if (isPromise(result)) {
         try {

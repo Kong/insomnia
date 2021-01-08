@@ -246,7 +246,7 @@ describe('plugins', () => {
       const result = getServerPlugins(servers, increment);
 
       expect(result).toHaveLength(2);
-      result.forEach(s => expect(s.plugins).toHaveLength(0));
+      result.forEach((s) => expect(s.plugins).toHaveLength(0));
     });
     it('returns plugins from each server', () => {
       const servers = [
@@ -407,7 +407,7 @@ describe('plugins', () => {
     });
     it.each(Object.values(HttpMethod))(
       'should extract method plugins for %o from path item',
-      methodName => {
+      (methodName) => {
         const pathItem = {
           [methodName]: {
             ...pluginKeyAuth,
@@ -705,9 +705,9 @@ describe('plugins', () => {
 
   describe('distinctByProperty()', () => {
     it('returns empty array if no truthy items', () => {
-      expect(distinctByProperty([], i => i)).toHaveLength(0);
-      expect(distinctByProperty([undefined], i => i)).toHaveLength(0);
-      expect(distinctByProperty([null, undefined, ''], i => i)).toHaveLength(0);
+      expect(distinctByProperty([], (i) => i)).toHaveLength(0);
+      expect(distinctByProperty([undefined], (i) => i)).toHaveLength(0);
+      expect(distinctByProperty([null, undefined, ''], (i) => i)).toHaveLength(0);
     });
 
     it('should remove objects with the same property selector - removes 2/4', () => {
@@ -718,7 +718,7 @@ describe('plugins', () => {
       const items = [item1, item2, item3, item4];
 
       // distinct by the name property
-      const filtered = distinctByProperty(items, i => i.name);
+      const filtered = distinctByProperty(items, (i) => i.name);
 
       // Should remove item2 and item4
       expect(filtered).toEqual([item1, item3]);
@@ -732,7 +732,7 @@ describe('plugins', () => {
       const items = [item1, item2, item3, item4];
 
       // distinct by the value property
-      const filtered = distinctByProperty(items, i => i.value);
+      const filtered = distinctByProperty(items, (i) => i.value);
 
       // Should remove no items
       expect(filtered).toEqual(items);

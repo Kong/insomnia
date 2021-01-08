@@ -66,7 +66,7 @@ async function pkg(electronBuilderConfig) {
 async function emptyDir(relPath) {
   return new Promise((resolve, reject) => {
     const dir = path.resolve(__dirname, relPath);
-    rimraf(dir, err => {
+    rimraf(dir, (err) => {
       if (err) {
         reject(err);
       } else {

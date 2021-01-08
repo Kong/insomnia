@@ -123,7 +123,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     label: string,
     property: string,
     help: string,
-    onChange: boolean => void,
+    onChange: (boolean) => void,
   ): React.Element<*> {
     const { request } = this.props;
     const { authentication } = request;
@@ -154,7 +154,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     );
   }
 
-  renderEnabledRow(onChange: boolean => void): React.Element<*> {
+  renderEnabledRow(onChange: (boolean) => void): React.Element<*> {
     const { request } = this.props;
     const { authentication } = request;
     return (

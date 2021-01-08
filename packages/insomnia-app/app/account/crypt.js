@@ -29,7 +29,7 @@ export function encryptRSAWithJWK(publicKeyJWK, plaintext) {
     throw new Error('Public key algorithm was not RSA-OAEP-256');
   } else if (publicKeyJWK.kty !== 'RSA') {
     throw new Error('Public key type was not RSA');
-  } else if (!publicKeyJWK.key_ops.find(o => o === 'encrypt')) {
+  } else if (!publicKeyJWK.key_ops.find((o) => o === 'encrypt')) {
     throw new Error('Public key does not have "encrypt" op');
   }
 
@@ -302,9 +302,9 @@ export async function generateKeyPairJWK() {
  * @returns {Promise}
  */
 async function _hkdfSalt(rawSalt, rawEmail) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const hkdf = new HKDF('sha256', rawSalt, rawEmail);
-    hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));
+    hkdf.derive('', DEFAULT_BYTE_LENGTH, (buffer) => resolve(buffer.toString('hex')));
   });
 }
 

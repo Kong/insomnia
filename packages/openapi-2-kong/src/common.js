@@ -97,7 +97,7 @@ export const HttpMethod = {
 
 export function isHttpMethodKey(key: string): boolean {
   const uppercaseKey = key.toUpperCase();
-  return Object.values(HttpMethod).some(m => m === uppercaseKey);
+  return Object.values(HttpMethod).some((m) => m === uppercaseKey);
 }
 
 export function getMethodAnnotationName(method: HttpMethodType): string {

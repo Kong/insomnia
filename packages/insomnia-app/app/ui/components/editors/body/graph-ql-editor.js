@@ -188,7 +188,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       return null;
     }
 
-    const disabledDefinitions = _documentAST.definitions.filter(d => {
+    const disabledDefinitions = _documentAST.definitions.filter((d) => {
       const name = d.name ? d.name.value : null;
       return d.kind === 'OperationDefinition' && name !== operationName;
     });
@@ -199,7 +199,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
 
     // Add "Unhighlight" markers
-    this._disabledOperationMarkers = disabledDefinitions.map(definition => {
+    this._disabledOperationMarkers = disabledDefinitions.map((definition) => {
       const { startToken, endToken } = definition.loc;
 
       const from = {
@@ -378,7 +378,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       return [];
     }
 
-    return this._documentAST.definitions.filter(def => def.kind === 'OperationDefinition');
+    return this._documentAST.definitions.filter((def) => def.kind === 'OperationDefinition');
   }
 
   _setDocumentAST(query: string) {

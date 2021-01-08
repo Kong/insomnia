@@ -16,7 +16,7 @@ export function logErrorExit1(err?: Error) {
 }
 
 export async function exit(result: Promise<boolean>): Promise<void> {
-  return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
+  return result.then((r) => process.exit(r ? 0 : 1)).catch(logErrorExit1);
 }
 
 export function getDefaultAppDataDir(): string {

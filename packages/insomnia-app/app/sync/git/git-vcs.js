@@ -70,7 +70,7 @@ export default class GitVCS {
     const emitter = new EventEmitter();
     git.plugins.set('emitter', emitter);
 
-    emitter.on('message', message => {
+    emitter.on('message', (message) => {
       console.log(`[git-event] ${message}`);
     });
 
@@ -140,7 +140,7 @@ export default class GitVCS {
     const branches = await git.listBranches({ ...this._baseOpts, remote: 'origin' });
 
     // Don't care about returning remote HEAD
-    return GitVCS._sortBranches(branches.filter(b => b !== 'HEAD'));
+    return GitVCS._sortBranches(branches.filter((b) => b !== 'HEAD'));
   }
 
   async status(filepath: string) {
@@ -198,7 +198,7 @@ export default class GitVCS {
 
   async getRemote(name: string): Promise<GitRemoteConfig | null> {
     const remotes = await this.listRemotes();
-    return remotes.find(r => r.remote === name) || null;
+    return remotes.find((r) => r.remote === name) || null;
   }
 
   async commit(message: string): Promise<string> {

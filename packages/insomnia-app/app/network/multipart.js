@@ -28,7 +28,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
           resolve();
         });
 
-        stream.once('error', err => {
+        stream.once('error', (err) => {
           reject(err);
         });
 
@@ -92,7 +92,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
     addString(`--${DEFAULT_BOUNDARY}--`);
     addString(lineBreak);
 
-    writeStream.once('error', err => {
+    writeStream.once('error', (err) => {
       reject(err);
     });
 

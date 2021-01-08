@@ -81,7 +81,7 @@ class VariableEditor extends PureComponent {
 
   render() {
     const { error, value, preview, variables, variableSource } = this.state;
-    const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
+    const isOther = !variables.find((v) => value === `{{ ${v.name} }}`);
     return (
       <div>
         <div className="form-control form-control--outlined">

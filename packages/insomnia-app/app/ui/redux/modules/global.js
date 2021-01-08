@@ -115,7 +115,7 @@ export const reducer = combineReducers({
 // ~~~~~~~ //
 
 export function newCommand(command, args) {
-  return async dispatch => {
+  return async (dispatch) => {
     switch (command) {
       case COMMAND_ALERT:
         showModal(AlertModal, { title: args.title, message: args.message });
@@ -148,7 +148,7 @@ export function newCommand(command, args) {
           ),
           yesText: 'Install',
           noText: 'Cancel',
-          onDone: async isYes => {
+          onDone: async (isYes) => {
             if (!isYes) {
               return;
             }
@@ -177,7 +177,7 @@ export function newCommand(command, args) {
           ),
           yesText: 'Install',
           noText: 'Cancel',
-          onDone: async isYes => {
+          onDone: async (isYes) => {
             if (!isYes) {
               return;
             }
@@ -245,7 +245,7 @@ export function setActiveWorkspace(workspaceId: string) {
 }
 
 export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
-  return async dispatch => {
+  return async (dispatch) => {
     dispatch(loadStart());
 
     const options = {
@@ -321,7 +321,7 @@ function handleImportResult(result: ImportResult, errorMessage: string): Array<W
 }
 
 export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
-  return async dispatch => {
+  return async (dispatch) => {
     dispatch(loadStart());
     const schema = electron.clipboard.readText();
     if (!schema) {
@@ -357,7 +357,7 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
 }
 
 export function importUri(workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) {
-  return async dispatch => {
+  return async (dispatch) => {
     dispatch(loadStart());
 
     let importedWorkspaces = [];
@@ -405,7 +405,7 @@ function showSelectExportTypeModal(onCancel, onDone) {
     ],
     message: 'Which format would you like to export as?',
     onCancel: onCancel,
-    onDone: selectedFormat => {
+    onDone: (selectedFormat) => {
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
       onDone(selectedFormat);
     },
@@ -456,12 +456,12 @@ function writeExportedFileToFileSystem(filename, jsonData, onDone) {
 }
 
 export function exportWorkspacesToFile(workspaceId = null) {
-  return async dispatch => {
+  return async (dispatch) => {
     dispatch(loadStart());
 
     showSelectExportTypeModal(
       () => dispatch(loadStop()),
-      async selectedFormat => {
+      async (selectedFormat) => {
         const workspace = await models.workspace.getById(workspaceId);
 
         // Check if we want to export private environments.
@@ -474,9 +474,9 @@ export function exportWorkspacesToFile(workspaceId = null) {
         }
 
         let exportPrivateEnvironments = false;
-        const privateEnvironments = environments.filter(e => e.isPrivate);
+        const privateEnvironments = environments.filter((e) => e.isPrivate);
         if (privateEnvironments.length) {
-          const names = privateEnvironments.map(e => e.name).join(', ');
+          const names = privateEnvironments.map((e) => e.name).join(', ');
           exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
         }
 
@@ -518,7 +518,7 @@ export function exportWorkspacesToFile(workspaceId = null) {
           return;
         }
 
-        writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+        writeExportedFileToFileSystem(fileName, stringifiedExport, (err) => {
           if (err) {
             console.warn('Export failed', err);
           }
@@ -530,12 +530,12 @@ export function exportWorkspacesToFile(workspaceId = null) {
 }
 
 export function exportRequestsToFile(requestIds) {
-  return async dispatch => {
+  return async (dispatch) => {
     dispatch(loadStart());
 
     showSelectExportTypeModal(
       () => dispatch(loadStop()),
-      async selectedFormat => {
+      async (selectedFormat) => {
         const requests = [];
         const privateEnvironments = [];
         const workspaceLookup = {};
@@ -550,7 +550,7 @@ export function exportRequestsToFile(requestIds) {
             models.workspace.type,
             models.requestGroup.type,
           ]);
-          const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+          const workspace = ancestors.find((ancestor) => ancestor.type === models.workspace.type);
           if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
             continue;
           }
@@ -558,14 +558,14 @@ export function exportRequestsToFile(requestIds) {
 
           const descendants = await db.withDescendants(workspace);
           const privateEnvs = descendants.filter(
-            descendant => descendant.type === models.environment.type && descendant.isPrivate,
+            (descendant) => descendant.type === models.environment.type && descendant.isPrivate,
           );
           privateEnvironments.push(...privateEnvs);
         }
 
         let exportPrivateEnvironments = false;
         if (privateEnvironments.length) {
-          const names = privateEnvironments.map(e => e.name).join(', ');
+          const names = privateEnvironments.map((e) => e.name).join(', ');
           exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
         }
 
@@ -607,7 +607,7 @@ export function exportRequestsToFile(requestIds) {
           return;
         }
 
-        writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+        writeExportedFileToFileSystem(fileName, stringifiedExport, (err) => {
           if (err) {
             console.warn('Export failed', err);
           }

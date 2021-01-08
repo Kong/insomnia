@@ -24,7 +24,7 @@ type Props = {
   settings: Settings,
 
   // For variables
-  handleRender: string => Promise<string>,
+  handleRender: (string) => Promise<string>,
   isVariableUncovered: boolean,
   handleGetRenderContext: Function,
 };

@@ -21,7 +21,7 @@ module.exports.templateTags = [
         displayName: 'Custom Format Template',
         type: 'string',
         placeholder: 'MMMM Do YYYY, h:mm:ss a',
-        hide: args => args[0].value !== 'custom',
+        hide: (args) => args[0].value !== 'custom',
       },
     ],
     run(context, dateType = 'iso-8601', formatStr = '') {

@@ -177,7 +177,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const { gitRepository } = this.props;
     showModal(GitRepositorySettingsModal, {
       gitRepository,
-      onSubmitEdits: async patch => {
+      onSubmitEdits: async (patch) => {
         const { workspace } = this.props;
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
 
@@ -228,7 +228,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     const renderBtn =
       renderDropdownButton ||
-      (children => (
+      ((children) => (
         <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
           {children}
         </DropdownButton>

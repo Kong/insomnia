@@ -16,8 +16,8 @@ type Props = {
   disabled?: boolean,
   methods: Array<GrpcMethodDefinition>,
   selectedMethod?: GrpcMethodDefinition,
-  handleChange: string => Promise<void>,
-  handleChangeProtoFile: string => Promise<void>,
+  handleChange: (string) => Promise<void>,
+  handleChangeProtoFile: (string) => Promise<void>,
 };
 
 const NormalCase = styled.span`
@@ -49,7 +49,7 @@ const GrpcMethodDropdown = ({
           <DropdownItem disabled>No methods found</DropdownItem>
         </>
       )}
-      {Object.keys(groupedByPkg).map(pkgName => (
+      {Object.keys(groupedByPkg).map((pkgName) => (
         <React.Fragment key={pkgName}>
           <DropdownDivider
             children={pkgName !== NO_PACKAGE_KEY && <NormalCase>pkg: {pkgName}</NormalCase>}

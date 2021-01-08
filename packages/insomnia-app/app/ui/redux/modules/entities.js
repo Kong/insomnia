@@ -87,7 +87,7 @@ export function addChanges(changes) {
 }
 
 export function initialize() {
-  return async dispatch => {
+  return async (dispatch) => {
     const docs = await allDocs();
     dispatch(initializeWith(docs));
   };

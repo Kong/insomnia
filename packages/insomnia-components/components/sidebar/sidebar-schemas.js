@@ -20,7 +20,7 @@ export default class SidebarSchemas extends React.Component<Props> {
       return <StyledInvalidSection name={'schema'} />;
     }
 
-    const filteredValues = Object.keys(schemas).filter(schema =>
+    const filteredValues = Object.keys(schemas).filter((schema) =>
       schema.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -30,7 +30,7 @@ export default class SidebarSchemas extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(schema => (
+        {filteredValues.map((schema) => (
           <SidebarItem key={schema} onClick={() => onClick('components', 'schemas', schema)}>
             <div>
               <SvgIcon icon={IconEnum.brackets} />

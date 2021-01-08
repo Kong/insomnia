@@ -37,7 +37,7 @@ export const reference = () => (
       <TableBody>
         {Object.keys(SvgIcon.icons)
           .sort()
-          .map(name => (
+          .map((name) => (
             <TableRow>
               <TableData>
                 <code>{name}</code>

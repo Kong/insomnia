@@ -100,5 +100,5 @@ function _notifyCommandListeners(uri) {
   const command = `${parsed.hostname}${parsed.pathname}`;
   const args = JSON.parse(JSON.stringify(parsed.query));
 
-  _commandListeners.map(fn => fn(command, args));
+  _commandListeners.map((fn) => fn(command, args));
 }

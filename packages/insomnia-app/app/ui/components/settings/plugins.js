@@ -120,9 +120,9 @@ class Plugins extends React.PureComponent<Props, State> {
       submitName: 'Generate',
       label: 'Plugin Name',
       selectText: true,
-      validate: name =>
+      validate: (name) =>
         name.match(/^[a-z][a-z-]*[a-z]$/) ? '' : 'Plugin name must be of format my-plugin-name',
-      onComplete: async name => {
+      onComplete: async (name) => {
         // Remove insomnia-plugin- prefix if they accidentally typed it
         name = name.replace(/^insomnia-plugin-/, '');
         try {
@@ -185,7 +185,7 @@ class Plugins extends React.PureComponent<Props, State> {
         className="valign-middle"
         checked={!plugin.config.disabled}
         disabled={this.state.isRefreshingPlugins}
-        onChange={async checked => {
+        onChange={async (checked) => {
           await this._togglePluginEnabled(plugin.name, checked, plugin.config);
         }}
       />
@@ -235,7 +235,7 @@ class Plugins extends React.PureComponent<Props, State> {
               </tr>
             </thead>
             <tbody>
-              {plugins.map(plugin =>
+              {plugins.map((plugin) =>
                 !plugin.directory ? null : (
                   <tr key={plugin.name}>
                     <td style={{ width: '4rem' }}>{this.renderToggleSwitch(plugin)}</td>

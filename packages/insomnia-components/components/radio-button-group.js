@@ -55,7 +55,7 @@ export default function RadioButtonGroup({
   selectedValue,
 }: Props) {
   const handleChange = React.useCallback(
-    e => {
+    (e) => {
       if (typeof onChange !== 'function') {
         return;
       }

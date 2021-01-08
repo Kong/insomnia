@@ -26,9 +26,12 @@ describe('init', () => {
     grpcIpcRenderer.init(dispatch);
   });
 
-  it.each(Object.values(GrpcResponseEventEnum))('should add listener for channel: %s', channel => {
-    expect(ipcRenderer.on).toHaveBeenCalledWith(channel, expect.anything());
-  });
+  it.each(Object.values(GrpcResponseEventEnum))(
+    'should add listener for channel: %s',
+    (channel) => {
+      expect(ipcRenderer.on).toHaveBeenCalledWith(channel, expect.anything());
+    },
+  );
 
   it('should attach listener for start', () => {
     const [channel, listener] = ipcRenderer.on.mock.calls[0];
@@ -92,7 +95,7 @@ describe('init', () => {
 describe('destroy', () => {
   it.each(Object.values(GrpcResponseEventEnum))(
     'should remove listeners for channel: %s',
-    channel => {
+    (channel) => {
       grpcIpcRenderer.destroy();
       expect(ipcRenderer.removeAllListeners).toHaveBeenCalledWith(channel);
     },

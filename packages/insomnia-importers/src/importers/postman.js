@@ -402,7 +402,7 @@ function findValueByKey(array, key) {
     return '';
   }
 
-  const obj = array.find(o => o.key === key);
+  const obj = array.find((o) => o.key === key);
   if (obj) {
     return obj.value || '';
   }

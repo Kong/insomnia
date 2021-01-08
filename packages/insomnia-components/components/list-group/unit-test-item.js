@@ -89,7 +89,7 @@ const UnitTestItem = ({
         <Button
           variant="text"
           onClick={onRunTest}
-          disabled={testsRunning && testsRunning.find(t => t._id === item._id)}>
+          disabled={testsRunning && testsRunning.find((t) => t._id === item._id)}>
           <SvgIcon icon="play" />
         </Button>
       </div>

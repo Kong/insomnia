@@ -85,7 +85,7 @@ class CookieList extends React.PureComponent<Props> {
                   <td onClick={null} className="text-right no-wrap">
                     <button
                       className="btn btn--super-compact btn--outlined"
-                      onClick={e => handleShowModifyCookieModal(cookie)}
+                      onClick={(e) => handleShowModifyCookieModal(cookie)}
                       title="Edit cookie properties">
                       Edit
                     </button>{' '}
@@ -93,7 +93,7 @@ class CookieList extends React.PureComponent<Props> {
                       className="btn btn--super-compact btn--outlined"
                       addIcon
                       confirmMessage=""
-                      onClick={e => this._handleDeleteCookie(cookie)}
+                      onClick={(e) => this._handleDeleteCookie(cookie)}
                       title="Delete cookie">
                       <i className="fa fa-trash-o" />
                     </PromptButton>
@@ -107,7 +107,7 @@ class CookieList extends React.PureComponent<Props> {
           <div className="pad faint italic text-center">
             <p>I couldn't find any cookies for you.</p>
             <p>
-              <button className="btn btn--clicky" onClick={e => this._handleCookieAdd()}>
+              <button className="btn btn--clicky" onClick={(e) => this._handleCookieAdd()}>
                 Add Cookie <i className="fa fa-plus-circle" />
               </button>
             </p>

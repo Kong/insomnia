@@ -9,7 +9,7 @@ const entity = 'api specification';
 
 export const loadApiSpec = (db: Database, identifier: string): ?ApiSpec => {
   logger.trace('Load %s with identifier `%s` from data store', entity, identifier);
-  const items = db.ApiSpec.filter(s => matchIdIsh(s, identifier) || s.fileName === identifier);
+  const items = db.ApiSpec.filter((s) => matchIdIsh(s, identifier) || s.fileName === identifier);
   logger.trace('Found %d.', items.length);
 
   return ensureSingleOrNone(items, entity);
@@ -23,7 +23,7 @@ export const promptApiSpec = async (db: Database, ci: boolean): Promise<?ApiSpec
   const prompt = new AutoComplete({
     name: 'apiSpec',
     message: 'Select an API Specification',
-    choices: db.ApiSpec.map(s => getDbChoice(generateIdIsh(s), s.fileName)),
+    choices: db.ApiSpec.map((s) => getDbChoice(generateIdIsh(s), s.fileName)),
   });
 
   logger.trace('Prompt for %s', entity);

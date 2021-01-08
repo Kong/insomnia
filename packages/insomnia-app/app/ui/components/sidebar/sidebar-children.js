@@ -98,7 +98,7 @@ class SidebarChildren extends React.PureComponent<Props> {
 
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
 
-    return children.map(child => {
+    return children.map((child) => {
       if (!isInPinnedList && child.hidden) {
         return null;
       }

@@ -47,7 +47,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
-      onComplete: async newName => {
+      onComplete: async (newName) => {
         const newWorkspace = await db.duplicate(workspace, { name: newName });
         await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, { fileName: newName });
 
@@ -67,7 +67,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: async fileName => {
+      onComplete: async (fileName) => {
         await models.apiSpec.update(apiSpec, { fileName });
       },
     });
@@ -88,7 +88,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       message: messages.join(' '),
       yesText: 'Yes',
       noText: 'Cancel',
-      onDone: async isYes => {
+      onDone: async (isYes) => {
         if (!isYes) {
           return;
         }
@@ -110,7 +110,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handlePluginClick(p: DocumentAction) {
-    this.setState(state => ({
+    this.setState((state) => ({
       loadingActions: {
         ...state.loadingActions,
         [p.label]: true,
@@ -134,7 +134,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       });
     }
 
-    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
+    this.setState((state) => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
     this._dropdown && this._dropdown.hide();
   }
 

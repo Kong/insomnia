@@ -27,7 +27,7 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
   const types = filterTypes?.length ? filterTypes : Object.keys(db);
 
   await Promise.all(
-    types.map(async type => {
+    types.map(async (type) => {
       // Get all files in type dir
       const typeDir = path.join(dir, type);
       if (!fs.existsSync(typeDir)) {
@@ -37,7 +37,7 @@ const gitAdapter: DbAdapter = async (dir, filterTypes) => {
       const files = await fs.promises.readdir(typeDir);
       return Promise.all(
         // Insert each file from each type
-        files.map(file => readAndInsertDoc(type, path.join(dir, type, file))),
+        files.map((file) => readAndInsertDoc(type, path.join(dir, type, file))),
       );
     }),
   );

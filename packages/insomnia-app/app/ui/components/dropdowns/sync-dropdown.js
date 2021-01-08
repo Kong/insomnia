@@ -89,7 +89,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
     if (!vcs.hasProject()) {
       const remoteProjects = await vcs.remoteProjects();
-      const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
+      const matchedProjects = remoteProjects.filter((p) => p.rootDocumentId === workspace._id);
       this.setState({ remoteProjects: matchedProjects });
       return;
     }
@@ -122,7 +122,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   componentDidMount() {
     this.setState({ initializing: true });
     this.refreshMainAttributes()
-      .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
+      .catch((err) => console.log('[sync_menu] Error refreshing sync state', err))
       .finally(() => this.setState({ initializing: false }));
 
     // Refresh but only if the user has been active in the last n minutes
@@ -146,7 +146,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     // Update if new sync items
     if (syncItems !== prevProps.syncItems) {
       if (vcs.hasProject()) {
-        vcs.status(syncItems, {}).then(status => {
+        vcs.status(syncItems, {}).then((status) => {
           this.setState({ status });
         });
       }
@@ -307,7 +307,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         // It will result in the workspace getting deleted
         // So we filter out the workspace from the delta to prevent this
         if (!defaultBranchHistoryCount && historyCount) {
-          delta.remove = delta.remove.filter(e => e.type !== models.workspace.type);
+          delta.remove = delta.remove.filter((e) => e.type !== models.workspace.type);
         }
       }
 
@@ -445,7 +445,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const canCreateSnapshot =
       Object.keys(status.stage).length > 0 || Object.keys(status.unstaged).length > 0;
 
-    const visibleBranches = localBranches.filter(b => !b.match(/\.hidden$/));
+    const visibleBranches = localBranches.filter((b) => !b.match(/\.hidden$/));
 
     const syncMenuHeader = (
       <DropdownDivider>
@@ -485,7 +485,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
                 <i className="fa fa-plus-circle" /> Create Local Project
               </DropdownItem>
             )}
-            {remoteProjects.map(p => (
+            {remoteProjects.map((p) => (
               <DropdownItem key={p.id} onClick={() => this._handleSetProject(p)}>
                 <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
               </DropdownItem>

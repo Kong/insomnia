@@ -22,7 +22,7 @@ export async function init() {
 
   // Initialize login state
   loginStateChange(isLoggedIn());
-  onLoginLogout(loggedIn => {
+  onLoginLogout((loggedIn) => {
     loginStateChange(loggedIn);
   });
 

@@ -182,7 +182,7 @@ async function _getDefaultParams(): Promise<Array<RequestParameter>> {
 
 // Monitor database changes to see if analytics gets enabled. If analytics
 // become enabled, flush any queued events.
-db.onChange(async changes => {
+db.onChange(async (changes) => {
   for (const change of changes) {
     const [event, doc] = change;
     if (doc.type === models.settings.type && event === 'update') {
@@ -214,11 +214,11 @@ async function _sendToGoogle(params: Array<RequestParameter>, queueable: boolean
   const net = (electron.remote || electron).net;
   const request = net.request(url);
 
-  request.once('error', err => {
+  request.once('error', (err) => {
     console.warn('[ga] Network error', err);
   });
 
-  request.once('response', response => {
+  request.once('response', (response) => {
     const { statusCode } = response;
     if (statusCode < 200 && statusCode >= 300) {
       console.warn('[ga] Bad status code ' + statusCode);
@@ -251,7 +251,7 @@ async function _sendToGoogle(params: Array<RequestParameter>, queueable: boolean
       }
     });
 
-    response.on('data', chunk => {
+    response.on('data', (chunk) => {
       chunks.push(chunk);
     });
   });

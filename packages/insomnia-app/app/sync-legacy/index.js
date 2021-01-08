@@ -62,7 +62,7 @@ export async function init() {
 
   // NOTE: This is at the top to prevent race conditions
   _isInitialized = true;
-  db.onChange(async changes => {
+  db.onChange(async (changes) => {
     // To help prevent bugs, put Workspaces first
     const sortedChanges = changes.sort(([event, doc, fromSync]) =>
       doc.type === models.workspace.type ? 1 : -1,
@@ -175,7 +175,7 @@ export async function fixDuplicateResourceGroups() {
     }
 
     // Fix duplicates
-    const ids = resources.map(r => r.resourceGroupId);
+    const ids = resources.map((r) => r.resourceGroupId);
     const { deleteResourceGroupIds } = await syncFixDupes(ids);
 
     for (const idToDelete of deleteResourceGroupIds) {
@@ -349,20 +349,20 @@ export async function pull(resourceGroupId = null, createMissingResources = true
   if (resourceGroupId) {
     // When doing specific sync, blacklist all configs except the one we're trying to sync.
     const allConfigs = await store.allConfigs();
-    blacklistedConfigs = allConfigs.filter(c => c.resourceGroupId !== resourceGroupId);
+    blacklistedConfigs = allConfigs.filter((c) => c.resourceGroupId !== resourceGroupId);
   } else {
     // When doing a full sync, blacklist the inactive configs
     blacklistedConfigs = await store.findInactiveConfigs(resourceGroupId);
   }
 
-  const resources = allResources.map(r => ({
+  const resources = allResources.map((r) => ({
     id: r.id,
     resourceGroupId: r.resourceGroupId,
     version: r.version,
     removed: r.removed,
   }));
 
-  const blacklistedResourceGroupIds = blacklistedConfigs.map(c => c.resourceGroupId);
+  const blacklistedResourceGroupIds = blacklistedConfigs.map((c) => c.resourceGroupId);
 
   const body = {
     resources,
@@ -735,7 +735,7 @@ export async function decryptDoc(resourceGroupId, messageJSON) {
 
 async function _getWorkspaceForDoc(doc) {
   const ancestors = await db.withAncestors(doc);
-  return ancestors.find(d => d.type === models.workspace.type);
+  return ancestors.find((d) => d.type === models.workspace.type);
 }
 
 export async function createResourceGroup(parentId, name) {
@@ -860,7 +860,7 @@ export async function getOrCreateAllActiveResources(resourceGroupId = null) {
     }
   }
 
-  const resources = Object.keys(activeResourceMap).map(k => activeResourceMap[k]);
+  const resources = Object.keys(activeResourceMap).map((k) => activeResourceMap[k]);
 
   const time = (Date.now() - startTime) / 1000;
   if (created > 0) {

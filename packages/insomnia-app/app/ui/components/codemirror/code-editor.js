@@ -254,8 +254,8 @@ class CodeEditor extends React.Component {
     }
     const marks = this.codeMirror
       .getAllMarks()
-      .filter(c => c.__isFold)
-      .map(mark => {
+      .filter((c) => c.__isFold)
+      .map((mark) => {
         const { from, to } = mark.find();
 
         return { from, to };
@@ -368,7 +368,7 @@ class CodeEditor extends React.Component {
 
     this.codeMirror.setOption('extraKeys', {
       ...BASE_CODEMIRROR_OPTIONS.extraKeys,
-      Tab: cm => {
+      Tab: (cm) => {
         // Indent with tabs or spaces
         // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
         if (cm.somethingSelected()) {
@@ -509,7 +509,7 @@ class CodeEditor extends React.Component {
     if (this.props.updateFilter && this.state.filter) {
       try {
         const results = queryXPath(code, this.state.filter);
-        code = `<result>${results.map(r => r.outer).join('\n')}</result>`;
+        code = `<result>${results.map((r) => r.outer).join('\n')}</result>`;
       } catch (err) {
         // Failed to parse filter (that's ok)
         code = `<error>${err.message}</error>`;
@@ -673,7 +673,7 @@ class CodeEditor extends React.Component {
     }
 
     // Strip of charset if there is one
-    Object.keys(options).map(key => {
+    Object.keys(options).map((key) => {
       this._codemirrorSmartSetOption(key, options[key]);
     });
   }
@@ -818,7 +818,7 @@ class CodeEditor extends React.Component {
 
       // Don't allow non-breaking spaces because they break the GraphQL syntax
       if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
-        change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+        change.text = change.text.map((text) => text.replace(/\u00A0/g, ' '));
       }
     }
   }
@@ -970,7 +970,7 @@ class CodeEditor extends React.Component {
             <DropdownButton className="btn btn--compact">
               <i className="fa fa-clock-o" />
             </DropdownButton>
-            {filterHistory.reverse().map(filter => (
+            {filterHistory.reverse().map((filter) => (
               <DropdownItem key={filter} value={filter} onClick={this._handleFilterHistorySelect}>
                 {filter}
               </DropdownItem>

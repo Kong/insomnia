@@ -79,7 +79,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       submitName: 'Create',
       placeholder: 'spec-name.yaml',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name) => {
         await models.workspace.create({
           name,
           scope: 'spec',
@@ -104,7 +104,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: uri => {
+      onComplete: (uri) => {
         this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
       },
     });
@@ -115,7 +115,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     // it's fine here for now (?)
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
-      onSubmitEdits: async repoSettingsPatch => {
+      onSubmitEdits: async (repoSettingsPatch) => {
         trackEvent('Git', 'Clone');
 
         const core = Math.random() + '';
@@ -294,7 +294,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { filter } = this.state;
 
-    const apiSpec = apiSpecs.find(s => s.parentId === w._id);
+    const apiSpec = apiSpecs.find((s) => s.parentId === w._id);
 
     let spec = null;
     let specFormat = null;
@@ -310,7 +310,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     }
 
     // Get cached branch from WorkspaceMeta
-    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === w._id);
+    const workspaceMeta = workspaceMetas.find((wm) => wm.parentId === w._id);
     const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
     const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
     const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
@@ -426,7 +426,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces.map(this.renderCard).filter(c => c !== null);
+    const cards = workspaces.map(this.renderCard).filter((c) => c !== null);
 
     return (
       <PageLayout

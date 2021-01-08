@@ -91,15 +91,15 @@ export function createWindow() {
     mainWindow.maximize();
   }
 
-  mainWindow.on('resize', e => saveBounds());
+  mainWindow.on('resize', (e) => saveBounds());
 
-  mainWindow.on('maximize', e => saveBounds());
+  mainWindow.on('maximize', (e) => saveBounds());
 
-  mainWindow.on('unmaximize', e => saveBounds());
+  mainWindow.on('unmaximize', (e) => saveBounds());
 
-  mainWindow.on('move', e => saveBounds());
+  mainWindow.on('move', (e) => saveBounds());
 
-  mainWindow.on('unresponsive', e => {
+  mainWindow.on('unresponsive', (e) => {
     showUnresponsiveModal();
   });
 
@@ -371,7 +371,7 @@ export function createWindow() {
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
-          mainWindow.capturePage(image => {
+          mainWindow.capturePage((image) => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);

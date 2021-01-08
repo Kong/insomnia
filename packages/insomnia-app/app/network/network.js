@@ -139,7 +139,7 @@ export async function _actuallySend(
   settings: Settings,
   environment: Environment | null,
 ): Promise<ResponsePatch> {
-  return new Promise(async resolve => {
+  return new Promise(async (resolve) => {
     const timeline: Array<ResponseTimelineEntry> = [];
 
     function addTimeline(name, value) {
@@ -223,7 +223,7 @@ export async function _actuallySend(
 
     /** Helper function to set Curl options */
     function setOpt(opt: number, val: any, optional: boolean = false) {
-      const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
+      const name = Object.keys(Curl.option).find((name) => Curl.option[name] === opt);
       try {
         curl.setOpt(opt, val);
       } catch (err) {
@@ -309,7 +309,7 @@ export async function _actuallySend(
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, contentBuffer: Buffer) => {
         const content = contentBuffer.toString('utf8');
-        const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
+        const rawName = Object.keys(CurlInfoDebug).find((k) => CurlInfoDebug[k] === infoType) || '';
         const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
         if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
@@ -504,7 +504,7 @@ export async function _actuallySend(
         const cHostWithProtocol = setDefaultProtocol(certificate.host, 'https:');
 
         if (urlMatchesCertHost(cHostWithProtocol, renderedRequest.url)) {
-          const ensureFile = blobOrFilename => {
+          const ensureFile = (blobOrFilename) => {
             try {
               fs.statSync(blobOrFilename);
             } catch (err) {
@@ -711,8 +711,8 @@ export async function _actuallySend(
 
       // NOTE: This is last because headers might be modified multiple times
       const headerStrings = headers
-        .filter(h => h.name)
-        .map(h => {
+        .filter((h) => h.name)
+        .map((h) => {
           const value = h.value || '';
           if (value === '') {
             // Curl needs a semicolon suffix to send empty header values
@@ -766,7 +766,7 @@ export async function _actuallySend(
         for (const { headers } of allCurlHeadersObjects) {
           // Collect Set-Cookie headers
           const setCookieHeaders = getSetCookieHeaders(headers);
-          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map(h => h.value)];
+          setCookieStrings = [...setCookieStrings, ...setCookieHeaders.map((h) => h.value)];
 
           // Pull out new URL if there is a redirect
           const newLocation = getLocationHeader(headers);
@@ -866,7 +866,7 @@ export async function sendWithSettings(
     models.workspace.type,
   ]);
 
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceDoc = ancestors.find((doc) => doc.type === models.workspace.type);
   const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
   const workspace = await models.workspace.getById(workspaceId);
   if (!workspace) {
@@ -945,7 +945,7 @@ export async function send(
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
 
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceDoc = ancestors.find((doc) => doc.type === models.workspace.type);
   const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
   if (!workspace) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
@@ -1119,8 +1119,8 @@ export function _getAwsAuthHeaders(
   const signature = aws4.sign(awsSignOptions, credentials);
 
   return Object.keys(signature.headers)
-    .filter(name => name !== 'content-type') // Don't add this because we already have it
-    .map(name => ({
+    .filter((name) => name !== 'content-type') // Don't add this because we already have it
+    .map((name) => ({
       name,
       value: signature.headers[name],
     }));
@@ -1136,7 +1136,7 @@ function storeTimeline(timeline: Array<ResponseTimelineEntry>): Promise<string> 
     const responsesDir = pathJoin(getDataDirectory(), 'responses');
     mkdirp.sync(responsesDir);
     const timelinePath = pathJoin(responsesDir, timelineHash + '.timeline');
-    fs.writeFile(timelinePath, timelineStr, err => {
+    fs.writeFile(timelinePath, timelineStr, (err) => {
       if (err != null) {
         reject(err);
       } else {

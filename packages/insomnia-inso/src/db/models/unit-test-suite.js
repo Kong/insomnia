@@ -11,7 +11,7 @@ import logger from '../../logger';
 export const loadUnitTestSuite = (db: Database, identifier: string): ?UnitTestSuite => {
   // Identifier is for one specific suite; find it
   logger.trace('Load unit test suite with identifier `%s` from data store', identifier);
-  const items = db.UnitTestSuite.filter(s => matchIdIsh(s, identifier) || s.name === identifier);
+  const items = db.UnitTestSuite.filter((s) => matchIdIsh(s, identifier) || s.name === identifier);
   logger.trace('Found %d.', items.length);
 
   return ensureSingleOrNone(items, 'unit test suite');
@@ -23,7 +23,7 @@ export const loadTestSuites = (db: Database, identifier: string): Array<UnitTest
 
   // if identifier is for an apiSpec or a workspace, return all suites for that workspace
   if (workspace) {
-    return db.UnitTestSuite.filter(s => s.parentId === workspace._id);
+    return db.UnitTestSuite.filter((s) => s.parentId === workspace._id);
   }
 
   // load particular suite
@@ -39,9 +39,9 @@ export const promptTestSuites = async (
     return [];
   }
 
-  const choices = db.ApiSpec.map(spec => [
+  const choices = db.ApiSpec.map((spec) => [
     getDbChoice(generateIdIsh(spec), spec.fileName),
-    ...db.UnitTestSuite.filter(suite => suite.parentId === spec.parentId).map(suite =>
+    ...db.UnitTestSuite.filter((suite) => suite.parentId === spec.parentId).map((suite) =>
       getDbChoice(generateIdIsh(suite), suite.name, { indent: 1 }),
     ),
   ]);

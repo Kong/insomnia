@@ -90,10 +90,10 @@ export async function getTagDefinitions(): Promise<Array<NunjucksParsedTag>> {
   const env = await getNunjucks(RENDER_ALL);
 
   return Object.keys(env.extensions)
-    .map(k => env.extensions[k])
-    .filter(ext => !ext.isDeprecated())
+    .map((k) => env.extensions[k])
+    .filter((ext) => !ext.isDeprecated())
     .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
-    .map(ext => ({
+    .map((ext) => ({
       name: ext.getTag(),
       displayName: ext.getName(),
       liveDisplayName: ext.getLiveDisplayName(),
@@ -162,7 +162,7 @@ async function getNunjucks(renderMode: string) {
 
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
-    nj.addFilter('debug', o => o);
+    nj.addFilter('debug', (o) => o);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //

@@ -70,7 +70,7 @@ class CookiesModal extends PureComponent<Props, State> {
     const { cookies } = cookieJar;
 
     // NOTE: This is sketchy because it relies on the same reference
-    cookieJar.cookies = cookies.filter(c => c.id !== cookie.id);
+    cookieJar.cookies = cookies.filter((c) => c.id !== cookie.id);
 
     await this._saveChanges();
   }

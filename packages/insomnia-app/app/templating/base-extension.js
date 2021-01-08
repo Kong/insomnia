@@ -90,7 +90,7 @@ export default class BaseExtension {
     // Extract the rest of the args
     const args = runArgs
       .slice(0, runArgs.length - 1)
-      .filter(a => a !== EMPTY_ARG)
+      .filter((a) => a !== EMPTY_ARG)
       .map(decodeEncoding);
 
     // Define a helper context with utils
@@ -102,22 +102,22 @@ export default class BaseExtension {
       meta: renderMeta,
       renderPurpose,
       util: {
-        render: str => templating.render(str, { context: renderContext }),
+        render: (str) => templating.render(str, { context: renderContext }),
         models: {
           request: {
             getById: models.request.getById,
-            getAncestors: async request => {
+            getAncestors: async (request) => {
               const ancestors = await db.withAncestors(request, [
                 models.requestGroup.type,
                 models.workspace.type,
               ]);
-              return ancestors.filter(doc => doc._id !== request._id);
+              return ancestors.filter((doc) => doc._id !== request._id);
             },
           },
           workspace: { getById: models.workspace.getById },
           oAuth2Token: { getByRequestId: models.oAuth2Token.getByParentId },
           cookieJar: {
-            getOrCreateForWorkspace: workspace => {
+            getOrCreateForWorkspace: (workspace) => {
               return models.cookieJar.getOrCreateForParentId(workspace._id);
             },
           },
@@ -141,10 +141,10 @@ export default class BaseExtension {
     // If the result is a promise, resolve it async
     if (result instanceof Promise) {
       result
-        .then(r => {
+        .then((r) => {
           callback(null, r);
         })
-        .catch(err => {
+        .catch((err) => {
           callback(err);
         });
       return;

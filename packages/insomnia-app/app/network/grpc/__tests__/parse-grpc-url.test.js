@@ -34,7 +34,7 @@ describe('parseGrpcUrl', () => {
     });
   });
 
-  it.each([null, undefined, ''])('can handle falsey urls', input => {
+  it.each([null, undefined, ''])('can handle falsey urls', (input) => {
     expect(parseGrpcUrl(input)).toStrictEqual({
       url: '',
       enableTls: false,

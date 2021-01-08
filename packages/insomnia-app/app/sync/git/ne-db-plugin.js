@@ -129,12 +129,12 @@ export default class NeDBPlugin {
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
-      docs = children.filter(d => d.type === type && !(d: any).isPrivate);
+      docs = children.filter((d) => d.type === type && !(d: any).isPrivate);
     } else {
       throw this._errMissing(filePath);
     }
 
-    const ids = docs.map(d => `${d._id}.yml`);
+    const ids = docs.map((d) => `${d._id}.yml`);
 
     return [...ids, ...otherFolders].sort();
   }

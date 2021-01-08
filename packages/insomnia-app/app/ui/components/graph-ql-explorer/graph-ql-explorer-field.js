@@ -37,7 +37,7 @@ class GraphQLExplorerField extends React.PureComponent<Props> {
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Arguments</h2>
         <ul className="graphql-explorer__defs">
-          {field.args.map(a => {
+          {field.args.map((a) => {
             return (
               <li key={a.name}>
                 <span className="info">{a.name}</span>:{' '}

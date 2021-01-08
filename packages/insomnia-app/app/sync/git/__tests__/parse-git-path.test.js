@@ -34,7 +34,7 @@ describe('parseGitPath', () => {
     expect(result.id).toBe('wrk_1');
   });
 
-  it.each(['json', 'yml'])('should omit the %s extension', ext => {
+  it.each(['json', 'yml'])('should omit the %s extension', (ext) => {
     const gitPath = `${GIT_INSOMNIA_DIR}/${models.workspace.type}/wrk_1.${ext}`;
 
     const result = parseGitPath(gitPath);

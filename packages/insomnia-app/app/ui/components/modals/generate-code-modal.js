@@ -12,8 +12,8 @@ import ModalFooter from '../base/modal-footer';
 import { exportHarRequest } from '../../../common/har';
 import Link from '../base/link';
 
-const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
-const DEFAULT_CLIENT = DEFAULT_TARGET.clients.find(t => t.key === 'curl');
+const DEFAULT_TARGET = availableTargets().find((t) => t.key === 'shell');
+const DEFAULT_CLIENT = DEFAULT_TARGET.clients.find((t) => t.key === 'curl');
 const MODE_MAP = {
   c: 'clike',
   java: 'clike',
@@ -76,13 +76,15 @@ class GenerateCodeModal extends PureComponent {
       return;
     }
 
-    const client = target.clients.find(c => c.key === target.default);
+    const client = target.clients.find((c) => c.key === target.default);
     this._generateCode(this.state.request, target, client);
   }
 
   async _generateCode(request, target, client) {
     // Some clients need a content-length for the request to succeed
-    const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
+    const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(
+      (c) => c === client.key,
+    );
 
     const { environmentId } = this.props;
     const har = await exportHarRequest(request._id, environmentId, addContentLength);
@@ -130,7 +132,7 @@ class GenerateCodeModal extends PureComponent {
                 {target ? target.title : 'n/a'}
                 <i className="fa fa-caret-down" />
               </DropdownButton>
-              {targets.map(target => (
+              {targets.map((target) => (
                 <DropdownItem key={target.key} onClick={this._handleTargetChange} value={target}>
                   {target.title}
                 </DropdownItem>
@@ -142,7 +144,7 @@ class GenerateCodeModal extends PureComponent {
                 {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down" />
               </DropdownButton>
-              {clients.map(client => (
+              {clients.map((client) => (
                 <DropdownItem key={client.key} onClick={this._handleClientChange} value={client}>
                   {client.title}
                 </DropdownItem>

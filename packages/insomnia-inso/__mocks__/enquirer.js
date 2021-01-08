@@ -13,7 +13,7 @@ class Prompt {
 
 module.exports = {
   __constructorMock,
-  __mockPromptRun: v => {
+  __mockPromptRun: (v) => {
     returnValue = v;
   },
   AutoComplete: Prompt,

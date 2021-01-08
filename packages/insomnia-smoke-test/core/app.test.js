@@ -36,7 +36,7 @@ describe('Application launch', function() {
 
   it.each([true, false])(
     'imports swagger 2 and sends request: new workspace=%s ',
-    async newWorkspace => {
+    async (newWorkspace) => {
       await debug.workspaceDropdownExists(app);
 
       // Copy text to clipboard

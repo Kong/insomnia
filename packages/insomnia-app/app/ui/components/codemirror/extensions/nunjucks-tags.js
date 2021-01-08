@@ -43,7 +43,7 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
 
 async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
   const renderCacheKey = Math.random() + '';
-  const renderString = text => render(text, renderCacheKey);
+  const renderString = (text) => render(text, renderCacheKey);
   const activeMarks = [];
   const doc = this.getDoc();
 
@@ -146,7 +146,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
         // Define the dialog HTML
         showModal(NunjucksVariableModal, {
           template: mark.__template,
-          onDone: template => {
+          onDone: (template) => {
             const pos = mark.find();
             if (pos) {
               const { from, to } = pos;
@@ -176,7 +176,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       };
 
       // Set up the drag
-      el.addEventListener('dragstart', e => {
+      el.addEventListener('dragstart', (e) => {
         // Setup the drag contents
         const template = e.target.getAttribute('data-template');
         e.dataTransfer.setData('text/plain', template);
@@ -188,7 +188,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
         this.on('drop', dropCb);
       });
 
-      el.addEventListener('dragend', e => {
+      el.addEventListener('dragend', (e) => {
         // If dragged within same editor, delete the old reference
         // TODO: Actually only use dropEffect for this logic. For some reason
         // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)
@@ -203,7 +203,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       });
 
       // Don't allow dropping on itself
-      el.addEventListener('drop', e => {
+      el.addEventListener('drop', (e) => {
         e.stopPropagation();
       });
     }
@@ -252,7 +252,7 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
   try {
     if (tagMatch) {
       const tagData = tokenizeTag(str);
-      const tagDefinition = (await getTagDefinitions()).find(d => d.name === tagData.name);
+      const tagDefinition = (await getTagDefinitions()).find((d) => d.name === tagData.name);
 
       if (tagDefinition) {
         // Try rendering these so we can show errors if needed
@@ -262,7 +262,7 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
           innerHTML = liveDisplayName;
         } else if (firstArg && firstArg.type === 'enum') {
           const argData = tagData.args[0];
-          const foundOption = firstArg.options.find(d => d.value === argData.value);
+          const foundOption = firstArg.options.find((d) => d.value === argData.value);
           const option = foundOption || firstArg.options[0];
           innerHTML = `${tagDefinition.displayName} &rArr; ${option.displayName}`;
         } else {

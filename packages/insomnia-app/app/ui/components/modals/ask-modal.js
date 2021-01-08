@@ -69,7 +69,7 @@ class AskModal extends PureComponent {
       this.yesButton && this.yesButton.focus();
     }, 100);
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this._promiseCallback = resolve;
     });
   }

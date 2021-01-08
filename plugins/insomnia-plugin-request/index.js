@@ -54,8 +54,8 @@ module.exports.templateTags = [
       },
       {
         type: 'string',
-        hide: args => ['url', 'oauth2', 'name', 'folder'].includes(args[0].value),
-        displayName: args => {
+        hide: (args) => ['url', 'oauth2', 'name', 'folder'].includes(args[0].value),
+        displayName: (args) => {
           switch (args[0].value) {
             case 'cookie':
               return 'Cookie Name';
@@ -69,7 +69,7 @@ module.exports.templateTags = [
         },
       },
       {
-        hide: args => args[0].value !== 'folder',
+        hide: (args) => args[0].value !== 'folder',
         displayName: 'Parent Index',
         help: 'Specify an index (Starting at 0) for how high up the folder tree to look',
         type: 'number',
@@ -124,7 +124,7 @@ module.exports.templateTags = [
             }
           }
 
-          const parameterNamesStr = parameterNames.map(n => `"${n}"`).join(',\n\t');
+          const parameterNamesStr = parameterNames.map((n) => `"${n}"`).join(',\n\t');
           throw new Error(
             `No query parameter with name "${name}".\nChoices are [\n\t${parameterNamesStr}\n]`,
           );
@@ -147,7 +147,7 @@ module.exports.templateTags = [
             }
           }
 
-          const headerNamesStr = headerNames.map(n => `"${n}"`).join(',\n\t');
+          const headerNamesStr = headerNames.map((n) => `"${n}"`).join(',\n\t');
           throw new Error(`No header with name "${name}".\nChoices are [\n\t${headerNamesStr}\n]`);
         case 'oauth2':
           const token = await context.util.models.oAuth2Token.getByRequestId(request._id);
@@ -203,9 +203,9 @@ function getCookieValue(cookieJar, url, name) {
         reject(new Error(`No cookies in store for url "${url}"`));
       }
 
-      const cookie = cookies.find(cookie => cookie.key === name);
+      const cookie = cookies.find((cookie) => cookie.key === name);
       if (!cookie) {
-        const names = cookies.map(c => `"${c.key}"`).join(',\n\t');
+        const names = cookies.map((c) => `"${c.key}"`).join(',\n\t');
         throw new Error(
           `No cookie with name "${name}".\nChoices are [\n\t${names}\n] for url "${url}"`,
         );

@@ -11,7 +11,7 @@ type Props = {
   onClick: (section: string, ...args: any) => void,
 };
 
-const isNotXDashKey = key => key.indexOf('x-') !== 0;
+const isNotXDashKey = (key) => key.indexOf('x-') !== 0;
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
@@ -25,7 +25,7 @@ export default class SidebarPaths extends React.Component<Props> {
     if (Object.prototype.toString.call(pathItems) !== '[object Array]') {
       return <StyledInvalidSection name={'path'} />;
     }
-    const filteredValues = pathItems.filter(pathDetail =>
+    const filteredValues = pathItems.filter((pathDetail) =>
       pathDetail[0].toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -46,7 +46,7 @@ export default class SidebarPaths extends React.Component<Props> {
             <SidebarItem>
               {Object.keys((routeBody: any))
                 .filter(isNotXDashKey)
-                .map(method => (
+                .map((method) => (
                   <SidebarBadge
                     key={method}
                     method={method}

@@ -34,7 +34,7 @@ export function generate(suites: Array<TestSuite>): string {
 export async function generateToFile(filepath: string, suites: Array<TestSuite>): Promise<void> {
   return new Promise((resolve, reject) => {
     const js = generate(suites);
-    return fs.writeFile(filepath, js, err => {
+    return fs.writeFile(filepath, js, (err) => {
       if (err) {
         reject(err);
       } else {

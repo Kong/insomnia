@@ -10,7 +10,7 @@ import SidebarCreateDropdown from './sidebar-create-dropdown';
 import SidebarSortDropdown from './sidebar-sort-dropdown';
 
 type Props = {
-  onChange: string => void,
+  onChange: (string) => void,
   requestCreate: () => void,
   requestGroupCreate: () => void,
   sidebarSort: (sortOrder: SortOrder) => void,

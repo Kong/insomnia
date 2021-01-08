@@ -211,16 +211,16 @@ describe('Git-VCS', () => {
       await vcs.init(GIT_CLONE_DIR, fs);
 
       // Write to all files
-      await Promise.all(files.map(f => fs.promises.writeFile(f, originalContent)));
+      await Promise.all(files.map((f) => fs.promises.writeFile(f, originalContent)));
 
       // Commit all files
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
-      await Promise.all(files.map(f => vcs.add(f, originalContent)));
+      await Promise.all(files.map((f) => vcs.add(f, originalContent)));
       await vcs.commit('First commit!');
 
       // Change all files
-      await Promise.all(files.map(f => fs.promises.writeFile(f, changedContent)));
-      await Promise.all(files.map(f => expect(vcs.status(foo1Txt)).resolves.toBe('*modified')));
+      await Promise.all(files.map((f) => fs.promises.writeFile(f, changedContent)));
+      await Promise.all(files.map((f) => expect(vcs.status(foo1Txt)).resolves.toBe('*modified')));
 
       // Undo foo1 and foo2, but not foo3
       await vcs.undoPendingChanges([foo1Txt, foo2Txt]);

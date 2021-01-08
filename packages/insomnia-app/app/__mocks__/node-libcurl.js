@@ -167,7 +167,7 @@ Curl.option = {
 //  converted to an object with format:
 // { EnumKey: 0, 0: EnumKey }
 // We only want the named members (non-number ones)
-const getTsEnumOnlyWithNamedMembers = enumObj => {
+const getTsEnumOnlyWithNamedMembers = (enumObj) => {
   let obj = {};
   for (const member in enumObj) {
     if (typeof enumObj[member] === 'number') {

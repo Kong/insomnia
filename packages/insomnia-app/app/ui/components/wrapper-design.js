@@ -73,7 +73,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
   async _handleTogglePreview() {
     await this.setState(
-      prevState => ({ previewHidden: !prevState.previewHidden }),
+      (prevState) => ({ previewHidden: !prevState.previewHidden }),
       async () => {
         const workspaceId = this.props.wrapperProps.activeWorkspace._id;
         const previewHidden = this.state.previewHidden;
@@ -118,7 +118,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     if (activeApiSpec.contents.length !== 0) {
       const results = await spectral.run(activeApiSpec.contents);
       this.setState({
-        lintMessages: results.map(r => ({
+        lintMessages: results.map((r) => ({
           type: r.severity === 0 ? 'error' : 'warning',
           message: `${r.code} ${r.message}`,
           line: r.range.start.line,

@@ -32,7 +32,7 @@ describe('workspace', () => {
 
     it.each([generateIdIsh(workspace), workspace._id, workspace.name])(
       'should return workspace with identifier: %o',
-      identifier => {
+      (identifier) => {
         expect(loadWorkspace(db, identifier)).toBe(workspace);
       },
     );

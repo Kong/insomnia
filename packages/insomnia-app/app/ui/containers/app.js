@@ -124,9 +124,11 @@ class App extends PureComponent {
 
     this._getRenderContextPromiseCache = {};
 
-    this._savePaneWidth = debounce(paneWidth => this._updateActiveWorkspaceMeta({ paneWidth }));
-    this._savePaneHeight = debounce(paneHeight => this._updateActiveWorkspaceMeta({ paneHeight }));
-    this._saveSidebarWidth = debounce(sidebarWidth =>
+    this._savePaneWidth = debounce((paneWidth) => this._updateActiveWorkspaceMeta({ paneWidth }));
+    this._savePaneHeight = debounce((paneHeight) =>
+      this._updateActiveWorkspaceMeta({ paneHeight }),
+    );
+    this._saveSidebarWidth = debounce((sidebarWidth) =>
       this._updateActiveWorkspaceMeta({ sidebarWidth }),
     );
 
@@ -233,7 +235,7 @@ class App extends PureComponent {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: async confirmed => {
+            onDone: async (confirmed) => {
               if (!confirmed) {
                 return;
               }
@@ -275,7 +277,7 @@ class App extends PureComponent {
             ? entities.grpcRequestMetas
             : entities.requestMetas;
 
-          const meta = Object.values(entitiesToCheck).find(m => m.parentId === activeRequest._id);
+          const meta = Object.values(entitiesToCheck).find((m) => m.parentId === activeRequest._id);
 
           await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
         },
@@ -323,7 +325,7 @@ class App extends PureComponent {
       submitName: 'Create',
       label: 'Name',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name) => {
         const requestGroup = await models.requestGroup.create({
           parentId,
           name,
@@ -339,7 +341,7 @@ class App extends PureComponent {
   _requestCreate(parentId) {
     showModal(RequestCreateModal, {
       parentId,
-      onComplete: requestId => {
+      onComplete: (requestId) => {
         this._handleSetActiveRequest(requestId);
         models.stats.incrementCreatedRequests();
       },
@@ -369,7 +371,7 @@ class App extends PureComponent {
     await this._recalculateMetaSortKey(docs);
 
     // sort RequestGroups recursively
-    await Promise.all(docs.filter(isRequestGroup).map(g => this._sortSidebar(order, g._id)));
+    await Promise.all(docs.filter(isRequestGroup).map((g) => this._sortSidebar(order, g._id)));
 
     if (flushId) {
       await db.flushChanges(flushId);
@@ -383,7 +385,7 @@ class App extends PureComponent {
       submitName: 'Create',
       label: 'New Name',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name) => {
         const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name });
 
         models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
@@ -406,7 +408,7 @@ class App extends PureComponent {
       submitName: 'Create',
       label: 'New Name',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name) => {
         const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
         models.stats.incrementCreatedRequests();
@@ -415,7 +417,7 @@ class App extends PureComponent {
   }
 
   _workspaceRename(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const workspace = this.props.workspaces.find((w) => w._id === workspaceId);
     console.dir(AppContext);
     showPrompt({
       title: `Rename ${AppContext.workspace}`,
@@ -423,7 +425,7 @@ class App extends PureComponent {
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: async name => {
+      onComplete: async (name) => {
         await models.workspace.update(workspace, { name: name });
         callback();
       },
@@ -431,13 +433,13 @@ class App extends PureComponent {
   }
 
   _workspaceDeleteById(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const workspace = this.props.workspaces.find((w) => w._id === workspaceId);
     showModal(AskModal, {
       title: `Delete ${AppContext.workspace}`,
       message: `Do you really want to delete ${workspace.name}?`,
       yesText: 'Yes',
       noText: 'Cancel',
-      onDone: async isYes => {
+      onDone: async (isYes) => {
         if (!isYes) {
           return;
         }
@@ -450,7 +452,7 @@ class App extends PureComponent {
   }
 
   _workspaceDuplicateById(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const workspace = this.props.workspaces.find((w) => w._id === workspaceId);
 
     showPrompt({
       title: `Duplicate ${AppContext.workspace}`,
@@ -458,7 +460,7 @@ class App extends PureComponent {
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
-      onComplete: async name => {
+      onComplete: async (name) => {
         const newWorkspace = await db.duplicate(workspace, { name });
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
@@ -738,7 +740,7 @@ class App extends PureComponent {
           await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
 
-        readStream.on('error', async err => {
+        readStream.on('error', async (err) => {
           console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
           await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
@@ -1022,7 +1024,7 @@ class App extends PureComponent {
 
     // Force app refresh if login state changes
     if (prevProps.isLoggedIn !== this.props.isLoggedIn) {
-      this.setState(state => ({
+      this.setState((state) => ({
         forceRefreshCounter: state.forceRefreshCounter + 1,
       }));
     }
@@ -1114,11 +1116,11 @@ class App extends PureComponent {
     if (!vcs) {
       const directory = path.join(getDataDirectory(), 'version-control');
       const driver = new FileSystemDriver({ directory });
-      vcs = new VCS(driver, async conflicts => {
-        return new Promise(resolve => {
+      vcs = new VCS(driver, async (conflicts) => {
+        return new Promise((resolve) => {
           showModal(SyncMergeModal, {
             conflicts,
-            handleDone: conflicts => resolve(conflicts),
+            handleDone: (conflicts) => resolve(conflicts),
           });
         });
       });
@@ -1145,7 +1147,7 @@ class App extends PureComponent {
     await this._updateVCS();
     await this._updateGitVCS(this.props.activeWorkspace);
 
-    db.onChange(async changes => {
+    db.onChange(async (changes) => {
       let needsRefresh = false;
 
       for (const change of changes) {
@@ -1205,7 +1207,7 @@ class App extends PureComponent {
     // NOTE: This is required for "drop" event to trigger.
     document.addEventListener(
       'dragover',
-      e => {
+      (e) => {
         e.preventDefault();
       },
       false,
@@ -1213,7 +1215,7 @@ class App extends PureComponent {
 
     document.addEventListener(
       'drop',
-      async e => {
+      async (e) => {
         e.preventDefault();
         const { activeWorkspace, handleImportUriToWorkspace } = this.props;
         if (!activeWorkspace) {
@@ -1267,7 +1269,7 @@ class App extends PureComponent {
       environments,
       activeApiSpec,
     } = this.props;
-    const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
+    const baseEnvironments = environments.filter((e) => e.parentId === activeWorkspace._id);
 
     // Nothing to do
     if (baseEnvironments.length && activeCookieJar && activeApiSpec && activeWorkspaceMeta) {
@@ -1483,7 +1485,7 @@ function mapStateToProps(state, props) {
   const syncItems = selectSyncItems(state, props);
 
   // Api spec stuff
-  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
+  const activeApiSpec = apiSpecs.find((s) => s.parentId === activeWorkspace._id);
 
   // Test stuff
   const activeUnitTests = selectActiveUnitTests(state, props);

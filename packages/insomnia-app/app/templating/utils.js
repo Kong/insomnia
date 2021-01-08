@@ -195,7 +195,7 @@ export function unTokenizeTag(tagData: NunjucksParsedTag): string {
 
 /** Get the default Nunjucks string for an extension */
 export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>): string {
-  const stringArgs: Array<string> = (args || []).map(argDefinition => {
+  const stringArgs: Array<string> = (args || []).map((argDefinition) => {
     switch (argDefinition.type) {
       case 'enum':
         const { defaultValue, options } = argDefinition;

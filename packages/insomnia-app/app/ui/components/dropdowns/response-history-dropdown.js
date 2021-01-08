@@ -18,9 +18,9 @@ import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 
 type Props = {
-  handleSetActiveResponse: Response => Promise<void>,
+  handleSetActiveResponse: (Response) => Promise<void>,
   handleDeleteResponses: (requestId: string, environmentId: string | null) => Promise<void>,
-  handleDeleteResponse: Response => Promise<void>,
+  handleDeleteResponse: (Response) => Promise<void>,
   requestId: string,
   responses: Array<Response>,
   requestVersions: Array<RequestVersion>,
@@ -64,7 +64,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
     const message =
       'Request will not be restored with this response because ' +
       'it was created before this ability was added';
-    const requestVersion = requestVersions.find(v => v._id === response.requestVersionId);
+    const requestVersion = requestVersions.find((v) => v._id === response.requestVersionId);
     const request = requestVersion ? decompressObject(requestVersion.compressedRequest) : null;
 
     return (
@@ -102,7 +102,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
     const now = moment();
     // Four arrays for four time groups
     const categories = { minutes: [], hours: [], today: [], week: [], other: [] };
-    responses.forEach(r => {
+    responses.forEach((r) => {
       const resTime = moment(r.created);
       if (now.diff(resTime, 'minutes') < 5) {
         // Five minutes ago

@@ -560,7 +560,7 @@ describe('Response tag', () => {
 
   describe('Max Age', () => {
     const maxAgeArg = tag.args[4];
-    const toValueObj = value => ({ value });
+    const toValueObj = (value) => ({ value });
 
     it('should ensure fourth argument is maxAge', () => {
       expect(maxAgeArg.displayName).toBe('Max age (seconds)');
@@ -639,9 +639,9 @@ function _genTestContext(requests, responses, extraInfoRoot) {
       },
     },
     store: {
-      hasItem: key => Object.prototype.hasOwnProperty.call(store, key),
-      getItem: key => store[key],
-      removeItem: key => {
+      hasItem: (key) => Object.prototype.hasOwnProperty.call(store, key),
+      getItem: (key) => store[key],
+      removeItem: (key) => {
         delete store[key];
       },
       setItem: (key, value) => {
@@ -652,12 +652,12 @@ function _genTestContext(requests, responses, extraInfoRoot) {
       models: {
         request: {
           getById(requestId) {
-            return requests.find(r => r._id === requestId) || null;
+            return requests.find((r) => r._id === requestId) || null;
           },
         },
         response: {
           getLatestForRequestId(requestId, environmentId) {
-            return responses.find(r => r.parentId === requestId) || null;
+            return responses.find((r) => r.parentId === requestId) || null;
           },
           getBodyBuffer(response) {
             const strOrBuffer = bodies[response._id];

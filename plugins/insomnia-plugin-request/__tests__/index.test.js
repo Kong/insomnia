@@ -119,18 +119,18 @@ function _getTestContext(workspaces, requests, jars) {
       models: {
         request: {
           getById(id) {
-            return requests.find(r => r._id === id);
+            return requests.find((r) => r._id === id);
           },
         },
         workspace: {
           getById(id) {
-            return workspaces.find(w => w._id === id);
+            return workspaces.find((w) => w._id === id);
           },
         },
         cookieJar: {
           getOrCreateForWorkspace(workspace) {
             return (
-              jars.find(j => j.parentId === workspace._id) || {
+              jars.find((j) => j.parentId === workspace._id) || {
                 parentId: workspace._id,
                 cookies: [],
               }

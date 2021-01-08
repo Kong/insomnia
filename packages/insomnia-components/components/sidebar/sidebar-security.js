@@ -20,7 +20,7 @@ export default class SidebarSecurity extends React.Component<Props> {
       return <StyledInvalidSection name={'security'} />;
     }
 
-    const filteredValues = Object.keys(security).filter(scheme =>
+    const filteredValues = Object.keys(security).filter((scheme) =>
       scheme.toLowerCase().includes(filter.toLocaleLowerCase()),
     );
 
@@ -30,7 +30,7 @@ export default class SidebarSecurity extends React.Component<Props> {
 
     return (
       <div>
-        {filteredValues.map(scheme => (
+        {filteredValues.map((scheme) => (
           <React.Fragment key={scheme}>
             <SidebarItem onClick={() => onClick('components', 'securitySchemes', scheme)}>
               <div>

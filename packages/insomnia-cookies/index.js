@@ -6,14 +6,14 @@ const { CookieJar, Cookie } = require('tough-cookie');
  * @param jar
  */
 module.exports.cookiesFromJar = function(jar) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     jar.store.getAllCookies((err, cookies) => {
       if (err) {
         console.warn('Failed to get cookies form jar', err);
         resolve([]);
       } else {
         // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-        resolve(cookies.map(c => c.toJSON()));
+        resolve(cookies.map((c) => c.toJSON()));
       }
     });
   });

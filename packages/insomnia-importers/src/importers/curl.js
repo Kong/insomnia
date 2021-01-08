@@ -148,14 +148,14 @@ function importArgs(args) {
   const authentication = username ? { username: username.trim(), password: password.trim() } : {};
 
   // Headers
-  const headers = [...(pairs.header || []), ...(pairs.H || [])].map(str => {
+  const headers = [...(pairs.header || []), ...(pairs.H || [])].map((str) => {
     const [name, value] = str.split(/:(.*)$/);
     return { name: name.trim(), value: value.trim() };
   });
 
   // Cookies
   const cookieHeaderValue = [...(pairs.cookie || []), ...(pairs.b || [])]
-    .map(str => {
+    .map((str) => {
       const name = str.split('=', 1)[0];
       const value = str.replace(`${name}=`, '');
       return `${name}=${value}`;
@@ -163,7 +163,7 @@ function importArgs(args) {
     .join('; ');
 
   // Convert cookie value to header
-  const existingCookieHeader = headers.find(h => h.name.toLowerCase() === 'cookie');
+  const existingCookieHeader = headers.find((h) => h.name.toLowerCase() === 'cookie');
   if (cookieHeaderValue && existingCookieHeader) {
     // Has existing cookie header, so let's update it
     existingCookieHeader.value += `; ${cookieHeaderValue}`;
@@ -187,11 +187,11 @@ function importArgs(args) {
   // join params to make body
   const textBody = textBodyParams.join('&');
 
-  const contentTypeHeader = headers.find(h => h.name.toLowerCase() === 'content-type');
+  const contentTypeHeader = headers.find((h) => h.name.toLowerCase() === 'content-type');
   const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : null;
 
   // Body (Multipart Form Data)
-  const formDataParams = [...(pairs.form || []), ...(pairs.F || [])].map(str => {
+  const formDataParams = [...(pairs.form || []), ...(pairs.F || [])].map((str) => {
     const [name, value] = str.split('=');
     const item = { name };
 
@@ -208,14 +208,14 @@ function importArgs(args) {
   // Body
   const body = mimeType ? { mimeType: mimeType } : {};
   if (textBody && bodyAsGET) {
-    const bodyParams = textBody.split('&').map(v => {
+    const bodyParams = textBody.split('&').map((v) => {
       const [name, value] = v.split('=');
       return { name: name || '', value: value || '' };
     });
 
     parameters.push(...bodyParams);
   } else if (textBody && mimeType === 'application/x-www-form-urlencoded') {
-    body.params = textBody.split('&').map(v => {
+    body.params = textBody.split('&').map((v) => {
       const [name, value] = v.split('=');
       return { name: name || '', value: value || '' };
     });

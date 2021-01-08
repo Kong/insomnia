@@ -34,7 +34,7 @@ class Account extends React.PureComponent<Props, State> {
   };
 
   async _handleShowChangePasswordForm(e: SyntheticEvent<HTMLInputElement>) {
-    this.setState(state => ({
+    this.setState((state) => ({
       showChangePassword: !state.showChangePassword,
       finishedResetting: false,
     }));

@@ -366,7 +366,7 @@ const defaultRegistry: HotKeyRegistry = {
 
 function copyKeyCombs(sources: Array<KeyCombination>): Array<KeyCombination> {
   const targets: Array<KeyCombination> = [];
-  sources.forEach(keyComb => {
+  sources.forEach((keyComb) => {
     targets.push(Object.assign({}, keyComb));
   });
   return targets;
@@ -445,7 +445,7 @@ export function areKeyBindingsSameAsDefault(hotKeyRefId: string, keyBinds: KeyBi
     return false;
   }
   for (const keyComb of keyCombs) {
-    const found = defaultKeyCombs.find(defKeyComb => {
+    const found = defaultKeyCombs.find((defKeyComb) => {
       if (areSameKeyCombinations(keyComb, defKeyComb)) {
         return true;
       }
@@ -464,7 +464,7 @@ export function areKeyBindingsSameAsDefault(hotKeyRefId: string, keyBinds: KeyBi
  */
 export function getChar(keyCode: number): string {
   let char;
-  const key = Object.keys(keyboardKeys).find(k => keyboardKeys[k].keyCode === keyCode);
+  const key = Object.keys(keyboardKeys).find((k) => keyboardKeys[k].keyCode === keyCode);
 
   if (!key) {
     console.error('Invalid key code', keyCode);

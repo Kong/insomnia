@@ -19,7 +19,7 @@ const localStorageMock = (function() {
 
 global.__DEV__ = false;
 global.localStorage = localStorageMock;
-global.requestAnimationFrame = cb => process.nextTick(cb);
+global.requestAnimationFrame = (cb) => process.nextTick(cb);
 global.require = require;
 
 // Set APP_ID for tests so the user doesn't have to worry

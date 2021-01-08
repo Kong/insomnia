@@ -212,7 +212,7 @@ describe('common', () => {
 
   const methods = ['get', 'put', 'post', 'options', 'delete', 'head', 'patch', 'trace'];
   describe('isHttpMethodKey()', () => {
-    it.each(methods)('should be true for %o', method => {
+    it.each(methods)('should be true for %o', (method) => {
       expect(isHttpMethodKey(method)).toBe(true);
     });
     it('should be false for non http method key', () => {
@@ -221,7 +221,7 @@ describe('common', () => {
   });
 
   describe('getMethodAnnotationName', () => {
-    it.each(methods)('should suffix with -method and lowercase: %o', method => {
+    it.each(methods)('should suffix with -method and lowercase: %o', (method) => {
       expect(getMethodAnnotationName(method)).toBe(`${method}-method`.toLowerCase());
     });
   });

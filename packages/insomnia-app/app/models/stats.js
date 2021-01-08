@@ -86,12 +86,12 @@ export async function incrementExecutedRequests() {
 
 export async function incrementCreatedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const requests = docs.filter((doc) => isRequest(doc) || isGrpcRequest(doc));
   await incrementRequestStats({ createdRequests: requests.length });
 }
 
 export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.withDescendants(doc);
-  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const requests = docs.filter((doc) => isRequest(doc) || isGrpcRequest(doc));
   await incrementRequestStats({ deletedRequests: requests.length });
 }

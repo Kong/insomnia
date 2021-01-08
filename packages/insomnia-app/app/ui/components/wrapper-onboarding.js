@@ -56,7 +56,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   _handleBackStep(e: SyntheticEvent<HTMLAnchorElement>) {
     e.preventDefault();
 
-    this.setState(state => ({ step: state.step - 1 }));
+    this.setState((state) => ({ step: state.step - 1 }));
   }
 
   async _handleCompleteAnalyticsStep(enableAnalytics: boolean) {
@@ -65,7 +65,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     // Update settings with analytics preferences
     await models.settings.update(settings, { enableAnalytics });
 
-    this.setState(state => ({ step: state.step + 1 }));
+    this.setState((state) => ({ step: state.step + 1 }));
   }
 
   async _handleClickEnableAnalytics(e: SyntheticEvent<HTMLButtonElement>) {
@@ -89,7 +89,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
       defaultValue: typeof defaultValue === 'string' ? defaultValue : '',
       placeholder: 'https://example.com/openapi-spec.yaml',
       label: 'URI to Import',
-      onComplete: value => {
+      onComplete: (value) => {
         handleImportUri(value, ForceToWorkspaceKeys.current);
       },
     });

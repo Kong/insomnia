@@ -18,7 +18,7 @@ export default class SidebarServers extends React.Component<Props> {
     if (!Array.isArray(servers)) {
       return <StyledInvalidSection name={'server'} />;
     }
-    const filteredValues = servers.filter(server =>
+    const filteredValues = servers.filter((server) =>
       server.url.includes(filter.toLocaleLowerCase()),
     );
 

@@ -22,7 +22,7 @@ import ProtoFilesModal from './proto-files-modal';
 
 type RequestCreateModalOptions = {
   parentId: string,
-  onComplete: string => void,
+  onComplete: (string) => void,
 };
 
 @autobind

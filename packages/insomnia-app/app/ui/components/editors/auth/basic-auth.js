@@ -11,7 +11,7 @@ import HelpTooltip from '../../help-tooltip';
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
-  handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
+  handleUpdateSettingsShowPasswords: (boolean) => Promise<Settings>,
   nunjucksPowerUserMode: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,

@@ -32,7 +32,7 @@ import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 type Props = {
   handleRender: Function,
   handleGetRenderContext: Function,
-  handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
+  handleUpdateSettingsShowPasswords: (boolean) => Promise<Settings>,
   nunjucksPowerUserMode: boolean,
   onChange: (Request, RequestAuthentication) => Promise<Request>,
   request: Request,
@@ -210,7 +210,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
 
-  renderEnabledRow(onChange: boolean => void): React.Element<*> {
+  renderEnabledRow(onChange: (boolean) => void): React.Element<*> {
     const { request } = this.props;
     const { authentication } = request;
     return (
@@ -240,7 +240,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  renderUsePkceRow(onChange: boolean => void): React.Element<*> {
+  renderUsePkceRow(onChange: (boolean) => void): React.Element<*> {
     const { request } = this.props;
     const { authentication } = request;
     return (

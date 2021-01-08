@@ -79,7 +79,7 @@ class PromptModal extends React.PureComponent<Props, State> {
   _handleDeleteHint(hint: string) {
     const { onDeleteHint } = this.state;
     onDeleteHint && onDeleteHint(hint);
-    const hints = this.state.hints.filter(h => h !== hint);
+    const hints = this.state.hints.filter((h) => h !== hint);
     this.setState({ hints });
   }
 
@@ -116,11 +116,11 @@ class PromptModal extends React.PureComponent<Props, State> {
     cancelable?: boolean,
     inputType?: string,
     placeholder?: string,
-    validate?: string => string,
+    validate?: (string) => string,
     label?: string,
     hints?: Array<string>,
-    onComplete?: string => void,
-    onDeleteHint?: string => void,
+    onComplete?: (string) => void,
+    onDeleteHint?: (string) => void,
     onCancel?: () => void,
   }) {
     const {

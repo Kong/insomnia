@@ -73,10 +73,10 @@ export async function runInsomniaTests(
 
   // Generate test file
   const testFileContents = await generate(
-    suites.map(suite =>
+    suites.map((suite) =>
       createTestSuite(
         suite,
-        db.UnitTest.filter(t => t.parentId === suite._id),
+        db.UnitTest.filter((t) => t.parentId === suite._id),
       ),
     ),
   );

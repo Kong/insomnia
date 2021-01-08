@@ -8,7 +8,7 @@ import { getThemes } from '../../../plugins';
 const THEMES_PER_ROW = 5;
 
 type Props = {
-  handleChangeTheme: string => void,
+  handleChangeTheme: (string) => void,
   activeTheme: string,
 };
 
