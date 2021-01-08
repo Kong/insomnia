@@ -51,7 +51,6 @@ export function generateFromSpec(
 
 export async function parseSpec(spec: string | Object): Promise<OpenApi3Spec> {
   let api: OpenApi3Spec;
-  const parser: any = new SwaggerParser();
 
   if (typeof spec === 'string') {
     try {
@@ -74,5 +73,5 @@ export async function parseSpec(spec: string | Object): Promise<OpenApi3Spec> {
     api.openapi = '3.0.0';
   }
 
-  return parser.dereference(api);
+  return SwaggerParser.dereference(api);
 }
