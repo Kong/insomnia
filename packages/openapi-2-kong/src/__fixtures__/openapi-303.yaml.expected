@@ -1,0 +1,29 @@
+{
+   "_format_version": "1.1",
+   "services": [
+      {
+         "name": "Greeting_API",
+         "url": "http://example.org",
+         "plugins": [],
+         "routes": [],
+         "tags": [
+            "OAS3_import",
+            "OAS3file_openapi-303.yaml"
+         ]
+      }
+   ],
+   "upstreams": [
+      {
+         "name": "Greeting_API",
+         "targets": [
+            {
+               "target": "example.org:80"
+            }
+         ],
+         "tags": [
+            "OAS3_import",
+            "OAS3file_openapi-303.yaml"
+         ]
+      }
+   ]
+}
