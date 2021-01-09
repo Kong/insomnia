@@ -1,6 +1,10 @@
 // @flow
 import axios from 'axios';
 
+export type RequestHeaders = {
+  [string]: string,
+};
+
 export type Request = {
   _id: string,
   url?: string,
@@ -65,9 +69,15 @@ export default class Insomnia {
   /**
    *
    * @param reqId - request ID to send. Specifying nothing will send the active request
+   * @param headers - additional request headers to send
+   * @param body - body string to send
    * @returns {Promise<{headers: *, data: *, statusText: (string|string), status: *}>}
    */
-  async send(reqId: string | null = null): Promise<Response> {
+  async send(
+    reqId: string | null = null,
+    headers: RequestHeaders | null = null,
+    body: string | typeof undefined | null = null,
+  ): Promise<Response> {
     // Default to active request if nothing is specified
     reqId = reqId || this.activeRequestId;
 
@@ -91,10 +101,22 @@ export default class Insomnia {
       axiosHeaders[h.name] = h.value;
     }
 
+    // Patch passed headers onto axiosHeaders object
+    if (headers) {
+      for (const h of Object.keys(headers)) {
+        axiosHeaders[h] = headers[h];
+      }
+    }
+
+    // Set active request body when none is passed
+    if (!body && req.body) {
+      body = req.body.text;
+    }
+
     const options = {
       url: req.url || '',
       method: req.method || 'GET',
-      data: req.body ? req.body.text : null,
+      data: body,
       headers: axiosHeaders,
 
       // Don't follow redirects,

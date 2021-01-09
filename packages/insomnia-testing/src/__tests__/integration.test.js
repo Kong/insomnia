@@ -106,10 +106,11 @@ describe('integration', () => {
       data: { foo: 'bar' },
     });
 
-    axios.__setResponse('GET', '301.insomnia.rest', {
+    axios.__setResponse('GET', '301.insomnia.rest', ({ data, headers = {} }) => ({
       status: 301,
-      headers: { location: '/blog' },
-    });
+      headers: { location: '/blog', ...headers },
+      data,
+    }));
 
     const testSrc = await generate([
       {
@@ -125,11 +126,47 @@ describe('integration', () => {
             ].join('\n'),
           },
           {
+            name: 'Tests referencing request by ID with headers',
+            defaultRequestId: null,
+            code: [
+              `const resp = await insomnia.send('req_123', { authentication: 'Hello World' });`,
+              `expect(resp.status).to.equal(301);`,
+              `expect(resp.headers.authentication).to.equal('Hello World');`,
+            ].join('\n'),
+          },
+          {
+            name: 'Tests referencing request by ID with body',
+            defaultRequestId: null,
+            code: [
+              `const resp = await insomnia.send('req_123', null, 'Hello World');`,
+              `expect(resp.status).to.equal(301);`,
+              `expect(resp.data).to.equal('Hello World');`,
+            ].join('\n'),
+          },
+          {
             name: 'Tests referencing default request',
             defaultRequestId: 'req_123',
             code: [
               `const resp = await insomnia.send();`,
               `expect(resp.status).to.equal(301);`,
+            ].join('\n'),
+          },
+          {
+            name: 'Tests referencing default request with headers',
+            defaultRequestId: 'req_123',
+            code: [
+              `const resp = await insomnia.send(null, { authentication: 'Hello World' });`,
+              `expect(resp.status).to.equal(301);`,
+              `expect(resp.headers.authentication).to.equal('Hello World');`,
+            ].join('\n'),
+          },
+          {
+            name: 'Tests referencing default request with body',
+            defaultRequestId: 'req_123',
+            code: [
+              `const resp = await insomnia.send(null, null, 'Hello World');`,
+              `expect(resp.status).to.equal(301);`,
+              `expect(resp.data).to.equal('Hello World');`,
             ].join('\n'),
           },
         ],
@@ -147,9 +184,9 @@ describe('integration', () => {
     });
 
     expect(failures).toEqual([]);
-    expect(passes.length).toBe(2);
-    expect(stats.tests).toBe(2);
+    expect(passes.length).toBe(6);
+    expect(stats.tests).toBe(6);
     expect(stats.failures).toBe(0);
-    expect(stats.passes).toBe(2);
+    expect(stats.passes).toBe(6);
   });
 });
