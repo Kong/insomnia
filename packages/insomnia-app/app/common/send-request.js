@@ -1,6 +1,6 @@
 import * as db from './database';
 import { types as modelTypes, stats } from '../models';
-import { send } from '../network/network';
+import { sendRequest } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 
 export async function getSendRequestCallbackMemDb(environmentId, memDB) {
@@ -17,20 +17,21 @@ export async function getSendRequestCallbackMemDb(environmentId, memDB) {
   await db.batchModifyDocs({ upsert: docs, remove: [] });
 
   // Return callback helper to send requests
-  return async function sendRequest(requestId) {
-    return sendAndTransform(requestId, environmentId);
+  return async function sendRequestCallback(requestId, requestSettings) {
+    return sendAndTransform(requestId, environmentId, requestSettings);
   };
 }
 
 export function getSendRequestCallback(environmentId) {
-  return async function sendRequest(requestId) {
+  return async function sendRequestCallback(requestId, requestSettings) {
+    console.log('settings', requestSettings);
     stats.incrementExecutedRequests();
-    return sendAndTransform(requestId, environmentId);
+    return sendAndTransform(requestId, environmentId, requestSettings);
   };
 }
 
-async function sendAndTransform(requestId, environmentId) {
-  const res = await send(requestId, environmentId);
+async function sendAndTransform(requestId, environmentId, requestSettings) {
+  const res = await sendRequest({ requestId, environmentId, requestSettings });
   const headersObj = {};
   for (const h of res.headers || []) {
     const name = h.name || '';

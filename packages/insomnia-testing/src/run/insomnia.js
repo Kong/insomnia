@@ -29,7 +29,10 @@ export type Response = {
   },
 };
 
-type SendRequestCallback = (requestId: string) => Promise<$Shape<Response>>;
+type SendRequestCallback = (
+  requestId: string,
+  requestSettings: Object,
+) => Promise<$Shape<Response>>;
 
 export type InsomniaOptions = {
   requests?: Array<$Shape<Request>>,
@@ -73,17 +76,13 @@ export default class Insomnia {
    * @param body - body string to send
    * @returns {Promise<{headers: *, data: *, statusText: (string|string), status: *}>}
    */
-  async send(
-    reqId: string | null = null,
-    headers: RequestHeaders | null = null,
-    body: string | typeof undefined | null = null,
-  ): Promise<Response> {
+  async send(reqId: string | null = null, reqSettings: Object | null = null): Promise<Response> {
     // Default to active request if nothing is specified
     reqId = reqId || this.activeRequestId;
 
     const { sendRequest } = this;
     if (typeof sendRequest === 'function' && typeof reqId === 'string') {
-      return sendRequest(reqId);
+      return sendRequest(reqId, reqSettings);
     }
 
     const req = this.requests.find(r => r._id === reqId);
@@ -101,16 +100,25 @@ export default class Insomnia {
       axiosHeaders[h.name] = h.value;
     }
 
-    // Patch passed headers onto axiosHeaders object
-    if (headers) {
-      for (const h of Object.keys(headers)) {
-        axiosHeaders[h] = headers[h];
+    // Patch request setting headers onto axiosHeaders object
+    if (reqSettings && reqSettings.headers) {
+      for (const h of reqSettings.headers || []) {
+        if (h.disabled) {
+          continue;
+        }
+
+        axiosHeaders[h.name] = h.value;
       }
     }
 
-    // Set active request body when none is passed
-    if (!body && req.body) {
+    let body;
+    if (req.body) {
       body = req.body.text;
+    }
+
+    // Patch body with request reqSettings body if passed
+    if (reqSettings && reqSettings.body) {
+      body = reqSettings.body.text;
     }
 
     const options = {

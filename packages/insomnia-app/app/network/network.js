@@ -987,6 +987,129 @@ export async function send(
   return response;
 }
 
+export async function sendRequest(context: {
+  requestId: string,
+  environmentId?: string,
+  requestSettings?: Object,
+  extraInfo?: ExtraRenderInfo,
+}): Promise<ResponsePatch> {
+  const { requestId, environmentId, requestSettings, extraInfo } = context;
+  console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
+
+  // HACK: wait for all debounces to finish
+  /*
+   * TODO: Do this in a more robust way
+   * The following block adds a "long" delay to let potential debounces and
+   * database updates finish before making the request. This is done by tracking
+   * the time of the user's last keypress and making sure the request is sent a
+   * significant time after the last press.
+   */
+  const timeSinceLastInteraction = Date.now() - lastUserInteraction;
+  const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
+  if (delayMillis > 0) {
+    await delay(delayMillis);
+  }
+
+  const request = await models.request.getById(requestId);
+  if (!request) {
+    throw new Error(`Failed to find request: ${requestId}`);
+  }
+
+  const settings = await models.settings.getOrCreate();
+  const ancestors = await db.withAncestors(request, [
+    models.request.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
+
+  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
+  const workspace = await models.workspace.getById(workspaceId);
+  if (!workspace) {
+    throw new Error(`Failed to find workspace for: ${requestId}`);
+  }
+
+  const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+  const environment: Environment | null = await models.environment.getById(
+    environmentId || workspaceMeta.activeEnvironmentId || 'n/a',
+  );
+
+  // Patch request with requestSettings where necessary
+  // ---
+  // Note: While this might not be the most optimal way to patch the request it is
+  // the most clear in terms of intention. Future optimization could be moving onto the model.
+  if (requestSettings) {
+    request.url = requestSettings.url || request.url;
+    request.method = requestSettings.method || request.method;
+    request.body = requestSettings.body || request.body;
+
+    if (requestSettings.headers) {
+      request.headers = [...request.headers, ...requestSettings.headers];
+    }
+    if (requestSettings.parameters) {
+      request.parameters = [...request.parameters, ...requestSettings.parameters];
+    }
+    if (requestSettings.authentication) {
+      request.authentication = { ...request.authentication, ...requestSettings.authentication };
+    }
+
+    request.settingStoreCookies =
+      requestSettings.settingStoreCookies || request.settingStoreCookies;
+    request.settingSendCookies = requestSettings.settingSendCookies || request.settingSendCookies;
+    request.settingDisableRenderRequestBody =
+      requestSettings.settingDisableRenderRequestBody || request.settingDisableRenderRequestBody;
+    request.settingEncodeUrl = requestSettings.settingEncodeUrl || request.settingEncodeUrl;
+    request.settingRebuildPath = requestSettings.settingRebuildPath || request.settingRebuildPath;
+    request.settingFollowRedirects =
+      requestSettings.settingFollowRedirects || request.settingFollowRedirects;
+  }
+
+  const renderResult = await getRenderedRequestAndContext(
+    request,
+    environmentId || null,
+    RENDER_PURPOSE_SEND,
+    extraInfo,
+  );
+
+  const renderedRequestBeforePlugins = renderResult.request;
+  const renderedContextBeforePlugins = renderResult.context;
+
+  let renderedRequest: RenderedRequest;
+  try {
+    renderedRequest = await _applyRequestPluginHooks(
+      renderedRequestBeforePlugins,
+      renderedContextBeforePlugins,
+    );
+  } catch (err) {
+    return {
+      environmentId: environmentId,
+      error: err.message,
+      parentId: renderedRequestBeforePlugins._id,
+      settingSendCookies: renderedRequestBeforePlugins.settingSendCookies,
+      settingStoreCookies: renderedRequestBeforePlugins.settingStoreCookies,
+      statusCode: STATUS_CODE_PLUGIN_ERROR,
+      statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
+      url: renderedRequestBeforePlugins.url,
+    };
+  }
+
+  const response = await _actuallySend(
+    renderedRequest,
+    renderedContextBeforePlugins,
+    workspace,
+    settings,
+    environment,
+  );
+
+  console.log(
+    response.error
+      ? `[network] Response failed req=${requestId} err=${response.error || 'n/a'}`
+      : `[network] Response succeeded req=${requestId} status=${response.statusCode || '?'}`,
+  );
+
+  return response;
+}
+
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Object,

@@ -55,7 +55,7 @@ describe('run', () => {
       requests: [{ _id: 'req_123' }],
       sendRequest,
     });
-    expect(sendRequest).toHaveBeenCalledWith('req_123');
+    expect(sendRequest).toHaveBeenCalledWith('req_123', undefined);
     expect(stats.passes).toBe(1);
   });
 

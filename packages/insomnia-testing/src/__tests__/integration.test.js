@@ -129,16 +129,16 @@ describe('integration', () => {
             name: 'Tests referencing request by ID with headers',
             defaultRequestId: null,
             code: [
-              `const resp = await insomnia.send('req_123', { authentication: 'Hello World' });`,
+              `const resp = await insomnia.send('req_123', { headers: [{ name: 'location', value: '/' }]});`,
               `expect(resp.status).to.equal(301);`,
-              `expect(resp.headers.authentication).to.equal('Hello World');`,
+              `expect(resp.headers.location).to.equal('/');`,
             ].join('\n'),
           },
           {
             name: 'Tests referencing request by ID with body',
             defaultRequestId: null,
             code: [
-              `const resp = await insomnia.send('req_123', null, 'Hello World');`,
+              `const resp = await insomnia.send('req_123', { body: { text: 'Hello World' }});`,
               `expect(resp.status).to.equal(301);`,
               `expect(resp.data).to.equal('Hello World');`,
             ].join('\n'),
@@ -155,16 +155,16 @@ describe('integration', () => {
             name: 'Tests referencing default request with headers',
             defaultRequestId: 'req_123',
             code: [
-              `const resp = await insomnia.send(null, { authentication: 'Hello World' });`,
+              `const resp = await insomnia.send(null, { headers: [{ name: 'location', value: '/' }]});`,
               `expect(resp.status).to.equal(301);`,
-              `expect(resp.headers.authentication).to.equal('Hello World');`,
+              `expect(resp.headers.location).to.equal('/');`,
             ].join('\n'),
           },
           {
             name: 'Tests referencing default request with body',
             defaultRequestId: 'req_123',
             code: [
-              `const resp = await insomnia.send(null, null, 'Hello World');`,
+              `const resp = await insomnia.send(null, { body: { text: 'Hello World' }});`,
               `expect(resp.status).to.equal(301);`,
               `expect(resp.data).to.equal('Hello World');`,
             ].join('\n'),
