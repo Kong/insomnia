@@ -245,7 +245,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
             </span>
           </div>
           <ProtoFileList
-            protoFiles={protoDirectories[0].files}
+            protoDirectories={protoDirectories}
             selectedId={selectedProtoFileId}
             handleSelect={this._handleSelect}
             handleUpdate={this._handleUpload}
@@ -268,7 +268,6 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
 const mapStateToProps = (state, props) => {
   const protoDirectories = selectExpandedActiveProtoDirectories(state, props);
 
-  console.log(protoDirectories);
   return { protoDirectories };
 };
 

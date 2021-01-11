@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import type { ProtoFile } from '../../../models/proto-file';
 import type {
   DeleteProtoFileHandler,
@@ -8,7 +8,7 @@ import type {
   SelectProtoFileHandler,
   UpdateProtoFileHandler,
 } from './proto-file-list';
-import { ListGroupItem, Button, AsyncButton } from '../../../../../insomnia-components';
+import { ListGroupItem, Button, AsyncButton } from 'insomnia-components';
 import Editable from '../base/editable';
 
 type Props = {
@@ -18,9 +18,17 @@ type Props = {
   handleDelete: DeleteProtoFileHandler,
   handleRename: RenameProtoFileHandler,
   handleUpdate: UpdateProtoFileHandler,
+  indentLevel: number,
 };
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
+
+export const Indent: React.PureComponent<{ level: number }> = styled.div`
+  ${({ level }) =>
+    css`
+      padding-left: calc(var(--padding-md) * ${level});
+    `};
+`;
 
 const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled(ListGroupItem)`
   &:hover {
@@ -41,6 +49,7 @@ const ProtoFileListItem = ({
   handleDelete,
   handleRename,
   handleUpdate,
+  indentLevel,
 }: Props) => {
   const { name, _id } = protoFile;
 
@@ -70,7 +79,7 @@ const ProtoFileListItem = ({
 
   return (
     <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
-      <div className="row-spaced">
+      <Indent level={indentLevel} className="row-spaced">
         <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
         <div className="row">
           <AsyncButton
@@ -89,7 +98,7 @@ const ProtoFileListItem = ({
             <i className="fa fa-trash-o" />
           </Button>
         </div>
-      </div>
+      </Indent>
     </SelectableListItem>
   );
 };

@@ -32,7 +32,11 @@ export const selectExpandedActiveProtoDirectories = createSelector(
     // Expand each directory
     const expandedDirs = rootDirs.map(dir => expandDir(dir, allFiles, allDirs));
 
-    return [{ files: individualFiles, dir: null, subDirs: [] }, ...expandedDirs];
+    if (individualFiles.length) {
+      return [{ files: individualFiles, dir: null, subDirs: [] }, ...expandedDirs];
+    }
+
+    return expandedDirs;
   },
 );
 
