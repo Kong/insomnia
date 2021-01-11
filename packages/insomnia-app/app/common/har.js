@@ -213,7 +213,7 @@ export async function exportHar(exportRequests: Array<ExportRequest>): Promise<H
         receive: 0,
         ssl: -1,
       },
-      comment: request.name,
+      comment: `${request.name} - ${request._id}`,
     };
 
     entries.push(entry);
