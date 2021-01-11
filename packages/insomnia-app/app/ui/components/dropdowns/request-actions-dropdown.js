@@ -174,7 +174,8 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
         {actionPlugins.map((p: RequestAction) => (
           <DropdownItem
             key={`${p.plugin.name}::${p.label}`}
-            onClick={() => this._handlePluginClick(p)}
+            value={p}
+            onClick={this._handlePluginClick}
             stayOpenAfterClick>
             {loadingActions[p.label] ? (
               <i className="fa fa-refresh fa-spin" />
