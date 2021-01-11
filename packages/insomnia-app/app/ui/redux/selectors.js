@@ -172,7 +172,7 @@ export const selectActiveRequest = createSelector(
   },
 );
 
-// deprecated
+// TODO remove this and all usages of it
 export const selectActiveProtoFiles = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,

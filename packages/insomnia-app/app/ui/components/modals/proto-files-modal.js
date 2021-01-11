@@ -109,6 +109,38 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     return this._handleUpload();
   }
 
+  // TODO: Move this out of the modal class component
+  async _readDir(dirPath: string, dirParentId: string): Promise<void> {
+    // Create dir in database
+    const createdProtoDir = await models.protoDirectory.create({
+      name: path.basename(dirPath),
+      parentId: dirParentId,
+    });
+
+    // Read contents
+    const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
+
+    // Loop and read all entries
+    await Promise.all(
+      entries.map(async entry => {
+        const fullEntryPath = path.resolve(dirPath, entry.name);
+        if (entry.isDirectory()) {
+          await this._readDir(fullEntryPath, createdProtoDir._id);
+        } else {
+          const protoText = fs.readFileSync(fullEntryPath, 'utf-8');
+          const name = entry.name;
+
+          await models.protoFile.create({
+            name,
+            parentId: createdProtoDir._id,
+            protoText,
+          });
+        }
+      }),
+    );
+  }
+
+  // TODO: Move this out of the modal class component
   async _handleAddDirectory(): Promise<void> {
     const { workspace } = this.props;
 
@@ -125,36 +157,10 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         return;
       }
 
-      // Create root dir in database
-      console.log(filePath);
-      const rootDir = await models.protoDirectory.create({
-        name: path.basename(filePath),
-        parentId: workspace._id,
-      });
-      console.log(rootDir.name);
+      await this._readDir(filePath, workspace._id);
 
-      // Read contents
-      const dirents = await fs.promises.readdir(filePath, { withFileTypes: true });
+      // TODO: validate the change is correct
 
-      // Loop and read all entries
-      await Promise.all(
-        dirents.map(async entry => {
-          if (entry.isDirectory()) {
-            console.log('nested dir');
-          } else {
-            const readFile = path.resolve(filePath, entry.name);
-            console.log(readFile);
-            const protoText = fs.readFileSync(readFile, 'utf-8');
-            const name = entry.name;
-
-            await models.protoFile.create({
-              name,
-              parentId: rootDir._id,
-              protoText,
-            });
-          }
-        }),
-      );
       await db.flushChanges(bufferId);
       this.setState({ selectedProtoFileId: null });
     } catch (e) {
@@ -163,6 +169,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     }
   }
 
+  // TODO: Move this out of the modal class component
   async _handleUpload(protoFile?: ProtoFile): Promise<void> {
     const { workspace, grpcDispatch } = this.props;
 
