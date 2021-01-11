@@ -172,6 +172,7 @@ export const selectActiveRequest = createSelector(
   },
 );
 
+// deprecated
 export const selectActiveProtoFiles = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,

@@ -529,7 +529,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
-      activeProtoFiles,
       activeRequest,
       activeWorkspace,
       activeWorkspaceClientCertificates,
@@ -794,7 +793,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   grpcDispatch={dispatch}
                   workspace={activeWorkspace}
-                  protoFiles={activeProtoFiles}
                 />
               )}
             </GrpcDispatchModalWrapper>

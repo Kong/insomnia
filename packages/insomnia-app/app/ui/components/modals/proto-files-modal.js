@@ -18,11 +18,14 @@ import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
 import * as protoLoader from '../../../network/grpc/proto-loader';
+import { connect } from 'react-redux';
+import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
+import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 
 type Props = {|
   grpcDispatch: GrpcDispatch,
   workspace: Workspace,
-  protoFiles: Array<ProtoFile>,
+  protoDirectories: Array<ExpandedProtoDirectory>,
 |};
 
 type State = {|
@@ -105,13 +108,52 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     return this._handleUpload();
   }
 
+  async _handleAddDirectory(): Promise<void> {
+    const { workspace } = this.props;
+
+    try {
+      // Select file
+      const { filePath, canceled } = await selectFileOrFolder({
+        itemTypes: ['directory'],
+        extensions: ['proto'],
+      });
+
+      // Exit if no file selected
+      if (canceled || !filePath) {
+        return;
+      }
+
+      // Read contents
+      const protoText = fs.readFileSync(filePath, 'utf-8');
+      const name = path.basename(filePath);
+
+      // Try parse proto file to make sure the file is valid
+      try {
+        await protoLoader.loadMethodsFromText(protoText);
+      } catch (e) {
+        showError({
+          title: 'Invalid Proto File',
+          message: `The file ${filePath} and could not be parsed`,
+          error: e,
+        });
+
+        return;
+      }
+
+      const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
+      this.setState({ selectedProtoFileId: newFile._id });
+    } catch (e) {
+      showError({ error: e });
+    }
+  }
+
   async _handleUpload(protoFile?: ProtoFile): Promise<void> {
     const { workspace, grpcDispatch } = this.props;
 
     try {
       // Select file
       const { filePath, canceled } = await selectFileOrFolder({
-        itemTypes: ['file'],
+        itemTypes: ['file', 'directory'],
         extensions: ['proto'],
       });
 
@@ -158,7 +200,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { protoFiles } = this.props;
+    const { protoDirectories } = this.props;
     const { selectedProtoFileId } = this.state;
 
     return (
@@ -167,12 +209,20 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         <ModalBody className="wide pad">
           <div className="row-spaced margin-bottom bold">
             Files
-            <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>
-              Add Proto File
-            </AsyncButton>
+            <span>
+              <AsyncButton
+                className="margin-right-sm"
+                onClick={this._handleAddDirectory}
+                loadingNode={spinner}>
+                Add Directory
+              </AsyncButton>
+              <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>
+                Add Proto File
+              </AsyncButton>
+            </span>
           </div>
           <ProtoFileList
-            protoFiles={protoFiles}
+            protoFiles={protoDirectories[0].files}
             selectedId={selectedProtoFileId}
             handleSelect={this._handleSelect}
             handleUpdate={this._handleUpload}
@@ -192,4 +242,10 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 }
 
-export default ProtoFilesModal;
+const mapStateToProps = (state, props) => {
+  const protoDirectories = selectExpandedActiveProtoDirectories(state, props);
+
+  return { protoDirectories };
+};
+
+export default connect(mapStateToProps, null, null, { forwardRef: true })(ProtoFilesModal);
