@@ -21,6 +21,7 @@ import * as protoLoader from '../../../network/grpc/proto-loader';
 import { connect } from 'react-redux';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
+import * as db from '../../../common/database';
 
 type Props = {|
   grpcDispatch: GrpcDispatch,
@@ -111,6 +112,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   async _handleAddDirectory(): Promise<void> {
     const { workspace } = this.props;
 
+    const bufferId = await db.bufferChanges();
     try {
       // Select file
       const { filePath, canceled } = await selectFileOrFolder({
@@ -123,26 +125,40 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         return;
       }
 
+      // Create root dir in database
+      console.log(filePath);
+      const rootDir = await models.protoDirectory.create({
+        name: path.basename(filePath),
+        parentId: workspace._id,
+      });
+      console.log(rootDir.name);
+
       // Read contents
-      const protoText = fs.readFileSync(filePath, 'utf-8');
-      const name = path.basename(filePath);
+      const dirents = await fs.promises.readdir(filePath, { withFileTypes: true });
 
-      // Try parse proto file to make sure the file is valid
-      try {
-        await protoLoader.loadMethodsFromText(protoText);
-      } catch (e) {
-        showError({
-          title: 'Invalid Proto File',
-          message: `The file ${filePath} and could not be parsed`,
-          error: e,
-        });
+      // Loop and read all entries
+      await Promise.all(
+        dirents.map(async entry => {
+          if (entry.isDirectory()) {
+            console.log('nested dir');
+          } else {
+            const readFile = path.resolve(filePath, entry.name);
+            console.log(readFile);
+            const protoText = fs.readFileSync(readFile, 'utf-8');
+            const name = entry.name;
 
-        return;
-      }
-
-      const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
-      this.setState({ selectedProtoFileId: newFile._id });
+            await models.protoFile.create({
+              name,
+              parentId: rootDir._id,
+              protoText,
+            });
+          }
+        }),
+      );
+      await db.flushChanges(bufferId);
+      this.setState({ selectedProtoFileId: null });
     } catch (e) {
+      await db.flushChanges(bufferId, true);
       showError({ error: e });
     }
   }
@@ -245,6 +261,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
 const mapStateToProps = (state, props) => {
   const protoDirectories = selectExpandedActiveProtoDirectories(state, props);
 
+  console.log(protoDirectories);
   return { protoDirectories };
 };
 

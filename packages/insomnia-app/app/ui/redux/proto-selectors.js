@@ -44,7 +44,7 @@ const expandDir = (
   const filesInDir = allFiles.filter(pf => pf.parentId === dir._id);
   const subDirs = allDirs.filter(pd => pd.parentId === dir._id);
 
-  // Expand subdirs
+  // Expand sub directories
   const expandedSubDirs = subDirs.map(subDir => expandDir(subDir, allFiles, allDirs));
 
   return { dir, files: filesInDir, subDirs: expandedSubDirs };
