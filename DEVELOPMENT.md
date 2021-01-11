@@ -79,7 +79,7 @@ The structure for smoke tests is explained in the smoke testing package: [`packa
 This is just a brief summary of Insomnia's current technical debt.
 
 - Loading large responses (~20MB) can crash the app on weaker hardware.
-- Redux stores are an in-memory duplicate of the local DB, unnecessarily doubling memory usage. Moving
+- An in-memory duplicate of the local DB is stored in Redux, unnecessarily doubling memory usage. Moving
   forward, Redux shouldn't need to be considered much and may be able to be removed eventually.
 - Bundling `libcurl` (native module) has caused many weeks of headaches trying to get builds working
   across Windows, Mac, and Linux. More expertise here is definitely needed.
