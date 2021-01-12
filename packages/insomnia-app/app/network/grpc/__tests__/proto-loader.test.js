@@ -1,6 +1,6 @@
 // @flow
 import * as protoLoader from '../proto-loader';
-import writeProtoFile from '../write-proto-file';
+import { writeProtoFile } from '../write-proto-file';
 import path from 'path';
 
 jest.mock('../write-proto-file', () => ({

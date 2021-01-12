@@ -3,7 +3,7 @@
 import type { GrpcMethodDefinition } from './method';
 import * as protoLoader from '@grpc/proto-loader';
 import * as models from '../../models';
-import writeProtoFile from './write-proto-file';
+import { writeProtoFile } from './write-proto-file';
 
 const GRPC_LOADER_OPTIONS = {
   keepCase: true,
@@ -27,12 +27,15 @@ export const loadMethods = async (
     return [];
   }
 
-  const tempProtoFile = await writeProtoFile(protoFile);
-  return await loadMethodsFromPath(tempProtoFile);
+  const { filePath, rootDir } = await writeProtoFile(protoFile);
+  return await loadMethodsFromPath(filePath, rootDir);
 };
 
-export const loadMethodsFromPath = async (path: string): Promise<Array<GrpcMethodDefinition>> => {
-  const definition = await protoLoader.load(path, GRPC_LOADER_OPTIONS);
+export const loadMethodsFromPath = async (
+  path: string,
+  dir?: string,
+): Promise<Array<GrpcMethodDefinition>> => {
+  const definition = await protoLoader.load(path, { ...GRPC_LOADER_OPTIONS, includeDirs: [dir] });
 
   return Object.values(definition)
     .filter(isServiceDefinition)
