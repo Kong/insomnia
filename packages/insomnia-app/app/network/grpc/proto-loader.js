@@ -27,12 +27,12 @@ export const loadMethods = async (
     return [];
   }
 
-  return await loadMethodsFromText(protoFile.protoText);
+  const tempProtoFile = await writeProtoFile(protoFile);
+  return await loadMethodsFromPath(tempProtoFile);
 };
 
-export const loadMethodsFromText = async (text: string): Promise<Array<GrpcMethodDefinition>> => {
-  const tempProtoFile = await writeProtoFile(text);
-  const definition = await protoLoader.load(tempProtoFile, GRPC_LOADER_OPTIONS);
+export const loadMethodsFromPath = async (path: string): Promise<Array<GrpcMethodDefinition>> => {
+  const definition = await protoLoader.load(path, GRPC_LOADER_OPTIONS);
 
   return Object.values(definition)
     .filter(isServiceDefinition)

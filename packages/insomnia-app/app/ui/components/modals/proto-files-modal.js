@@ -238,7 +238,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
 
       // Try parse proto file to make sure the file is valid
       try {
-        await protoLoader.loadMethodsFromText(protoText);
+        await protoLoader.loadMethodsFromPath(filePath);
       } catch (e) {
         showError({
           title: 'Invalid Proto File',
