@@ -8,6 +8,7 @@ import ProtoDirectoryListItem from './proto-directory-list-item';
 
 export type SelectProtoFileHandler = (id: string) => void;
 export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
+export type DeleteProtoDirectoryHandler = (protoDirectory: ProtoDirectory) => Promise<void>;
 export type UpdateProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type RenameProtoFileHandler = (protoFile: ProtoFile, name: string) => Promise<void>;
 
@@ -18,6 +19,7 @@ type Props = {
   handleDelete: DeleteProtoFileHandler,
   handleRename: RenameProtoFileHandler,
   handleUpdate: UpdateProtoFileHandler,
+  handleDeleteDirectory: DeleteProtoDirectoryHandler,
 };
 
 const recursiveRender = (
@@ -25,9 +27,23 @@ const recursiveRender = (
   props: Props,
   indent: number,
 ) => {
-  const { handleDelete, handleRename, handleSelect, handleUpdate, selectedId } = props;
+  const {
+    handleDelete,
+    handleDeleteDirectory,
+    handleRename,
+    handleSelect,
+    handleUpdate,
+    selectedId,
+  } = props;
 
-  const dirNode = dir && <ProtoDirectoryListItem key={dir.name} dir={dir} indentLevel={indent++} />;
+  const dirNode = dir && (
+    <ProtoDirectoryListItem
+      key={dir.name}
+      dir={dir}
+      indentLevel={indent++}
+      handleDeleteDirectory={handleDeleteDirectory}
+    />
+  );
   const fileNodes = files.map(f => (
     <ProtoFileListItem
       key={f._id}

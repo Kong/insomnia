@@ -22,6 +22,7 @@ import { connect } from 'react-redux';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import * as db from '../../../common/database';
+import type { ProtoDirectory } from '../../../models/proto-directory';
 
 type Props = {|
   grpcDispatch: GrpcDispatch,
@@ -105,12 +106,34 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     });
   }
 
+  async _handleDeleteDirectory(protoDirectory: ProtoDirectory) {
+    showAlert({
+      title: `Delete ${protoDirectory.name}`,
+      message: (
+        <span>
+          Really delete <strong>{protoDirectory.name}</strong> and all proto files contained within?
+          All requests that use these proto files will stop working.
+        </span>
+      ),
+      addCancel: true,
+      onConfirm: async () => {
+        const descendant = await db.withDescendants(protoDirectory);
+        await models.protoDirectory.remove(protoDirectory);
+
+        // if previously selected protofile has been deleted, clear the selection
+        if (descendant.find(c => c._id === this.state.selectedProtoFileId)) {
+          this.setState({ selectedProtoFileId: '' });
+        }
+      },
+    });
+  }
+
   _handleAdd(): Promise<void> {
     return this._handleUpload();
   }
 
   // TODO: Move this out of the modal class component
-  async _readDir(dirPath: string, dirParentId: string): Promise<void> {
+  async _readDir(dirPath: string, dirParentId: string): Promise<Array<boolean>> {
     // Create dir in database
     const createdProtoDir = await models.protoDirectory.create({
       name: path.basename(dirPath),
@@ -121,23 +144,40 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
 
     // Loop and read all entries
-    await Promise.all(
+    const filesFound = await Promise.all(
       entries.map(async entry => {
         const fullEntryPath = path.resolve(dirPath, entry.name);
         if (entry.isDirectory()) {
-          await this._readDir(fullEntryPath, createdProtoDir._id);
+          // Is directory
+          const result = await this._readDir(fullEntryPath, createdProtoDir._id);
+          return result.some(c => c);
         } else {
-          const protoText = fs.readFileSync(fullEntryPath, 'utf-8');
-          const name = entry.name;
+          // Is file
+          const extension = path.extname(entry.name);
 
-          await models.protoFile.create({
-            name,
-            parentId: createdProtoDir._id,
-            protoText,
-          });
+          // Only load .proto files
+          if (extension === '.proto') {
+            // TODO: use fs.promises api
+            const protoText = fs.readFileSync(fullEntryPath, 'utf-8');
+            const name = entry.name;
+
+            await models.protoFile.create({
+              name,
+              parentId: createdProtoDir._id,
+              protoText,
+            });
+            return true;
+          }
         }
       }),
     );
+
+    // Delete the directory if no .proto file is found in a nested location
+    if (!filesFound.some(c => c)) {
+      await models.protoDirectory.remove(createdProtoDir);
+    }
+
+    return filesFound;
   }
 
   // TODO: Move this out of the modal class component
@@ -157,12 +197,19 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         return;
       }
 
-      await this._readDir(filePath, workspace._id);
+      const filesFound = await this._readDir(filePath, workspace._id);
+
+      // Show warning if no files found
+      if (!filesFound.some(c => c)) {
+        showAlert({
+          title: 'No files found',
+          message: `No .proto files were found under ${filePath}.`,
+        });
+      }
 
       // TODO: validate the change is correct
 
       await db.flushChanges(bufferId);
-      this.setState({ selectedProtoFileId: null });
     } catch (e) {
       await db.flushChanges(bufferId, true);
       showError({ error: e });
@@ -251,6 +298,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
             handleUpdate={this._handleUpload}
             handleDelete={this._handleDelete}
             handleRename={this._handleRename}
+            handleDeleteDirectory={this._handleDeleteDirectory}
           />
         </ModalBody>
         <ModalFooter>
