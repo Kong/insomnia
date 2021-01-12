@@ -5,15 +5,21 @@ import mkdirp from 'mkdirp';
 import fs from 'fs';
 import type { ProtoFile } from '../../models/proto-file';
 
+const getProtoTempFileName = ({ _id, modified }: ProtoFile): string => `${_id}.${modified}.proto`;
+
 const writeProtoFile = async (protoFile: ProtoFile): Promise<string> => {
+  // Create temp folder
   const root = path.join(os.tmpdir(), 'insomnia-grpc');
   mkdirp.sync(root);
-  const fileName = `${protoFile._id}.${protoFile.modified}.proto`;
-  const fullPath = path.join(root, fileName);
+
+  // Check if file already exists
+  const fullPath = path.join(root, getProtoTempFileName(protoFile));
   console.log(`check for ${fullPath}`);
   if (fs.existsSync(fullPath)) {
     return fullPath;
   }
+
+  // Write file
   console.log(`[gRPC] Writing ${protoFile.name} to ${fullPath}.`);
   await fs.promises.writeFile(fullPath, protoFile.protoText);
   return fullPath;
