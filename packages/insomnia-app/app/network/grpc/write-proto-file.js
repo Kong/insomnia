@@ -17,7 +17,7 @@ const getProtoTempDirectoryName = ({ _id, modified }: ProtoDirectory): string =>
 
 type WriteResult = {
   filePath: string,
-  rootDir: string,
+  dirs: Array<string>,
 };
 
 const writeIndividualProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
@@ -26,7 +26,7 @@ const writeIndividualProtoFile = async (protoFile: ProtoFile): Promise<WriteResu
   mkdirp.sync(rootDir);
 
   const filePath = getProtoTempFileName(protoFile);
-  const result = { filePath, rootDir };
+  const result = { filePath, dirs: [rootDir] };
 
   // Check if file already exists
   const fullPath = path.join(rootDir, filePath);
@@ -61,14 +61,14 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
 
   // Is this file part of a directory?
   if (ancestorDirectories.length) {
-    const treeRootDir = await writeProtoFileTree(ancestors);
+    const treeRootDirs = await writeProtoFileTree(ancestors);
     // Get all ancestor directories excluding the root (first entry after reversing the array)
     const subDirs = ancestorDirectories
       .map(f => f.name)
       .reverse()
       .slice(1);
     const filePath = path.join(...subDirs, protoFile.name);
-    return { filePath, rootDir: treeRootDir };
+    return { filePath, dirs: treeRootDirs };
   } else {
     return writeIndividualProtoFile(protoFile);
   }
@@ -76,7 +76,7 @@ export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult>
 
 const writeProtoFileTree = async (
   ancestors: Array<ProtoDirectory | Workspace>,
-): Promise<string> => {
+): Promise<Array<string>> => {
   // Find the ancestor workspace
   const ancestorWorkspace = ancestors.find(isWorkspace);
 
@@ -95,20 +95,20 @@ const writeProtoFileTree = async (
     getProtoTempDirectoryName(rootAncestorProtoDirectory),
   );
 
-  const rootPath = await recursiveWriteProtoDirectory(
+  const dirs = await recursiveWriteProtoDirectory(
     rootAncestorProtoDirectory,
     descendants,
     tempDirPath,
   );
 
-  return rootPath;
+  return dirs;
 };
 
 const recursiveWriteProtoDirectory = async (
   dir: ProtoDirectory,
   descendants: Array<BaseModel>,
   currentDirPath: string,
-): Promise<void> => {
+): Promise<Array<string>> => {
   // Increment folder path
   const dirPath = path.join(currentDirPath, dir.name);
   mkdirp.sync(dirPath);
@@ -119,7 +119,9 @@ const recursiveWriteProtoDirectory = async (
 
   // Get and write subdirectories
   const subDirs = descendants.filter(f => isProtoDirectory(f) && f.parentId === dir._id);
-  await Promise.all(subDirs.map(f => recursiveWriteProtoDirectory(f, descendants, dirPath)));
+  const createdDirs = await Promise.all(
+    subDirs.map(f => recursiveWriteProtoDirectory(f, descendants, dirPath)),
+  );
 
-  return dirPath;
+  return [dirPath, ...createdDirs.flat()];
 };

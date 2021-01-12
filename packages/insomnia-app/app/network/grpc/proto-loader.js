@@ -27,15 +27,18 @@ export const loadMethods = async (
     return [];
   }
 
-  const { filePath, rootDir } = await writeProtoFile(protoFile);
-  return await loadMethodsFromPath(filePath, rootDir);
+  const { filePath, dirs } = await writeProtoFile(protoFile);
+  return await loadMethodsFromPath(filePath, dirs);
 };
 
 export const loadMethodsFromPath = async (
-  path: string,
-  dir?: string,
+  filePath: string,
+  includeDirs?: Array<string>,
 ): Promise<Array<GrpcMethodDefinition>> => {
-  const definition = await protoLoader.load(path, { ...GRPC_LOADER_OPTIONS, includeDirs: [dir] });
+  const definition = await protoLoader.load(filePath, {
+    ...GRPC_LOADER_OPTIONS,
+    includeDirs,
+  });
 
   return Object.values(definition)
     .filter(isServiceDefinition)
