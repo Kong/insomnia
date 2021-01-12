@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import styled, { css } from 'styled-components';
 import type { ProtoFile } from '../../../models/proto-file';
 import type {
   DeleteProtoFileHandler,
@@ -8,39 +7,21 @@ import type {
   SelectProtoFileHandler,
   UpdateProtoFileHandler,
 } from './proto-file-list';
-import { ListGroupItem, Button, AsyncButton } from 'insomnia-components';
+import { Button, AsyncButton } from 'insomnia-components';
 import Editable from '../base/editable';
+import ProtoListItem from './proto-list-item';
 
 type Props = {
   protoFile: ProtoFile,
   isSelected?: boolean,
   handleSelect: SelectProtoFileHandler,
+  indentLevel: number,
   handleDelete: DeleteProtoFileHandler,
   handleRename: RenameProtoFileHandler,
   handleUpdate: UpdateProtoFileHandler,
-  indentLevel: number,
 };
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
-
-export const Indent: React.PureComponent<{ level: number }> = styled.div`
-  ${({ level }) =>
-    css`
-      padding-left: calc(var(--padding-md) * ${level});
-    `};
-`;
-
-const SelectableListItem: React.PureComponent<{ isSelected?: boolean }> = styled(ListGroupItem)`
-  &:hover {
-    background-color: var(--hl-sm) !important;
-  }
-  background-color: ${({ isSelected }) =>
-    isSelected && 'var(--hl-xs) !important; font-weight: bold;'};
-
-  i.fa {
-    font-size: var(--font-size-lg);
-  }
-`;
 
 const ProtoFileListItem = ({
   protoFile,
@@ -77,29 +58,38 @@ const ProtoFileListItem = ({
     [handleUpdate, protoFile],
   );
 
+  const isReadOnly = indentLevel > 0;
+
   return (
-    <SelectableListItem isSelected={isSelected} onClick={handleSelectCallback}>
-      <Indent level={indentLevel} className="row-spaced">
-        <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
-        <div className="row">
-          <AsyncButton
-            variant="text"
-            title="Re-upload Proto File"
-            onClick={handleUpdateCallback}
-            loadingNode={spinner}
-            className="space-right">
-            <i className="fa fa-upload" />
-          </AsyncButton>
-          <Button
-            variant="text"
-            title="Delete Proto File"
-            bg="danger"
-            onClick={handleDeleteCallback}>
-            <i className="fa fa-trash-o" />
-          </Button>
-        </div>
-      </Indent>
-    </SelectableListItem>
+    <ProtoListItem
+      selectable
+      isSelected={isSelected}
+      onClick={handleSelectCallback}
+      indentLevel={indentLevel}>
+      {isReadOnly && <span className="wide">{name}</span>}
+      {!isReadOnly && (
+        <>
+          <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
+          <div className="row">
+            <AsyncButton
+              variant="text"
+              title="Re-upload Proto File"
+              onClick={handleUpdateCallback}
+              loadingNode={spinner}
+              className="space-right">
+              <i className="fa fa-upload" />
+            </AsyncButton>
+            <Button
+              variant="text"
+              title="Delete Proto File"
+              bg="danger"
+              onClick={handleDeleteCallback}>
+              <i className="fa fa-trash-o" />
+            </Button>
+          </div>
+        </>
+      )}
+    </ProtoListItem>
   );
 };
 
