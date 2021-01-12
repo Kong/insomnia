@@ -27,7 +27,7 @@ const recursiveRender = (
 ) => {
   const { handleDelete, handleRename, handleSelect, handleUpdate, selectedId } = props;
 
-  const dirNode = dir && <ProtoDirectoryListItem dir={dir} indentLevel={indent++} />;
+  const dirNode = dir && <ProtoDirectoryListItem key={dir.name} dir={dir} indentLevel={indent++} />;
   const fileNodes = files.map(f => (
     <ProtoFileListItem
       key={f._id}
