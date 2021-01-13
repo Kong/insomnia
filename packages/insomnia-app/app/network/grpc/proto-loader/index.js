@@ -3,7 +3,7 @@
 import type { GrpcMethodDefinition } from '../method';
 import * as protoLoader from '@grpc/proto-loader';
 import * as models from '../../../models';
-import { writeProtoFile } from './write-proto-file';
+import writeProtoFile from './write-proto-file';
 
 const GRPC_LOADER_OPTIONS = {
   keepCase: true,

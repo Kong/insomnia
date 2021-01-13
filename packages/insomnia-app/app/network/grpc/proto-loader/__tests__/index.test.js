@@ -1,30 +1,34 @@
 // @flow
-import * as protoLoader from '../proto-loader';
-import { writeProtoFile } from '../proto-loader/write-proto-file';
+import * as protoLoader from '../index';
+import writeProtoFile from '../write-proto-file';
 import path from 'path';
+import { globalBeforeEach } from '../../../../__jest__/before-each';
+import * as models from '../../../../models';
 
 jest.mock('../write-proto-file', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
 
-const protoFile = {
-  protoText: 'this is just a placeholder because writing to a file is mocked',
-};
-
 describe('loadMethods', () => {
   const protoFilePath = path.join(__dirname, '../__fixtures__/hello.proto');
 
   beforeEach(() => {
+    globalBeforeEach();
     jest.resetAllMocks();
   });
 
   it('should load methods', async () => {
-    writeProtoFile.mockResolvedValue(protoFilePath);
+    const w = await models.workspace.create();
+    const pf = await models.protoFile.create({
+      parentId: w._id,
+      protoText: 'this is just a placeholder because writing to a file is mocked',
+    });
+    writeProtoFile.mockResolvedValue({ filePath: protoFilePath, dirs: [] });
 
-    const methods = await protoLoader.loadMethods(protoFile);
+    const methods = await protoLoader.loadMethods(pf);
 
-    expect(writeProtoFile).toHaveBeenCalledWith(protoFile.protoText);
+    expect(writeProtoFile).toHaveBeenCalledWith(pf);
 
     expect(methods).toHaveLength(4);
     expect(methods.map(c => c.path)).toStrictEqual(
