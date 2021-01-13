@@ -18,8 +18,6 @@ const isServiceDefinition = (obj: Object) => !isTypeOrEnumDefinition(obj);
 
 // TODO: The file path for protoLoader.load can also be a URL, so we can avoid
 //  writing to a file in those cases, but it becomes more important to cache
-//  We also need to think about how to store a reference to a proto file and it's
-//  implications on import/export/sync - INS-271
 export const loadMethods = async (
   protoFile: ProtoFile | undefined,
 ): Promise<Array<GrpcMethodDefinition>> => {
