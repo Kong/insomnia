@@ -16,7 +16,7 @@ import { connect } from 'react-redux';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import type { ProtoDirectory } from '../../../models/proto-directory';
-import ProtoManager from '../../../protos/proto-manager';
+import * as protoManager from '../../../network/grpc/proto-manager';
 
 type Props = {|
   grpcDispatch: GrpcDispatch,
@@ -43,14 +43,12 @@ const spinner = <i className="fa fa-spin fa-refresh" />;
 class ProtoFilesModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
   onSave: (string => Promise<void>) | null;
-  protoManager: ProtoManager;
 
   constructor(props: Props) {
     super(props);
 
     this.state = INITIAL_STATE;
     this.onSave = null;
-    this.protoManager = new ProtoManager();
   }
 
   _setModalRef(ref: ?Modal) {
@@ -82,7 +80,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   _handleDeleteFile(protoFile: ProtoFile): Promise<void> {
-    return this.protoManager.deleteFile(protoFile, deletedId => {
+    return protoManager.deleteFile(protoFile, deletedId => {
       // if the deleted protoFile was previously selected, clear the selection
       if (this.state.selectedProtoFileId === deletedId) {
         this.setState({ selectedProtoFileId: '' });
@@ -91,7 +89,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   _handleDeleteDirectory(protoDirectory: ProtoDirectory): Promise<void> {
-    return this.protoManager.deleteDirectory(protoDirectory, deletedIds => {
+    return protoManager.deleteDirectory(protoDirectory, deletedIds => {
       // if previously selected protoFile has been deleted, clear the selection
       if (deletedIds.contains(this.state.selectedProtoFileId)) {
         this.setState({ selectedProtoFileId: '' });
@@ -100,7 +98,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   _handleAdd(): Promise<void> {
-    return this.protoManager.addFile(this.props.workspace._id, createdId => {
+    return protoManager.addFile(this.props.workspace._id, createdId => {
       this.setState({ selectedProtoFileId: createdId });
     });
   }
@@ -108,7 +106,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   _handleUpload(protoFile: ProtoFile): Promise<void> {
     const { grpcDispatch } = this.props;
 
-    return this.protoManager.updateFile(protoFile, async updatedId => {
+    return protoManager.updateFile(protoFile, async updatedId => {
       const action = await grpcActions.invalidateMany(updatedId);
       grpcDispatch(action);
       sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
@@ -116,11 +114,11 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 
   _handleAddDirectory(): Promise<void> {
-    return this.protoManager.addDirectory(this.props.workspace._id);
+    return protoManager.addDirectory(this.props.workspace._id);
   }
 
   _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
-    return this.protoManager.renameFile(protoFile, name);
+    return protoManager.renameFile(protoFile, name);
   }
 
   render() {

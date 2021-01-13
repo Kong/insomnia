@@ -3,13 +3,13 @@ import path from 'path';
 import os from 'os';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
-import type { ProtoFile } from '../../models/proto-file';
-import type { ProtoDirectory } from '../../models/proto-directory';
-import * as db from '../../common/database';
-import * as models from '../../models';
-import { isProtoDirectory, isProtoFile, isWorkspace } from '../../models/helpers/is-model';
-import type { BaseModel } from '../../models';
-import type { Workspace } from '../../models/workspace';
+import type { ProtoFile } from '../../../models/proto-file';
+import type { ProtoDirectory } from '../../../models/proto-directory';
+import * as db from '../../../common/database';
+import * as models from '../../../models';
+import { isProtoDirectory, isProtoFile, isWorkspace } from '../../../models/helpers/is-model';
+import type { BaseModel } from '../../../models';
+import type { Workspace } from '../../../models/workspace';
 
 const getProtoTempFileName = ({ _id, modified }: ProtoFile): string => `${_id}.${modified}.proto`;
 const getProtoTempDirectoryName = ({ _id, modified }: ProtoDirectory): string =>
@@ -48,30 +48,6 @@ const writeNestedProtoFile = async (protoFile: ProtoFile, dirPath: string): Prom
 
   // Write file
   await fs.promises.writeFile(fullPath, protoFile.protoText);
-};
-
-export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
-  // Find all ancestors
-  const ancestors = await db.withAncestors(protoFile, [
-    models.protoDirectory.type,
-    models.workspace.type,
-  ]);
-
-  const ancestorDirectories = ancestors.filter(isProtoDirectory);
-
-  // Is this file part of a directory?
-  if (ancestorDirectories.length) {
-    const treeRootDirs = await writeProtoFileTree(ancestors);
-    // Get all ancestor directories excluding the root (first entry after reversing the array)
-    const subDirs = ancestorDirectories
-      .map(f => f.name)
-      .reverse()
-      .slice(1);
-    const filePath = path.join(...subDirs, protoFile.name);
-    return { filePath, dirs: treeRootDirs };
-  } else {
-    return writeIndividualProtoFile(protoFile);
-  }
 };
 
 const writeProtoFileTree = async (
@@ -124,4 +100,30 @@ const recursiveWriteProtoDirectory = async (
   );
 
   return [dirPath, ...createdDirs.flat()];
+};
+
+export const writeProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
+  // Find all ancestors
+  const ancestors = await db.withAncestors(protoFile, [
+    models.protoDirectory.type,
+    models.workspace.type,
+  ]);
+
+  const ancestorDirectories = ancestors.filter(isProtoDirectory);
+
+  // Is this file part of a directory?
+  if (ancestorDirectories.length) {
+    // Write proto file tree from root directory
+    const treeRootDirs = await writeProtoFileTree(ancestors);
+    // Get all ancestor directories excluding the root (ignore the first entry after reversing the array)
+    const subDirs = ancestorDirectories
+      .map(f => f.name)
+      .reverse()
+      .slice(1);
+    const filePath = path.join(...subDirs, protoFile.name);
+    return { filePath, dirs: treeRootDirs };
+  } else {
+    // Write single file
+    return writeIndividualProtoFile(protoFile);
+  }
 };
