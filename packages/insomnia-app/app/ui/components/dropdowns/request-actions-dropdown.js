@@ -1,5 +1,5 @@
 // @flow
-import React from 'react'; // @flow
+import React from 'react';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
