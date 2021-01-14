@@ -122,6 +122,8 @@ class SidebarChildren extends React.PureComponent<Props> {
             request={child.doc}
             workspace={workspace}
             hotKeyRegistry={hotKeyRegistry}
+            // Necessary for plugin actions on requests
+            activeEnvironment={activeEnvironment}
           />
         );
       }
