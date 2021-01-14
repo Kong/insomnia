@@ -1,5 +1,6 @@
 // @flow
-import React from 'react';
+import React from 'react'; // @flow
+import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
 import PromptButton from '../base/prompt-button';
 import {
@@ -87,7 +88,7 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
     return requestOperations.remove(request);
   }
 
-  async onOpen() {
+  async _onOpen() {
     const plugins = await getRequestActions();
     this.setState({ actionPlugins: plugins });
   }
@@ -135,7 +136,7 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
     const canGenerateCode = isRequest(request);
 
     return (
-      <Dropdown ref={this._setDropdownRef} onOpen={this.onOpen} {...other}>
+      <Dropdown ref={this._setDropdownRef} onOpen={this._onOpen} {...other}>
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
