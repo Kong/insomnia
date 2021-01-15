@@ -4,31 +4,30 @@ The purpose of this document is to provide a general overview of the application
 
 ## Technologies
 
-Insomnia is a desktop application built on top of [Electron](http://electronjs.org/). Electron 
+Insomnia is a desktop application built on top of [Electron](http://electronjs.org/). Electron
 provides a Chromium runtime for the Insomnia web app to run inside of, as well as additional tools
 to provide access to operating system features.
 
 There are a few more technologies and tools worth mentioning:
 
 - [`React`](https://reactjs.org/) is the library used for all UI components.
-- [`styled-components`](https://styled-components.com/) and [`Less`](http://lesscss.org/) are used 
+- [`styled-components`](https://styled-components.com/) and [`Less`](http://lesscss.org/) are used
   for styling UI components.
 - [`Electron Builder`](https://github.com/electron-userland/electron-builder) is used to help build,
   sign, and package Insomnia for distribution.
 - [`Flow`](https://flow.org/) is used for adding types to the codebase. Not everything is Flow but
   all new code should be typed with Flow.
 - [`Webpack`](https://webpack.js.org/) is the bundler used to compile the JS/Less/babel/etc
-  libcurl library that Insomnia uses to make requests. Libcurl is the HTTP client of choice because
-  it allows the deepest amount of debuggability and control of HTTP requests.
+- [`libcurl`](https://curl.se/libcurl/) is the library that Insomnia uses to make requests. Libcurl is the HTTP client of choice because it allows the deepest amount of debuggability and control of HTTP requests.
 - [`nedb`](https://github.com/louischatriot/nedb) a local in-memory database.
-- [`node-libcurl`](https://github.com/JCMais/node-libcurl) is a NodeJS wrapper around the native.
-- [`Codemirror`](https://codemirror.net/) is a web-based, extendable, code editor used for 
+- [`node-libcurl`](https://github.com/JCMais/node-libcurl) is a NodeJS wrapper around the native libcurl library.
+- [`Codemirror`](https://codemirror.net/) is a web-based, extendable, code editor used for
   highlighting and linting of data formats like JSON, GraphQL, and XML.
 - [`Commander.js`](https://github.com/tj/commander.js) is used for building the inso CLI.
 
 ## Project Structure
 
-Insomnia uses [`lerna`](https://lerna.js.org/) to manage multiple npm packages within a single 
+Insomnia uses [`lerna`](https://lerna.js.org/) to manage multiple npm packages within a single
 repository. There are currently two package locations:
 
 - `/packages` contains related packages that are consumed by `insomnia-app` or externally.
@@ -77,10 +76,10 @@ The structure for smoke tests is explained in the smoke testing package: [`packa
 
 ## Technical Debt
 
-This is just brief summary of Insomnia's current technical debt.
+This is just a brief summary of Insomnia's current technical debt.
 
 - Loading large responses (~20MB) can crash the app on weaker hardware.
-- Redux stores an in-memory duplicate of the local DB, unnecessarily doubling memory usage. Moving
+- An in-memory duplicate of the local DB is stored in Redux, unnecessarily doubling memory usage. Moving
   forward, Redux shouldn't need to be considered much and may be able to be removed eventually.
 - Bundling `libcurl` (native module) has caused many weeks of headaches trying to get builds working
   across Windows, Mac, and Linux. More expertise here is definitely needed.
