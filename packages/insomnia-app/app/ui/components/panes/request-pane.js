@@ -14,9 +14,6 @@ import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import * as models from '../../../models';
-import * as db from '../../../common/database';
-import { hotKeyRefs } from '../../common/hotkeys';
-import Hotkey from '../hotkey';
 import AuthDropdown from '../dropdowns/auth-dropdown';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import AuthWrapper from '../editors/auth/auth-wrapper';
@@ -34,7 +31,7 @@ import type { ForceToWorkspace } from '../../redux/modules/helpers';
 import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
-import { getRequestTabs, RequestTab, PluginTab } from '../../../plugins';
+import { getRequestTabs, RequestTab } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import HtmlElementWrapper from '../html-element-wrapper';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -136,20 +133,8 @@ class RequestPane extends React.PureComponent<Props, State> {
   }
 
   async _autocompleteUrls(): Promise<Array<string>> {
-    const docs = await db.withDescendants(this.props.workspace, models.request.type);
-
-    const requestId = this.props.request ? this.props.request._id : 'n/a';
-
-    const urls = docs
-      .filter(
-        (d: any) =>
-          d.type === models.request.type && // Only requests
-          d._id !== requestId && // Not current request
-          (d.url || ''), // Only ones with non-empty URLs
-      )
-      .map((r: any) => (r.url || '').trim());
-
-    return Array.from(new Set(urls));
+    const { workspace, request } = this.props;
+    return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor() {
