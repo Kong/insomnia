@@ -452,7 +452,7 @@ class RequestPane extends React.PureComponent<Props, State> {
             <TabPanel
               className="react-tabs__tab-panel"
               key={`${request._id}::${p.plugin.name}::${p.label}`}>
-              <HtmlElementWrapper el={p.body} />
+              <HtmlElementWrapper el={p.body} className={'tall'} />
             </TabPanel>
           ))}
         </Tabs>

@@ -32,7 +32,7 @@ class HtmlElementWrapper extends React.Component<Props> {
   }
 
   render() {
-    return <div ref={this._setRef} />;
+    return <div ref={this._setRef} className={this.props.className} />;
   }
 }
 
