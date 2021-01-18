@@ -32,6 +32,10 @@ export function create(patch: $Shape<ProtoDirectory> = {}): Promise<ProtoDirecto
   return db.docCreate(type, patch);
 }
 
+export function getByParentId(parentId: string): Promise<ProtoDirectory | null> {
+  return db.getWhere(type, { parentId });
+}
+
 export function remove(obj: ProtoDirectory): Promise<void> {
   return db.remove(obj);
 }

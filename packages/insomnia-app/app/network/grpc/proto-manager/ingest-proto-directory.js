@@ -7,7 +7,7 @@ import fs from 'fs';
 
 const _parseDir = async (entryPath: string, dirParentId: string): Promise<boolean> => {
   const result = await ingestProtoDirectory(entryPath, dirParentId);
-  return result.some(c => c);
+  return Boolean(result);
 };
 
 const _parseFile = async (entryPath: string, dirParentId: string): Promise<boolean> => {
@@ -34,6 +34,11 @@ const ingestProtoDirectory = async (
   dirPath: string,
   dirParentId: string,
 ): Promise<ProtoDirectory | null> => {
+  // Check exists
+  if (!fs.existsSync(dirPath)) {
+    return null;
+  }
+
   // Create dir in database
   const createdProtoDir = await models.protoDirectory.create({
     name: path.basename(dirPath),
