@@ -36,21 +36,6 @@ export function remove(obj: ProtoDirectory): Promise<void> {
   return db.remove(obj);
 }
 
-export function update(
-  obj: ProtoDirectory,
-  patch: $Shape<ProtoDirectory> = {},
-): Promise<ProtoDirectory> {
-  return db.docUpdate(obj, patch);
-}
-
-export function getById(_id: string): Promise<ProtoDirectory | null> {
-  return db.getWhere(type, { _id });
-}
-
-export function findByParentId(parentId: string): Promise<Array<ProtoDirectory>> {
-  return db.find(type, { parentId });
-}
-
 export function all(): Promise<Array<ProtoDirectory>> {
   return db.all(type);
 }
