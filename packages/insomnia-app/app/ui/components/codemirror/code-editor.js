@@ -95,6 +95,7 @@ class CodeEditor extends React.Component {
   componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
+      this.codeMirror.closeHintDropdown();
     }
   }
 
