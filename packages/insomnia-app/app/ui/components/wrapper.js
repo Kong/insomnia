@@ -186,7 +186,6 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
-  activeProtoFiles: Array<ProtoFile>,
   activeUnitTestResult: UnitTestResult | null,
   activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,

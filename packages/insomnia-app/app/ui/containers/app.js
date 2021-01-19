@@ -39,7 +39,6 @@ import {
   selectActiveCookieJar,
   selectActiveGitRepository,
   selectActiveOAuth2Token,
-  selectActiveProtoFiles,
   selectActiveRequest,
   selectActiveRequestMeta,
   selectActiveRequestResponses,
@@ -1491,16 +1490,12 @@ function mapStateToProps(state, props) {
   const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
   const activeUnitTestResult = selectActiveUnitTestResult(state, props);
 
-  // Proto file stuff
-  const activeProtoFiles = selectActiveProtoFiles(state, props);
-
   return Object.assign({}, state, {
     activity: activeActivity,
     activeApiSpec,
     activeCookieJar,
     activeEnvironment,
     activeGitRepository,
-    activeProtoFiles,
     activeRequest,
     activeRequestResponses,
     activeResponse,
