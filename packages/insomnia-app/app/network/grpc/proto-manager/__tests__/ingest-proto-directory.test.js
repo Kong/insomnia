@@ -41,9 +41,13 @@ describe('ingestProtoDirectory', () => {
     const libraryFolder = await models.protoDirectory.getByParentId(w._id);
     expect(libraryFolder.name).toBe('library');
 
-    const [helloProto, rootProto] = await models.protoFile.findByParentId(libraryFolder._id);
-    expect(helloProto.name).toBe('hello.proto');
-    expect(rootProto.name).toBe('root.proto');
+    const protos = await models.protoFile.findByParentId(libraryFolder._id);
+    expect(protos).toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'hello.proto' }),
+        expect.objectContaining({ name: 'root.proto' }),
+      ]),
+    );
 
     const nestedFolder = await models.protoDirectory.getByParentId(libraryFolder._id);
     expect(nestedFolder.name).toBe('nested');
