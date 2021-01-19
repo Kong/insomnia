@@ -11,11 +11,14 @@ export type ExpandedProtoDirectory = {
   subDirs: Array<ExpandedProtoDirectory>,
 };
 
-const selectAllProtoFiles = createSelector(selectEntitiesLists, entities => entities.protoFiles);
+const selectAllProtoFiles = createSelector(
+  selectEntitiesLists,
+  entities => entities.protoFiles || [],
+);
 
 const selectAllProtoDirectories = createSelector(
   selectEntitiesLists,
-  entities => entities.protoDirectories,
+  entities => entities.protoDirectories || [],
 );
 
 export const selectExpandedActiveProtoDirectories = createSelector(
