@@ -1,12 +1,14 @@
 // @flow
 
 import fs from 'fs';
+import path from 'path';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import selectFileOrFolder from '../../../../common/select-file-or-folder';
 import * as protoManager from '../index';
 import * as protoLoader from '../../proto-loader';
 import * as models from '../../../../models';
 import * as modals from '../../../../ui/components/modals';
+import * as db from '../../../../common/database';
 
 jest.mock('../../../../common/select-file-or-folder', () => ({
   __esModule: true,
@@ -18,6 +20,7 @@ jest.mock('../../proto-loader');
 
 describe('protoManager', () => {
   const selectFileOrFolderMock: JestMockFn<*, *> = selectFileOrFolder;
+
   beforeEach(() => {
     globalBeforeEach();
     jest.resetAllMocks();
@@ -193,6 +196,88 @@ describe('protoManager', () => {
       await expect(models.protoDirectory.getById(pd._id)).resolves.toBeNull();
       await expect(models.protoFile.getById(pf1._id)).resolves.toBeNull();
       await expect(models.protoFile.getById(pf2._id)).resolves.toBeNull();
+    });
+  });
+
+  describe('addDirectory', () => {
+    let dbBufferChangesSpy: * | JestMockFn<*, *>;
+    let dbFlushChangesSpy: * | JestMockFn<*, *>;
+
+    beforeEach(() => {
+      dbBufferChangesSpy = jest.spyOn(db, 'bufferChanges');
+      dbFlushChangesSpy = jest.spyOn(db, 'flushChanges');
+    });
+
+    afterEach(() => {
+      expect(dbBufferChangesSpy).toHaveBeenCalled();
+      expect(dbFlushChangesSpy).toHaveBeenCalled();
+    });
+
+    it('should not create database entries if loading canceled', async () => {
+      // Arrange
+      const w = await models.workspace.create();
+      selectFileOrFolderMock.mockResolvedValue({ canceled: true });
+
+      // Act
+      await protoManager.addDirectory(w._id);
+
+      // Assert
+      await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
+      await expect(models.protoFile.all()).resolves.toHaveLength(0);
+    });
+
+    it('should not create database entry if file loading throws error', async () => {
+      // Arrange
+      const w = await models.workspace.create();
+      const error = new Error();
+      selectFileOrFolderMock.mockRejectedValue(error);
+
+      // Act
+      await protoManager.addDirectory(w._id);
+
+      // Assert
+      await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
+      await expect(models.protoFile.all()).resolves.toHaveLength(0);
+
+      expect(modals.showError).toHaveBeenCalledWith({ error });
+    });
+
+    it('should show alert if no directory was created', async () => {
+      // Arrange
+      const w = await models.workspace.create();
+      const filePath = path.join(__dirname, '../../__fixtures__/', 'library', 'empty');
+      selectFileOrFolderMock.mockResolvedValue({ filePath });
+
+      // Act
+      await protoManager.addDirectory(w._id);
+
+      // Assert
+      await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
+      await expect(models.protoFile.all()).resolves.toHaveLength(0);
+
+      expect(modals.showAlert).toHaveBeenCalledWith({
+        title: 'No files found',
+        message: `No .proto files were found under ${filePath}.`,
+      });
+    });
+
+    it('should create database entries', async () => {
+      // Arrange
+      const w = await models.workspace.create();
+      const filePath = path.join(__dirname, '../../__fixtures__/', 'library');
+      selectFileOrFolderMock.mockResolvedValue({ filePath });
+
+      // Act
+      await protoManager.addDirectory(w._id);
+
+      // Assert
+      await expect(models.protoDirectory.all()).resolves.toHaveLength(3);
+      await expect(models.protoFile.all()).resolves.toHaveLength(3);
+
+      // Each individual entry is not validated here because it is
+      // too involved to mock everything, and an integration test exists
+      // which uses this code path. As long as the expected number of
+      // entities are loaded from the fixture directory, this test is sufficient.
     });
   });
 });

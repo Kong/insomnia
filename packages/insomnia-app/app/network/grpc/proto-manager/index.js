@@ -53,6 +53,7 @@ export async function deleteDirectory(
 
 export async function addDirectory(workspaceId: string): Promise<void> {
   const bufferId = await db.bufferChanges();
+  let rollback = false;
   try {
     // Select file
     const { filePath, canceled } = await selectFileOrFolder({
@@ -74,13 +75,12 @@ export async function addDirectory(workspaceId: string): Promise<void> {
         message: `No .proto files were found under ${filePath}.`,
       });
     }
-
     // TODO: validate all of the imported proto files
-
-    await db.flushChanges(bufferId);
   } catch (e) {
-    await db.flushChanges(bufferId, true);
+    rollback = true;
     showError({ error: e });
+  } finally {
+    await db.flushChanges(bufferId, rollback);
   }
 }
 
