@@ -97,10 +97,6 @@ async function _readFile(): Promise<{ fileName: string, fileContents: string } |
       return;
     }
 
-    // Read contents
-    const contents = await fs.promises.readFile(filePath, 'utf-8');
-    const name = path.basename(filePath);
-
     // Try parse proto file to make sure the file is valid
     try {
       await protoLoader.loadMethodsFromPath(filePath);
@@ -113,6 +109,10 @@ async function _readFile(): Promise<{ fileName: string, fileContents: string } |
 
       return;
     }
+
+    // Read contents
+    const contents = await fs.promises.readFile(filePath, 'utf-8');
+    const name = path.basename(filePath);
 
     return { fileName: name, fileContents: contents };
   } catch (e) {

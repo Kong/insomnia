@@ -11,7 +11,7 @@ jest.mock('../write-proto-file', () => ({
 }));
 
 describe('loadMethods', () => {
-  const protoFilePath = path.join(__dirname, '../__fixtures__/hello.proto');
+  const protoFilePath = path.join(__dirname, '../../__fixtures__/library/hello.proto');
 
   beforeEach(() => {
     globalBeforeEach();
@@ -39,5 +39,16 @@ describe('loadMethods', () => {
         '/hello.HelloService/BidiHello',
       ]),
     );
+  });
+
+  it('should load no methods if protofile does not exist or is empty', async () => {
+    const w = await models.workspace.create();
+    const pf = await models.protoFile.create({
+      parentId: w._id,
+      protoText: '',
+    });
+
+    await expect(protoLoader.loadMethods(undefined)).resolves.toHaveLength(0);
+    await expect(protoLoader.loadMethods(pf)).resolves.toHaveLength(0);
   });
 });
