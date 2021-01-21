@@ -35,7 +35,7 @@ class BearerAuth extends React.PureComponent<Props> {
     onChange(request, { ...request.authentication, prefix });
   };
 
-  render = () => {
+  render() {
     const {
       request,
       handleRender,
@@ -130,7 +130,7 @@ class BearerAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default BearerAuth;

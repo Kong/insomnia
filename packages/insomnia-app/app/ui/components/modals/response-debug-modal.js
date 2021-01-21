@@ -51,7 +51,7 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.show();
   };
 
-  render = () => {
+  render() {
     const { settings } = this.props;
     const { response, title } = this.state;
 
@@ -74,7 +74,7 @@ class ResponseDebugModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default ResponseDebugModal;

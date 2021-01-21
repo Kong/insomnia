@@ -504,21 +504,21 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     this.setState({ activeGitBranch: branch || 'no-vcs' });
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     const { activity } = this.props;
     trackPageView(`/${activity || ''}`);
-  };
+  }
 
-  componentDidUpdate = (prevProps: Props) => {
+  componentDidUpdate(prevProps: Props) {
     // We're using activities as page views so here we monitor
     // for a change in activity and send it as a pageview.
     const { activity } = this.props;
     if (prevProps.activity !== activity) {
       trackPageView(`/${activity || ''}`);
     }
-  };
+  }
 
-  render = () => {
+  render() {
     const {
       activeCookieJar,
       activeEnvironment,
@@ -873,7 +873,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
         </React.Fragment>
       </React.Fragment>
     );
-  };
+  }
 }
 
 export default Wrapper;

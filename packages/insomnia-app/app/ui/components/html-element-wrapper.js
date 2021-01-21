@@ -23,12 +23,12 @@ class HtmlElementWrapper extends React.Component<Props> {
     n.appendChild(this.props.el);
   };
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     const { onUnmount } = this.props;
     if (typeof onUnmount === 'function') {
       onUnmount();
     }
-  };
+  }
 
   render = () => <div ref={this._setRef} />;
 }

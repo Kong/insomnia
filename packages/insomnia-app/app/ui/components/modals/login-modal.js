@@ -62,7 +62,7 @@ class LoginModal extends PureComponent {
     this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { title, message, loading, error } = this.state;
     return (
       <form onSubmit={this._handleLogin}>
@@ -106,7 +106,7 @@ class LoginModal extends PureComponent {
         </Modal>
       </form>
     );
-  };
+  }
 }
 
 export default LoginModal;

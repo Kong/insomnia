@@ -24,9 +24,9 @@ class Theme extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._loadThemes();
-  };
+  }
 
   _loadThemes = async () => {
     const themes = await getThemes();

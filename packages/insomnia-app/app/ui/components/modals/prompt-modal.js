@@ -199,7 +199,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const {
       submitName,
       title,
@@ -263,7 +263,7 @@ class PromptModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default PromptModal;

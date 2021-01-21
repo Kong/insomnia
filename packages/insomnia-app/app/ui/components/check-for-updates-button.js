@@ -39,17 +39,17 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     this.setState({ checking: true });
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     electron.ipcRenderer.on('updater.check.status', this._listenerCheckStatus);
     electron.ipcRenderer.on('updater.check.complete', this._listenerCheckComplete);
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     electron.ipcRenderer.removeListener('updater.check.complete', this._listenerCheckComplete);
     electron.ipcRenderer.removeListener('updater.check.status', this._listenerCheckStatus);
-  };
+  }
 
-  render = () => {
+  render() {
     const { children, className } = this.props;
     const { status, checking } = this.state;
 
@@ -58,7 +58,7 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
         {status || children}
       </button>
     );
-  };
+  }
 }
 
 export default CheckForUpdatesButton;

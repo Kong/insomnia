@@ -64,7 +64,7 @@ class EnvironmentEditModal extends PureComponent {
     this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const {
       editorKeyMap,
       editorFontSize,
@@ -113,7 +113,7 @@ class EnvironmentEditModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 EnvironmentEditModal.propTypes = {

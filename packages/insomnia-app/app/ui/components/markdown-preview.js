@@ -68,29 +68,29 @@ class MarkdownPreview extends PureComponent {
     }
   };
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearTimeout(this._compileTimeout);
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount = () => {
+  UNSAFE_componentWillMount() {
     this._compileMarkdown(this.props.markdown);
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = nextProps => {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._compileMarkdown(nextProps.markdown);
-  };
+  }
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._highlightCodeBlocks();
-  };
+  }
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._highlightCodeBlocks();
-  };
+  }
 
-  render = () => {
+  render() {
     const { className, heading } = this.props;
     const { compiled, renderError } = this.state;
 
@@ -106,7 +106,7 @@ class MarkdownPreview extends PureComponent {
         </div>
       </div>
     );
-  };
+  }
 }
 
 MarkdownPreview.propTypes = {

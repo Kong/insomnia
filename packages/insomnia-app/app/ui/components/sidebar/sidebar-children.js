@@ -190,7 +190,7 @@ class SidebarChildren extends React.PureComponent<Props> {
     handleCreateRequestGroup(workspace._id);
   };
 
-  render = () => {
+  render() {
     const { childObjects, hotKeyRegistry } = this.props;
 
     const showSeparator = childObjects.pinned.length > 0;
@@ -215,7 +215,7 @@ class SidebarChildren extends React.PureComponent<Props> {
         {contextMenuPortal}
       </React.Fragment>
     );
-  };
+  }
 }
 
 export default SidebarChildren;

@@ -194,7 +194,7 @@ class HawkAuth extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const fields = this.renderHawkAuthenticationFields();
     const { authentication } = this.props.request;
 
@@ -230,7 +230,7 @@ class HawkAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default HawkAuth;

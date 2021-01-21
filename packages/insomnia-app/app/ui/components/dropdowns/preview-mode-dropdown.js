@@ -38,7 +38,7 @@ class PreviewModeDropdown extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const { fullDownload, previewMode, showPrettifyOption } = this.props;
 
     return (
@@ -66,7 +66,7 @@ class PreviewModeDropdown extends React.PureComponent<Props> {
         </DropdownItem>
       </Dropdown>
     );
-  };
+  }
 }
 
 export default PreviewModeDropdown;

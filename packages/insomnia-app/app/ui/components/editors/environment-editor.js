@@ -111,7 +111,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
   isValid = () => !this.state.error;
 
-  render = () => {
+  render() {
     const {
       environmentInfo,
       editorFontSize,
@@ -154,7 +154,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
         {error && <p className="notice error margin">{error}</p>}
       </div>
     );
-  };
+  }
 }
 
 export default EnvironmentEditor;

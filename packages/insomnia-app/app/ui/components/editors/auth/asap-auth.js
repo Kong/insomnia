@@ -175,7 +175,7 @@ class AsapAuth extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const { authentication } = this.props.request;
     const fields = this.renderAsapAuthenticationFields();
 
@@ -211,7 +211,7 @@ class AsapAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default AsapAuth;

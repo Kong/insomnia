@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import CodeEditor from '../../codemirror/code-editor';
 
 class RawEditor extends PureComponent {
-  render = () => {
+  render() {
     const {
       className,
       content,
@@ -44,7 +44,7 @@ class RawEditor extends PureComponent {
         />
       </React.Fragment>
     );
-  };
+  }
 }
 
 RawEditor.propTypes = {

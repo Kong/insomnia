@@ -112,14 +112,14 @@ class ResponseViewer extends React.Component<Props, State> {
   };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount = () => {
+  UNSAFE_componentWillMount() {
     this._maybeLoadResponseBody(this.props);
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     this._maybeLoadResponseBody(nextProps);
-  };
+  }
 
   shouldComponentUpdate = (nextProps: Props, nextState: State) => {
     for (const k of Object.keys(nextProps)) {

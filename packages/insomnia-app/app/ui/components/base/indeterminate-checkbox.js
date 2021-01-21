@@ -19,22 +19,22 @@ class IndeterminateCheckbox extends React.PureComponent<Props> {
     }
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._update();
-  };
+  }
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._update();
-  };
+  }
 
-  render = () => {
+  render() {
     const {
       indeterminate, // eslint-disable-line no-unused-vars
       ...otherProps
     } = this.props;
 
     return <input ref={this._setRef} type="checkbox" {...(otherProps: Object)} />;
-  };
+  }
 }
 
 export default IndeterminateCheckbox;

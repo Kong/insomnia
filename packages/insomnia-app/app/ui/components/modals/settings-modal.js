@@ -88,7 +88,7 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { settings, activity } = this.props;
     const { currentTabIndex } = this.state;
     const email = session.isLoggedIn() ? session.getFullName() : null;
@@ -167,7 +167,7 @@ class SettingsModal extends PureComponent {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 SettingsModal.propTypes = {

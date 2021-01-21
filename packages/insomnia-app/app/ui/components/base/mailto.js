@@ -12,7 +12,7 @@ type Props = {|
 |};
 
 class Mailto extends React.PureComponent<Props> {
-  render = () => {
+  render() {
     const { email, body, subject, children } = this.props;
 
     const params = [];
@@ -27,7 +27,7 @@ class Mailto extends React.PureComponent<Props> {
     const href = joinUrlAndQueryString(`mailto:${email}`, qs);
 
     return <Link href={href}>{children || email}</Link>;
-  };
+  }
 }
 
 export default Mailto;

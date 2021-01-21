@@ -314,7 +314,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { status, message, error, branch } = this.state;
 
     const nonAddedKeys = [];
@@ -377,7 +377,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default SyncStagingModal;

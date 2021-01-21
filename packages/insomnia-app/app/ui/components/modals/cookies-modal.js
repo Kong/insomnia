@@ -84,7 +84,7 @@ class CookiesModal extends PureComponent<Props, State> {
   };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     // Re-filter if we received new cookies
     // Compare cookies with Dates cast to strings
     const sameCookies = deepEqual(this.props.cookieJar.cookies, nextProps.cookieJar.cookies);
@@ -92,7 +92,7 @@ class CookiesModal extends PureComponent<Props, State> {
     if (!sameCookies) {
       this._applyFilter(this.state.filter, nextProps.cookieJar.cookies);
     }
-  };
+  }
 
   _applyFilter = async (filter: string, cookies: Array<Cookie>) => {
     const renderedCookies = [];
@@ -151,7 +151,7 @@ class CookiesModal extends PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { handleShowModifyCookieModal, handleRender, cookieJar } = this.props;
 
     const { filter } = this.state;
@@ -203,7 +203,7 @@ class CookiesModal extends PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 // export CookiesModal;

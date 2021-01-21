@@ -111,18 +111,18 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
     });
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._isMounted = true;
     syncStorage.onChange(this._reloadData);
     this._reloadData();
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     syncStorage.offChange(this._reloadData);
     this._isMounted = false;
-  };
+  }
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     const { resourceGroupId, syncMode } = this.state;
 
     if (!resourceGroupId) {
@@ -135,7 +135,7 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
       this._hasPrompted = true;
       this._handleShowSyncModePrompt();
     }
-  };
+  }
 
   _getSyncDescription = (syncMode: string | null, syncPercentage: number) => {
     let el = null;
@@ -162,7 +162,7 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
     return el;
   };
 
-  render = () => {
+  render() {
     const { className } = this.props;
     const { resourceGroupId, loading, loggedIn } = this.state;
 
@@ -227,7 +227,7 @@ class SyncLegacyDropdown extends React.PureComponent<Props, State> {
         </div>
       );
     }
-  };
+  }
 }
 
 export default SyncLegacyDropdown;

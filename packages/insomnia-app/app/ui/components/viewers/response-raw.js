@@ -32,7 +32,7 @@ class ResponseRaw extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const { fontSize, responseId, value } = this.props;
     return (
       <CodeEditor
@@ -49,7 +49,7 @@ class ResponseRaw extends PureComponent {
         uniquenessKey={responseId}
       />
     );
-  };
+  }
 }
 
 ResponseRaw.propTypes = {

@@ -81,7 +81,7 @@ class Editable extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const {
       value,
       fallbackValue,
@@ -126,7 +126,7 @@ class Editable extends PureComponent {
         return <span {...readViewProps}>{initialValue || blankValue}</span>;
       }
     }
-  };
+  }
 }
 
 Editable.propTypes = {

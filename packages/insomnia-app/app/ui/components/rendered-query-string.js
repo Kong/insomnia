@@ -44,24 +44,24 @@ class RenderedQueryString extends PureComponent {
     }
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._update(this.props);
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearTimeout(this._interval);
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = nextProps => {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.request._id !== this.props.request._id) {
       this._update(nextProps);
     } else {
       this._debouncedUpdate(nextProps);
     }
-  };
+  }
 
-  render = () => {
+  render() {
     let inner;
     if (this.state.string) {
       inner = <span className="selectable force-wrap">{this.state.string}</span>;
@@ -82,7 +82,7 @@ class RenderedQueryString extends PureComponent {
         {inner}
       </div>
     );
-  };
+  }
 }
 
 RenderedQueryString.propTypes = {

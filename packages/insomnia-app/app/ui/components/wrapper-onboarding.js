@@ -29,9 +29,9 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     step: 1,
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     db.onChange(this._handleDbChange);
-  };
+  }
 
   _handleDbChange = (changes: Array<[string, BaseModel, boolean]>) => {
     for (const change of changes) {

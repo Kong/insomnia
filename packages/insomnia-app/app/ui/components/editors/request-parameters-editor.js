@@ -74,7 +74,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     return paramsString;
   };
 
-  render = () => {
+  render() {
     const {
       bulk,
       request,
@@ -114,7 +114,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
         onChange={this._handleKeyValueUpdate}
       />
     );
-  };
+  }
 }
 
 export default RequestParametersEditor;

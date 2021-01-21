@@ -56,9 +56,9 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._setParts();
-  };
+  }
 
   _setParts = async () => {
     try {
@@ -207,7 +207,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       fakeReq.end();
     });
 
-  render = () => {
+  render() {
     const {
       download,
       disableHtmlPreviewJs,
@@ -298,7 +298,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
         ) : null}
       </div>
     );
-  };
+  }
 }
 
 export default ResponseMultipart;

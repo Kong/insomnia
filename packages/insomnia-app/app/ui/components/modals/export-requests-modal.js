@@ -192,7 +192,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     return false;
   };
 
-  render = () => {
+  render() {
     const { treeRoot } = this.state;
     const isExportDisabled = treeRoot != null ? treeRoot.selectedRequests === 0 : false;
     return (
@@ -219,7 +219,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default ExportRequestsModal;

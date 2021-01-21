@@ -468,26 +468,26 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   static _graphQLToString = (body: GraphQLBody): string => JSON.stringify(body);
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (this.state.automaticFetch && nextProps.request.url !== this.props.request.url) {
       clearTimeout(this._schemaFetchTimeout);
       this._schemaFetchTimeout = setTimeout(async () => {
         await this._fetchAndSetSchema(nextProps.request);
       }, 2000);
     }
-  };
+  }
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._isMounted = true;
     (async () => {
       await this._fetchAndSetSchema(this.props.request);
     })();
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     this._isMounted = false;
     clearTimeout(this._schemaFetchTimeout);
-  };
+  }
 
   renderSelectedOperationName = () => {
     const { operationName } = this.state.body;
@@ -521,7 +521,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     return `<div class="markdown-preview__content">${html}</div>`;
   };
 
-  render = () => {
+  render() {
     const {
       content,
       render,
@@ -684,7 +684,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         {graphQLExplorerPortal}
       </div>
     );
-  };
+  }
 }
 
 export default GraphQLEditor;

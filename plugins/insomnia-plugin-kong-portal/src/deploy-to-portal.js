@@ -211,11 +211,11 @@ class DeployToPortal extends React.Component<Props, State> {
     this.setState(newState);
   };
 
-  componentDidUpdate = async () => {
+  async componentDidUpdate() {
     for (const key of STATE_KEYS_TO_PERSIST) {
       await this.props.store.setItem(key, this.state[key]);
     }
-  };
+  }
 
   _handleKongPortalApiUrlChange = async (e: SyntheticEvent<HTMLInputElement>) => {
     this.setState({ kongPortalApiUrl: e.currentTarget.value });

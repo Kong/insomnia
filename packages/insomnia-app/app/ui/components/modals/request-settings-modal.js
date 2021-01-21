@@ -458,7 +458,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { request } = this.state;
     return (
       <Modal ref={this._setModalRef} freshState>
@@ -469,7 +469,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
         <ModalBody className="pad">{this.renderModalBody()}</ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default RequestSettingsModal;

@@ -94,7 +94,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
 
   static _getCommonHeaderNames = (pair: RequestHeader) => allHeaderNames;
 
-  render = () => {
+  render() {
     const {
       bulk,
       request,
@@ -141,7 +141,7 @@ class RequestHeadersEditor extends React.PureComponent<Props> {
         </div>
       </div>
     );
-  };
+  }
 }
 
 export default RequestHeadersEditor;

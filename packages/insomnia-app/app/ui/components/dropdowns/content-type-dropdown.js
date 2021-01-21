@@ -90,7 +90,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const { children, className, ...extraProps } = this.props;
     return (
       <Dropdown beside {...(extraProps: Object)}>
@@ -122,7 +122,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
         {this._renderDropdownItem(EMPTY_MIME_TYPE, 'No Body')}
       </Dropdown>
     );
-  };
+  }
 }
 
 export default ContentTypeDropdown;

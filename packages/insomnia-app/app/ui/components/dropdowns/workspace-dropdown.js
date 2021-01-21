@@ -238,18 +238,18 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   };
 
-  componentDidUpdate = (prevProps: Props) => {
+  componentDidUpdate(prevProps: Props) {
     // Reload workspaces if we just got a new VCS instance
     if (this.props.vcs && !prevProps.vcs) {
       this._refreshRemoteWorkspaces();
     }
-  };
+  }
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._refreshRemoteWorkspaces();
-  };
+  }
 
-  render = () => {
+  render() {
     const {
       className,
       workspaces,
@@ -421,7 +421,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
         </Dropdown>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 export default WorkspaceDropdown;

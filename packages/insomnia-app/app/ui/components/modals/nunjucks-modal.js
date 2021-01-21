@@ -51,7 +51,7 @@ class NunjucksModal extends PureComponent {
     this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { handleRender, handleGetRenderContext, uniqueKey, workspace } = this.props;
     const { defaultTemplate } = this.state;
 
@@ -93,7 +93,7 @@ class NunjucksModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 NunjucksModal.propTypes = {

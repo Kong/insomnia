@@ -169,7 +169,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { branch: currentBranch, branches, remoteBranches, newBranchName, error } = this.state;
 
     const remoteOnlyBranches = remoteBranches.filter(b => !branches.includes(b));
@@ -292,7 +292,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default GitBranchesModal;

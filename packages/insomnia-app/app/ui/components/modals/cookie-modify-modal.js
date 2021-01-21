@@ -210,7 +210,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { cookieJar } = this.props;
     const { cookie } = this.state;
     const checkFields = ['secure', 'httpOnly'];
@@ -285,7 +285,7 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 // export CookieModifyModal;

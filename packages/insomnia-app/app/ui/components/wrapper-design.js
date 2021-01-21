@@ -137,21 +137,21 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
   };
 
-  componentDidMount = async () => {
+  async componentDidMount() {
     const generateConfigPlugins = await getConfigGenerators();
     this.setState({ hasConfigPlugins: generateConfigPlugins.length > 0 });
 
     await this._reLint();
-  };
+  }
 
-  componentDidUpdate = (prevProps: Props) => {
+  componentDidUpdate(prevProps: Props) {
     const { activeApiSpec } = this.props.wrapperProps;
 
     // Re-lint if content changed
     if (activeApiSpec.contents !== prevProps.wrapperProps.activeApiSpec.contents) {
       this._reLint();
     }
-  };
+  }
 
   _renderEditor = (): React.Node => {
     const { activeApiSpec, settings } = this.props.wrapperProps;
@@ -229,7 +229,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { gitSyncDropdown, wrapperProps, handleActivityChange } = this.props;
 
     const { activeApiSpec, activity, activeWorkspace } = wrapperProps;
@@ -301,7 +301,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         )}
       />
     );
-  };
+  }
 }
 
 export default WrapperDesign;

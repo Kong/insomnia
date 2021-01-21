@@ -403,7 +403,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     return fields;
   };
 
-  render = () => {
+  render() {
     const fields = this.renderFields();
 
     return (
@@ -413,7 +413,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default OAuth1Auth;

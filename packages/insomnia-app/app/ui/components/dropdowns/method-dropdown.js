@@ -68,7 +68,7 @@ class MethodDropdown extends PureComponent {
     this._dropdown && this._dropdown.toggle(true);
   };
 
-  render = () => {
+  render() {
     const {
       method,
       right,
@@ -109,7 +109,7 @@ class MethodDropdown extends PureComponent {
         </DropdownItem>
       </Dropdown>
     );
-  };
+  }
 }
 
 MethodDropdown.propTypes = {

@@ -21,7 +21,7 @@ class RequestRow extends PureComponent<Props> {
     return handleSetItemSelected(request._id, value);
   };
 
-  render = () => {
+  render() {
     const { request, isSelected } = this.props;
     const isGrpc = isGrpcRequest(request);
 
@@ -38,7 +38,7 @@ class RequestRow extends PureComponent<Props> {
         </div>
       </li>
     );
-  };
+  }
 }
 
 export default RequestRow;

@@ -101,7 +101,7 @@ class GenerateCodeModal extends PureComponent {
     this.modal.show();
   };
 
-  render = () => {
+  render() {
     const { cmd, target, client } = this.state;
     const { editorFontSize, editorIndentSize, editorKeyMap } = this.props;
 
@@ -174,7 +174,7 @@ class GenerateCodeModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 GenerateCodeModal.propTypes = {

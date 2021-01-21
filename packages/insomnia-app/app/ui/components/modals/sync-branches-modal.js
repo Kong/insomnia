@@ -151,7 +151,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     await this.refreshState();
   };
 
-  render = () => {
+  render() {
     const { vcs } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
 
@@ -278,7 +278,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default SyncBranchesModal;

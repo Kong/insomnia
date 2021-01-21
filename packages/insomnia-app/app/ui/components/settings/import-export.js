@@ -19,7 +19,7 @@ class ImportExport extends PureComponent {
     });
   };
 
-  render = () => {
+  render() {
     const {
       handleImportFile,
       handleImportClipBoard,
@@ -82,7 +82,7 @@ class ImportExport extends PureComponent {
         <p className="italic faint">* Tip: You can also paste Curl commands into the URL bar</p>
       </div>
     );
-  };
+  }
 }
 
 ImportExport.propTypes = {

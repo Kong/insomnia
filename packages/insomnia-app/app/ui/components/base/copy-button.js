@@ -30,11 +30,11 @@ class CopyButton extends PureComponent {
     }, 2000);
   };
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearTimeout(this._triggerTimeout);
-  };
+  }
 
-  render = () => {
+  render() {
     const {
       content, // eslint-disable-line no-unused-vars
       children,
@@ -57,7 +57,7 @@ class CopyButton extends PureComponent {
         )}
       </Button>
     );
-  };
+  }
 }
 
 CopyButton.propTypes = {

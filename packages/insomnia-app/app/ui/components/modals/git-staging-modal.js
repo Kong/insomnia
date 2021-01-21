@@ -392,7 +392,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { items, branch, loading } = this.state;
 
     const itemsList = Object.keys(items).map(k => items[k]);
@@ -420,7 +420,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default GitStagingModal;

@@ -43,7 +43,7 @@ class SidebarRequestGroupRow extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const {
       connectDragSource,
       connectDropTarget,
@@ -159,7 +159,7 @@ class SidebarRequestGroupRow extends PureComponent {
         </ul>
       </li>
     );
-  };
+  }
 }
 
 SidebarRequestGroupRow.propTypes = {

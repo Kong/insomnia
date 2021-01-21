@@ -49,7 +49,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.show();
   };
 
-  render = () => {
+  render() {
     const { title, body, bodyHTML, tall, skinny, wide } = this.state;
 
     let finalBody = body;
@@ -63,7 +63,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
         <ModalBody>{finalBody}</ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default WrapperModal;

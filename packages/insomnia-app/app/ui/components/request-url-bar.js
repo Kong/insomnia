@@ -247,11 +247,11 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
   };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (nextProps.request._id !== this.props.request._id) {
       this._handleResetTimeouts();
     }
-  };
+  }
 
   renderSendButton = () => {
     const { hotKeyRegistry, downloadPath } = this.props;
@@ -329,7 +329,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
     return [cancelButton, sendButton];
   };
 
-  render = () => {
+  render() {
     const {
       request,
       handleRender,
@@ -372,7 +372,7 @@ class RequestUrlBar extends React.PureComponent<Props, State> {
         </div>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 export default RequestUrlBar;

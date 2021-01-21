@@ -11,7 +11,7 @@ type Props = {|
 |};
 
 class Highlight extends React.PureComponent<Props> {
-  render = () => {
+  render() {
     const { search, text, blankValue, ...otherProps } = this.props;
 
     // Match loose here to make sure our highlighting always works
@@ -33,7 +33,7 @@ class Highlight extends React.PureComponent<Props> {
         }}
       />
     );
-  };
+  }
 }
 
 export default Highlight;

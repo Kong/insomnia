@@ -375,9 +375,9 @@ class Dropdown extends PureComponent {
     return newChildren;
   };
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._checkSizeAndPosition();
-  };
+  }
 
   hide = () => {
     // Focus the dropdown button after hiding

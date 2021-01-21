@@ -43,7 +43,7 @@ class CookieList extends React.PureComponent<Props> {
     this.props.handleCookieDelete(cookie);
   };
 
-  render = () => {
+  render() {
     const { cookies, handleDeleteAll, handleShowModifyCookieModal, handleRender } = this.props;
 
     return (
@@ -114,7 +114,7 @@ class CookieList extends React.PureComponent<Props> {
         )}
       </div>
     );
-  };
+  }
 }
 
 export default CookieList;

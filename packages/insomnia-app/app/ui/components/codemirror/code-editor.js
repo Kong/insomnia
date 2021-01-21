@@ -91,30 +91,30 @@ class CodeEditor extends React.Component {
     this._previousUniquenessKey = 'n/a';
   }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
       this.codeMirror.closeHintDropdown();
     }
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = nextProps => {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._uniquenessKey = nextProps.uniquenessKey;
     this._previousUniquenessKey = this.props.uniquenessKey;
 
     // Sync the filter too
     this.setState({ filter: nextProps.filter || '' });
-  };
+  }
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._codemirrorSetOptions();
     const { defaultValue } = this.props;
     if (this._uniquenessKey && this._uniquenessKey !== this._previousUniquenessKey) {
       this._codemirrorSetValue(defaultValue);
       this._restoreState();
     }
-  };
+  }
 
   shouldComponentUpdate = nextProps => {
     // Update if any properties changed, except value. We ignore value.
@@ -928,7 +928,7 @@ class CodeEditor extends React.Component {
     showModal(FilterHelpModal, isJson);
   };
 
-  render = () => {
+  render() {
     const {
       id,
       readOnly,
@@ -1046,7 +1046,7 @@ class CodeEditor extends React.Component {
         {toolbar}
       </div>
     );
-  };
+  }
 }
 
 CodeEditor.propTypes = {

@@ -217,9 +217,9 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     await this._refreshState();
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._refreshState();
-  };
+  }
 
   renderButton = () => {
     const { branch } = this.state;
@@ -270,7 +270,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { className, vcs } = this.props;
     const { log, branches, branch, loadingPull, loadingPush } = this.state;
 
@@ -344,7 +344,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         </Dropdown>
       </div>
     );
-  };
+  }
 }
 
 export default GitSyncDropdown;

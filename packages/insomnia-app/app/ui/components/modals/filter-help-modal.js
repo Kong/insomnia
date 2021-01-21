@@ -26,7 +26,7 @@ class FilterHelpModal extends PureComponent {
     this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { isJson } = this.state;
 
     const link = isJson ? (
@@ -93,7 +93,7 @@ class FilterHelpModal extends PureComponent {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default FilterHelpModal;

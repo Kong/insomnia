@@ -125,7 +125,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
     this._dropdown && this._dropdown.hide();
   };
 
-  render = () => {
+  render() {
     const {
       workspace, // eslint-disable-line no-unused-vars
       requestGroup, // eslint-disable-line no-unused-vars
@@ -177,7 +177,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
         ))}
       </Dropdown>
     );
-  };
+  }
 }
 
 export default RequestGroupActionsDropdown;

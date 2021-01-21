@@ -100,7 +100,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { teams, error, selectedTeam, loading } = this.state;
     const { workspace } = this.props;
     return (
@@ -165,7 +165,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default SyncShareModal;

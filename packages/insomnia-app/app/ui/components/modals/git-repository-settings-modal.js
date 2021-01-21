@@ -136,7 +136,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { inputs, gitRepository } = this.state;
 
     const linkIcon = <i className="fa fa-external-link-square" />;
@@ -256,7 +256,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
         </Modal>
       </form>
     );
-  };
+  }
 }
 
 export default GitRepositorySettingsModal;

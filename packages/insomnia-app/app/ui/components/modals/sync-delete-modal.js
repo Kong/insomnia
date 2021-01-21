@@ -76,7 +76,7 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { error, workspaceName } = this.state;
     const { workspace } = this.props;
 
@@ -110,7 +110,7 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default SyncDeleteModal;

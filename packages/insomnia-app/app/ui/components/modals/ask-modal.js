@@ -73,7 +73,7 @@ class AskModal extends PureComponent {
     });
   };
 
-  render = () => {
+  render() {
     const { message, title, yesText, noText, loading } = this.state;
 
     return (
@@ -96,7 +96,7 @@ class AskModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default AskModal;

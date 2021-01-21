@@ -30,7 +30,7 @@ type Props = {|
 |};
 
 class Sidebar extends React.PureComponent<Props> {
-  render = () => {
+  render() {
     const {
       activeEnvironment,
       children,
@@ -78,7 +78,7 @@ class Sidebar extends React.PureComponent<Props> {
         )}
       </aside>
     );
-  };
+  }
 }
 
 export default Sidebar;

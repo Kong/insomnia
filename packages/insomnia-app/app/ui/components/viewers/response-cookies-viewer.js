@@ -21,7 +21,7 @@ class ResponseCookiesViewer extends PureComponent {
     );
   };
 
-  render = () => {
+  render() {
     const { headers, showCookiesModal, cookiesSent, cookiesStored } = this.props;
 
     const notifyNotStored = !cookiesStored && headers.length;
@@ -61,7 +61,7 @@ class ResponseCookiesViewer extends PureComponent {
         </p>
       </div>
     );
-  };
+  }
 }
 
 ResponseCookiesViewer.propTypes = {

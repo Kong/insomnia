@@ -416,7 +416,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     </Dropdown>
   );
 
-  render = () => {
+  render() {
     const { workspaces } = this.props.wrapperProps;
     const { filter } = this.state;
 
@@ -466,7 +466,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         )}
       />
     );
-  };
+  }
 }
 
 export default WrapperHome;

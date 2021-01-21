@@ -79,7 +79,7 @@ class AuthDropdown extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const { children, className } = this.props;
     return (
       <Dropdown beside debug="true">
@@ -99,7 +99,7 @@ class AuthDropdown extends React.PureComponent<Props> {
         {this.renderAuthType(AUTH_NONE, 'No Authentication')}
       </Dropdown>
     );
-  };
+  }
 }
 
 export default AuthDropdown;

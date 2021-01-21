@@ -61,12 +61,12 @@ class PromptButton extends PureComponent {
     }
   };
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearTimeout(this._triggerTimeout);
     clearTimeout(this._doneTimeout);
-  };
+  }
 
-  render = () => {
+  render() {
     const {
       onClick, // eslint-disable-line no-unused-vars
       children,
@@ -111,7 +111,7 @@ class PromptButton extends PureComponent {
         {innerMsg}
       </Button>
     );
-  };
+  }
 }
 
 PromptButton.propTypes = {

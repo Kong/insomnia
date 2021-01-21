@@ -129,7 +129,7 @@ class RequestCreateModal extends PureComponent {
     this._onComplete = onComplete;
   };
 
-  render = () => {
+  render() {
     const { selectedContentType, selectedMethod } = this.state;
 
     return (
@@ -184,7 +184,7 @@ class RequestCreateModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default RequestCreateModal;

@@ -89,19 +89,19 @@ class TagEditor extends React.PureComponent<Props, State> {
     this.setState({ variables });
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this.load();
     this.loadVariables();
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     const { workspace } = nextProps;
 
     if (this.props.workspace._id !== workspace._id) {
       this._refreshModels(workspace);
     }
-  };
+  }
 
   _handleRefresh = async () => {
     await this._update(
@@ -684,7 +684,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { error, preview, activeTagDefinition, activeTagData, rendering } = this.state;
 
     if (!activeTagData) {
@@ -770,7 +770,7 @@ class TagEditor extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  };
+  }
 }
 
 export default TagEditor;

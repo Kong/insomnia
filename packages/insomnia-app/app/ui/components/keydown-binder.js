@@ -48,7 +48,7 @@ class KeydownBinder extends React.PureComponent<Props> {
     }
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
       el && el.addEventListener('keydown', this._handleKeydown);
@@ -57,9 +57,9 @@ class KeydownBinder extends React.PureComponent<Props> {
       document.body && document.body.addEventListener('keydown', this._handleKeydown);
       document.body && document.body.addEventListener('keyup', this._handleKeyup);
     }
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     if (this.props.scoped) {
       const el = ReactDOM.findDOMNode(this);
       el && el.removeEventListener('keydown', this._handleKeydown);
@@ -68,7 +68,7 @@ class KeydownBinder extends React.PureComponent<Props> {
       document.body && document.body.removeEventListener('keydown', this._handleKeydown);
       document.body && document.body.removeEventListener('keyup', this._handleKeyup);
     }
-  };
+  }
 
   render = () => this.props.children;
 }

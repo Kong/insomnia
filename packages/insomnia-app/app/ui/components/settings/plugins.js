@@ -146,14 +146,14 @@ class Plugins extends React.PureComponent<Props, State> {
     });
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._isMounted = true;
     this._handleRefreshPlugins();
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     this._isMounted = false;
-  };
+  }
 
   _handleUpdatePluginConfig = async (pluginName: string, config: PluginConfig) => {
     const { updateSetting, settings } = this.props;
@@ -202,7 +202,7 @@ class Plugins extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const {
       plugins,
       error,
@@ -326,7 +326,7 @@ class Plugins extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  };
+  }
 }
 
 export default Plugins;

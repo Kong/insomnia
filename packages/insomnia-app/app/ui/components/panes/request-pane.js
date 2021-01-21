@@ -124,7 +124,7 @@ class RequestPane extends React.PureComponent<Props> {
     }
   };
 
-  render = () => {
+  render() {
     const {
       forceRefreshCounter,
       forceUpdateRequestHeaders,
@@ -390,7 +390,7 @@ class RequestPane extends React.PureComponent<Props> {
         </Tabs>
       </Pane>
     );
-  };
+  }
 }
 
 export default RequestPane;

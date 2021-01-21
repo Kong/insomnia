@@ -535,7 +535,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     }
   };
 
-  render = () => {
+  render() {
     const { request, oAuth2Token: tok } = this.props;
     const { loading, error, showAdvanced } = this.state;
 
@@ -637,7 +637,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         </div>
       </div>
     );
-  };
+  }
 }
 
 export default OAuth2Auth;

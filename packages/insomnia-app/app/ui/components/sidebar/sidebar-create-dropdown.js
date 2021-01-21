@@ -25,7 +25,7 @@ class SidebarCreateDropdown extends React.PureComponent<Props> {
     this._dropdown = n;
   };
 
-  render = () => {
+  render() {
     const { handleCreateRequest, handleCreateRequestGroup, hotKeyRegistry, right } = this.props;
 
     return (
@@ -44,7 +44,7 @@ class SidebarCreateDropdown extends React.PureComponent<Props> {
         </DropdownItem>
       </Dropdown>
     );
-  };
+  }
 }
 
 export default SidebarCreateDropdown;

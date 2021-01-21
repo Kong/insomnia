@@ -68,7 +68,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { conflicts } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -119,7 +119,7 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default SyncMergeModal;

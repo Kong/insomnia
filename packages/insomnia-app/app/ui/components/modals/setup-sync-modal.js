@@ -102,7 +102,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { workspace } = this.props;
     const {
       syncMode,
@@ -174,7 +174,7 @@ class SetupSyncModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default SetupSyncModal;

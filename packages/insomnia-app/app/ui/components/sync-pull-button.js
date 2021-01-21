@@ -59,11 +59,11 @@ class SyncPullButton extends React.PureComponent<Props, State> {
     }
   };
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearTimeout(this._timeout);
-  };
+  }
 
-  render = () => {
+  render() {
     const { className, children, disabled } = this.props;
     const { loading } = this.state;
     return (
@@ -72,7 +72,7 @@ class SyncPullButton extends React.PureComponent<Props, State> {
         {children || 'Pull'}
       </button>
     );
-  };
+  }
 }
 
 export default SyncPullButton;

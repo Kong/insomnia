@@ -16,7 +16,7 @@ class GraphQLExplorerTypeLink extends React.PureComponent<Props> {
     onNavigate(type);
   };
 
-  render = () => {
+  render() {
     const { type, onNavigate } = this.props;
 
     if (type instanceof GraphQLList) {
@@ -41,7 +41,7 @@ class GraphQLExplorerTypeLink extends React.PureComponent<Props> {
         {type.name}
       </a>
     );
-  };
+  }
 }
 
 export default GraphQLExplorerTypeLink;

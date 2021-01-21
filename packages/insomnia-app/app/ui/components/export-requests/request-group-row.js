@@ -38,7 +38,7 @@ class RequestGroupRow extends React.PureComponent<Props> {
     return handleSetItemSelected(requestGroup._id, value);
   };
 
-  render = () => {
+  render() {
     const { children, requestGroup, isCollapsed, totalRequests, selectedRequests } = this.props;
 
     let folderIconClass = 'fa-folder';
@@ -77,7 +77,7 @@ class RequestGroupRow extends React.PureComponent<Props> {
         </ul>
       </li>
     );
-  };
+  }
 }
 
 export default RequestGroupRow;

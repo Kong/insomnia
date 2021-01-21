@@ -343,11 +343,11 @@ class Editor extends PureComponent {
     this.setState({ displayDescription: !this.state.displayDescription });
   };
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._updateFocus();
-  };
+  }
 
-  render = () => {
+  render() {
     const {
       maxPairs,
       className,
@@ -445,7 +445,7 @@ class Editor extends PureComponent {
         </ul>
       </Lazy>
     );
-  };
+  }
 }
 
 Editor.propTypes = {

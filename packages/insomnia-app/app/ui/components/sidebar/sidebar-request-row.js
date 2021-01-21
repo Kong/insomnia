@@ -117,15 +117,15 @@ class SidebarRequestRow extends PureComponent {
     }
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     const { request } = this.props;
     if (request && !request.name) {
       this._debouncedUpdateRenderedUrl(this.props);
     }
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUpdate = nextProps => {
+  UNSAFE_componentWillUpdate(nextProps) {
     if (!nextProps.request) {
       return;
     }
@@ -134,13 +134,13 @@ class SidebarRequestRow extends PureComponent {
     if (nextProps.request.url !== requestUrl) {
       this._debouncedUpdateRenderedUrl(nextProps);
     }
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearTimeout(this._urlUpdateInterval);
-  };
+  }
 
-  render = () => {
+  render() {
     const {
       filter,
       handleDuplicateRequest,
@@ -253,7 +253,7 @@ class SidebarRequestRow extends PureComponent {
     } else {
       return connectDropTarget(node);
     }
-  };
+  }
 }
 
 SidebarRequestRow.propTypes = {

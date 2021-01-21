@@ -47,7 +47,7 @@ class Notice extends React.PureComponent<Props, State> {
     window.localStorage.setItem(localStorageKey, DISMISSED_VALUE);
   };
 
-  render = () => {
+  render() {
     const { children, color, className } = this.props;
     const { visible, localStorageKey } = this.state;
 
@@ -65,7 +65,7 @@ class Notice extends React.PureComponent<Props, State> {
         {children}
       </p>
     );
-  };
+  }
 }
 
 export default Notice;

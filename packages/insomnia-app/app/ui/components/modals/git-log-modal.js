@@ -72,7 +72,7 @@ class GitLogModal extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { log, branch } = this.state;
 
     return (
@@ -102,7 +102,7 @@ class GitLogModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default GitLogModal;

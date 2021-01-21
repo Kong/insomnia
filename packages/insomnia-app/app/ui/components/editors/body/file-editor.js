@@ -16,7 +16,7 @@ class FileEditor extends PureComponent {
     this.props.onChange(path);
   };
 
-  render = () => {
+  render() {
     const { path } = this.props;
 
     // Replace home path with ~/ to make the path shorter
@@ -62,7 +62,7 @@ class FileEditor extends PureComponent {
         </div>
       </div>
     );
-  };
+  }
 }
 
 FileEditor.propTypes = {

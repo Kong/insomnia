@@ -119,7 +119,7 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
     this._dropdown && this._dropdown.hide();
   };
 
-  render = () => {
+  render() {
     const {
       request, // eslint-disable-line no-unused-vars
       handleShowSettings,
@@ -192,7 +192,7 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
         </DropdownItem>
       </Dropdown>
     );
-  };
+  }
 }
 
 RequestActionsDropdown.propTypes = {

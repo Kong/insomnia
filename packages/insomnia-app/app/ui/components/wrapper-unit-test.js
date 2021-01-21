@@ -477,7 +477,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { handleActivityChange, gitSyncDropdown } = this.props;
     const { activeWorkspace, activity, activeApiSpec } = this.props.wrapperProps;
     return (
@@ -511,7 +511,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
         )}
       />
     );
-  };
+  }
 }
 
 export default WrapperUnitTest;

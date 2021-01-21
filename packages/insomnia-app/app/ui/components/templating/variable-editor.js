@@ -15,14 +15,14 @@ class VariableEditor extends PureComponent {
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount() {
     this._update(this.state.value, true);
     this._resize();
-  };
+  }
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._resize();
-  };
+  }
 
   _handleChange = e => {
     const name = e.target.value;
@@ -77,7 +77,7 @@ class VariableEditor extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const { error, value, preview, variables, variableSource } = this.state;
     const isOther = !variables.find(v => value === `{{ ${v.name} }}`);
     return (
@@ -112,7 +112,7 @@ class VariableEditor extends PureComponent {
         </div>
       </div>
     );
-  };
+  }
 }
 
 VariableEditor.propTypes = {

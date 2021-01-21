@@ -110,11 +110,11 @@ class WorkspaceShareSettingsModal extends PureComponent {
   };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount = () => {
+  UNSAFE_componentWillMount() {
     this._resetState();
-  };
+  }
 
-  render = () => {
+  render() {
     const { teams, resourceGroup, error, loading } = this.state;
     const { workspace } = this.props;
     return (
@@ -192,7 +192,7 @@ class WorkspaceShareSettingsModal extends PureComponent {
         </Modal>
       </form>
     );
-  };
+  }
 }
 
 WorkspaceShareSettingsModal.propTypes = {

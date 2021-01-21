@@ -12,9 +12,9 @@ class ResponseTimer extends PureComponent {
     };
   }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearInterval(this._interval);
-  };
+  }
 
   _handleUpdateElapsedTime = () => {
     const { loadStartTime } = this.props;
@@ -23,7 +23,7 @@ class ResponseTimer extends PureComponent {
     this.setState({ elapsedTime });
   };
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     const { loadStartTime } = this.props;
 
     if (loadStartTime <= 0) {
@@ -34,9 +34,9 @@ class ResponseTimer extends PureComponent {
     clearInterval(this._interval); // Just to be sure
     this._interval = setInterval(this._handleUpdateElapsedTime, 100);
     this._handleUpdateElapsedTime();
-  };
+  }
 
-  render = () => {
+  render() {
     const { handleCancel, loadStartTime } = this.props;
     const { elapsedTime } = this.state;
 
@@ -63,7 +63,7 @@ class ResponseTimer extends PureComponent {
         </div>
       </div>
     );
-  };
+  }
 }
 
 ResponseTimer.propTypes = {

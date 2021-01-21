@@ -46,7 +46,7 @@ class FileInputButton extends React.PureComponent<Props> {
     this.props.onChange(filePath);
   };
 
-  render = () => {
+  render() {
     const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
 
     // NOTE: Basename fails if path is not a string, so let's make sure it is
@@ -63,7 +63,7 @@ class FileInputButton extends React.PureComponent<Props> {
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>
     );
-  };
+  }
 }
 
 export default FileInputButton;

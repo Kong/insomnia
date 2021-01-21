@@ -137,7 +137,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const {
       activeResponse, // eslint-disable-line no-unused-vars
       handleSetActiveResponse, // eslint-disable-line no-unused-vars
@@ -181,7 +181,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
         </Dropdown>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 export default ResponseHistoryDropdown;

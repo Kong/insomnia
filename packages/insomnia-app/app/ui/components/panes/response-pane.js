@@ -179,7 +179,7 @@ class ResponsePane extends React.PureComponent<Props> {
     }
   };
 
-  render = () => {
+  render() {
     const {
       disableHtmlPreviewJs,
       editorFontSize,
@@ -341,7 +341,7 @@ class ResponsePane extends React.PureComponent<Props> {
         </ErrorBoundary>
       </Pane>
     );
-  };
+  }
 }
 
 export default ResponsePane;

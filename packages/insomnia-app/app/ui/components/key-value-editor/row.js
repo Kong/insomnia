@@ -335,7 +335,7 @@ class KeyValueEditorRow extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const {
       pair,
       namePlaceholder,
@@ -458,7 +458,7 @@ class KeyValueEditorRow extends PureComponent {
     } else {
       return connectDragPreview(connectDropTarget(row));
     }
-  };
+  }
 }
 
 KeyValueEditorRow.propTypes = {

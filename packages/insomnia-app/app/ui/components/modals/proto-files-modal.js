@@ -154,7 +154,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     await models.protoFile.update(protoFile, { name });
   };
 
-  render = () => {
+  render() {
     const { protoFiles } = this.props;
     const { selectedProtoFileId } = this.state;
 
@@ -186,7 +186,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default ProtoFilesModal;

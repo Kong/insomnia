@@ -255,9 +255,9 @@ class Dropdown extends PureComponent {
     return newChildren;
   };
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._checkSizeAndPosition();
-  };
+  }
 
   hide = () => {
     // Focus the dropdown button after hiding
@@ -297,7 +297,7 @@ class Dropdown extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const { right, outline, wide, className, style, children } = this.props;
 
     const {
@@ -415,7 +415,7 @@ class Dropdown extends PureComponent {
         </div>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 Dropdown.propTypes = {

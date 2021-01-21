@@ -26,7 +26,7 @@ class Link extends React.PureComponent<Props> {
     misc.clickLink(href);
   };
 
-  render = () => {
+  render() {
     const {
       onClick, // eslint-disable-line no-unused-vars
       button,
@@ -51,7 +51,7 @@ class Link extends React.PureComponent<Props> {
         {children}
       </a>
     );
-  };
+  }
 }
 
 export default Link;

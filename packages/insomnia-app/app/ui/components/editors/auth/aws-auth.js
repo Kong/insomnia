@@ -90,7 +90,7 @@ class AWSAuth extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const { authentication } = this.props.request;
     return (
       <div className="pad">
@@ -147,7 +147,7 @@ class AWSAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default AWSAuth;

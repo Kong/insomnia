@@ -45,17 +45,17 @@ class TimeFromNow extends React.PureComponent<Props, State> {
     this.setState({ text });
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     const intervalSeconds = this.props.intervalSeconds || 5;
     this._interval = setInterval(this._update, intervalSeconds * 1000);
     this._update();
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearInterval(this._interval);
-  };
+  }
 
-  render = () => {
+  render() {
     const { className, timestamp } = this.props;
     const { text } = this.state;
 
@@ -64,7 +64,7 @@ class TimeFromNow extends React.PureComponent<Props, State> {
         {text}
       </span>
     );
-  };
+  }
 }
 
 export default TimeFromNow;

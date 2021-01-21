@@ -52,7 +52,7 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
     });
   };
 
-  render = () => {
+  render() {
     const { error, title, addCancel } = this.state;
 
     const message = this.state.message || error?.message;
@@ -85,7 +85,7 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default ErrorModal;

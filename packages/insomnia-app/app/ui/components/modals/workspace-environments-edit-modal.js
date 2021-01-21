@@ -288,7 +288,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     this._handleChangeEnvironmentColor(environment, null);
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     db.onChange(async changes => {
       const { selectedEnvironmentId } = this.state;
 
@@ -306,7 +306,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         }
       }
     });
-  };
+  }
 
   _handleSortEnd = async (results: {
     oldIndex: number,
@@ -376,7 +376,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     }
   };
 
-  render = () => {
+  render() {
     const {
       editorFontSize,
       editorIndentSize,
@@ -544,7 +544,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default WorkspaceEnvironmentsEditModal;

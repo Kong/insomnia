@@ -77,7 +77,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
   };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = (nextProps: Props) => {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (!nextProps.reference) {
       return;
     }
@@ -102,7 +102,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
       currentType: type || null,
       currentField: field || null,
     });
-  };
+  }
 
   renderHistoryItem = () => {
     const { history, currentField, currentType } = this.state;
@@ -148,7 +148,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { schema, handleClose, visible } = this.props;
 
     if (!visible) {
@@ -199,7 +199,7 @@ class GraphQLExplorer extends React.PureComponent<Props, State> {
         <div className="graphql-explorer__body">{child}</div>
       </div>
     );
-  };
+  }
 }
 
 export default GraphQLExplorer;

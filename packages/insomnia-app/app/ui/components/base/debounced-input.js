@@ -98,7 +98,7 @@ class DebouncedInput extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const {
       onChange, // eslint-disable-line no-unused-vars
       onFocus, // eslint-disable-line no-unused-vars
@@ -128,7 +128,7 @@ class DebouncedInput extends PureComponent {
         />
       );
     }
-  };
+  }
 }
 
 DebouncedInput.propTypes = {

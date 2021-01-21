@@ -1014,7 +1014,7 @@ class App extends PureComponent {
     document.title = title;
   };
 
-  componentDidUpdate = prevProps => {
+  componentDidUpdate(prevProps) {
     this._updateDocumentTitle();
     this._ensureWorkspaceChildren();
 
@@ -1040,7 +1040,7 @@ class App extends PureComponent {
     if (changingWorkspace || thisGit._id !== nextGit._id) {
       this._updateGitVCS();
     }
-  };
+  }
 
   _updateGitVCS = async () => {
     const { activeGitRepository, activeWorkspace } = this.props;
@@ -1130,7 +1130,7 @@ class App extends PureComponent {
     }
   };
 
-  componentDidMount = async () => {
+  async componentDidMount() {
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
     document.addEventListener('mousemove', this._handleMouseMove);
@@ -1249,13 +1249,13 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
-  };
+  }
 
   _ensureWorkspaceChildren = async () => {
     const {
@@ -1290,16 +1290,16 @@ class App extends PureComponent {
   };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps = nextProps => {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._ensureWorkspaceChildren(nextProps);
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount = () => {
+  UNSAFE_componentWillMount() {
     this._ensureWorkspaceChildren(this.props);
-  };
+  }
 
-  render = () => {
+  render() {
     if (this.state.isMigratingChildren) {
       console.log('[app] Waiting for migration to complete');
       return null;
@@ -1391,7 +1391,7 @@ class App extends PureComponent {
         </GrpcProvider>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 App.propTypes = {

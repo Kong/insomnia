@@ -90,7 +90,7 @@ class CodePromptModal extends PureComponent {
     this.modal.show();
   };
 
-  render = () => {
+  render() {
     const {
       handleGetRenderContext,
       nunjucksPowerUserMode,
@@ -199,7 +199,7 @@ class CodePromptModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 CodePromptModal.propTypes = {

@@ -112,7 +112,7 @@ class Modal extends PureComponent {
     this.onHide && this.onHide();
   };
 
-  render = () => {
+  render() {
     const { tall, wide, skinny, noEscape, className, children } = this.props;
     const { open, zIndex, forceRefreshCounter } = this.state;
 
@@ -153,7 +153,7 @@ class Modal extends PureComponent {
         </div>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 Modal.propTypes = {

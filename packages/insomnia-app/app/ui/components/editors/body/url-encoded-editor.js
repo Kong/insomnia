@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import KeyValueEditor from '../../key-value-editor/editor';
 
 class UrlEncodedEditor extends PureComponent {
-  render = () => {
+  render() {
     const {
       parameters,
       onChange,
@@ -33,7 +33,7 @@ class UrlEncodedEditor extends PureComponent {
         </div>
       </div>
     );
-  };
+  }
 }
 
 UrlEncodedEditor.propTypes = {

@@ -29,7 +29,7 @@ class PageLayout extends React.PureComponent<Props, State> {
     handleStartDragSidebar();
   };
 
-  render = () => {
+  render() {
     const {
       renderPaneOne,
       renderPaneTwo,
@@ -196,7 +196,7 @@ class PageLayout extends React.PureComponent<Props, State> {
         )}
       </div>
     );
-  };
+  }
 }
 
 export default PageLayout;

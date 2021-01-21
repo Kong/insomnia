@@ -15,7 +15,7 @@ class GraphQLExplorerFieldLink extends React.PureComponent<Props> {
     onNavigate(field);
   };
 
-  render = () => {
+  render() {
     const { field } = this.props;
 
     return (
@@ -23,7 +23,7 @@ class GraphQLExplorerFieldLink extends React.PureComponent<Props> {
         {field.name}
       </a>
     );
-  };
+  }
 }
 
 export default GraphQLExplorerFieldLink;

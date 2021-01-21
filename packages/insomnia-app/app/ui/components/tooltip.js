@@ -141,23 +141,23 @@ class Tooltip extends React.PureComponent<Props, State> {
     return container;
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     // Move the element to the body so we can position absolutely
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().appendChild(el);
     }
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     // Remove the element from the body
     if (this._bubble) {
       const el = ReactDOM.findDOMNode(this._bubble);
       el && this._getContainer().removeChild(el);
     }
-  };
+  }
 
-  render = () => {
+  render() {
     const { children, message, className, selectable, wide } = this.props;
     const { visible } = this.state;
 
@@ -191,7 +191,7 @@ class Tooltip extends React.PureComponent<Props, State> {
         {children}
       </div>
     );
-  };
+  }
 }
 
 export default Tooltip;

@@ -60,7 +60,7 @@ class AlertModal extends PureComponent {
     });
   };
 
-  render = () => {
+  render() {
     const { message, title, addCancel, okLabel } = this.state;
 
     return (
@@ -81,7 +81,7 @@ class AlertModal extends PureComponent {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default AlertModal;

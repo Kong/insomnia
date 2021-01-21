@@ -77,7 +77,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   };
 
-  render = () => {
+  render() {
     const { workspaces, activeWorkspace } = this.props;
     const { selectedWorkspaceId } = this.state;
     return (
@@ -110,7 +110,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
         </Modal>
       </form>
     );
-  };
+  }
 }
 
 export default MoveRequestGroupModal;

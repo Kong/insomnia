@@ -32,7 +32,7 @@ class MarkdownEditor extends PureComponent {
     this._editor && this._editor.focus();
   };
 
-  render = () => {
+  render() {
     const {
       fontSize,
       lineWrapping,
@@ -96,7 +96,7 @@ class MarkdownEditor extends PureComponent {
         </TabPanel>
       </Tabs>
     );
-  };
+  }
 }
 
 MarkdownEditor.propTypes = {

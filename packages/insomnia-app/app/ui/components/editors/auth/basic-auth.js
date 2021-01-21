@@ -46,7 +46,7 @@ class BasicAuth extends React.PureComponent<Props> {
     onChange(request, { ...request.authentication, password: value });
   };
 
-  render = () => {
+  render() {
     const {
       request,
       showPasswords,
@@ -164,7 +164,7 @@ class BasicAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default BasicAuth;

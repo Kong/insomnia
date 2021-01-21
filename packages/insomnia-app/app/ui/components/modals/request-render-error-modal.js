@@ -80,7 +80,7 @@ class RequestRenderErrorModal extends PureComponent {
     );
   };
 
-  render = () => {
+  render() {
     const { request, error } = this.state;
     return (
       <Modal ref={this._setModalRef} freshState>
@@ -88,7 +88,7 @@ class RequestRenderErrorModal extends PureComponent {
         <ModalBody>{request && error ? this.renderModalBody(request, error) : null}</ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default RequestRenderErrorModal;

@@ -61,7 +61,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
     });
   };
 
-  render = () => {
+  render() {
     const {
       className,
       workspace,
@@ -129,7 +129,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
         </Dropdown>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 export default EnvironmentsDropdown;

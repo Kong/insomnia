@@ -13,7 +13,7 @@ class Button extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const { children, disabled, tabIndex, className, type, id } = this.props;
 
     return (
@@ -27,7 +27,7 @@ class Button extends PureComponent {
         {children}
       </button>
     );
-  };
+  }
 }
 
 Button.propTypes = {

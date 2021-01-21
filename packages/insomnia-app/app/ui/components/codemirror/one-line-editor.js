@@ -81,13 +81,13 @@ class OneLineEditor extends PureComponent {
     }
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     document.body.addEventListener('mousedown', this._handleDocumentMousedown);
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     document.body.removeEventListener('mousedown', this._handleDocumentMousedown);
-  };
+  }
 
   _handleDocumentMousedown = e => {
     if (!this._editor) {
@@ -287,7 +287,7 @@ class OneLineEditor extends PureComponent {
     return !!text.match(NUNJUCKS_REGEX);
   };
 
-  render = () => {
+  render() {
     const {
       id,
       defaultValue,
@@ -367,7 +367,7 @@ class OneLineEditor extends PureComponent {
         />
       );
     }
-  };
+  }
 }
 
 OneLineEditor.propTypes = {

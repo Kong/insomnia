@@ -111,7 +111,7 @@ class BodyEditor extends React.PureComponent<Props> {
     }
   };
 
-  render = () => {
+  render() {
     const {
       request,
       workspace,
@@ -206,7 +206,7 @@ class BodyEditor extends React.PureComponent<Props> {
         </div>
       );
     }
-  };
+  }
 }
 
 export default BodyEditor;

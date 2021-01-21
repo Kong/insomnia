@@ -479,7 +479,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     const { workspace } = this.props;
     return (
       <Modal ref={this._handleSetModalRef} freshState>
@@ -487,7 +487,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
         {workspace ? this.renderModalBody() : null}
       </Modal>
     );
-  };
+  }
 }
 
 export default WorkspaceSettingsModal;

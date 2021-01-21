@@ -79,20 +79,20 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
     this.debounceTimeout = setTimeout(this.loadPDF, 300);
   };
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this.loadPDF();
-  };
+  }
 
-  componentDidMount = () => {
+  componentDidMount() {
     this.loadPDF();
     window.addEventListener('resize', this.handleResize);
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
-  };
+  }
 
-  render = () => {
+  render() {
     const styles = {
       width: '100%',
       height: '100%',
@@ -106,7 +106,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
         <div className="faded text-center vertically-center tall">Loading PDF...</div>
       </div>
     );
-  };
+  }
 }
 
 export default ResponsePDFViewer;

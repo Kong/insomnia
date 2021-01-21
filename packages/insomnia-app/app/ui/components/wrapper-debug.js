@@ -367,7 +367,7 @@ class WrapperDebug extends React.PureComponent<Props> {
     );
   };
 
-  render = () => {
+  render() {
     const { activity } = this.props.wrapperProps;
 
     const insomnia = isInsomnia(activity);
@@ -382,7 +382,7 @@ class WrapperDebug extends React.PureComponent<Props> {
         renderPaneTwo={this._renderResponsePane}
       />
     );
-  };
+  }
 }
 
 export default WrapperDebug;

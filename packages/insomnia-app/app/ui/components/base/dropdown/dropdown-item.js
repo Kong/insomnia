@@ -22,7 +22,7 @@ class DropdownItem extends PureComponent {
     }
   };
 
-  render = () => {
+  render() {
     const {
       buttonClass,
       children,
@@ -50,7 +50,7 @@ class DropdownItem extends PureComponent {
     };
 
     return React.createElement(buttonClass || 'button', buttonProps, inner);
-  };
+  }
 }
 
 DropdownItem.propTypes = {

@@ -37,7 +37,7 @@ class NTLMAuth extends React.PureComponent<Props> {
     onChange(request, { ...request.authentication, password: value });
   };
 
-  render = () => {
+  render() {
     const {
       request,
       showPasswords,
@@ -129,7 +129,7 @@ class NTLMAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default NTLMAuth;

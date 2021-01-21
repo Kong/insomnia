@@ -137,7 +137,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     this._dropdown && this._dropdown.hide();
   };
 
-  render = () => {
+  render() {
     const {
       children,
       workspaceId,
@@ -174,7 +174,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         </DropdownItem>
       </Dropdown>
     );
-  };
+  }
 }
 
 export default DocumentCardDropdown;

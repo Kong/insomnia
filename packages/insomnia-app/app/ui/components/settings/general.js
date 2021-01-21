@@ -49,7 +49,7 @@ class General extends React.PureComponent<Props, State> {
     };
   }
 
-  componentDidMount = async () => {
+  async componentDidMount() {
     const allFonts = await fontScanner.getAvailableFonts();
 
     // Find regular fonts
@@ -66,7 +66,7 @@ class General extends React.PureComponent<Props, State> {
       fonts,
       fontsMono,
     });
-  };
+  }
 
   _handleUpdateSetting = async (e: SyntheticEvent<HTMLInputElement>): Promise<Settings> => {
     const el = e.currentTarget;
@@ -181,7 +181,7 @@ class General extends React.PureComponent<Props, State> {
       type: 'number',
     });
 
-  render = () => {
+  render() {
     const { settings } = this.props;
     const { fonts, fontsMono } = this.state;
     return (
@@ -526,7 +526,7 @@ class General extends React.PureComponent<Props, State> {
         )}
       </div>
     );
-  };
+  }
 }
 
 export default General;

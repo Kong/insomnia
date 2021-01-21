@@ -111,7 +111,7 @@ class AddKeyCombinationModal extends PureComponent<Props, State> {
     this._modal && this._modal.hide();
   };
 
-  render = () => {
+  render() {
     const { checkKeyCombinationDuplicate, pressedKeyCombination } = this.state;
     let keyCombDisplay = '';
     let isDuplicate = false;
@@ -142,7 +142,7 @@ class AddKeyCombinationModal extends PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default AddKeyCombinationModal;

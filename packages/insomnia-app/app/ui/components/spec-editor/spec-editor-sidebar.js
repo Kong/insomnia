@@ -76,7 +76,7 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     this._mapPosition(itemPath);
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     const { contents } = this.props.apiSpec;
     try {
       JSON.parse(contents);
@@ -85,9 +85,9 @@ class SpecEditorSidebar extends React.Component<Props, State> {
       return;
     }
     this.setState({ specContentJSON: true });
-  };
+  }
 
-  render = () => {
+  render() {
     const { error } = this.state;
     if (error) {
       return <p className="notice error margin-sm">{error}</p>;
@@ -100,7 +100,7 @@ class SpecEditorSidebar extends React.Component<Props, State> {
         <Sidebar jsonData={specJSON} onClick={this._handleItemClick} />
       </StyledSpecEditorSidebar>
     );
-  };
+  }
 }
 
 export default SpecEditorSidebar;

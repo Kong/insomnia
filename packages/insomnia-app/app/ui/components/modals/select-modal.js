@@ -66,7 +66,7 @@ class SelectModal extends React.PureComponent<Props, State> {
     }, 100);
   };
 
-  render = () => {
+  render() {
     const { message, title, options, value, onCancel } = this.state;
 
     return (
@@ -91,7 +91,7 @@ class SelectModal extends React.PureComponent<Props, State> {
         </ModalFooter>
       </Modal>
     );
-  };
+  }
 }
 
 export default SelectModal;

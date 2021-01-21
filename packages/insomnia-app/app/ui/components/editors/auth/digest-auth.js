@@ -38,7 +38,7 @@ class DigestAuth extends React.PureComponent<Props> {
     onChange(request, { ...request.authentication, password: value });
   };
 
-  render = () => {
+  render() {
     const {
       request,
       showPasswords,
@@ -130,7 +130,7 @@ class DigestAuth extends React.PureComponent<Props> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default DigestAuth;

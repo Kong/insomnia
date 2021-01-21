@@ -94,7 +94,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
     }
   };
 
-  render = () => {
+  render() {
     const { branch, history } = this.state;
 
     return (
@@ -149,7 +149,7 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
         </ModalBody>
       </Modal>
     );
-  };
+  }
 }
 
 export default SyncHistoryModal;

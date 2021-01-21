@@ -121,7 +121,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     </Tab>
   );
 
-  render = () => {
+  render() {
     const { configs, activeTab } = this.state;
 
     const activeConfig = configs[activeTab];
@@ -144,7 +144,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
         )}
       </Modal>
     );
-  };
+  }
 }
 
 export default GenerateConfigModal;

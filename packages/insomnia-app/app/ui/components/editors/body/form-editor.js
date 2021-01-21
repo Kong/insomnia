@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import KeyValueEditor from '../../key-value-editor/editor';
 
 class FormEditor extends PureComponent {
-  render = () => {
+  render() {
     const {
       parameters,
       onChange,
@@ -34,7 +34,7 @@ class FormEditor extends PureComponent {
         </div>
       </div>
     );
-  };
+  }
 }
 
 FormEditor.propTypes = {

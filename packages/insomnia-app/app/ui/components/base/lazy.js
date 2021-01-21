@@ -12,14 +12,14 @@ class Lazy extends PureComponent {
   };
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillMount = () => {
+  UNSAFE_componentWillMount() {
     if (this.props.delay < 0) {
       // Show right away if negative delay passed
       this.show();
     } else {
       setTimeout(this.show, this.props.delay || 50);
     }
-  };
+  }
 
   render = () => (this.state.show ? this.props.children : null);
 }

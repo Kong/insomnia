@@ -368,7 +368,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     }
   };
 
-  render = () => {
+  render() {
     const {
       searchString,
       activeIndex,
@@ -489,7 +489,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
         </Modal>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 export default RequestSwitcherModal;

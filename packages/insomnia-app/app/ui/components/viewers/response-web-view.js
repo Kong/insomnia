@@ -62,17 +62,17 @@ class ResponseWebView extends React.PureComponent<Props> {
     webview.webContents.session = new EventEmitter();
   };
 
-  componentDidUpdate = () => {
+  componentDidUpdate() {
     this._setBody();
-  };
+  }
 
-  render = () => {
+  render() {
     const { webpreferences } = this.props;
 
     return (
       <webview ref={this._handleSetWebViewRef} src="about:blank" webpreferences={webpreferences} />
     );
-  };
+  }
 }
 
 export default ResponseWebView;

@@ -32,20 +32,20 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
     });
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this.update(this.props.body);
-  };
+  }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUpdate = (nextProps: Props, nextState: State) => {
+  UNSAFE_componentWillUpdate(nextProps: Props, nextState: State) {
     if (this.props.body === nextProps.body) {
       return;
     }
 
     this.update(nextProps.body);
-  };
+  }
 
-  render = () => {
+  render() {
     const { result } = this.state;
     if (!result) {
       return 'Parsing CSV...';
@@ -66,7 +66,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
         </table>
       </div>
     );
-  };
+  }
 }
 
 export default ResponseCSVViewer;

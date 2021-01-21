@@ -118,7 +118,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     this.setState(newState);
   };
 
-  componentDidMount = () => {
+  componentDidMount() {
     this.setState({ initializing: true });
     this.refreshMainAttributes()
       .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
@@ -132,14 +132,14 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }, REFRESH_PERIOD);
 
     document.addEventListener('mousemove', this._handleUserActivity);
-  };
+  }
 
-  componentWillUnmount = () => {
+  componentWillUnmount() {
     clearInterval(this.checkInterval);
     document.removeEventListener('mousemove', this._handleUserActivity);
-  };
+  }
 
-  componentDidUpdate = (prevProps: Props) => {
+  componentDidUpdate(prevProps: Props) {
     const { vcs, syncItems } = this.props;
 
     // Update if new sync items
@@ -155,7 +155,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         this.refreshOnNextSyncItems = false;
       }
     }
-  };
+  }
 
   _handleUserActivity = () => {
     this.lastUserActivity = Date.now();
@@ -423,7 +423,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     );
   };
 
-  render = () => {
+  render() {
     if (!session.isLoggedIn()) {
       return null;
     }
@@ -574,7 +574,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         </Dropdown>
       </div>
     );
-  };
+  }
 }
 
 export default SyncDropdown;

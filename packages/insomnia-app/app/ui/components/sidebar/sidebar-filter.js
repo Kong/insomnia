@@ -57,7 +57,7 @@ class SidebarFilter extends React.PureComponent<Props> {
     });
   };
 
-  render = () => {
+  render() {
     const { filter, hotKeyRegistry, sidebarSort } = this.props;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
@@ -85,7 +85,7 @@ class SidebarFilter extends React.PureComponent<Props> {
         </div>
       </KeydownBinder>
     );
-  };
+  }
 }
 
 export default SidebarFilter;
