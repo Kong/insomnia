@@ -128,6 +128,7 @@ class ResponsePane extends React.PureComponent<Props> {
         } else {
           to.write(finalBuffer);
         }
+        to.end();
       });
     }
   }
