@@ -291,6 +291,7 @@ class OneLineEditor extends PureComponent {
   render() {
     const {
       id,
+      testId,
       defaultValue,
       className,
       onChange,
@@ -341,6 +342,7 @@ class OneLineEditor extends PureComponent {
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}
             isVariableUncovered={isVariableUncovered}
+            data-testid={testId}
           />
         </React.Fragment>
       );
@@ -350,6 +352,7 @@ class OneLineEditor extends PureComponent {
           ref={this._setInputRef}
           id={id}
           type={type}
+          data-testid={testId}
           className={className}
           style={{
             // background: 'rgba(255, 0, 0, 0.05)', // For debugging
@@ -376,6 +379,7 @@ OneLineEditor.propTypes = {
 
   // Optional
   id: PropTypes.string,
+  testId: PropTypes.string,
   type: PropTypes.string,
   mode: PropTypes.string,
   onBlur: PropTypes.func,

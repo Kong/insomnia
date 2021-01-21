@@ -3,6 +3,7 @@ import * as React from 'react';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
+import PasswordEditor from '../password-editor';
 import Button from '../../base/button';
 import type { Settings } from '../../../../models/settings';
 import type { Request, RequestAuthentication } from '../../../../models/request';
@@ -19,19 +20,8 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-type State = {
-  showPassword: Boolean,
-};
-
 @autobind
-class BasicAuth extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      showPassword: false,
-    };
-  }
-
+class BasicAuth extends React.PureComponent<Props> {
   _handleUseISO88591() {
     const { request, onChange } = this.props;
     onChange(request, {
@@ -53,17 +43,7 @@ class BasicAuth extends React.PureComponent<Props, State> {
     onChange(request, { ...request.authentication, username: value });
   }
 
-  _handleChangePassword(value: string) {
-    const { request, onChange } = this.props;
-    onChange(request, { ...request.authentication, password: value });
-  }
-
-  _handleShowPassword() {
-    this.setState({ showPassword: !this.state.showPassword });
-  }
-
   render() {
-    const { showPassword } = this.state;
     const {
       request,
       showPasswords,
@@ -71,6 +51,7 @@ class BasicAuth extends React.PureComponent<Props, State> {
       handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
+      onChange,
     } = this.props;
 
     const { authentication } = request;
@@ -111,31 +92,15 @@ class BasicAuth extends React.PureComponent<Props, State> {
                 </label>
               </td>
               <td className="flex wide">
-                <div
-                  className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled,
-                  })}>
-                  <OneLineEditor
-                    type={showPasswords || showPassword ? 'text' : 'password'}
-                    id="password"
-                    onChange={this._handleChangePassword}
-                    defaultValue={authentication.password || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    render={handleRender}
-                    getRenderContext={handleGetRenderContext}
-                    isVariableUncovered={isVariableUncovered}
-                  />
-                </div>
-                {!showPasswords ? (
-                  <Button
-                    className="btn btn--super-duper-compact pointer"
-                    onClick={this._handleShowPassword}
-                    value={showPassword}>
-                    {showPassword ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
-                  </Button>
-                ) : (
-                  <></>
-                )}
+                <PasswordEditor
+                  showAllPasswords={showPasswords}
+                  request={request}
+                  onChange={onChange}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  render={handleRender}
+                  getRenderContext={handleGetRenderContext}
+                  isVariableUncovered={isVariableUncovered}
+                />
               </td>
             </tr>
             <tr>
