@@ -20,7 +20,7 @@ class RenderedText extends React.PureComponent<Props, State> {
     };
   }
 
-  async _render() {
+  _render = async () => {
     const { render, children } = this.props;
 
     if (!children) {
@@ -33,7 +33,7 @@ class RenderedText extends React.PureComponent<Props, State> {
     } catch (err) {
       this.setState({ error: err.message });
     }
-  }
+  };
 
   componentDidMount() {
     this._render();

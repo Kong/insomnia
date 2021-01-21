@@ -10,9 +10,9 @@ class ResponseTimelineViewer extends PureComponent {
     timelineKey: '',
   };
 
-  static _handleClickLink(link) {
+  static _handleClickLink = link => {
     shell.openExternal(link);
-  }
+  };
 
   componentDidMount() {
     this.refreshTimeline();
@@ -25,16 +25,16 @@ class ResponseTimelineViewer extends PureComponent {
     }
   }
 
-  async refreshTimeline() {
+  refreshTimeline = async () => {
     const { response } = this.props;
     const timeline = await models.response.getTimeline(response);
     this.setState({
       timeline,
       timelineKey: response._id,
     });
-  }
+  };
 
-  renderRow(row, i, all) {
+  renderRow = (row, i, all) => {
     const { name, value } = row;
     const previousName = i > 0 ? all[i - 1].name : '';
 
@@ -79,7 +79,7 @@ class ResponseTimelineViewer extends PureComponent {
 
     // Join all lines together
     return leadingSpace + newLines.join('\n');
-  }
+  };
 
   render() {
     const { editorFontSize, editorIndentSize, editorLineWrapping } = this.props;
