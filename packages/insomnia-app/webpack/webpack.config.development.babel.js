@@ -39,13 +39,12 @@ module.exports = {
     // This is needed for source-maps to resolve correctly
     contentBase: '/',
   },
-  optimization:{
-    noEmitOnErrors: true,
-    moduleIds: "named"
-  },
   plugins: [
     ...baseConfig.plugins,
     new webpack.LoaderOptionsPlugin({ debug: true }), // Legacy global loader option
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoEmitOnErrorsPlugin(),
+    new webpack.NamedModulesPlugin(),
     new webpack.DefinePlugin({
       __DEV__: true,
       'process.env.NODE_ENV': JSON.stringify('development'),

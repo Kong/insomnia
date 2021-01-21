@@ -1415,7 +1415,7 @@ App.propTypes = {
   }),
 };
 
-const mapStateToProps = (state, props) => {
+function mapStateToProps(state, props) {
   const { entities, global } = state;
 
   const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = global;
@@ -1537,9 +1537,9 @@ const mapStateToProps = (state, props) => {
     workspaces,
     workspaceMetas,
   });
-};
+}
 
-const _moveDoc = async (docToMove, parentId, targetId, targetOffset) => {
+async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   // Nothing to do. We are in the same spot as we started
   if (docToMove._id === targetId) {
     return;
@@ -1604,9 +1604,9 @@ const _moveDoc = async (docToMove, parentId, targetId, targetOffset) => {
       break;
     }
   }
-};
+}
 
-const mapDispatchToProps = dispatch => {
+function mapDispatchToProps(dispatch) {
   const global = bindActionCreators(globalActions, dispatch);
   const entities = bindActionCreators(entitiesActions, dispatch);
 
@@ -1625,6 +1625,6 @@ const mapDispatchToProps = dispatch => {
     handleInitializeEntities: entities.initialize,
     handleMoveDoc: _moveDoc,
   };
-};
+}
 
 export default connect(mapStateToProps, mapDispatchToProps)(App);

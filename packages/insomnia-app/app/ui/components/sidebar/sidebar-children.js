@@ -131,7 +131,7 @@ class SidebarChildren extends React.PureComponent<Props> {
 
       const requestGroup = child.doc;
 
-      const hasActiveChild = children => {
+      function hasActiveChild(children) {
         for (const c of children) {
           if (hasActiveChild(c.children || [])) {
             return true;
@@ -142,7 +142,7 @@ class SidebarChildren extends React.PureComponent<Props> {
 
         // Didn't find anything, so return
         return false;
-      };
+      }
 
       const isActive = hasActiveChild(child.children);
       const children = this._renderChildren(child.children, isInPinnedList);
