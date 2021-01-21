@@ -37,6 +37,7 @@ describe('NeDBPlugin', () => {
         models.environment.type,
         models.grpcRequest.type,
         models.protoFile.type,
+        models.protoDirectory.type,
         models.request.type,
         models.requestGroup.type,
         models.unitTest.type,
