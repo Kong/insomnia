@@ -158,20 +158,22 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     const { lintMessages } = this.state;
 
     return (
-      <div className="tall theme--pane__body">
-        <CodeEditor
-          manualPrettify
-          ref={this._setEditorRef}
-          fontSize={settings.editorFontSize}
-          indentSize={settings.editorIndentSize}
-          lineWrapping={settings.lineWrapping}
-          keyMap={settings.editorKeyMap}
-          lintOptions={WrapperDesign.lintOptions}
-          mode="openapi"
-          defaultValue={activeApiSpec.contents}
-          onChange={this._handleOnChange}
-          uniquenessKey={activeApiSpec._id}
-        />
+      <div className="column tall theme--pane__body">
+        <div className="tall">
+          <CodeEditor
+            manualPrettify
+            ref={this._setEditorRef}
+            fontSize={settings.editorFontSize}
+            indentSize={settings.editorIndentSize}
+            lineWrapping={settings.lineWrapping}
+            keyMap={settings.editorKeyMap}
+            lintOptions={WrapperDesign.lintOptions}
+            mode="openapi"
+            defaultValue={activeApiSpec.contents}
+            onChange={this._handleOnChange}
+            uniquenessKey={activeApiSpec._id}
+          />
+        </div>
         {lintMessages.length > 0 && (
           <NoticeTable notices={lintMessages} onClick={this._handleLintClick} />
         )}
