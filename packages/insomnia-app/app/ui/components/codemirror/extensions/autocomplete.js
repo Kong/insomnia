@@ -37,6 +37,10 @@ CodeMirror.defineExtension('isHintDropdownActive', function() {
   );
 });
 
+CodeMirror.defineExtension('closeHintDropdown', function() {
+  this.state.completionActive?.close();
+});
+
 CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;
