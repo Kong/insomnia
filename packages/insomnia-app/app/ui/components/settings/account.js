@@ -136,7 +136,7 @@ class Account extends React.PureComponent<Props, State> {
         <p>
           Or{' '}
           <a href="#" onClick={Account._handleLogin} className="theme--link">
-            Login
+            Log In
           </a>
         </p>
       </React.Fragment>
