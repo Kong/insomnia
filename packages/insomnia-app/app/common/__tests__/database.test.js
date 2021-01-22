@@ -408,3 +408,42 @@ describe('docCreate()', () => {
     expect(spy).toHaveBeenCalled();
   });
 });
+
+describe('withAncestors()', () => {
+  beforeEach(globalBeforeEach);
+
+  it('should return itself and all parents but exclude siblings', async () => {
+    const wrk = await models.workspace.create();
+    const wrkReq = await models.request.create({ parentId: wrk._id });
+    const wrkGrpcReq = await models.grpcRequest.create({ parentId: wrk._id });
+    const grp = await models.requestGroup.create({ parentId: wrk._id });
+    const grpReq = await models.request.create({ parentId: grp._id });
+    const grpGrpcReq = await models.grpcRequest.create({ parentId: grp._id });
+
+    // Workspace child searching for ancestors
+    await expect(db.withAncestors(wrk)).resolves.toStrictEqual([wrk]);
+    await expect(db.withAncestors(wrkReq)).resolves.toStrictEqual([wrkReq, wrk]);
+    await expect(db.withAncestors(wrkGrpcReq)).resolves.toStrictEqual([wrkGrpcReq, wrk]);
+
+    // Group searching for ancestors
+    await expect(db.withAncestors(grp)).resolves.toStrictEqual([grp, wrk]);
+
+    // Group child searching for ancestors
+    await expect(db.withAncestors(grpReq)).resolves.toStrictEqual([grpReq, grp, wrk]);
+    await expect(db.withAncestors(grpGrpcReq)).resolves.toStrictEqual([grpGrpcReq, grp, wrk]);
+
+    // Group child searching for ancestors with filters
+    await expect(db.withAncestors(grpGrpcReq, [models.requestGroup.type])).resolves.toStrictEqual([
+      grpGrpcReq,
+      grp,
+    ]);
+    await expect(
+      db.withAncestors(grpGrpcReq, [models.requestGroup.type, models.workspace.type]),
+    ).resolves.toStrictEqual([grpGrpcReq, grp, wrk]);
+
+    // Group child searching for ancestors but excluding groups will not find the workspace
+    await expect(db.withAncestors(grpGrpcReq, [models.workspace.type])).resolves.toStrictEqual([
+      grpGrpcReq,
+    ]);
+  });
+});

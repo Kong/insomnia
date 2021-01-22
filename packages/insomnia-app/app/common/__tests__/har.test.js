@@ -340,7 +340,7 @@ describe('exportHarWithRequest()', () => {
       },
     });
 
-    const renderedRequest = await render.getRenderedRequest(request);
+    const { request: renderedRequest } = await render.getRenderedRequestAndContext(request);
     const har = await harUtils.exportHarWithRequest(renderedRequest);
 
     expect(har.cookies.length).toBe(1);
@@ -393,7 +393,7 @@ describe('exportHarWithRequest()', () => {
       authentication: {},
     });
 
-    const renderedRequest = await render.getRenderedRequest(request);
+    const { request: renderedRequest } = await render.getRenderedRequestAndContext(request);
     const har = await harUtils.exportHarWithRequest(renderedRequest);
 
     expect(har).toEqual({

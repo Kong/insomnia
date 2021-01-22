@@ -17,6 +17,7 @@ import _RadioButtonGroup from './components/radio-button-group';
 import _Switch from './components/switch';
 import _ToggleSwitch from './components/toggle-switch';
 import * as table from './components/table';
+import _Tooltip from './components/tooltip';
 
 export { Button, AsyncButton } from './components/button';
 
@@ -44,3 +45,4 @@ export const TableHead = table.TableHead;
 export const TableHeader = table.TableHeader;
 export const TableRow = table.TableRow;
 export const ToggleSwitch = _ToggleSwitch;
+export const Tooltip = _Tooltip;
