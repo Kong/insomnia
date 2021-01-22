@@ -9,7 +9,7 @@ import Strings from '../../../common/strings';
 @autobind
 class ImportExport extends PureComponent {
   _handleImportUri() {
-    showPrompt({
+    const promptOptions = {
       title: 'Import Data from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
@@ -17,7 +17,15 @@ class ImportExport extends PureComponent {
       onComplete: uri => {
         this.props.handleImportUri(uri);
       },
-    });
+    };
+
+    const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
+
+    if (lastUsedImportUri) {
+      promptOptions.defaultValue = lastUsedImportUri;
+    }
+
+    showPrompt(promptOptions);
   }
 
   render() {

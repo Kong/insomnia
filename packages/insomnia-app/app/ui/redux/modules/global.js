@@ -360,6 +360,8 @@ export function importUri(workspaceId: string, uri: string, forceToWorkspace?: F
   return async dispatch => {
     dispatch(loadStart());
 
+    window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
+
     let importedWorkspaces = [];
     try {
       const result = await importUtils.importUri(
