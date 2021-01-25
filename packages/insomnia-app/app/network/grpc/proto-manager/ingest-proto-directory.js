@@ -40,31 +40,34 @@ const ingestProtoDirectory = async (
   }
 
   // Create dir in database
-  const createdProtoDir = await models.protoDirectory.create({
-    name: path.basename(dirPath),
-    parentId: dirParentId,
-  });
+
+  const newDirId = models.protoDirectory.createId();
 
   // Read contents
   const entries = await fs.promises.readdir(dirPath, { withFileTypes: true });
 
   // Loop and read all entries
-  const parsePromises: Array<Promise<boolean>> = entries.map(entry => {
+  let filesFound = false;
+  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
     const fullEntryPath = path.resolve(dirPath, entry.name);
-    return entry.isDirectory()
-      ? _parseDir(fullEntryPath, createdProtoDir._id)
-      : _parseFile(fullEntryPath, createdProtoDir._id);
-  });
+    const result = await (entry.isDirectory()
+      ? _parseDir(fullEntryPath, newDirId)
+      : _parseFile(fullEntryPath, newDirId));
 
-  const filesFound = await Promise.all(parsePromises);
-
-  // Delete the directory if no .proto file is found in the tree
-  if (!filesFound.some(c => c)) {
-    await models.protoDirectory.remove(createdProtoDir);
-    return null;
+    filesFound = filesFound || result;
   }
 
-  return createdProtoDir;
+  // Only create the directory if a .proto file is found in the tree
+  if (filesFound) {
+    const createdProtoDir = await models.protoDirectory.create({
+      _id: newDirId,
+      name: path.basename(dirPath),
+      parentId: dirParentId,
+    });
+    return createdProtoDir;
+  }
+
+  return null;
 };
 
 export default ingestProtoDirectory;

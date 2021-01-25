@@ -11,6 +11,7 @@ import ingestProtoDirectory from './ingest-proto-directory';
 import fs from 'fs';
 import path from 'path';
 import * as protoLoader from '../proto-loader';
+import { isProtoFile } from '../../../models/helpers/is-model';
 
 export async function deleteFile(protoFile: ProtoFile, callback: string => void): Promise<void> {
   showAlert({
@@ -52,8 +53,10 @@ export async function deleteDirectory(
 }
 
 export async function addDirectory(workspaceId: string): Promise<void> {
-  const bufferId = await db.bufferChanges();
   let rollback = false;
+  let createdDir: ?ProtoDirectory = null;
+
+  const bufferId = await db.bufferChanges(-1);
   try {
     // Select file
     const { filePath, canceled } = await selectFileOrFolder({
@@ -66,7 +69,7 @@ export async function addDirectory(workspaceId: string): Promise<void> {
       return;
     }
 
-    const createdDir = await ingestProtoDirectory(filePath, workspaceId);
+    createdDir = await ingestProtoDirectory(filePath, workspaceId);
 
     // Show warning if no files found
     if (!createdDir) {
@@ -75,12 +78,37 @@ export async function addDirectory(workspaceId: string): Promise<void> {
         message: `No .proto files were found under ${filePath}.`,
       });
     }
-    // TODO: validate all of the imported proto files
+
+    // Try parse all loaded proto files to make sure they are valid
+    const loadedEntities = await db.withDescendants(createdDir);
+    const loadedFiles = loadedEntities.filter(isProtoFile);
+
+    for (const file of loadedFiles) {
+      try {
+        await protoLoader.loadMethods(file);
+      } catch (e) {
+        showError({
+          title: 'Invalid Proto File',
+          message: `The file ${file.name} and could not be parsed`,
+          error: e,
+        });
+
+        rollback = true;
+        return;
+      }
+    }
   } catch (e) {
     rollback = true;
     showError({ error: e });
   } finally {
+    // Fake flushing changes (or, rollback) only prevents change notifs being sent to the UI
+    // It does NOT revert changes written to the database, as is typical of a db transaction rollback
+    // As such, if rolling back, the created directory needs to be deleted manually
     await db.flushChanges(bufferId, rollback);
+
+    if (rollback && createdDir) {
+      await models.protoDirectory.remove(createdDir);
+    }
   }
 }
 

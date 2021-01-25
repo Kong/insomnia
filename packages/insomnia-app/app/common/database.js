@@ -164,14 +164,17 @@ export function offChange(callback: Function): void {
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
-/** buffers database changes and returns false if was already buffering */
+/** buffers database changes and returns a buffer id */
 export const bufferChanges = (database.bufferChanges = async function(
   millis: number = 1000,
 ): Promise<number> {
   if (db._empty) return _send('bufferChanges', ...arguments);
 
   bufferingChanges = true;
-  setTimeout(database.flushChanges, millis);
+
+  if (millis >= 0) {
+    setTimeout(database.flushChanges, millis);
+  }
 
   return ++bufferChangesId;
 });

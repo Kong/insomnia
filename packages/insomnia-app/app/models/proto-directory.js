@@ -1,6 +1,7 @@
 // @flow
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+import { generateId } from '../common/misc';
 
 export const name = 'Proto Directory';
 export const type = 'ProtoDirectory';
@@ -22,6 +23,10 @@ export function init(): BaseProtoDirectory {
 
 export function migrate(doc: ProtoDirectory): ProtoDirectory {
   return doc;
+}
+
+export function createId(): string {
+  return generateId(prefix);
 }
 
 export function create(patch: $Shape<ProtoDirectory> = {}): Promise<ProtoDirectory> {
