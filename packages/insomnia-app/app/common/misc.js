@@ -377,3 +377,23 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
 export function setActivityAttribute(activity: GlobalActivity) {
   document.body.setAttribute('data-activity', activity);
 }
+
+export function pluralize(text: string): string {
+  let trailer = 's';
+  let chop = 0;
+
+  // Things already ending with 's' stay that way
+  if (text.match(/s$/)) {
+    trailer = '';
+    chop = 0;
+  }
+
+  // Things ending in 'y' convert to ies
+  if (text.match(/y$/)) {
+    trailer = 'ies';
+    chop = 1;
+  }
+
+  // Add the trailer for pluralization
+  return `${text.slice(0, text.length - chop)}${trailer}`;
+}

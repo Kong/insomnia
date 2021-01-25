@@ -23,7 +23,7 @@ import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
-import { generateId } from '../common/misc';
+import { generateId, pluralize } from '../common/misc';
 
 export type BaseModel = {
   _id: string,
@@ -130,11 +130,8 @@ export function getModelName(type: string, count: number = 1) {
     return 'Unknown';
   } else if (count === 1) {
     return model.name;
-  } else if (!model.name.match(/s$/)) {
-    // Add an 's' if it doesn't already end in one
-    return `${model.name}s`;
   } else {
-    return model.name;
+    return pluralize(model.name);
   }
 }
 
