@@ -1,5 +1,6 @@
 import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { pluralize } from '../misc';
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -200,5 +201,19 @@ describe('chunkArray()', () => {
   it('works with less than one chunk', () => {
     const chunks = misc.chunkArray([1, 2], 4);
     expect(chunks).toEqual([[1, 2]]);
+  });
+});
+
+describe('pluralize()', () => {
+  it('should not change pluralization', () => {
+    expect(pluralize('Requests')).toBe('Requests');
+  });
+
+  it('should end with s', () => {
+    expect(pluralize('Request')).toBe('Requests');
+  });
+
+  it('should end with ies', () => {
+    expect(pluralize('Directory')).toBe('Directories');
   });
 });
