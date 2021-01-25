@@ -66,10 +66,18 @@ const ProtoFileListItem = ({
       isSelected={isSelected}
       onClick={handleSelectCallback}
       indentLevel={indentLevel}>
-      {isReadOnly && <span className="wide">{name}</span>}
+      {isReadOnly && (
+        <span className="wide">
+          <i className="fa fa-file-o pad-right-sm" />
+          {name}
+        </span>
+      )}
       {!isReadOnly && (
         <>
-          <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
+          <span className="wide">
+            <i className="fa fa-file-o pad-right-sm" />
+            <Editable className="wide" onSubmit={handleRenameCallback} value={name} preventBlank />
+          </span>
           <div className="row">
             <AsyncButton
               variant="text"
