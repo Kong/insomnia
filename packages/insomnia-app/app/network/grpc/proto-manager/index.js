@@ -56,7 +56,7 @@ export async function addDirectory(workspaceId: string): Promise<void> {
   let rollback = false;
   let createdDir: ?ProtoDirectory = null;
 
-  const bufferId = await db.bufferChanges(-1);
+  const bufferId = await db.bufferChangesIndefinitely();
   try {
     // Select file
     const { filePath, canceled } = await selectFileOrFolder({

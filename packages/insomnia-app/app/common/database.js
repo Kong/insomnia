@@ -171,10 +171,16 @@ export const bufferChanges = (database.bufferChanges = async function(
   if (db._empty) return _send('bufferChanges', ...arguments);
 
   bufferingChanges = true;
+  setTimeout(database.flushChanges, millis);
 
-  if (millis >= 0) {
-    setTimeout(database.flushChanges, millis);
-  }
+  return ++bufferChangesId;
+});
+
+/** buffers database changes and returns a buffer id */
+export const bufferChangesIndefinitely = (database.bufferChangesIndefinitely = async function(): Promise<number> {
+  if (db._empty) return _send('bufferChanges', ...arguments);
+
+  bufferingChanges = true;
 
   return ++bufferChangesId;
 });
