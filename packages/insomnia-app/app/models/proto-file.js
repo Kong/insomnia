@@ -46,6 +46,10 @@ export function getById(_id: string): Promise<ProtoFile | null> {
   return db.getWhere(type, { _id });
 }
 
+export function getByParentId(parentId: string): Promise<ProtoFile | null> {
+  return db.getWhere(type, { parentId });
+}
+
 export function findByParentId(parentId: string): Promise<Array<ProtoFile>> {
   return db.find(type, { parentId });
 }

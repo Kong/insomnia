@@ -1,6 +1,6 @@
 // @flow
 import type { BaseModel } from '../index';
-import { grpcRequest, request, requestGroup, protoFile } from '../index';
+import { grpcRequest, request, requestGroup, protoFile, protoDirectory, workspace } from '../index';
 
 export function isGrpcRequest(obj: BaseModel): boolean {
   return obj.type === grpcRequest.type;
@@ -25,4 +25,12 @@ export function isRequestGroup(obj: BaseModel): boolean {
 
 export function isProtoFile(obj: BaseModel): boolean {
   return obj.type === protoFile.type;
+}
+
+export function isProtoDirectory(obj: BaseModel): boolean {
+  return obj.type === protoDirectory.type;
+}
+
+export function isWorkspace(obj: BaseModel): boolean {
+  return obj.type === workspace.type;
 }
