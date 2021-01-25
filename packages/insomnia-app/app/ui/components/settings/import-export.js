@@ -15,6 +15,7 @@ class ImportExport extends PureComponent {
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
+        window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
         this.props.handleImportUri(uri);
       },
     };
