@@ -93,6 +93,85 @@ describe('bufferChanges()', () => {
       ],
     ]);
   });
+
+  it('should auto flush after a default wait', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChanges();
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    // Default flush timeout is 1000ms after starting buffering
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
+
+  it('should auto flush after a specified wait', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChanges(500);
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
+
+  it('should not auto flush after a negative wait', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChanges(-1);
+    const newDoc = await models.request.create(doc);
+    await models.request.update(newDoc, true);
+
+    // Default flush timeout is 1000ms after starting buffering
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Assert no change seen before flush
+    expect(changesSeen.length).toBe(0);
+  });
 });
 
 describe('requestCreate()', () => {
