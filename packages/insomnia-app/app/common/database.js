@@ -178,7 +178,7 @@ export const bufferChanges = (database.bufferChanges = async function(
 
 /** buffers database changes and returns a buffer id */
 export const bufferChangesIndefinitely = (database.bufferChangesIndefinitely = async function(): Promise<number> {
-  if (db._empty) return _send('bufferChanges', ...arguments);
+  if (db._empty) return _send('bufferChangesIndefinitely', ...arguments);
 
   bufferingChanges = true;
 
