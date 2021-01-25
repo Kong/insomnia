@@ -200,17 +200,19 @@ describe('protoManager', () => {
   });
 
   describe('addDirectory', () => {
-    let dbBufferChangesSpy: * | JestMockFn<*, *>;
+    let dbBufferChangesIndefinitelySpy: * | JestMockFn<*, *>;
     let dbFlushChangesSpy: * | JestMockFn<*, *>;
 
     beforeEach(() => {
-      dbBufferChangesSpy = jest.spyOn(db, 'bufferChanges');
+      dbBufferChangesIndefinitelySpy = jest.spyOn(db, 'bufferChangesIndefinitely');
       dbFlushChangesSpy = jest.spyOn(db, 'flushChanges');
     });
 
     afterEach(() => {
-      expect(dbBufferChangesSpy).toHaveBeenCalled();
+      expect(dbBufferChangesIndefinitelySpy).toHaveBeenCalled();
       expect(dbFlushChangesSpy).toHaveBeenCalled();
+      dbBufferChangesIndefinitelySpy.mockRestore();
+      dbFlushChangesSpy.mockRestore();
     });
 
     it('should not create database entries if loading canceled', async () => {
@@ -240,6 +242,8 @@ describe('protoManager', () => {
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
 
       expect(modals.showError).toHaveBeenCalledWith({ error });
+
+      expect(dbFlushChangesSpy).toHaveBeenCalledWith(expect.any(Number), true);
     });
 
     it('should show alert if no directory was created', async () => {
@@ -259,6 +263,30 @@ describe('protoManager', () => {
         title: 'No files found',
         message: `No .proto files were found under ${filePath}.`,
       });
+    });
+
+    it('should delete database entries if there is a parsing error', async () => {
+      // Arrange
+      const w = await models.workspace.create();
+      const filePath = path.join(__dirname, '../../__fixtures__/', 'library', 'nested', 'time');
+      selectFileOrFolderMock.mockResolvedValue({ filePath });
+      const error = new Error('error');
+      protoLoader.loadMethods.mockRejectedValue(error);
+
+      // Act
+      await protoManager.addDirectory(w._id);
+
+      // Assert
+      await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
+      await expect(models.protoFile.all()).resolves.toHaveLength(0);
+
+      expect(modals.showError).toHaveBeenCalledWith({
+        title: 'Invalid Proto File',
+        message: `The file time.proto and could not be parsed`,
+        error,
+      });
+
+      expect(dbFlushChangesSpy).toHaveBeenCalledWith(expect.any(Number), true);
     });
 
     it('should create database entries', async () => {
