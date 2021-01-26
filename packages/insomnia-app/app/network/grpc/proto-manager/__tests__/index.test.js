@@ -265,6 +265,37 @@ describe('protoManager', () => {
       });
     });
 
+    it('should delete database entries if there is an error while ingesting', async () => {
+      // Arrange
+      const w = await models.workspace.create();
+      const filePath = path.join(__dirname, '../../__fixtures__/', 'simulate-error');
+      selectFileOrFolderMock.mockResolvedValue({ filePath });
+
+      // Should error when loading the 5th file
+      const error = new Error('should-error.proto could not be loaded');
+      const fsPromisesReadFileSpy = jest.spyOn(fs.promises, 'readFile');
+      fsPromisesReadFileSpy
+        .mockResolvedValueOnce('contents of 1.proto')
+        .mockResolvedValueOnce('contents of 2.proto')
+        .mockResolvedValueOnce('contents of 3.proto')
+        .mockResolvedValueOnce('contents of 4.proto')
+        .mockRejectedValueOnce(error);
+
+      // Act
+      await protoManager.addDirectory(w._id);
+
+      // Assert
+      await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
+      await expect(models.protoFile.all()).resolves.toHaveLength(0);
+
+      expect(modals.showError).toHaveBeenCalledWith({
+        error,
+      });
+
+      expect(dbFlushChangesSpy).toHaveBeenCalledWith(expect.any(Number), true);
+      fsPromisesReadFileSpy.mockRestore();
+    });
+
     it('should delete database entries if there is a parsing error', async () => {
       // Arrange
       const w = await models.workspace.create();

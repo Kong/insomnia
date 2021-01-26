@@ -39,8 +39,6 @@ const ingestProtoDirectory = async (
     return null;
   }
 
-  // Create dir in database
-
   const newDirId = models.protoDirectory.createId();
 
   // Read contents
