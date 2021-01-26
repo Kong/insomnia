@@ -5,8 +5,7 @@ import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import * as sync from '../../../sync-legacy/index';
-import { getFirstName } from '../../../account/session';
+import { getFirstName, endTrial, logout } from '../../../account/session';
 
 let hidePaymentNotificationUntilNextLaunch = false;
 
@@ -14,7 +13,8 @@ let hidePaymentNotificationUntilNextLaunch = false;
 class PaymentNotificationModal extends PureComponent {
   async _handleCancel() {
     try {
-      await sync.cancelTrial();
+      await endTrial();
+      await logout();
     } catch (err) {
       // That's okay
     }
