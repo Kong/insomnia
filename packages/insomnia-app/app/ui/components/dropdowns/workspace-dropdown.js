@@ -13,7 +13,6 @@ import { getAppName, getAppVersion } from '../../../common/constants';
 import { showAlert, showError, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
-import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
@@ -26,7 +25,6 @@ import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
-import * as sync from '../../../sync-legacy/index';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
 import type { WorkspaceAction } from '../../../plugins';
@@ -38,7 +36,6 @@ import type { Environment } from '../../../models/environment';
 type Props = {
   activeEnvironment: Environment | null,
   activeWorkspace: Workspace,
-  enableSyncBeta: boolean,
   handleSetActiveWorkspace: (id: string) => void,
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
@@ -197,7 +194,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   }
 
   static async _handleLogout() {
-    await sync.logout();
+    await session.logout();
   }
 
   static _handleShowExport() {
@@ -213,11 +210,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleShowShareSettings() {
-    if (this.props.enableSyncBeta) {
-      showModal(SyncShareModal);
-    } else {
-      showModal(WorkspaceShareSettingsModal);
-    }
+    showModal(SyncShareModal);
   }
 
   _handleWorkspaceCreate() {
@@ -259,7 +252,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       isLoading,
       hotKeyRegistry,
       handleSetActiveWorkspace,
-      enableSyncBeta,
       ...other
     } = this.props;
 
