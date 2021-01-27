@@ -22,7 +22,10 @@ const ProtoDirectoryListItem = ({ dir, indentLevel, handleDeleteDirectory }: Pro
 
   return (
     <ProtoListItem indentLevel={indentLevel}>
-      {dir.name}
+      <span className="wide">
+        <i className="fa fa-folder-open-o pad-right-sm" />
+        {dir.name}
+      </span>
       {indentLevel === 0 && (
         <div className="row">
           <Button

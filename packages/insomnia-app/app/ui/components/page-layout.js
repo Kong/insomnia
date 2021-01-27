@@ -123,7 +123,6 @@ class PageLayout extends React.PureComponent<Props, State> {
               ref={handleSetSidebarRef}
               activeEnvironment={activeEnvironment}
               activeGitRepository={activeGitRepository}
-              enableSyncBeta={settings.enableSyncBeta}
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
