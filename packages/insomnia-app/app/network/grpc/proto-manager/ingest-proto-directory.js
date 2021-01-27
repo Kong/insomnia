@@ -84,9 +84,9 @@ class ProtoDirectoryLoader {
   async load(): Promise<IngestResult> {
     try {
       const createdDir = await this._ingest(this.rootDirPath, this.workspaceId);
-      return { createdDir, createdIds: this.createdIds, error: undefined };
+      return { createdDir, createdIds: this.createdIds, error: null };
     } catch (error) {
-      return { createdDir: undefined, createdIds: this.createdIds, error };
+      return { createdDir: null, createdIds: this.createdIds, error };
     }
   }
 }
