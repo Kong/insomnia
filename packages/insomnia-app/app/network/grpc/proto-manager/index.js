@@ -11,6 +11,7 @@ import ingestProtoDirectory from './ingest-proto-directory';
 import fs from 'fs';
 import path from 'path';
 import * as protoLoader from '../proto-loader';
+import { isProtoFile } from '../../../models/helpers/is-model';
 
 export async function deleteFile(protoFile: ProtoFile, callback: string => void): Promise<void> {
   showAlert({
@@ -52,8 +53,10 @@ export async function deleteDirectory(
 }
 
 export async function addDirectory(workspaceId: string): Promise<void> {
-  const bufferId = await db.bufferChanges();
   let rollback = false;
+  let createdIds: Array<string>;
+
+  const bufferId = await db.bufferChangesIndefinitely();
   try {
     // Select file
     const { filePath, canceled } = await selectFileOrFolder({
@@ -66,7 +69,19 @@ export async function addDirectory(workspaceId: string): Promise<void> {
       return;
     }
 
-    const createdDir = await ingestProtoDirectory(filePath, workspaceId);
+    const result = await ingestProtoDirectory(filePath, workspaceId);
+    createdIds = result.createdIds;
+    const { error, createdDir } = result;
+
+    if (error) {
+      showError({
+        title: 'Failed to import',
+        message: `An unexpected error occurred when reading ${filePath}`,
+        error,
+      });
+      rollback = true;
+      return;
+    }
 
     // Show warning if no files found
     if (!createdDir) {
@@ -74,13 +89,40 @@ export async function addDirectory(workspaceId: string): Promise<void> {
         title: 'No files found',
         message: `No .proto files were found under ${filePath}.`,
       });
+      return;
     }
-    // TODO: validate all of the imported proto files
+
+    // Try parse all loaded proto files to make sure they are valid
+    const loadedEntities = await db.withDescendants(createdDir);
+    const loadedFiles = loadedEntities.filter(isProtoFile);
+
+    for (const file of loadedFiles) {
+      try {
+        await protoLoader.loadMethods(file);
+      } catch (e) {
+        showError({
+          title: 'Invalid Proto File',
+          message: `The file ${file.name} could not be parsed`,
+          error: e,
+        });
+
+        rollback = true;
+        return;
+      }
+    }
   } catch (e) {
     rollback = true;
     showError({ error: e });
   } finally {
+    // Fake flushing changes (or, rollback) only prevents change notifs being sent to the UI
+    // It does NOT revert changes written to the database, as is typical of a db transaction rollback
+    // As such, if rolling back, the created directory needs to be deleted manually
     await db.flushChanges(bufferId, rollback);
+
+    if (rollback) {
+      await models.protoDirectory.batchRemoveIds(createdIds);
+      await models.protoFile.batchRemoveIds(createdIds);
+    }
   }
 }
 

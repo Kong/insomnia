@@ -18,7 +18,7 @@ describe('ingestProtoDirectory', () => {
       const result = await ingestProtoDirectory(dirToIngest, w._id);
 
       // Assert
-      expect(result).toBe(null);
+      expect(result).toStrictEqual({ createdDir: null, createdIds: [], error: null });
       expect(models.protoDirectory.all()).resolves.toHaveLength(0);
       expect(models.protoFile.all()).resolves.toHaveLength(0);
     },
@@ -33,7 +33,11 @@ describe('ingestProtoDirectory', () => {
     const result = await ingestProtoDirectory(dirToIngest, w._id);
 
     // Assert
-    expect(result).toStrictEqual(expect.objectContaining({ name: 'library', parentId: w._id }));
+    expect(result.createdDir).toStrictEqual(
+      expect.objectContaining({ name: 'library', parentId: w._id }),
+    );
+    expect(result.createdIds).toHaveLength(6);
+    expect(result.error).toBeNull();
     expect(models.protoDirectory.all()).resolves.toHaveLength(3);
     expect(models.protoFile.all()).resolves.toHaveLength(3);
 

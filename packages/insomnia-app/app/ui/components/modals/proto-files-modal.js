@@ -91,7 +91,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   _handleDeleteDirectory(protoDirectory: ProtoDirectory): Promise<void> {
     return protoManager.deleteDirectory(protoDirectory, deletedIds => {
       // if previously selected protoFile has been deleted, clear the selection
-      if (deletedIds.contains(this.state.selectedProtoFileId)) {
+      if (deletedIds.includes(this.state.selectedProtoFileId)) {
         this.setState({ selectedProtoFileId: '' });
       }
     });

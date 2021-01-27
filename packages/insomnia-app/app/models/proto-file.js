@@ -38,6 +38,11 @@ export function remove(protoFile: ProtoFile): Promise<void> {
   return db.remove(protoFile);
 }
 
+export async function batchRemoveIds(ids: Array<string>): Promise<void> {
+  const files = await db.find(type, { _id: { $in: ids } });
+  await db.batchModifyDocs({ upsert: [], remove: files });
+}
+
 export function update(protoFile: ProtoFile, patch: $Shape<ProtoFile> = {}): Promise<ProtoFile> {
   return db.docUpdate(protoFile, patch);
 }

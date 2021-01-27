@@ -83,7 +83,7 @@ describe('proto management integration test', () => {
     // Load selected method
     const selectedMethod = await protoLoader.getSelectedMethod(gr);
 
-    expect(JSON.stringify(selectedMethod)).toEqual(JSON.stringify(rootMethods[0]));
+    expect(selectedMethod.originalName).toEqual(rootMethods[0].originalName);
   });
 
   afterEach(async () => {
