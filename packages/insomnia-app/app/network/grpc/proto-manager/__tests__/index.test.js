@@ -318,7 +318,7 @@ describe('protoManager', () => {
 
       expect(modals.showError).toHaveBeenCalledWith({
         title: 'Invalid Proto File',
-        message: `The file time.proto and could not be parsed`,
+        message: `The file time.proto could not be parsed`,
         error,
       });
 

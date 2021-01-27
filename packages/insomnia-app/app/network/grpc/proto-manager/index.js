@@ -102,7 +102,7 @@ export async function addDirectory(workspaceId: string): Promise<void> {
       } catch (e) {
         showError({
           title: 'Invalid Proto File',
-          message: `The file ${file.name} and could not be parsed`,
+          message: `The file ${file.name} could not be parsed`,
           error: e,
         });
 
