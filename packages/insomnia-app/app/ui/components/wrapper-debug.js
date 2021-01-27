@@ -142,7 +142,6 @@ class WrapperDebug extends React.PureComponent<Props> {
             unseenWorkspaces={unseenWorkspaces}
             hotKeyRegistry={settings.hotKeyRegistry}
             handleSetActiveWorkspace={handleSetActiveWorkspace}
-            enableSyncBeta={settings.enableSyncBeta}
             isLoading={isLoading}
             vcs={vcs}
           />
