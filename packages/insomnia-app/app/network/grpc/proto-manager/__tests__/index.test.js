@@ -271,7 +271,7 @@ describe('protoManager', () => {
       const filePath = path.join(__dirname, '../../__fixtures__/', 'simulate-error');
       selectFileOrFolderMock.mockResolvedValue({ filePath });
 
-      // Should error when loading the 5th file
+      // Should error when loading the 6th file
       const error = new Error('should-error.proto could not be loaded');
       const fsPromisesReadFileSpy = jest.spyOn(fs.promises, 'readFile');
       fsPromisesReadFileSpy
@@ -279,6 +279,7 @@ describe('protoManager', () => {
         .mockResolvedValueOnce('contents of 2.proto')
         .mockResolvedValueOnce('contents of 3.proto')
         .mockResolvedValueOnce('contents of 4.proto')
+        .mockResolvedValueOnce('contents of 5.proto')
         .mockRejectedValueOnce(error);
 
       // Act
@@ -288,11 +289,15 @@ describe('protoManager', () => {
       await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
 
+      // Expect rollback
+      expect(dbFlushChangesSpy).toHaveBeenCalledWith(expect.any(Number), true);
+
       expect(modals.showError).toHaveBeenCalledWith({
+        title: 'Failed to import',
+        message: `An unexpected error occurred when reading ${filePath}`,
         error,
       });
 
-      expect(dbFlushChangesSpy).toHaveBeenCalledWith(expect.any(Number), true);
       fsPromisesReadFileSpy.mockRestore();
     });
 

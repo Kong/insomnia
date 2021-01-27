@@ -54,7 +54,7 @@ export async function deleteDirectory(
 
 export async function addDirectory(workspaceId: string): Promise<void> {
   let rollback = false;
-  let createdDir: ?ProtoDirectory = null;
+  let createdIds: Array<string>;
 
   const bufferId = await db.bufferChangesIndefinitely();
   try {
@@ -69,7 +69,19 @@ export async function addDirectory(workspaceId: string): Promise<void> {
       return;
     }
 
-    createdDir = await ingestProtoDirectory(filePath, workspaceId);
+    const result = await ingestProtoDirectory(filePath, workspaceId);
+    createdIds = result.createdIds;
+    const { error, createdDir } = result;
+
+    if (error) {
+      showError({
+        title: 'Failed to import',
+        message: `An unexpected error occurred when reading ${filePath}`,
+        error,
+      });
+      rollback = true;
+      return;
+    }
 
     // Show warning if no files found
     if (!createdDir) {
@@ -77,6 +89,7 @@ export async function addDirectory(workspaceId: string): Promise<void> {
         title: 'No files found',
         message: `No .proto files were found under ${filePath}.`,
       });
+      return;
     }
 
     // Try parse all loaded proto files to make sure they are valid
@@ -106,8 +119,9 @@ export async function addDirectory(workspaceId: string): Promise<void> {
     // As such, if rolling back, the created directory needs to be deleted manually
     await db.flushChanges(bufferId, rollback);
 
-    if (rollback && createdDir) {
-      await models.protoDirectory.remove(createdDir);
+    if (rollback) {
+      await models.protoDirectory.batchRemoveIds(createdIds);
+      await models.protoFile.batchRemoveIds(createdIds);
     }
   }
 }

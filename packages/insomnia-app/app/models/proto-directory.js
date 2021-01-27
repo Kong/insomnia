@@ -49,6 +49,11 @@ export function remove(obj: ProtoDirectory): Promise<void> {
   return db.remove(obj);
 }
 
+export async function batchRemoveIds(ids: Array<string>): Promise<void> {
+  const dirs = await db.find(type, { _id: { $in: ids } });
+  await db.batchModifyDocs({ upsert: [], remove: dirs });
+}
+
 export function all(): Promise<Array<ProtoDirectory>> {
   return db.all(type);
 }
