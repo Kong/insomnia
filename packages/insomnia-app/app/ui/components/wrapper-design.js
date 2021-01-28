@@ -12,7 +12,7 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
-import designerLogo from '../images/insomnia-designer-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
 import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
@@ -245,7 +245,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
             className="app-header"
             gridLeft={
               <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
+                <img src={coreLogo} alt="Insomnia" width="32" height="32" />
                 <Breadcrumb
                   className="breadcrumb"
                   crumbs={['Documents', activeApiSpec.fileName]}

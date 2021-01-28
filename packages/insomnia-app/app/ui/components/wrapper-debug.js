@@ -10,7 +10,7 @@ import ResponsePane from './panes/response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import designerLogo from '../images/insomnia-designer-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.svg';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import { ACTIVITY_HOME, AUTOBIND_CFG, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
@@ -18,6 +18,7 @@ import { isGrpcRequest } from '../../models/helpers/is-model';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
+import strings from '../../common/strings';
 
 type Props = {
   forceRefreshKey: string,
@@ -61,28 +62,59 @@ class WrapperDebug extends React.PureComponent<Props> {
     const {
       gitSyncDropdown,
       handleActivityChange,
-      wrapperProps: { activeApiSpec, activeWorkspace, activity },
+      wrapperProps: {
+        activeApiSpec,
+        activeWorkspace,
+        activeEnvironment,
+        settings,
+        activity,
+        unseenWorkspaces,
+        vcs,
+        workspaces,
+        isLoading,
+        handleSetActiveWorkspace,
+      },
     } = this.props;
+
+    const insomnia = isInsomnia(activity);
+    const designer = !insomnia;
 
     return (
       <Header
         className="app-header"
         gridLeft={
           <React.Fragment>
-            <img src={designerLogo} alt="Insomnia" width="32" height="32" />
+            <img src={coreLogo} alt="Insomnia" width="32" height="32" />
             <Breadcrumb
               className="breadcrumb"
-              crumbs={['Documents', activeApiSpec.fileName]}
+              crumbs={[
+                strings.workspaces,
+                insomnia ? activeWorkspace.name : activeApiSpec.fileName,
+              ]}
               onClick={this._handleBreadcrumb}
             />
+            {insomnia && (
+              <WorkspaceDropdown
+                activeEnvironment={activeEnvironment}
+                activeWorkspace={activeWorkspace}
+                workspaces={workspaces}
+                unseenWorkspaces={unseenWorkspaces}
+                hotKeyRegistry={settings.hotKeyRegistry}
+                handleSetActiveWorkspace={handleSetActiveWorkspace}
+                isLoading={isLoading}
+                vcs={vcs}
+              />
+            )}
           </React.Fragment>
         }
         gridCenter={
-          <ActivityToggle
-            activity={activity}
-            handleActivityChange={handleActivityChange}
-            workspace={activeWorkspace}
-          />
+          designer && (
+            <ActivityToggle
+              activity={activity}
+              handleActivityChange={handleActivityChange}
+              workspace={activeWorkspace}
+            />
+          )
         }
         gridRight={gitSyncDropdown}
       />
@@ -99,13 +131,11 @@ class WrapperDebug extends React.PureComponent<Props> {
     } = this.props;
 
     const {
-      activity,
       activeEnvironment,
       activeRequest,
       activeWorkspace,
       environments,
       handleActivateRequest,
-      handleSetActiveWorkspace,
       handleCopyAsCurl,
       handleCreateRequest,
       handleCreateRequestGroup,
@@ -118,34 +148,15 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
       handleSetSidebarFilter,
-      isLoading,
       settings,
       sidebarChildren,
       sidebarFilter,
       sidebarHidden,
       sidebarWidth,
-      unseenWorkspaces,
-      vcs,
-      workspaces,
     } = this.props.wrapperProps;
-
-    const insomnia = isInsomnia(activity);
 
     return (
       <React.Fragment>
-        {insomnia && (
-          <WorkspaceDropdown
-            className="sidebar__header theme--sidebar__header"
-            activeEnvironment={activeEnvironment}
-            activeWorkspace={activeWorkspace}
-            workspaces={workspaces}
-            unseenWorkspaces={unseenWorkspaces}
-            hotKeyRegistry={settings.hotKeyRegistry}
-            handleSetActiveWorkspace={handleSetActiveWorkspace}
-            isLoading={isLoading}
-            vcs={vcs}
-          />
-        )}
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             handleChangeEnvironment={handleChangeEnvironment}
@@ -368,15 +379,10 @@ class WrapperDebug extends React.PureComponent<Props> {
   }
 
   render() {
-    const { activity } = this.props.wrapperProps;
-
-    const insomnia = isInsomnia(activity);
-    const designer = !insomnia;
-
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageHeader={designer && this._renderPageHeader}
+        renderPageHeader={this._renderPageHeader}
         renderPageSidebar={this._renderPageSidebar}
         renderPaneOne={this._renderRequestPane}
         renderPaneTwo={this._renderResponsePane}

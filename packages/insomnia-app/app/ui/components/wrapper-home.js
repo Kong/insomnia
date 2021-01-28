@@ -37,7 +37,7 @@ import GitRepositorySettingsModal from '../components/modals/git-repository-sett
 import PageLayout from './page-layout';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
-import designerLogo from '../images/insomnia-designer-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.svg';
 import { MemPlugin } from '../../sync/git/mem-plugin';
 import {
   GIT_CLONE_DIR,
@@ -437,7 +437,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             className="app-header"
             gridLeft={
               <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
+                <img src={coreLogo} alt="Insomnia" width="32" height="32" />
                 <Breadcrumb className="breadcrumb" crumbs={['Documents']} />
               </React.Fragment>
             }

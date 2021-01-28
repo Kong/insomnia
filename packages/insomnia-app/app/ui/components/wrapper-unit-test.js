@@ -17,7 +17,7 @@ import {
 import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
-import designerLogo from '../images/insomnia-designer-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.svg';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';
@@ -492,7 +492,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
             className="app-header"
             gridLeft={
               <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
+                <img src={coreLogo} alt="Insomnia" width="32" height="32" />
                 <Breadcrumb
                   className="breadcrumb"
                   crumbs={['Documents', activeApiSpec.fileName]}

@@ -271,16 +271,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     const nonActiveWorkspaces = workspaces
       .filter(w => w._id !== activeWorkspace._id)
       .sort((w1, w2) => w1.name.localeCompare(w2.name));
-    const addedWorkspaceNames = unseenWorkspaces.map(w => `"${w.name}"`).join(', ');
     const classes = classnames(className, 'wide', 'workspace-dropdown');
-
-    const unseenWorkspacesMessage = (
-      <div>
-        The following workspaces were added
-        <br />
-        {addedWorkspaceNames}
-      </div>
-    );
 
     const { actionPlugins, loadingActions } = this.state;
 
@@ -293,19 +284,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           onOpen={this._handleDropdownOpen}
           onHide={this._handleDropdownHide}
           {...(other: Object)}>
-          <DropdownButton className="btn wide">
-            <h1 className="no-pad text-left">
-              <div className="pull-right">
-                {isLoading ? <i className="fa fa-refresh fa-spin" /> : null}
-                {unseenWorkspaces.length > 0 && (
-                  <Tooltip message={unseenWorkspacesMessage} position="bottom">
-                    <i className="fa fa-asterisk space-left" />
-                  </Tooltip>
-                )}
-                <i className="fa fa-caret-down space-left" />
-              </div>
-              {activeWorkspace.name}
-            </h1>
+          <DropdownButton className="btn">
+            <i className="fa fa-caret-down space-left" />
+            {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
           <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
