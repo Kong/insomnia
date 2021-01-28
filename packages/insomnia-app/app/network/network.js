@@ -60,7 +60,7 @@ import {
 } from 'insomnia-url';
 import fs from 'fs';
 import * as db from '../common/database';
-import * as CACerts from './cacert';
+import CACerts from './ca-certs';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
 import { getAuthHeader } from './authentication';
@@ -417,23 +417,20 @@ export async function _actuallySend(
         addTimelineText('Disable SSL validation');
       }
 
-      // Setup CA Root Certificates if not on Mac. Thanks to libcurl, Mac will use
-      // certificates form the OS.
-      if (process.platform !== 'darwin') {
-        const baseCAPath = getTempDir();
-        const fullCAPath = pathJoin(baseCAPath, CACerts.filename);
+      // Setup CA Root Certificates
+      const baseCAPath = getTempDir();
+      const fullCAPath = pathJoin(baseCAPath, 'ca-certs.pem');
 
-        try {
-          fs.statSync(fullCAPath);
-        } catch (err) {
-          // Doesn't exist yet, so write it
-          mkdirp.sync(baseCAPath);
-          fs.writeFileSync(fullCAPath, CACerts.blob);
-          console.log('[net] Set CA to', fullCAPath);
-        }
-
-        setOpt(Curl.option.CAINFO, fullCAPath);
+      try {
+        fs.statSync(fullCAPath);
+      } catch (err) {
+        // Doesn't exist yet, so write it
+        mkdirp.sync(baseCAPath);
+        fs.writeFileSync(fullCAPath, CACerts);
+        console.log('[net] Set CA to', fullCAPath);
       }
+
+      setOpt(Curl.option.CAINFO, fullCAPath);
 
       // Set cookies from jar
       if (renderedRequest.settingSendCookies) {

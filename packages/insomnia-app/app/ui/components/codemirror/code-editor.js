@@ -95,6 +95,7 @@ class CodeEditor extends React.Component {
   componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
+      this.codeMirror.closeHintDropdown();
     }
   }
 
@@ -724,6 +725,10 @@ class CodeEditor extends React.Component {
       return 'application/xml';
     } else if (mimeType.includes('kotlin')) {
       return 'text/x-kotlin';
+    } else if (CodeEditor._isYAML(mimeType)) {
+      // code-mirror doesn't recognize text/yaml or application/yaml
+      // as a valid mime-type
+      return 'yaml';
     } else {
       return mimeType;
     }

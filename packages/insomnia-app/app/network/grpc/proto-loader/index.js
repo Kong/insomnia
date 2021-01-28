@@ -1,8 +1,8 @@
 // @flow
 
-import type { GrpcMethodDefinition } from './method';
+import type { GrpcMethodDefinition } from '../method';
 import * as protoLoader from '@grpc/proto-loader';
-import * as models from '../../models';
+import * as models from '../../../models';
 import writeProtoFile from './write-proto-file';
 
 const GRPC_LOADER_OPTIONS = {
@@ -18,8 +18,6 @@ const isServiceDefinition = (obj: Object) => !isTypeOrEnumDefinition(obj);
 
 // TODO: The file path for protoLoader.load can also be a URL, so we can avoid
 //  writing to a file in those cases, but it becomes more important to cache
-//  We also need to think about how to store a reference to a proto file and it's
-//  implications on import/export/sync - INS-271
 export const loadMethods = async (
   protoFile: ProtoFile | undefined,
 ): Promise<Array<GrpcMethodDefinition>> => {
@@ -27,12 +25,18 @@ export const loadMethods = async (
     return [];
   }
 
-  return await loadMethodsFromText(protoFile.protoText);
+  const { filePath, dirs } = await writeProtoFile(protoFile);
+  return await loadMethodsFromPath(filePath, dirs);
 };
 
-export const loadMethodsFromText = async (text: string): Promise<Array<GrpcMethodDefinition>> => {
-  const tempProtoFile = await writeProtoFile(text);
-  const definition = await protoLoader.load(tempProtoFile, GRPC_LOADER_OPTIONS);
+export const loadMethodsFromPath = async (
+  filePath: string,
+  includeDirs?: Array<string>,
+): Promise<Array<GrpcMethodDefinition>> => {
+  const definition = await protoLoader.load(filePath, {
+    ...GRPC_LOADER_OPTIONS,
+    includeDirs,
+  });
 
   return Object.values(definition)
     .filter(isServiceDefinition)
@@ -42,6 +46,8 @@ export const loadMethodsFromText = async (text: string): Promise<Array<GrpcMetho
 // TODO: instead of reloading the methods from the protoFile,
 //  just get it from what has already been loaded in the react component,
 //  or from the cache
+//  We can't send the method over IPC because of the following deprecation in Electron v9
+//  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
 export const getSelectedMethod = async (request: GrpcRequest): GrpcMethodDefinition | undefined => {
   const protoFile = await models.protoFile.getById(request.protoFileId);
 

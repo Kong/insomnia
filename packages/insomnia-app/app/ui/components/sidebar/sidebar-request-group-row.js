@@ -155,6 +155,8 @@ class SidebarRequestGroupRow extends PureComponent {
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
               isPinned={false}
+              // Necessary so that plugin actions work
+              activeEnvironment={activeEnvironment}
             />
           )}
         </ul>

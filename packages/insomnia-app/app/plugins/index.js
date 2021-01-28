@@ -41,6 +41,19 @@ export type RequestGroupAction = {
   icon?: string,
 };
 
+export type RequestAction = {
+  plugin: Plugin,
+  action: (
+    context: Object,
+    models: {
+      requestGroup: RequestGroup,
+      request: Array<Request>,
+    },
+  ) => void | Promise<void>,
+  label: string,
+  icon?: string,
+};
+
 export type WorkspaceAction = {
   plugin: Plugin,
   action: (
@@ -212,6 +225,16 @@ export async function getRequestGroupActions(): Promise<Array<RequestGroupAction
   let extensions = [];
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.requestGroupActions || [];
+    extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
+  }
+
+  return extensions;
+}
+
+export async function getRequestActions(): Promise<Array<RequestAction>> {
+  let extensions = [];
+  for (const plugin of await getActivePlugins()) {
+    const actions = plugin.module.requestActions || [];
     extensions = [...extensions, ...actions.map(p => ({ plugin, ...p }))];
   }
 

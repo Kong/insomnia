@@ -9,15 +9,24 @@ import Strings from '../../../common/strings';
 @autobind
 class ImportExport extends PureComponent {
   _handleImportUri() {
-    showPrompt({
+    const promptOptions = {
       title: 'Import Data from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
+        window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
         this.props.handleImportUri(uri);
       },
-    });
+    };
+
+    const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
+
+    if (lastUsedImportUri) {
+      promptOptions.defaultValue = lastUsedImportUri;
+    }
+
+    showPrompt(promptOptions);
   }
 
   render() {

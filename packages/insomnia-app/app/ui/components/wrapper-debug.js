@@ -142,7 +142,6 @@ class WrapperDebug extends React.PureComponent<Props> {
             unseenWorkspaces={unseenWorkspaces}
             hotKeyRegistry={settings.hotKeyRegistry}
             handleSetActiveWorkspace={handleSetActiveWorkspace}
-            enableSyncBeta={settings.enableSyncBeta}
             isLoading={isLoading}
             vcs={vcs}
           />
@@ -244,8 +243,13 @@ class WrapperDebug extends React.PureComponent<Props> {
         <ErrorBoundary showAlert>
           <GrpcRequestPane
             activeRequest={activeRequest}
+            environmentId={activeEnvironment ? activeEnvironment._id : ''}
+            workspaceId={activeWorkspace._id}
             forceRefreshCounter={forceRefreshKey}
             settings={settings}
+            handleRender={handleRender}
+            isVariableUncovered={isVariableUncovered}
+            handleGetRenderContext={handleGetRenderContext}
           />
         </ErrorBoundary>
       );

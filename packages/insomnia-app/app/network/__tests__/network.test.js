@@ -2,7 +2,7 @@
 import * as networkUtils from '../network';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
-import { getRenderedRequest } from '../../common/render';
+import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
 import {
   AUTH_AWS_IAM,
@@ -21,6 +21,8 @@ import { Settings } from '../../models/settings';
 import { Workspace } from '../../models/workspace';
 
 const CONTEXT = {};
+
+const getRenderedRequest = async (...args) => (await getRenderedRequestAndContext(...args)).request;
 
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);

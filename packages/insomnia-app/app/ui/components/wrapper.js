@@ -35,7 +35,6 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import RequestSettingsModal from './modals/request-settings-modal';
-import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
 import GitStagingModal from './modals/git-staging-modal';
@@ -49,7 +48,6 @@ import SyncDeleteModal from './modals/sync-delete-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
-import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as db from '../../common/database';
 import * as models from '../../models/index';
@@ -186,7 +184,6 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
-  activeProtoFiles: Array<ProtoFile>,
   activeUnitTestResult: UnitTestResult | null,
   activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,
@@ -529,7 +526,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
-      activeProtoFiles,
       activeRequest,
       activeWorkspace,
       activeWorkspaceClientCertificates,
@@ -674,8 +670,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
-
             <GenerateCodeModal
               ref={registerModal}
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
@@ -721,8 +715,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
-
-            <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
 
             {gitVCS && (
               <React.Fragment>
@@ -794,7 +786,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   grpcDispatch={dispatch}
                   workspace={activeWorkspace}
-                  protoFiles={activeProtoFiles}
                 />
               )}
             </GrpcDispatchModalWrapper>

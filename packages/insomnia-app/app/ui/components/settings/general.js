@@ -19,7 +19,6 @@ import {
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
-import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
@@ -530,13 +529,6 @@ class General extends React.PureComponent<Props, State> {
             as request data, names, etc.
           </p>
         </div>
-
-        {session.isLoggedIn() && (
-          <React.Fragment>
-            <hr />
-            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
-          </React.Fragment>
-        )}
       </div>
     );
   }
