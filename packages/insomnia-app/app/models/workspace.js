@@ -2,8 +2,7 @@
 import type { BaseModel } from './index';
 import * as models from './index';
 import * as db from '../common/database';
-import { getAppId, getAppName } from '../common/constants';
-import { APP_ID_DESIGNER } from '../../config';
+import { getAppName } from '../common/constants';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -47,7 +46,8 @@ export async function all(): Promise<Array<Workspace>> {
   const workspaces = await db.all(type);
 
   if (workspaces.length === 0) {
-    await create({ name: getAppName(), scope: getAppId() === APP_ID_DESIGNER ? 'spec' : null });
+    // Create default workspace
+    await create({ name: getAppName(), scope: 'collection' });
     return all();
   } else {
     return workspaces;
