@@ -4,7 +4,7 @@ import * as git from 'isomorphic-git';
 import path from 'path';
 import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_SPEC } from '../../common/constants';
+import { AUTOBIND_CFG, ACTIVITY_INSOMNIA, ACTIVITY_HOME, ACTIVITY_SPEC } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
@@ -37,7 +37,7 @@ import GitRepositorySettingsModal from '../components/modals/git-repository-sett
 import PageLayout from './page-layout';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
-import coreLogo from '../images/insomnia-core-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.png';
 import { MemPlugin } from '../../sync/git/mem-plugin';
 import {
   GIT_CLONE_DIR,
@@ -352,7 +352,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     );
     const version = spec?.info?.version || '';
     let label: string = 'Insomnia';
-    let defaultActivity = ACTIVITY_DEBUG;
+    let defaultActivity = ACTIVITY_INSOMNIA;
 
     if (spec || w.scope === 'designer') {
       label = '';

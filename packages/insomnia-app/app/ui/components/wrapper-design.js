@@ -12,7 +12,7 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
-import coreLogo from '../images/insomnia-core-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.png';
 import previewIcon from '../images/icn-eye.svg';
 import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';

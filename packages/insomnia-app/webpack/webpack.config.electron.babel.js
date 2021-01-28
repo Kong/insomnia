@@ -2,6 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 const productionConfig = require('./webpack.config.production.babel');
 const pkg = require('../package.json');
+const {APP_ID_INSOMNIA} = require('../config');
 
 const PORT = pkg.dev['dev-server-port'];
 
@@ -24,7 +25,7 @@ if (process.env.NODE_ENV === 'development') {
     }),
   ];
 } else {
-  output.path = path.join(__dirname, '../build', process.env.APP_ID);
+  output.path = path.join(__dirname, '../build', APP_ID_INSOMNIA);
   devtool = productionConfig.devtool;
   plugins = productionConfig.plugins;
 }

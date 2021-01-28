@@ -10,7 +10,7 @@ import ResponsePane from './panes/response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import coreLogo from '../images/insomnia-core-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.png';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import { ACTIVITY_HOME, AUTOBIND_CFG, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
@@ -93,18 +93,16 @@ class WrapperDebug extends React.PureComponent<Props> {
               ]}
               onClick={this._handleBreadcrumb}
             />
-            {insomnia && (
-              <WorkspaceDropdown
-                activeEnvironment={activeEnvironment}
-                activeWorkspace={activeWorkspace}
-                workspaces={workspaces}
-                unseenWorkspaces={unseenWorkspaces}
-                hotKeyRegistry={settings.hotKeyRegistry}
-                handleSetActiveWorkspace={handleSetActiveWorkspace}
-                isLoading={isLoading}
-                vcs={vcs}
-              />
-            )}
+            <WorkspaceDropdown
+              activeEnvironment={activeEnvironment}
+              activeWorkspace={activeWorkspace}
+              workspaces={workspaces}
+              unseenWorkspaces={unseenWorkspaces}
+              hotKeyRegistry={settings.hotKeyRegistry}
+              handleSetActiveWorkspace={handleSetActiveWorkspace}
+              isLoading={isLoading}
+              vcs={vcs}
+            />
           </React.Fragment>
         }
         gridCenter={

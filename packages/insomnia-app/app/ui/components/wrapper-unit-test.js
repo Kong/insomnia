@@ -17,7 +17,7 @@ import {
 import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
-import coreLogo from '../images/insomnia-core-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.png';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';

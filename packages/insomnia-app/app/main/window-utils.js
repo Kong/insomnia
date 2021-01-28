@@ -373,17 +373,6 @@ export function createWindow() {
           });
         },
       },
-      {
-        label: `${MNEMONIC_SYM}Toggle Insomnia`,
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          w.webContents.send('toggle-insomnia');
-        },
-      },
     ],
   };
 

@@ -24,14 +24,13 @@ import SettingsModal, {
 } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
 import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace, ensureActivityIsForApp } from './helpers';
+import { askToImportIntoWorkspace } from './helpers';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import { setActivityAttribute } from '../../../common/misc';
-import { isDevelopment } from '../../../common/constants';
-import type { Workspace } from '../../../models/workspace';
 import type { GlobalActivity } from '../../../common/constants';
+import type { Workspace } from '../../../models/workspace';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -224,18 +223,11 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveActivity(activity: GlobalActivity) {
-  let goToActivity = activity;
-
-  // If development, skip logic (to allow for real-time switching)
-  if (!isDevelopment()) {
-    goToActivity = ensureActivityIsForApp(activity);
-  }
-
-  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(goToActivity));
-  setActivityAttribute(goToActivity);
-  trackEvent('Activity', 'Change', goToActivity);
-  return { type: SET_ACTIVE_ACTIVITY, activity: goToActivity };
+export function setActiveActivity(activity?: GlobalActivity) {
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
+  setActivityAttribute(activity);
+  trackEvent('Activity', 'Change', activity);
+  return { type: SET_ACTIVE_ACTIVITY, activity: activity };
 }
 
 export function setActiveWorkspace(workspaceId: string) {
@@ -637,9 +629,6 @@ export function init() {
   } catch (e) {
     // Nothing here...
   }
-
-  // If the default app id is insomnia, then default to the insomnia view at initialization
-  activity = ensureActivityIsForApp(activity);
 
   return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
 }
