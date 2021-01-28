@@ -60,7 +60,7 @@
     ]
   },
   "packedDependencies": [
-    "autobind-decorator",
+    "class-autobind-decorator",
     "classnames",
     "codemirror",
     "codemirror-graphql",
@@ -98,9 +98,9 @@
   "dependencies": {
     "@hot-loader/react-dom": "^16.8.6",
     "@stoplight/spectral": "^4.1.1",
-    "autobind-decorator": "^2.4.0",
     "aws4": "^1.9.0",
     "axios": "^0.19.0",
+    "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.2.5",
     "clone": "^2.1.0",
     "codemirror": "^5.50.0",
@@ -211,7 +211,7 @@
     "license-checker": "^25.0.1",
     "ncp": "^2.0.0",
     "prompt-run": "^1.4.5",
-    "react-hot-loader": "^4.8.3",
+    "react-hot-loader": "^4.13.0",
     "react-test-renderer": "^16.14.0",
     "source-map-loader": "^1.0.0",
     "spectron": "^11.1.0",
