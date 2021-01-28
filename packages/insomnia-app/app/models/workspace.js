@@ -120,6 +120,7 @@ async function _migrateScope(workspace: Workspace): Workspace {
     }
     case 'debug':
     case null:
+    default:
       workspace.scope = 'collection';
       break;
   }

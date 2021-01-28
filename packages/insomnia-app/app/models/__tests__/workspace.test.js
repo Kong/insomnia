@@ -74,13 +74,16 @@ describe('migrate()', () => {
     const specW = await models.workspace.create({ scope: 'spec' });
     const debugW = await models.workspace.create({ scope: 'debug' });
     const nullW = await models.workspace.create({ scope: null });
+    const somethingElseW = await models.workspace.create({ scope: 'something else' });
 
     await models.workspace.migrate(specW);
     await models.workspace.migrate(debugW);
     await models.workspace.migrate(nullW);
+    await models.workspace.migrate(somethingElseW);
 
     expect(specW.scope).toBe('designer');
     expect(debugW.scope).toBe('collection');
     expect(nullW.scope).toBe('collection');
+    expect(somethingElseW.scope).toBe('collection');
   });
 });
