@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
 
 type Props = {
@@ -14,7 +14,7 @@ type State = {
   updateAvailable: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class CheckForUpdatesButton extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);

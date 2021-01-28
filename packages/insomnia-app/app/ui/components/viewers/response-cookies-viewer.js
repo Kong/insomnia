@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Cookie } from 'tough-cookie';
 
-@autobind
+@autoBindMethodsForReact
 class ResponseCookiesViewer extends PureComponent {
   renderRow(h, i) {
     let cookie = null;

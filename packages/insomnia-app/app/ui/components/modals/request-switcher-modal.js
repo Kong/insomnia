@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import Button from '../base/button';
@@ -46,7 +46,7 @@ type State = {
   title: string | null,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestSwitcherModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _input: ?HTMLInputElement;

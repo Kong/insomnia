@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import type { RequestGroup } from '../../../models/request-group';
 
@@ -17,7 +17,7 @@ type Props = {
   children?: React.Node,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestGroupRow extends React.PureComponent<Props> {
   checkbox: HTMLInputElement;
 

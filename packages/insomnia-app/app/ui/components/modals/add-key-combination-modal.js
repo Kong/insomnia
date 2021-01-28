@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import Modal from '../base/modal';
 import ModalHeader from '../base/modal-header';
@@ -19,7 +19,7 @@ type State = {
   pressedKeyCombination: KeyCombination | null,
 };
 
-@autobind
+@autoBindMethodsForReact
 class AddKeyCombinationModal extends PureComponent<Props, State> {
   _modal: Modal | null;
 

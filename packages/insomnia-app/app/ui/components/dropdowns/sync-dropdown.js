@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
@@ -55,7 +55,7 @@ type State = {
   remoteProjects: Array<Project>,
 };
 
-@autobind
+@autoBindMethodsForReact
 class SyncDropdown extends React.PureComponent<Props, State> {
   checkInterval: IntervalID;
   refreshOnNextSyncItems = false;

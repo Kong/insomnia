@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
@@ -18,7 +18,7 @@ type Props = {
   hotKeyRegistry: HotKeyRegistry,
 };
 
-@autobind
+@autoBindMethodsForReact
 class SidebarFilter extends React.PureComponent<Props> {
   _input: ?HTMLInputElement;
   _triggerTimeout: TimeoutID;

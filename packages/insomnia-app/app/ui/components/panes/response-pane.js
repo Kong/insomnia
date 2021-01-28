@@ -3,7 +3,7 @@ import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import fs from 'fs';
 import mime from 'mime-types';
 import { remote } from 'electron';
@@ -67,7 +67,7 @@ type Props = {
   unitTestResult: ?UnitTestResult,
 };
 
-@autobind
+@autoBindMethodsForReact
 class ResponsePane extends React.PureComponent<Props> {
   _responseViewer: any;
 

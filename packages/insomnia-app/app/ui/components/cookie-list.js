@@ -2,7 +2,7 @@
 import React from 'react';
 import * as uuid from 'uuid';
 import * as toughCookie from 'tough-cookie';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';
 import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
@@ -23,7 +23,7 @@ type Props = {
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
 const MAX_TIME = 2147483647000;
 
-@autobind
+@autoBindMethodsForReact
 class CookieList extends React.PureComponent<Props> {
   _handleCookieAdd() {
     const newCookie: Cookie = {

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
@@ -27,7 +27,7 @@ type Props = {|
   workspaces: Array<Workspace>,
 |};
 
-@autobind
+@autoBindMethodsForReact
 class Sidebar extends React.PureComponent<Props> {
   render() {
     const {

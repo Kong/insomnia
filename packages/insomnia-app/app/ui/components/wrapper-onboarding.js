@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
@@ -24,7 +24,7 @@ type State = {|
   step: number,
 |};
 
-@autobind
+@autoBindMethodsForReact
 class WrapperOnboarding extends React.PureComponent<Props, State> {
   state = {
     step: 1,

@@ -1,10 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
+})
 class RenderedQueryString extends PureComponent {
   constructor(props) {
     super(props);

@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import styled from 'styled-components';
 import classnames from 'classnames';
 import Link from './base/link';
@@ -65,7 +65,7 @@ const StyledFooter: React.ComponentType<{}> = styled.footer`
   width: 100%;
 `;
 
-@autobind
+@autoBindMethodsForReact
 class Toast extends React.PureComponent<Props, State> {
   _interval: any;
 

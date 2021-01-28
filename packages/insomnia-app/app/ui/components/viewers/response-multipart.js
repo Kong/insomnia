@@ -7,7 +7,7 @@ import moment from 'moment';
 import path from 'path';
 import { PassThrough } from 'stream';
 import multiparty from 'multiparty';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import ResponseViewer from './response-viewer';
 import { getContentTypeFromHeaders, PREVIEW_MODE_FRIENDLY } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
@@ -46,7 +46,7 @@ type State = {
   error: string | null,
 };
 
-@autobind
+@autoBindMethodsForReact
 class ResponseMultipart extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);

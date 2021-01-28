@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import KeydownBinder from '../keydown-binder';
 
 export const shouldSave = (oldValue, newValue, preventBlank) => {
@@ -18,7 +18,7 @@ export const shouldSave = (oldValue, newValue, preventBlank) => {
   return true;
 };
 
-@autobind
+@autoBindMethodsForReact
 class Editable extends PureComponent {
   constructor(props) {
     super(props);

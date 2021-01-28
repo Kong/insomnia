@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Link from '../base/link';
 import LoginModal from '../modals/login-modal';
 import { hideAllModals, showModal } from '../modals/index';
@@ -20,7 +20,7 @@ type State = {
   finishedResetting: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class Account extends React.PureComponent<Props, State> {
   state = {
     code: '',

@@ -2,12 +2,14 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import highlight from 'highlight.js';
 import * as misc from '../../common/misc';
 import { markdownToHTML } from '../../common/markdown-to-html';
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillMount', 'UNSAFE_componentWillReceiveProps'],
+})
 class MarkdownPreview extends PureComponent {
   constructor(props) {
     super(props);

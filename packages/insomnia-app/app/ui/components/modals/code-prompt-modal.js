@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -22,7 +22,7 @@ const MODES = {
   'text/html': 'HTML',
 };
 
-@autobind
+@autoBindMethodsForReact
 class CodePromptModal extends PureComponent {
   constructor(props) {
     super(props);

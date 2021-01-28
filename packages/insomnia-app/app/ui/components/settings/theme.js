@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Button from '../base/button';
 import type { Theme as ThemeType } from '../../../plugins';
 import { getThemes } from '../../../plugins';
@@ -16,7 +16,7 @@ type State = {
   themes: Array<ThemeType>,
 };
 
-@autobind
+@autoBindMethodsForReact
 class Theme extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);

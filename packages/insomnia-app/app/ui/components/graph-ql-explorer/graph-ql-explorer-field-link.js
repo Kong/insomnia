@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { GraphQLField } from 'graphql';
 
 type Props = {
@@ -8,7 +8,7 @@ type Props = {
   field: GraphQLField<any, any>,
 };
 
-@autobind
+@autoBindMethodsForReact
 class GraphQLExplorerFieldLink extends React.PureComponent<Props> {
   _handleClick(e: MouseEvent) {
     e.preventDefault();

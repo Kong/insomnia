@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import ReactDOM from 'react-dom';
 import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
@@ -17,7 +17,9 @@ import GrpcTag from '../tags/grpc-tag';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import GrpcSpinner from '../grpc-spinner';
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillUpdate'],
+})
 class SidebarRequestRow extends PureComponent {
   constructor(props) {
     super(props);

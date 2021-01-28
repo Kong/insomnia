@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import type { DocumentAction } from '../../../plugins';
@@ -30,7 +30,7 @@ type State = {
   loadingActions: { [string]: boolean },
 };
 
-@autobind
+@autoBindMethodsForReact
 class DocumentCardDropdown extends React.PureComponent<Props, State> {
   state = {
     actionPlugins: [],

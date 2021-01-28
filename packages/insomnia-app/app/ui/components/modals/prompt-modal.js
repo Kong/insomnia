@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -30,7 +30,7 @@ type State = {
   currentValue: string,
 };
 
-@autobind
+@autoBindMethodsForReact
 class PromptModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _input: ?HTMLInputElement;

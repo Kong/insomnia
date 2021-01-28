@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import HelpTooltip from '../help-tooltip';
 import type { HttpVersion } from '../../../common/constants';
 import {
@@ -39,7 +39,7 @@ type State = {
   fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
-@autobind
+@autoBindMethodsForReact
 class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);

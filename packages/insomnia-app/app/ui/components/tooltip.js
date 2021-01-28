@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import ReactDOM from 'react-dom';
 
@@ -20,7 +20,7 @@ type State = {
   visible: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class Tooltip extends React.PureComponent<Props, State> {
   _showTimeout: TimeoutID;
   _hideTimeout: TimeoutID;

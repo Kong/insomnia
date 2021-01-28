@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import CodeEditor from '../../codemirror/code-editor';
 
-@autobind
+@autoBindMethodsForReact
 class RawEditor extends PureComponent {
   render() {
     const {

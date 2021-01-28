@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Breadcrumb, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
@@ -51,7 +51,7 @@ type Props = {
   wrapperProps: WrapperProps,
 };
 
-@autobind
+@autoBindMethodsForReact
 class WrapperDebug extends React.PureComponent<Props> {
   _handleBreadcrumb() {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);

@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import PromptButton from '../base/prompt-button';
 import {
   Dropdown,
@@ -47,7 +47,7 @@ type State = {
   loadingActions: { [string]: boolean },
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestActionsDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 

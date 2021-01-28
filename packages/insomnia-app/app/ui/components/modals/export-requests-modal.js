@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -29,7 +29,7 @@ type State = {
   treeRoot: ?Node,
 };
 
-@autobind
+@autoBindMethodsForReact
 class ExportRequestsModal extends PureComponent<Props, State> {
   modal: Modal;
 

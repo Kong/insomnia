@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import clone from 'clone';
@@ -78,7 +78,9 @@ const BASE_CODEMIRROR_OPTIONS = {
   gutters: ['CodeMirror-lint-markers'],
 };
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
+})
 class CodeEditor extends React.Component {
   constructor(props) {
     super(props);

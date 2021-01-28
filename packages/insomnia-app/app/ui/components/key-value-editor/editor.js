@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { DEBOUNCE_MILLIS } from '../../../common/constants';
 import Lazy from '../base/lazy';
@@ -19,7 +19,7 @@ const DOWN = 40;
 const LEFT = 37;
 const RIGHT = 39;
 
-@autobind
+@autoBindMethodsForReact
 class Editor extends PureComponent {
   constructor(props) {
     super(props);

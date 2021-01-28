@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as git from 'isomorphic-git';
 import path from 'path';
 import * as db from '../../common/database';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
@@ -57,7 +57,7 @@ type State = {|
   filter: string,
 |};
 
-@autobind
+@autoBindMethodsForReact
 class WrapperHome extends React.PureComponent<Props, State> {
   state = {
     filter: '',

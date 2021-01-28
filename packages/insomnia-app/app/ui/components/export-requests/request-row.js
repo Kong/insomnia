@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import MethodTag from '../tags/method-tag';
 import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';
@@ -13,7 +13,7 @@ type Props = {
   request: Request | GrpcRequest,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestRow extends PureComponent<Props> {
   handleSelect(e: SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;

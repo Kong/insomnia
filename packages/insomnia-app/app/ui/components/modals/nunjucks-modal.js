@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import VariableEditor from '../templating/variable-editor';
 import TagEditor from '../templating/tag-editor';
 import Modal from '../base/modal';
@@ -8,7 +8,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-@autobind
+@autoBindMethodsForReact
 class NunjucksModal extends PureComponent {
   constructor(props) {
     super(props);

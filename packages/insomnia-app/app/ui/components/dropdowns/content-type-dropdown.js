@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import {
   CONTENT_TYPE_FILE,
@@ -31,7 +31,7 @@ type Props = {
 
 const EMPTY_MIME_TYPE = null;
 
-@autobind
+@autoBindMethodsForReact
 class ContentTypeDropdown extends React.PureComponent<Props> {
   async _checkMimeTypeChange(body: RequestBody, mimeType: string | null) {
     // Nothing to do

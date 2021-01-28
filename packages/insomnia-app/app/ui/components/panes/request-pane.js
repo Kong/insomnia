@@ -8,7 +8,7 @@ import type {
 } from '../../../models/request';
 import type { Workspace } from '../../../models/workspace';
 import type { OAuth2Token } from '../../../models/o-auth-2-token';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
@@ -71,7 +71,7 @@ type Props = {
   oAuth2Token: ?OAuth2Token,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestPane extends React.PureComponent<Props> {
   _handleEditDescriptionAdd() {
     this._handleEditDescription(true);

@@ -1,6 +1,6 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import MethodDropdown from '../dropdowns/method-dropdown';
 import Modal from '../base/modal';
@@ -25,7 +25,7 @@ type RequestCreateModalOptions = {
   onComplete: string => void,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestCreateModal extends PureComponent {
   constructor(props) {
     super(props);

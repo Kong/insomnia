@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
@@ -29,7 +29,7 @@ type State = {
   rawValue: string,
 };
 
-@autobind
+@autoBindMethodsForReact
 class CookieModifyModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
   _rawTimeout: TimeoutID;

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -23,7 +23,7 @@ type State = {
   history: Array<Snapshot>,
 };
 
-@autobind
+@autoBindMethodsForReact
 class SyncHistoryModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   handleRollback: Snapshot => Promise<void>;

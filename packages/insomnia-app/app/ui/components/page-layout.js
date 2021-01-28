@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
 import ErrorBoundary from './error-boundary';
@@ -20,7 +20,7 @@ type Props = {
 
 type State = {};
 
-@autobind
+@autoBindMethodsForReact
 class PageLayout extends React.PureComponent<Props, State> {
   // Special request updaters
   _handleStartDragSidebar(e: Event): void {

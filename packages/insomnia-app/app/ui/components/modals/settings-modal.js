@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Modal from '../base/modal';
 import Button from '../base/button';
 import ModalBody from '../base/modal-body';
@@ -24,7 +24,7 @@ export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
-@autobind
+@autoBindMethodsForReact
 class SettingsModal extends PureComponent {
   constructor(props) {
     super(props);

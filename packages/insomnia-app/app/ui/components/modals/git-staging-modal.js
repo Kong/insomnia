@@ -1,7 +1,7 @@
 // @flow
 import YAML from 'yaml';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import path from 'path';
 import * as models from '../../../models';
 import Modal from '../base/modal';
@@ -48,7 +48,7 @@ const INITIAL_STATE: State = {
   items: {},
 };
 
-@autobind
+@autoBindMethodsForReact
 class GitStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   statusNames: { [string]: string };

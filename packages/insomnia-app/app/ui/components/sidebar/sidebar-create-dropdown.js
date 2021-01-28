@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Dropdown, DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -12,7 +12,7 @@ type Props = {
   right?: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class SidebarCreateDropdown extends React.PureComponent<Props> {
   _dropdown: ?Dropdown;
 

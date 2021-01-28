@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
 import HelpTooltip from '../../help-tooltip';
@@ -16,7 +16,7 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class BearerAuth extends React.PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;

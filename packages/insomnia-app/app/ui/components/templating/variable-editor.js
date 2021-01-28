@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 
-@autobind
+@autoBindMethodsForReact
 class VariableEditor extends PureComponent {
   constructor(props) {
     super(props);

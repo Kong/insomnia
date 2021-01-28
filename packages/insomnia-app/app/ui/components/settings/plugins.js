@@ -3,7 +3,7 @@ import * as path from 'path';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
 import CopyButton from '../base/copy-button';
 import { reload } from '../../../templating/index';
@@ -31,7 +31,7 @@ type Props = {
   updateSetting: Function,
 };
 
-@autobind
+@autoBindMethodsForReact
 class Plugins extends React.PureComponent<Props, State> {
   _isMounted: boolean;
 

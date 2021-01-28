@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import KeyValueEditor from '../../key-value-editor/editor';
 
-@autobind
+@autoBindMethodsForReact
 class UrlEncodedEditor extends PureComponent {
   render() {
     const {

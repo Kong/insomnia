@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -24,7 +24,7 @@ type State = {|
   },
 |};
 
-@autobind
+@autoBindMethodsForReact
 class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   input: ?HTMLInputElement;

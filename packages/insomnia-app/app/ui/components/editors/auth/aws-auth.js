@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
@@ -19,7 +19,7 @@ type Props = {
   handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
 };
 
-@autobind
+@autoBindMethodsForReact
 class AWSAuth extends React.PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;

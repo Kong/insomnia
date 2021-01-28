@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
 import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
@@ -46,7 +46,7 @@ type State = {
   error: string | null,
 };
 
-@autobind
+@autoBindMethodsForReact
 class EnvironmentEditor extends React.PureComponent<Props, State> {
   _editor: CodeEditor | null;
 

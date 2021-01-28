@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { basename as pathBasename } from 'path';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
 
@@ -17,7 +17,7 @@ type Props = {
   name?: string,
 };
 
-@autobind
+@autoBindMethodsForReact
 class FileInputButton extends React.PureComponent<Props> {
   _button: ?HTMLButtonElement;
 

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import VCS from '../../sync/vcs';
 import { showError } from './modals';
 
@@ -17,7 +17,7 @@ type State = {
   loading: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class SyncPullButton extends React.PureComponent<Props, State> {
   _timeout: TimeoutID;
   state = {

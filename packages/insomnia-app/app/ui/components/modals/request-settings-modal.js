@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -42,7 +42,7 @@ type RequestSettingsModalOptions = {
   forceEditMode: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestSettingsModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _editor: ?MarkdownEditor;

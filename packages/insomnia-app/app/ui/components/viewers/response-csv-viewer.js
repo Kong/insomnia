@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import Papa from 'papaparse';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 
 type Props = {
   body: Buffer,
@@ -11,7 +11,9 @@ type State = {
   result: null | { data: Array<Array<string>> },
 };
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillUpdate'],
+})
 class ResponseCSVViewer extends React.PureComponent<Props, State> {
   currentHash: string;
 

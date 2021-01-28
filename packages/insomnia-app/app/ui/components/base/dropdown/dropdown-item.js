@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 
-@autobind
+@autoBindMethodsForReact
 class DropdownItem extends PureComponent {
   _handleClick(e) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;

@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-@autobind
+@autoBindMethodsForReact
 class AskModal extends PureComponent {
   constructor(props) {
     super(props);

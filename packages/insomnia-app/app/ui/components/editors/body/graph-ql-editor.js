@@ -2,7 +2,7 @@
 import classnames from 'classnames';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
@@ -75,7 +75,9 @@ type State = {
   },
 };
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
+})
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _disabledOperationMarkers: Array<TextMarker>;
   _documentAST: null | Object;

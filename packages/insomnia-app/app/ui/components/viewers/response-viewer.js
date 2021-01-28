@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import iconv from 'iconv-lite';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { shell } from 'electron';
 import PDFViewer from './response-pdf-viewer';
 import CSVViewer from './response-csv-viewer';
@@ -50,7 +50,9 @@ type State = {
   error: string,
 };
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillMount', 'UNSAFE_componentWillReceiveProps'],
+})
 class ResponseViewer extends React.Component<Props, State> {
   _selectableView: any;
 

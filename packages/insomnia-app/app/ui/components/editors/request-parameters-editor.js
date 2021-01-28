@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
 import type { Request, RequestParameter } from '../../../models/request';
@@ -19,7 +19,7 @@ type Props = {
   request: Request,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestParametersEditor extends React.PureComponent<Props> {
   _handleBulkUpdate(paramsString: string) {
     const { onChange, request } = this.props;

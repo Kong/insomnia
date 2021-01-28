@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import { EventEmitter } from 'events';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import contextMenu from 'electron-context-menu';
 
 type Props = {
@@ -11,7 +11,7 @@ type Props = {
   webpreferences: string,
 };
 
-@autobind
+@autoBindMethodsForReact
 class ResponseWebView extends React.PureComponent<Props> {
   _webview: ?HTMLElement;
 

@@ -1,7 +1,7 @@
 // @flow
 import classnames from 'classnames';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as misc from '../../../common/misc';
 
 type Props = {|
@@ -15,7 +15,7 @@ type Props = {|
   noTheme?: boolean,
 |};
 
-@autobind
+@autoBindMethodsForReact
 class Link extends React.PureComponent<Props> {
   _handleClick(e: SyntheticEvent<HTMLAnchorElement>) {
     e && e.preventDefault();

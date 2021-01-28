@@ -2,7 +2,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/file-input-button';
@@ -14,7 +14,7 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import { showModal } from '../modals/index';
 import { describeByteSize } from '../../../common/misc';
 
-@autobind
+@autoBindMethodsForReact
 class KeyValueEditorRow extends PureComponent {
   constructor(props) {
     super(props);

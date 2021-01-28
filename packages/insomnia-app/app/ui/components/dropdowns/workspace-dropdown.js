@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -55,7 +55,7 @@ type State = {
   remoteProjects: Array<Project>,
 };
 
-@autobind
+@autoBindMethodsForReact
 class WorkspaceDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 

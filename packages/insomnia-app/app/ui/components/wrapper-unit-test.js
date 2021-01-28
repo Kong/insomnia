@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
@@ -43,7 +43,7 @@ type State = {|
   resultsError: string | null,
 |};
 
-@autobind
+@autoBindMethodsForReact
 class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,

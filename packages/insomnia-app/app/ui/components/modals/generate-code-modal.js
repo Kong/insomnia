@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import HTTPSnippet, { availableTargets } from 'httpsnippet';
 import CopyButton from '../base/copy-button';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
@@ -27,7 +27,7 @@ const TO_ADD_CONTENT_LENGTH = {
   node: ['native'],
 };
 
-@autobind
+@autoBindMethodsForReact
 class GenerateCodeModal extends PureComponent {
   constructor(props) {
     super(props);

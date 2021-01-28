@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
 import allHeaderNames from '../../../datasets/header-names';
@@ -23,7 +23,7 @@ type Props = {
   request: Request,
 };
 
-@autobind
+@autoBindMethodsForReact
 class RequestHeadersEditor extends React.PureComponent<Props> {
   _handleBulkUpdate(headersString: string) {
     const { onChange, request } = this.props;

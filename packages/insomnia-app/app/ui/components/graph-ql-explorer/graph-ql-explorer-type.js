@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { SvgIcon } from 'insomnia-components';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import MarkdownPreview from '../markdown-preview';
 import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
 import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
@@ -17,7 +17,7 @@ type Props = {
   schema: GraphQLSchema | null,
 };
 
-@autobind
+@autoBindMethodsForReact
 class GraphQLExplorerType extends React.PureComponent<Props> {
   _handleNavigateType(type: Object) {
     const { onNavigateType } = this.props;

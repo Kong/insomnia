@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Tooltip from './tooltip';
 
 type Props = {
@@ -13,7 +13,7 @@ type Props = {
   info?: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class HelpTooltip extends React.PureComponent<Props> {
   render() {
     const { children, className, style, info } = this.props;

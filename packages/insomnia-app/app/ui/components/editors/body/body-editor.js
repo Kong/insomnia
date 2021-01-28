@@ -2,7 +2,7 @@
 import * as React from 'react';
 import * as mimes from 'mime-types';
 import clone from 'clone';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import RawEditor from './raw-editor';
 import UrlEncodedEditor from './url-encoded-editor';
 import FormEditor from './form-editor';
@@ -47,7 +47,7 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact
 class BodyEditor extends React.PureComponent<Props> {
   _handleRawChange(rawValue: string) {
     const { onChange, request } = this.props;

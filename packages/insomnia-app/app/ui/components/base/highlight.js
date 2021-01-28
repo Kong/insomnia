@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import fuzzySort from 'fuzzysort';
 import { fuzzyMatch } from '../../../common/misc';
 
@@ -10,7 +10,7 @@ type Props = {|
   blankValue?: String,
 |};
 
-@autobind
+@autoBindMethodsForReact
 class Highlight extends React.PureComponent<Props> {
   render() {
     const { search, text, blankValue, ...otherProps } = this.props;

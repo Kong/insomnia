@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showModal } from '../modals';
 import AlertModal from '../modals/alert-modal';
@@ -31,7 +31,7 @@ type Props = {
   children: React.Node,
 };
 
-@autobind
+@autoBindMethodsForReact
 class AuthDropdown extends React.PureComponent<Props> {
   async _handleTypeChange(type: string) {
     const { request, onChange } = this.props;

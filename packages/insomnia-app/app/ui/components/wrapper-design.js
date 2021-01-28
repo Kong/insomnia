@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import { Breadcrumb, Button, Header, NoticeTable } from 'insomnia-components';
@@ -41,7 +41,7 @@ type State = {|
   }>,
 |};
 
-@autobind
+@autoBindMethodsForReact
 class WrapperDesign extends React.PureComponent<Props, State> {
   editor: ?CodeEditor;
   debounceTimeout: IntervalID;

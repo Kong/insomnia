@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import PromptButton from '../base/prompt-button';
 import Link from '../base/link';
 import Modal from '../base/modal';
@@ -9,7 +9,7 @@ import { getFirstName, endTrial, logout } from '../../../account/session';
 
 let hidePaymentNotificationUntilNextLaunch = false;
 
-@autobind
+@autoBindMethodsForReact
 class PaymentNotificationModal extends PureComponent {
   async _handleCancel() {
     try {

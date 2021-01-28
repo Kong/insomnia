@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { remote } from 'electron';
 import { DEBOUNCE_MILLIS, isMac } from '../../common/constants';
 import {
@@ -44,7 +44,9 @@ type State = {
   currentTimeout: number | null,
 };
 
-@autobind
+@autoBindMethodsForReact({
+  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
+})
 class RequestUrlBar extends React.PureComponent<Props, State> {
   _urlChangeDebounceTimeout: TimeoutID;
   _sendTimeout: TimeoutID;

@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { GraphQLList, GraphQLNonNull } from 'graphql';
 import type { GraphQLType } from 'graphql';
 
@@ -9,7 +9,7 @@ type Props = {
   type: GraphQLType,
 };
 
-@autobind
+@autoBindMethodsForReact
 class GraphQLExplorerTypeLink extends React.PureComponent<Props> {
   _handleClick(e: MouseEvent) {
     e.preventDefault();

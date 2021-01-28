@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import * as constants from '../../../common/constants';
 import { showPrompt } from '../modals/index';
@@ -9,7 +9,7 @@ import { METHOD_GRPC } from '../../../common/constants';
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
-@autobind
+@autoBindMethodsForReact
 class MethodDropdown extends PureComponent {
   _setDropdownRef(n) {
     this._dropdown = n;

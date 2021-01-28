@@ -1,13 +1,13 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import fs from 'fs';
 import electron from 'electron';
 import FileInputButton from '../../base/file-input-button';
 import PromptButton from '../../base/prompt-button';
 import * as misc from '../../../../common/misc';
 
-@autobind
+@autoBindMethodsForReact
 class FileEditor extends PureComponent {
   _handleResetFile() {
     this.props.onChange('');
