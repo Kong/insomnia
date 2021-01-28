@@ -30,6 +30,14 @@ module.exports = {
           loader: 'babel-loader',
         },
       },
+      {
+        test: require.resolve('../app/network/ca-certs.js'),
+        use: [
+          {
+            loader: 'val-loader',
+          },
+        ],
+      },
     ],
   },
   externals: [
