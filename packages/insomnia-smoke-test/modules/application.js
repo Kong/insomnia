@@ -2,7 +2,7 @@ import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
 import electronPath from '../../insomnia-app/node_modules/electron';
-import { APP_ID_INSOMNIA, APP_ID_DESIGNER } from '../../insomnia-app/config';
+import { APP_ID_INSOMNIA } from '../../insomnia-app/config';
 
 const getAppPlatform = () => process.platform;
 const isMac = () => getAppPlatform() === 'darwin';
@@ -31,11 +31,6 @@ const spectronConfig = (appId, appName) => {
 
 export const launchCore = async () => {
   const config = spectronConfig(APP_ID_INSOMNIA, 'Insomnia');
-  return await launch(config);
-};
-
-export const launchDesigner = async () => {
-  const config = spectronConfig(APP_ID_DESIGNER, 'Insomnia Designer');
   return await launch(config);
 };
 

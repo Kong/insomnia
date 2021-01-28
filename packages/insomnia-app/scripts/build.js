@@ -8,7 +8,7 @@ const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 const { getBuildContext } = require('./getBuildContext');
-const { APP_ID_INSOMNIA, APP_ID_DESIGNER } = require('../config');
+const { APP_ID_INSOMNIA } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -30,11 +30,7 @@ module.exports.start = async function(forceFromGitRef) {
   }
 
   // Configure APP_ID env based on what we detected
-  if (buildContext.app === 'designer') {
-    process.env.APP_ID = APP_ID_DESIGNER;
-  } else if (buildContext.app === 'core') {
-    process.env.APP_ID = APP_ID_INSOMNIA;
-  }
+  process.env.APP_ID = APP_ID_INSOMNIA;
 
   if (!buildContext.smokeTest && appConfig().version !== buildContext.version) {
     console.log(
@@ -49,7 +45,7 @@ module.exports.start = async function(forceFromGitRef) {
   const buildFolder = path.join('../build', appConfig().appId);
 
   if (buildContext.smokeTest) {
-    console.log(`[build] Starting build to smoke test ${buildContext.app}`);
+    console.log('[build] Starting build to smoke test');
   } else {
     console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
   }

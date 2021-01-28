@@ -46,8 +46,7 @@ export async function all(): Promise<Array<Workspace>> {
   const workspaces = await db.all(type);
 
   if (workspaces.length === 0) {
-    // Create default workspace
-    await create({ name: getAppName(), scope: 'collection' });
+    await create({ name: getAppName() });
     return all();
   } else {
     return workspaces;
