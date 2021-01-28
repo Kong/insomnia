@@ -12,15 +12,12 @@ import {
   getAppPlatform,
   getAppId,
   getAppVersion,
-  getDefaultAppId,
   isLinux,
 } from '../../common/constants';
 import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
-import imgSrcDesigner from '../images/insomnia-designer-logo.png';
 import imgSrcCore from '../images/insomnia-core-logo.png';
-import { APP_ID_INSOMNIA } from '../../../config';
 import { getDeviceId } from '../../common/analytics';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
@@ -216,10 +213,7 @@ class Toast extends React.PureComponent<Props, State> {
           'toast--show': visible,
         })}>
         <StyledLogo>
-          <img
-            src={getDefaultAppId() === APP_ID_INSOMNIA ? imgSrcCore : imgSrcDesigner}
-            alt={appName}
-          />
+          <img src={imgSrcCore} alt={appName} />
         </StyledLogo>
         <StyledContent>
           <p>{notification ? notification.message : 'Unknown'}</p>
