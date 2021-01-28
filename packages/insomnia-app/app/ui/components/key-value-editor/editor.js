@@ -350,16 +350,27 @@ class Editor extends PureComponent {
 
   componentDidUpdate() {
     this._updateFocus();
-    if (this.props.pairs.length !== 0 && this.state.pairs.length === 0) {
-      const pairs = [...this.props.pairs];
+    const pairs = [...this.props.pairs];
+    try {
+      const index = [];
       for (const pair of pairs) {
         if (this.props.maxPairs !== 1 && !pair.id) {
           pair.id = generateId('pair');
+          index.push(pair);
         }
       }
-      this.setState({
-        pairs: pairs,
-      });
+      if (index.length !== 0) {
+        const prevPairs = [...this.state.pairs];
+        for (const pair of index) {
+          prevPairs.push(pair);
+        }
+        console.log(prevPairs);
+        this.setState({
+          pairs: prevPairs,
+        });
+      }
+    } catch (e) {
+      console.log(e);
     }
   }
 
