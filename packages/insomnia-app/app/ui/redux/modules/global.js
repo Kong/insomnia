@@ -28,7 +28,6 @@ import { askToImportIntoWorkspace } from './helpers';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
-import { setActivityAttribute } from '../../../common/misc';
 import type { GlobalActivity } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
 
@@ -225,7 +224,6 @@ export function loadRequestStop(requestId) {
 
 export function setActiveActivity(activity?: GlobalActivity) {
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  setActivityAttribute(activity);
   trackEvent('Activity', 'Change', activity);
   return { type: SET_ACTIVE_ACTIVITY, activity: activity };
 }
