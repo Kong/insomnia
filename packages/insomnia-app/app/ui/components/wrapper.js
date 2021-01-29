@@ -689,7 +689,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleImportUri={this._handleImportUri}
               handleToggleMenuBar={handleToggleMenuBar}
               settings={settings}
-              activity={activity}
             />
 
             <ResponseDebugModal ref={registerModal} settings={settings} />

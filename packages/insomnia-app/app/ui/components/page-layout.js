@@ -43,7 +43,6 @@ class PageLayout extends React.PureComponent<Props, State> {
     const {
       activeEnvironment,
       activeGitRepository,
-      activeWorkspace,
       gitVCS,
       handleInitializeEntities,
       handleResetDragSidebar,
@@ -62,9 +61,7 @@ class PageLayout extends React.PureComponent<Props, State> {
       settings,
       sidebarHidden,
       sidebarWidth,
-      syncItems,
       unseenWorkspaces,
-      vcs,
       workspaces,
     } = wrapperProps;
 
@@ -129,12 +126,9 @@ class PageLayout extends React.PureComponent<Props, State> {
               hotKeyRegistry={settings.hotKeyRegistry}
               isLoading={isLoading}
               showEnvironmentsModal={this._handleShowEnvironmentsModal}
-              syncItems={syncItems}
               unseenWorkspaces={unseenWorkspaces}
-              vcs={vcs}
               gitVCS={gitVCS}
               width={sidebarWidth}
-              workspace={activeWorkspace}
               workspaces={workspaces}>
               {renderPageSidebar()}
             </Sidebar>

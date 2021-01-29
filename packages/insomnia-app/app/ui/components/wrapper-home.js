@@ -272,12 +272,15 @@ class WrapperHome extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleSetActiveWorkspace(id: string, defaultActivity: GlobalActivity) {
+  async _handleClickCard(id: string, defaultActivity: GlobalActivity) {
     const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
 
+    const { scope } = await models.workspace.getById(id);
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
-    if (!activeActivity || activeActivity === ACTIVITY_HOME) {
+    if (scope === 'collection') {
+      handleSetActiveActivity(ACTIVITY_INSOMNIA);
+    } else if (!activeActivity || activeActivity === ACTIVITY_HOME) {
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);
@@ -387,7 +390,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         tagLabel={label && <Highlight search={filter} text={label} />}
         docLog={log}
         docMenu={docMenu}
-        onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
+        onClick={() => this._handleClickCard(w._id, defaultActivity)}
       />
     );
   }

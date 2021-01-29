@@ -378,15 +378,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
 
     return (
-      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+      <DropdownButton className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced">
         <div className="ellipsis">
           <i className="fa fa-code-fork space-right" />{' '}
           {initializing ? 'Initializing...' : currentBranch}
         </div>
         <div className="space-left">
-          <Tooltip message={snapshotToolTipMsg} delay={800}>
+          <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
             <i
-              className={classnames('icon fa fa-cube fa--fixed-width', {
+              className={classnames('fa fa-cube fa--fixed-width', {
                 'super-duper-faint': !canCreateSnapshot,
               })}
             />
@@ -398,7 +398,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               {loadingPull ? (
                 loadIcon
               ) : (
-                <Tooltip message={pullToolTipMsg} delay={800}>
+                <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
                   <i
                     className={classnames('fa fa-cloud-download fa--fixed-width', {
                       'super-duper-faint': !canPull,
@@ -410,7 +410,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               {loadingPush ? (
                 loadIcon
               ) : (
-                <Tooltip message={pushToolTipMsg} delay={800}>
+                <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
                   <i
                     className={classnames('fa fa-cloud-upload fa--fixed-width', {
                       'super-duper-faint': !canPush,
