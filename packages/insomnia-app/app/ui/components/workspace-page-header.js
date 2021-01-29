@@ -1,7 +1,7 @@
 // @flow
 
 import React from 'react';
-import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
+import { ACTIVITY_HOME } from '../../common/constants';
 import coreLogo from '../images/insomnia-core-logo.png';
 import strings from '../../common/strings';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
@@ -31,8 +31,8 @@ const WorkspacePageHeader = ({
     handleSetActiveWorkspace,
   },
 }: Props) => {
-  const insomnia = isInsomnia(activity);
-  const designer = !insomnia;
+  const collection = activeWorkspace.scope === 'collection';
+  const designer = !collection;
 
   const homeCallback = React.useCallback(
     () => handleActivityChange(activeWorkspace._id, ACTIVITY_HOME),
@@ -41,7 +41,7 @@ const WorkspacePageHeader = ({
 
   const workspace = (
     <WorkspaceDropdown
-      displayName={insomnia ? activeWorkspace.name : activeApiSpec.fileName}
+      displayName={collection ? activeWorkspace.name : activeApiSpec.fileName}
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
       workspaces={workspaces}

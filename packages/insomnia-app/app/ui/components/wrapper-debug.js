@@ -15,7 +15,6 @@ import type { ForceToWorkspace } from '../redux/modules/helpers';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
-import { isInsomnia } from '../../common/constants';
 import { isLoggedIn } from '../../account/session';
 import SyncDropdown from './dropdowns/sync-dropdown';
 
@@ -55,12 +54,12 @@ type Props = {
 class WrapperDebug extends React.PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, syncItems, activity } = this.props.wrapperProps;
+    const { vcs, activeWorkspace, syncItems } = this.props.wrapperProps;
 
-    const insomnia = isInsomnia(activity);
-    const designer = !insomnia;
+    const collection = activeWorkspace.scope === 'collection';
+    const designer = !collection;
 
-    const betaSync = insomnia && vcs && isLoggedIn() && (
+    const betaSync = collection && vcs && isLoggedIn() && (
       <SyncDropdown workspace={activeWorkspace} vcs={vcs} syncItems={syncItems} />
     );
 

@@ -88,10 +88,6 @@ export function isDevelopment() {
   return getAppEnvironment() === 'development';
 }
 
-export function isInsomnia(activity: GlobalActivity): boolean {
-  return activity === ACTIVITY_INSOMNIA;
-}
-
 export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
 }
@@ -159,12 +155,12 @@ export const DEFAULT_PANE_HEIGHT = 0.5;
 export const DEFAULT_SIDEBAR_WIDTH = 19;
 
 // Activities
-export type GlobalActivity = 'spec' | 'debug' | 'monitor' | 'home';
+export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
-export const ACTIVITY_INSOMNIA: GlobalActivity = 'insomnia';
+export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
 // HTTP Methods
 export const METHOD_GET = 'GET';

@@ -30,6 +30,7 @@ import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import type { GlobalActivity } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
+import { ACTIVITY_DEBUG, DEPRECATED_ACTIVITY_INSOMNIA } from '../../../common/constants';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -223,9 +224,11 @@ export function loadRequestStop(requestId) {
 }
 
 export function setActiveActivity(activity?: GlobalActivity) {
+  activity = activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
+
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   trackEvent('Activity', 'Change', activity);
-  return { type: SET_ACTIVE_ACTIVITY, activity: activity };
+  return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 
 export function setActiveWorkspace(workspaceId: string) {

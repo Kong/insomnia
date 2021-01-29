@@ -5,6 +5,8 @@ import {
   DEFAULT_SIDEBAR_WIDTH,
   DEFAULT_PANE_WIDTH,
   DEFAULT_PANE_HEIGHT,
+  ACTIVITY_DEBUG,
+  DEPRECATED_ACTIVITY_INSOMNIA,
 } from '../common/constants';
 
 export const name = 'Workspace Meta';
@@ -55,6 +57,15 @@ export function init(): BaseWorkspaceMeta {
 }
 
 export function migrate(doc: WorkspaceMeta): WorkspaceMeta {
+  doc = _migrateInsomniaActivity(doc);
+  return doc;
+}
+
+function _migrateInsomniaActivity(doc: WorkspaceMeta): WorkspaceMeta {
+  if (doc.activeActivity === DEPRECATED_ACTIVITY_INSOMNIA) {
+    doc.activeActivity = ACTIVITY_DEBUG;
+  }
+
   return doc;
 }
 
