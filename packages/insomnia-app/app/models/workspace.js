@@ -30,7 +30,7 @@ export async function migrate(doc: Workspace): Promise<Workspace> {
   doc = await _migrateExtractClientCertificates(doc);
   doc = await _migrateEnsureName(doc);
   await models.apiSpec.getOrCreateForParentId(doc._id, { fileName: doc.name });
-  doc = await _migrateScope(doc);
+  doc = _migrateScope(doc);
   return doc;
 }
 
@@ -110,7 +110,11 @@ async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
 /**
  * Ensure workspace scope is set to a valid entry
  */
-async function _migrateScope(workspace: Workspace): Workspace {
+function _migrateScope(workspace: Workspace): Workspace {
+  if (workspace.scope === 'designer' || workspace.scope === 'collection') {
+    return workspace;
+  }
+
   // Translate the old value
   type OldScopeTypes = 'spec' | 'debug' | null;
   switch ((workspace.scope: OldScopeTypes)) {

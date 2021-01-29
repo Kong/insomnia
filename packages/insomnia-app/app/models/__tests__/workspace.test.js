@@ -74,7 +74,9 @@ describe('migrate()', () => {
     const specW = await models.workspace.create({ scope: 'spec' });
     const debugW = await models.workspace.create({ scope: 'debug' });
     const nullW = await models.workspace.create({ scope: null });
-    const somethingElseW = await models.workspace.create({ scope: 'something else' });
+    const somethingElseW = await models.workspace.create({ scope: 'something' });
+    const designerW = await models.workspace.create({ scope: 'designer' });
+    const collectionW = await models.workspace.create({ scope: 'collection' });
 
     await models.workspace.migrate(specW);
     await models.workspace.migrate(debugW);
@@ -85,5 +87,7 @@ describe('migrate()', () => {
     expect(debugW.scope).toBe('collection');
     expect(nullW.scope).toBe('collection');
     expect(somethingElseW.scope).toBe('collection');
+    expect(designerW.scope).toBe('designer');
+    expect(collectionW.scope).toBe('collection');
   });
 });
