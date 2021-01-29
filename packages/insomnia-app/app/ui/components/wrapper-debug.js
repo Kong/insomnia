@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { Breadcrumb, Header } from 'insomnia-components';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
 import RequestPane from './panes/request-pane';
@@ -10,15 +9,12 @@ import ResponsePane from './panes/response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import coreLogo from '../images/insomnia-core-logo.png';
-import WorkspaceDropdown from './dropdowns/workspace-dropdown';
-import { ACTIVITY_HOME, AUTOBIND_CFG, isInsomnia } from '../../common/constants';
-import ActivityToggle from './activity-toggle';
+import { AUTOBIND_CFG } from '../../common/constants';
 import { isGrpcRequest } from '../../models/helpers/is-model';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
-import strings from '../../common/strings';
+import WorkspacePageHeader from './workspace-page-header';
 
 type Props = {
   forceRefreshKey: string,
@@ -54,66 +50,13 @@ type Props = {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperDebug extends React.PureComponent<Props> {
-  _handleBreadcrumb() {
-    this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);
-  }
-
   _renderPageHeader() {
-    const {
-      gitSyncDropdown,
-      handleActivityChange,
-      wrapperProps: {
-        activeApiSpec,
-        activeWorkspace,
-        activeEnvironment,
-        settings,
-        activity,
-        unseenWorkspaces,
-        vcs,
-        workspaces,
-        isLoading,
-        handleSetActiveWorkspace,
-      },
-    } = this.props;
-
-    const insomnia = isInsomnia(activity);
-    const designer = !insomnia;
+    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
 
     return (
-      <Header
-        className="app-header"
-        gridLeft={
-          <React.Fragment>
-            <img src={coreLogo} alt="Insomnia" width="32" height="32" />
-            <Breadcrumb
-              className="breadcrumb"
-              crumbs={[
-                strings.workspaces,
-                insomnia ? activeWorkspace.name : activeApiSpec.fileName,
-              ]}
-              onClick={this._handleBreadcrumb}
-            />
-            <WorkspaceDropdown
-              activeEnvironment={activeEnvironment}
-              activeWorkspace={activeWorkspace}
-              workspaces={workspaces}
-              unseenWorkspaces={unseenWorkspaces}
-              hotKeyRegistry={settings.hotKeyRegistry}
-              handleSetActiveWorkspace={handleSetActiveWorkspace}
-              isLoading={isLoading}
-              vcs={vcs}
-            />
-          </React.Fragment>
-        }
-        gridCenter={
-          designer && (
-            <ActivityToggle
-              activity={activity}
-              handleActivityChange={handleActivityChange}
-              workspace={activeWorkspace}
-            />
-          )
-        }
+      <WorkspacePageHeader
+        wrapperProps={wrapperProps}
+        handleActivityChange={handleActivityChange}
         gridRight={gitSyncDropdown}
       />
     );

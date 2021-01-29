@@ -24,6 +24,9 @@ const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
   }
 
   li {
+    display: flex;
+    flex-direction: row;
+
     a {
       cursor: pointer;
     }
