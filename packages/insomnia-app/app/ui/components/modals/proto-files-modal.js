@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import * as models from '../../../models';
 import type { ProtoFile } from '../../../models/proto-file';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
@@ -9,20 +8,20 @@ import autobind from 'autobind-decorator';
 import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
 import ProtoFileList from '../proto-file/proto-file-list';
-import { showAlert, showError } from './index';
-import fs from 'fs';
-import path from 'path';
-import selectFileOrFolder from '../../../common/select-file-or-folder';
 import { AsyncButton } from 'insomnia-components';
 import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
 import { GrpcRequestEventEnum } from '../../../common/grpc-events';
-import * as protoLoader from '../../../network/grpc/proto-loader';
+import { connect } from 'react-redux';
+import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
+import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
+import type { ProtoDirectory } from '../../../models/proto-directory';
+import * as protoManager from '../../../network/grpc/proto-manager';
 
 type Props = {|
   grpcDispatch: GrpcDispatch,
   workspace: Workspace,
-  protoFiles: Array<ProtoFile>,
+  protoDirectories: Array<ExpandedProtoDirectory>,
 |};
 
 type State = {|
@@ -80,85 +79,50 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     this.setState({ selectedProtoFileId: id });
   }
 
-  async _handleDelete(protoFile: ProtoFile) {
-    showAlert({
-      title: `Delete ${protoFile.name}`,
-      message: (
-        <span>
-          Really delete <strong>{protoFile.name}</strong>? All requests that use this proto file
-          will stop working.
-        </span>
-      ),
-      addCancel: true,
-      onConfirm: async () => {
-        await models.protoFile.remove(protoFile);
+  _handleDeleteFile(protoFile: ProtoFile): Promise<void> {
+    return protoManager.deleteFile(protoFile, deletedId => {
+      // if the deleted protoFile was previously selected, clear the selection
+      if (this.state.selectedProtoFileId === deletedId) {
+        this.setState({ selectedProtoFileId: '' });
+      }
+    });
+  }
 
-        // if the deleted protoFile was previously selected, clear the selection
-        if (this.state.selectedProtoFileId === protoFile._id) {
-          this.setState({ selectedProtoFileId: '' });
-        }
-      },
+  _handleDeleteDirectory(protoDirectory: ProtoDirectory): Promise<void> {
+    return protoManager.deleteDirectory(protoDirectory, deletedIds => {
+      // if previously selected protoFile has been deleted, clear the selection
+      if (deletedIds.includes(this.state.selectedProtoFileId)) {
+        this.setState({ selectedProtoFileId: '' });
+      }
     });
   }
 
   _handleAdd(): Promise<void> {
-    return this._handleUpload();
+    return protoManager.addFile(this.props.workspace._id, createdId => {
+      this.setState({ selectedProtoFileId: createdId });
+    });
   }
 
-  async _handleUpload(protoFile?: ProtoFile): Promise<void> {
-    const { workspace, grpcDispatch } = this.props;
+  _handleUpload(protoFile: ProtoFile): Promise<void> {
+    const { grpcDispatch } = this.props;
 
-    try {
-      // Select file
-      const { filePath, canceled } = await selectFileOrFolder({
-        itemTypes: ['file'],
-        extensions: ['proto'],
-      });
-
-      // Exit if no file selected
-      if (canceled || !filePath) {
-        return;
-      }
-
-      // Read contents
-      const protoText = fs.readFileSync(filePath, 'utf-8');
-      const name = path.basename(filePath);
-
-      // Try parse proto file to make sure the file is valid
-      try {
-        await protoLoader.loadMethodsFromText(protoText);
-      } catch (e) {
-        showError({
-          title: 'Invalid Proto File',
-          message: `The file ${filePath} and could not be parsed`,
-          error: e,
-        });
-
-        return;
-      }
-
-      // Create or update a protoFile
-      if (protoFile) {
-        await models.protoFile.update(protoFile, { name, protoText });
-        const action = await grpcActions.invalidateMany(protoFile._id);
-
-        grpcDispatch(action);
-        sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
-      } else {
-        const newFile = await models.protoFile.create({ name, parentId: workspace._id, protoText });
-        this.setState({ selectedProtoFileId: newFile._id });
-      }
-    } catch (e) {
-      showError({ error: e });
-    }
+    return protoManager.updateFile(protoFile, async updatedId => {
+      const action = await grpcActions.invalidateMany(updatedId);
+      grpcDispatch(action);
+      sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
+    });
   }
 
-  async _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
-    await models.protoFile.update(protoFile, { name });
+  _handleAddDirectory(): Promise<void> {
+    return protoManager.addDirectory(this.props.workspace._id);
+  }
+
+  _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
+    return protoManager.renameFile(protoFile, name);
   }
 
   render() {
-    const { protoFiles } = this.props;
+    const { protoDirectories } = this.props;
     const { selectedProtoFileId } = this.state;
 
     return (
@@ -167,17 +131,26 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
         <ModalBody className="wide pad">
           <div className="row-spaced margin-bottom bold">
             Files
-            <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>
-              Add Proto File
-            </AsyncButton>
+            <span>
+              <AsyncButton
+                className="margin-right-sm"
+                onClick={this._handleAddDirectory}
+                loadingNode={spinner}>
+                Add Directory
+              </AsyncButton>
+              <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>
+                Add Proto File
+              </AsyncButton>
+            </span>
           </div>
           <ProtoFileList
-            protoFiles={protoFiles}
+            protoDirectories={protoDirectories}
             selectedId={selectedProtoFileId}
             handleSelect={this._handleSelect}
             handleUpdate={this._handleUpload}
-            handleDelete={this._handleDelete}
+            handleDelete={this._handleDeleteFile}
             handleRename={this._handleRename}
+            handleDeleteDirectory={this._handleDeleteDirectory}
           />
         </ModalBody>
         <ModalFooter>
@@ -192,4 +165,10 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
   }
 }
 
-export default ProtoFilesModal;
+const mapStateToProps = (state, props) => {
+  const protoDirectories = selectExpandedActiveProtoDirectories(state, props);
+
+  return { protoDirectories };
+};
+
+export default connect(mapStateToProps, null, null, { forwardRef: true })(ProtoFilesModal);

@@ -7,14 +7,12 @@ import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
 import { COLLAPSE_SIDEBAR_REMS, SIDEBAR_SKINNY_REMS } from '../../../common/constants';
 import SyncDropdown from '../dropdowns/sync-dropdown';
-import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
 import type { StatusCandidate } from '../../../sync/types';
 import { isLoggedIn } from '../../../account/session';
 
 type Props = {|
   activeEnvironment: Environment | null,
   children: React.Node,
-  enableSyncBeta: boolean,
   environmentHighlightColorStyle: string,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
@@ -35,7 +33,6 @@ class Sidebar extends React.PureComponent<Props> {
     const {
       activeEnvironment,
       children,
-      enableSyncBeta,
       environmentHighlightColorStyle,
       hidden,
       syncItems,
@@ -61,20 +58,12 @@ class Sidebar extends React.PureComponent<Props> {
         }}>
         {children}
 
-        {enableSyncBeta && vcs && isLoggedIn() && (
+        {vcs && isLoggedIn() && (
           <SyncDropdown
             className="sidebar__footer"
             workspace={workspace}
             vcs={vcs}
             syncItems={syncItems}
-          />
-        )}
-
-        {!enableSyncBeta && (
-          <SyncLegacyDropdown
-            className="sidebar__footer"
-            key={workspace._id}
-            workspace={workspace}
           />
         )}
       </aside>

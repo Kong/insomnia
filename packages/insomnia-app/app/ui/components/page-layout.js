@@ -74,7 +74,9 @@ class PageLayout extends React.PureComponent<Props, State> {
 
     const paneTwo = renderPaneTwo && renderPaneTwo();
 
-    const gridRows = `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
+    const gridRows = paneTwo
+      ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
+      : `auto 1fr`;
     const gridColumns =
       `auto ${realSidebarWidth}rem 0 ` +
       `${paneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
@@ -121,7 +123,6 @@ class PageLayout extends React.PureComponent<Props, State> {
               ref={handleSetSidebarRef}
               activeEnvironment={activeEnvironment}
               activeGitRepository={activeGitRepository}
-              enableSyncBeta={settings.enableSyncBeta}
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
