@@ -217,6 +217,7 @@
     "spectron": "^11.1.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
+    "val-loader": "^2.1.2",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",

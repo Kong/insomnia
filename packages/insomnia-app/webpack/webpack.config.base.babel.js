@@ -42,6 +42,14 @@ module.exports = {
         test: /\.(png|svg)$/,
         loader: 'url-loader',
       },
+      {
+        test: require.resolve('../app/network/ca-certs.js'),
+        use: [
+          {
+            loader: 'val-loader',
+          },
+        ],
+      },
     ],
   },
   resolve: {
