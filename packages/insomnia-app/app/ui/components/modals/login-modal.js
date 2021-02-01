@@ -5,7 +5,6 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import * as sync from '../../../sync-legacy';
 import * as session from '../../../account/session';
 
 @autobind
@@ -42,10 +41,6 @@ class LoginModal extends PureComponent {
 
     try {
       await session.login(email, password);
-
-      // Clear all existing sync data that might be there and enable sync
-      await sync.resetLocalData();
-      await sync.doInitialSync();
       this.hide();
     } catch (e) {
       this.setState({ error: e.message, loading: false });
@@ -68,7 +63,7 @@ class LoginModal extends PureComponent {
     return (
       <form onSubmit={this._handleLogin}>
         <Modal ref={this._setModalRef} {...this.props}>
-          <ModalHeader>{title || 'Login to Your Account'}</ModalHeader>
+          <ModalHeader>{title || 'Log Into Your Account'}</ModalHeader>
           <ModalBody className="pad">
             {message ? <p className="notice info">{message}</p> : null}
             <div className="form-control form-control--outlined no-pad-top">
@@ -97,11 +92,11 @@ class LoginModal extends PureComponent {
           </ModalBody>
           <ModalFooter>
             <div className="margin-left">
-              Don't have an account yet? <Link href="https://insomnia.rest/app/">Signup</Link>
+              Don't have an account yet? <Link href="https://insomnia.rest/app/">Sign Up</Link>
             </div>
             <button type="submit" className="btn">
               {loading ? <i className="fa fa-spin fa-refresh margin-right-sm" /> : null}
-              Login
+              Log In
             </button>
           </ModalFooter>
         </Modal>

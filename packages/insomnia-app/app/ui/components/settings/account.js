@@ -1,7 +1,6 @@
 // @flow
 import * as React from 'react';
 import autobind from 'autobind-decorator';
-import * as sync from '../../../sync-legacy/index';
 import Link from '../base/link';
 import LoginModal from '../modals/login-modal';
 import { hideAllModals, showModal } from '../modals/index';
@@ -81,7 +80,7 @@ class Account extends React.PureComponent<Props, State> {
   }
 
   async _handleLogout() {
-    await sync.logout();
+    await session.logout();
     this.forceUpdate();
   }
 
@@ -136,7 +135,7 @@ class Account extends React.PureComponent<Props, State> {
         <p>
           Or{' '}
           <a href="#" onClick={Account._handleLogin} className="theme--link">
-            Login
+            Log In
           </a>
         </p>
       </React.Fragment>

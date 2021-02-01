@@ -36,6 +36,7 @@
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
       "^worker-loader!": "<rootDir>/__mocks__/dummy.js"
     },
+    "modulePathIgnorePatterns": ["<rootDir>/network/.*/__mocks__"],
     "testMatch": [
       "**/__tests__/**/*.test.js?(x)"
     ],
@@ -51,6 +52,7 @@
       "!**/static/**",
       "!**/ui/components/**",
       "!**/__fixtures__/**",
+      "!**/__schemas__/**",
       "!**/__tests__/**",
       "!**/__jest__/**",
       "!**/__mocks__/**",
@@ -139,6 +141,7 @@
     "insomnia-url": "^2.2.24",
     "insomnia-xpath": "^2.2.24",
     "isomorphic-git": "^0.70.3",
+    "js-yaml": "^3.14.1",
     "jshint": "^2.11.1",
     "json-order": "^1.1.0",
     "jsonlint": "^1.6.3",
@@ -214,6 +217,7 @@
     "spectron": "^11.1.0",
     "style-loader": "^0.23.1",
     "url-loader": "^1.1.2",
+    "val-loader": "^2.1.2",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",
