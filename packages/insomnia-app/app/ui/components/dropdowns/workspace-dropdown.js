@@ -221,7 +221,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       submitName: 'Create',
       selectText: true,
       onComplete: async name => {
-        const workspace = await models.workspace.create({ name });
+        const workspace = await models.workspace.create({ name, scope: 'collection' });
         this.props.handleSetActiveWorkspace(workspace._id);
       },
     });

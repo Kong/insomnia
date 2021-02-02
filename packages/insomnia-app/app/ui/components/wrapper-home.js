@@ -83,7 +83,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onComplete: async name => {
         await models.workspace.create({
           name,
-          scope: 'spec',
+          scope: 'designer',
         });
 
         trackEvent('Workspace', 'Create');
@@ -354,7 +354,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     let label: string = 'Insomnia';
     let defaultActivity = ACTIVITY_DEBUG;
 
-    if (spec || w.scope === 'spec') {
+    if (spec || w.scope === 'designer') {
       label = '';
       if (specFormat === 'openapi') {
         label = `OpenAPI ${specFormatVersion}`;
