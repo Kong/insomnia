@@ -4,7 +4,7 @@ import * as git from 'isomorphic-git';
 import path from 'path';
 import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, ACTIVITY_HOME, ACTIVITY_SPEC } from '../../common/constants';
+import { AUTOBIND_CFG, ACTIVITY_HOME, ACTIVITY_SPEC, ACTIVITY_DEBUG } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
