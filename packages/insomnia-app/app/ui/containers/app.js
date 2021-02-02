@@ -4,11 +4,11 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
   ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
+  getAppName,
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
@@ -16,8 +16,6 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
-  getAppId,
-  getAppName,
 } from '../../common/constants';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
@@ -66,9 +64,9 @@ import RequestRenderErrorModal from '../components/modals/request-render-error-m
 import * as network from '../../network/network';
 import {
   debounce,
+  generateId,
   getContentDispositionHeader,
   getDataDirectory,
-  generateId,
 } from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
@@ -82,6 +80,7 @@ import KeydownBinder from '../components/keydown-binder';
 import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
@@ -95,8 +94,6 @@ import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import AppContext from '../../common/strings';
-import { APP_ID_INSOMNIA } from '../../../config';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
@@ -982,12 +979,6 @@ class App extends PureComponent {
     console.log('[plugins] reloaded');
   }
 
-  _handleToggleInsomniaActivity() {
-    const { activity, handleSetActiveActivity } = this.props;
-
-    handleSetActiveActivity(activity === ACTIVITY_INSOMNIA ? ACTIVITY_HOME : ACTIVITY_INSOMNIA);
-  }
-
   /**
    * Update document.title to be "Workspace (Environment) – Request" when not home
    * @private
@@ -1006,7 +997,8 @@ class App extends PureComponent {
     if (activity === ACTIVITY_HOME) {
       title = getAppName();
     } else {
-      title = getAppId() === APP_ID_INSOMNIA ? activeWorkspace.name : activeApiSpec.fileName;
+      title =
+        activeWorkspace.scope === 'collection' ? activeWorkspace.name : activeApiSpec.fileName;
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }
@@ -1187,8 +1179,6 @@ class App extends PureComponent {
     });
 
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
-
-    ipcRenderer.on('toggle-insomnia', this._handleToggleInsomniaActivity);
 
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);

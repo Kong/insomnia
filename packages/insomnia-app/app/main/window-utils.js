@@ -7,7 +7,6 @@ import {
   changelogUrl,
   getAppLongName,
   getAppName,
-  getDefaultAppId,
   getAppReleaseDate,
   getAppVersion,
   isDevelopment,
@@ -15,7 +14,6 @@ import {
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
-import { APP_ID_INSOMNIA } from '../../config';
 import * as misc from '../common/misc';
 import * as log from '../common/log';
 import * as os from 'os';
@@ -45,10 +43,7 @@ export function createWindow() {
   const zoomFactor = getZoomFactor();
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
-  const appLogo =
-    getDefaultAppId() === APP_ID_INSOMNIA
-      ? 'static/insomnia-core-logo_16x.png'
-      : 'static/insomnia-designer-logo_16x.png';
+  const appLogo = 'static/insomnia-core-logo_16x.png';
 
   let isVisibleOnAnyDisplay = true;
   for (const d of electron.screen.getAllDisplays()) {
@@ -376,17 +371,6 @@ export function createWindow() {
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
           });
-        },
-      },
-      {
-        label: `${MNEMONIC_SYM}Toggle Insomnia`,
-        click: () => {
-          const w = BrowserWindow.getFocusedWindow();
-          if (!w || !w.webContents) {
-            return;
-          }
-
-          w.webContents.send('toggle-insomnia');
         },
       },
     ],

@@ -16,7 +16,7 @@ import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
-import imgSrcDesigner from '../images/insomnia-designer-logo.png';
+import coreLogo from '../images/insomnia-core-logo.png';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 
@@ -180,7 +180,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         <div className="onboarding__background theme--sidebar" />
         <div className="onboarding__content theme--dialog">
           <div className="img-container">
-            <img src={imgSrcDesigner} alt="Kong" />
+            <img src={coreLogo} alt="Kong" />
           </div>
           <header className="onboarding__content__header">
             <h1>Welcome to {getAppLongName()}</h1>

@@ -18,7 +18,6 @@ import {
   AUTOBIND_CFG,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   getAppName,
@@ -90,7 +89,6 @@ import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestResult } from '../../models/unit-test-result';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { GlobalActivity } from '../../common/constants';
-
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
@@ -689,7 +687,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleImportUri={this._handleImportUri}
               handleToggleMenuBar={handleToggleMenuBar}
               settings={settings}
-              activity={activity}
             />
 
             <ResponseDebugModal ref={registerModal} settings={settings} />
@@ -821,7 +818,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
           )}
 
-          {(activity === ACTIVITY_DEBUG || activity === ACTIVITY_INSOMNIA) && (
+          {activity === ACTIVITY_DEBUG && (
             <WrapperDebug
               forceRefreshKey={this.state.forceRefreshKey}
               gitSyncDropdown={gitSyncDropdown}

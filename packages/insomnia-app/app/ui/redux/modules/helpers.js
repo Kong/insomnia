@@ -1,9 +1,6 @@
 // @flow
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
-import type { GlobalActivity } from '../../../common/constants';
-import { ACTIVITY_HOME, ACTIVITY_INSOMNIA, getDefaultAppId } from '../../../common/constants';
-import { APP_ID_INSOMNIA } from '../../../../config';
 
 export const ForceToWorkspaceKeys = {
   new: 'new',
@@ -33,20 +30,4 @@ export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?:
         });
     }
   };
-}
-
-// If app should be insomnia
-//   then don't allow changing to another activity
-// If not insomnia
-//   then don't allow changing to ACTIVITY_INSOMNIA
-export function ensureActivityIsForApp(activity: GlobalActivity): GlobalActivity {
-  if (getDefaultAppId() === APP_ID_INSOMNIA) {
-    return ACTIVITY_INSOMNIA;
-  }
-
-  if (activity === ACTIVITY_INSOMNIA) {
-    return ACTIVITY_HOME;
-  }
-
-  return activity;
 }

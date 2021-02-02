@@ -77,7 +77,7 @@ const GrpcRequestPane = ({
     <Pane type="request">
       <PaneHeader>
         <StyledUrlBar>
-          <div className="method-grpc pad">gRPC</div>
+          <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
           <StyledUrlEditor title={activeRequest.url}>
             <OneLineEditor
               key={uniquenessKey}

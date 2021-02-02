@@ -4,7 +4,7 @@ import * as git from 'isomorphic-git';
 import path from 'path';
 import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_SPEC } from '../../common/constants';
+import { AUTOBIND_CFG, ACTIVITY_HOME, ACTIVITY_SPEC, ACTIVITY_DEBUG } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
@@ -37,7 +37,7 @@ import GitRepositorySettingsModal from '../components/modals/git-repository-sett
 import PageLayout from './page-layout';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
-import designerLogo from '../images/insomnia-designer-logo.svg';
+import coreLogo from '../images/insomnia-core-logo.png';
 import { MemPlugin } from '../../sync/git/mem-plugin';
 import {
   GIT_CLONE_DIR,
@@ -46,6 +46,7 @@ import {
   GIT_INTERNAL_DIR,
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
+import strings from '../../common/strings';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -271,7 +272,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleSetActiveWorkspace(id: string, defaultActivity: GlobalActivity) {
+  async _handleClickCard(id: string, defaultActivity: GlobalActivity) {
     const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
 
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
@@ -353,6 +354,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const version = spec?.info?.version || '';
     let label: string = 'Insomnia';
     let defaultActivity = ACTIVITY_DEBUG;
+    let title = w.name;
 
     if (spec || w.scope === 'designer') {
       label = '';
@@ -364,10 +366,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
       }
 
       defaultActivity = ACTIVITY_SPEC;
+      title = apiSpec.fileName || title;
     }
 
     // Filter the card by multiple different properties
-    const matchResults = fuzzyMatchAll(filter, [apiSpec.fileName, label, branch, version], {
+    const matchResults = fuzzyMatchAll(filter, [title, label, branch, version], {
       splitSpace: true,
       loose: true,
     });
@@ -381,12 +384,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <Card
         key={apiSpec._id}
         docBranch={branch && <Highlight search={filter} text={branch} />}
-        docTitle={apiSpec.fileName && <Highlight search={filter} text={apiSpec.fileName} />}
+        docTitle={title && <Highlight search={filter} text={title} />}
         docVersion={version && <Highlight search={filter} text={version} />}
         tagLabel={label && <Highlight search={filter} text={label} />}
         docLog={log}
         docMenu={docMenu}
-        onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
+        onClick={() => this._handleClickCard(w._id, defaultActivity)}
       />
     );
   }
@@ -437,8 +440,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
             className="app-header"
             gridLeft={
               <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb className="breadcrumb" crumbs={['Documents']} />
+                <img src={coreLogo} alt="Insomnia" width="32" height="32" />
+                <Breadcrumb className="breadcrumb" crumbs={[strings.home]} />
               </React.Fragment>
             }
             gridCenter={

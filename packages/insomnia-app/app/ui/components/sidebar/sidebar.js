@@ -10,9 +10,6 @@ import {
   SIDEBAR_SKINNY_REMS,
   AUTOBIND_CFG,
 } from '../../../common/constants';
-import SyncDropdown from '../dropdowns/sync-dropdown';
-import type { StatusCandidate } from '../../../sync/types';
-import { isLoggedIn } from '../../../account/session';
 
 type Props = {|
   activeEnvironment: Environment | null,
@@ -24,10 +21,8 @@ type Props = {|
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
   showEnvironmentsModal: Function,
-  syncItems: Array<StatusCandidate>,
   unseenWorkspaces: Array<Workspace>,
   width: number,
-  workspace: Workspace,
   workspaces: Array<Workspace>,
 |};
 
@@ -39,10 +34,7 @@ class Sidebar extends React.PureComponent<Props> {
       children,
       environmentHighlightColorStyle,
       hidden,
-      syncItems,
-      vcs,
       width,
-      workspace,
     } = this.props;
 
     return (
@@ -61,15 +53,6 @@ class Sidebar extends React.PureComponent<Props> {
               : null,
         }}>
         {children}
-
-        {vcs && isLoggedIn() && (
-          <SyncDropdown
-            className="sidebar__footer"
-            workspace={workspace}
-            vcs={vcs}
-            syncItems={syncItems}
-          />
-        )}
       </aside>
     );
   }
