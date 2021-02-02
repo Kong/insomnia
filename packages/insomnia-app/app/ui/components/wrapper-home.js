@@ -439,7 +439,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             gridLeft={
               <React.Fragment>
                 <img src={coreLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb className="breadcrumb" crumbs={[strings.workspaces]} />
+                <Breadcrumb className="breadcrumb" crumbs={[strings.home]} />
               </React.Fragment>
             }
             gridCenter={

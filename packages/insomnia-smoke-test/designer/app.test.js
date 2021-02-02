@@ -5,7 +5,7 @@ import * as settings from '../modules/settings';
 import * as modal from '../modules/modal';
 import * as dropdown from '../modules/dropdown';
 
-import { isPackage, launchDesigner, stop } from '../modules/application';
+import { isPackage, launchCore, stop } from '../modules/application';
 
 const itIf = condition => (condition ? it : it.skip);
 it.if = itIf;
@@ -15,7 +15,7 @@ describe('Application launch', function() {
   let app = null;
 
   beforeEach(async () => {
-    app = await launchDesigner();
+    app = await launchCore();
   });
 
   afterEach(async () => {
