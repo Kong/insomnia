@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import Button from './base/button';
