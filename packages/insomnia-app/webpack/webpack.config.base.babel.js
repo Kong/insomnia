@@ -74,7 +74,6 @@ module.exports = {
   plugins: [
     new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
     new webpack.DefinePlugin({
-      'process.env.APP_ID': JSON.stringify(APP_ID_INSOMNIA),
       'process.env.RELEASE_DATE': JSON.stringify(new Date()),
     }),
   ],

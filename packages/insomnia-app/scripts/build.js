@@ -8,7 +8,6 @@ const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 const { getBuildContext } = require('./getBuildContext');
-const { APP_ID_INSOMNIA } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -23,14 +22,6 @@ module.exports.start = async function(forceFromGitRef) {
     console.log(`[build] Skipping build for ref "${buildContext.gitRef}"`);
     process.exit(0);
   }
-
-  if (process.env.APP_ID) {
-    console.log('Should not set APP_ID for builds. Use Git tag instead');
-    process.exit(1);
-  }
-
-  // Configure APP_ID env based on what we detected
-  process.env.APP_ID = APP_ID_INSOMNIA;
 
   if (!buildContext.smokeTest && appConfig().version !== buildContext.version) {
     console.log(

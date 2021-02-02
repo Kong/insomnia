@@ -27,10 +27,6 @@ export function getAppSynopsis() {
   return appConfig().synopsis;
 }
 
-export function getDefaultAppId() {
-  return process.env.APP_ID;
-}
-
 export function getAppId() {
   return appConfig().appId;
 }
