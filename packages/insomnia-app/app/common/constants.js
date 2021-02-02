@@ -111,6 +111,13 @@ export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
 export const PLUGIN_PATH = path.join(getDataDirectory(), 'plugins');
+export const AUTOBIND_CFG = {
+  methodsToIgnore: [
+    'UNSAFE_componentWillMount',
+    'UNSAFE_componentWillReceiveProps',
+    'UNSAFE_componentWillUpdate',
+  ],
+};
 
 // Available editor key maps
 export const EDITOR_KEY_MAP_DEFAULT = 'default';
