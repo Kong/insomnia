@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -20,7 +21,7 @@ type State = {
   selectedWorkspaceId: string | null,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class MoveRequestGroupModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 

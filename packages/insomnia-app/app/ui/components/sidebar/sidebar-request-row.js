@@ -11,15 +11,13 @@ import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
-import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
+import { CONTENT_TYPE_GRAPHQL, AUTOBIND_CFG } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import GrpcSpinner from '../grpc-spinner';
 
-@autoBindMethodsForReact({
-  methodsToIgnore: ['UNSAFE_componentWillUpdate'],
-})
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarRequestRow extends PureComponent {
   constructor(props) {
     super(props);

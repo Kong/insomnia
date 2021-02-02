@@ -2,6 +2,7 @@
 import YAML from 'yaml';
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import path from 'path';
 import * as models from '../../../models';
 import Modal from '../base/modal';
@@ -48,7 +49,7 @@ const INITIAL_STATE: State = {
   items: {},
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GitStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   statusNames: { [string]: string };

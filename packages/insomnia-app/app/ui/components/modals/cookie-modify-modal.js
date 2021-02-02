@@ -2,10 +2,11 @@
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
+
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -29,7 +30,7 @@ type State = {
   rawValue: string,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CookieModifyModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
   _rawTimeout: TimeoutID;

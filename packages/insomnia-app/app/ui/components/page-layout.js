@@ -5,7 +5,7 @@ import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
-import { isInsomnia } from '../../common/constants';
+import { isInsomnia, AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {
   wrapperProps: WrapperProps,
@@ -20,7 +20,7 @@ type Props = {
 
 type State = {};
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class PageLayout extends React.PureComponent<Props, State> {
   // Special request updaters
   _handleStartDragSidebar(e: Event): void {

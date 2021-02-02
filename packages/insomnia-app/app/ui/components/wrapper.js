@@ -14,6 +14,7 @@ import type {
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
@@ -216,7 +217,7 @@ const rUpdate = (request, ...args) => {
 
 const sUpdate = models.settings.update;
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Wrapper extends React.PureComponent<WrapperProps, State> {
   constructor(props: any) {
     super(props);

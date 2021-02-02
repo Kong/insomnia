@@ -5,6 +5,7 @@ import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
 import Modal from '../base/modal';
 import ProtoFileList from '../proto-file/proto-file-list';
@@ -39,7 +40,7 @@ const INITIAL_STATE: State = {
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ProtoFilesModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
   onSave: (string => Promise<void>) | null;

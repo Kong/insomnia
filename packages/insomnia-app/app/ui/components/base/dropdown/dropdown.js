@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import classnames from 'classnames';
 import DropdownButton from './dropdown-button';
 import DropdownItem from './dropdown-item';
@@ -13,7 +14,7 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Dropdown extends PureComponent {
   constructor(props) {
     super(props);

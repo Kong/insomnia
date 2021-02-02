@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { remote } from 'electron';
-import { DEBOUNCE_MILLIS, isMac } from '../../common/constants';
+import { DEBOUNCE_MILLIS, AUTOBIND_CFG, isMac } from '../../common/constants';
 import {
   Dropdown,
   DropdownButton,
@@ -44,9 +44,7 @@ type State = {
   currentTimeout: number | null,
 };
 
-@autoBindMethodsForReact({
-  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
-})
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestUrlBar extends React.PureComponent<Props, State> {
   _urlChangeDebounceTimeout: TimeoutID;
   _sendTimeout: TimeoutID;

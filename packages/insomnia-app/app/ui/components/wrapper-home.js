@@ -4,6 +4,7 @@ import * as git from 'isomorphic-git';
 import path from 'path';
 import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
@@ -57,7 +58,7 @@ type State = {|
   filter: string,
 |};
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperHome extends React.PureComponent<Props, State> {
   state = {
     filter: '',

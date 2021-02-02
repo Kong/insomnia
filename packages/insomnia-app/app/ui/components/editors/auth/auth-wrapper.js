@@ -12,6 +12,7 @@ import {
   AUTH_HAWK,
   AUTH_NETRC,
   AUTH_ASAP,
+  AUTOBIND_CFG,
 } from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
@@ -42,7 +43,7 @@ type Props = {
   oAuth2Token: ?OAuth2Token,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class AuthWrapper extends React.PureComponent<Props> {
   renderEditor() {
     const {

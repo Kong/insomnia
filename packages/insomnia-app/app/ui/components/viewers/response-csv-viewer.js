@@ -2,6 +2,7 @@
 import * as React from 'react';
 import Papa from 'papaparse';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 
 type Props = {
   body: Buffer,
@@ -11,9 +12,7 @@ type State = {
   result: null | { data: Array<Array<string>> },
 };
 
-@autoBindMethodsForReact({
-  methodsToIgnore: ['UNSAFE_componentWillUpdate'],
-})
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseCSVViewer extends React.PureComponent<Props, State> {
   currentHash: string;
 

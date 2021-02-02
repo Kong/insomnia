@@ -7,6 +7,7 @@ import classnames from 'classnames';
 import Link from './base/link';
 import * as models from '../../models/index';
 import {
+  AUTOBIND_CFG,
   getAppName,
   getAppPlatform,
   getAppId,
@@ -65,7 +66,7 @@ const StyledFooter: React.ComponentType<{}> = styled.footer`
   width: 100%;
 `;
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Toast extends React.PureComponent<Props, State> {
   _interval: any;
 

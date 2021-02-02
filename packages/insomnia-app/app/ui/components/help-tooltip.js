@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Tooltip from './tooltip';
+import { AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {
   children: React.Node,
@@ -13,7 +14,7 @@ type Props = {
   info?: boolean,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class HelpTooltip extends React.PureComponent<Props> {
   render() {
     const { children, className, style, info } = this.props;

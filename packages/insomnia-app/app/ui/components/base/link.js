@@ -2,6 +2,7 @@
 import classnames from 'classnames';
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import * as misc from '../../../common/misc';
 
 type Props = {|
@@ -15,7 +16,7 @@ type Props = {|
   noTheme?: boolean,
 |};
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Link extends React.PureComponent<Props> {
   _handleClick(e: SyntheticEvent<HTMLAnchorElement>) {
     e && e.preventDefault();

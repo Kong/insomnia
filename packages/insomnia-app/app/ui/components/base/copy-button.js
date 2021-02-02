@@ -2,9 +2,10 @@ import React, { PureComponent } from 'react';
 import { clipboard } from 'electron';
 import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Button } from 'insomnia-components';
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CopyButton extends PureComponent {
   constructor(props) {
     super(props);

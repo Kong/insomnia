@@ -1,6 +1,7 @@
 // @flow
 import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Hotkey from '../hotkey';
 import type { HotKeyDefinition, HotKeyRegistry, KeyCombination } from '../../../common/hotkeys';
 import {
@@ -24,7 +25,7 @@ type Props = {
 
 const HOT_KEY_DEFS: Array<HotKeyDefinition> = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Shortcuts extends PureComponent<Props> {
   /**
    * Checks whether the given key combination already existed.

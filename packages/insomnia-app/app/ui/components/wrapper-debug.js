@@ -12,7 +12,7 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import designerLogo from '../images/insomnia-designer-logo.svg';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
-import { ACTIVITY_HOME, isInsomnia } from '../../common/constants';
+import { ACTIVITY_HOME, AUTOBIND_CFG, isInsomnia } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 import { isGrpcRequest } from '../../models/helpers/is-model';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
@@ -51,7 +51,7 @@ type Props = {
   wrapperProps: WrapperProps,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperDebug extends React.PureComponent<Props> {
   _handleBreadcrumb() {
     this.props.wrapperProps.handleSetActiveActivity(ACTIVITY_HOME);

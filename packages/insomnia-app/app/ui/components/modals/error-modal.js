@@ -2,6 +2,7 @@
 
 import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -14,7 +15,7 @@ export type ErrorModalOptions = {|
   message?: string,
 |};
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
   constructor(props) {
     super(props);

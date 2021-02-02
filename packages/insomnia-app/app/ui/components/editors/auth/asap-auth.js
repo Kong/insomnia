@@ -9,6 +9,7 @@ import { showModal } from '../../modals';
 import CodePromptModal from '../../modals/code-prompt-modal';
 import Button from '../../base/button';
 import type { Request, RequestAuthentication } from '../../../../models/request';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 
 type Props = {
   request: Request,
@@ -32,7 +33,7 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 -----END RSA PRIVATE KEY-----
 `.trim();
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class AsapAuth extends React.PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;

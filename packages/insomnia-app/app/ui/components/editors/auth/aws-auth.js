@@ -7,6 +7,7 @@ import Button from '../../base/button';
 import HelpTooltip from '../../help-tooltip';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 
 type Props = {
   request: Request,
@@ -19,7 +20,7 @@ type Props = {
   handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class AWSAuth extends React.PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;

@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
 
 const DISMISSED_VALUE = 'dismissed';
@@ -17,7 +18,7 @@ type State = {
   localStorageKey: string | null,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Notice extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);

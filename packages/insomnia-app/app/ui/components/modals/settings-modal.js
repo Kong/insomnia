@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, getAppName, getAppVersion, isInsomnia } from '../../../common/constants';
 import Modal from '../base/modal';
 import Button from '../base/button';
 import ModalBody from '../base/modal-body';
@@ -13,7 +14,7 @@ import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import { Curl } from 'node-libcurl';
-import { getAppName, getAppVersion, isInsomnia } from '../../../common/constants';
+
 import Tooltip from '../tooltip';
 import { setTheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
@@ -24,7 +25,7 @@ export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SettingsModal extends PureComponent {
   constructor(props) {
     super(props);

@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
 import { parse as urlParse } from 'url';
@@ -101,9 +102,7 @@ import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
 import withDragDropContext from '../context/app/drag-drop-context';
 
-@autoBindMethodsForReact({
-  methodsToIgnore: ['UNSAFE_componentWillMount', 'UNSAFE_componentWillReceiveProps'],
-})
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
   constructor(props) {
     super(props);

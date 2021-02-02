@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import clone from 'clone';
 import * as templating from '../../../templating';
@@ -46,9 +47,7 @@ type State = {
   variables: Array<{ name: string, value: string }>,
 };
 
-@autoBindMethodsForReact({
-  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
-})
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class TagEditor extends React.PureComponent<Props, State> {
   _select: ?HTMLSelectElement;
 

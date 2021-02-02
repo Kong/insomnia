@@ -2,6 +2,7 @@
 import * as React from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -26,7 +27,7 @@ type State = {
   remoteBranches: Array<string>,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncBranchesModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 

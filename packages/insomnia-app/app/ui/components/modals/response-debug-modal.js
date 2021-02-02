@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import ResponseTimelineViewer from '../../components/viewers/response-timeline-viewer';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -18,7 +19,7 @@ type State = {|
   title: string | null,
 |};
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseDebugModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 

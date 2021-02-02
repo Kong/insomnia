@@ -12,6 +12,7 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
+  AUTOBIND_CFG,
   getContentTypeFromHeaders,
 } from '../../../../common/constants';
 import type {
@@ -47,7 +48,7 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class BodyEditor extends React.PureComponent<Props> {
   _handleRawChange(rawValue: string) {
     const { onChange, request } = this.props;

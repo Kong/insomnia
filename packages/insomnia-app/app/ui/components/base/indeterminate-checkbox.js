@@ -1,13 +1,14 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 
 type Props = {
   indeterminate: boolean,
   checked: boolean,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class IndeterminateCheckbox extends React.PureComponent<Props> {
   input: ?HTMLInputElement;
 

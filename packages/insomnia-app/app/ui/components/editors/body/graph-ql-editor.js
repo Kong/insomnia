@@ -12,7 +12,7 @@ import type { CodeMirror, TextMarker } from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
-import { CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
+import { CONTENT_TYPE_JSON, DEBOUNCE_MILLIS, AUTOBIND_CFG } from '../../../../common/constants';
 import prettify from 'insomnia-prettify';
 import type { ResponsePatch } from '../../../../network/network';
 import * as network from '../../../../network/network';
@@ -75,9 +75,7 @@ type State = {
   },
 };
 
-@autoBindMethodsForReact({
-  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
-})
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _disabledOperationMarkers: Array<TextMarker>;
   _documentAST: null | Object;

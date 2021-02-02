@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
+import { AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {
   children: React.Node,
@@ -14,7 +15,7 @@ type State = {
   updateAvailable: boolean,
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CheckForUpdatesButton extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);

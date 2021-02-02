@@ -2,6 +2,7 @@
 import React, { PureComponent } from 'react';
 import deepEqual from 'deep-equal';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -24,9 +25,7 @@ type State = {
   visibleCookieIndexes: Array<number> | null,
 };
 
-@autoBindMethodsForReact({
-  methodsToIgnore: ['UNSAFE_componentWillReceiveProps'],
-})
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CookiesModal extends PureComponent<Props, State> {
   modal: Modal | null;
   filterInput: HTMLInputElement | null;

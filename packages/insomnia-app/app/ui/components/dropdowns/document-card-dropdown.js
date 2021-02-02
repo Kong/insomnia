@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, getAppName } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import type { DocumentAction } from '../../../plugins';
@@ -14,7 +15,6 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
 import type { Workspace } from '../../../models/workspace';
-import { getAppName } from '../../../common/constants';
 
 type Props = {
   apiSpec: ?ApiSpec,
@@ -30,7 +30,7 @@ type State = {
   loadingActions: { [string]: boolean },
 };
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class DocumentCardDropdown extends React.PureComponent<Props, State> {
   state = {
     actionPlugins: [],

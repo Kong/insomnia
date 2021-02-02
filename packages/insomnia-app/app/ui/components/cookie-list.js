@@ -8,6 +8,7 @@ import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
 import type { Cookie } from '../../models/cookie-jar';
 import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
+import { AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {
   handleCookieAdd: Function,
@@ -23,7 +24,7 @@ type Props = {
 // https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
 const MAX_TIME = 2147483647000;
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CookieList extends React.PureComponent<Props> {
   _handleCookieAdd() {
     const newCookie: Cookie = {

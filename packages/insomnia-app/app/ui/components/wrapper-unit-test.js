@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
@@ -43,7 +44,7 @@ type State = {|
   resultsError: string | null,
 |};
 
-@autoBindMethodsForReact
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,
