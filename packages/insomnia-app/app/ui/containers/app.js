@@ -1,20 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
-import fs from 'fs';
-import { clipboard, ipcRenderer, remote } from 'electron';
-import { parse as urlParse } from 'url';
-import HTTPSnippet from 'httpsnippet';
-import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import Wrapper from '../components/wrapper';
-import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
-import Toast from '../components/toast';
-import CookiesModal from '../components/modals/cookies-modal';
-import RequestSwitcherModal from '../components/modals/request-switcher-modal';
-import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  AUTOBIND_CFG,
   ACTIVITY_HOME,
   ACTIVITY_INSOMNIA,
   COLLAPSE_SIDEBAR_REMS,
@@ -31,6 +19,20 @@ import {
   getAppId,
   getAppName,
 } from '../../common/constants';
+import fs from 'fs';
+import { clipboard, ipcRenderer, remote } from 'electron';
+import { parse as urlParse } from 'url';
+import HTTPSnippet from 'httpsnippet';
+import ReactDOM from 'react-dom';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import Wrapper from '../components/wrapper';
+import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
+import Toast from '../components/toast';
+import CookiesModal from '../components/modals/cookies-modal';
+import RequestSwitcherModal from '../components/modals/request-switcher-modal';
+import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
 import * as db from '../../common/database';
@@ -99,8 +101,9 @@ import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/hel
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
+import withDragDropContext from '../context/app/drag-drop-context';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
   constructor(props) {
     super(props);
@@ -1626,4 +1629,4 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(withDragDropContext(App));

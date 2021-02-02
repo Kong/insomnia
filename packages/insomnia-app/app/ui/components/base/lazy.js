@@ -1,8 +1,9 @@
 import { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Lazy extends PureComponent {
   constructor(props) {
     super(props);

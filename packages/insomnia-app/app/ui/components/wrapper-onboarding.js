@@ -1,11 +1,17 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { ACTIVITY_HOME, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
+import {
+  AUTOBIND_CFG,
+  ACTIVITY_HOME,
+  getAppLongName,
+  getAppName,
+  getAppSynopsis,
+} from '../../common/constants';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import * as db from '../../common/database';
@@ -24,7 +30,7 @@ type State = {|
   step: number,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperOnboarding extends React.PureComponent<Props, State> {
   state = {
     step: 1,

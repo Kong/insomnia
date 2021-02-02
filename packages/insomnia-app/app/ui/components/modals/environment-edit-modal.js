@@ -1,13 +1,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import EnvironmentEditor from '../editors/environment-editor';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class EnvironmentEditModal extends PureComponent {
   constructor(props) {
     super(props);

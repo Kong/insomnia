@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import { Breadcrumb, Button, Header, NoticeTable } from 'insomnia-components';
@@ -19,7 +19,7 @@ import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
 import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_HOME } from '../../common/constants';
+import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import ActivityToggle from './activity-toggle';
 
 const spectral = new Spectral();
@@ -41,7 +41,7 @@ type State = {|
   }>,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperDesign extends React.PureComponent<Props, State> {
   editor: ?CodeEditor;
   debounceTimeout: IntervalID;

@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../common/constants';
 import moment from 'moment';
 
 type Props = {
@@ -14,7 +15,7 @@ type State = {
   text: string,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class TimeFromNow extends React.PureComponent<Props, State> {
   _interval: any;
 

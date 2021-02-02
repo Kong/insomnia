@@ -1,11 +1,15 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
-import { COLLAPSE_SIDEBAR_REMS, SIDEBAR_SKINNY_REMS } from '../../../common/constants';
+import {
+  COLLAPSE_SIDEBAR_REMS,
+  SIDEBAR_SKINNY_REMS,
+  AUTOBIND_CFG,
+} from '../../../common/constants';
 import SyncDropdown from '../dropdowns/sync-dropdown';
 import type { StatusCandidate } from '../../../sync/types';
 import { isLoggedIn } from '../../../account/session';
@@ -27,7 +31,7 @@ type Props = {|
   workspaces: Array<Workspace>,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Sidebar extends React.PureComponent<Props> {
   render() {
     const {

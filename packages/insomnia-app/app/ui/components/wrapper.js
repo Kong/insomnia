@@ -13,7 +13,17 @@ import type {
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_INSOMNIA,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  getAppName,
+  SortOrder,
+} from '../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
@@ -80,15 +90,7 @@ import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestResult } from '../../models/unit-test-result';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { GlobalActivity } from '../../common/constants';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-  getAppName,
-  SortOrder,
-} from '../../common/constants';
+
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
@@ -216,7 +218,7 @@ const rUpdate = (request, ...args) => {
 
 const sUpdate = models.settings.update;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Wrapper extends React.PureComponent<WrapperProps, State> {
   constructor(props: any) {
     super(props);

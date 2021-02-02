@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
@@ -40,7 +41,7 @@ type State = {|
   branches: Array<string>,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GitSyncDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 

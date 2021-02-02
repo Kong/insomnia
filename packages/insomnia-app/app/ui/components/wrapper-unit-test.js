@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, ACTIVITY_HOME } from '../../common/constants';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
@@ -29,7 +30,6 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import ActivityToggle from './activity-toggle';
 import { getSendRequestCallback } from '../../common/send-request';
 import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_HOME } from '../../common/constants';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -43,7 +43,7 @@ type State = {|
   resultsError: string | null,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,

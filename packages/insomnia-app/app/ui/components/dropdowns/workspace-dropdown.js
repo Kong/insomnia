@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -9,7 +10,7 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
-import { getAppName, getAppVersion } from '../../../common/constants';
+
 import { showAlert, showError, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
@@ -55,7 +56,7 @@ type State = {
   remoteProjects: Array<Project>,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WorkspaceDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 
