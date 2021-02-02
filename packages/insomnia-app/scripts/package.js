@@ -1,5 +1,5 @@
 const { appConfig } = require('../config');
-const electronBuilderConfig = require('./electronbuilder.json');
+const electronBuilderConfig = require('../config/electronbuilder.json');
 const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
