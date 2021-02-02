@@ -354,6 +354,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const version = spec?.info?.version || '';
     let label: string = 'Insomnia';
     let defaultActivity = ACTIVITY_DEBUG;
+    let title = w.name;
 
     if (spec || w.scope === 'designer') {
       label = '';
@@ -365,10 +366,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
       }
 
       defaultActivity = ACTIVITY_SPEC;
+      title = apiSpec.fileName || title;
     }
 
     // Filter the card by multiple different properties
-    const matchResults = fuzzyMatchAll(filter, [apiSpec.fileName, label, branch, version], {
+    const matchResults = fuzzyMatchAll(filter, [title, label, branch, version], {
       splitSpace: true,
       loose: true,
     });
@@ -382,7 +384,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <Card
         key={apiSpec._id}
         docBranch={branch && <Highlight search={filter} text={branch} />}
-        docTitle={apiSpec.fileName && <Highlight search={filter} text={apiSpec.fileName} />}
+        docTitle={title && <Highlight search={filter} text={title} />}
         docVersion={version && <Highlight search={filter} text={version} />}
         tagLabel={label && <Highlight search={filter} text={label} />}
         docLog={log}

@@ -286,8 +286,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           onOpen={this._handleDropdownOpen}
           onHide={this._handleDropdownHide}
           {...(other: Object)}>
-          <DropdownButton>
-            {displayName}
+          <DropdownButton className="row">
+            <div className="ellipsis" style={{ maxWidth: '400px' }} title={displayName}>
+              {displayName}
+            </div>
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
