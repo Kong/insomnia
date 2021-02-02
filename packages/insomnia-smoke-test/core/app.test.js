@@ -1,6 +1,6 @@
 import * as debug from '../modules/debug';
 import * as client from '../modules/client';
-import { launchCore, stop } from '../modules/application';
+import { launchApp, stop } from '../modules/application';
 import * as dropdown from '../modules/dropdown';
 import * as settings from '../modules/settings';
 import fs from 'fs';
@@ -11,7 +11,7 @@ describe('Application launch', function() {
   let app = null;
 
   beforeEach(async () => {
-    app = await launchCore();
+    app = await launchApp();
   });
 
   afterEach(async () => {
