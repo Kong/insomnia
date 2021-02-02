@@ -61,7 +61,7 @@ const WorkspacePageHeader = ({
           <img src={coreLogo} alt="Insomnia" width="32" height="32" />
           <Breadcrumb
             className="breadcrumb"
-            crumbs={[strings.workspaces, workspace]}
+            crumbs={[strings.home, workspace]}
             onClick={homeCallback}
           />
         </React.Fragment>
