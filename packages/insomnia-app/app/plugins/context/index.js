@@ -6,7 +6,7 @@ import * as _request from './request';
 import * as _response from './response';
 import * as _store from './store';
 
-export { PluginStore } from './store';
+export type { PluginStore } from './store';
 
 export const app = _app;
 export const data = _data;
