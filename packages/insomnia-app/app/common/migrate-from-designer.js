@@ -9,6 +9,8 @@ import * as db from './database';
 import { getModelName } from '../models';
 import { difference } from 'lodash';
 import { showAlert } from '../ui/components/modals';
+import type { Workspace } from '../models/workspace';
+import type { Settings } from '../models/settings';
 
 function getDesignerDBFilePath(modelType: string): string {
   // fetch using env-paths
@@ -21,7 +23,7 @@ async function loadDesignerDb(types: Array<string>): Promise<Object> {
   const designerDb = {};
 
   types.forEach(type => {
-    designerDb[type] = []; // initialize to empty array
+    designerDb[type] = []; // initialize each type to empty array
   });
 
   const promises = types.map(
@@ -60,22 +62,51 @@ async function loadDesignerDb(types: Array<string>): Promise<Object> {
 
 type DBType = { [string]: Array<BaseModel> };
 
-async function actuallyMigrate() {
+type MigrationOptions = {
+  useDesignerSettings: boolean,
+};
+
+async function actuallyMigrate({ useDesignerSettings }: MigrationOptions) {
   const modelTypesToIgnore = [
-    models.settings.type, // TODO: user should be prompted about which settings to use - Core or Designer
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
   ];
+  // TODO: should models.oAuth2Token.type also be ignored?
 
   const modelTypesToMerge = difference(models.types(), modelTypesToIgnore);
-
-  // TODO: should models.oAuth2Token.type also be ignored?
 
   // Load designer database
   const designerDb: DBType = await loadDesignerDb(modelTypesToMerge, console.log);
 
-  // For each model,, batch upsert entries into the Core database
+  // Ensure user is not migrating an existing Insomnia Core repo
+  const designerSettings: Settings = designerDb[models.settings.type].find();
+  if (designerSettings.hasOwnProperty('hasPromptedToMigrateFromDesigner')) {
+    console.log('[db-merge] cannot merge database');
+    return;
+  }
+
+  // For each model, batch upsert entries into the Core database
   for (const modelType of modelTypesToMerge) {
     const entries = designerDb[modelType];
+
+    // Decide how to merge settings
+    if (modelType === models.settings.type) {
+      if (useDesignerSettings) {
+        console.log(`[db-merge] keeping settings from Insomnia Designer`);
+        const coreSettings = await models.settings.getOrCreate();
+        (entries[0]: Settings)._id = coreSettings._id;
+      } else {
+        console.log(`[db-merge] keeping settings from Insomnia Core`);
+        continue;
+      }
+    }
+
+    // For each workspace coming from Designer, mark workspace.scope as 'designer'
+    if (modelType === models.workspace.type) {
+      for (const workspace of entries) {
+        (workspace: Workspace).scope = 'designer';
+      }
+    }
+
     const entryCount = entries.length;
     console.log(
       `[db-merge] merging ${entryCount} ${getModelName(modelType, entryCount)} from Designer`,
