@@ -4,7 +4,8 @@ import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -27,6 +28,7 @@ import Button from '../../base/button';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import type { Settings } from '../../../../models/settings';
+import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 
 type Props = {
   handleRender: Function,
@@ -53,7 +55,7 @@ const getAccessTokenUrls = () => accessTokenUrls;
 
 let showAdvanced = false;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class OAuth2Auth extends React.PureComponent<Props, State> {
   constructor(props: any) {
     super(props);
@@ -584,6 +586,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
             {showAdvanced && fields.advanced}
           </tbody>
         </table>
+        {showAdvanced ? (
+          <div className="pad-top text-right">
+            <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+              Clear OAuth 2 session
+            </button>
+          </div>
+        ) : null}
         <div className="notice subtle margin-top text-left">
           {error && <p className="selectable notice warning margin-bottom">{error}</p>}
           {this.renderError()}

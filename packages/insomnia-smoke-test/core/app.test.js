@@ -1,6 +1,6 @@
 import * as debug from '../modules/debug';
 import * as client from '../modules/client';
-import { launchCore, stop } from '../modules/application';
+import { launchApp, stop } from '../modules/application';
 import * as dropdown from '../modules/dropdown';
 import * as settings from '../modules/settings';
 import fs from 'fs';
@@ -11,7 +11,7 @@ describe('Application launch', function() {
   let app = null;
 
   beforeEach(async () => {
-    app = await launchCore();
+    app = await launchApp();
   });
 
   afterEach(async () => {
@@ -64,7 +64,7 @@ describe('Application launch', function() {
   );
 
   it('sends CSV request and shows rich response', async () => {
-    const url = 'http://127.0.0.1:4010/csv';
+    const url = 'http://127.0.0.1:4010/file/dummy.csv';
 
     await debug.workspaceDropdownExists(app);
     await debug.createNewRequest(app, 'csv');
@@ -77,9 +77,7 @@ describe('Application launch', function() {
   });
 
   it('sends PDF request and shows rich response', async () => {
-    // Cannot mock the pdf response using Prism because it is not yet supported
-    // https://github.com/stoplightio/prism/issues/1248#issuecomment-646056440
-    const url = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+    const url = 'http://127.0.0.1:4010/file/dummy.pdf';
 
     await debug.workspaceDropdownExists(app);
     await debug.createNewRequest(app, 'pdf');

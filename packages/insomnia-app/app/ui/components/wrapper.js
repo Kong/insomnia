@@ -13,7 +13,16 @@ import type {
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  getAppName,
+  SortOrder,
+} from '../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
@@ -35,7 +44,6 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import RequestSettingsModal from './modals/request-settings-modal';
-import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
 import GitStagingModal from './modals/git-staging-modal';
@@ -49,7 +57,6 @@ import SyncDeleteModal from './modals/sync-delete-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
-import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as db from '../../common/database';
 import * as models from '../../models/index';
@@ -82,15 +89,6 @@ import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestResult } from '../../models/unit-test-result';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { GlobalActivity } from '../../common/constants';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-  getAppName,
-  SortOrder,
-} from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
@@ -186,7 +184,6 @@ export type WrapperProps = {
   activeCookieJar: CookieJar,
   activeEnvironment: Environment | null,
   activeGitRepository: GitRepository | null,
-  activeProtoFiles: Array<ProtoFile>,
   activeUnitTestResult: UnitTestResult | null,
   activeUnitTestSuites: Array<UnitTestSuite>,
   activeUnitTests: Array<UnitTest>,
@@ -219,7 +216,7 @@ const rUpdate = (request, ...args) => {
 
 const sUpdate = models.settings.update;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Wrapper extends React.PureComponent<WrapperProps, State> {
   constructor(props: any) {
     super(props);
@@ -529,7 +526,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
-      activeProtoFiles,
       activeRequest,
       activeWorkspace,
       activeWorkspaceClientCertificates,
@@ -674,8 +670,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
-
             <GenerateCodeModal
               ref={registerModal}
               environmentId={activeEnvironment ? activeEnvironment._id : 'n/a'}
@@ -693,7 +687,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleImportUri={this._handleImportUri}
               handleToggleMenuBar={handleToggleMenuBar}
               settings={settings}
-              activity={activity}
             />
 
             <ResponseDebugModal ref={registerModal} settings={settings} />
@@ -721,8 +714,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
-
-            <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
 
             {gitVCS && (
               <React.Fragment>
@@ -794,7 +785,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   grpcDispatch={dispatch}
                   workspace={activeWorkspace}
-                  protoFiles={activeProtoFiles}
                 />
               )}
             </GrpcDispatchModalWrapper>
@@ -828,7 +818,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
           )}
 
-          {(activity === ACTIVITY_DEBUG || activity === ACTIVITY_INSOMNIA) && (
+          {activity === ACTIVITY_DEBUG && (
             <WrapperDebug
               forceRefreshKey={this.state.forceRefreshKey}
               gitSyncDropdown={gitSyncDropdown}

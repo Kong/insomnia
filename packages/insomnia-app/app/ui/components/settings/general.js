@@ -2,10 +2,9 @@
 import * as React from 'react';
 import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
-import HelpTooltip from '../help-tooltip';
-import type { HttpVersion } from '../../../common/constants';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  AUTOBIND_CFG,
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
@@ -17,9 +16,11 @@ import {
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
+import HelpTooltip from '../help-tooltip';
+import type { HttpVersion } from '../../../common/constants';
+
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
-import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
@@ -40,7 +41,7 @@ type State = {
   fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -519,13 +520,6 @@ class General extends React.PureComponent<Props, State> {
             as request data, names, etc.
           </p>
         </div>
-
-        {session.isLoggedIn() && (
-          <React.Fragment>
-            <hr />
-            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
-          </React.Fragment>
-        )}
       </div>
     );
   }

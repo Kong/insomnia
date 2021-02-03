@@ -1,7 +1,8 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import Modal from '../base/modal';
@@ -25,7 +26,7 @@ type State = {
   error: string,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncShareModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 

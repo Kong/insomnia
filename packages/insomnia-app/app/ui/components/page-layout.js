@@ -1,11 +1,11 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
-import { isInsomnia } from '../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {
   wrapperProps: WrapperProps,
@@ -20,7 +20,7 @@ type Props = {
 
 type State = {};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class PageLayout extends React.PureComponent<Props, State> {
   // Special request updaters
   _handleStartDragSidebar(e: Event): void {
@@ -41,17 +41,14 @@ class PageLayout extends React.PureComponent<Props, State> {
     } = this.props;
 
     const {
-      activity,
       activeEnvironment,
       activeGitRepository,
-      activeWorkspace,
       gitVCS,
       handleInitializeEntities,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
       handleSetActiveWorkspace,
       handleSetSidebarRef,
-      handleShowSettingsModal,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
       handleStartDragPaneHorizontal,
@@ -64,9 +61,7 @@ class PageLayout extends React.PureComponent<Props, State> {
       settings,
       sidebarHidden,
       sidebarWidth,
-      syncItems,
       unseenWorkspaces,
-      vcs,
       workspaces,
     } = wrapperProps;
 
@@ -74,7 +69,9 @@ class PageLayout extends React.PureComponent<Props, State> {
 
     const paneTwo = renderPaneTwo && renderPaneTwo();
 
-    const gridRows = `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
+    const gridRows = paneTwo
+      ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
+      : `auto 1fr`;
     const gridColumns =
       `auto ${realSidebarWidth}rem 0 ` +
       `${paneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
@@ -121,7 +118,6 @@ class PageLayout extends React.PureComponent<Props, State> {
               ref={handleSetSidebarRef}
               activeEnvironment={activeEnvironment}
               activeGitRepository={activeGitRepository}
-              enableSyncBeta={settings.enableSyncBeta}
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
@@ -130,23 +126,11 @@ class PageLayout extends React.PureComponent<Props, State> {
               hotKeyRegistry={settings.hotKeyRegistry}
               isLoading={isLoading}
               showEnvironmentsModal={this._handleShowEnvironmentsModal}
-              syncItems={syncItems}
               unseenWorkspaces={unseenWorkspaces}
-              vcs={vcs}
               gitVCS={gitVCS}
               width={sidebarWidth}
-              workspace={activeWorkspace}
               workspaces={workspaces}>
               {renderPageSidebar()}
-              {!isInsomnia(activity) && (
-                <div className="sidebar__footer">
-                  <button
-                    className="btn btn--compact wide row-spaced"
-                    onClick={handleShowSettingsModal}>
-                    Preferences <i className="fa fa-gear" />
-                  </button>
-                </div>
-              )}
             </Sidebar>
 
             <div className="drag drag--sidebar">

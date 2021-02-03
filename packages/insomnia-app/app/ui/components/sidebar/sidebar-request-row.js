@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import ReactDOM from 'react-dom';
 import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
@@ -11,13 +11,13 @@ import MethodTag from '../tags/method-tag';
 import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
-import { CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
+import { CONTENT_TYPE_GRAPHQL, AUTOBIND_CFG } from '../../../common/constants';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import GrpcSpinner from '../grpc-spinner';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarRequestRow extends PureComponent {
   constructor(props) {
     super(props);
@@ -158,6 +158,7 @@ class SidebarRequestRow extends PureComponent {
       isPinned,
       disableDragAndDrop,
       hotKeyRegistry,
+      activeEnvironment,
     } = this.props;
 
     const { dragDirection } = this.state;
@@ -232,6 +233,8 @@ class SidebarRequestRow extends PureComponent {
                 isPinned={isPinned}
                 requestGroup={requestGroup}
                 hotKeyRegistry={hotKeyRegistry}
+                // Necessary for plugin actions to have network capabilities
+                activeEnvironment={activeEnvironment}
               />
             </div>
             {isPinned && (

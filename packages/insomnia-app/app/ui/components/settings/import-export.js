@@ -1,23 +1,33 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
 import Strings from '../../../common/strings';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ImportExport extends PureComponent {
   _handleImportUri() {
-    showPrompt({
+    const promptOptions = {
       title: 'Import Data from URL',
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
+        window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
         this.props.handleImportUri(uri);
       },
-    });
+    };
+
+    const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
+
+    if (lastUsedImportUri) {
+      promptOptions.defaultValue = lastUsedImportUri;
+    }
+
+    showPrompt(promptOptions);
   }
 
   render() {

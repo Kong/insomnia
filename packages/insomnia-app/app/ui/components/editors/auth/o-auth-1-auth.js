@@ -2,7 +2,8 @@
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
 import {
@@ -38,7 +39,7 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 -----END RSA PRIVATE KEY-----
 `.trim();
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class OAuth1Auth extends React.PureComponent<Props> {
   _handleEditPrivateKey() {
     const { handleRender, handleGetRenderContext, request } = this.props;

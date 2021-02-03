@@ -1,3 +1,4 @@
+import { hot } from 'react-hot-loader';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -5,16 +6,11 @@ import App from './containers/app';
 import * as models from '../models';
 import * as db from '../common/database';
 import { init as initStore } from './redux/modules';
-import * as legacySync from '../sync-legacy';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
-import { getAppId, getAppLongName, isDevelopment } from '../common/constants';
+import { getAppLongName, isDevelopment } from '../common/constants';
 import { setFont, setTheme } from '../plugins/misc';
-import { AppContainer } from 'react-hot-loader';
-import { DragDropContext } from 'react-dnd';
-import DNDBackend from './dnd-backend';
 import { trackEvent } from '../common/analytics';
-import { APP_ID_DESIGNER, APP_ID_INSOMNIA } from '../../config';
 import * as styledComponents from 'styled-components';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { initializeLogging } from '../common/log';
@@ -39,43 +35,17 @@ document.title = getAppLongName();
   // Create Redux store
   const store = await initStore();
 
-  const context = DragDropContext(DNDBackend);
-  const render = Component => {
-    const DnDComponent = context(Component);
+  const render = App => {
+    const TheHottestApp = hot(module)(App);
     ReactDOM.render(
-      <AppContainer>
-        <Provider store={store}>
-          <DnDComponent />
-        </Provider>
-      </AppContainer>,
+      <Provider store={store}>
+        <TheHottestApp />
+      </Provider>,
       document.getElementById('root'),
     );
   };
 
   render(App);
-
-  // Hot Module Replacement API
-  if (module.hot) {
-    // module.hot.accept('./containers/app', () => {
-    //   render(App);
-    // });
-  }
-
-  const appId = getAppId();
-
-  // Legacy sync not part of Designer
-  if (appId === APP_ID_DESIGNER) {
-    legacySync.disableForSession();
-  } else if (appId === APP_ID_INSOMNIA) {
-    // Do things that can wait
-    const { enableSyncBeta } = await models.settings.getOrCreate();
-    if (enableSyncBeta) {
-      console.log('[app] Enabling sync beta');
-      legacySync.disableForSession();
-    } else {
-      process.nextTick(legacySync.init);
-    }
-  }
 })();
 
 // Export some useful things for dev

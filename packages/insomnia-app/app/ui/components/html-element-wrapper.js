@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {|
   el: HTMLElement,
@@ -12,7 +13,7 @@ type Props = {|
  * application. This was created to facilitate the layer between UI plugins
  * and the Insomnia application.
  */
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class HtmlElementWrapper extends React.Component<Props> {
   _setRef(n: ?HTMLDivElement) {
     if (!n) {

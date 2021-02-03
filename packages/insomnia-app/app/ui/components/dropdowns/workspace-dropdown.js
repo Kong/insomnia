@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -9,11 +10,10 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
-import { getAppName, getAppVersion } from '../../../common/constants';
+
 import { showAlert, showError, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
-import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
@@ -26,7 +26,6 @@ import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import HelpTooltip from '../help-tooltip';
 import type { Project } from '../../../sync/types';
-import * as sync from '../../../sync-legacy/index';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
 import type { WorkspaceAction } from '../../../plugins';
@@ -36,9 +35,9 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 
 type Props = {
+  displayName: string,
   activeEnvironment: Environment | null,
   activeWorkspace: Workspace,
-  enableSyncBeta: boolean,
   handleSetActiveWorkspace: (id: string) => void,
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
@@ -58,7 +57,7 @@ type State = {
   remoteProjects: Array<Project>,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WorkspaceDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 
@@ -197,7 +196,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   }
 
   static async _handleLogout() {
-    await sync.logout();
+    await session.logout();
   }
 
   static _handleShowExport() {
@@ -213,11 +212,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleShowShareSettings() {
-    if (this.props.enableSyncBeta) {
-      showModal(SyncShareModal);
-    } else {
-      showModal(WorkspaceShareSettingsModal);
-    }
+    showModal(SyncShareModal);
   }
 
   _handleWorkspaceCreate() {
@@ -227,7 +222,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       submitName: 'Create',
       selectText: true,
       onComplete: async name => {
-        const workspace = await models.workspace.create({ name });
+        const workspace = await models.workspace.create({ name, scope: 'collection' });
         this.props.handleSetActiveWorkspace(workspace._id);
       },
     });
@@ -252,6 +247,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
   render() {
     const {
+      displayName,
       className,
       workspaces,
       activeWorkspace,
@@ -259,7 +255,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       isLoading,
       hotKeyRegistry,
       handleSetActiveWorkspace,
-      enableSyncBeta,
       ...other
     } = this.props;
 
@@ -278,16 +273,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     const nonActiveWorkspaces = workspaces
       .filter(w => w._id !== activeWorkspace._id)
       .sort((w1, w2) => w1.name.localeCompare(w2.name));
-    const addedWorkspaceNames = unseenWorkspaces.map(w => `"${w.name}"`).join(', ');
     const classes = classnames(className, 'wide', 'workspace-dropdown');
-
-    const unseenWorkspacesMessage = (
-      <div>
-        The following workspaces were added
-        <br />
-        {addedWorkspaceNames}
-      </div>
-    );
 
     const { actionPlugins, loadingActions } = this.state;
 
@@ -300,19 +286,12 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           onOpen={this._handleDropdownOpen}
           onHide={this._handleDropdownHide}
           {...(other: Object)}>
-          <DropdownButton className="btn wide">
-            <h1 className="no-pad text-left">
-              <div className="pull-right">
-                {isLoading ? <i className="fa fa-refresh fa-spin" /> : null}
-                {unseenWorkspaces.length > 0 && (
-                  <Tooltip message={unseenWorkspacesMessage} position="bottom">
-                    <i className="fa fa-asterisk space-left" />
-                  </Tooltip>
-                )}
-                <i className="fa fa-caret-down space-left" />
-              </div>
-              {activeWorkspace.name}
-            </h1>
+          <DropdownButton className="row">
+            <div className="ellipsis" style={{ maxWidth: '400px' }} title={displayName}>
+              {displayName}
+            </div>
+            <i className="fa fa-caret-down space-left" />
+            {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
           <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>

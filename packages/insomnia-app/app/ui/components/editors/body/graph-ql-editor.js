@@ -3,8 +3,8 @@ import electron from 'electron';
 import classnames from 'classnames';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
 import { readFileSync } from 'fs';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
@@ -14,7 +14,7 @@ import type { CodeMirror, TextMarker } from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
-import { CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
+import { CONTENT_TYPE_JSON, DEBOUNCE_MILLIS, AUTOBIND_CFG } from '../../../../common/constants';
 import prettify from 'insomnia-prettify';
 import type { ResponsePatch } from '../../../../network/network';
 import * as network from '../../../../network/network';
@@ -77,7 +77,7 @@ type State = {
   },
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLEditor extends React.PureComponent<Props, State> {
   _disabledOperationMarkers: Array<TextMarker>;
   _documentAST: null | Object;

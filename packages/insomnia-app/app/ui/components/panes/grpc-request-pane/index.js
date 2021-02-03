@@ -7,18 +7,26 @@ import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import type { Settings } from '../../../../models/settings';
 import type { GrpcRequest } from '../../../../models/grpc-request';
-import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
 import GrpcSendButton from '../../buttons/grpc-send-button';
-import { grpcActions, useGrpc, useGrpcIpc } from '../../../context/grpc';
+import { useGrpc } from '../../../context/grpc';
 import useChangeHandlers from './use-change-handlers';
 import useSelectedMethod from './use-selected-method';
 import useProtoFileReload from './use-proto-file-reload';
 import styled from 'styled-components';
+import useActionHandlers from './use-action-handlers';
+import useExistingGrpcUrls from './use-existing-grpc-urls';
 
 type Props = {
   forceRefreshKey: string,
   activeRequest: GrpcRequest,
+  environmentId: string,
+  workspaceId: string,
   settings: Settings,
+
+  // For variables
+  handleRender: string => Promise<string>,
+  isVariableUncovered: boolean,
+  handleGetRenderContext: Function,
 };
 
 const StyledUrlBar = styled.div`
@@ -39,7 +47,16 @@ const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
 
-const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) => {
+const GrpcRequestPane = ({
+  activeRequest,
+  environmentId,
+  workspaceId,
+  forceRefreshKey,
+  settings,
+  handleRender,
+  handleGetRenderContext,
+  isVariableUncovered,
+}: Props) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
 
@@ -49,25 +66,18 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
 
   const handleChange = useChangeHandlers(activeRequest, dispatch);
+  const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, dispatch);
+  const getExistingGrpcUrls = useExistingGrpcUrls(workspaceId, activeRequest._id);
 
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;
 
-  const sendIpc = useGrpcIpc(activeRequest._id);
-
-  const handleStream = React.useCallback(() => {
-    sendIpc(GrpcRequestEventEnum.sendMessage);
-    dispatch(grpcActions.requestMessage(activeRequest._id, activeRequest.body.text));
-  }, [activeRequest._id, activeRequest.body.text, dispatch, sendIpc]);
-
-  const handleCommit = React.useCallback(() => sendIpc(GrpcRequestEventEnum.commit), [sendIpc]);
-
   return (
     <Pane type="request">
       <PaneHeader>
         <StyledUrlBar>
-          <div className="method-grpc pad">gRPC</div>
+          <div className="method-grpc pad-right pad-left vertically-center">gRPC</div>
           <StyledUrlEditor title={activeRequest.url}>
             <OneLineEditor
               key={uniquenessKey}
@@ -76,6 +86,11 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
               defaultValue={activeRequest.url}
               placeholder="grpcb.in:9000"
               onChange={handleChange.url}
+              render={handleRender}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              isVariableUncovered={isVariableUncovered}
+              getAutocompleteConstants={getExistingGrpcUrls}
+              getRenderContext={handleGetRenderContext}
             />
           </StyledUrlEditor>
           <StyledDropdown>
@@ -88,7 +103,12 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
             />
           </StyledDropdown>
 
-          <GrpcSendButton requestId={activeRequest._id} methodType={methodType} />
+          <GrpcSendButton
+            running={running}
+            methodType={methodType}
+            handleCancel={handleAction.cancel}
+            handleStart={handleAction.start}
+          />
         </StyledUrlBar>
       </PaneHeader>
       <PaneBody>
@@ -111,8 +131,11 @@ const GrpcRequestPane = ({ activeRequest, forceRefreshKey, settings }: Props) =>
                 bodyText={activeRequest.body.text}
                 handleBodyChange={handleChange.body}
                 showActions={running && enableClientStream}
-                handleStream={handleStream}
-                handleCommit={handleCommit}
+                handleStream={handleAction.stream}
+                handleCommit={handleAction.commit}
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
+                isVariableUncovered={isVariableUncovered}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel">
