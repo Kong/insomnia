@@ -35,7 +35,9 @@
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
       "^worker-loader!": "<rootDir>/__mocks__/dummy.js"
     },
-    "modulePathIgnorePatterns": ["<rootDir>/network/.*/__mocks__"],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/network/.*/__mocks__"
+    ],
     "testMatch": [
       "**/__tests__/**/*.test.js?(x)"
     ],
@@ -109,6 +111,7 @@
     "electron-context-menu": "^2.2.0",
     "electron-log": "^4.2.4",
     "electron-updater": "^4.2.0",
+    "env-paths": "^2.2.0",
     "font-scanner": "^0.1.2",
     "framer-motion": "^1.11.1",
     "fs-extra": "^5.0.0",

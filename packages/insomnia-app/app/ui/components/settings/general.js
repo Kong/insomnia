@@ -10,6 +10,7 @@ import {
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
   HttpVersions,
+  isDevelopment,
   isLinux,
   isMac,
   isWindows,
@@ -24,6 +25,7 @@ import { setFont } from '../../../plugins/misc';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import migrateFromDesigner from '../../../common/migrate-from-designer';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -520,6 +522,26 @@ class General extends React.PureComponent<Props, State> {
             as request data, names, etc.
           </p>
         </div>
+
+        <hr className="pad-top" />
+
+        {isDevelopment() && (
+          <>
+            <h2>Migrate from Designer</h2>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting(
+                'Has prompted to migrate',
+                'hasPromptedToMigrateFromDesigner',
+              )}
+              <button
+                className="btn btn--clicky pointer"
+                style={{ padding: 0 }}
+                onClick={migrateFromDesigner}>
+                Migrate from Designer
+              </button>
+            </div>
+          </>
+        )}
       </div>
     );
   }

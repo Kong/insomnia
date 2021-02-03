@@ -14,6 +14,7 @@ import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { initializeLogging } from '../common/log';
+import migrateFromDesigner from '../common/migrate-from-designer';
 
 initializeLogging();
 
@@ -46,6 +47,12 @@ document.title = getAppLongName();
   };
 
   render(App);
+
+  const { hasPromptedToMigrateFromDesigner } = await models.settings.getOrCreate();
+
+  if (!hasPromptedToMigrateFromDesigner) {
+    await migrateFromDesigner();
+  }
 })();
 
 // Export some useful things for dev
