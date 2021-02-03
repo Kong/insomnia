@@ -27,13 +27,12 @@ if (require.main === module) {
 
 async function start(app, version) {
   console.log(`[release] Creating release for ${app} ${version}`);
-  const appId = appConfig().appId;
 
   // globs should only use forward slash, so force use of path.posix
-  const distGlob = ext => path.posix.join('dist', appId, '**', `*${ext}`);
+  const distGlob = ext => path.posix.join('dist', '**', `*${ext}`);
   const assetGlobs = {
     darwin: [distGlob('.zip'), distGlob('.dmg')],
-    win32: [path.posix.join('dist', appId, 'squirrel-windows', '*')],
+    win32: [path.posix.join('dist', 'squirrel-windows', '*')],
     linux: [
       distGlob('.snap'),
       distGlob('.rpm'),

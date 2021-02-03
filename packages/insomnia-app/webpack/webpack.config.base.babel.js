@@ -1,14 +1,13 @@
 const webpack = require('webpack');
 const path = require('path');
 const pkg = require('../package.json');
-const {APP_ID_INSOMNIA} = require('../config');
 
 module.exports = {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.js', './renderer.html'],
   output: {
-    path: path.join(__dirname, '../build', APP_ID_INSOMNIA),
+    path: path.join(__dirname, '../build'),
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
   },
