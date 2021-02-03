@@ -33,7 +33,7 @@ module.exports.start = async function(forceFromGitRef) {
   // These must be required after APP_ID environment variable is set above
   const configRenderer = require('../webpack/webpack.config.production.babel');
   const configMain = require('../webpack/webpack.config.electron.babel');
-  const buildFolder = path.join('../build', appConfig().appId);
+  const buildFolder = path.join('../build');
 
   if (buildContext.smokeTest) {
     console.log('[build] Starting build to smoke test');
@@ -64,7 +64,7 @@ module.exports.start = async function(forceFromGitRef) {
   console.log('[build] Copying files');
   await copyFiles('../bin', buildFolder);
   await copyFiles('../app/static', path.join(buildFolder, 'static'));
-  await copyFiles(`../app/icons/${appConfig().appId}`, buildFolder);
+  await copyFiles('../app/icons', buildFolder);
 
   // Generate necessary files needed by `electron-builder`
   await generatePackageJson('../package.json', path.join(buildFolder, 'package.json'));
