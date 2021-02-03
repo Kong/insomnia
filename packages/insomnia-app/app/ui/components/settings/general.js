@@ -25,7 +25,8 @@ import { setFont } from '../../../plugins/misc';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import migrateFromDesigner from '../../../common/migrate-from-designer';
+import migrateFromDesigner, { restoreCoreBackup } from '../../../common/migrate-from-designer';
+import { getDataDirectory } from '../../../common/misc';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -533,11 +534,19 @@ class General extends React.PureComponent<Props, State> {
                 'Has prompted to migrate',
                 'hasPromptedToMigrateFromDesigner',
               )}
+            </div>
+            <div className="form-row pad-top-sm">
               <button
                 className="btn btn--clicky pointer"
                 style={{ padding: 0 }}
                 onClick={migrateFromDesigner}>
                 Migrate from Designer
+              </button>
+              <button
+                className="btn btn--clicky pointer"
+                style={{ padding: 0 }}
+                onClick={() => restoreCoreBackup(getDataDirectory())}>
+                Restore core backup
               </button>
             </div>
           </>
