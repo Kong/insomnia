@@ -11,6 +11,8 @@ import { difference } from 'lodash';
 import { showAlert } from '../ui/components/modals';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
+import { getDataDirectory } from './misc';
+import fsx from 'fs-extra';
 
 function getDesignerDBFilePath(modelType: string): string {
   // fetch using env-paths
@@ -66,6 +68,37 @@ type MigrationOptions = {
   useDesignerSettings: boolean,
 };
 
+async function createCoreBackup(modelTypes: Array<string>) {
+  console.log(`[db-merge] creating backup`);
+
+  const coreDataDir = getDataDirectory();
+  const backupDir = fsPath.join(coreDataDir, 'core-backup');
+  await fsx.ensureDir(backupDir);
+
+  // Copy db files
+  const filesToCopy = modelTypes.map(modelType => `insomnia.${modelType}.db`);
+
+  for (const entryName of filesToCopy) {
+    const src = fsPath.join(coreDataDir, entryName);
+    const dest = fsPath.join(backupDir, entryName);
+
+    await fsx.copy(src, dest);
+  }
+
+  // Copy dirs
+  const dirsToCopy = ['plugins', 'responses', 'version-control'];
+
+  for (const entryName of dirsToCopy) {
+    const src = fsPath.join(coreDataDir, entryName);
+    const dest = fsPath.join(backupDir, entryName);
+
+    await fsx.ensureDir(dest);
+    await fsx.copy(src, dest);
+  }
+
+  console.log(`[db-merge] backup created at ${backupDir}`);
+}
+
 async function actuallyMigrate({ useDesignerSettings }: MigrationOptions) {
   const modelTypesToIgnore = [
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
@@ -73,6 +106,9 @@ async function actuallyMigrate({ useDesignerSettings }: MigrationOptions) {
   // TODO: should models.oAuth2Token.type also be ignored?
 
   const modelTypesToMerge = difference(models.types(), modelTypesToIgnore);
+
+  // Create core backup
+  await createCoreBackup(modelTypesToIgnore);
 
   // Load designer database
   const designerDb: DBType = await loadDesignerDb(modelTypesToMerge, console.log);
