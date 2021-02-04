@@ -58,7 +58,7 @@ async function loadDesignerDb(types: Array<string>, designerDataDir: string): Pr
 
 type DBType = { [string]: Array<BaseModel> };
 
-type MigrationOptions = {
+export type MigrationOptions = {
   useDesignerSettings: boolean,
   copyPlugins: boolean,
   copyResponses: boolean,
