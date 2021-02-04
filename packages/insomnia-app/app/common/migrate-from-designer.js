@@ -216,8 +216,6 @@ export async function restoreCoreBackup(coreDataDir: string) {
   await removeDirs(['plugins', 'responses', 'version-control'], coreDataDir);
   await fsx.copy(backupDir, coreDataDir);
   console.log(`[db-merge] restored from backup`);
-
-  restartApp();
 }
 
 export function restartApp() {

@@ -4,16 +4,25 @@ import * as React from 'react';
 import PageLayout from './page-layout';
 import type { WrapperProps } from './wrapper';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { AUTOBIND_CFG, getAppLongName, getAppSynopsis } from '../../common/constants';
+import {
+  ACTIVITY_HOME,
+  AUTOBIND_CFG,
+  getAppLongName,
+  getAppSynopsis,
+} from '../../common/constants';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { ToggleSwitch } from 'insomnia-components';
 import HelpTooltip from './help-tooltip';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
 import migrateFromDesigner, { restartApp } from '../../common/migrate-from-designer';
+import { bindActionCreators } from 'redux';
+import * as globalActions from '../redux/modules/global';
+import { connect } from 'react-redux';
 
 type Props = {|
   wrapperProps: WrapperProps,
+  handleSetActiveActivity: (activity?: GlobalActivity) => void,
 |};
 
 type State = {|
@@ -48,6 +57,10 @@ class WrapperMigration extends React.Component<Props, State> {
     } else {
       await this.setState({ step: 'success' });
     }
+  }
+
+  async _cancel() {
+    this.props.handleSetActiveActivity(ACTIVITY_HOME);
   }
 
   _handleUpdateState({ currentTarget: { name, value } }: SyntheticEvent<HTMLInputElement>) {
@@ -116,7 +129,7 @@ class WrapperMigration extends React.Component<Props, State> {
           <button key="start" className="btn btn--clicky" onClick={this._doMigration}>
             Start Migration
           </button>
-          <button key="cancel" className="btn btn--super-compact" onClick={() => {}}>
+          <button key="cancel" className="btn btn--super-compact" onClick={this._cancel}>
             Cancel
           </button>
         </div>
@@ -241,4 +254,11 @@ class WrapperMigration extends React.Component<Props, State> {
   }
 }
 
-export default WrapperMigration;
+function mapDispatchToProps(dispatch) {
+  const global = bindActionCreators(globalActions, dispatch);
+  return {
+    handleSetActiveActivity: global.setActiveActivity,
+  };
+}
+
+export default connect(null, mapDispatchToProps)(WrapperMigration);

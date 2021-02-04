@@ -131,6 +131,7 @@ class SettingsModal extends PureComponent {
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <General
                 settings={settings}
+                hideModal={this.hide}
                 handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
                 handleRootCssChange={this._handleRootCssChange}
