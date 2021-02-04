@@ -60,8 +60,6 @@ const ToggleSwitch: React.StatelessFunctionalComponent<Props> = ({
       checked={checked}
       disabled={disabled}
       onChange={callback}
-      checkedIcon={false}
-      uncheckedIcon={false}
       height={20}
       width={40}
       {...(props: Object)}
