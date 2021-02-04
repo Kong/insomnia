@@ -6,6 +6,7 @@ import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+import envPaths from 'env-paths';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -357,6 +358,10 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
       resolve();
     });
   });
+}
+
+export function getDesignerDataDir(): string {
+  return envPaths('Insomnia Designer', { suffix: '' }).data;
 }
 
 export function getDataDirectory(): string {

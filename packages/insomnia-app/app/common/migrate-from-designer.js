@@ -2,16 +2,13 @@
 import NeDB from 'nedb';
 import type { BaseModel } from '../models';
 import fsPath from 'path';
-import envPaths from 'env-paths';
 import fs from 'fs';
 import * as models from '../models';
 import * as db from './database';
 import { getModelName } from '../models';
 import { difference } from 'lodash';
-import { showAlert } from '../ui/components/modals';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
-import { getDataDirectory } from './misc';
 import fsx from 'fs-extra';
 import * as electron from 'electron';
 
@@ -66,6 +63,10 @@ export type MigrationOptions = {
   coreDataDir: string,
 };
 
+export type MigrationResult = {
+  error?: Error,
+};
+
 async function createCoreBackup(modelTypes: Array<string>, coreDataDir: string) {
   console.log(`[db-merge] creating backup`);
 
@@ -118,13 +119,13 @@ async function removeDirs(dirs: Array<string>, srcDir: string) {
   }
 }
 
-async function actuallyMigrate({
+export default async function migrateFromDesigner({
   useDesignerSettings,
   designerDataDir,
   coreDataDir,
   copyPlugins,
   copyResponses,
-}: MigrationOptions) {
+}: MigrationOptions): Promise<MigrationResult> {
   const modelTypesToIgnore = [
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
   ];
@@ -156,8 +157,7 @@ async function actuallyMigrate({
           console.log(`[db-merge] keeping settings from Insomnia Designer`);
           const coreSettings = await models.settings.getOrCreate();
           (entries[0]: Settings)._id = coreSettings._id;
-          (entries[0]: Settings).hasPromptedToMigrateFromDesigner =
-            coreSettings.hasPromptedToMigrateFromDesigner;
+          (entries[0]: Settings).hasPromptedToMigrateFromDesigner = true;
         } else {
           console.log(`[db-merge] keeping settings from Insomnia Core`);
           continue;
@@ -195,29 +195,13 @@ async function actuallyMigrate({
       console.log(`[db-merge] not migrating plugins`);
     }
 
-    showAlert({
-      title: 'Success',
-      message: 'Your data from Designer was migrated into Core. The application will now restart.',
-      okLabel: 'Restart',
-      addCancel: false,
-      onConfirm: () => {
-        const { app } = electron.remote || electron;
-        app.relaunch();
-        app.exit();
-      },
-    });
-  } catch (e) {
+    console.log('[db-merge] done!');
+
+    return {};
+  } catch (error) {
     console.log('[db-merge] an error occurred while migrating');
-    console.error(e);
-    showAlert({
-      title: 'Something went wrong!',
-      message: 'Your previous data will be restored and the application will restart.',
-      okLabel: 'Restore from backup',
-      addCancel: false,
-      onConfirm: async () => {
-        await restoreCoreBackup(coreDataDir);
-      },
-    });
+    console.error(error);
+    return { error };
   }
 }
 
@@ -233,27 +217,11 @@ export async function restoreCoreBackup(coreDataDir: string) {
   await fsx.copy(backupDir, coreDataDir);
   console.log(`[db-merge] restored from backup`);
 
+  restartApp();
+}
+
+export function restartApp() {
   const { app } = electron.remote || electron;
   app.relaunch();
   app.exit();
-}
-
-export default async function migrateFromDesigner() {
-  // Store flag in settings
-  const settings = await models.settings.getOrCreate();
-  await models.settings.update(settings, { hasPromptedToMigrateFromDesigner: true });
-
-  showAlert({
-    title: 'Migrate from Designer',
-    message: 'Would you like to import your data from Insomnia Designer?',
-    addCancel: true,
-    onConfirm: () =>
-      actuallyMigrate({
-        useDesignerSettings: true,
-        copyPlugins: true,
-        copyResponses: true,
-        designerDataDir: envPaths('Insomnia Designer', { suffix: '' }).data,
-        coreDataDir: getDataDirectory(),
-      }),
-  });
 }

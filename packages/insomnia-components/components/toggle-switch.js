@@ -8,7 +8,7 @@ type Props = {
   switchClassName?: string,
   checked?: boolean,
   disabled?: boolean,
-  onChange(checked: boolean, any, any): void | Promise<void>,
+  onChange(checked: boolean, Event, string): void | Promise<void>,
   label?: string,
 };
 
