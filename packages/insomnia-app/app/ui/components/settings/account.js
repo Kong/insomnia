@@ -163,7 +163,7 @@ class Account extends React.PureComponent<Props, State> {
             <code className="code--compact">{session.getEmail()}</code>
           </p>
           <br />
-          <Link button href="https://insomnia.rest/app/" className="btn btn--clicky">
+          <Link button href="https://app.insomnia.rest" className="btn btn--clicky">
             Manage Account
           </Link>
           <PromptButton className="space-left btn btn--clicky" onClick={this._handleLogout}>

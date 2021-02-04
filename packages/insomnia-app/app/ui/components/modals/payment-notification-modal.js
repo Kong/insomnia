@@ -59,7 +59,7 @@ class PaymentNotificationModal extends PureComponent {
               &nbsp;&nbsp;
               <Link
                 button
-                href="https://insomnia.rest/app/subscribe/"
+                href="https://app.insomnia.rest/app/subscribe/"
                 className="btn btn--compact btn--outlined">
                 Update Billing
               </Link>
