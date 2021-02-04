@@ -182,19 +182,21 @@ class WrapperMigration extends React.Component<Props, State> {
           <i className="fa fa-crosshairs" />
         </p>
 
-        <p>
-          Something went wrong with the migration and your data has been restored from backup.
-          Please restart the application for the changes to take effect.
-        </p>
+        <div className="wide text-left">
+          <p>
+            Something went wrong with the migration and your data has been restored from backup.
+            Please restart the application for the changes to take effect.
+          </p>
 
-        {error && (
-          <details>
-            <summary>Additonal information</summary>
-            <pre className="pad-top-sm force-wrap selectable">
-              <code className="wide">{error.stack || error}</code>
-            </pre>
-          </details>
-        )}
+          {error && (
+            <details>
+              <summary>Additonal information</summary>
+              <pre className="pad-top-sm force-wrap selectable">
+                <code className="wide">{error.stack || error}</code>
+              </pre>
+            </details>
+          )}
+        </div>
 
         <div className="margin-top">
           <button key="restart" className="btn btn--clicky" onClick={restartApp}>
