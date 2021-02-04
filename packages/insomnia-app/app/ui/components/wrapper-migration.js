@@ -38,6 +38,10 @@ class WrapperMigration extends React.Component<Props, State> {
     this.setState({ [name]: value });
   }
 
+  _handleUpdateStateFromToggleSwitch(checked: boolean, event: Object, id: string) {
+    this.setState({ [id]: checked });
+  }
+
   renderTextSetting(label: string, name: $Keys<State>, help: string) {
     if (!this.state.hasOwnProperty(name)) {
       throw new Error(`Invalid text setting name ${name}`);
@@ -68,10 +72,9 @@ class WrapperMigration extends React.Component<Props, State> {
       <ToggleSwitch
         labelClassName="row margin-bottom wide"
         checked={this.state[name]}
+        id={name}
         label={label}
-        onChange={checked => {
-          this.setState({ [name]: checked });
-        }}
+        onChange={this._handleUpdateStateFromToggleSwitch}
       />
     );
   }

@@ -8,7 +8,7 @@ type Props = {
   switchClassName?: string,
   checked?: boolean,
   disabled?: boolean,
-  onChange(checked: boolean): void | Promise<void>,
+  onChange(checked: boolean, any, any): void | Promise<void>,
   label?: string,
 };
 
@@ -47,9 +47,9 @@ const ToggleSwitch: React.StatelessFunctionalComponent<Props> = ({
   }, [checkedProp]);
 
   const callback = React.useCallback(
-    c => {
+    (c, a, b) => {
       setChecked(c);
-      onChange(c);
+      onChange(c, a, b);
     },
     [onChange],
   );
