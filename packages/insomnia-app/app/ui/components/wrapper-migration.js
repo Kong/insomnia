@@ -184,8 +184,8 @@ class WrapperMigration extends React.Component<Props, State> {
 
         <div className="wide text-left">
           <p>
-            Something went wrong with the migration and your data has been restored from backup.
-            Please restart the application for the changes to take effect.
+            Something went wrong with the migration and all changes made have been reverted. Please
+            restart the application.
           </p>
 
           {error && (
@@ -246,13 +246,7 @@ class WrapperMigration extends React.Component<Props, State> {
 
   render() {
     const { wrapperProps } = this.props;
-    return (
-      <PageLayout
-        key={this.state.step}
-        wrapperProps={wrapperProps}
-        renderPageBody={this.renderPageBody}
-      />
-    );
+    return <PageLayout wrapperProps={wrapperProps} renderPageBody={() => this.renderPageBody()} />;
   }
 }
 

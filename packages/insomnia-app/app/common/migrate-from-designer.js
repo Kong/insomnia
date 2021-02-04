@@ -90,6 +90,8 @@ async function createCoreBackup(modelTypes: Array<string>, coreDataDir: string) 
   await copyDirs(dirsToCopy, coreDataDir, backupDir);
 
   console.log(`[db-merge] backup created at ${backupDir}`);
+
+  return backupDir;
 }
 
 async function migratePlugins(designerDataDir: string, coreDataDir: string) {
@@ -129,12 +131,11 @@ export default async function migrateFromDesigner({
   const modelTypesToIgnore = [
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
   ];
-  // TODO: should models.oAuth2Token.type also be ignored?
 
   const modelTypesToMerge = difference(models.types(), modelTypesToIgnore);
 
   // Create core backup
-  await createCoreBackup(modelTypesToMerge, coreDataDir);
+  const backupDir = await createCoreBackup(modelTypesToMerge, coreDataDir);
 
   try {
     // Load designer database
@@ -197,16 +198,18 @@ export default async function migrateFromDesigner({
 
     console.log('[db-merge] done!');
 
-    return {};
+    throw new Error('oops');
+
+    // return {};
   } catch (error) {
+    await restoreCoreBackup(backupDir, coreDataDir);
     console.log('[db-merge] an error occurred while migrating');
     console.error(error);
     return { error };
   }
 }
 
-export async function restoreCoreBackup(coreDataDir: string) {
-  const backupDir = fsPath.join(coreDataDir, 'core-backup');
+export async function restoreCoreBackup(backupDir: string, coreDataDir: string) {
   if (!fs.existsSync(backupDir)) {
     console.log(`[db-merge] backup directory doesn't exist; doing nothing`);
     return;
