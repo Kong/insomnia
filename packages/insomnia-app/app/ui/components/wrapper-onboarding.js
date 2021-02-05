@@ -6,19 +6,19 @@ import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import {
-  AUTOBIND_CFG,
   ACTIVITY_HOME,
+  AUTOBIND_CFG,
   getAppLongName,
   getAppName,
   getAppSynopsis,
 } from '../../common/constants';
 import type { WrapperProps } from './wrapper';
-import PageLayout from './page-layout';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
 import coreLogo from '../images/insomnia-core-logo.png';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
+import OnboardingContainer from './onboarding-container';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -193,8 +193,17 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   }
 
   render() {
+    const { step } = this.state;
+
+    let stepBody;
+    if (step === 1) {
+      stepBody = this.renderStep1();
+    } else {
+      stepBody = this.renderStep2();
+    }
+
     return (
-      <PageLayout wrapperProps={this.props.wrapperProps} renderPageBody={this.renderPageBody} />
+      <OnboardingContainer wrapperProps={this.props.wrapperProps}>{stepBody}</OnboardingContainer>
     );
   }
 }

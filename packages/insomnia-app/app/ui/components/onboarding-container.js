@@ -5,10 +5,11 @@ import PageLayout from './page-layout';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { getAppLongName, getAppSynopsis } from '../../common/constants';
 
-type OnboardingContainerProps = {
+type Props = {
   wrapperProps: WrapperProps,
 };
-const OnboardingContainer = ({ wrapperProps, children }: OnboardingContainerProps) => {
+
+const OnboardingContainer = ({ wrapperProps, children }: Props) => {
   return (
     <PageLayout
       wrapperProps={wrapperProps}
