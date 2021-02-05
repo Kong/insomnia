@@ -26,8 +26,6 @@ import { setFont } from '../../../plugins/misc';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import { restoreCoreBackup } from '../../../common/migrate-from-designer';
-import { getDataDirectory } from '../../../common/misc';
 import { bindActionCreators } from 'redux';
 import * as globalActions from '../../redux/modules/global';
 import { connect } from 'react-redux';
@@ -554,12 +552,6 @@ class General extends React.PureComponent<Props, State> {
             style={{ padding: 0 }}
             onClick={this._handleStartMigration}>
             Migrate from Designer
-          </button>
-          <button
-            className="btn btn--clicky pointer"
-            style={{ padding: 0 }}
-            onClick={() => restoreCoreBackup(getDataDirectory())}>
-            Restore core backup
           </button>
         </div>
       </div>

@@ -55,8 +55,6 @@ type BaseSettings = {
   useBulkHeaderEditor: boolean,
   useBulkParametersEditor: boolean,
   validateSSL: boolean,
-
-  // Feature flags
   hasPromptedToMigrateFromDesigner: boolean,
 };
 
