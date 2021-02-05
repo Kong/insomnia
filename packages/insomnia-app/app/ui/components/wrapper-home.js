@@ -138,6 +138,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             url,
             ...credentials,
             depth: 1,
+            noGitSuffix: true,
           });
         } catch (err) {
           showError({ title: 'Error Cloning Repository', message: err.message, error: err });
@@ -249,6 +250,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             const newRepo = await models.gitRepository.create({
               ...repoSettingsPatch,
               needsFullClone: true,
+              uriHasBeenMigrated: true,
             });
             const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
             await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });

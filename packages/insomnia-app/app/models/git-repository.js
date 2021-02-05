@@ -12,6 +12,7 @@ type BaseGitRepository = {
     name: string,
     email: string,
   },
+  uriHasBeenMigrated: boolean,
 };
 
 export type GitRepository = BaseModel & BaseGitRepository;
@@ -31,10 +32,27 @@ export function init(): BaseGitRepository {
       name: '',
       email: '',
     },
+    uriHasBeenMigrated: false,
   };
 }
 
-export function migrate<T>(doc: T): T {
+export function migrate(doc: GitRepository): GitRepository {
+  doc = _migrateURI(doc);
+  return doc;
+}
+
+// Append .git to old git URIs to mimic previous isomorphic-git behaviour
+function _migrateURI(doc: GitRepository): GitRepository {
+  if (doc.uriHasBeenMigrated) {
+    return doc;
+  }
+
+  if (!doc.uri.endsWith('.git')) {
+    doc.uri += '.git';
+  }
+
+  doc.uriHasBeenMigrated = true;
+
   return doc;
 }
 

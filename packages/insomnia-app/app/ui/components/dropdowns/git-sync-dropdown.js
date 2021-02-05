@@ -185,7 +185,10 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
         if (gitRepository) {
           await models.gitRepository.update(gitRepository, patch);
         } else {
-          const repo = await models.gitRepository.create(patch);
+          const repo = await models.gitRepository.create({
+            ...patch,
+            uriHasBeenMigrated: true,
+          });
           await models.workspaceMeta.update(workspaceMeta, { gitRepositoryId: repo._id });
         }
       },
