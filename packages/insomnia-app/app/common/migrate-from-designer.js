@@ -134,10 +134,12 @@ export default async function migrateFromDesigner({
 
   const modelTypesToMerge = difference(models.types(), modelTypesToIgnore);
 
-  // Create core backup
-  const backupDir = await createCoreBackup(modelTypesToMerge, coreDataDir);
+  let backupDir = '';
 
   try {
+    // Create core backup
+    backupDir = await createCoreBackup(modelTypesToMerge, coreDataDir);
+
     // Load designer database
     const designerDb: DBType = await loadDesignerDb(modelTypesToMerge, designerDataDir);
 
@@ -198,9 +200,7 @@ export default async function migrateFromDesigner({
 
     console.log('[db-merge] done!');
 
-    throw new Error('oops');
-
-    // return {};
+    return {};
   } catch (error) {
     await restoreCoreBackup(backupDir, coreDataDir);
     console.log('[db-merge] an error occurred while migrating');
@@ -210,8 +210,13 @@ export default async function migrateFromDesigner({
 }
 
 export async function restoreCoreBackup(backupDir: string, coreDataDir: string) {
+  if (!backupDir) {
+    console.log(`[db-merge] nothing to restore; no backup was created`);
+    return;
+  }
+
   if (!fs.existsSync(backupDir)) {
-    console.log(`[db-merge] backup directory doesn't exist; doing nothing`);
+    console.log(`[db-merge] nothing to restore: backup directory doesn't exist at ${backupDir}`);
     return;
   }
 
