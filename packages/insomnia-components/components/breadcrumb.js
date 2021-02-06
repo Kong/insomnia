@@ -20,10 +20,12 @@ const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
   a::before,
   li > ::before {
     color: var(--color-font);
-    font-weight: 400 !important;
   }
 
   li {
+    display: flex;
+    flex-direction: row;
+
     a {
       cursor: pointer;
     }

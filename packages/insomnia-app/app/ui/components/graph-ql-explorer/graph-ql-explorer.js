@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import GraphQLExplorerField from './graph-ql-explorer-field';
 import GraphQLExplorerType from './graph-ql-explorer-type';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
@@ -28,7 +29,7 @@ type State = HistoryItem & {
   history: Array<HistoryItem>,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLExplorer extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);

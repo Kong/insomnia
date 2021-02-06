@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import jq from 'jsonpath';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import Modal from '../base/modal';
@@ -8,7 +9,7 @@ import ModalHeader from '../base/modal-header';
 import { showModal } from './index';
 import Link from '../base/link';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestRenderErrorModal extends PureComponent {
   constructor(props) {
     super(props);

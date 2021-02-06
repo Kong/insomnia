@@ -1,9 +1,10 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { debounce } from '../../../common/misc';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class DebouncedInput extends PureComponent {
   constructor(props) {
     super(props);

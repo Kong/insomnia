@@ -1,7 +1,8 @@
 // @flow
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
@@ -50,7 +51,7 @@ type Props = {
   activeRequest: ?Request,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarChildren extends React.PureComponent<Props> {
   _contextMenu: ?SidebarCreateDropdown;
 

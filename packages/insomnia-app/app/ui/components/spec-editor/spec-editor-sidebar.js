@@ -1,7 +1,8 @@
 // @flow
 import * as React from 'react';
 import styled from 'styled-components';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
 import { Sidebar } from 'insomnia-components';
@@ -22,7 +23,7 @@ const StyledSpecEditorSidebar: React.ComponentType<{}> = styled.div`
   overflow-y: auto;
 `;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SpecEditorSidebar extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);

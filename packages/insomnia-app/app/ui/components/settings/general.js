@@ -2,10 +2,9 @@
 import * as React from 'react';
 import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
-import HelpTooltip from '../help-tooltip';
-import type { HttpVersion } from '../../../common/constants';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  AUTOBIND_CFG,
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
@@ -17,6 +16,9 @@ import {
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
+import HelpTooltip from '../help-tooltip';
+import type { HttpVersion } from '../../../common/constants';
+
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
 import Tooltip from '../tooltip';
@@ -39,7 +41,7 @@ type State = {
   fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
