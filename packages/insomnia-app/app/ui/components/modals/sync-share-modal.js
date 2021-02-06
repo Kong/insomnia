@@ -160,7 +160,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
             <Link
               button
               className="btn btn--super-compact inline-block"
-              href="https://insomnia.rest/app/teams/">
+              href="https://app.insomnia.rest/app/teams/">
               Manage Teams
             </Link>
           </div>
