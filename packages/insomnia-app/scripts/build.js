@@ -8,7 +8,6 @@ const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 const { getBuildContext } = require('./getBuildContext');
-const { APP_ID_INSOMNIA, APP_ID_DESIGNER } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
@@ -24,18 +23,6 @@ module.exports.start = async function(forceFromGitRef) {
     process.exit(0);
   }
 
-  if (process.env.APP_ID) {
-    console.log('Should not set APP_ID for builds. Use Git tag instead');
-    process.exit(1);
-  }
-
-  // Configure APP_ID env based on what we detected
-  if (buildContext.app === 'designer') {
-    process.env.APP_ID = APP_ID_DESIGNER;
-  } else if (buildContext.app === 'core') {
-    process.env.APP_ID = APP_ID_INSOMNIA;
-  }
-
   if (!buildContext.smokeTest && appConfig().version !== buildContext.version) {
     console.log(
       `[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`,
@@ -46,10 +33,10 @@ module.exports.start = async function(forceFromGitRef) {
   // These must be required after APP_ID environment variable is set above
   const configRenderer = require('../webpack/webpack.config.production.babel');
   const configMain = require('../webpack/webpack.config.electron.babel');
-  const buildFolder = path.join('../build', appConfig().appId);
+  const buildFolder = path.join('../build');
 
   if (buildContext.smokeTest) {
-    console.log(`[build] Starting build to smoke test ${buildContext.app}`);
+    console.log('[build] Starting build to smoke test');
   } else {
     console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
   }
@@ -77,7 +64,7 @@ module.exports.start = async function(forceFromGitRef) {
   console.log('[build] Copying files');
   await copyFiles('../bin', buildFolder);
   await copyFiles('../app/static', path.join(buildFolder, 'static'));
-  await copyFiles(`../app/icons/${appConfig().appId}`, buildFolder);
+  await copyFiles('../app/icons', buildFolder);
 
   // Generate necessary files needed by `electron-builder`
   await generatePackageJson('../package.json', path.join(buildFolder, 'package.json'));

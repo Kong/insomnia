@@ -59,7 +59,7 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
-    "autobind-decorator": "^2.4.0",
+    "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.2.6",
     "framer-motion": "^1.10.3",
     "fuzzysort": "^1.1.4",

@@ -4,18 +4,14 @@
   "version": "2.2.27",
   "type": "module",
   "scripts": {
-    "spectron:core:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
-    "spectron:designer:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern designer",
-    "spectron:core:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern core",
-    "spectron:designer:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern designer",
+    "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
+    "spectron:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
     "serve": "node server/index.js",
     "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
     "test:cli": "npm run with-mock \"npm run cli\"",
-    "test:core:build": "npm run with-mock \"npm run spectron:core:build\"",
-    "test:designer:build": "npm run with-mock \"npm run spectron:designer:build\"",
-    "test:core:package": "npm run with-mock \"npm run spectron:core:package\"",
-    "test:designer:package": "npm run with-mock \"npm run spectron:designer:package\""
+    "test:build": "npm run with-mock \"npm run spectron:build\"",
+    "test:package": "npm run with-mock \"npm run spectron:package\""
   },
   "devDependencies": {
     "concurrently": "^5.3.0",

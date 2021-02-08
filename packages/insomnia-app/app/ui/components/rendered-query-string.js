@@ -1,10 +1,11 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../common/constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class RenderedQueryString extends PureComponent {
   constructor(props) {
     super(props);

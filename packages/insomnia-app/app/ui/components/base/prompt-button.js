@@ -1,13 +1,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from './button';
 
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class PromptButton extends PureComponent {
   constructor(props) {
     super(props);

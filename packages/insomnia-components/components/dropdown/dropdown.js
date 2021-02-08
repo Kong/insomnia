@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import fuzzySort from 'fuzzysort';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
@@ -109,7 +109,7 @@ const StyledMenu = styled.div`
   }
 `;
 
-@autobind
+@autoBindMethodsForReact
 class Dropdown extends PureComponent {
   constructor(props) {
     super(props);

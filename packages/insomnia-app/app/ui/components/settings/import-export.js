@@ -1,12 +1,13 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
 import Strings from '../../../common/strings';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ImportExport extends PureComponent {
   _handleImportUri() {
     const promptOptions = {
