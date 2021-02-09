@@ -227,6 +227,20 @@ class Editor extends PureComponent {
     this._onChange(pairs);
   }
 
+  _ensureID() {
+    const pairs = [...this.props.pairs];
+    const prevPairs = [...this.state.pairs];
+    for (const pair of pairs) {
+      if (this.props.maxPairs !== 1 && !pair.id) {
+        pair.id = generateId('pair');
+        prevPairs.push(pair);
+      }
+    }
+    this.setState({
+      pairs: prevPairs,
+    });
+  }
+
   _focusNext(addIfValue = false) {
     if (this.props.maxPairs === 1) {
       return;
@@ -350,28 +364,7 @@ class Editor extends PureComponent {
 
   componentDidUpdate() {
     this._updateFocus();
-    const pairs = [...this.props.pairs];
-    try {
-      const index = [];
-      for (const pair of pairs) {
-        if (this.props.maxPairs !== 1 && !pair.id) {
-          pair.id = generateId('pair');
-          index.push(pair);
-        }
-      }
-      if (index.length !== 0) {
-        const prevPairs = [...this.state.pairs];
-        for (const pair of index) {
-          prevPairs.push(pair);
-        }
-        console.log(prevPairs);
-        this.setState({
-          pairs: prevPairs,
-        });
-      }
-    } catch (e) {
-      console.log(e);
-    }
+    this._ensureID();
   }
 
   render() {
