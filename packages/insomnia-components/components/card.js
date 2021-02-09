@@ -9,6 +9,7 @@ type Props = {
   docMenu: React.Node,
   docTitle: string,
   docVersion: string,
+  docType: string,
   tagLabel: string,
 
   onChange?: (e: SyntheticEvent<HTMLInputElement>) => any,
@@ -243,8 +244,10 @@ class Card extends React.PureComponent<Props, State> {
       docLog,
       docMenu,
       selectable,
+      docType,
       onClick,
     } = this.props;
+
     return (
       <StyledCard className={this.state.selected ? 'selected' : 'deselected'} onClick={onClick}>
         <CardHeader>
@@ -265,6 +268,12 @@ class Card extends React.PureComponent<Props, State> {
           {docVersion && <div className="version">{docVersion}</div>}
         </CardBody>
         <CardFooter>
+          {docType && (
+            <span>
+              <SvgIcon icon={IconEnum.file} />
+              <div className="icoLabel">{docType}</div>
+            </span>
+          )}
           {docBranch && (
             <span>
               <SvgIcon icon={IconEnum.gitBranch} />
