@@ -4,7 +4,6 @@ import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
 import { getAppDefaultTheme, MIN_INTERFACE_FONT_SIZE } from '../common/constants';
-import { showAlert } from '../ui/components/modals';
 
 type ThemeBlock = {
   background?: {
@@ -282,17 +281,6 @@ export async function setFont(settings: Object) {
   const html = document.querySelector('html');
 
   if (!html) {
-    return;
-  }
-
-  if (settings.fontSize < MIN_INTERFACE_FONT_SIZE) {
-    showAlert({
-      title: `Interface font size warning`,
-      message: `Interface font size cannot be set below ${MIN_INTERFACE_FONT_SIZE}`,
-      onConfirm: () => {
-        settings.fontSize = MIN_INTERFACE_FONT_SIZE;
-      },
-    });
     return;
   }
 

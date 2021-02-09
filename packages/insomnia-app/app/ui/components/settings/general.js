@@ -28,6 +28,7 @@ import { setFont } from '../../../plugins/misc';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { showAlert } from '../modals';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -98,6 +99,16 @@ class General extends React.PureComponent<Props, State> {
 
   async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
+    if (settings.fontSize < MIN_INTERFACE_FONT_SIZE) {
+      showAlert({
+        title: `Interface font size warning`,
+        message: `Interface font size cannot be set below ${MIN_INTERFACE_FONT_SIZE}`,
+        onConfirm: () => {
+          settings.fontSize = MIN_INTERFACE_FONT_SIZE;
+        },
+      });
+      return;
+    }
     setFont(settings);
   }
 
