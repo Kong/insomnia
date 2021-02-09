@@ -212,6 +212,20 @@ export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
   return { mimeType, text: rawBody };
 }
 
+export function newBodyGraphQL(rawBody: string): RequestBody {
+  try {
+    // Only strip the newlines if rawBody is a parsable JSON
+    JSON.parse(rawBody);
+    return { mimeType: CONTENT_TYPE_GRAPHQL, text: rawBody.replace(/\\\\n/g, '') };
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      return { mimeType: CONTENT_TYPE_GRAPHQL, text: rawBody };
+    } else {
+      throw e;
+    }
+  }
+}
+
 export function newBodyFormUrlEncoded(parameters: Array<RequestBodyParameter> | null): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
@@ -328,7 +342,7 @@ export function updateMimeType(
     if (contentTypeHeader) {
       contentTypeHeader.value = CONTENT_TYPE_JSON;
     }
-    body = newBodyRaw(oldBody.text || '', CONTENT_TYPE_GRAPHQL);
+    body = newBodyGraphQL(oldBody.text || '');
   } else if (typeof mimeType !== 'string') {
     // No body
     body = newBodyNone();
