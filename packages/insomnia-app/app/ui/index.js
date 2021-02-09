@@ -42,7 +42,11 @@ document.title = getAppLongName();
   //  Need to know all the rules for when to automatically show migration and what the previous/next step is
 
   // Check if we should load from Designer
-  if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+  if (
+    !isDevelopment() &&
+    !settings.hasPromptedToMigrateFromDesigner &&
+    fs.existsSync(getDesignerDataDir())
+  ) {
     store.dispatch(setActiveActivity(ACTIVITY_MIGRATION));
     await models.settings.update(settings, { hasPromptedToMigrateFromDesigner: true });
   }
