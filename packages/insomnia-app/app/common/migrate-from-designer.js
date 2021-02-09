@@ -202,9 +202,9 @@ export default async function migrateFromDesigner({
 
     return {};
   } catch (error) {
-    await restoreCoreBackup(backupDir, coreDataDir);
     console.log('[db-merge] an error occurred while migrating');
     console.error(error);
+    await restoreCoreBackup(backupDir, coreDataDir);
     return { error };
   }
 }

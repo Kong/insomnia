@@ -6,7 +6,6 @@ import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
-import envPaths from 'env-paths';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -361,7 +360,8 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
 }
 
 export function getDesignerDataDir(): string {
-  return envPaths('Insomnia Designer', { suffix: '' }).data;
+  const { app } = electron.remote || electron;
+  return pathJoin(app.getPath('appData'), 'Insomnia Designer');
 }
 
 export function getDataDirectory(): string {
