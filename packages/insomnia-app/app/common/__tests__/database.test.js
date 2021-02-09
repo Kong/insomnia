@@ -443,6 +443,50 @@ describe('_repairDatabase()', () => {
     expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Workspace 2'); // Should fix
     expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name'); // should not fix
   });
+
+  it('fixes old git uris', async () => {
+    const oldRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+      uriHasBeenMigrated: false,
+    });
+    const oldRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+      uriHasBeenMigrated: false,
+    });
+    const newRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+    });
+    const newRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+    });
+
+    await db._repairDatabase();
+
+    expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriHasBeenMigrated: true,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriHasBeenMigrated: true,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriHasBeenMigrated: true,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar',
+        uriHasBeenMigrated: true,
+      }),
+    );
+  });
 });
 
 describe('duplicate()', () => {
