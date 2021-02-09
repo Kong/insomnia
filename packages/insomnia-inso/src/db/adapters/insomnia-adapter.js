@@ -6,16 +6,16 @@ import type { BaseModel } from '../models/types';
 import YAML from 'yaml';
 
 const keyToType = {
-  api_spec: 'ApiSpec',
-  environment: 'Environment',
-  request: 'Request',
-  request_group: 'RequestGroup',
-  workspace: 'Workspace',
-  unit_test_suite: 'UnitTestSuite',
-  unit_test: 'UnitTest',
+  ApiSpec: 'api_spec',
+  Environment: 'environment',
+  Request: 'request',
+  RequestGroup: 'request_group',
+  Workspace: 'workspace',
+  UnitTestSuite: 'unit_test_suite',
+  UnitTest: 'unit_test',
 };
 
-const insomniaAdapter: DbAdapter = async path => {
+const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
   // Sanity check - do db files exist?
   if (!fs.existsSync(path)) return null;
   // Building an empty database
@@ -28,14 +28,11 @@ const insomniaAdapter: DbAdapter = async path => {
   if (object.__export_format !== 4) return null;
   const raw = object?.resources;
 
+  // Filter data on type
+  const types = filterTypes?.length ? filterTypes : Object.keys(db);
+
   if (raw?.length !== 0) {
-    db.ApiSpec.push(...read(raw, 'api_spec'));
-    db.Environment.push(...read(raw, 'environment'));
-    db.Request.push(...read(raw, 'request'));
-    db.RequestGroup.push(...read(raw, 'request_group'));
-    db.Workspace.push(...read(raw, 'workspace'));
-    db.UnitTestSuite.push(...read(raw, 'unit_test_suite'));
-    db.UnitTest.push(...read(raw, 'unit_test'));
+    types.forEach(type => db[type].push(...read(raw, keyToType[type])));
   }
 
   return db;
@@ -52,7 +49,7 @@ const read: Array<BaseModel> = (raw, _type) => {
 
 const replace: Array<BaseModel> = (raw, _type) => {
   return raw.map(item => {
-    item.type = keyToType[_type];
+    item.type = keyToType[item.type];
     return item;
   });
 };
