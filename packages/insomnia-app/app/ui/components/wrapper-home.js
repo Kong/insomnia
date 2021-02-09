@@ -138,6 +138,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             url,
             ...credentials,
             depth: 1,
+            noGitSuffix: true,
           });
         } catch (err) {
           showError({ title: 'Error Cloning Repository', message: err.message, error: err });
