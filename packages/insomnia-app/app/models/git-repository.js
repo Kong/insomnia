@@ -12,7 +12,7 @@ type BaseGitRepository = {
     name: string,
     email: string,
   },
-  uriHasBeenMigrated: boolean,
+  uriNeedsMigration: boolean,
 };
 
 export type GitRepository = BaseModel & BaseGitRepository;
@@ -32,7 +32,7 @@ export function init(): BaseGitRepository {
       name: '',
       email: '',
     },
-    uriHasBeenMigrated: false,
+    uriNeedsMigration: true,
   };
 }
 
@@ -42,7 +42,7 @@ export function migrate(doc: GitRepository): GitRepository {
 
 export function create(patch: $Shape<GitRepository> = {}): Promise<GitRepository> {
   return db.docCreate(type, {
-    uriHasBeenMigrated: true,
+    uriNeedsMigration: false,
     ...patch,
   });
 }

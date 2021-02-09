@@ -796,7 +796,7 @@ async function _fixMultipleCookieJars(workspace) {
 
 // Append .git to old git URIs to mimic previous isomorphic-git behaviour
 async function _fixOldGitURIs(doc: GitRepository) {
-  if (doc.uriHasBeenMigrated) {
+  if (!doc.uriNeedsMigration) {
     return;
   }
 
@@ -804,7 +804,7 @@ async function _fixOldGitURIs(doc: GitRepository) {
     doc.uri += '.git';
   }
 
-  doc.uriHasBeenMigrated = true;
+  doc.uriNeedsMigration = false;
 
   await update(doc);
 

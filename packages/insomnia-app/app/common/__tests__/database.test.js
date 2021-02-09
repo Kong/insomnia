@@ -447,11 +447,11 @@ describe('_repairDatabase()', () => {
   it('fixes old git uris', async () => {
     const oldRepoWithSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
-      uriHasBeenMigrated: false,
+      uriNeedsMigration: true,
     });
     const oldRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
-      uriHasBeenMigrated: false,
+      uriNeedsMigration: true,
     });
     const newRepoWithSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
@@ -465,25 +465,25 @@ describe('_repairDatabase()', () => {
     expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
-        uriHasBeenMigrated: true,
+        uriNeedsMigration: false,
       }),
     );
     expect(await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id)).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
-        uriHasBeenMigrated: true,
+        uriNeedsMigration: false,
       }),
     );
     expect(await db.get(models.gitRepository.type, newRepoWithSuffix._id)).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
-        uriHasBeenMigrated: true,
+        uriNeedsMigration: false,
       }),
     );
     expect(await db.get(models.gitRepository.type, newRepoWithoutSuffix._id)).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar',
-        uriHasBeenMigrated: true,
+        uriNeedsMigration: false,
       }),
     );
   });
