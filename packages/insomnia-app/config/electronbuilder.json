@@ -9,30 +9,30 @@
       "filter": "yarn-standalone.js"
     },
     {
-      "from": "./build/__APP_ID__",
+      "from": "./build",
       "to": ".",
       "filter": "opensource-licenses.txt"
     }
   ],
   "protocols": [
     {
-      "name": "Insomnia Designer",
+      "name": "Insomnia",
       "role": "Viewer",
       "schemes": [
-        "insomniad"
+        "insomnia"
       ]
     }
   ],
   "fileAssociations": [],
   "directories": {
-    "buildResources": "build/__APP_ID__",
-    "app": "build/__APP_ID__",
-    "output": "dist/__APP_ID__"
+    "buildResources": "build",
+    "app": "build",
+    "output": "dist"
   },
   "mac": {
     "hardenedRuntime": true,
     "category": "public.app-category.developer-tools",
-    "entitlements": "./build/__APP_ID__/static/entitlements.mac.inherit.plist",
+    "entitlements": "./build/static/entitlements.mac.inherit.plist",
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "target": [
       "dmg",
@@ -61,13 +61,13 @@
     ]
   },
   "win": {
-    "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "target": [
       "squirrel",
       "zip"
     ]
   },
   "squirrelWindows": {
+    "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "iconUrl": "__ICON_URL__"
   },
   "linux": {

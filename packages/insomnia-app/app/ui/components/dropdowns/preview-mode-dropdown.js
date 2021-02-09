@@ -1,8 +1,8 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
 
 type Props = {|
   download: (pretty: boolean) => any,
@@ -12,7 +12,7 @@ type Props = {|
   showPrettifyOption?: boolean,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class PreviewModeDropdown extends React.PureComponent<Props> {
   async _handleClick(previewMode: string) {
     const { updatePreviewMode } = this.props;

@@ -12,6 +12,7 @@ import {
   AUTH_HAWK,
   AUTH_NETRC,
   AUTH_ASAP,
+  AUTOBIND_CFG,
 } from '../../../../common/constants';
 import BasicAuth from './basic-auth';
 import DigestAuth from './digest-auth';
@@ -23,7 +24,7 @@ import HawkAuth from './hawk-auth';
 import AWSAuth from './aws-auth';
 import NetrcAuth from './netrc-auth';
 import AsapAuth from './asap-auth';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Settings } from '../../../../models/settings';
@@ -42,7 +43,7 @@ type Props = {
   oAuth2Token: ?OAuth2Token,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class AuthWrapper extends React.PureComponent<Props> {
   renderEditor() {
     const {

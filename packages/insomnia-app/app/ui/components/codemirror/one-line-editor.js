@@ -2,7 +2,8 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import CodeEditor from './code-editor';
 import Input from '../base/debounced-input';
 
@@ -11,7 +12,7 @@ const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class OneLineEditor extends PureComponent {
   constructor(props) {
     super(props);

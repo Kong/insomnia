@@ -3,7 +3,13 @@ import * as path from 'path';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  NPM_PACKAGE_BASE,
+  PLUGIN_HUB_BASE,
+  PLUGIN_PATH,
+} from '../../../common/constants';
 import * as electron from 'electron';
 import CopyButton from '../base/copy-button';
 import { reload } from '../../../templating/index';
@@ -11,7 +17,7 @@ import installPlugin from '../../../plugins/install';
 import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { delay } from '../../../common/misc';
-import { NPM_PACKAGE_BASE, PLUGIN_HUB_BASE, PLUGIN_PATH } from '../../../common/constants';
+
 import type { PluginConfig, Settings } from '../../../models/settings';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import { createPlugin } from '../../../plugins/create';
@@ -31,7 +37,7 @@ type Props = {
   updateSetting: Function,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Plugins extends React.PureComponent<Props, State> {
   _isMounted: boolean;
 

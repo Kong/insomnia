@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import ReactDOM from 'react-dom';
 import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
@@ -9,7 +10,7 @@ import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-drop
 import SidebarRequestRow from './sidebar-request-row';
 import * as misc from '../../../common/misc';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarRequestGroupRow extends PureComponent {
   constructor(props) {
     super(props);

@@ -1,9 +1,9 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
-import { Breadcrumb, Button, Header, NoticeTable } from 'insomnia-components';
+import { Button, NoticeTable } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import CodeEditor from './codemirror/code-editor';
@@ -12,15 +12,14 @@ import { showModal } from './modals';
 import GenerateConfigModal from './modals/generate-config-modal';
 import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
-import designerLogo from '../images/insomnia-designer-logo.svg';
 import previewIcon from '../images/icn-eye.svg';
 import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
 import { getConfigGenerators } from '../../plugins';
 import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_HOME } from '../../common/constants';
-import ActivityToggle from './activity-toggle';
+import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
+import WorkspacePageHeader from './workspace-page-header';
 
 const spectral = new Spectral();
 
@@ -41,7 +40,7 @@ type State = {|
   }>,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperDesign extends React.PureComponent<Props, State> {
   editor: ?CodeEditor;
   debounceTimeout: IntervalID;
@@ -230,76 +229,64 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
-    const { gitSyncDropdown, wrapperProps, handleActivityChange } = this.props;
-
-    const { activeApiSpec, activity, activeWorkspace } = wrapperProps;
-
+  _renderPageHeader() {
+    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
     const { previewHidden, hasConfigPlugins } = this.state;
 
     return (
+      <WorkspacePageHeader
+        wrapperProps={wrapperProps}
+        handleActivityChange={handleActivityChange}
+        gridRight={
+          <React.Fragment>
+            <Button variant="contained" onClick={this._handleTogglePreview}>
+              <img src={previewIcon} alt="Preview" width="15" />
+              &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
+            </Button>
+            {hasConfigPlugins && (
+              <Button
+                variant="contained"
+                onClick={this._handleGenerateConfig}
+                className="margin-left">
+                <img src={generateConfigIcon} alt="Generate Config" width="15" />
+                &nbsp; Generate Config
+              </Button>
+            )}
+            {gitSyncDropdown}
+          </React.Fragment>
+        }
+      />
+    );
+  }
+
+  _renderPageSidebar() {
+    const { activeApiSpec } = this.props.wrapperProps;
+
+    return (
+      <ErrorBoundary
+        invalidationKey={activeApiSpec.contents}
+        renderError={() => (
+          <div className="text-left margin pad">
+            <h4>An error occurred while trying to render your spec's navigation. 😢</h4>
+            <p>
+              This navigation will automatically refresh, once you have a valid specification that
+              can be rendered.
+            </p>
+          </div>
+        )}>
+        <SpecEditorSidebar apiSpec={activeApiSpec} handleSetSelection={this._handleSetSelection} />
+      </ErrorBoundary>
+    );
+  }
+
+  render() {
+    return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageHeader={() => (
-          <Header
-            className="app-header"
-            gridLeft={
-              <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb
-                  className="breadcrumb"
-                  crumbs={['Documents', activeApiSpec.fileName]}
-                  onClick={this._handleBreadcrumb}
-                />
-              </React.Fragment>
-            }
-            gridCenter={
-              <ActivityToggle
-                activity={activity}
-                handleActivityChange={handleActivityChange}
-                workspace={activeWorkspace}
-              />
-            }
-            gridRight={
-              <React.Fragment>
-                <Button variant="contained" onClick={this._handleTogglePreview}>
-                  <img src={previewIcon} alt="Preview" width="15" />
-                  &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
-                </Button>
-                {hasConfigPlugins && (
-                  <Button
-                    variant="contained"
-                    onClick={this._handleGenerateConfig}
-                    className="margin-left">
-                    <img src={generateConfigIcon} alt="Generate Config" width="15" />
-                    &nbsp; Generate Config
-                  </Button>
-                )}
-                {gitSyncDropdown}
-              </React.Fragment>
-            }
-          />
-        )}
+        renderPageHeader={this._renderPageHeader}
         renderPaneOne={this._renderEditor}
         renderPaneTwo={this._renderPreview}
-        renderPageSidebar={() => (
-          <ErrorBoundary
-            invalidationKey={activeApiSpec.contents}
-            renderError={() => (
-              <div className="text-left margin pad">
-                <h4>An error occurred while trying to render your spec's navigation. 😢</h4>
-                <p>
-                  This navigation will automatically refresh, once you have a valid specification
-                  that can be rendered.
-                </p>
-              </div>
-            )}>
-            <SpecEditorSidebar
-              apiSpec={activeApiSpec}
-              handleSetSelection={this._handleSetSelection}
-            />
-          </ErrorBoundary>
-        )}
+        renderPageSidebar={this._renderPageSidebar}
       />
     );
   }

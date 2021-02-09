@@ -1,14 +1,15 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
-import { COLLAPSE_SIDEBAR_REMS, SIDEBAR_SKINNY_REMS } from '../../../common/constants';
-import SyncDropdown from '../dropdowns/sync-dropdown';
-import type { StatusCandidate } from '../../../sync/types';
-import { isLoggedIn } from '../../../account/session';
+import {
+  COLLAPSE_SIDEBAR_REMS,
+  SIDEBAR_SKINNY_REMS,
+  AUTOBIND_CFG,
+} from '../../../common/constants';
 
 type Props = {|
   activeEnvironment: Environment | null,
@@ -20,14 +21,12 @@ type Props = {|
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
   showEnvironmentsModal: Function,
-  syncItems: Array<StatusCandidate>,
   unseenWorkspaces: Array<Workspace>,
   width: number,
-  workspace: Workspace,
   workspaces: Array<Workspace>,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Sidebar extends React.PureComponent<Props> {
   render() {
     const {
@@ -35,10 +34,7 @@ class Sidebar extends React.PureComponent<Props> {
       children,
       environmentHighlightColorStyle,
       hidden,
-      syncItems,
-      vcs,
       width,
-      workspace,
     } = this.props;
 
     return (
@@ -57,15 +53,6 @@ class Sidebar extends React.PureComponent<Props> {
               : null,
         }}>
         {children}
-
-        {vcs && isLoggedIn() && (
-          <SyncDropdown
-            className="sidebar__footer"
-            workspace={workspace}
-            vcs={vcs}
-            syncItems={syncItems}
-          />
-        )}
       </aside>
     );
   }

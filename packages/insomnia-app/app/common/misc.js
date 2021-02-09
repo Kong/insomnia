@@ -6,7 +6,6 @@ import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
-import type { GlobalActivity } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -372,10 +371,6 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
   }
 
   return chunks;
-}
-
-export function setActivityAttribute(activity: GlobalActivity) {
-  document.body.setAttribute('data-activity', activity);
 }
 
 export function pluralize(text: string): string {
