@@ -15,6 +15,10 @@ import {
   isWindows,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
+  MIN_INTERFACE_FONT_SIZE,
+  MAX_INTERFACE_FONT_SIZE,
+  MIN_EDITOR_FONT_SIZE,
+  MAX_EDITOR_FONT_SIZE,
 } from '../../../common/constants';
 import HelpTooltip from '../help-tooltip';
 import type { HttpVersion } from '../../../common/constants';
@@ -268,9 +272,9 @@ class General extends React.PureComponent<Props, State> {
             </label>
           </div>
           {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-            min: 8,
-            max: 20,
-            onChange: this._handleFontSizeChange,
+            min: MIN_INTERFACE_FONT_SIZE,
+            max: MAX_INTERFACE_FONT_SIZE,
+            onBlur: this._handleFontSizeChange,
           })}
         </div>
 
@@ -298,8 +302,8 @@ class General extends React.PureComponent<Props, State> {
             </label>
           </div>
           {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
-            min: 8,
-            max: 20,
+            min: MIN_EDITOR_FONT_SIZE,
+            max: MAX_EDITOR_FONT_SIZE,
           })}
         </div>
 
