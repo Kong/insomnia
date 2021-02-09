@@ -11,7 +11,17 @@ export const Unchecked = () => <ToggleSwitch onChange={defaultOnChange} />;
 
 export const Disabled = () => (
   <>
-    <ToggleSwitch disabled checked onChange={defaultOnChange} />
-    <ToggleSwitch disabled onChange={defaultOnChange} />
+    <p>
+      <ToggleSwitch disabled checked onChange={defaultOnChange} />
+    </p>
+    <p>
+      <ToggleSwitch disabled onChange={defaultOnChange} />
+    </p>
+  </>
+);
+
+export const WithLabel = () => (
+  <>
+    <ToggleSwitch onChange={defaultOnChange()} label="text label" />
   </>
 );

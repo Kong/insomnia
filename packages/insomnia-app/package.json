@@ -35,7 +35,9 @@
       "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
       "^worker-loader!": "<rootDir>/__mocks__/dummy.js"
     },
-    "modulePathIgnorePatterns": ["<rootDir>/network/.*/__mocks__"],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/network/.*/__mocks__"
+    ],
     "testMatch": [
       "**/__tests__/**/*.test.js?(x)"
     ],

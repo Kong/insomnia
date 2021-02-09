@@ -30,7 +30,12 @@ import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import type { GlobalActivity } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
-import { ACTIVITY_DEBUG, DEPRECATED_ACTIVITY_INSOMNIA } from '../../../common/constants';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  DEPRECATED_ACTIVITY_INSOMNIA,
+} from '../../../common/constants';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -629,6 +634,11 @@ export function init() {
     activity = JSON.parse(item);
   } catch (e) {
     // Nothing here...
+  }
+
+  // If the initializing activity is migration, change it to home
+  if (activity === ACTIVITY_MIGRATION) {
+    activity = ACTIVITY_HOME;
   }
 
   return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
