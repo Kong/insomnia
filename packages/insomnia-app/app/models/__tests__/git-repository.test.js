@@ -7,17 +7,17 @@ describe('migrate()', () => {
   it('migrates old git uris correctly', async () => {
     const oldRepoWithSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
+      uriHasBeenMigrated: false,
     });
     const oldRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
+      uriHasBeenMigrated: false,
     });
     const newRepoWithSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar.git',
-      uriHasBeenMigrated: true,
     });
     const newRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
-      uriHasBeenMigrated: true,
     });
 
     await models.gitRepository.migrate(oldRepoWithSuffix);
@@ -25,9 +25,29 @@ describe('migrate()', () => {
     await models.gitRepository.migrate(newRepoWithSuffix);
     await models.gitRepository.migrate(newRepoWithoutSuffix);
 
-    expect(oldRepoWithSuffix.uri).toBe('https://github.com/foo/bar.git');
-    expect(oldRepoWithoutSuffix.uri).toBe('https://github.com/foo/bar.git');
-    expect(newRepoWithSuffix.uri).toBe('https://github.com/foo/bar.git');
-    expect(newRepoWithoutSuffix.uri).toBe('https://github.com/foo/bar');
+    expect(oldRepoWithSuffix).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriHasBeenMigrated: true,
+      }),
+    );
+    expect(oldRepoWithoutSuffix).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriHasBeenMigrated: true,
+      }),
+    );
+    expect(newRepoWithSuffix).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriHasBeenMigrated: true,
+      }),
+    );
+    expect(newRepoWithoutSuffix).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar',
+        uriHasBeenMigrated: true,
+      }),
+    );
   });
 });

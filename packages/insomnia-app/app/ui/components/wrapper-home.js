@@ -250,7 +250,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
             const newRepo = await models.gitRepository.create({
               ...repoSettingsPatch,
               needsFullClone: true,
-              uriHasBeenMigrated: true,
             });
             const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
             await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });

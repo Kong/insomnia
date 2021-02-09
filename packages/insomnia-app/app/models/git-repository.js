@@ -57,7 +57,10 @@ function _migrateURI(doc: GitRepository): GitRepository {
 }
 
 export function create(patch: $Shape<GitRepository> = {}): Promise<GitRepository> {
-  return db.docCreate(type, patch);
+  return db.docCreate(type, {
+    uriHasBeenMigrated: true,
+    ...patch,
+  });
 }
 
 export function update(repo: GitRepository, patch: $Shape<GitRepository>): Promise<GitRepository> {
