@@ -106,6 +106,7 @@ declare type OA3PathItem = {
   head?: OA3Operation,
   patch?: OA3Operation,
   trace?: OA3Operation,
+  'x-kong-name'?: string,
 };
 
 declare type OA3Paths = {
@@ -204,7 +205,6 @@ declare type OpenApi3Spec = {
   security?: Array<OA3SecurityRequirement>,
   tags?: Array<string>,
   externalDocs?: OA3ExternalDocs,
-  'x-kong-name'?: string,
 };
 
 const HttpMethod = {

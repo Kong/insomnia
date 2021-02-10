@@ -95,11 +95,14 @@ export function generateRouteName(
   method: string,
   numRoutes: number,
 ): string {
-  const n = numRoutes;
+  if (pathItem[method].operationId) {
+    return pathItem[method].operationId;
+  }
+
   const name = getName(api);
 
-  if (typeof (pathItem: Object)['x-kong-name'] === 'string') {
-    const pathSlug = generateSlug((pathItem: Object)['x-kong-name']);
+  if (typeof pathItem['x-kong-name'] === 'string') {
+    const pathSlug = generateSlug(pathItem['x-kong-name']);
     return `${name}-${pathSlug}-${method}`;
   }
 
@@ -110,5 +113,5 @@ export function generateRouteName(
   }
 
   // otherwise, use a unique integer to prevent collisions
-  return `${generateSlug(name)}-path${n ? '_' + n : ''}-${method}`;
+  return `${generateSlug(name)}-path${numRoutes ? '_' + numRoutes : ''}-${method}`;
 }
