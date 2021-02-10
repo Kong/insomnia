@@ -77,11 +77,15 @@ const Options = ({ start, cancel }: OptionsProps) => {
   return (
     <>
       <p>
-        <strong>Would you like to migrate data from Insomnia Designer?</strong>
+        <strong>Migrate from Insomnia Designer</strong>
+      </p>
+      <p>
+        Insomnia Designer and Core are now Insomnia! Select the items below you'd like to migrate
+        from Designer.
       </p>
       <div className="text-left margin-top">
         <BooleanSetting
-          label="Use Designer Settings"
+          label="Copy Designer Application Settings"
           name="useDesignerSettings"
           options={options}
           handleChange={handleSwitchChange}
@@ -107,7 +111,7 @@ const Options = ({ start, cancel }: OptionsProps) => {
             handleChange={handleInputChange}
           />
           <TextSetting
-            label="Core Data Directory"
+            label="Insomnia Data Directory"
             name="coreDataDir"
             options={options}
             handleChange={handleInputChange}
@@ -120,7 +124,7 @@ const Options = ({ start, cancel }: OptionsProps) => {
           Start Migration
         </button>
         <button key="cancel" className="btn btn--super-compact" onClick={cancel}>
-          Cancel
+          Skip for now
         </button>
       </div>
     </>
@@ -138,6 +142,12 @@ const Migrating = () => (
   </>
 );
 
+const RestartButton = () => (
+  <button key="restart" className="btn btn--clicky" onClick={restartApp}>
+    Restart Now
+  </button>
+);
+
 const Success = () => (
   <>
     <p>
@@ -150,9 +160,7 @@ const Success = () => (
     <p>Please restart the application for your changes to take effect.</p>
 
     <div className="margin-top">
-      <button key="restart" className="btn btn--clicky" onClick={restartApp}>
-        Restart
-      </button>
+      <RestartButton />
     </div>
   </>
 );
@@ -186,9 +194,7 @@ const Fail = ({ error }: FailProps) => (
     </div>
 
     <div className="margin-top">
-      <button key="restart" className="btn btn--clicky" onClick={restartApp}>
-        Restart
-      </button>
+      <RestartButton />
     </div>
   </>
 );
