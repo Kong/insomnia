@@ -28,7 +28,6 @@ import { setFont } from '../../../plugins/misc';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import { showAlert } from '../modals';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -79,11 +78,21 @@ class General extends React.PureComponent<Props, State> {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
-    if (e.currentTarget.type === 'number') {
-      value = parseInt(value, 10);
+    if (el.type === 'number') {
+      value = parseInt(value, 10) || 0;
+      const min = parseInt(el.min, 10);
+      const max = parseInt(el.max, 10);
+
+      const lessThanMax = Number.isNaN(max) || value <= max;
+      const moreThanMin = Number.isNaN(min) || value >= min;
+      const between = lessThanMax && moreThanMin;
+
+      if (!between) {
+        value = !lessThanMax ? max : min;
+      }
     }
 
-    if (e.currentTarget.value === '__NULL__') {
+    if (el.value === '__NULL__') {
       value = null;
     }
 
@@ -99,16 +108,7 @@ class General extends React.PureComponent<Props, State> {
 
   async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
-    if (settings.fontSize < MIN_INTERFACE_FONT_SIZE) {
-      showAlert({
-        title: `Interface font size warning`,
-        message: `Interface font size cannot be set below ${MIN_INTERFACE_FONT_SIZE}`,
-        onConfirm: () => {
-          settings.fontSize = MIN_INTERFACE_FONT_SIZE;
-        },
-      });
-      return;
-    }
+
     setFont(settings);
   }
 

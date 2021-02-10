@@ -3,7 +3,7 @@ import Color from 'color';
 import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
-import { getAppDefaultTheme, MIN_INTERFACE_FONT_SIZE } from '../common/constants';
+import { getAppDefaultTheme } from '../common/constants';
 
 type ThemeBlock = {
   background?: {
@@ -287,12 +287,7 @@ export async function setFont(settings: Object) {
   html.style.setProperty('--font-default', settings.fontInterface);
   html.style.setProperty('--font-monospace', settings.fontMonospace);
   html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');
-  html.style.setProperty(
-    'font-size',
-    `${
-      settings.fontSize < MIN_INTERFACE_FONT_SIZE ? MIN_INTERFACE_FONT_SIZE : settings.fontSize
-    }px`,
-  );
+  html.style.setProperty('font-size', `${settings.fontSize}px`);
 }
 
 const _baseTheme = {
