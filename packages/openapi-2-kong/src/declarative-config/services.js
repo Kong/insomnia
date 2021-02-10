@@ -95,15 +95,23 @@ export function generateRouteName(
   method: string,
   numRoutes: number,
 ): string {
-  if (pathItem[method].operationId) {
-    return pathItem[method].operationId;
-  }
-
   const name = getName(api);
 
+  // as a product requirement, `x-kong-name` values takes precedence over `operationId` or other OpenAPI values
+
+  // method-level `x-kong-name` has the highest priority
+  if (typeof pathItem[method]['x-kong-name'] === 'string') {
+    return pathItem[method]['x-kong-name'];
+  }
+
+  // path-level `x-kong-name` has the second highest priority
   if (typeof pathItem['x-kong-name'] === 'string') {
     const pathSlug = generateSlug(pathItem['x-kong-name']);
     return `${name}-${pathSlug}-${method}`;
+  }
+
+  if (pathItem[method].operationId) {
+    return pathItem[method].operationId;
   }
 
   // If a summary key exists, use that to generate the name
