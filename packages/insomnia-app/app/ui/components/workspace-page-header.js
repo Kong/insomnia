@@ -58,7 +58,7 @@ const WorkspacePageHeader = ({
       className="app-header"
       gridLeft={
         <React.Fragment>
-          <img src={coreLogo} alt="Insomnia" width="32" height="32" />
+          <img src={coreLogo} alt="Insomnia" width="24" height="24" />
           <Breadcrumb
             className="breadcrumb"
             crumbs={[strings.home, <React.Fragment key="workspace-dd">{workspace}</React.Fragment>]}
