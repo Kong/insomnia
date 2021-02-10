@@ -4,23 +4,40 @@ import Switch from 'react-switch';
 import styled from 'styled-components';
 
 type Props = {
-  className?: string,
+  labelClassName?: string,
+  switchClassName?: string,
   checked?: boolean,
   disabled?: boolean,
-  onChange(checked: boolean): void | Promise<void>,
+  onChange(checked: boolean, Event, string): void | Promise<void>,
+  label?: string,
 };
 
-const ThemedSwitch: React.ComponentType<{ checked: boolean }> = styled.div`
+const ThemedSwitch: React.ComponentType<{ checked: boolean }> = styled(Switch)`
   .react-switch-bg {
     background: ${({ checked }) => (checked ? 'var(--color-surprise)' : 'var(--hl-xl)')} !important;
+  }
+
+  vertical-align: middle;
+`;
+
+const StyledLabel = styled.label`
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+
+  span {
+    margin-left: var(--padding-md);
   }
 `;
 
 const ToggleSwitch: React.StatelessFunctionalComponent<Props> = ({
-  className,
+  labelClassName,
+  switchClassName,
   checked: checkedProp,
   onChange,
   disabled,
+  label,
+  ...props
 }) => {
   const [checked, setChecked] = React.useState(!!checkedProp);
 
@@ -30,25 +47,35 @@ const ToggleSwitch: React.StatelessFunctionalComponent<Props> = ({
   }, [checkedProp]);
 
   const callback = React.useCallback(
-    c => {
+    (c, a, b) => {
       setChecked(c);
-      onChange(c);
+      onChange(c, a, b);
     },
     [onChange],
   );
 
-  return (
-    <ThemedSwitch checked={checked}>
-      <Switch
-        className={className}
-        checked={checked}
-        disabled={disabled}
-        onChange={callback}
-        height={20}
-        width={40}
-      />
-    </ThemedSwitch>
+  const toggle = (
+    <ThemedSwitch
+      className={switchClassName}
+      checked={checked}
+      disabled={disabled}
+      onChange={callback}
+      height={20}
+      width={40}
+      {...(props: Object)}
+    />
   );
+
+  if (label) {
+    return (
+      <StyledLabel className={labelClassName}>
+        {toggle}
+        <span>{label}</span>
+      </StyledLabel>
+    );
+  } else {
+    return toggle;
+  }
 };
 
 export default ToggleSwitch;
