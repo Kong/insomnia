@@ -6,7 +6,6 @@ export const ButtonSizeEnum = {
   Default: 'default',
   Small: 'small',
   Medium: 'medium',
-  Circle: 'circle',
 };
 
 export const ButtonVariantEnum = {
