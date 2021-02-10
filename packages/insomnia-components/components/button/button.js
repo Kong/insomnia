@@ -6,6 +6,7 @@ export const ButtonSizeEnum = {
   Default: 'default',
   Small: 'small',
   Medium: 'medium',
+  Circle: 'circle',
 };
 
 export const ButtonVariantEnum = {
@@ -38,6 +39,7 @@ const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
+  justify-content: center !important;
   border: 1px solid transparent;
 
   ${({ radius }) => css`
@@ -57,6 +59,12 @@ const StyledButton: React.ComponentType<ButtonProps> = styled.button`
           padding: 0 var(--padding-md);
           height: calc(var(--line-height-md) * 0.8);
           font-size: var(--font-size-md);
+        `;
+      case 'circle':
+        return css`
+          padding: 0.6rem;
+          font-size: var(--font-size-xxl);
+          border-radius: 50%;
         `;
       default:
         return css`

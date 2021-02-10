@@ -19,7 +19,7 @@ import _ToggleSwitch from './components/toggle-switch';
 import * as table from './components/table';
 import _Tooltip from './components/tooltip';
 
-export { Button, AsyncButton } from './components/button';
+export { Button, AsyncButton, CircleButton } from './components/button';
 
 export const Breadcrumb = _Breadcrumb;
 export const Card = _Card;

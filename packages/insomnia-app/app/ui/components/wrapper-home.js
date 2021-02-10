@@ -22,6 +22,7 @@ import {
   DropdownDivider,
   DropdownItem,
   Header,
+  CircleButton,
   SvgIcon,
 } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
@@ -460,6 +461,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
                 <img src={coreLogo} alt="Insomnia" width="32" height="32" />
                 <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
               </React.Fragment>
+            }
+            gridRight={
+              <>
+                <CircleButton>
+                  <SvgIcon icon="gear" />
+                </CircleButton>
+              </>
             }
           />
         )}
