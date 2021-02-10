@@ -60,12 +60,6 @@ const StyledButton: React.ComponentType<ButtonProps> = styled.button`
           height: calc(var(--line-height-md) * 0.8);
           font-size: var(--font-size-md);
         `;
-      case 'circle':
-        return css`
-          padding: 0.6rem;
-          font-size: var(--font-size-xxl);
-          border-radius: 50%;
-        `;
       default:
         return css`
           padding: 0 var(--padding-md);
