@@ -10,7 +10,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_callback-example.yaml"],
           "name": "Callback_Example-path-post",
-          "paths": ["/streams"]
+          "paths": ["/streams$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_callback-example.yaml"]

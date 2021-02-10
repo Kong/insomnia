@@ -191,7 +191,7 @@ describe('common', () => {
     });
 
     it('does not convert to regex if no variables present', () => {
-      expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz');
+      expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz$');
     });
   });
 

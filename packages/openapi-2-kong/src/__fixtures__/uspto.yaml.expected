@@ -10,7 +10,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
           "name": "USPTO_Data_Set_API-path-get",
-          "paths": ["/"]
+          "paths": ["/$"]
         },
         {
           "methods": ["GET"],
