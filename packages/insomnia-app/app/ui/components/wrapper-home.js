@@ -358,17 +358,20 @@ class WrapperHome extends React.PureComponent<Props, State> {
       </DocumentCardDropdown>
     );
     const version = spec?.info?.version || '';
-    let label: string = 'Insomnia';
+    let label: string = 'Collection';
+    let format: string = '';
+    let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
     let title = w.name;
 
     if (w.scope === 'designer') {
-      label = '';
+      label = 'Document';
+      labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
-        label = `OpenAPI ${specFormatVersion}`;
+        format = `OpenAPI ${specFormatVersion}`;
       } else if (specFormat === 'swagger') {
         // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
-        label = `OpenAPI ${specFormatVersion}`;
+        format = `OpenAPI ${specFormatVersion}`;
       }
 
       defaultActivity = ACTIVITY_SPEC;
@@ -391,10 +394,18 @@ class WrapperHome extends React.PureComponent<Props, State> {
         key={apiSpec._id}
         docBranch={branch && <Highlight search={filter} text={branch} />}
         docTitle={title && <Highlight search={filter} text={title} />}
-        docVersion={version && <Highlight search={filter} text={version} />}
-        tagLabel={label && <Highlight search={filter} text={label} />}
+        docVersion={version && <Highlight search={filter} text={`v${version}`} />}
+        tagLabel={
+          label && (
+            <>
+              <span className="margin-right-xs">{labelIcon}</span>
+              <Highlight search={filter} text={label} />
+            </>
+          )
+        }
         docLog={log}
         docMenu={docMenu}
+        docFormat={format}
         onClick={() => this._handleClickCard(w._id, defaultActivity)}
       />
     );

@@ -9,7 +9,7 @@ type Props = {
   docMenu: React.Node,
   docTitle: string,
   docVersion: string,
-  docType: string,
+  docFormat: string,
   tagLabel: string,
 
   onChange?: (e: SyntheticEvent<HTMLInputElement>) => any,
@@ -203,10 +203,10 @@ const CardFooter: React.ComponentType<{}> = styled.div`
     display: flex;
     justify-content: left;
     flex-direction: row;
+    margin-bottom: var(--padding-xs);
   }
 
   .icoLabel {
-    margin-bottom: var(--padding-xxs);
     padding-left: var(--padding-xs);
     font-size: var(--font-size-sm);
     * {
@@ -243,8 +243,8 @@ class Card extends React.PureComponent<Props, State> {
       docBranch,
       docLog,
       docMenu,
+      docFormat,
       selectable,
-      docType,
       onClick,
     } = this.props;
 
@@ -264,14 +264,18 @@ class Card extends React.PureComponent<Props, State> {
           )}
         </CardHeader>
         <CardBody>
-          {docTitle && <div className="title">{docTitle}</div>}
+          {docTitle && (
+            <div className="title">
+              <strong>{docTitle}</strong>
+            </div>
+          )}
           {docVersion && <div className="version">{docVersion}</div>}
         </CardBody>
         <CardFooter>
-          {docType && (
+          {docFormat && (
             <span>
               <SvgIcon icon={IconEnum.file} />
-              <div className="icoLabel">{docType}</div>
+              <div className="icoLabel">{docFormat}</div>
             </span>
           )}
           {docBranch && (
