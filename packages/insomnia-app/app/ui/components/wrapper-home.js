@@ -53,6 +53,7 @@ import {
   GIT_INTERNAL_DIR,
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
+import SettingsModal from './modals/settings-modal';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -116,6 +117,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
         this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
       },
     });
+  }
+
+  static _handleShowSettings() {
+    showModal(SettingsModal);
   }
 
   async _handleWorkspaceClone() {
@@ -417,7 +422,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <Dropdown
         renderButton={() => (
           <Button variant="contained" bg="surprise" className="margin-left">
-            Create <i className="fa fa-caret-down" />
+            Create <i className="fa fa-caret-down pad-left-sm" />
           </Button>
         )}>
         <DropdownDivider>New</DropdownDivider>
@@ -463,11 +468,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridRight={
-              <>
-                <CircleButton>
-                  <SvgIcon icon="gear" />
-                </CircleButton>
-              </>
+              <CircleButton onClick={WrapperHome._handleShowSettings}>
+                <SvgIcon icon="gear" />
+              </CircleButton>
             }
           />
         )}
@@ -498,6 +501,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
                   No documents found for <strong>{filter}</strong>
                 </Notice>
               )}
+            </div>
+            <div className="document-listing__footer vertically-center">
+              <span>{cards.length} Documents</span>
             </div>
           </div>
         )}

@@ -12,7 +12,7 @@ type Props = {
 
 const StyledCircleButton: React.ComponentType<Props> = styled(Button)`
   padding: unset;
-  font-size: var(--font-size-xxxl);
+  font-size: var(--font-size-xl);
   border-radius: 50%;
 
   ${({ height }) => css`
