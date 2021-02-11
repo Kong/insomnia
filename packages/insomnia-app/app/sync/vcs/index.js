@@ -379,7 +379,7 @@ export default class VCS {
     return branch.snapshots.length;
   }
 
-  async getHistory(count = 0): Promise<Array<Snapshot>> {
+  async getHistory(count: number = 0): Promise<Array<Snapshot>> {
     const branch = await this._getCurrentBranch();
     const snapshots = [];
 
