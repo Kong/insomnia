@@ -269,83 +269,6 @@ describe('VCS', () => {
     });
   });
 
-  describe('getHistory()', () => {
-    let v;
-    beforeEach(async () => {
-      v = await vcs('master');
-
-      const status1 = await v.status(
-        [{ key: 'foo', name: 'Foo', document: newDoc('foobar1') }],
-        {},
-      );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged.foo]);
-      await v.takeSnapshot(stage1, 'Add foo');
-
-      const status2 = await v.status(
-        [{ key: 'bar', name: 'Bar', document: newDoc('foobar2') }],
-        {},
-      );
-      const stage2 = await v.stage(status2.stage, [status2.unstaged.bar]);
-      await v.takeSnapshot(stage2, 'Add bar');
-    });
-    it('returns all history', async () => {
-      // get all history
-      expect(await v.getHistory()).toStrictEqual([
-        {
-          author: '',
-          created: expect.any(Date),
-          description: '',
-          id: 'bbc0f7a04fdae6b42a06fa17639c29c4095c792b',
-          name: 'Add foo',
-          parent: '0000000000000000000000000000000000000000',
-          state: [
-            {
-              blob: 'f3827e9fdf461634c4ce528b88ced46fecf6509c',
-              key: 'foo',
-              name: 'Foo',
-            },
-          ],
-        },
-        {
-          author: '',
-          created: expect.any(Date),
-          description: '',
-          id: '38ac2c897ba1ef9ac96248d95352b6c83c8f09d3',
-          name: 'Add bar',
-          parent: 'bbc0f7a04fdae6b42a06fa17639c29c4095c792b',
-          state: [
-            {
-              blob: 'f3827e9fdf461634c4ce528b88ced46fecf6509c',
-              key: 'foo',
-              name: 'Foo',
-            },
-            {
-              blob: '2d1f409ab33b0b997d6c239a7754d24875570c2d',
-              key: 'bar',
-              name: 'Bar',
-            },
-          ],
-        },
-      ]);
-    });
-
-    it('returns recent history', async () => {
-      const [s1, s2, ...others] = await v.getHistory();
-
-      // There should only be two items
-      expect(others).toHaveLength(0);
-
-      // Get the latest item
-      expect(await v.getHistory(1)).toStrictEqual([s2]);
-
-      // Get the last 2 items
-      expect(await v.getHistory(2)).toStrictEqual([s1, s2]);
-
-      // Get the last 3 items (only 2 exist)
-      expect(await v.getHistory(3)).toStrictEqual([s1, s2]);
-    });
-  });
-
   describe('stage()', () => {
     it('stages entity', async () => {
       const v = await vcs('master');
@@ -748,6 +671,7 @@ describe('VCS', () => {
       ]);
     });
   });
+
   describe('describeChanges()', () => {
     it('works with same object structure', async () => {
       const a = { foo: 'bar', nested: { baz: 10 } };
@@ -765,6 +689,84 @@ describe('VCS', () => {
       const a = null;
       const b = { foo: 'baz', nested: { baz: 11 }, modified: 12 };
       expect(describeChanges(a, b)).toEqual([]);
+    });
+  });
+
+  describe('getHistory()', () => {
+    let v;
+    beforeEach(async () => {
+      v = await vcs('master');
+
+      const status1 = await v.status(
+        [{ key: 'foo', name: 'Foo', document: newDoc('foobar1') }],
+        {},
+      );
+      const stage1 = await v.stage(status1.stage, [status1.unstaged.foo]);
+      await v.takeSnapshot(stage1, 'Add foo');
+
+      const status2 = await v.status(
+        [{ key: 'bar', name: 'Bar', document: newDoc('foobar2') }],
+        {},
+      );
+      const stage2 = await v.stage(status2.stage, [status2.unstaged.bar]);
+      await v.takeSnapshot(stage2, 'Add bar');
+    });
+
+    it('returns all history', async () => {
+      // get all history
+      expect(await v.getHistory()).toStrictEqual([
+        {
+          author: '',
+          created: expect.any(Date),
+          description: '',
+          id: 'f271aed3e12317215491ca1545770bd8289948e1',
+          name: 'Add foo',
+          parent: '0000000000000000000000000000000000000000',
+          state: [
+            {
+              blob: 'f3827e9fdf461634c4ce528b88ced46fecf6509c',
+              key: 'foo',
+              name: 'Foo',
+            },
+          ],
+        },
+        {
+          author: '',
+          created: expect.any(Date),
+          description: '',
+          id: '3acf54915cd8d34a9cd9ea4ac3a988105b483869',
+          name: 'Add bar',
+          parent: 'f271aed3e12317215491ca1545770bd8289948e1',
+          state: [
+            {
+              blob: 'f3827e9fdf461634c4ce528b88ced46fecf6509c',
+              key: 'foo',
+              name: 'Foo',
+            },
+            {
+              blob: '2d1f409ab33b0b997d6c239a7754d24875570c2d',
+              key: 'bar',
+              name: 'Bar',
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('returns recent history', async () => {
+      const [s1, s2, ...others] = await v.getHistory();
+
+      // There should only be two items
+      expect(others).toHaveLength(0);
+
+      // Get the latest item
+      expect(await v.getHistory(1)).toStrictEqual([s2]);
+
+      // Get the last 2 items
+      expect(await v.getHistory(2)).toStrictEqual([s1, s2]);
+
+      // Get the last 3 items (only 2 exist)
+      expect(await v.getHistory(3)).toStrictEqual([s1, s2]);
     });
   });
 });
