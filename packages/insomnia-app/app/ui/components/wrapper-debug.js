@@ -18,8 +18,7 @@ import WorkspacePageHeader from './workspace-page-header';
 import { isLoggedIn } from '../../account/session';
 import SyncDropdown from './dropdowns/sync-dropdown';
 import { Button } from 'insomnia-components';
-import { showModal } from './modals';
-import SyncShareModal from './modals/sync-share-modal';
+import { showSyncShareModal } from './modals/sync-share-modal';
 
 type Props = {
   forceRefreshKey: string,
@@ -62,17 +61,18 @@ class WrapperDebug extends React.PureComponent<Props> {
     const collection = activeWorkspace.scope === 'collection';
     const designer = !collection;
 
+    const share = collection && (
+      <Button variant="contained" onClick={showSyncShareModal}>
+        <i className="fa fa-globe pad-right-sm" /> Share
+      </Button>
+    );
+
     const betaSync = collection && vcs && isLoggedIn() && (
       <SyncDropdown workspace={activeWorkspace} vcs={vcs} syncItems={syncItems} />
     );
 
     const gitSync = designer && gitSyncDropdown;
     const sync = betaSync || gitSync;
-    const share = collection && (
-      <Button variant="contained" onClick={this._handleShowShareSettings}>
-        <i className="fa fa-globe pad-right-sm" /> Share
-      </Button>
-    );
 
     return (
       <WorkspacePageHeader
@@ -81,15 +81,11 @@ class WrapperDebug extends React.PureComponent<Props> {
         gridRight={
           <>
             {share}
-            <span className="margin-left">{sync}</span>
+            {sync && <span className="margin-left">{sync}</span>}
           </>
         }
       />
     );
-  }
-
-  _handleShowShareSettings() {
-    showModal(SyncShareModal);
   }
 
   _renderPageSidebar() {
