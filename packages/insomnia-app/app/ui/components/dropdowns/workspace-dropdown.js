@@ -11,7 +11,7 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
@@ -114,19 +114,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  _handleWorkspaceCreate() {
-    showPrompt({
-      title: 'Create New Workspace',
-      defaultValue: 'My Workspace',
-      submitName: 'Create',
-      selectText: true,
-      onComplete: async name => {
-        const workspace = await models.workspace.create({ name, scope: 'collection' });
-        this.props.handleSetActiveWorkspace(workspace._id);
-      },
-    });
-  }
-
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
       this._dropdown && this._dropdown.toggle(true);
@@ -170,10 +157,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
-          </DropdownItem>
-
-          <DropdownItem onClick={this._handleWorkspaceCreate}>
-            <i className="fa fa-empty" /> Create Workspace
           </DropdownItem>
 
           <DropdownDivider>

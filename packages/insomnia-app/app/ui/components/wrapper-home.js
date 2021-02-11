@@ -83,19 +83,37 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.setState({ filter: e.currentTarget.value });
   }
 
-  _handleWorkspaceCreate() {
+  async __actuallyCreate(patch: $Shape<Workspace>) {
+    const workspace = await models.workspace.create(patch);
+    this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
+
+    trackEvent('Workspace', 'Create');
+  }
+
+  _handleDocumentCreate() {
     showPrompt({
       title: 'New Document',
       submitName: 'Create',
       placeholder: 'spec-name.yaml',
-      selectText: true,
       onComplete: async name => {
-        await models.workspace.create({
+        await this.__actuallyCreate({
           name,
           scope: 'designer',
         });
+      },
+    });
+  }
 
-        trackEvent('Workspace', 'Create');
+  _handleCollectionCreate() {
+    showPrompt({
+      title: 'Create New Collection',
+      placeholder: 'My Collection',
+      submitName: 'Create',
+      onComplete: async name => {
+        await this.__actuallyCreate({
+          name,
+          scope: 'collection',
+        });
       },
     });
   }
@@ -424,8 +442,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
     return (
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleWorkspaceCreate}>
+        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleDocumentCreate}>
           Blank Document
+        </DropdownItem>
+        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleCollectionCreate}>
+          Blank Collection
         </DropdownItem>
         <DropdownDivider>Import From</DropdownDivider>
         <DropdownItem icon={<i className="fa fa-file" />} onClick={this._handleImportFile}>
