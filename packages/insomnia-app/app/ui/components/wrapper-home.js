@@ -4,7 +4,13 @@ import * as git from 'isomorphic-git';
 import path from 'path';
 import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, ACTIVITY_HOME, ACTIVITY_SPEC, ACTIVITY_DEBUG } from '../../common/constants';
+import {
+  AUTOBIND_CFG,
+  ACTIVITY_HOME,
+  ACTIVITY_SPEC,
+  ACTIVITY_DEBUG,
+  getAppName,
+} from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
@@ -16,6 +22,7 @@ import {
   DropdownDivider,
   DropdownItem,
   Header,
+  CircleButton,
   SvgIcon,
 } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
@@ -46,7 +53,7 @@ import {
   GIT_INTERNAL_DIR,
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
-import strings from '../../common/strings';
+import SettingsModal from './modals/settings-modal';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -110,6 +117,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
         this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
       },
     });
+  }
+
+  static _handleShowSettings() {
+    showModal(SettingsModal);
   }
 
   async _handleWorkspaceClone() {
@@ -353,17 +364,20 @@ class WrapperHome extends React.PureComponent<Props, State> {
       </DocumentCardDropdown>
     );
     const version = spec?.info?.version || '';
-    let label: string = 'Insomnia';
+    let label: string = 'Collection';
+    let format: string = '';
+    let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
     let title = w.name;
 
-    if (spec || w.scope === 'designer') {
-      label = '';
+    if (w.scope === 'designer') {
+      label = 'Document';
+      labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
-        label = `OpenAPI ${specFormatVersion}`;
+        format = `OpenAPI ${specFormatVersion}`;
       } else if (specFormat === 'swagger') {
         // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
-        label = `OpenAPI ${specFormatVersion}`;
+        format = `OpenAPI ${specFormatVersion}`;
       }
 
       defaultActivity = ACTIVITY_SPEC;
@@ -386,10 +400,18 @@ class WrapperHome extends React.PureComponent<Props, State> {
         key={apiSpec._id}
         docBranch={branch && <Highlight search={filter} text={branch} />}
         docTitle={title && <Highlight search={filter} text={title} />}
-        docVersion={version && <Highlight search={filter} text={version} />}
-        tagLabel={label && <Highlight search={filter} text={label} />}
+        docVersion={version && <Highlight search={filter} text={`v${version}`} />}
+        tagLabel={
+          label && (
+            <>
+              <span className="margin-right-xs">{labelIcon}</span>
+              <Highlight search={filter} text={label} />
+            </>
+          )
+        }
         docLog={log}
         docMenu={docMenu}
+        docFormat={format}
         onClick={() => this._handleClickCard(w._id, defaultActivity)}
       />
     );
@@ -400,7 +422,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <Dropdown
         renderButton={() => (
           <Button variant="contained" bg="surprise" className="margin-left">
-            Create <i className="fa fa-caret-down" />
+            Create <i className="fa fa-caret-down pad-left-sm" />
           </Button>
         )}>
         <DropdownDivider>New</DropdownDivider>
@@ -441,36 +463,47 @@ class WrapperHome extends React.PureComponent<Props, State> {
             className="app-header"
             gridLeft={
               <React.Fragment>
-                <img src={coreLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb className="breadcrumb" crumbs={[strings.home]} />
+                <img src={coreLogo} alt="Insomnia" width="24" height="24" />
+                <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
               </React.Fragment>
             }
-            gridCenter={
-              <div className="form-control form-control--outlined no-margin">
-                <KeydownBinder onKeydown={this._handleKeyDown}>
-                  <input
-                    ref={this._setFilterInputRef}
-                    type="text"
-                    placeholder="Filter..."
-                    onChange={this._handleFilterChange}
-                    className="no-margin"
-                  />
-                  <span className="fa fa-search filter-icon" />
-                </KeydownBinder>
-              </div>
+            gridRight={
+              <CircleButton onClick={WrapperHome._handleShowSettings}>
+                <SvgIcon icon="gear" />
+              </CircleButton>
             }
-            gridRight={this.renderMenu()}
           />
         )}
         renderPageBody={() => (
-          <div className="document-listing theme--pane layout-body pad-top">
-            <div className="document-listing__body">
+          <div className="document-listing theme--pane layout-body">
+            <div className="document-listing__body pad-bottom">
+              <div className="row-spaced margin-top margin-bottom-sm">
+                <h2 className="no-margin">Dashboard</h2>
+                <span className="row-spaced pad-left" style={{ maxWidth: '400px' }}>
+                  <div className="form-control form-control--outlined no-margin">
+                    <KeydownBinder onKeydown={this._handleKeyDown}>
+                      <input
+                        ref={this._setFilterInputRef}
+                        type="text"
+                        placeholder="Filter..."
+                        onChange={this._handleFilterChange}
+                        className="no-margin"
+                      />
+                      <span className="fa fa-search filter-icon" />
+                    </KeydownBinder>
+                  </div>
+                  {this.renderMenu()}
+                </span>
+              </div>
               <CardContainer>{cards}</CardContainer>
               {filter && cards.length === 0 && (
                 <Notice color="subtle">
                   No documents found for <strong>{filter}</strong>
                 </Notice>
               )}
+            </div>
+            <div className="document-listing__footer vertically-center">
+              <span>{cards.length} Documents</span>
             </div>
           </div>
         )}
