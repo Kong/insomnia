@@ -22,7 +22,6 @@ import {
   DropdownDivider,
   DropdownItem,
   Header,
-  CircleButton,
   SvgIcon,
 } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
@@ -53,8 +52,9 @@ import {
   GIT_INTERNAL_DIR,
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
-import { showSettingsModal } from './modals/settings-modal';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
+import SettingsButton from './buttons/settings-button';
+import AccountDropdown from './dropdowns/account-dropdown';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -490,9 +490,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridRight={
-              <CircleButton className="margin-left" onClick={showSettingsModal}>
-                <SvgIcon icon="gear" />
-              </CircleButton>
+              <>
+                <SettingsButton className="margin-left" />
+                <AccountDropdown className="margin-left" />
+              </>
             }
           />
         )}

@@ -7,8 +7,9 @@ import strings from '../../common/strings';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import ActivityToggle from './activity-toggle';
 import type { WrapperProps } from './wrapper';
-import { Header, Breadcrumb, CircleButton, SvgIcon } from 'insomnia-components';
-import { showSettingsModal } from './modals/settings-modal';
+import { Header, Breadcrumb } from 'insomnia-components';
+import AccountDropdown from './dropdowns/account-dropdown';
+import SettingsButton from './buttons/settings-button';
 
 type Props = {
   wrapperProps: WrapperProps,
@@ -79,9 +80,8 @@ const WorkspacePageHeader = ({
       gridRight={
         <>
           {gridRight}
-          <CircleButton className="margin-left" onClick={showSettingsModal}>
-            <SvgIcon icon="gear" />
-          </CircleButton>
+          <SettingsButton className="margin-left" />
+          <AccountDropdown className="margin-left" />
         </>
       }
     />
