@@ -2,11 +2,21 @@
 import * as React from 'react';
 import styled, { css } from 'styled-components';
 
-type Props = { isSelected?: boolean, selectable?: boolean, indentLevel?: number };
+type Props = {
+  bordered?: boolean,
+  isSelected?: boolean,
+  selectable?: boolean,
+  indentLevel?: number,
+};
 
 const ListGroupItem: React.AbstractComponent<Props> = styled.li`
-  border-bottom: 1px solid var(--hl-xs);
   padding: var(--padding-sm) var(--padding-sm);
+
+  ${({ bordered = true }) =>
+    bordered &&
+    css`
+      border-bottom: 1px solid var(--hl-xs);
+    `}
 
   ${({ selectable }) =>
     selectable &&
