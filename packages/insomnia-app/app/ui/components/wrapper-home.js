@@ -418,14 +418,15 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   renderCreateMenu() {
+    const button = (
+      <Button variant="contained" bg="surprise" className="margin-left">
+        Create
+        <i className="fa fa-caret-down pad-left-sm" />
+      </Button>
+    );
+
     return (
-      <Dropdown
-        renderButton={() => (
-          <Button variant="contained" bg="surprise" className="margin-left">
-            Create
-            <i className="fa fa-caret-down pad-left-sm" />
-          </Button>
-        )}>
+      <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
         <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleWorkspaceCreate}>
           Blank Document

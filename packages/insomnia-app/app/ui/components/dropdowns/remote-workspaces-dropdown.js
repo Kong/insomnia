@@ -144,15 +144,15 @@ class RemoteWorkspacesDropdown extends React.Component<Props, State> {
       return !(workspaceExists && localProjectExists);
     });
 
+    const button = (
+      <Button variant="contained" bg="surprise" className={className}>
+        Pull
+        <i className="fa fa-caret-down pad-left-sm" />
+      </Button>
+    );
+
     return (
-      <Dropdown
-        onOpen={this._refreshRemoteWorkspaces}
-        renderButton={() => (
-          <Button variant="contained" bg="surprise" className={className}>
-            Pull
-            <i className="fa fa-caret-down pad-left-sm" />
-          </Button>
-        )}>
+      <Dropdown onOpen={this._refreshRemoteWorkspaces} renderButton={button}>
         <DropdownDivider>
           Remote Workspaces{' '}
           <HelpTooltip>
