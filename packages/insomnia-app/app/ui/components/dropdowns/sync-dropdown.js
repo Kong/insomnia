@@ -85,7 +85,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     };
   }
 
-  async refreshMainAttributes(extraState?: Object = {}) {
+  async refreshMainAttributes(extraState: Object = {}) {
     const { vcs, syncItems, workspace } = this.props;
 
     if (!vcs.hasProject()) {
@@ -98,6 +98,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
+    const [lastSnapshot] = await vcs.getHistory(1);
     const status = await vcs.status(syncItems, {});
 
     const newState = {
@@ -116,6 +117,12 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         console.log('Failed to compare remote branches', err.message);
       }
     }
+
+    // Don't really need to wait for this to finish
+    models.workspaceMeta.updateByParentId(workspace._id, {
+      cachedGitRepositoryBranch: currentBranch,
+      cachedGitLastCommitTime: lastSnapshot?.created,
+    });
 
     this.setState(newState);
   }
