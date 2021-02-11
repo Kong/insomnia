@@ -57,7 +57,7 @@ declare type OA3Operation = {
   deprecated?: boolean,
   security?: Array<OA3SecurityRequirement>,
   servers?: Array<OA3Server>,
-};
+} & XKongName;
 
 declare type OA3Reference = {|
   $ref: string,
