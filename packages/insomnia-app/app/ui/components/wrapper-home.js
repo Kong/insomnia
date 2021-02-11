@@ -290,12 +290,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
-    handleSetActiveWorkspace(id);
     if (!activeActivity || activeActivity === ACTIVITY_HOME) {
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);
     }
+    handleSetActiveWorkspace(id);
   }
 
   renderCard(w: Workspace) {
@@ -335,9 +335,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     let log = <TimeFromNow timestamp={modifiedLocally} />;
     let branch = lastActiveBranch;
-    // Show locally unsaved changes for spec
-    // NOTE: this doesn't work for non-spec workspaces
-    if (w.scope === 'designer' && apiSpec && lastCommitTime && apiSpec.modified > lastCommitTime) {
+    if (w.scope === 'designer' && lastCommitTime && apiSpec?.modified > lastCommitTime) {
+      // Show locally unsaved changes for spec
+      // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
       log = (
         <React.Fragment>

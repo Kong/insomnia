@@ -11,11 +11,10 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 
-import { showAlert, showError, showModal, showPrompt } from '../modals';
+import { showError, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import LoginModal from '../modals/login-modal';
-import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -24,8 +23,6 @@ import type { Workspace } from '../../../models/workspace';
 import SyncShareModal from '../modals/sync-share-modal';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
-import HelpTooltip from '../help-tooltip';
-import type { Project } from '../../../sync/types';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
 import type { WorkspaceAction } from '../../../plugins';
@@ -52,9 +49,6 @@ type Props = {
 type State = {
   actionPlugins: Array<WorkspaceAction>,
   loadingActions: { [string]: boolean },
-  localProjects: Array<Project>,
-  pullingProjects: { [string]: boolean },
-  remoteProjects: Array<Project>,
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -64,9 +58,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   state = {
     actionPlugins: [],
     loadingActions: {},
-    localProjects: [],
-    pullingProjects: {},
-    remoteProjects: [],
   };
 
   async _handlePluginClick(p: WorkspaceAction) {
@@ -111,84 +102,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleDropdownOpen() {
-    this._refreshRemoteWorkspaces();
-
     // Load action plugins
     const plugins = await getWorkspaceActions();
     this.setState({ actionPlugins: plugins });
-  }
-
-  async _refreshRemoteWorkspaces() {
-    const { vcs } = this.props;
-    if (!vcs) {
-      return;
-    }
-
-    if (!session.isLoggedIn()) {
-      return;
-    }
-
-    const remoteProjects = await vcs.remoteProjects();
-    const localProjects = await vcs.localProjects();
-    this.setState({ remoteProjects, localProjects });
-  }
-
-  async _handlePullRemoteWorkspace(project: Project) {
-    const { vcs } = this.props;
-    if (!vcs) {
-      throw new Error('VCS is not defined');
-    }
-
-    this.setState(state => ({
-      pullingProjects: { ...state.pullingProjects, [project.id]: true },
-    }));
-
-    try {
-      // Clone old VCS so we don't mess anything up while working on other projects
-      const newVCS = vcs.newInstance();
-
-      // Remove all projects for workspace first
-      await newVCS.removeProjectsForRoot(project.rootDocumentId);
-
-      // Set project, checkout master, and pull
-      const defaultBranch = 'master';
-
-      await newVCS.setProject(project);
-      await newVCS.checkout([], defaultBranch);
-
-      const remoteBranches = await newVCS.getRemoteBranches();
-      const defaultBranchMissing = !remoteBranches.includes(defaultBranch);
-
-      // The default branch does not exist, so we create it and the workspace locally
-      if (defaultBranchMissing) {
-        const workspace: Workspace = await models.initModel(models.workspace.type, {
-          _id: project.rootDocumentId,
-          name: project.name,
-        });
-
-        await db.upsert(workspace);
-      } else {
-        await newVCS.pull([]); // There won't be any existing docs since it's a new pull
-
-        const flushId = await db.bufferChanges();
-        for (const doc of await newVCS.allDocuments()) {
-          await db.upsert(doc);
-        }
-        await db.flushChanges(flushId);
-      }
-
-      await this._refreshRemoteWorkspaces();
-    } catch (err) {
-      this._dropdown && this._dropdown.hide();
-      showAlert({
-        title: 'Pull Error',
-        message: `Failed to pull workspace. ${err.message}`,
-      });
-    }
-
-    this.setState(state => ({
-      pullingProjects: { ...state.pullingProjects, [project.id]: false },
-    }));
   }
 
   _setDropdownRef(n: ?Dropdown) {
@@ -234,17 +150,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  componentDidUpdate(prevProps: Props) {
-    // Reload workspaces if we just got a new VCS instance
-    if (this.props.vcs && !prevProps.vcs) {
-      this._refreshRemoteWorkspaces();
-    }
-  }
-
-  componentDidMount() {
-    this._refreshRemoteWorkspaces();
-  }
-
   render() {
     const {
       displayName,
@@ -258,21 +163,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       ...other
     } = this.props;
 
-    const { remoteProjects, localProjects, pullingProjects } = this.state;
-
-    const missingRemoteProjects = remoteProjects.filter(({ id, rootDocumentId }) => {
-      const localProjectExists = localProjects.find(p => p.id === id);
-      const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
-
-      // Mark as missing if:
-      //   - the project doesn't yet exists locally
-      //   - the project exists locally but somehow the workspace doesn't anymore
-      return !(workspaceExists && localProjectExists);
-    });
-
-    const nonActiveWorkspaces = workspaces
-      .filter(w => w._id !== activeWorkspace._id)
-      .sort((w1, w2) => w1.name.localeCompare(w2.name));
     const classes = classnames(className, 'wide', 'workspace-dropdown');
 
     const { actionPlugins, loadingActions } = this.state;
@@ -303,49 +193,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-globe" /> Share <strong>{activeWorkspace.name}</strong>
           </DropdownItem>
 
-          <DropdownDivider>Switch Workspace</DropdownDivider>
-
-          {nonActiveWorkspaces.map(w => {
-            const isUnseen = !!unseenWorkspaces.find(v => v._id === w._id);
-            return (
-              <DropdownItem key={w._id} onClick={handleSetActiveWorkspace} value={w._id}>
-                <i className="fa fa-random" /> To <strong>{w.name}</strong>
-                {isUnseen && (
-                  <Tooltip message="You haven't seen this workspace before" position="top">
-                    <i className="width-auto fa fa-asterisk surprise" />
-                  </Tooltip>
-                )}
-              </DropdownItem>
-            );
-          })}
-
           <DropdownItem onClick={this._handleWorkspaceCreate}>
             <i className="fa fa-empty" /> Create Workspace
           </DropdownItem>
-
-          {missingRemoteProjects.length > 0 && (
-            <DropdownDivider>
-              Remote Workspaces{' '}
-              <HelpTooltip>
-                These workspaces have been shared with you via Insomnia Sync and do not yet exist on
-                your machine.
-              </HelpTooltip>
-            </DropdownDivider>
-          )}
-
-          {missingRemoteProjects.map(p => (
-            <DropdownItem
-              key={p.id}
-              stayOpenAfterClick
-              onClick={() => this._handlePullRemoteWorkspace(p)}>
-              {pullingProjects[p.id] ? (
-                <i className="fa fa-refresh fa-spin" />
-              ) : (
-                <i className="fa fa-cloud-download" />
-              )}
-              Pull <strong>{p.name}</strong>
-            </DropdownItem>
-          ))}
 
           <DropdownDivider>
             {getAppName()} v{getAppVersion()}
