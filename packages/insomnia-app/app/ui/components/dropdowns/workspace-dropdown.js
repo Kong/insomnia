@@ -20,7 +20,6 @@ import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
-import SyncShareModal from '../modals/sync-share-modal';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import PromptButton from '../base/prompt-button';
@@ -127,10 +126,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     showModal(WorkspaceSettingsModal);
   }
 
-  _handleShowShareSettings() {
-    showModal(SyncShareModal);
-  }
-
   _handleWorkspaceCreate() {
     showPrompt({
       title: 'Create New Workspace',
@@ -187,10 +182,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
-          </DropdownItem>
-
-          <DropdownItem onClick={this._handleShowShareSettings}>
-            <i className="fa fa-globe" /> Share <strong>{activeWorkspace.name}</strong>
           </DropdownItem>
 
           <DropdownItem onClick={this._handleWorkspaceCreate}>

@@ -53,7 +53,7 @@ import {
   GIT_INTERNAL_DIR,
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
-import SettingsModal from './modals/settings-modal';
+import { showSettingsModal } from './modals/settings-modal';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 
 type Props = {|
@@ -118,10 +118,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
         this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
       },
     });
-  }
-
-  static _handleShowSettings() {
-    showModal(SettingsModal);
   }
 
   async _handleWorkspaceClone() {
@@ -494,7 +490,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridRight={
-              <CircleButton onClick={WrapperHome._handleShowSettings}>
+              <CircleButton className="margin-left" onClick={showSettingsModal}>
                 <SvgIcon icon="gear" />
               </CircleButton>
             }

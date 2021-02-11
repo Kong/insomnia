@@ -7,7 +7,8 @@ import strings from '../../common/strings';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import ActivityToggle from './activity-toggle';
 import type { WrapperProps } from './wrapper';
-import { Header, Breadcrumb } from 'insomnia-components';
+import { Header, Breadcrumb, CircleButton, SvgIcon } from 'insomnia-components';
+import { showSettingsModal } from './modals/settings-modal';
 
 type Props = {
   wrapperProps: WrapperProps,
@@ -75,7 +76,14 @@ const WorkspacePageHeader = ({
           />
         )
       }
-      gridRight={gridRight}
+      gridRight={
+        <>
+          {gridRight}
+          <CircleButton className="margin-left" onClick={showSettingsModal}>
+            <SvgIcon icon="gear" />
+          </CircleButton>
+        </>
+      }
     />
   );
 };
