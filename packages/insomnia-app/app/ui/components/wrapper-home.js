@@ -54,6 +54,7 @@ import {
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
 import SettingsModal from './modals/settings-modal';
+import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -417,12 +418,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
     );
   }
 
-  renderMenu() {
+  renderCreateMenu() {
     return (
       <Dropdown
         renderButton={() => (
           <Button variant="contained" bg="surprise" className="margin-left">
-            Create <i className="fa fa-caret-down pad-left-sm" />
+            Create
+            <i className="fa fa-caret-down pad-left-sm" />
           </Button>
         )}>
         <DropdownDivider>New</DropdownDivider>
@@ -445,6 +447,30 @@ class WrapperHome extends React.PureComponent<Props, State> {
           Git Clone
         </DropdownItem>
       </Dropdown>
+    );
+  }
+
+  renderDashboardMenu() {
+    const { vcs, workspaces } = this.props.wrapperProps;
+    return (
+      <div className="row row--right pad-left wide">
+        <div
+          className="form-control form-control--outlined no-margin"
+          style={{ maxWidth: '400px' }}>
+          <KeydownBinder onKeydown={this._handleKeyDown}>
+            <input
+              ref={this._setFilterInputRef}
+              type="text"
+              placeholder="Filter..."
+              onChange={this._handleFilterChange}
+              className="no-margin"
+            />
+            <span className="fa fa-search filter-icon" />
+          </KeydownBinder>
+        </div>
+        {this.renderCreateMenu()}
+        <RemoteWorkspacesDropdown vcs={vcs} workspaces={workspaces} className="margin-left" />
+      </div>
     );
   }
 
@@ -479,21 +505,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             <div className="document-listing__body pad-bottom">
               <div className="row-spaced margin-top margin-bottom-sm">
                 <h2 className="no-margin">Dashboard</h2>
-                <span className="row-spaced pad-left" style={{ maxWidth: '400px' }}>
-                  <div className="form-control form-control--outlined no-margin">
-                    <KeydownBinder onKeydown={this._handleKeyDown}>
-                      <input
-                        ref={this._setFilterInputRef}
-                        type="text"
-                        placeholder="Filter..."
-                        onChange={this._handleFilterChange}
-                        className="no-margin"
-                      />
-                      <span className="fa fa-search filter-icon" />
-                    </KeydownBinder>
-                  </div>
-                  {this.renderMenu()}
-                </span>
+                {this.renderDashboardMenu()}
               </div>
               <CardContainer>{cards}</CardContainer>
               {filter && cards.length === 0 && (
