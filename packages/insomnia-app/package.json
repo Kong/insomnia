@@ -100,7 +100,7 @@
     "@hot-loader/react-dom": "^16.8.6",
     "@stoplight/spectral": "^4.1.1",
     "aws4": "^1.9.0",
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.2.5",
     "clone": "^2.1.0",
