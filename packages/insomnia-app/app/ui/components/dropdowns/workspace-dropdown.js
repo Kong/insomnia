@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -86,16 +86,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     this._dropdown && this._dropdown.hide();
   }
 
-  async _handleDropdownHide() {
-    // Mark all unseen workspace as seen
-    for (const workspace of this.props.unseenWorkspaces) {
-      const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-      if (!workspaceMeta.hasSeen) {
-        await models.workspaceMeta.update(workspaceMeta, { hasSeen: true });
-      }
-    }
-  }
-
   async _handleDropdownOpen() {
     // Load action plugins
     const plugins = await getWorkspaceActions();
@@ -153,15 +143,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
-          <DropdownDivider>{activeWorkspace.name}</DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
-
-          <DropdownDivider>
-            {getAppName()} v{getAppVersion()}
-          </DropdownDivider>
 
           <DropdownItem onClick={WorkspaceDropdown._handleShowExport}>
             <i className="fa fa-share" /> Import/Export
