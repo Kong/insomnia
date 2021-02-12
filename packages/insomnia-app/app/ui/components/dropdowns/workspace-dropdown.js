@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import classnames from 'classnames';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -136,6 +136,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
     const { actionPlugins, loadingActions, configGeneratorPlugins } = this.state;
 
+    const isDesigner = activeWorkspace.scope === 'designer';
+
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
@@ -152,6 +154,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
           </DropdownButton>
+          <DropdownDivider>
+            {getAppName()} v{getAppVersion()}
+          </DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
             <i className="fa fa-wrench" /> Workspace Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
@@ -175,15 +180,22 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
               {p.label}
             </DropdownItem>
           ))}
-          {configGeneratorPlugins.length > 0 && (
-            <DropdownDivider>Config Generators</DropdownDivider>
+          {isDesigner && (
+            <>
+              {configGeneratorPlugins.length > 0 && (
+                <DropdownDivider>Config Generators</DropdownDivider>
+              )}
+              {configGeneratorPlugins.map((p: ConfigGenerator) => (
+                <DropdownItem
+                  key="generateConfig"
+                  onClick={this._handleGenerateConfig}
+                  value={p.label}>
+                  <i className="fa fa-code" />
+                  {p.label}
+                </DropdownItem>
+              ))}
+            </>
           )}
-          {configGeneratorPlugins.map((p: ConfigGenerator) => (
-            <DropdownItem key="generateConfig" onClick={this._handleGenerateConfig} value={p.label}>
-              <i className="fa fa-wrench" />
-              {p.label}
-            </DropdownItem>
-          ))}
         </Dropdown>
       </KeydownBinder>
     );
