@@ -19,6 +19,7 @@ import { isLoggedIn } from '../../account/session';
 import SyncDropdown from './dropdowns/sync-dropdown';
 import { Button } from 'insomnia-components';
 import { showSyncShareModal } from './modals/sync-share-modal';
+import * as session from '../../account/session';
 
 type Props = {
   forceRefreshKey: string,
@@ -61,7 +62,7 @@ class WrapperDebug extends React.PureComponent<Props> {
     const collection = activeWorkspace.scope === 'collection';
     const designer = !collection;
 
-    const share = collection && (
+    const share = session.isLoggedIn() && collection && (
       <Button variant="contained" onClick={showSyncShareModal}>
         <i className="fa fa-globe pad-right-sm" /> Share
       </Button>
