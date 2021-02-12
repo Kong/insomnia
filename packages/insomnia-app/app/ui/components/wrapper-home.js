@@ -442,14 +442,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
     return (
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleDocumentCreate}>
+        <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
           Blank Document
         </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleCollectionCreate}>
-          Blank Collection
+        <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
+          Request Collection
         </DropdownItem>
         <DropdownDivider>Import From</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-file" />} onClick={this._handleImportFile}>
+        <DropdownItem icon={<i className="fa fa-plus" />} onClick={this._handleImportFile}>
           File
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-link" />} onClick={this._handleImportUri}>
@@ -485,8 +485,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        {this.renderCreateMenu()}
         <RemoteWorkspacesDropdown vcs={vcs} workspaces={workspaces} className="margin-left" />
+        {this.renderCreateMenu()}
       </div>
     );
   }

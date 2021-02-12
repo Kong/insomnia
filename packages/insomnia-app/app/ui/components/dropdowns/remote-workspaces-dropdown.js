@@ -6,7 +6,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import * as session from '../../../account/session';
 import VCS from '../../../sync/vcs';
 import type { Project } from '../../../sync/types';
-import { Dropdown, DropdownDivider, DropdownItem, Button } from 'insomnia-components';
+import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomnia-components';
 import type { Workspace } from '../../../models/workspace';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
@@ -125,13 +125,26 @@ class RemoteWorkspacesDropdown extends React.Component<Props, State> {
     this._refreshRemoteWorkspaces();
   }
 
+  renderButton(disabled = false) {
+    return (
+      <Button className={this.props.className} disabled={disabled}>
+        Pull
+        <i className="fa fa-caret-down pad-left-sm" />
+      </Button>
+    );
+  }
+
   render() {
-    const { className, workspaces } = this.props;
+    const { workspaces } = this.props;
 
     const { loading, remoteProjects, localProjects, pullingProjects } = this.state;
 
     if (!session.isLoggedIn()) {
-      return null;
+      return (
+        <Tooltip message="Please log in to access your remote collections" position="bottom">
+          {this.renderButton(true)}
+        </Tooltip>
+      );
     }
 
     const missingRemoteProjects = remoteProjects.filter(({ id, rootDocumentId }) => {
@@ -144,12 +157,7 @@ class RemoteWorkspacesDropdown extends React.Component<Props, State> {
       return !(workspaceExists && localProjectExists);
     });
 
-    const button = (
-      <Button variant="contained" bg="surprise" className={className}>
-        Pull
-        <i className="fa fa-caret-down pad-left-sm" />
-      </Button>
-    );
+    const button = this.renderButton();
 
     return (
       <Dropdown onOpen={this._refreshRemoteWorkspaces} renderButton={button}>
