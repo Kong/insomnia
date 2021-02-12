@@ -22,7 +22,6 @@ import {
   DropdownDivider,
   DropdownItem,
   Header,
-  CircleButton,
   SvgIcon,
 } from 'insomnia-components';
 import DocumentCardDropdown from './dropdowns/document-card-dropdown';
@@ -53,8 +52,9 @@ import {
   GIT_INTERNAL_DIR,
 } from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
-import SettingsModal from './modals/settings-modal';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
+import SettingsButton from './buttons/settings-button';
+import AccountDropdown from './dropdowns/account-dropdown';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -83,19 +83,37 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.setState({ filter: e.currentTarget.value });
   }
 
-  _handleWorkspaceCreate() {
+  async __actuallyCreate(patch: $Shape<Workspace>) {
+    const workspace = await models.workspace.create(patch);
+    this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
+
+    trackEvent('Workspace', 'Create');
+  }
+
+  _handleDocumentCreate() {
     showPrompt({
       title: 'New Document',
       submitName: 'Create',
       placeholder: 'spec-name.yaml',
-      selectText: true,
       onComplete: async name => {
-        await models.workspace.create({
+        await this.__actuallyCreate({
           name,
           scope: 'designer',
         });
+      },
+    });
+  }
 
-        trackEvent('Workspace', 'Create');
+  _handleCollectionCreate() {
+    showPrompt({
+      title: 'Create New Collection',
+      placeholder: 'My Collection',
+      submitName: 'Create',
+      onComplete: async name => {
+        await this.__actuallyCreate({
+          name,
+          scope: 'collection',
+        });
       },
     });
   }
@@ -118,10 +136,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
         this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
       },
     });
-  }
-
-  static _handleShowSettings() {
-    showModal(SettingsModal);
   }
 
   async _handleWorkspaceClone() {
@@ -428,8 +442,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
     return (
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleWorkspaceCreate}>
+        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleDocumentCreate}>
           Blank Document
+        </DropdownItem>
+        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleCollectionCreate}>
+          Blank Collection
         </DropdownItem>
         <DropdownDivider>Import From</DropdownDivider>
         <DropdownItem icon={<i className="fa fa-file" />} onClick={this._handleImportFile}>
@@ -494,9 +511,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
               </React.Fragment>
             }
             gridRight={
-              <CircleButton onClick={WrapperHome._handleShowSettings}>
-                <SvgIcon icon="gear" />
-              </CircleButton>
+              <>
+                <SettingsButton className="margin-left" />
+                <AccountDropdown className="margin-left" />
+              </>
             }
           />
         )}

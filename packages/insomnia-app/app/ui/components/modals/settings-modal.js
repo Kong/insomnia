@@ -18,6 +18,7 @@ import Tooltip from '../tooltip';
 import { setTheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Account from '../settings/account';
+import { showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
@@ -179,5 +180,7 @@ SettingsModal.propTypes = {
   // Properties
   settings: PropTypes.object.isRequired,
 };
+
+export const showSettingsModal = () => showModal(SettingsModal);
 
 export default SettingsModal;

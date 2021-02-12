@@ -16,11 +16,11 @@ const StyledCircleButton: React.ComponentType<Props> = styled(Button)`
   border-radius: 50%;
 
   ${({ height }) => css`
-    height: ${height || 'unset'};
+    height: ${height || css`var(--line-height-xs)`};
   `};
 
   ${({ width }) => css`
-    width: ${width || 'unset'};
+    width: ${width || css`var(--line-height-xs)`};
   `};
 
   svg {

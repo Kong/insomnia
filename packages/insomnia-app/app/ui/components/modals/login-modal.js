@@ -7,6 +7,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as session from '../../../account/session';
+import { showModal } from './index';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class LoginModal extends PureComponent {
@@ -106,4 +107,5 @@ class LoginModal extends PureComponent {
   }
 }
 
+export const showLoginModal = () => showModal(LoginModal);
 export default LoginModal;
