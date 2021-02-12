@@ -77,6 +77,7 @@ export type SpecInfo = {
 
 export type ConfigGenerator = {
   plugin: Plugin,
+  label: string,
   generate: (info: SpecInfo) => Promise<{ document?: string, error?: string }>,
 };
 

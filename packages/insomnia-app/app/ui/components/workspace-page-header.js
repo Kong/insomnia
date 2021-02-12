@@ -46,6 +46,7 @@ const WorkspacePageHeader = ({
       displayName={collection ? activeWorkspace.name : activeApiSpec.fileName}
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
+      activeApiSpec={activeApiSpec}
       workspaces={workspaces}
       unseenWorkspaces={unseenWorkspaces}
       hotKeyRegistry={settings.hotKeyRegistry}

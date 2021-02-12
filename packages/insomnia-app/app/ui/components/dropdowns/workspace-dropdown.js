@@ -21,15 +21,17 @@ import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
 import type { WorkspaceAction } from '../../../plugins';
-import { getWorkspaceActions } from '../../../plugins';
+import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
+import { showGenerateConfigModal } from '../modals/generate-config-modal';
 
 type Props = {
   displayName: string,
   activeEnvironment: Environment | null,
   activeWorkspace: Workspace,
+  activeApiSpec: ApiSpec,
   handleSetActiveWorkspace: (id: string) => void,
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
@@ -43,6 +45,7 @@ type Props = {
 
 type State = {
   actionPlugins: Array<WorkspaceAction>,
+  configGeneratorPlugins: Array<ConfigGenerator>,
   loadingActions: { [string]: boolean },
 };
 
@@ -52,6 +55,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
   state = {
     actionPlugins: [],
+    configGeneratorPlugins: [],
     loadingActions: {},
   };
 
@@ -87,9 +91,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleDropdownOpen() {
-    // Load action plugins
-    const plugins = await getWorkspaceActions();
-    this.setState({ actionPlugins: plugins });
+    const actionPlugins = await getWorkspaceActions();
+    const configGeneratorPlugins = await getConfigGenerators();
+    this.setState({ actionPlugins, configGeneratorPlugins });
   }
 
   _setDropdownRef(n: ?Dropdown) {
@@ -110,6 +114,11 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
+  async _handleGenerateConfig(label: string) {
+    const { activeApiSpec } = this.props;
+    showGenerateConfigModal({ apiSpec: activeApiSpec, activeTabLabel: label });
+  }
+
   render() {
     const {
       displayName,
@@ -125,7 +134,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
     const classes = classnames(className, 'wide', 'workspace-dropdown');
 
-    const { actionPlugins, loadingActions } = this.state;
+    const { actionPlugins, loadingActions, configGeneratorPlugins } = this.state;
 
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
@@ -163,6 +172,15 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
               ) : (
                 <i className={classnames('fa', p.icon || 'fa-code')} />
               )}
+              {p.label}
+            </DropdownItem>
+          ))}
+          {configGeneratorPlugins.length > 0 && (
+            <DropdownDivider>Config Generators</DropdownDivider>
+          )}
+          {configGeneratorPlugins.map((p: ConfigGenerator) => (
+            <DropdownItem key="generateConfig" onClick={this._handleGenerateConfig} value={p.label}>
+              <i className="fa fa-wrench" />
               {p.label}
             </DropdownItem>
           ))}
