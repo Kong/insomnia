@@ -19,7 +19,6 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
 import * as db from '../../../common/database';
-import VCS from '../../../sync/vcs';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
@@ -32,14 +31,8 @@ type Props = {
   activeEnvironment: Environment | null,
   activeWorkspace: Workspace,
   activeApiSpec: ApiSpec,
-  handleSetActiveWorkspace: (id: string) => void,
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
-  unseenWorkspaces: Array<Workspace>,
-  vcs: VCS | null,
-  workspaces: Array<Workspace>,
-
-  // Optional
   className?: string,
 };
 
@@ -123,12 +116,9 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     const {
       displayName,
       className,
-      workspaces,
       activeWorkspace,
-      unseenWorkspaces,
       isLoading,
       hotKeyRegistry,
-      handleSetActiveWorkspace,
       ...other
     } = this.props;
 
