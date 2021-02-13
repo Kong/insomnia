@@ -40,7 +40,7 @@ class Theme extends React.PureComponent<Props, State> {
     this.setState({ themes });
   }
 
-  renderTheme(theme: ThemeType, colorScheme: ColorScheme) {
+  renderTheme(theme: ThemeType) {
     const { handleChangeTheme, activeTheme } = this.props;
 
     const isActive = activeTheme === theme.theme.name;
