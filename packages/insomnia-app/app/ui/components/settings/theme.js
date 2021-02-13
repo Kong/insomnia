@@ -125,14 +125,11 @@ class Theme extends React.PureComponent<Props, State> {
     ));
   }
 
-  renderThemeSelect(scheme: ColorScheme) {
+  renderThemeSelect(scheme: 'light' | 'dark') {
     const { activeLightTheme, activeDarkTheme, handleChangeTheme } = this.props;
     const { themes } = this.state;
 
-    const activeColorTheme = {
-      light: activeLightTheme,
-      dark: activeDarkTheme,
-    }[scheme];
+    const activeColorTheme = scheme === 'light' ? activeLightTheme : activeDarkTheme;
 
     return (
       <div className="form-control form-control--outlined">

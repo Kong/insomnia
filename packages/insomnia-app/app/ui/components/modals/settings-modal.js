@@ -68,11 +68,18 @@ class SettingsModal extends PureComponent {
   async _handleChangeTheme(themeName, colorScheme, persist = true) {
     const { settings } = this.props;
 
-    const patch = {
-      default: { theme: themeName },
-      light: { lightTheme: themeName },
-      dark: { darkTheme: themeName },
-    }[colorScheme];
+    let patch;
+    switch (colorScheme) {
+      case 'light':
+        patch = { theme: themeName };
+        break;
+      case 'dark':
+        patch = { darkTheme: themeName };
+        break;
+      default:
+        patch = { theme: themeName };
+        break;
+    }
 
     applyColorScheme({ ...settings, ...patch });
 
