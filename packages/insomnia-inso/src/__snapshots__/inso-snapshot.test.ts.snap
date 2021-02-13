@@ -11,7 +11,7 @@ Options:
   -a, --appDataDir <dir>  set the app data directory
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
-  --fromFile <path>       Build an in-memory database from an Insomnia v4 file
+  --src <file|directory>  Set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
@@ -36,7 +36,7 @@ Options:
   -a, --appDataDir <dir>  set the app data directory
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
-  --fromFile <path>       Build an in-memory database from an Insomnia v4 file
+  --src <file|directory>  Set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
@@ -110,7 +110,7 @@ Options:
   -a, --appDataDir <dir>  set the app data directory
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
-  --fromFile <path>       Build an in-memory database from an Insomnia v4 file
+  --src <file|directory>  Set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command

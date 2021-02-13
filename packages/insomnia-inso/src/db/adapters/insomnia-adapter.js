@@ -16,8 +16,8 @@ const keyToType = {
 };
 
 const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
-  // Sanity check - do db files exist?
-  if (!fs.existsSync(path)) return null;
+  // Sanity check - do db files exist and is it a file?
+  if (!fs.existsSync(path) || fs.lstatSync(path).isDirectory()) return null;
   // Building an empty database
   const db: Database = emptyDb();
 

@@ -27,9 +27,9 @@ describe('loadDb()', () => {
     globalBeforeEach();
   });
 
-  it('should load database from file if --fromFile is provided', async () => {
+  it('should load database from file if --src is provided', async () => {
     insomniaAdapter.mockResolvedValue(emptyDb());
-    await loadDb({ fromFile: '.' });
+    await loadDb({ src: '.' });
     expect(logger.__getLogs().debug).toEqual([
       `Data store configured from file at \`${path.resolve('.')}\``,
     ]);

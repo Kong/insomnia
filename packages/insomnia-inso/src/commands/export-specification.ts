@@ -16,7 +16,7 @@ export async function exportSpecification(
     workingDir,
     appDataDir,
     filterTypes: ['ApiSpec'],
-    fromFile
+    fromFile,
   });
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 

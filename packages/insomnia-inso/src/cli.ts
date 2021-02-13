@@ -177,7 +177,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
     .option('-a, --appDataDir <dir>', 'set the app data directory')
     .option('--config <path>', 'path to configuration file')
     .option('--verbose', 'show additional logs while running the command')
-    .option('--fromFile <path>', 'Build an in-memory database from an Insomnia v4 file')
+    .option('--src <file|directory>', 'Set the app data source')
     .option('--printOptions', 'print the loaded options')
     .option('--ci', 'run in CI, disables all prompts');
 

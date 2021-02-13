@@ -18,7 +18,7 @@ export type GlobalOptions = {
   verbose?: boolean;
   printOptions?: boolean;
   config?: string;
-  fromFile?: string;
+  src?: string;
 } & ConfigFileOptions;
 
 const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
@@ -26,7 +26,7 @@ const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
   'workingDir',
   'ci',
   'verbose',
-  'fromFile',
+  'src',
   'printOptions',
 ];
 
