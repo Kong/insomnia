@@ -59,7 +59,7 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
     .option(
       '-r, --reporter <reporter>',
-      `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`,
+      `standard reporters options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`,
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')

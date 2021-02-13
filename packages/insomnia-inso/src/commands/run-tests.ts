@@ -6,33 +6,21 @@ import { logger, noConsoleLog } from '../logger';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 
-export type TestReporter = 'dot' | 'list' | 'spec' | 'min' | 'progress';
-
-export const reporterTypes: TestReporter[] = [
-  'dot',
-  'list',
-  'min',
-  'progress',
-  'spec',
-];
-
-export const reporterTypesSet = new Set(reporterTypes);
+export const TestReporterEnum = ['dot', 'list', 'spec', 'progress', 'min'];
 
 export type RunTestsOptions = GlobalOptions & {
   env?: string;
-  reporter: TestReporter;
+  reporter?: string;
   bail?: boolean;
   keepFile?: boolean;
   testNamePattern?: string;
 };
 
-function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
-  if (reporter && !reporterTypesSet.has(reporter)) {
-    logger.fatal(`Reporter "${reporter}" not unrecognized. Options are [${reporterTypes.join(', ')}].`);
-    return false;
+function warnAboutValidReporters({ reporter }: RunTestsOptions): void {
+  if (reporter && !TestReporterEnum.includes(reporter)) {
+    logger.info(`Reporter "${reporter}" is not recognized and is treated as external`);
+    logger.info('If possible, consider using default --reporter values');
   }
-
-  return true;
 }
 
 const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite => ({
@@ -50,9 +38,7 @@ export async function runInsomniaTests(
   identifier: string | null | undefined,
   options: Partial<RunTestsOptions>,
 ) {
-  if (!validateOptions(options)) {
-    return false;
-  }
+  warnAboutValidReporters(options);
 
   const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
   const db = await loadDb({
