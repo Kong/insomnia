@@ -24,7 +24,6 @@ type State = {
 
 const StyledTooltip: React.ComponentType<{}> = styled.div`
   position: relative;
-  margin: 0 var(--padding-xxs);
   display: inline-block;
 `;
 

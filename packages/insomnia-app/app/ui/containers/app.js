@@ -16,6 +16,7 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
+  ACTIVITY_MIGRATION,
 } from '../../common/constants';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
@@ -994,7 +995,7 @@ class App extends PureComponent {
 
     let title;
 
-    if (activity === ACTIVITY_HOME) {
+    if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else {
       title =

@@ -11,6 +11,7 @@ import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
+import { showModal } from './index';
 
 type Props = {
   workspace: Workspace,
@@ -169,5 +170,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     );
   }
 }
+
+export const showSyncShareModal = () => showModal(SyncShareModal);
 
 export default SyncShareModal;
