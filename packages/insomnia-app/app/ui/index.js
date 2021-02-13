@@ -9,7 +9,7 @@ import { init as initStore } from './redux/modules';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
 import { ACTIVITY_MIGRATION, getAppLongName, isDevelopment } from '../common/constants';
-import { setFont, setTheme } from '../plugins/misc';
+import { setFont, applyColorScheme } from '../plugins/misc';
 import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
