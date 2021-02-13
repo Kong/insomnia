@@ -120,7 +120,7 @@ class Theme extends React.PureComponent<Props, State> {
 
     return rows.map((row, i) => (
       <div key={i} className="themes__row">
-        {row.map(theme => this.renderTheme(theme))}
+        {row.map(this.renderTheme)}
       </div>
     ));
   }
