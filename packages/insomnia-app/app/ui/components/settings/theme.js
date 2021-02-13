@@ -41,9 +41,10 @@ class Theme extends React.PureComponent<Props, State> {
   }
 
   renderTheme(theme: ThemeType) {
-    const { handleChangeTheme, activeTheme } = this.props;
+    const { handleChangeTheme, activeTheme, autoDetectColorScheme } = this.props;
 
     const isActive = activeTheme === theme.theme.name;
+    const disabled = autoDetectColorScheme;
 
     return (
       <div
@@ -52,6 +53,7 @@ class Theme extends React.PureComponent<Props, State> {
         style={{ maxWidth: `${100 / THEMES_PER_ROW}%` }}>
         <h2 className="txt-lg">{theme.theme.displayName}</h2>
         <Button
+          disabled={disabled}
           onClick={() => handleChangeTheme(theme.theme.name, 'default')}
           className={isActive ? 'active' : ''}>
           <svg theme={theme.theme.name} width="100%" height="100%" viewBox="0 0 500 300">
