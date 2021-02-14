@@ -115,6 +115,7 @@ type IconKeys = $Values<typeof IconEnum>;
 type Props = {
   icon: IconKeys,
   label?: React.Node,
+  theme?: string,
 };
 
 const SvgIconStyled: React.ComponentType<{ theme: ThemeKeys, hasLabel: boolean }> = styled.div`
@@ -199,7 +200,7 @@ class SvgIcon extends React.Component<Props> {
   };
 
   render() {
-    const { icon, label } = this.props;
+    const { icon, label, theme } = this.props;
 
     if (!SvgIcon.icons[icon]) {
       throw new Error(
@@ -207,10 +208,16 @@ class SvgIcon extends React.Component<Props> {
       );
     }
 
-    const [theme, Svg] = SvgIcon.icons[icon];
+    if (!!theme && !ThemeEnum[theme]) {
+      throw new Error(
+        `Invalid theme "${theme}" used. Must be one of ${Object.values(ThemeEnum).join('|')}`,
+      );
+    }
+
+    const [defaultTheme, Svg] = SvgIcon.icons[icon];
 
     return (
-      <SvgIconStyled theme={theme} hasLabel={!!label}>
+      <SvgIconStyled theme={theme || defaultTheme} hasLabel={!!label}>
         <Svg />
         {label}
       </SvgIconStyled>
