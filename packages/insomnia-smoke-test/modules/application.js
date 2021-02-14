@@ -2,42 +2,39 @@ import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
 import electronPath from '../../insomnia-app/node_modules/electron';
-import { APP_ID_INSOMNIA, APP_ID_DESIGNER } from '../../insomnia-app/config';
 
 const getAppPlatform = () => process.platform;
 const isMac = () => getAppPlatform() === 'darwin';
 const isLinux = () => getAppPlatform() === 'linux';
 const isWindows = () => getAppPlatform() === 'win32';
 
-const spectronConfig = appId => {
+export const isBuild = () => process.env.BUNDLE === 'build';
+export const isPackage = () => process.env.BUNDLE === 'package';
+
+const spectronConfig = () => {
   let packagePathSuffix = '';
   if (isWindows()) {
-    packagePathSuffix = 'win-unpacked/Insomnia.exe';
+    packagePathSuffix = path.join('win-unpacked', 'Insomnia.exe');
   } else if (isMac()) {
-    packagePathSuffix = 'mac/Insomnia.app/Contents/MacOS/Insomnia';
+    packagePathSuffix = path.join('mac', 'Insomnia.app', 'Contents', 'MacOS', 'Insomnia');
   } else if (isLinux()) {
     packagePathSuffix = ''; // TODO: find out what this is
   }
 
-  const buildPath = path.join(__dirname, '../../insomnia-app/build', appId);
-  const packagePath = path.join(__dirname, '../../insomnia-app/dist', appId, packagePathSuffix);
-  const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', appId, `${Math.random()}`);
+  const buildPath = path.join(__dirname, '../../insomnia-app/build');
+  const packagePath = path.join(__dirname, '../../insomnia-app/dist', packagePathSuffix);
+  const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Math.random()}`);
 
   return { buildPath, packagePath, dataPath };
 };
 
-export const launchCore = async () => {
-  const config = spectronConfig(APP_ID_INSOMNIA);
-  return await launch(config);
-};
-
-export const launchDesigner = async () => {
-  const config = spectronConfig(APP_ID_DESIGNER);
+export const launchApp = async () => {
+  const config = spectronConfig();
   return await launch(config);
 };
 
 const getLaunchPath = config =>
-  process.env.BUNDLE === 'package'
+  isPackage()
     ? { path: config.packagePath }
     : {
         path: electronPath,
@@ -67,6 +64,12 @@ const launch = async config => {
     // https://github.com/electron-userland/spectron/issues/60
     await app.browserWindow.focus();
     await app.browserWindow.setAlwaysOnTop(true);
+
+    // Set the implicit wait timeout to 0 (webdriver default)
+    //  https://webdriver.io/docs/timeouts.html#session-implicit-wait-timeout
+    // Spectron overrides it to an unreasonable value, as per the issue
+    //  https://github.com/electron-userland/spectron/issues/763
+    await app.client.setTimeout({ implicit: 0 });
   });
 
   return app;

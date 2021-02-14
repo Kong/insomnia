@@ -1,9 +1,10 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
-import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
+
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
@@ -46,7 +47,7 @@ type State = {
   error: string | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class EnvironmentEditor extends React.PureComponent<Props, State> {
   _editor: CodeEditor | null;
 

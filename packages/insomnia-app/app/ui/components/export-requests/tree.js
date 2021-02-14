@@ -2,10 +2,11 @@
 import * as React from 'react';
 import RequestRow from './request-row';
 import RequestGroupRow from './request-group-row';
-import * as models from '../../../models/index';
 import type { Node } from '../modals/export-requests-modal';
 import type { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
+import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
+import type { GrpcRequest } from '../../../models/grpc-request';
 
 type Props = {
   root: ?Node,
@@ -19,9 +20,9 @@ class Tree extends React.PureComponent<Props> {
       return null;
     }
 
-    if (node.doc.type === models.request.type) {
-      // Directly cast to Request will result in error, so cast it to any first.
-      const request: Request = ((node.doc: any): Request);
+    if (isRequest(node.doc) || isGrpcRequest(node.doc)) {
+      // Directly casting will result in error, so cast it to any first.
+      const request: Request | GrpcRequest = ((node.doc: any): Request | GrpcRequest);
       return (
         <RequestRow
           key={node.doc._id}

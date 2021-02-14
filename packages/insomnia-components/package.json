@@ -1,6 +1,6 @@
 {
   "name": "insomnia-components",
-  "version": "2.2.24",
+  "version": "2.2.26",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
@@ -8,7 +8,9 @@
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
-    "test": "npm run typecheck",
+    "jest": "jest",
+    "jest:watch": "jest --watch",
+    "test": "npm run typecheck && npm run jest",
     "build": "webpack --config webpack/webpack.prod.js --display errors-only",
     "watch": "webpack --config webpack/webpack.dev.js --watch",
     "build-storybook": "build-storybook --quiet",
@@ -16,16 +18,37 @@
     "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
     "prepare": "npm run convert-svg && npm run build"
   },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "./__jest__/setup-after-env.js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.js?(x)"
+    ],
+    "verbose": false,
+    "resetMocks": true,
+    "resetModules": true,
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  },
   "devDependencies": {
     "@babel/core": "^7.7.7",
     "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.7",
+    "@babel/plugin-transform-runtime": "^7.12.10",
     "@storybook/addon-contexts": "^5.3.19",
     "@storybook/addon-info": "^5.3.19",
     "@storybook/addon-knobs": "^5.3.19",
     "@storybook/react": "^5.3.19",
     "@svgr/cli": "^5.3.0",
+    "@testing-library/dom": "^7.28.1",
+    "@testing-library/jest-dom": "^5.11.6",
+    "@testing-library/react": "^11.2.2",
+    "@testing-library/react-hooks": "^3.7.0",
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
+    "jest": "^26.6.3",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-use": "^15.3.2",
@@ -36,7 +59,7 @@
     "webpack-merge": "^4.2.2"
   },
   "dependencies": {
-    "autobind-decorator": "^2.4.0",
+    "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.2.6",
     "framer-motion": "^1.10.3",
     "fuzzysort": "^1.1.4",

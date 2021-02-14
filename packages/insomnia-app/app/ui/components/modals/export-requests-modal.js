@@ -1,6 +1,7 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -9,9 +10,11 @@ import Tree from '../export-requests/tree';
 import type { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import * as models from '../../../models';
+import type { GrpcRequest } from '../../../models/grpc-request';
+import { isGrpcRequest, isRequest, isRequestGroup } from '../../../models/helpers/is-model';
 
 export type Node = {
-  doc: Request | RequestGroup,
+  doc: Request | GrpcRequest | RequestGroup,
   children: Array<Node>,
   collapsed: boolean,
   totalRequests: number,
@@ -27,7 +30,7 @@ type State = {
   treeRoot: ?Node,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ExportRequestsModal extends PureComponent<Props, State> {
   modal: Modal;
 
@@ -64,7 +67,8 @@ class ExportRequestsModal extends PureComponent<Props, State> {
   }
 
   getSelectedRequestIds(node: Node): Array<string> {
-    if (node.doc.type === models.request.type && node.selectedRequests === node.totalRequests) {
+    const docIsRequest = isRequest(node.doc) || isGrpcRequest(node.doc);
+    if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }
     const requestIds: Array<string> = [];
@@ -105,7 +109,9 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     let totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
-    if (item.doc.type === models.request.type) {
+
+    const docIsRequest = isRequest(item.doc) || isGrpcRequest(item.doc);
+    if (docIsRequest) {
       totalRequests++;
     }
     return {
@@ -146,7 +152,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
   }
 
   setRequestGroupCollapsed(node: Node, isCollapsed: boolean, requestGroupId: string): boolean {
-    if (node.doc.type !== models.requestGroup.type) {
+    if (!isRequestGroup(node.doc)) {
       return false;
     }
     if (node.doc._id === requestGroupId) {

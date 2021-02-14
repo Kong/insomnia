@@ -93,6 +93,97 @@ describe('bufferChanges()', () => {
       ],
     ]);
   });
+
+  it('should auto flush after a default wait', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChanges();
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    // Default flush timeout is 1000ms after starting buffering
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
+
+  it('should auto flush after a specified wait', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChanges(500);
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
+});
+
+describe('bufferChangesIndefinitely()', () => {
+  beforeEach(globalBeforeEach);
+  it('should not auto flush', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChangesIndefinitely();
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    // Default flush timeout is 1000ms after starting buffering
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Assert no change seen before flush
+    expect(changesSeen.length).toBe(0);
+
+    // Assert changes seen after flush
+    await db.flushChanges();
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
 });
 
 describe('requestCreate()', () => {
@@ -352,6 +443,50 @@ describe('_repairDatabase()', () => {
     expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Workspace 2'); // Should fix
     expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name'); // should not fix
   });
+
+  it('fixes old git uris', async () => {
+    const oldRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+      uriNeedsMigration: true,
+    });
+    const oldRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+      uriNeedsMigration: true,
+    });
+    const newRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+    });
+    const newRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+    });
+
+    await db._repairDatabase();
+
+    expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar',
+        uriNeedsMigration: false,
+      }),
+    );
+  });
 });
 
 describe('duplicate()', () => {
@@ -406,5 +541,44 @@ describe('docCreate()', () => {
 
     // TODO: This is actually called twice, not once - we should avoid the double model.init() call.
     expect(spy).toHaveBeenCalled();
+  });
+});
+
+describe('withAncestors()', () => {
+  beforeEach(globalBeforeEach);
+
+  it('should return itself and all parents but exclude siblings', async () => {
+    const wrk = await models.workspace.create();
+    const wrkReq = await models.request.create({ parentId: wrk._id });
+    const wrkGrpcReq = await models.grpcRequest.create({ parentId: wrk._id });
+    const grp = await models.requestGroup.create({ parentId: wrk._id });
+    const grpReq = await models.request.create({ parentId: grp._id });
+    const grpGrpcReq = await models.grpcRequest.create({ parentId: grp._id });
+
+    // Workspace child searching for ancestors
+    await expect(db.withAncestors(wrk)).resolves.toStrictEqual([wrk]);
+    await expect(db.withAncestors(wrkReq)).resolves.toStrictEqual([wrkReq, wrk]);
+    await expect(db.withAncestors(wrkGrpcReq)).resolves.toStrictEqual([wrkGrpcReq, wrk]);
+
+    // Group searching for ancestors
+    await expect(db.withAncestors(grp)).resolves.toStrictEqual([grp, wrk]);
+
+    // Group child searching for ancestors
+    await expect(db.withAncestors(grpReq)).resolves.toStrictEqual([grpReq, grp, wrk]);
+    await expect(db.withAncestors(grpGrpcReq)).resolves.toStrictEqual([grpGrpcReq, grp, wrk]);
+
+    // Group child searching for ancestors with filters
+    await expect(db.withAncestors(grpGrpcReq, [models.requestGroup.type])).resolves.toStrictEqual([
+      grpGrpcReq,
+      grp,
+    ]);
+    await expect(
+      db.withAncestors(grpGrpcReq, [models.requestGroup.type, models.workspace.type]),
+    ).resolves.toStrictEqual([grpGrpcReq, grp, wrk]);
+
+    // Group child searching for ancestors but excluding groups will not find the workspace
+    await expect(db.withAncestors(grpGrpcReq, [models.workspace.type])).resolves.toStrictEqual([
+      grpGrpcReq,
+    ]);
   });
 });

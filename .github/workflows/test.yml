@@ -30,11 +30,11 @@ jobs:
         run: npm run bootstrap
       - name: Run tests
         run: npm test
-      - name: Build core for smoke tests
-        run: npm run app-build:smoke:core
-      - name: Build designer for smoke tests
-        run: npm run app-build:smoke:designer
-      - name: Run core smoke tests
-        run: npm run test:smoke:core:build
-      - name: Run designer smoke tests
-        run: npm run test:smoke:designer:build
+# Smoke tests disabled while new homepage layout is worked on for Core
+#      - name: Build for smoke tests
+#        run: npm run app-build:smoke
+#      - name: Run smoke tests
+#        timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
+#        run: npm run test:smoke:build
+      - name: Run CLI smoke tests
+        run: npm run test:smoke:cli

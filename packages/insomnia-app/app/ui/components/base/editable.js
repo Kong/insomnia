@@ -1,9 +1,25 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 
-@autobind
+export const shouldSave = (oldValue, newValue, preventBlank) => {
+  // Should not save if length = 0 and we want to prevent blank
+  if (preventBlank && !newValue.length) {
+    return false;
+  }
+
+  // Should not save if old value and new value is the same
+  if (oldValue === newValue) {
+    return false;
+  }
+
+  // Should save
+  return true;
+};
+
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Editable extends PureComponent {
   constructor(props) {
     super(props);
@@ -36,11 +52,12 @@ class Editable extends PureComponent {
   }
 
   _handleEditEnd() {
-    const value = this._input.value.trim();
+    const originalValue = this.props.value;
+    const newValue = this._input.value.trim();
 
-    if (value !== this.props.value) {
-      // Don't run onSubmit for values that haven't been changed.
-      this.props.onSubmit(value);
+    if (shouldSave(originalValue, newValue, this.props.preventBlank)) {
+      // Don't run onSubmit for values that haven't been changed
+      this.props.onSubmit(newValue);
     }
 
     // This timeout prevents the UI from showing the old value after submit.
@@ -73,6 +90,7 @@ class Editable extends PureComponent {
       blankValue,
       singleClick,
       onEditStart, // eslint-disable-line no-unused-vars
+      preventBlank, // eslint-disable-line no-unused-vars
       className,
       renderReadView,
       ...extra
@@ -124,6 +142,7 @@ Editable.propTypes = {
   singleClick: PropTypes.bool,
   onEditStart: PropTypes.func,
   className: PropTypes.string,
+  preventBlank: PropTypes.bool,
 };
 
 export default Editable;

@@ -1,5 +1,4 @@
 import _Breadcrumb from './components/breadcrumb';
-import _Button from './components/button';
 import _Card from './components/card';
 import _CardContainer from './components/card-container';
 import _Dropdown from './components/dropdown/dropdown';
@@ -18,9 +17,11 @@ import _RadioButtonGroup from './components/radio-button-group';
 import _Switch from './components/switch';
 import _ToggleSwitch from './components/toggle-switch';
 import * as table from './components/table';
+import _Tooltip from './components/tooltip';
+
+export { Button, AsyncButton, CircleButton } from './components/button';
 
 export const Breadcrumb = _Breadcrumb;
-export const Button = _Button;
 export const Card = _Card;
 export const CardContainer = _CardContainer;
 export const Dropdown = _Dropdown;
@@ -44,3 +45,4 @@ export const TableHead = table.TableHead;
 export const TableHeader = table.TableHeader;
 export const TableRow = table.TableRow;
 export const ToggleSwitch = _ToggleSwitch;
+export const Tooltip = _Tooltip;

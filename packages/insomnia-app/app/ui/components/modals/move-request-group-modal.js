@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -12,6 +13,7 @@ import HelpTooltip from '../help-tooltip';
 
 type Props = {
   workspaces: Array<Workspace>,
+  activeWorkspace: Workspace,
 };
 
 type State = {
@@ -19,7 +21,7 @@ type State = {
   selectedWorkspaceId: string | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class MoveRequestGroupModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -49,8 +51,10 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
-    await models.requestGroup.update(newRequestGroup, {
+    // TODO: if there are gRPC requests in a request group
+    //  we should also copy the protofiles to the destination workspace - INS-267
+
+    await models.requestGroup.duplicate(requestGroup, {
       metaSortKey: -1e9,
       parentId: selectedWorkspaceId,
       name: requestGroup.name, // Because duplicating will add (Copy) suffix
@@ -76,7 +80,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces } = this.props;
+    const { workspaces, activeWorkspace } = this.props;
     const { selectedWorkspaceId } = this.state;
     return (
       <form onSubmit={this._handleSubmit}>
@@ -89,11 +93,13 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
                 <HelpTooltip>Folder will be moved to the root of the new workspace</HelpTooltip>
                 <select onChange={this._handleChangeSelectedWorkspace} value={selectedWorkspaceId}>
                   <option value="n/a">-- Select Workspace --</option>
-                  {workspaces.map(w => (
-                    <option key={w._id} value={w._id}>
-                      {w.name}
-                    </option>
-                  ))}
+                  {workspaces.map(w =>
+                    w._id === activeWorkspace._id ? null : (
+                      <option key={w._id} value={w._id}>
+                        {w.name}
+                      </option>
+                    ),
+                  )}
                 </select>
               </label>
             </div>

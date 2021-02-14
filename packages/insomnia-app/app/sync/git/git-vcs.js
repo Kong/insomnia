@@ -56,7 +56,7 @@ export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
 
 export default class GitVCS {
   _git: Object;
-  _baseOpts: { dir: string, gitdir?: string };
+  _baseOpts: { dir: string, gitdir?: string, noGitSuffix: boolean };
   _initialized: boolean;
 
   constructor() {
@@ -74,7 +74,11 @@ export default class GitVCS {
       console.log(`[git-event] ${message}`);
     });
 
-    this._baseOpts = { dir: directory, gitdir: gitDirectory };
+    this._baseOpts = {
+      dir: directory,
+      gitdir: gitDirectory,
+      noGitSuffix: true,
+    };
 
     if (await this._repoExists()) {
       console.log(`[git] Opened repo for ${gitDirectory}`);
@@ -96,7 +100,11 @@ export default class GitVCS {
     this._git = git;
     git.plugins.set('fs', fsPlugin);
 
-    this._baseOpts = { dir: directory, gitdir: gitDirectory };
+    this._baseOpts = {
+      dir: directory,
+      gitdir: gitDirectory,
+      noGitSuffix: true,
+    };
 
     await git.clone({ ...this._baseOpts, ...creds, url, singleBranch: true });
 

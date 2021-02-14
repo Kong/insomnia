@@ -1,12 +1,15 @@
 // @flow
 import * as React from 'react';
+import { SvgIcon } from 'insomnia-components';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import MarkdownPreview from '../markdown-preview';
 import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
 import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
 import GraphQLDefaultValue from './graph-ql-default-value';
+import Tooltip from '../../components/tooltip';
 
 type Props = {
   onNavigateType: (type: Object) => void,
@@ -15,7 +18,7 @@ type Props = {
   schema: GraphQLSchema | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLExplorerType extends React.PureComponent<Props> {
   _handleNavigateType(type: Object) {
     const { onNavigateType } = this.props;
@@ -77,12 +80,13 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
 
     // $FlowFixMe
     const fields = type.getFields();
+    const fieldKeys = Object.keys(fields).sort((a, b) => a.localeCompare(b));
 
     return (
       <React.Fragment>
         <h2 className="graphql-explorer__subheading">Fields</h2>
         <ul className="graphql-explorer__defs">
-          {Object.keys(fields).map(key => {
+          {fieldKeys.map(key => {
             const field: GraphQLField<any, any> = (fields[key]: any);
 
             let argLinks = null;
@@ -110,11 +114,20 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
               <GraphQLExplorerTypeLink onNavigate={this._handleNavigateType} type={field.type} />
             );
 
+            const isDeprecated = field.isDeprecated;
             const description = field.description;
             return (
               <li key={key}>
                 {fieldLink}
                 {argLinks}: {typeLink} <GraphQLDefaultValue field={field} />
+                {isDeprecated && (
+                  <Tooltip
+                    message={`The field "${field.name}" is deprecated. ${field.deprecationReason}`}
+                    position="bottom"
+                    delay={1000}>
+                    <SvgIcon icon="warning" />
+                  </Tooltip>
+                )}
                 {description && (
                   <div className="graphql-explorer__defs__description">
                     <MarkdownPreview markdown={description} />

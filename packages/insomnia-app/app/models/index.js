@@ -17,9 +17,13 @@ import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
 import * as _unitTestSuite from './unit-test-suite';
+import * as _protoFile from './proto-file';
+import * as _protoDirectory from './proto-directory';
+import * as _grpcRequest from './grpc-request';
+import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
-import { generateId } from '../common/misc';
+import { generateId, pluralize } from '../common/misc';
 
 export type BaseModel = {
   _id: string,
@@ -48,10 +52,17 @@ export const stats = _stats;
 export const unitTest = _unitTest;
 export const unitTestSuite = _unitTestSuite;
 export const unitTestResult = _unitTestResult;
+export const protoFile = _protoFile;
+export const protoDirectory = _protoDirectory;
+export const grpcRequest = _grpcRequest;
+export const grpcRequestMeta = _grpcRequestMeta;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
 export function all() {
+  // NOTE: This list should be from most to least specific (ie. parents above children)
+  // For example, stats, settings and workspace are global models, with workspace being the top-most parent,
+  // so they must be at the top
   return [
     stats,
     settings,
@@ -73,6 +84,10 @@ export function all() {
     unitTestSuite,
     unitTestResult,
     unitTest,
+    protoFile,
+    protoDirectory,
+    grpcRequest,
+    grpcRequestMeta,
   ];
 }
 
@@ -118,11 +133,8 @@ export function getModelName(type: string, count: number = 1) {
     return 'Unknown';
   } else if (count === 1) {
     return model.name;
-  } else if (!model.name.match(/s$/)) {
-    // Add an 's' if it doesn't already end in one
-    return `${model.name}s`;
   } else {
-    return model.name;
+    return pluralize(model.name);
   }
 }
 

@@ -1,8 +1,8 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  AUTOBIND_CFG,
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
@@ -14,6 +14,8 @@ import {
   CONTENT_TYPE_EDN,
   getContentTypeName,
 } from '../../../common/constants';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+
 import { showModal } from '../modals/index';
 import AlertModal from '../modals/alert-modal';
 import type { Request, RequestBody } from '../../../models/request';
@@ -31,7 +33,7 @@ type Props = {
 
 const EMPTY_MIME_TYPE = null;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ContentTypeDropdown extends React.PureComponent<Props> {
   async _checkMimeTypeChange(body: RequestBody, mimeType: string | null) {
     // Nothing to do

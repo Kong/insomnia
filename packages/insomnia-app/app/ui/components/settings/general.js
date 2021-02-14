@@ -2,27 +2,33 @@
 import * as React from 'react';
 import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
-import HelpTooltip from '../help-tooltip';
-import type { HttpVersion } from '../../../common/constants';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  ACTIVITY_MIGRATION,
+  AUTOBIND_CFG,
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
   HttpVersions,
+  isDevelopment,
   isLinux,
   isMac,
   isWindows,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
+import HelpTooltip from '../help-tooltip';
+import type { HttpVersion } from '../../../common/constants';
+
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
-import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { bindActionCreators } from 'redux';
+import * as globalActions from '../../redux/modules/global';
+import { connect } from 'react-redux';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -30,9 +36,11 @@ const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 
 type Props = {
   settings: Settings,
+  hideModal: () => void,
   updateSetting: Function,
   handleToggleMenuBar: Function,
   handleRootCssChange: Function,
+  handleSetActiveActivity: (activity?: GlobalActivity) => void,
 };
 
 type State = {
@@ -40,7 +48,7 @@ type State = {
   fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -99,6 +107,11 @@ class General extends React.PureComponent<Props, State> {
   async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
+  }
+
+  _handleStartMigration() {
+    this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
+    this.props.hideModal();
   }
 
   renderEnumSetting(
@@ -190,7 +203,7 @@ class General extends React.PureComponent<Props, State> {
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
           <div>
-            {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
+            {this.renderBooleanSetting('Use bulk header editor', 'useBulkHeaderEditor', '')}
             {this.renderBooleanSetting(
               'Vertical request/response layout',
               'forceVerticalLayout',
@@ -520,15 +533,37 @@ class General extends React.PureComponent<Props, State> {
           </p>
         </div>
 
-        {session.isLoggedIn() && (
-          <React.Fragment>
-            <hr />
-            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
-          </React.Fragment>
+        <hr className="pad-top" />
+
+        <h2>Migrate from Designer</h2>
+        {isDevelopment() && (
+          <>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting(
+                'Has prompted to migrate',
+                'hasPromptedToMigrateFromDesigner',
+              )}
+            </div>
+          </>
         )}
+        <div className="form-row pad-top-sm">
+          <button
+            className="btn btn--clicky pointer"
+            style={{ padding: 0 }}
+            onClick={this._handleStartMigration}>
+            Migrate from Designer
+          </button>
+        </div>
       </div>
     );
   }
 }
 
-export default General;
+function mapDispatchToProps(dispatch) {
+  const global = bindActionCreators(globalActions, dispatch);
+  return {
+    handleSetActiveActivity: global.setActiveActivity,
+  };
+}
+
+export default connect(null, mapDispatchToProps)(General);

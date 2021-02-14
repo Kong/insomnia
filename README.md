@@ -1,6 +1,5 @@
 # Insomnia REST Client
 
-[![Travis](https://api.travis-ci.org/Kong/insomnia.svg)](https://travis-ci.org/Kong/insomnia)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 [![CodeFund](https://img.shields.io/badge/codefund-advertiser-success.svg)](https://codefund.io)
@@ -74,7 +73,7 @@ sudo apt-get install build-essential
 Also on Linux, if Electron is failing during the bootstrap process, run the following
 ```bash
 # Clear Electron install conflicts
-rm -rf ~/cache/electron
+rm -rf ~/.cache/electron
 ```
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)

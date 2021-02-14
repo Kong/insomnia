@@ -400,6 +400,11 @@ blockquote {
   height: 100%;
 }
 
+.column {
+  display: flex;
+  flex-direction: column;
+}
+
 .row {
   display: flex;
   flex-direction: row;
@@ -501,6 +506,10 @@ blockquote {
   display: none;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 .relative {
   position: relative;
 }
@@ -570,7 +579,7 @@ i.fa.fa--fixed-width {
 }
 
 .pad-left-sm {
-  padding-left: calc(var(--padding-md) / 2);
+  padding-left: var(--padding-sm);
 }
 
 .pad-right {
@@ -579,7 +588,7 @@ i.fa.fa--fixed-width {
 }
 
 .pad-right-sm {
-  padding-right: calc(var(--padding-md) / 2);
+  padding-right: var(--padding-sm);
 }
 
 .pad-top {
@@ -638,6 +647,14 @@ i.fa.fa--fixed-width {
 
 .margin-right-sm {
   margin-right: var(--padding-sm);
+}
+
+.margin-left-xs {
+  margin-left: var(--padding-xs);
+}
+
+.margin-right-xs {
+  margin-right: var(--padding-xs);
 }
 
 .margin-bottom {

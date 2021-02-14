@@ -1,6 +1,12 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  DEBOUNCE_MILLIS,
+  EDITOR_KEY_MAP_VIM,
+  isMac,
+} from '../../../common/constants';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import clone from 'clone';
@@ -10,7 +16,7 @@ import { showModal } from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import prettify from 'insomnia-prettify';
-import { DEBOUNCE_MILLIS, EDITOR_KEY_MAP_VIM, isMac } from '../../../common/constants';
+
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import './base-imports';
 import { getTagDefinitions } from '../../../templating/index';
@@ -78,7 +84,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   gutters: ['CodeMirror-lint-markers'],
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CodeEditor extends React.Component {
   constructor(props) {
     super(props);
@@ -95,6 +101,7 @@ class CodeEditor extends React.Component {
   componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
+      this.codeMirror.closeHintDropdown();
     }
   }
 
@@ -312,7 +319,13 @@ class CodeEditor extends React.Component {
         let startToken = '{';
         let endToken = '}';
 
+        // Prevent retrieving an invalid content if undefined
+        if (!from?.line || !to?.line) return '\u2194';
+
         const prevLine = this.codeMirror.getLine(from.line);
+
+        if (!prevLine) return '\u2194';
+
         if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
           startToken = '[';
           endToken = ']';
@@ -718,6 +731,10 @@ class CodeEditor extends React.Component {
       return 'application/xml';
     } else if (mimeType.includes('kotlin')) {
       return 'text/x-kotlin';
+    } else if (CodeEditor._isYAML(mimeType)) {
+      // code-mirror doesn't recognize text/yaml or application/yaml
+      // as a valid mime-type
+      return 'yaml';
     } else {
       return mimeType;
     }
@@ -795,18 +812,20 @@ class CodeEditor extends React.Component {
 
   _codemirrorValueBeforeChange(doc, change) {
     const value = this.codeMirror.getDoc().getValue();
+
+    // If we're in single-line mode, merge all changed lines into one
+    if (this.props.singleLine && change.text && change.text.length > 1) {
+      const text = change.text
+        .join('') // join all changed lines into one
+        .replace(/\n/g, ' '); // Convert all whitespace to spaces
+      change.update(change.from, change.to, [text]);
+    }
+
     // Suppress lint on empty doc or single space exists (default value)
     if (value.trim() === '') {
       this._codemirrorSmartSetOption('lint', false);
     } else {
       this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
-      // If we're in single-line mode, merge all changed lines into one
-      if (this.props.singleLine && change.text && change.text.length > 1) {
-        const text = change.text
-          .join('') // join all changed lines into one
-          .replace(/\n/g, ' '); // Convert all whitespace to spaces
-        change.update(change.from, change.to, [text]);
-      }
 
       // Don't allow non-breaking spaces because they break the GraphQL syntax
       if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {

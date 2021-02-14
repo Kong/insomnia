@@ -90,6 +90,21 @@ export function trackPageView(path: string) {
   });
 }
 
+export async function getDeviceId(): Promise<string> {
+  const settings = await models.settings.getOrCreate();
+
+  let { deviceId } = settings;
+  if (!deviceId) {
+    // Migrate old GA ID into settings model if needed
+    const oldId = (window && window.localStorage.getItem('gaClientId')) || null;
+    deviceId = oldId || uuid.v4();
+
+    await models.settings.update(settings, { deviceId });
+  }
+
+  return deviceId;
+}
+
 // ~~~~~~~~~~~~~~~~~ //
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
@@ -129,15 +144,7 @@ export async function _trackPageView(location: string) {
 }
 
 async function _getDefaultParams(): Promise<Array<RequestParameter>> {
-  const settings = await models.settings.getOrCreate();
-
-  // Migrate old GA ID into settings model
-  let { deviceId } = settings;
-  if (!deviceId) {
-    const oldId = (window && window.localStorage.gaClientId) || null;
-    deviceId = oldId || uuid.v4();
-    await models.settings.update(settings, { deviceId });
-  }
+  const deviceId = await getDeviceId();
 
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
   const ua = String(window?.navigator?.userAgent)

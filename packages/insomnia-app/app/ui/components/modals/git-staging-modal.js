@@ -1,7 +1,8 @@
 // @flow
 import YAML from 'yaml';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import path from 'path';
 import * as models from '../../../models';
 import Modal from '../base/modal';
@@ -16,6 +17,7 @@ import Tooltip from '../tooltip';
 import PromptButton from '../base/prompt-button';
 import { gitRollback } from '../../../sync/git/git-rollback';
 import classnames from 'classnames';
+import parseGitPath from '../../../sync/git/parse-git-path';
 
 type Props = {|
   workspace: Workspace,
@@ -32,6 +34,7 @@ type Item = {|
 |};
 
 type State = {|
+  loading: boolean,
   branch: string,
   message: string,
   items: {
@@ -40,12 +43,13 @@ type State = {|
 |};
 
 const INITIAL_STATE: State = {
+  loading: false,
   branch: '',
   message: '',
   items: {},
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GitStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   statusNames: { [string]: string };
@@ -173,6 +177,12 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   async _refresh(callback?: () => void) {
     const { vcs, workspace } = this.props;
 
+    this.setState({ loading: true });
+
+    // Get and set branch name
+    const branch = await vcs.getBranch();
+    this.setState({ branch });
+
     // Cache status names
     const docs = await withDescendants(workspace);
     const allPaths = await this.getAllPaths();
@@ -207,14 +217,10 @@ class GitStagingModal extends React.PureComponent<Props, State> {
         }
       }
 
-      // We know that type is in the path but we don't know where. This
-      // is the safest way to check for the type
-      let type = 'Unknown';
-      for (const t of models.types()) {
-        if (gitPath.includes(t)) {
-          type = t;
-          break;
-        }
+      // We know that type is in the path; extract it. If the model is not found, set to Unknown.
+      let { type } = parseGitPath(gitPath);
+      if (!models.types().includes(type)) {
+        type = 'Unknown';
       }
 
       const added = status.includes('added');
@@ -239,8 +245,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
       };
     }
 
-    const branch = await vcs.getBranch();
-    this.setState({ items, branch }, callback);
+    this.setState({ items, loading: false }, callback);
   }
 
   renderOperation(item: Item) {
@@ -355,64 +360,68 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
-    const { items, message, branch } = this.state;
+  _renderEmpty() {
+    const { loading } = this.state;
 
-    const itemsList = Object.keys(items).map(k => items[k]);
-    let body = null;
-    if (itemsList.length === 0) {
-      body = (
-        <>
-          <ModalHeader>Commit Changes</ModalHeader>
-          <ModalBody className="wide pad">No changes to commit.</ModalBody>
-          <ModalFooter>
-            <div className="margin-left italic txt-sm tall">
-              <i className="fa fa-code-fork" /> {branch}
-            </div>
-            <div>
-              <button className="btn" onClick={this._hideModal}>
-                Close
-              </button>
-            </div>
-          </ModalFooter>
-        </>
-      );
-    } else {
-      const newItems = itemsList.filter(i => i.status.includes('added'));
-      const existingItems = itemsList.filter(i => !i.status.includes('added'));
-
-      body = (
-        <>
-          <ModalHeader>Commit Changes</ModalHeader>
-          <ModalBody className="wide pad">
-            <div className="form-control form-control--outlined">
-              <textarea
-                ref={this._setTextareaRef}
-                rows="3"
-                required
-                placeholder="A descriptive message to describe changes made"
-                defaultValue={message}
-                onChange={this._handleMessageChange}
-              />
-            </div>
-            {this.renderTable('Modified Objects', existingItems, 'Rollback all')}
-            {this.renderTable('Unversioned Objects', newItems, 'Delete all')}
-          </ModalBody>
-          <ModalFooter>
-            <div className="margin-left italic txt-sm tall">
-              <i className="fa fa-code-fork" /> {branch}
-            </div>
-            <div>
-              <button className="btn" onClick={this._handleCommit}>
-                Commit
-              </button>
-            </div>
-          </ModalFooter>
-        </>
-      );
+    if (loading) {
+      return <>Loading...</>;
     }
 
-    return <Modal ref={this._setModalRef}>{body}</Modal>;
+    return <>No changes to commit.</>;
+  }
+
+  _renderItems(items: Array<Item>) {
+    const { message } = this.state;
+
+    const newItems = items.filter(i => i.status.includes('added'));
+    const existingItems = items.filter(i => !i.status.includes('added'));
+
+    return (
+      <>
+        <div className="form-control form-control--outlined">
+          <textarea
+            ref={this._setTextareaRef}
+            rows="3"
+            required
+            placeholder="A descriptive message to describe changes made"
+            defaultValue={message}
+            onChange={this._handleMessageChange}
+          />
+        </div>
+        {this.renderTable('Modified Objects', existingItems, 'Rollback all')}
+        {this.renderTable('Unversioned Objects', newItems, 'Delete all')}
+      </>
+    );
+  }
+
+  render() {
+    const { items, branch, loading } = this.state;
+
+    const itemsList = Object.keys(items).map(k => items[k]);
+    const hasChanges = !!itemsList.length;
+
+    return (
+      <Modal ref={this._setModalRef}>
+        <ModalHeader>Commit Changes</ModalHeader>
+        <ModalBody className="wide pad">
+          {hasChanges ? this._renderItems(itemsList) : this._renderEmpty()}
+        </ModalBody>
+        <ModalFooter>
+          <div className="margin-left italic txt-sm tall">
+            <i className="fa fa-code-fork" /> {branch}{' '}
+            {loading && <i className="fa fa-refresh fa-spin" />}
+          </div>
+          <div>
+            <button className="btn" onClick={this._hideModal}>
+              Close
+            </button>
+            <button className="btn" onClick={this._handleCommit} disabled={loading || !hasChanges}>
+              Commit
+            </button>
+          </div>
+        </ModalFooter>
+      </Modal>
+    );
   }
 }
 

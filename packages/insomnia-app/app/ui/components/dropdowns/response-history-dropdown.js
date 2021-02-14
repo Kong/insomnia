@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import moment from 'moment';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import StatusTag from '../tags/status-tag';
@@ -28,7 +29,7 @@ type Props = {
   activeEnvironment: ?Environment,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseHistoryDropdown extends React.PureComponent<Props> {
   _dropdown: ?Dropdown;
 

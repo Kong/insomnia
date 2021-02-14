@@ -6,7 +6,6 @@ import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
-import type { GlobalActivity } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -360,6 +359,11 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
   });
 }
 
+export function getDesignerDataDir(): string {
+  const { app } = electron.remote || electron;
+  return pathJoin(app.getPath('appData'), 'Insomnia Designer');
+}
+
 export function getDataDirectory(): string {
   const { app } = electron.remote || electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
@@ -374,6 +378,22 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
   return chunks;
 }
 
-export function setActivityAttribute(activity: GlobalActivity) {
-  document.body.setAttribute('data-activity', activity);
+export function pluralize(text: string): string {
+  let trailer = 's';
+  let chop = 0;
+
+  // Things already ending with 's' stay that way
+  if (text.match(/s$/)) {
+    trailer = '';
+    chop = 0;
+  }
+
+  // Things ending in 'y' convert to ies
+  if (text.match(/y$/)) {
+    trailer = 'ies';
+    chop = 1;
+  }
+
+  // Add the trailer for pluralization
+  return `${text.slice(0, text.length - chop)}${trailer}`;
 }

@@ -17,6 +17,55 @@ export const _default = () => (
   </div>
 );
 
+export const _bordered = () => (
+  <div style={{ width: '350px' }}>
+    <ListGroup bordered>
+      <ListGroupItem>Bordered</ListGroupItem>
+      <ListGroupItem>list</ListGroupItem>
+      <ListGroupItem>of</ListGroupItem>
+      <ListGroupItem>things...</ListGroupItem>
+    </ListGroup>
+  </div>
+);
+
+export const _indented = () => (
+  <div style={{ width: '350px' }}>
+    <ListGroup bordered>
+      <ListGroupItem indentLevel={0}>Indent 0</ListGroupItem>
+      <ListGroupItem indentLevel={1}>Indent 1</ListGroupItem>
+      <ListGroupItem indentLevel={2}>Indent 2</ListGroupItem>
+      <ListGroupItem indentLevel={3}>Indent 3</ListGroupItem>
+      <ListGroupItem indentLevel={4}>Indent 4</ListGroupItem>
+      <ListGroupItem indentLevel={3}>Indent 3</ListGroupItem>
+      <ListGroupItem indentLevel={2}>Indent 2</ListGroupItem>
+      <ListGroupItem indentLevel={1}>Indent 1</ListGroupItem>
+      <ListGroupItem indentLevel={0}>Indent 0</ListGroupItem>
+    </ListGroup>
+  </div>
+);
+
+export const _selectable = () => {
+  const [selected, setSelected] = React.useState(-1);
+  return (
+    <div style={{ width: '350px' }}>
+      <ListGroup>
+        <ListGroupItem selectable isSelected={selected === 0} onClick={() => setSelected(0)}>
+          Selectable
+        </ListGroupItem>
+        <ListGroupItem selectable isSelected={selected === 1} onClick={() => setSelected(1)}>
+          list
+        </ListGroupItem>
+        <ListGroupItem selectable isSelected={selected === 2} onClick={() => setSelected(2)}>
+          of
+        </ListGroupItem>
+        <ListGroupItem selectable isSelected={selected === 3} onClick={() => setSelected(3)}>
+          things...
+        </ListGroupItem>
+      </ListGroup>
+    </div>
+  );
+};
+
 const unitTestResults = [
   {
     _id: 'ut_A',

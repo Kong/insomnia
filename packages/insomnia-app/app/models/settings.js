@@ -55,9 +55,7 @@ type BaseSettings = {
   useBulkHeaderEditor: boolean,
   useBulkParametersEditor: boolean,
   validateSSL: boolean,
-
-  // Feature flags
-  enableSyncBeta: boolean,
+  hasPromptedToMigrateFromDesigner: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -113,7 +111,7 @@ export function init(): BaseSettings {
     validateSSL: true,
 
     // Feature flags
-    enableSyncBeta: false,
+    hasPromptedToMigrateFromDesigner: false,
   };
 }
 

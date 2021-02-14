@@ -1,7 +1,14 @@
 // @flow
 import * as React from 'react';
 import iconv from 'iconv-lite';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  HUGE_RESPONSE_MB,
+  LARGE_RESPONSE_MB,
+  PREVIEW_MODE_FRIENDLY,
+  PREVIEW_MODE_RAW,
+} from '../../../common/constants';
 import { shell } from 'electron';
 import PDFViewer from './response-pdf-viewer';
 import CSVViewer from './response-csv-viewer';
@@ -10,12 +17,7 @@ import ResponseWebView from './response-web-view';
 import MultipartViewer from './response-multipart';
 import ResponseRaw from './response-raw';
 import ResponseError from './response-error';
-import {
-  HUGE_RESPONSE_MB,
-  LARGE_RESPONSE_MB,
-  PREVIEW_MODE_FRIENDLY,
-  PREVIEW_MODE_RAW,
-} from '../../../common/constants';
+
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -50,7 +52,7 @@ type State = {
   error: string,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseViewer extends React.Component<Props, State> {
   _selectableView: any;
 

@@ -1,0 +1,17 @@
+swagger: "2.0"
+info:
+  version: 1.0.0
+  title: E2E testing specification - swagger 2
+  description: This is a specification representing the oas3.yaml spec
+schemes:
+  - http
+host: 127.0.0.1:4010
+tags:
+  - name: custom-tag
+paths:
+  /pets/1:
+    get:
+      summary: get pet by id
+      operationId: findPetById
+      tags:
+        - custom-tag

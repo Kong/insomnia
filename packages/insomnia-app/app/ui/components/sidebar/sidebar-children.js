@@ -1,7 +1,8 @@
 // @flow
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import * as models from '../../../models/index';
@@ -14,7 +15,7 @@ import { Dropdown } from '../base/dropdown';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 
 type Child = {
-  doc: Request | RequestGroup,
+  doc: Request | GrpcRequest | RequestGroup,
   children: Array<Child>,
   collapsed: boolean,
   hidden: boolean,
@@ -50,7 +51,7 @@ type Props = {
   activeRequest: ?Request,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarChildren extends React.PureComponent<Props> {
   _contextMenu: ?SidebarCreateDropdown;
 
@@ -103,7 +104,7 @@ class SidebarChildren extends React.PureComponent<Props> {
         return null;
       }
 
-      if (child.doc.type === models.request.type) {
+      if (child.doc.type === models.request.type || child.doc.type === models.grpcRequest.type) {
         return (
           <SidebarRequestRow
             key={child.doc._id}
@@ -122,6 +123,8 @@ class SidebarChildren extends React.PureComponent<Props> {
             request={child.doc}
             workspace={workspace}
             hotKeyRegistry={hotKeyRegistry}
+            // Necessary for plugin actions on requests
+            activeEnvironment={activeEnvironment}
           />
         );
       }

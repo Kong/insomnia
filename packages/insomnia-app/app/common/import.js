@@ -12,6 +12,14 @@ import fs from 'fs';
 import { fnOrString, generateId } from './misc';
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
+import {
+  isGrpcRequest,
+  isProtoDirectory,
+  isProtoFile,
+  isRequest,
+  isRequestGroup,
+  isWorkspace,
+} from '../models/helpers/is-model';
 
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
@@ -19,6 +27,7 @@ const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
 const EXPORT_FORMAT = 4;
 
 const EXPORT_TYPE_REQUEST = 'request';
+const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
 const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
 const EXPORT_TYPE_UNIT_TEST = 'unit_test';
@@ -26,12 +35,15 @@ const EXPORT_TYPE_WORKSPACE = 'workspace';
 const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 const EXPORT_TYPE_ENVIRONMENT = 'environment';
 const EXPORT_TYPE_API_SPEC = 'api_spec';
+const EXPORT_TYPE_PROTO_FILE = 'proto_file';
+const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
 
 // If we come across an ID of this form, we will replace it with a new one
 const REPLACE_ID_REGEX = /__\w+_\d+__/g;
 
 const MODELS = {
   [EXPORT_TYPE_REQUEST]: models.request,
+  [EXPORT_TYPE_GRPC_REQUEST]: models.grpcRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: models.requestGroup,
   [EXPORT_TYPE_UNIT_TEST_SUITE]: models.unitTestSuite,
   [EXPORT_TYPE_UNIT_TEST]: models.unitTest,
@@ -39,6 +51,8 @@ const MODELS = {
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
   [EXPORT_TYPE_API_SPEC]: models.apiSpec,
+  [EXPORT_TYPE_PROTO_FILE]: models.protoFile,
+  [EXPORT_TYPE_PROTO_DIRECTORY]: models.protoDirectory,
 };
 
 export type ImportResult = {
@@ -197,7 +211,7 @@ export async function importRaw(
     // Hack to switch to GraphQL based on finding `graphql` in the URL path
     // TODO: Support this in a better way
     if (
-      model.type === models.request.type &&
+      isRequest(model) &&
       resource.body &&
       typeof resource.body.text === 'string' &&
       typeof resource.url === 'string' &&
@@ -209,7 +223,7 @@ export async function importRaw(
 
     // Try adding Content-Type JSON if no Content-Type exists
     if (
-      model.type === models.request.type &&
+      isRequest(model) &&
       resource.body &&
       typeof resource.body.text === 'string' &&
       Array.isArray(resource.headers) &&
@@ -231,7 +245,7 @@ export async function importRaw(
       newDoc = await db.docCreate(model.type, resource);
 
       // Mark as not seen if we created a new workspace from sync
-      if (newDoc.type === models.workspace.type) {
+      if (isWorkspace(newDoc)) {
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newDoc._id);
         await models.workspaceMeta.update(workspaceMeta, { hasSeen: false });
       }
@@ -278,7 +292,7 @@ export async function exportWorkspacesHAR(
   includePrivateDocs: boolean = false,
 ): Promise<string> {
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
+  const requests: Array<BaseModel> = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
 
@@ -294,7 +308,7 @@ export async function exportRequestsHAR(
       models.workspace.type,
       models.requestGroup.type,
     ]);
-    const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+    const workspace = ancestors.find(isWorkspace);
     mapRequestIdToWorkspace[request._id] = workspace;
     if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
       continue;
@@ -342,7 +356,7 @@ export async function exportWorkspacesData(
   format: 'json' | 'yaml',
 ): Promise<string> {
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
+  const requests: Array<BaseModel> = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
 
@@ -371,7 +385,7 @@ export async function exportRequestsData(
       }
       mapTypeAndIdToDoc[key] = ancestor;
       docs.push(ancestor);
-      if (ancestor.type === models.workspace.type) {
+      if (isWorkspace(ancestor)) {
         workspaces.push(ancestor);
       }
     }
@@ -385,7 +399,9 @@ export async function exportRequestsData(
         d.type === models.environment.type ||
         d.type === models.apiSpec.type ||
         d.type === models.unitTestSuite.type ||
-        d.type === models.unitTest.type
+        d.type === models.unitTest.type ||
+        isProtoFile(d) ||
+        isProtoDirectory(d)
       );
     });
     docs.push(...descendants);
@@ -398,9 +414,12 @@ export async function exportRequestsData(
         !(
           d.type === models.unitTestSuite.type ||
           d.type === models.unitTest.type ||
-          d.type === models.request.type ||
-          d.type === models.requestGroup.type ||
-          d.type === models.workspace.type ||
+          isRequest(d) ||
+          isGrpcRequest(d) ||
+          isRequestGroup(d) ||
+          isProtoFile(d) ||
+          isProtoDirectory(d) ||
+          isWorkspace(d) ||
           d.type === models.cookieJar.type ||
           d.type === models.environment.type ||
           d.type === models.apiSpec.type
@@ -412,7 +431,7 @@ export async function exportRequestsData(
       return !(d: Object).isPrivate || includePrivateDocs;
     })
     .map((d: Object) => {
-      if (d.type === models.workspace.type) {
+      if (isWorkspace(d)) {
         d._type = EXPORT_TYPE_WORKSPACE;
       } else if (d.type === models.cookieJar.type) {
         d._type = EXPORT_TYPE_COOKIE_JAR;
@@ -422,10 +441,16 @@ export async function exportRequestsData(
         d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
       } else if (d.type === models.unitTest.type) {
         d._type = EXPORT_TYPE_UNIT_TEST;
-      } else if (d.type === models.requestGroup.type) {
+      } else if (isRequestGroup(d)) {
         d._type = EXPORT_TYPE_REQUEST_GROUP;
-      } else if (d.type === models.request.type) {
+      } else if (isRequest(d)) {
         d._type = EXPORT_TYPE_REQUEST;
+      } else if (isGrpcRequest(d)) {
+        d._type = EXPORT_TYPE_GRPC_REQUEST;
+      } else if (isProtoFile(d)) {
+        d._type = EXPORT_TYPE_PROTO_FILE;
+      } else if (isProtoDirectory(d)) {
+        d._type = EXPORT_TYPE_PROTO_DIRECTORY;
       } else if (d.type === models.apiSpec.type) {
         d._type = EXPORT_TYPE_API_SPEC;
       }

@@ -1,12 +1,13 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
 import HelpTooltip from '../../help-tooltip';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 
 type Props = {
   request: Request,
@@ -19,7 +20,7 @@ type Props = {
   handleUpdateSettingsShowPasswords: boolean => Promise<Settings>,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class AWSAuth extends React.PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;

@@ -25,12 +25,11 @@
     "storybook-start": "npm run storybook --prefix packages/insomnia-components",
     "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
     "preinstall": "node ./scripts/check-version.js",
-    "app-build:smoke:core": "cross-env SMOKE_TEST=core npm run app-build",
-    "app-build:smoke:designer": "cross-env SMOKE_TEST=designer npm run app-build",
-    "test:smoke:core:build": "npm run test:core:build --prefix packages/insomnia-smoke-test",
-    "test:smoke:designer:build": "npm run test:designer:build --prefix packages/insomnia-smoke-test",
-    "test:smoke:core:package": "npm run test:core:package --prefix packages/insomnia-smoke-test",
-    "test:smoke:designer:package": "npm run test:designer:package --prefix packages/insomnia-smoke-test"
+    "app-build:smoke": "cross-env SMOKE_TEST=true npm run app-build",
+    "app-package:smoke": "cross-env SMOKE_TEST=true npm run app-package",
+    "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test",
+    "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test",
+    "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test"
   },
   "lint-staged": {
     "{packages,plugins}/**/*.{js,json}": [
