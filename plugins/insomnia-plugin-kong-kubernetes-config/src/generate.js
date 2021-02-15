@@ -17,7 +17,7 @@ module.exports = {
     let result;
 
     try {
-      result = await o2k.generateFromString(contents, 'kong-for-kubernetes');
+      result = await o2k.generateFromString(contents, 'kong-for-kubernetes', contents['x-kong-tags']);
     } catch (err) {
       return {
         document: null,
