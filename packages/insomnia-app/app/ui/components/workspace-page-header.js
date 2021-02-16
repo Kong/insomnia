@@ -26,11 +26,7 @@ const WorkspacePageHeader = ({
     activeEnvironment,
     settings,
     activity,
-    unseenWorkspaces,
-    vcs,
-    workspaces,
     isLoading,
-    handleSetActiveWorkspace,
   },
 }: Props) => {
   const collection = activeWorkspace.scope === 'collection';
@@ -46,12 +42,9 @@ const WorkspacePageHeader = ({
       displayName={collection ? activeWorkspace.name : activeApiSpec.fileName}
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
-      workspaces={workspaces}
-      unseenWorkspaces={unseenWorkspaces}
+      activeApiSpec={activeApiSpec}
       hotKeyRegistry={settings.hotKeyRegistry}
-      handleSetActiveWorkspace={handleSetActiveWorkspace}
       isLoading={isLoading}
-      vcs={vcs}
     />
   );
 
