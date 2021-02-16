@@ -1,5 +1,9 @@
 // @flow
 
+declare type XKongName = {
+  'x-kong-name'?: string,
+};
+
 declare type OA3Info = {|
   title: string,
   version: string,
@@ -53,7 +57,7 @@ declare type OA3Operation = {
   deprecated?: boolean,
   security?: Array<OA3SecurityRequirement>,
   servers?: Array<OA3Server>,
-};
+} & XKongName;
 
 declare type OA3Reference = {|
   $ref: string,
@@ -106,7 +110,7 @@ declare type OA3PathItem = {
   head?: OA3Operation,
   patch?: OA3Operation,
   trace?: OA3Operation,
-};
+} & XKongName;
 
 declare type OA3Paths = {
   [string]: OA3PathItem,
@@ -204,8 +208,7 @@ declare type OpenApi3Spec = {
   security?: Array<OA3SecurityRequirement>,
   tags?: Array<string>,
   externalDocs?: OA3ExternalDocs,
-  'x-kong-name'?: string,
-};
+} & XKongName;
 
 const HttpMethod = {
   get: 'GET',

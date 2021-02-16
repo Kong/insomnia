@@ -9,14 +9,14 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
-          "name": "Simple_API_overview-path-get",
+          "name": "x_kong_name_override_at_method",
           "paths": ["/$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
-          "name": "Simple_API_overview-path_1-get",
+          "name": "getVersionDetailsv2",
           "paths": ["/v2$"]
         }
       ],

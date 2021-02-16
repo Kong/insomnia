@@ -9,35 +9,35 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "Link_Example-path-get",
+          "name": "getUserByName",
           "paths": ["\/2.0\/users\/(?<username>\\S+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "Link_Example-path_1-get",
+          "name": "getRepositoriesByOwner",
           "paths": ["\/2.0\/repositories\/(?<username>\\S+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "Link_Example-path_2-get",
+          "name": "getRepository",
           "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "Link_Example-path_3-get",
+          "name": "getPullRequestsByRepository",
           "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "Link_Example-path_4-get",
+          "name": "getPullRequestsById",
           "paths": [
             "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)$"
           ]
@@ -46,7 +46,7 @@
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "Link_Example-path_5-post",
+          "name": "mergePullRequest",
           "paths": [
             "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)\/merge$"
           ]
