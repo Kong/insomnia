@@ -1,9 +1,10 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Request } from '../../../../models/request';
 
 type State = {
@@ -20,7 +21,7 @@ type Props = {
   showAllPasswords: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class PasswordEditor extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
