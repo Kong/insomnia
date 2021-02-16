@@ -34,6 +34,11 @@ class NTLMAuth extends React.PureComponent<Props> {
     onChange(request, { ...request.authentication, username: value });
   }
 
+  _handleChangePassword(value: string) {
+    const { request, onChange } = this.props;
+    onChange(request, { ...request.authentication, password: value });
+  }
+
   render() {
     const {
       request,
@@ -42,7 +47,6 @@ class NTLMAuth extends React.PureComponent<Props> {
       handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
-      onChange,
     } = this.props;
 
     const { authentication } = request;
@@ -88,7 +92,7 @@ class NTLMAuth extends React.PureComponent<Props> {
                   request={request}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   render={handleRender}
-                  onChange={onChange}
+                  onChange={this._handleChangePassword}
                   getRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}
                 />

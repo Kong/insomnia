@@ -1,23 +1,30 @@
 // @flow
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
 
+type State = {
+  showPassword: boolean,
+};
+
+type Props = {
+  render: Function,
+  getRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
+  onChange: Function,
+  request: Request,
+  isVariableUncovered: boolean,
+  showAllPasswords: Boolean,
+};
 @autobind
-class PasswordEditor extends React.PureComponent {
-  constructor(props) {
+class PasswordEditor extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = {
       showPassword: false,
     };
-  }
-
-  _handleChangePassword(value) {
-    const { request, onChange } = this.props;
-    onChange(request, { ...request.authentication, password: value });
   }
 
   _handleShowPassword() {
@@ -33,6 +40,7 @@ class PasswordEditor extends React.PureComponent {
       handleGetRenderContext,
       nunjucksPowerUserMode,
       isVariableUncovered,
+      onChange,
     } = this.props;
 
     const { authentication } = request;
@@ -46,7 +54,7 @@ class PasswordEditor extends React.PureComponent {
             type={showAllPasswords || showPassword ? 'text' : 'password'}
             id="password"
             testId="password"
-            onChange={this._handleChangePassword}
+            onChange={onChange}
             defaultValue={authentication.password || ''}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             render={handleRender}
@@ -67,18 +75,5 @@ class PasswordEditor extends React.PureComponent {
     );
   }
 }
-PasswordEditor.propTypes = {
-  request: PropTypes.shape({
-    authentication: PropTypes.shape({
-      password: PropTypes.string,
-    }).isRequired,
-  }).isRequired,
-  render: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  getRenderContext: PropTypes.func.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  showAllPasswords: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-};
 
 export default PasswordEditor;
