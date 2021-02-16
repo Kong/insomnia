@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import autobind from 'autobind-decorator';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
+import type { Request } from '../../../../models/request';
 
 type State = {
   showPassword: boolean,
@@ -16,7 +17,7 @@ type Props = {
   onChange: Function,
   request: Request,
   isVariableUncovered: boolean,
-  showAllPasswords: Boolean,
+  showAllPasswords: boolean,
 };
 
 @autobind
