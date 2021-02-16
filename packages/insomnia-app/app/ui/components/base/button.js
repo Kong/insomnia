@@ -16,7 +16,7 @@ class Button extends PureComponent {
   }
 
   render() {
-    const { children, disabled, tabIndex, className, type, id, testId } = this.props;
+    const { children, disabled, tabIndex, className, type, id } = this.props;
 
     return (
       <button
@@ -25,8 +25,7 @@ class Button extends PureComponent {
         type={type}
         tabIndex={tabIndex}
         className={className}
-        onClick={this._handleClick}
-        data-testid={testId}>
+        onClick={this._handleClick}>
         {children}
       </button>
     );

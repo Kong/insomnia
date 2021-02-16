@@ -5,19 +5,19 @@ import PasswordEditor from '../password-editor';
 const props = {
   request: {
     authentication: {
-      password: '',
+      password: 'text-password',
     },
   },
 };
 describe('<PasswordEditor />', () => {
   it('should able to render the component', () => {
-    const { getByTestId } = render(<PasswordEditor {...props} />);
-    expect(getByTestId('password')).toBeInTheDocument();
-    expect(getByTestId('password').type).toBe('password');
-    expect(getByTestId('password-reveal')).toBeInTheDocument();
+    const { getByRole, getByDisplayValue } = render(<PasswordEditor {...props} />);
+    expect(getByDisplayValue('text-password')).toBeInTheDocument();
+    expect(getByDisplayValue('text-password').type).toBe('password');
+    expect(getByRole('button')).toBeInTheDocument();
   });
   it('should able to show password value as text and hide password-reveal icon if showAllPasswords is true', () => {
-    const { getByTestId, queryByTestId } = render(
+    const { getByDisplayValue, queryByRole } = render(
       <PasswordEditor
         request={{
           authentication: {
@@ -27,11 +27,11 @@ describe('<PasswordEditor />', () => {
         showAllPasswords={true}
       />,
     );
-    expect(getByTestId('password').type).toBe('text');
-    expect(queryByTestId('password-reveal')).not.toBeInTheDocument();
+    expect(getByDisplayValue('text-value').type).toBe('text');
+    expect(queryByRole('button')).not.toBeInTheDocument();
   });
   it('should able to show password value if clicked on password-reveal icon', () => {
-    const { getByTestId } = render(
+    const { getByRole, getByDisplayValue } = render(
       <PasswordEditor
         request={{
           authentication: {
@@ -40,9 +40,9 @@ describe('<PasswordEditor />', () => {
         }}
       />,
     );
-    const passwordInput = getByTestId('password');
+    const passwordInput = getByDisplayValue('text-value');
     expect(passwordInput.type).toBe('password');
-    fireEvent.click(getByTestId('password-reveal'));
+    fireEvent.click(getByRole('button'));
     expect(passwordInput.type).toBe('text');
   });
 });

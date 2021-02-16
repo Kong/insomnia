@@ -18,6 +18,7 @@ type Props = {
   isVariableUncovered: boolean,
   showAllPasswords: Boolean,
 };
+
 @autobind
 class PasswordEditor extends React.PureComponent<Props, State> {
   constructor(props: Props) {
