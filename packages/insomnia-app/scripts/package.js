@@ -1,4 +1,5 @@
-const { appConfig, electronBuilderConfig } = require('../config');
+const { appConfig } = require('../config');
+const electronBuilderConfig = require('../config/electronbuilder.json');
 const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
@@ -27,17 +28,16 @@ module.exports.start = async function() {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
-    const appId = appConfig().appId;
-    await emptyDir(path.join('..', 'dist', appId, '*'));
+    await emptyDir(path.join('..', 'dist', '*'));
   }
 
   console.log('[package] Packaging app');
-  await pkg(electronBuilderConfig());
+  await pkg();
 
   console.log('[package] Complete!');
 };
 
-async function pkg(electronBuilderConfig) {
+async function pkg() {
   const app = appConfig();
 
   // Replace some things

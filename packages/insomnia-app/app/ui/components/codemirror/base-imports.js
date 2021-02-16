@@ -39,6 +39,7 @@ import 'codemirror/addon/selection/selection-pointer';
 import 'codemirror/addon/display/placeholder';
 import 'codemirror/addon/lint/lint';
 import 'codemirror/addon/lint/json-lint';
+import 'codemirror/addon/lint/yaml-lint';
 import 'codemirror/addon/lint/lint.css';
 import 'codemirror/keymap/vim';
 import 'codemirror/keymap/emacs';
@@ -63,6 +64,11 @@ import './extensions/nunjucks-tags';
 import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
 
-// Make jsonlint available to the jsonlint addon
+// Make jsonlint available to the json-lint addon
 import { parser as jsonlint } from 'jsonlint';
+
+// Make js-yaml available to the yaml-lint addon
+import * as jsYaml from 'js-yaml';
+
 global.jsonlint = jsonlint;
+global.jsyaml = jsYaml;

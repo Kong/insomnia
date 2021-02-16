@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import styled, { css } from 'styled-components';
 
 const StyledButton = styled.button`
@@ -74,7 +74,7 @@ const StyledIconContainer = styled.div`
   padding-right: var(--padding-md);
 `;
 
-@autobind
+@autoBindMethodsForReact
 class DropdownItem extends PureComponent {
   _handleClick(e) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;

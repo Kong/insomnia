@@ -1,20 +1,19 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
-import { COLLAPSE_SIDEBAR_REMS, SIDEBAR_SKINNY_REMS } from '../../../common/constants';
-import SyncDropdown from '../dropdowns/sync-dropdown';
-import SyncLegacyDropdown from '../dropdowns/sync-legacy-dropdown';
-import type { StatusCandidate } from '../../../sync/types';
-import { isLoggedIn } from '../../../account/session';
+import {
+  COLLAPSE_SIDEBAR_REMS,
+  SIDEBAR_SKINNY_REMS,
+  AUTOBIND_CFG,
+} from '../../../common/constants';
 
 type Props = {|
   activeEnvironment: Environment | null,
   children: React.Node,
-  enableSyncBeta: boolean,
   environmentHighlightColorStyle: string,
   handleSetActiveEnvironment: Function,
   handleSetActiveWorkspace: Function,
@@ -22,26 +21,20 @@ type Props = {|
   hotKeyRegistry: HotKeyRegistry,
   isLoading: boolean,
   showEnvironmentsModal: Function,
-  syncItems: Array<StatusCandidate>,
   unseenWorkspaces: Array<Workspace>,
   width: number,
-  workspace: Workspace,
   workspaces: Array<Workspace>,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Sidebar extends React.PureComponent<Props> {
   render() {
     const {
       activeEnvironment,
       children,
-      enableSyncBeta,
       environmentHighlightColorStyle,
       hidden,
-      syncItems,
-      vcs,
       width,
-      workspace,
     } = this.props;
 
     return (
@@ -60,23 +53,6 @@ class Sidebar extends React.PureComponent<Props> {
               : null,
         }}>
         {children}
-
-        {enableSyncBeta && vcs && isLoggedIn() && (
-          <SyncDropdown
-            className="sidebar__footer"
-            workspace={workspace}
-            vcs={vcs}
-            syncItems={syncItems}
-          />
-        )}
-
-        {!enableSyncBeta && (
-          <SyncLegacyDropdown
-            className="sidebar__footer"
-            key={workspace._id}
-            workspace={workspace}
-          />
-        )}
       </aside>
     );
   }

@@ -4,7 +4,8 @@ import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -54,7 +55,7 @@ const getAccessTokenUrls = () => accessTokenUrls;
 
 let showAdvanced = false;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class OAuth2Auth extends React.PureComponent<Props, State> {
   constructor(props: any) {
     super(props);

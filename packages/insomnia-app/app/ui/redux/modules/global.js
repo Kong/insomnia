@@ -24,14 +24,18 @@ import SettingsModal, {
 } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
 import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace, ensureActivityIsForApp } from './helpers';
+import { askToImportIntoWorkspace } from './helpers';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
-import { setActivityAttribute } from '../../../common/misc';
-import { isDevelopment } from '../../../common/constants';
-import type { Workspace } from '../../../models/workspace';
 import type { GlobalActivity } from '../../../common/constants';
+import type { Workspace } from '../../../models/workspace';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  DEPRECATED_ACTIVITY_INSOMNIA,
+} from '../../../common/constants';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -224,18 +228,12 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveActivity(activity: GlobalActivity) {
-  let goToActivity = activity;
+export function setActiveActivity(activity?: GlobalActivity) {
+  activity = activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
 
-  // If development, skip logic (to allow for real-time switching)
-  if (!isDevelopment()) {
-    goToActivity = ensureActivityIsForApp(activity);
-  }
-
-  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(goToActivity));
-  setActivityAttribute(goToActivity);
-  trackEvent('Activity', 'Change', goToActivity);
-  return { type: SET_ACTIVE_ACTIVITY, activity: goToActivity };
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
+  trackEvent('Activity', 'Change', activity);
+  return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 
 export function setActiveWorkspace(workspaceId: string) {
@@ -638,8 +636,10 @@ export function init() {
     // Nothing here...
   }
 
-  // If the default app id is insomnia, then default to the insomnia view at initialization
-  activity = ensureActivityIsForApp(activity);
+  // If the initializing activity is migration, change it to home
+  if (activity === ACTIVITY_MIGRATION) {
+    activity = ACTIVITY_HOME;
+  }
 
   return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
 }

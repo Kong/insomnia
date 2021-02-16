@@ -1,20 +1,21 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import PromptButton from '../base/prompt-button';
 import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import * as sync from '../../../sync-legacy/index';
-import { getFirstName } from '../../../account/session';
+import { getFirstName, endTrial, logout } from '../../../account/session';
 
 let hidePaymentNotificationUntilNextLaunch = false;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class PaymentNotificationModal extends PureComponent {
   async _handleCancel() {
     try {
-      await sync.cancelTrial();
+      await endTrial();
+      await logout();
     } catch (err) {
       // That's okay
     }
@@ -58,7 +59,7 @@ class PaymentNotificationModal extends PureComponent {
               &nbsp;&nbsp;
               <Link
                 button
-                href="https://insomnia.rest/app/subscribe/"
+                href="https://app.insomnia.rest/app/subscribe/"
                 className="btn btn--compact btn--outlined">
                 Update Billing
               </Link>

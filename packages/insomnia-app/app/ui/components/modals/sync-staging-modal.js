@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -46,7 +47,7 @@ const _initialState: State = {
   lookupMap: {},
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _onSnapshot: ?() => void;

@@ -379,10 +379,14 @@ export default class VCS {
     return branch.snapshots.length;
   }
 
-  async getHistory(): Promise<Array<Snapshot>> {
+  async getHistory(count: number = 0): Promise<Array<Snapshot>> {
     const branch = await this._getCurrentBranch();
     const snapshots = [];
-    for (const id of branch.snapshots) {
+
+    const total = branch.snapshots.length;
+    const slice = count <= 0 || count > total ? 0 : total - count;
+
+    for (const id of branch.snapshots.slice(slice)) {
       const snapshot = await this._getSnapshot(id);
       if (snapshot === null) {
         throw new Error(`Failed to get snapshot id=${id}`);

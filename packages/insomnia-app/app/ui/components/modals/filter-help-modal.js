@@ -1,11 +1,12 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class FilterHelpModal extends PureComponent {
   constructor(props) {
     super(props);

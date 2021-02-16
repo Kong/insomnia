@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import DebouncedInput from '../base/debounced-input';
 import FileInputButton from '../base/file-input-button';
@@ -42,7 +43,7 @@ type State = {
   defaultPreviewMode: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
 

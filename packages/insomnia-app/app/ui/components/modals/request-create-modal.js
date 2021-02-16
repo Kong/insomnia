@@ -1,13 +1,8 @@
 // @flow
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
-import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
-import MethodDropdown from '../dropdowns/method-dropdown';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  AUTOBIND_CFG,
   getContentTypeName,
   METHOD_GET,
   METHOD_HEAD,
@@ -15,6 +10,13 @@ import {
   METHOD_DELETE,
   METHOD_GRPC,
 } from '../../../common/constants';
+import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
+import MethodDropdown from '../dropdowns/method-dropdown';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
+import ModalFooter from '../base/modal-footer';
+
 import * as models from '../../../models/index';
 import { trackEvent } from '../../../common/analytics';
 import { showModal } from './index';
@@ -25,7 +27,7 @@ type RequestCreateModalOptions = {
   onComplete: string => void,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestCreateModal extends PureComponent {
   constructor(props) {
     super(props);

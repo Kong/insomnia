@@ -1,7 +1,8 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import Modal from '../base/modal';
@@ -10,6 +11,7 @@ import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
+import { showModal } from './index';
 
 type Props = {
   workspace: Workspace,
@@ -25,7 +27,7 @@ type State = {
   error: string,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncShareModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -159,7 +161,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
             <Link
               button
               className="btn btn--super-compact inline-block"
-              href="https://insomnia.rest/app/teams/">
+              href="https://app.insomnia.rest/app/teams/">
               Manage Teams
             </Link>
           </div>
@@ -168,5 +170,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     );
   }
 }
+
+export const showSyncShareModal = () => showModal(SyncShareModal);
 
 export default SyncShareModal;

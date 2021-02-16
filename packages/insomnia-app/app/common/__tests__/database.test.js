@@ -93,6 +93,97 @@ describe('bufferChanges()', () => {
       ],
     ]);
   });
+
+  it('should auto flush after a default wait', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChanges();
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    // Default flush timeout is 1000ms after starting buffering
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
+
+  it('should auto flush after a specified wait', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChanges(500);
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
+});
+
+describe('bufferChangesIndefinitely()', () => {
+  beforeEach(globalBeforeEach);
+  it('should not auto flush', async () => {
+    const doc = {
+      type: models.request.type,
+      parentId: 'n/a',
+      name: 'foo',
+    };
+
+    const changesSeen = [];
+    const callback = change => {
+      changesSeen.push(change);
+    };
+    db.onChange(callback);
+
+    await db.bufferChangesIndefinitely();
+    const newDoc = await models.request.create(doc);
+    const updatedDoc = await models.request.update(newDoc, true);
+
+    // Default flush timeout is 1000ms after starting buffering
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Assert no change seen before flush
+    expect(changesSeen.length).toBe(0);
+
+    // Assert changes seen after flush
+    await db.flushChanges();
+    expect(changesSeen).toEqual([
+      [
+        [db.CHANGE_INSERT, newDoc, false],
+        [db.CHANGE_UPDATE, updatedDoc, false],
+      ],
+    ]);
+  });
 });
 
 describe('requestCreate()', () => {
@@ -351,6 +442,50 @@ describe('_repairDatabase()', () => {
     expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('Workspace 1'); // Should fix
     expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Workspace 2'); // Should fix
     expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name'); // should not fix
+  });
+
+  it('fixes old git uris', async () => {
+    const oldRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+      uriNeedsMigration: true,
+    });
+    const oldRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+      uriNeedsMigration: true,
+    });
+    const newRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+    });
+    const newRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+    });
+
+    await db._repairDatabase();
+
+    expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar',
+        uriNeedsMigration: false,
+      }),
+    );
   });
 });
 

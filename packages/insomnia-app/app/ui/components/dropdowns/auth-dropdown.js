@@ -1,13 +1,9 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showModal } from '../modals';
-import AlertModal from '../modals/alert-modal';
-import * as models from '../../../models';
-import type { Request, RequestAuthentication } from '../../../models/request';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  AUTOBIND_CFG,
   AUTH_BASIC,
   AUTH_DIGEST,
   AUTH_BEARER,
@@ -21,6 +17,11 @@ import {
   AUTH_ASAP,
   getAuthTypeName,
 } from '../../../common/constants';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { showModal } from '../modals';
+import AlertModal from '../modals/alert-modal';
+import * as models from '../../../models';
+import type { Request, RequestAuthentication } from '../../../models/request';
 
 type Props = {
   onChange: (r: Request, RequestAuthentication) => Promise<Request>,
@@ -31,7 +32,7 @@ type Props = {
   children: React.Node,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class AuthDropdown extends React.PureComponent<Props> {
   async _handleTypeChange(type: string) {
     const { request, onChange } = this.props;

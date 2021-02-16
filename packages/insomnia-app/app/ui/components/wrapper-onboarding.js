@@ -1,18 +1,17 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { ACTIVITY_HOME, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
+import { ACTIVITY_HOME, AUTOBIND_CFG, getAppLongName, getAppName } from '../../common/constants';
 import type { WrapperProps } from './wrapper';
-import PageLayout from './page-layout';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
-import imgSrcDesigner from '../images/insomnia-designer-logo.png';
 import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
+import OnboardingContainer from './onboarding-container';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -24,7 +23,7 @@ type State = {|
   step: number,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperOnboarding extends React.PureComponent<Props, State> {
   state = {
     step: 1,
@@ -159,7 +158,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     );
   }
 
-  renderPageBody() {
+  render() {
     const { step } = this.state;
 
     let stepBody;
@@ -170,28 +169,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     }
 
     return (
-      <div className="onboarding">
-        <div className="onboarding__background theme--sidebar" />
-        <div className="onboarding__content theme--dialog">
-          <div className="img-container">
-            <img src={imgSrcDesigner} alt="Kong" />
-          </div>
-          <header className="onboarding__content__header">
-            <h1>Welcome to {getAppLongName()}</h1>
-            <h2>{getAppSynopsis()}</h2>
-          </header>
-          <div className="onboarding__content__body">{stepBody}</div>
-        </div>
-      </div>
-    );
-  }
-
-  render() {
-    return (
-      <PageLayout
-        wrapperProps={this.props.wrapperProps}
-        renderPageBody={() => this.renderPageBody()}
-      />
+      <OnboardingContainer wrapperProps={this.props.wrapperProps}>{stepBody}</OnboardingContainer>
     );
   }
 }
