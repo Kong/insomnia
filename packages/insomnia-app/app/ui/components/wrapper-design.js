@@ -8,15 +8,11 @@ import ErrorBoundary from './error-boundary';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import CodeEditor from './codemirror/code-editor';
 import { Spectral } from '@stoplight/spectral';
-import { showModal } from './modals';
-import GenerateConfigModal from './modals/generate-config-modal';
 import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
 import previewIcon from '../images/icn-eye.svg';
-import generateConfigIcon from '../images/icn-gear.svg';
 import * as models from '../../models/index';
 import { parseApiSpec } from '../../common/api-specs';
-import { getConfigGenerators } from '../../plugins';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
@@ -32,7 +28,6 @@ type Props = {|
 
 type State = {|
   previewHidden: boolean,
-  hasConfigPlugins: boolean,
   lintMessages: Array<{
     message: string,
     line: number,
@@ -51,7 +46,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     this.state = {
       previewHidden: props.wrapperProps.activeWorkspaceMeta.previewHidden || false,
       lintMessages: [],
-      hasConfigPlugins: false,
     };
   }
 
@@ -63,11 +57,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
   _setEditorRef(n: ?CodeEditor) {
     this.editor = n;
-  }
-
-  async _handleGenerateConfig() {
-    const { activeApiSpec } = this.props.wrapperProps;
-    showModal(GenerateConfigModal, { apiSpec: activeApiSpec });
   }
 
   async _handleTogglePreview() {
@@ -138,9 +127,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
   }
 
   async componentDidMount() {
-    const generateConfigPlugins = await getConfigGenerators();
-    this.setState({ hasConfigPlugins: generateConfigPlugins.length > 0 });
-
     await this._reLint();
   }
 
@@ -231,7 +217,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
 
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { previewHidden, hasConfigPlugins } = this.state;
+    const { previewHidden } = this.state;
 
     return (
       <WorkspacePageHeader
@@ -243,15 +229,6 @@ class WrapperDesign extends React.PureComponent<Props, State> {
               <img src={previewIcon} alt="Preview" width="15" />
               &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
             </Button>
-            {hasConfigPlugins && (
-              <Button
-                variant="contained"
-                onClick={this._handleGenerateConfig}
-                className="margin-left">
-                <img src={generateConfigIcon} alt="Generate Config" width="15" />
-                &nbsp; Generate Config
-              </Button>
-            )}
             {gitSyncDropdown}
           </React.Fragment>
         }
