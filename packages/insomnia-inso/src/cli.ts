@@ -174,7 +174,7 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   // Global options
   cmd
     .option('-w, --workingDir <dir>', 'set working directory')
-    .option('-a, --appDataDir <dir>', 'set the app data directory')
+    .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead')
     .option('--config <path>', 'path to configuration file')
     .option('--verbose', 'show additional logs while running the command')
     .option('--src <file|directory>', 'Set the app data source')

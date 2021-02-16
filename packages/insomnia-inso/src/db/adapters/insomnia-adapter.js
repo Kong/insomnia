@@ -5,7 +5,7 @@ import type { Database, DbAdapter } from '../index';
 import type { BaseModel } from '../models/types';
 import YAML from 'yaml';
 
-const keyToType = {
+const modelTypeToExportTypeMap = {
   ApiSpec: 'api_spec',
   Environment: 'environment',
   Request: 'request',
@@ -32,7 +32,7 @@ const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
   const types = filterTypes?.length ? filterTypes : Object.keys(db);
 
   if (raw?.length !== 0) {
-    types.forEach(type => db[type].push(...read(raw, keyToType[type])));
+    types.forEach(type => db[type].push(...read(raw, modelTypeToExportTypeMap[type])));
   }
 
   return db;
@@ -47,9 +47,9 @@ const read: Array<BaseModel> = (raw, _type) => {
   return replace(renamed, _type);
 };
 
-const replace: Array<BaseModel> = (raw, _type) => {
+const replace: Array<BaseModel> = (raw: Array<BaseModel>, _type: string) => {
   return raw.map(item => {
-    item.type = keyToType[item.type];
+    item.type = modelTypeToExportTypeMap[item.type];
     return item;
   });
 };

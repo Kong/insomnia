@@ -8,7 +8,8 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
   --src <file|directory>  Set the app data source
@@ -33,7 +34,8 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
   --src <file|directory>  Set the app data source
@@ -107,7 +109,8 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
   --src <file|directory>  Set the app data source
