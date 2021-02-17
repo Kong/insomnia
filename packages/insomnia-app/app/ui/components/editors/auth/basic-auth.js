@@ -99,7 +99,8 @@ class BasicAuth extends React.PureComponent<Props> {
               <td className="flex wide">
                 <PasswordEditor
                   showAllPasswords={showPasswords}
-                  request={request}
+                  disabled={authentication.disabled}
+                  password={authentication.password}
                   onChange={this._handleChangePassword}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   render={handleRender}

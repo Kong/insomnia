@@ -5,7 +5,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { Request } from '../../../../models/request';
 
 type State = {
   showPassword: boolean,
@@ -16,7 +15,8 @@ type Props = {
   getRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   onChange: Function,
-  request: Request,
+  password: string,
+  disabled: boolean,
   isVariableUncovered: boolean,
   showAllPasswords: boolean,
 };
@@ -37,7 +37,8 @@ class PasswordEditor extends React.PureComponent<Props, State> {
   render() {
     const { showPassword } = this.state;
     const {
-      request,
+      password,
+      disabled,
       showAllPasswords,
       handleRender,
       handleGetRenderContext,
@@ -46,19 +47,18 @@ class PasswordEditor extends React.PureComponent<Props, State> {
       onChange,
     } = this.props;
 
-    const { authentication } = request;
     return (
       <>
         <div
           className={classnames('form-control form-control--underlined no-margin', {
-            'form-control--inactive': authentication.disabled,
+            'form-control--inactive': disabled,
           })}>
           <OneLineEditor
             type={showAllPasswords || showPassword ? 'text' : 'password'}
             id="password"
             testId="password"
             onChange={onChange}
-            defaultValue={authentication.password || ''}
+            defaultValue={password || ''}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
