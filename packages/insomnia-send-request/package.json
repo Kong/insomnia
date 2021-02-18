@@ -5,7 +5,7 @@
   "dependencies": {
     "@stoplight/spectral": "^5.4.0",
     "aws4": "^1.10.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "clone": "^2.1.2",
     "color": "^3.1.2",
     "deep-equal": "^2.0.3",

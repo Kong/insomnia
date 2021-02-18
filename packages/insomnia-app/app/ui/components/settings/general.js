@@ -4,12 +4,14 @@ import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
   HttpVersions,
+  isDevelopment,
   isLinux,
   isMac,
   isWindows,
@@ -28,6 +30,9 @@ import { setFont } from '../../../plugins/misc';
 import Tooltip from '../tooltip';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { bindActionCreators } from 'redux';
+import * as globalActions from '../../redux/modules/global';
+import { connect } from 'react-redux';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -35,9 +40,11 @@ const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 
 type Props = {
   settings: Settings,
+  hideModal: () => void,
   updateSetting: Function,
   handleToggleMenuBar: Function,
   handleRootCssChange: Function,
+  handleSetActiveActivity: (activity?: GlobalActivity) => void,
 };
 
 type State = {
@@ -116,6 +123,11 @@ class General extends React.PureComponent<Props, State> {
   async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
+  }
+
+  _handleStartMigration() {
+    this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
+    this.props.hideModal();
   }
 
   renderEnumSetting(
@@ -536,9 +548,38 @@ class General extends React.PureComponent<Props, State> {
             as request data, names, etc.
           </p>
         </div>
+
+        <hr className="pad-top" />
+
+        <h2>Migrate from Designer</h2>
+        {isDevelopment() && (
+          <>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting(
+                'Has prompted to migrate',
+                'hasPromptedToMigrateFromDesigner',
+              )}
+            </div>
+          </>
+        )}
+        <div className="form-row pad-top-sm">
+          <button
+            className="btn btn--clicky pointer"
+            style={{ padding: 0 }}
+            onClick={this._handleStartMigration}>
+            Migrate from Designer
+          </button>
+        </div>
       </div>
     );
   }
 }
 
-export default General;
+function mapDispatchToProps(dispatch) {
+  const global = bindActionCreators(globalActions, dispatch);
+  return {
+    handleSetActiveActivity: global.setActiveActivity,
+  };
+}
+
+export default connect(null, mapDispatchToProps)(General);

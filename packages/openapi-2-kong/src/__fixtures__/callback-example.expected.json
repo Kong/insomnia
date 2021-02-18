@@ -9,8 +9,8 @@
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_callback-example.yaml"],
-          "name": "Callback_Example-path-post",
-          "paths": ["/streams"]
+          "name": "Callback_Example-streams-post",
+          "paths": ["/streams$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_callback-example.yaml"]

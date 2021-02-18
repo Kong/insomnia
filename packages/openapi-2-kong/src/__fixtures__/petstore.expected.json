@@ -9,21 +9,21 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
-          "name": "Swagger_Petstore-path-get",
-          "paths": ["/pets"]
+          "name": "listPets",
+          "paths": ["/pets$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
-          "name": "Swagger_Petstore-path_1-post",
-          "paths": ["/pets"]
+          "name": "createPets",
+          "paths": ["/pets$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
-          "name": "Swagger_Petstore-path_2-get",
+          "name": "showPetById",
           "paths": ["\/pets\/(?<petId>\\S+)$"]
         }
       ],

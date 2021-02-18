@@ -696,6 +696,10 @@ export async function _repairDatabase() {
     await _fixMultipleCookieJars(workspace);
     await _applyApiSpecName(workspace);
   }
+
+  for (const gitRepository of await find(models.gitRepository.type)) {
+    await _fixOldGitURIs(gitRepository);
+  }
 }
 
 /**
@@ -788,4 +792,21 @@ async function _fixMultipleCookieJars(workspace) {
   await update(chosenJar);
 
   console.log(`[fix] Merged ${cookieJars.length} cookie jars under ${workspace.name}`);
+}
+
+// Append .git to old git URIs to mimic previous isomorphic-git behaviour
+async function _fixOldGitURIs(doc: GitRepository) {
+  if (!doc.uriNeedsMigration) {
+    return;
+  }
+
+  if (!doc.uri.endsWith('.git')) {
+    doc.uri += '.git';
+  }
+
+  doc.uriNeedsMigration = false;
+
+  await update(doc);
+
+  console.log(`[fix] Fixed git URI for ${doc._id}`);
 }

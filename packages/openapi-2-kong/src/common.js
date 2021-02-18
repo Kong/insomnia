@@ -64,15 +64,12 @@ export function generateSlug(str: string, options: SlugifyOptions = {}): string 
   return slugify(str, options);
 }
 
+/** characters in curly brances not immediately followed by `://`, e.g. `{foo}` will match but `{foo}://` will not. */
 const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
 export function pathVariablesToRegex(p: string): string {
   const result = p.replace(pathVariableSearchValue, '(?<$1>\\S+)');
-  if (result === p) {
-    return result;
-  }
-
-  // If anything was replaced, it's a regex, so add a line-ending match
+  // add a line ending because it is a regex
   return result + '$';
 }
 

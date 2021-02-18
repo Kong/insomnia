@@ -155,11 +155,12 @@ export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
 
 // Activities
-export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home';
+export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home' | 'migration';
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
+export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
 // HTTP Methods

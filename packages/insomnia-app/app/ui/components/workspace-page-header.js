@@ -8,6 +8,8 @@ import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import ActivityToggle from './activity-toggle';
 import type { WrapperProps } from './wrapper';
 import { Header, Breadcrumb } from 'insomnia-components';
+import AccountDropdown from './dropdowns/account-dropdown';
+import SettingsButton from './buttons/settings-button';
 
 type Props = {
   wrapperProps: WrapperProps,
@@ -24,11 +26,7 @@ const WorkspacePageHeader = ({
     activeEnvironment,
     settings,
     activity,
-    unseenWorkspaces,
-    vcs,
-    workspaces,
     isLoading,
-    handleSetActiveWorkspace,
   },
 }: Props) => {
   const collection = activeWorkspace.scope === 'collection';
@@ -44,12 +42,9 @@ const WorkspacePageHeader = ({
       displayName={collection ? activeWorkspace.name : activeApiSpec.fileName}
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
-      workspaces={workspaces}
-      unseenWorkspaces={unseenWorkspaces}
+      activeApiSpec={activeApiSpec}
       hotKeyRegistry={settings.hotKeyRegistry}
-      handleSetActiveWorkspace={handleSetActiveWorkspace}
       isLoading={isLoading}
-      vcs={vcs}
     />
   );
 
@@ -58,7 +53,7 @@ const WorkspacePageHeader = ({
       className="app-header"
       gridLeft={
         <React.Fragment>
-          <img src={coreLogo} alt="Insomnia" width="32" height="32" />
+          <img src={coreLogo} alt="Insomnia" width="24" height="24" />
           <Breadcrumb
             className="breadcrumb"
             crumbs={[strings.home, <React.Fragment key="workspace-dd">{workspace}</React.Fragment>]}
@@ -75,7 +70,13 @@ const WorkspacePageHeader = ({
           />
         )
       }
-      gridRight={gridRight}
+      gridRight={
+        <>
+          {gridRight}
+          <SettingsButton className="margin-left" />
+          <AccountDropdown className="margin-left" />
+        </>
+      }
     />
   );
 };

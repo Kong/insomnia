@@ -6,6 +6,7 @@ import {
   getAllServers,
   getName,
   pathVariablesToRegex,
+  HttpMethod,
 } from '../common';
 
 import { generateSecurityPlugins } from './security-plugins';
@@ -66,7 +67,7 @@ export function generateService(
       const fullPathRegex = pathVariablesToRegex(routePath);
       const route: DCRoute = {
         tags,
-        name: generateRouteName(api, pathItem, method, service.routes.length),
+        name: generateRouteName(api, routePath, method),
         methods: [method.toUpperCase()],
         paths: [fullPathRegex],
         strip_path: false,
@@ -91,24 +92,22 @@ export function generateService(
 
 export function generateRouteName(
   api: OpenApi3Spec,
-  pathItem: OA3PathItem,
-  method: string,
-  numRoutes: number,
+  routePath: string,
+  method: $Keys<typeof HttpMethod>,
 ): string {
-  const n = numRoutes;
   const name = getName(api);
+  const pathItem = api.paths[routePath];
 
-  if (typeof (pathItem: Object)['x-kong-name'] === 'string') {
-    const pathSlug = generateSlug((pathItem: Object)['x-kong-name']);
-    return `${name}-${pathSlug}-${method}`;
+  if (pathItem[method] && typeof pathItem[method]['x-kong-name'] === 'string') {
+    return generateSlug(pathItem[method]['x-kong-name']);
   }
 
-  // If a summary key exists, use that to generate the name
-  if (typeof pathItem.summary === 'string') {
-    const pathSlug = generateSlug(pathItem.summary);
-    return `${name}-${pathSlug}-${method}`;
+  if (pathItem[method] && pathItem[method].operationId) {
+    return pathItem[method].operationId;
   }
 
-  // otherwise, use a unique integer to prevent collisions
-  return `${generateSlug(name)}-path${n ? '_' + n : ''}-${method}`;
+  // replace all `/` with `-` except the ones at the beginng or end of a string
+  const replacedRoute = routePath.replace(/(?!^)\/(?!$)/g, '-');
+  const pathSlug = generateSlug(pathItem['x-kong-name'] || replacedRoute);
+  return `${name}${pathSlug ? `-${pathSlug}` : ''}-${method}`;
 }

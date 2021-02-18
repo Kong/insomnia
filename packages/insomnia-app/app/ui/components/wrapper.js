@@ -22,6 +22,7 @@ import {
   ACTIVITY_UNIT_TEST,
   getAppName,
   SortOrder,
+  ACTIVITY_MIGRATION,
 } from '../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
@@ -92,6 +93,7 @@ import type { GlobalActivity } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
+import WrapperMigration from './wrapper-migration';
 
 const spectral = new Spectral();
 
@@ -858,6 +860,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               wrapperProps={this.props}
             />
           )}
+
+          {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
 
           {activity === null && (
             <WrapperOnboarding
