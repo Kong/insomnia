@@ -23,6 +23,7 @@ import {
   getAppName,
   SortOrder,
   ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
 } from '../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
@@ -863,7 +864,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
           {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
 
-          {activity === null && (
+          {(activity === ACTIVITY_ONBOARDING || activity === null) && (
             <WrapperOnboarding
               wrapperProps={this.props}
               handleImportFile={this._handleImportFile}

@@ -8,7 +8,7 @@ import * as db from '../common/database';
 import { init as initStore } from './redux/modules';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
-import { ACTIVITY_MIGRATION, getAppLongName, isDevelopment } from '../common/constants';
+import { getAppLongName, isDevelopment } from '../common/constants';
 import { setFont, setTheme } from '../plugins/misc';
 import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
@@ -16,7 +16,7 @@ import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { initializeLogging } from '../common/log';
 import fs from 'fs';
 import { getDesignerDataDir } from '../common/misc';
-import { setActiveActivity } from './redux/modules/global';
+import { setActivityMigration } from './redux/modules/global';
 
 initializeLogging();
 
@@ -43,11 +43,11 @@ document.title = getAppLongName();
 
   // Check if we should load from Designer
   if (
-    !isDevelopment() &&
+    // !isDevelopment() &&
     !settings.hasPromptedToMigrateFromDesigner &&
     fs.existsSync(getDesignerDataDir())
   ) {
-    store.dispatch(setActiveActivity(ACTIVITY_MIGRATION));
+    store.dispatch(setActivityMigration());
     await models.settings.update(settings, { hasPromptedToMigrateFromDesigner: true });
   }
 

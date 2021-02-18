@@ -34,6 +34,7 @@ import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
   DEPRECATED_ACTIVITY_INSOMNIA,
 } from '../../../common/constants';
 
@@ -228,12 +229,30 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveActivity(activity?: GlobalActivity) {
-  activity = activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
+export function setActiveActivity(nextActivity?: GlobalActivity, validate: boolean = true) {
+  return function(dispatch, getState) {
+    if (validate) {
+      const { activeActivity, activeWorkspaceId } = getState().global;
 
-  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
-  trackEvent('Activity', 'Change', activity);
-  return { type: SET_ACTIVE_ACTIVITY, activity };
+      if (activeActivity === ACTIVITY_MIGRATION) {
+        if (activeWorkspaceId === null) {
+          nextActivity = ACTIVITY_ONBOARDING;
+        } else {
+          nextActivity = ACTIVITY_HOME;
+        }
+      }
+    }
+
+    nextActivity = nextActivity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : nextActivity;
+
+    window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(nextActivity));
+    trackEvent('Activity', 'Change', nextActivity);
+    dispatch({ type: SET_ACTIVE_ACTIVITY, activity: nextActivity });
+  };
+}
+
+export function setActivityMigration() {
+  return setActiveActivity(ACTIVITY_MIGRATION, false);
 }
 
 export function setActiveWorkspace(workspaceId: string) {
@@ -618,7 +637,7 @@ export function exportRequestsToFile(requestIds) {
 
 export function init() {
   let workspaceId = null;
-  let activity = null;
+  let activity = ACTIVITY_ONBOARDING;
 
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
@@ -634,11 +653,6 @@ export function init() {
     activity = JSON.parse(item);
   } catch (e) {
     // Nothing here...
-  }
-
-  // If the initializing activity is migration, change it to home
-  if (activity === ACTIVITY_MIGRATION) {
-    activity = ACTIVITY_HOME;
   }
 
   return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
