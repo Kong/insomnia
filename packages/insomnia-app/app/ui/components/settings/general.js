@@ -83,12 +83,13 @@ class General extends React.PureComponent<Props, State> {
       const min = parseInt(el.min, 10);
       const max = parseInt(el.max, 10);
 
-      const lessThanMax = Number.isNaN(max) || value <= max;
-      const moreThanMin = Number.isNaN(min) || value >= min;
-      const between = lessThanMax && moreThanMin;
+      const moreThanMax = Number.isNaN(max) || value > max;
+      const lessThanMin = Number.isNaN(min) || value < min;
 
-      if (!between) {
-        value = !lessThanMax ? max : min;
+      if (moreThanMax) {
+        value = max;
+      } else if (lessThanMin) {
+        value = min;
       }
     }
 
