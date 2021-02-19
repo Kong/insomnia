@@ -37,6 +37,7 @@ import {
   ACTIVITY_ONBOARDING,
   DEPRECATED_ACTIVITY_INSOMNIA,
 } from '../../../common/constants';
+import { selectSettings } from '../selectors';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
@@ -229,30 +230,53 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveActivity(nextActivity?: GlobalActivity, validate: boolean = true) {
-  return function(dispatch, getState) {
-    if (validate) {
-      const { activeActivity, activeWorkspaceId } = getState().global;
+export function setActiveActivity(nextActivity?: GlobalActivity) {
+  return async function(dispatch, getState) {
+    const state = getState();
+    const { activeActivity } = state.global;
+    const settings = selectSettings(state);
 
-      if (activeActivity === ACTIVITY_MIGRATION) {
-        if (activeWorkspaceId === null) {
-          nextActivity = ACTIVITY_ONBOARDING;
-        } else {
-          nextActivity = ACTIVITY_HOME;
-        }
+    console.log(settings);
+
+    // TODO: Shouldn't do this if currently still migrating, why is it doing this? Does it need to be moved out of here?
+    // If current activity is MIGRATION, decide the override next activity through the following logic
+    if (activeActivity === ACTIVITY_MIGRATION) {
+      if (settings.hasPromptedOnboarding) {
+        console.log('going to home after migration');
+        nextActivity = ACTIVITY_HOME;
+      } else {
+        console.log('going to onboarding after migration');
+        nextActivity = ACTIVITY_ONBOARDING;
       }
+    } else if (activeActivity === ACTIVITY_ONBOARDING) {
+      console.log('going to home after onboarding');
+      nextActivity = ACTIVITY_HOME;
     }
 
     nextActivity = nextActivity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : nextActivity;
 
-    window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(nextActivity));
-    trackEvent('Activity', 'Change', nextActivity);
-    dispatch({ type: SET_ACTIVE_ACTIVITY, activity: nextActivity });
+    if (nextActivity) {
+      switch (nextActivity) {
+        case ACTIVITY_MIGRATION:
+          await models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
+          break;
+        case ACTIVITY_ONBOARDING:
+          await models.settings.patch({ hasPromptedOnboarding: true });
+          break;
+        default:
+          break;
+      }
+
+      window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(nextActivity));
+      trackEvent('Activity', 'Change', nextActivity);
+      dispatch({ type: SET_ACTIVE_ACTIVITY, activity: nextActivity });
+    }
   };
 }
 
-export function setActivityMigration() {
-  return setActiveActivity(ACTIVITY_MIGRATION, false);
+export function goToNextActivity() {
+  console.log('go to next activity');
+  return (...props) => setActiveActivity()(...props);
 }
 
 export function setActiveWorkspace(workspaceId: string) {

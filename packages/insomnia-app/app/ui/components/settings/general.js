@@ -4,6 +4,7 @@ import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
@@ -39,7 +40,7 @@ type Props = {
   updateSetting: Function,
   handleToggleMenuBar: Function,
   handleRootCssChange: Function,
-  handleSetActivityMigration: () => void,
+  handleSetActiveActivity: () => void,
 };
 
 type State = {
@@ -109,7 +110,7 @@ class General extends React.PureComponent<Props, State> {
   }
 
   _handleStartMigration() {
-    this.props.handleSetActivityMigration();
+    this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
     this.props.hideModal();
   }
 
@@ -542,6 +543,7 @@ class General extends React.PureComponent<Props, State> {
                 'Has prompted to migrate',
                 'hasPromptedToMigrateFromDesigner',
               )}
+              {this.renderBooleanSetting('Has prompted Onboarding', 'hasPromptedOnboarding')}
             </div>
           </>
         )}
@@ -561,7 +563,7 @@ class General extends React.PureComponent<Props, State> {
 function mapDispatchToProps(dispatch) {
   const global = bindActionCreators(globalActions, dispatch);
   return {
-    handleSetActivityMigration: global.setActivityMigration,
+    handleSetActiveActivity: global.setActiveActivity,
   };
 }
 

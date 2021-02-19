@@ -8,7 +8,12 @@ import * as db from '../common/database';
 import { init as initStore } from './redux/modules';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
-import { getAppLongName, isDevelopment } from '../common/constants';
+import {
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+  getAppLongName,
+  isDevelopment,
+} from '../common/constants';
 import { setFont, setTheme } from '../plugins/misc';
 import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
@@ -16,7 +21,7 @@ import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { initializeLogging } from '../common/log';
 import fs from 'fs';
 import { getDesignerDataDir } from '../common/misc';
-import { setActivityMigration } from './redux/modules/global';
+import { setActiveActivity } from './redux/modules/global';
 
 initializeLogging();
 
@@ -47,8 +52,11 @@ document.title = getAppLongName();
     !settings.hasPromptedToMigrateFromDesigner &&
     fs.existsSync(getDesignerDataDir())
   ) {
-    store.dispatch(setActivityMigration());
-    await models.settings.update(settings, { hasPromptedToMigrateFromDesigner: true });
+    store.dispatch(setActiveActivity(ACTIVITY_MIGRATION));
+    // await models.settings.update(settings, { hasPromptedToMigrateFromDesigner: true });
+  } else if (!settings.hasPromptedOnboarding) {
+    store.dispatch(setActiveActivity(ACTIVITY_ONBOARDING));
+    // await models.settings.update(settings, { hasPromptedOnboarding: true });
   }
 
   const render = App => {

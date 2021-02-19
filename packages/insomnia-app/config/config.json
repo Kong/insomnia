@@ -10,7 +10,7 @@
   "synopsis": "The Collaborative API Client and Design Tool",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/icon.ico?raw=true",
   "changelogBaseUrl": "https://insomnia.rest/changelog/core",
-  "theme": "default",
+  "theme": "studio-light",
   "main": "main.min.js",
   "githubOrg": "Kong",
   "githubRepo": "insomnia",
