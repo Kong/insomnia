@@ -114,4 +114,17 @@ describe('runInsomniaTests()', () => {
       'No environment identified; cannot run tests without a valid environment.',
     ]);
   });
+
+  it('should return falsy value if reporter is not found', async () => {
+    const contents = 'generated test contents';
+    mock(insomniaTesting.generate).mockResolvedValue(contents);
+
+    const result = await runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
+      ...base,
+      env: 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub',
+      reporter: 'does-not-exists',
+    });
+
+    await expect(result).toBeFalsy();
+  });
 });

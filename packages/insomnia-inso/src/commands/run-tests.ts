@@ -1,50 +1,72 @@
-import { generate, runTestsCli, TestSuite } from 'insomnia-testing';
+// @flow
+import { generate, runTestsCli } from 'insomnia-testing';
 import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import type { UnitTest, UnitTestSuite } from '../db/models/types';
-import { logger, noConsoleLog } from '../logger';
+import logger, { noConsoleLog } from '../logger';
 import { loadTestSuites, promptTestSuites } from '../db/models/unit-test-suite';
 import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 
-export const TestReporterEnum = ['dot', 'list', 'spec', 'progress', 'min'];
-
-export type RunTestsOptions = GlobalOptions & {
-  env?: string;
-  reporter?: string;
-  bail?: boolean;
-  keepFile?: boolean;
-  testNamePattern?: string;
+export const TestReporterEnum = {
+  dot: 'dot',
+  list: 'list',
+  spec: 'spec',
+  min: 'min',
+  progress: 'progress',
 };
 
-function warnAboutValidReporters({ reporter }: RunTestsOptions): void {
-  if (reporter && !TestReporterEnum.includes(reporter)) {
-    logger.info(`Reporter "${reporter}" is not recognized and is treated as external`);
-    logger.info('If possible, consider using default --reporter values');
-  }
+export type RunTestsOptions = GlobalOptions & {
+  env?: string,
+  reporter: $Keys<typeof TestReporterEnum>,
+  bail?: boolean,
+  keepFile?: boolean,
+  testNamePattern?: string,
+};
+
+function isExternalReporter({ reporter }: RunTestsOptions): boolean {
+  return reporter && !TestReporterEnum[reporter];
 }
 
-const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite => ({
-  name: dbSuite.name,
-  suites: [],
-  tests: dbTests.map(({ name, code, requestId }) => ({
-    name,
-    code,
-    defaultRequestId: requestId,
-  })),
-});
+function getTestSuite(dbSuite: UnitTestSuite, dbTests: Array<UnitTest>) {
+  return {
+    name: dbSuite.name,
+    tests: dbTests.map(({ name, code, requestId }) => ({
+      name,
+      code,
+      defaultRequestId: requestId,
+    })),
+  };
+}
+
+async function getEnvironments(db, ci, suites, env) {
+  const workspaceId = suites[0].parentId;
+  return env
+    ? loadEnvironment(db, workspaceId, env)
+    : await promptEnvironment(db, !!ci, workspaceId);
+}
+
+async function getTestFileContent(db, suites) {
+  return await generate(
+    suites.map(suite =>
+      getTestSuite(
+        suite,
+        db.UnitTest.filter(t => t.parentId === suite._id),
+      ),
+    ),
+  );
+}
 
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(
-  identifier: string | null | undefined,
-  options: Partial<RunTestsOptions>,
-) {
-  warnAboutValidReporters(options);
+  identifier?: string,
+  options: RunTestsOptions,
+): Promise<boolean> {
+  const { reporter, ci, bail, keepFile, testNamePattern, env } = options;
+  // Loading database instance
+  const db = await loadDb(options);
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
-  const db = await loadDb({
-    workingDir,
-    appDataDir,
-  });
+  // Check if any provider has been provided (Yeah, comedy king)
+  const isExternal = isExternalReporter(options);
 
   // Find suites
   const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!ci);
@@ -54,11 +76,8 @@ export async function runInsomniaTests(
     return false;
   }
 
-  // Find environment
-  const workspaceId = suites[0].parentId;
-  const environment = env
-    ? loadEnvironment(db, workspaceId, env)
-    : await promptEnvironment(db, !!ci, workspaceId);
+  // Find env
+  const environment = await getEnvironments(db, ci, suites, env);
 
   if (!environment) {
     logger.fatal('No environment identified; cannot run tests without a valid environment.');
@@ -66,26 +85,27 @@ export async function runInsomniaTests(
   }
 
   // Generate test file
-  const testFileContents = generate(
-    suites.map(suite =>
-      createTestSuite(
-        suite,
-        db.UnitTest.filter(test => test.parentId === suite._id),
-      ),
-    ),
-  );
+  const testFiles = await getTestFileContent(db, suites);
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
+  // Load lazily when needed, otherwise this require slows down the entire CLI.
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
-
   const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
-  return await noConsoleLog(() =>
-    runTestsCli(testFileContents, {
-      reporter,
-      bail,
-      keepFile,
-      sendRequest,
-      testFilter: testNamePattern,
-    }),
-  );
+
+  const config = {
+    reporter,
+    bail,
+    keepFile,
+    sendRequest,
+    testFilter: testNamePattern,
+  };
+
+  return isExternal
+    ? runTestsCli(testFiles, config)?.catch(e => {
+        if (e.toString().includes('invalid reporter')) {
+          logger.fatal(`The following reporter \`${reporter}\` was not found!`);
+        } else {
+          logger.fatal(`An unknown error occurred: ${e}`);
+        }
+      })
+    : await noConsoleLog(() => runTestsCli(testFiles, config));
 }
