@@ -101,4 +101,17 @@ describe('runInsomniaTests()', () => {
     });
     expect(result).toBe(true);
   });
+
+  it('should return false if environment is undefined', async () => {
+    const result = await runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
+      ...base,
+      workingDir: 'src/db/__fixtures__/git-repo',
+      env: undefined,
+    });
+
+    await expect(result).toBe(false);
+    expect(logger.__getLogs().fatal).toEqual([
+      'No environment identified; cannot run tests without a valid environment.',
+    ]);
+  });
 });
