@@ -44,6 +44,8 @@ const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
+const MIGRATING_START = 'global/migrating-start';
+const MIGRATING_STOP = 'global/migrating-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
@@ -88,6 +90,17 @@ function loadingReducer(state = false, action) {
   }
 }
 
+function migratingReducer(state = false, action) {
+  switch (action.type) {
+    case MIGRATING_START:
+      return true;
+    case MIGRATING_STOP:
+      return false;
+    default:
+      return state;
+  }
+}
+
 function loadingRequestsReducer(state = {}, action) {
   switch (action.type) {
     case LOAD_REQUEST_START:
@@ -114,6 +127,7 @@ export const reducer = combineReducers({
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
+  isMigrating: migratingReducer,
 });
 
 // ~~~~~~~ //
@@ -218,6 +232,14 @@ export function loadStop() {
   return { type: LOAD_STOP };
 }
 
+export function migrateStart() {
+  return { type: MIGRATING_START };
+}
+
+export function migrateStop() {
+  return { type: MIGRATING_START };
+}
+
 export function loadRequestStart(requestId) {
   return { type: LOAD_REQUEST_START, requestId, time: Date.now() };
 }
@@ -233,7 +255,14 @@ export function loadRequestStop(requestId) {
 export function setActiveActivity(nextActivity?: GlobalActivity) {
   return function(dispatch, getState) {
     const state = getState();
-    const { activeActivity } = state.global;
+    const { activeActivity, isMigrating } = state.global;
+
+    // Don't change activity if currently migrating
+    if (isMigrating) {
+      console.log('Attempted to change activity while migrating');
+      return;
+    }
+
     const settings = selectSettings(state);
 
     console.log('In thunk');
