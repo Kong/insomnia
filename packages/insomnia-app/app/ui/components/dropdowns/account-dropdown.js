@@ -27,7 +27,7 @@ const StyledIconContainer = styled.div`
 const AccountDropdown = ({ className }: Props) => (
   <div className={className}>
     <Dropdown>
-      <DropdownButton>
+      <DropdownButton noWrap>
         <Tooltip delay={1000} position="bottom" message="Account">
           <CircleButton>
             <SvgIcon icon="user" />

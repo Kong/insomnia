@@ -3,7 +3,10 @@ import PropTypes from 'prop-types';
 
 class DropdownButton extends PureComponent {
   render() {
-    const { children, ...props } = this.props;
+    const { children, noWrap, ...props } = this.props;
+    if (noWrap) {
+      return <>{children}</>;
+    }
     return (
       <button type="button" {...props}>
         {children}
@@ -14,6 +17,7 @@ class DropdownButton extends PureComponent {
 
 DropdownButton.propTypes = {
   children: PropTypes.node,
+  noWrap: PropTypes.bool,
 };
 
 export default DropdownButton;
