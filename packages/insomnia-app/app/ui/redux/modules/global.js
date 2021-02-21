@@ -231,11 +231,12 @@ export function loadRequestStop(requestId) {
 }
 
 export function setActiveActivity(nextActivity?: GlobalActivity) {
-  return async function(dispatch, getState) {
+  return function(dispatch, getState) {
     const state = getState();
     const { activeActivity } = state.global;
     const settings = selectSettings(state);
 
+    console.log('In thunk');
     console.log(settings);
 
     // TODO: Shouldn't do this if currently still migrating, why is it doing this? Does it need to be moved out of here?
@@ -253,30 +254,34 @@ export function setActiveActivity(nextActivity?: GlobalActivity) {
       nextActivity = ACTIVITY_HOME;
     }
 
-    nextActivity = nextActivity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : nextActivity;
-
     if (nextActivity) {
       switch (nextActivity) {
         case ACTIVITY_MIGRATION:
-          await models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
+          models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
           break;
         case ACTIVITY_ONBOARDING:
-          await models.settings.patch({ hasPromptedOnboarding: true });
+          models.settings.patch({ hasPromptedOnboarding: true });
           break;
         default:
           break;
       }
 
-      window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(nextActivity));
-      trackEvent('Activity', 'Change', nextActivity);
-      dispatch({ type: SET_ACTIVE_ACTIVITY, activity: nextActivity });
+      dispatch(_setActivity(nextActivity));
     }
   };
 }
 
+function _setActivity(activity: GlobalActivity) {
+  activity = activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
+
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
+  trackEvent('Activity', 'Change', activity);
+  return { type: SET_ACTIVE_ACTIVITY, activity: activity };
+}
+
 export function goToNextActivity() {
   console.log('go to next activity');
-  return (...props) => setActiveActivity()(...props);
+  return setActiveActivity();
 }
 
 export function setActiveWorkspace(workspaceId: string) {
@@ -659,9 +664,17 @@ export function exportRequestsToFile(requestIds) {
   };
 }
 
+function initActiveWorkspace(workspaceId: string) {
+  return setActiveWorkspace(workspaceId);
+}
+
+function initActiveActivity(activity: GlobalActivity) {
+  return _setActivity(activity);
+}
+
 export function init() {
   let workspaceId = null;
-  let activity = ACTIVITY_ONBOARDING;
+  let activity = ACTIVITY_HOME;
 
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
@@ -679,5 +692,5 @@ export function init() {
     // Nothing here...
   }
 
-  return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
+  return [initActiveWorkspace(workspaceId), initActiveActivity(activity)];
 }
