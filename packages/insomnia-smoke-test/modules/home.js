@@ -3,6 +3,10 @@ export const documentListingShown = async app => {
   await item.waitForExist();
 };
 
+export const expectDocumentWithTitle = async (app, title) => {
+  await app.client.waitUntilTextExists('.document-listing__body', title);
+};
+
 export const openDocumentMenuDropdown = async app => {
   const dropdown = await app.client.react$('DocumentCardDropdown');
   await dropdown.click();

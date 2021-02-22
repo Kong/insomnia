@@ -1,4 +1,3 @@
-import * as onboarding from '../modules/onboarding';
 import * as client from '../modules/client';
 import * as home from '../modules/home';
 import * as settings from '../modules/settings';
@@ -22,18 +21,7 @@ describe('Application launch', function() {
     await stop(app);
   });
 
-  it('can reset to and proceed through onboarding flow', async () => {
-    await client.correctlyLaunched(app);
-    await client.resetToOnboarding(app);
-
-    await onboarding.welcomeMessageShown(app);
-    await onboarding.clickDontShare(app);
-    await onboarding.clickSkipImport(app);
-
-    await home.documentListingShown(app);
-  });
-
-  it.if(isPackage())('can install and consume a plugin', async () => {
+  xit.if(isPackage())('can install and consume a plugin', async () => {
     await client.correctlyLaunched(app);
     await home.documentListingShown(app);
 
