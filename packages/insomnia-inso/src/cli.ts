@@ -61,6 +61,7 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
       '-r, --reporter <reporter>',
       `standard reporters options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`,
     )
+    .option('-ro, --reporter-options <option> [options...]', 'reporter-specific options')
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
     .action((identifier, cmd) => {
