@@ -34,6 +34,8 @@ describe('Application launch', function() {
 
     await app.restart();
     await client.focusAfterRestart(app);
+
+    await home.documentListingShown(app);
   });
 
   it('can migrate and proceed onboarding', async () => {
