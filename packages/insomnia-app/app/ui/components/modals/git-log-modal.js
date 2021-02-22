@@ -5,8 +5,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import type { GitLogEntry } from '../../../sync/git/git-vcs';
-import GitVCS from '../../../sync/git/git-vcs';
+import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
 import ModalFooter from '../base/modal-footer';
 import Tooltip from '../tooltip';
 import TimeFromNow from '../time-from-now';
@@ -16,7 +15,7 @@ type Props = {|
 |};
 
 type State = {|
-  log: Array<GitLogEntry>,
+  logs: Array<GitLogEntry>,
   branch: string,
 |};
 
@@ -28,7 +27,7 @@ class GitLogModal extends React.PureComponent<Props, State> {
     super(props);
 
     this.state = {
-      log: [],
+      logs: [],
       branch: '??',
     };
   }
@@ -40,10 +39,10 @@ class GitLogModal extends React.PureComponent<Props, State> {
   async show() {
     const { vcs } = this.props;
 
-    const log = await vcs.log();
+    const logs = await vcs.log();
     const branch = await vcs.getBranch();
 
-    this.setState({ log, branch });
+    this.setState({ logs, branch });
 
     this.modal && this.modal.show();
   }
@@ -53,7 +52,10 @@ class GitLogModal extends React.PureComponent<Props, State> {
   }
 
   renderLogEntryRow(entry: GitLogEntry) {
-    const { author, message, oid } = entry;
+    const {
+      commit: { author, message },
+      oid,
+    } = entry;
 
     return (
       <tr key={oid}>
@@ -75,11 +77,11 @@ class GitLogModal extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { log, branch } = this.state;
+    const { logs, branch } = this.state;
 
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader>Git History ({log.length})</ModalHeader>
+        <ModalHeader>Git History ({logs.length})</ModalHeader>
         <ModalBody className="pad">
           <table className="table--fancy table--striped">
             <thead>
@@ -89,7 +91,7 @@ class GitLogModal extends React.PureComponent<Props, State> {
                 <th className="text-left">Author</th>
               </tr>
             </thead>
-            <tbody>{log.map(this.renderLogEntryRow)}</tbody>
+            <tbody>{logs.map(this.renderLogEntryRow)}</tbody>
           </table>
         </ModalBody>
         <ModalFooter>

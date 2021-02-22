@@ -3,71 +3,40 @@ import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
 
-export default class FSPlugin {
-  _basePath: string;
+type FSWraps =
+  | fs.FSPromise.readFile
+  | fs.FSPromise.writeFile
+  | fs.FSPromise.unlink
+  | fs.FSPromise.readdir
+  | fs.FSPromise.mkdir
+  | fs.FSPromise.rmdir
+  | fs.FSPromise.stat
+  | fs.FSPromise.lstat
+  | fs.FSPromise.readlink
+  | fs.FSPromise.symlink;
 
-  constructor(basePath?: string = '/') {
-    mkdirp.sync(basePath);
-    this._basePath = basePath;
-    console.log(`[FSPlugin] Created in ${basePath}`);
-  }
+export const fsPlugin = (basePath: string) => {
+  console.log(`[fsPlugin] Created in ${basePath}`);
+  mkdirp.sync(basePath);
 
-  static createPlugin(basePath?: string = '/') {
-    return {
-      promises: new FSPlugin(basePath),
-    };
-  }
+  const wrap = (fn: FSWraps) => async (filePath: string, ...args: Array<any>): Promise<T> => {
+    const modifiedPath = path.join(basePath, path.normalize(filePath));
+    return fn(modifiedPath, ...args);
+  };
 
-  async readFile(filePath: string, ...x: Array<any>): Promise<Buffer | string> {
-    return this._callbackAsPromise(fs.readFile, filePath, ...x);
-  }
-
-  async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.writeFile, filePath, data, ...x);
-  }
-
-  async unlink(filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.unlink, filePath, ...x);
-  }
-
-  async readdir(filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.readdir, filePath, ...x);
-  }
-
-  async mkdir(filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.mkdir, filePath, ...x);
-  }
-
-  async rmdir(filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.rmdir, filePath, ...x);
-  }
-
-  async stat(filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.stat, filePath, ...x);
-  }
-
-  async lstat(filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.lstat, filePath, ...x);
-  }
-
-  async readlink(filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.readlink, filePath, ...x);
-  }
-
-  async symlink(targetPath: string, filePath: string, ...x: Array<any>) {
-    return this._callbackAsPromise(fs.symlink, filePath, ...x);
-  }
-
-  _callbackAsPromise<T>(fn: Function, filePath: string, ...args: Array<any>): Promise<T> {
-    return new Promise((resolve, reject) => {
-      filePath = path.join(this._basePath, path.normalize(filePath));
-      const callback = args.find(arg => typeof arg === 'function');
-      const newArgs = args.filter(arg => arg !== callback);
-
-      fn(filePath, ...newArgs, (err, result) => {
-        if (err) reject(err);
-        else resolve(result);
-      });
-    });
-  }
-}
+  return {
+    promises: {
+      enumerable: true,
+      readFile: wrap(fs.promises.readFile),
+      writeFile: wrap(fs.promises.writeFile),
+      unlink: wrap(fs.promises.unlink),
+      readdir: wrap(fs.promises.readdir),
+      mkdir: wrap(fs.promises.mkdir),
+      rmdir: wrap(fs.promises.rmdir),
+      stat: wrap(fs.promises.stat),
+      lstat: wrap(fs.promises.lstat),
+      readlink: wrap(fs.promises.readlink),
+      symlink: wrap(fs.promises.symlink),
+    },
+  };
+};

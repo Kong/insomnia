@@ -9,7 +9,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
-import GitVCS, { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
+import { GitVCS, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
 import { withDescendants } from '../../../common/database';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';

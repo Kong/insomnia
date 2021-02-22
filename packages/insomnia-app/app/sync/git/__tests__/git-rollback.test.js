@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
+import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { setupDateMocks } from './util';
 import { MemPlugin } from '../mem-plugin';
 import type { FileWithStatus } from '../git-rollback';

@@ -90,9 +90,9 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
+import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
-import FSPlugin from '../../sync/git/fs-plugin';
+import { fsPlugin } from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import {
@@ -1017,7 +1017,6 @@ class App extends PureComponent {
 
   async _updateGitVCS() {
     const { activeGitRepository, activeWorkspace } = this.props;
-
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
     this.setState({ gitVCS: null });
@@ -1033,10 +1032,10 @@ class App extends PureComponent {
         `version-control/git/${activeGitRepository._id}`,
       );
       const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
-      const pGitData = FSPlugin.createPlugin(baseDir);
-      const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
+      const pGitData = fsPlugin(baseDir);
+      const pOtherData = fsPlugin(path.join(baseDir, 'other'));
 
-      const fsPlugin = routableFSPlugin(
+      const routableFS = routableFSPlugin(
         // All data outside the directories listed below will be stored in an 'other'
         // directory. This is so we can support files that exist outside the ones
         // the app is specifically in charge of.
@@ -1052,12 +1051,22 @@ class App extends PureComponent {
       );
 
       // Init VCS
+      const { credentials, uri } = activeGitRepository;
       if (activeGitRepository.needsFullClone) {
         await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
-        const { credentials, uri } = activeGitRepository;
-        await gitVCS.initFromClone(uri, credentials, GIT_CLONE_DIR, fsPlugin, GIT_INTERNAL_DIR);
+        await gitVCS.initFromClone({
+          url: uri,
+          gitCredentials: credentials,
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
       } else {
-        await gitVCS.init(GIT_CLONE_DIR, fsPlugin, GIT_INTERNAL_DIR);
+        await gitVCS.init({
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
       }
 
       // Configure basic info

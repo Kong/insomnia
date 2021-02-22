@@ -1,10 +1,10 @@
 // @flow
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
-import { httpPlugin } from './http';
+import { http } from './http-plugin';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
-import EventEmitter from 'events';
+import { addDotGit } from './utils';
 
 export type GitAuthor = {|
   name: string,
@@ -26,15 +26,41 @@ type GitCredentialsToken = {
   token: string,
 };
 
+const onAuth = ({ username, token }: GitCredentialsToken) => () => ({
+  username,
+  password: token,
+});
+const onMessage = (message: string) => {
+  console.log(`[git-event] ${message}`);
+};
+const onAuthFailure = (message: string) => {
+  console.log(`[git-event] Auth Failure: ${message}`);
+};
+const onAuthSuccess = (message: string) => {
+  console.log(`[git-event] Auth Success: ${message}`);
+};
+
 export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
+
+export type GitHash = string;
+export type GitRef = GitHash | string;
 
 export type GitLogEntry = {|
   oid: string,
-  message: string,
-  tree: string,
-  author: GitAuthor & {
-    timestamp: number,
+  commit: {
+    message: string,
+    tree: GitRef,
+    author: GitAuthor & {
+      timezoneOffset: number,
+      timestamp: number,
+    },
+    committer: GitAuthor & {
+      timezoneOffset: number,
+      timestamp: number,
+    },
+    parent: Array<GitRef>,
   },
+  payload: string,
 |};
 
 export type PushResponse = {
@@ -54,30 +80,38 @@ export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
 export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, _gitInternalDirName);
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
 
-export default class GitVCS {
+export class GitVCS {
   _git: Object;
-  _baseOpts: { dir: string, gitdir?: string, noGitSuffix: boolean };
+  _baseOpts: {
+    dir: string,
+    gitdir?: string,
+    fs: Object,
+    http: Object,
+  };
+
   _initialized: boolean;
 
   constructor() {
     this._initialized = false;
   }
 
-  async init(directory: string, fsPlugin: Object, gitDirectory: string) {
+  async init({
+    directory,
+    fs,
+    gitDirectory,
+  }: {
+    directory: string,
+    fs: Object,
+    gitDirectory: string,
+  }) {
     this._git = git;
-    git.plugins.set('fs', fsPlugin);
-    git.plugins.set('http', httpPlugin);
-    const emitter = new EventEmitter();
-    git.plugins.set('emitter', emitter);
-
-    emitter.on('message', message => {
-      console.log(`[git-event] ${message}`);
-    });
 
     this._baseOpts = {
       dir: directory,
       gitdir: gitDirectory,
-      noGitSuffix: true,
+      fs,
+      http,
+      onMessage,
     };
 
     if (await this._repoExists()) {
@@ -90,23 +124,46 @@ export default class GitVCS {
     this._initialized = true;
   }
 
-  async initFromClone(
+  async initFromClone({
+    url,
+    gitCredentials,
+    directory,
+    fs,
+    gitDirectory,
+  }: {
     url: string,
-    creds: GitCredentials,
+    gitCredentials: GitCredentials,
     directory: string,
-    fsPlugin: Object,
+    fs: Object,
     gitDirectory: string,
-  ) {
+  }) {
     this._git = git;
-    git.plugins.set('fs', fsPlugin);
 
     this._baseOpts = {
       dir: directory,
       gitdir: gitDirectory,
-      noGitSuffix: true,
+      fs,
+      http,
+      onAuth: onAuth(gitCredentials),
     };
 
-    await git.clone({ ...this._baseOpts, ...creds, url, singleBranch: true });
+    const cloneParams = {
+      ...this._baseOpts,
+      onAuthFailure,
+      onAuthSuccess,
+      url,
+      singleBranch: true,
+    };
+    try {
+      await git.clone(cloneParams);
+    } catch (error) {
+      if (!url.endsWith('.git')) {
+        git.clone({
+          ...cloneParams,
+          url: addDotGit(cloneParams),
+        });
+      }
+    }
 
     console.log(`[git] Clones repo to ${gitDirectory} from ${url}`);
 
@@ -191,8 +248,8 @@ export default class GitVCS {
   }
 
   async getAuthor(): Promise<GitAuthor> {
-    const name = await git.config({ ...this._baseOpts, path: 'user.name' });
-    const email = await git.config({ ...this._baseOpts, path: 'user.email' });
+    const name = await git.setConfig({ ...this._baseOpts, path: 'user.name' });
+    const email = await git.setConfig({ ...this._baseOpts, path: 'user.email' });
     return {
       name: name || '',
       email: email || '',
@@ -200,8 +257,9 @@ export default class GitVCS {
   }
 
   async setAuthor(name: string, email: string): Promise<void> {
-    await git.config({ ...this._baseOpts, path: 'user.name', value: name });
-    await git.config({ ...this._baseOpts, path: 'user.email', value: email });
+    console.log({ ...this._baseOpts, name, email });
+    await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
+    await git.setConfig({ ...this._baseOpts, path: 'user.email', value: email });
   }
 
   async getRemote(name: string): Promise<GitRemoteConfig | null> {
@@ -220,10 +278,10 @@ export default class GitVCS {
    * when pushing with isomorphic-git, if the HEAD of local is equal the HEAD
    * of remote, it will fail with a non-fast-forward message.
    *
-   * @param creds
+   * @param gitCredentials
    * @returns {Promise<boolean>}
    */
-  async canPush(creds?: GitCredentials | null) {
+  async canPush(gitCredentials?: GitCredentials | null) {
     const branch = await this.getBranch();
 
     const remote = await this.getRemote('origin');
@@ -233,7 +291,9 @@ export default class GitVCS {
 
     const remoteInfo = await git.getRemoteInfo({
       ...this._baseOpts,
-      ...creds,
+      onAuth: onAuth(gitCredentials),
+      onAuthFailure,
+      onAuthSuccess,
       forPush: true,
       url: remote.url,
     });
@@ -250,7 +310,7 @@ export default class GitVCS {
     return true;
   }
 
-  async push(creds?: GitCredentials | null, force: boolean = false): Promise<void> {
+  async push(gitCredentials?: GitCredentials | null, force: boolean = false): Promise<void> {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
 
@@ -258,7 +318,9 @@ export default class GitVCS {
     const response: PushResponse = await git.push({
       ...this._baseOpts,
       remote: 'origin',
-      ...creds,
+      onAuth: onAuth(gitCredentials),
+      onAuthFailure,
+      onAuthSuccess,
       force,
     });
 
@@ -271,13 +333,15 @@ export default class GitVCS {
     }
   }
 
-  async pull(creds?: GitCredentials | null): Promise<void> {
+  async pull(gitCredentials?: GitCredentials | null): Promise<void> {
     console.log('[git] Pull remote=origin', await this.getBranch());
     trackEvent('Git', 'Pull');
 
     return git.pull({
       ...this._baseOpts,
-      ...creds,
+      onAuth: onAuth(gitCredentials),
+      onAuthFailure,
+      onAuthSuccess,
       remote: 'origin',
       singleBranch: true,
       fast: true,
@@ -294,13 +358,15 @@ export default class GitVCS {
   async fetch(
     singleBranch: boolean,
     depth: number | null,
-    creds?: GitCredentials | null,
+    gitCredentials?: GitCredentials | null,
   ): Promise<void> {
     console.log('[git] Fetch remote=origin');
 
     return git.fetch({
       ...this._baseOpts,
-      ...creds,
+      onAuth: onAuth(gitCredentials),
+      onAuthFailure,
+      onAuthSuccess,
       singleBranch,
       remote: 'origin',
       depth,
@@ -314,7 +380,7 @@ export default class GitVCS {
     let log = [];
 
     try {
-      log = await git.log({ ...this._baseOpts, depth: depth });
+      log = await git.log({ ...this._baseOpts, depth });
     } catch (e) {
       err = e;
     }
@@ -381,7 +447,7 @@ export default class GitVCS {
 
   async _repoExists() {
     try {
-      await git.config({ ...this._baseOpts, path: '' });
+      await git.setConfig({ ...this._baseOpts, path: '' });
     } catch (err) {
       return false;
     }
@@ -390,7 +456,7 @@ export default class GitVCS {
   }
 
   getFs() {
-    return git.plugins.get('fs');
+    return this._baseOpts.fs;
   }
 
   static _sortBranches(branches: Array<string>) {
