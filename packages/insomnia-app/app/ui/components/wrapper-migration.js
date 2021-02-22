@@ -9,7 +9,11 @@ import migrateFromDesigner, { restartApp } from '../../common/migrate-from-desig
 import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
 import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
-import { migrateStart, migrateStop, setActiveActivity } from '../redux/modules/global';
+import {
+  disableActivityChange,
+  enableActivityChange,
+  setActiveActivity,
+} from '../redux/modules/global';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -198,25 +202,29 @@ const Fail = ({ error }: FailProps) => (
   </>
 );
 
-type MigrationBodyProps = {
-  handleSetActiveActivity: (activity?: GlobalActivity) => void,
-};
-const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
+const MigrationBody = () => {
+  // The migration step does not need to be in redux, but a loading state does need to exist there.
   const [step, setStep] = React.useState<Step>('options');
   const [error, setError] = React.useState<Error>(null);
 
   const reduxDispatch = useDispatch();
 
-  const doMigration = React.useCallback(
+  const start = React.useCallback(
     async (options: MigrationOptions) => {
-      setStep('migrating'); // Should probably move this into redux now that we have a loading state there hmm
-      reduxDispatch(migrateStart());
-      const { error } = await migrateFromDesigner(options);
-      if (error) {
-        setError(error);
+      // TODO: On occasion, the active activity would change to HOME while the migration was still running.
+      //  This action will explicitly lock the activity and can be removed after determining why the
+      //  activity changes unexpectedly during migration
+      reduxDispatch(disableActivityChange());
+      try {
+        setStep('migrating');
+        const { error } = await migrateFromDesigner(options);
+        if (error) {
+          setError(error);
+        }
+        setStep('results');
+      } finally {
+        reduxDispatch(enableActivityChange());
       }
-      setStep('results');
-      reduxDispatch(migrateStop());
     },
     [reduxDispatch],
   );
@@ -227,7 +235,7 @@ const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
 
   switch (step) {
     case 'options':
-      return <Options start={doMigration} cancel={cancel} />;
+      return <Options start={start} cancel={cancel} />;
     case 'migrating':
       return <Migrating />;
     case 'results':

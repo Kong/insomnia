@@ -33,7 +33,7 @@ document.title = getAppLongName();
   await setFont(settings);
 
   // Create Redux store
-  const store = await initStore(settings);
+  const store = await initStore();
 
   const render = App => {
     const TheHottestApp = hot(module)(App);

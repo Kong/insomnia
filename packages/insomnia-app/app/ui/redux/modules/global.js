@@ -38,14 +38,15 @@ import {
   DEPRECATED_ACTIVITY_INSOMNIA,
 } from '../../../common/constants';
 import { selectSettings } from '../selectors';
+import { getDesignerDataDir } from '../../../common/misc';
 
 const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
-const MIGRATING_START = 'global/migrating-start';
-const MIGRATING_STOP = 'global/migrating-stop';
+const DISABLE_ACTIVITY_CHANGE = 'global/disable-activity-change';
+const ENABLE_ACTIVITY_CHANGE = 'global/enable-activity-change';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
@@ -90,11 +91,11 @@ function loadingReducer(state = false, action) {
   }
 }
 
-function migratingReducer(state = false, action) {
+function canChangeActivityReducer(state = true, action) {
   switch (action.type) {
-    case MIGRATING_START:
+    case ENABLE_ACTIVITY_CHANGE:
       return true;
-    case MIGRATING_STOP:
+    case DISABLE_ACTIVITY_CHANGE:
       return false;
     default:
       return state;
@@ -127,7 +128,7 @@ export const reducer = combineReducers({
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
-  isMigrating: migratingReducer,
+  canChangeActivity: canChangeActivityReducer,
 });
 
 // ~~~~~~~ //
@@ -232,12 +233,12 @@ export function loadStop() {
   return { type: LOAD_STOP };
 }
 
-export function migrateStart() {
-  return { type: MIGRATING_START };
+export function disableActivityChange() {
+  return { type: DISABLE_ACTIVITY_CHANGE };
 }
 
-export function migrateStop() {
-  return { type: MIGRATING_START };
+export function enableActivityChange() {
+  return { type: DISABLE_ACTIVITY_CHANGE };
 }
 
 export function loadRequestStart(requestId) {
@@ -252,65 +253,50 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveActivity(nextActivity?: GlobalActivity) {
+function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
+  switch (currentActivity) {
+    case ACTIVITY_MIGRATION:
+      // Have we the onboarding step? Go to home, otherwise go to onboarding
+      return settings.hasPromptedOnboarding ? ACTIVITY_HOME : ACTIVITY_ONBOARDING;
+    case ACTIVITY_ONBOARDING:
+      // Always go to home after onboarding
+      return ACTIVITY_HOME;
+    default:
+      return currentActivity;
+  }
+}
+
+export function goToNextActivity() {
   return function(dispatch, getState) {
     const state = getState();
-    const { activeActivity, isMigrating } = state.global;
-
-    // Don't change activity if currently migrating
-    if (isMigrating) {
-      console.log('Attempted to change activity while migrating');
-      return;
-    }
+    const { activeActivity } = state.global;
 
     const settings = selectSettings(state);
 
-    console.log('In thunk');
-    console.log(settings);
+    const nextActivity = _getNextActivity(settings, activeActivity);
 
-    // TODO: Shouldn't do this if currently still migrating, why is it doing this? Does it need to be moved out of here?
-    // If current activity is MIGRATION, decide the override next activity through the following logic
-    if (activeActivity === ACTIVITY_MIGRATION) {
-      if (settings.hasPromptedOnboarding) {
-        console.log('going to home after migration');
-        nextActivity = ACTIVITY_HOME;
-      } else {
-        console.log('going to onboarding after migration');
-        nextActivity = ACTIVITY_ONBOARDING;
-      }
-    } else if (activeActivity === ACTIVITY_ONBOARDING) {
-      console.log('going to home after onboarding');
-      nextActivity = ACTIVITY_HOME;
-    }
-
-    if (nextActivity) {
-      switch (nextActivity) {
-        case ACTIVITY_MIGRATION:
-          models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
-          break;
-        case ACTIVITY_ONBOARDING:
-          models.settings.patch({ hasPromptedOnboarding: true });
-          break;
-        default:
-          break;
-      }
-
-      dispatch(_setActivity(nextActivity));
+    if (nextActivity !== activeActivity) {
+      dispatch(setActiveActivity(nextActivity));
     }
   };
 }
 
-function _setActivity(activity: GlobalActivity) {
-  activity = activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
+export function setActiveActivity(activity: GlobalActivity) {
+  // Don't need to await settings update
+  switch (activity) {
+    case ACTIVITY_MIGRATION:
+      models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
+      break;
+    case ACTIVITY_ONBOARDING:
+      models.settings.patch({ hasPromptedOnboarding: true });
+      break;
+    default:
+      break;
+  }
 
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   trackEvent('Activity', 'Change', activity);
   return { type: SET_ACTIVE_ACTIVITY, activity: activity };
-}
-
-export function goToNextActivity() {
-  console.log('go to next activity');
-  return setActiveActivity();
 }
 
 export function setActiveWorkspace(workspaceId: string) {
@@ -693,18 +679,8 @@ export function exportRequestsToFile(requestIds) {
   };
 }
 
-function initActiveWorkspace(workspaceId: string) {
-  return setActiveWorkspace(workspaceId);
-}
-
-function initActiveActivity(activity: GlobalActivity) {
-  return _setActivity(activity);
-}
-
-export function init() {
+function initActiveWorkspace() {
   let workspaceId = null;
-  let activity = ACTIVITY_HOME;
-
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
     const item = window.localStorage.getItem(key);
@@ -713,13 +689,52 @@ export function init() {
     // Nothing here...
   }
 
-  try {
-    const key = `${LOCALSTORAGE_PREFIX}::activity`;
-    const item = window.localStorage.getItem(key);
-    activity = JSON.parse(item);
-  } catch (e) {
-    // Nothing here...
-  }
+  return setActiveWorkspace(workspaceId);
+}
 
-  return [initActiveWorkspace(workspaceId), initActiveActivity(activity)];
+function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
+  return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
+}
+
+function initActiveActivity() {
+  return function(dispatch, getState) {
+    const state = getState();
+    const settings = selectSettings(state);
+
+    // Default to home
+    let activeActivity = ACTIVITY_HOME;
+
+    try {
+      const key = `${LOCALSTORAGE_PREFIX}::activity`;
+      const item = window.localStorage.getItem(key);
+      activeActivity = JSON.parse(item);
+    } catch (e) {
+      // Nothing here...
+    }
+
+    activeActivity = _migrateDeprecatedActivity(activeActivity);
+
+    let overrideActivity = null;
+    switch (activeActivity) {
+      // If relaunched after a migration, go to the next activity
+      case ACTIVITY_MIGRATION:
+        overrideActivity = _getNextActivity(settings, activeActivity);
+        break;
+      // Always check if user has been prompted to migrate or onboard
+      default:
+        if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+          overrideActivity = ACTIVITY_MIGRATION;
+        } else if (!settings.hasPromptedOnboarding) {
+          overrideActivity = ACTIVITY_ONBOARDING;
+        }
+        break;
+    }
+
+    const initializeToActivity = overrideActivity || activeActivity;
+    return setActiveActivity(initializeToActivity);
+  };
+}
+
+export function init() {
+  return [initActiveWorkspace(), initActiveActivity()];
 }
