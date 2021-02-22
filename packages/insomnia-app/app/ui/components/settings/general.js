@@ -536,8 +536,19 @@ class General extends React.PureComponent<Props, State> {
         <hr className="pad-top" />
 
         <h2>Migrate from Designer</h2>
+        <div className="form-row pad-top-sm">
+          <button
+            className="btn btn--clicky pointer"
+            style={{ padding: 0 }}
+            onClick={this._handleStartMigration}>
+            Migrate
+          </button>
+        </div>
+        <hr className="pad-top" />
+
         {isDevelopment() && (
           <>
+            <h2>Development</h2>
             <div className="form-row pad-top-sm">
               {this.renderBooleanSetting(
                 'Has prompted to migrate',
@@ -547,14 +558,6 @@ class General extends React.PureComponent<Props, State> {
             </div>
           </>
         )}
-        <div className="form-row pad-top-sm">
-          <button
-            className="btn btn--clicky pointer"
-            style={{ padding: 0 }}
-            onClick={this._handleStartMigration}>
-            Migrate from Designer
-          </button>
-        </div>
       </div>
     );
   }

@@ -1,7 +1,15 @@
-import { FLEXIBLE_URL_REGEX } from '../constants';
-import { globalBeforeEach } from '../../__jest__/before-each';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  FLEXIBLE_URL_REGEX,
+  isWorkspaceActivity,
+} from '../constants';
+
 describe('URL Regex', () => {
-  beforeEach(globalBeforeEach);
   it('matches valid URLs', () => {
     expect('https://google.com').toMatch(FLEXIBLE_URL_REGEX);
     expect('http://google.com').toMatch(FLEXIBLE_URL_REGEX);
@@ -23,5 +31,19 @@ describe('URL Regex', () => {
     expect('"https://google.com"').not.toMatch(FLEXIBLE_URL_REGEX);
     expect('(https://google.com)').not.toMatch(FLEXIBLE_URL_REGEX);
     expect('[https://google.com]').not.toMatch(FLEXIBLE_URL_REGEX);
+  });
+});
+
+describe('isWorkspaceActivity', () => {
+  it('return true', () => {
+    expect(isWorkspaceActivity(ACTIVITY_SPEC)).toBe(true);
+    expect(isWorkspaceActivity(ACTIVITY_DEBUG)).toBe(true);
+    expect(isWorkspaceActivity(ACTIVITY_UNIT_TEST)).toBe(true);
+  });
+
+  it('return false', () => {
+    expect(isWorkspaceActivity(ACTIVITY_HOME)).toBe(false);
+    expect(isWorkspaceActivity(ACTIVITY_ONBOARDING)).toBe(false);
+    expect(isWorkspaceActivity(ACTIVITY_MIGRATION)).toBe(false);
   });
 });
