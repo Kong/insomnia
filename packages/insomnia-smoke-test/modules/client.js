@@ -6,7 +6,7 @@ export const correctlyLaunched = async app => {
 };
 
 export const focusAfterRestart = async app => {
-  await app.client.pause(2000);
+  await app.client.pause(4000);
 
   const count = await app.client.getWindowCount();
   if (count === 0) {

@@ -21,7 +21,6 @@ describe('Application launch', function() {
     await client.correctlyLaunched(app);
 
     await migration.migrationMessageShown(app);
-
     await migration.clickSkip(app);
 
     await onboarding.analyticsMessageShown(app);
