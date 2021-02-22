@@ -731,7 +731,7 @@ function initActiveActivity() {
     }
 
     const initializeToActivity = overrideActivity || activeActivity;
-    return setActiveActivity(initializeToActivity);
+    dispatch(setActiveActivity(initializeToActivity));
   };
 }
 

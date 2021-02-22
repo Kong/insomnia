@@ -7,7 +7,7 @@ import { API_BASE_URL, getClientString } from '../../../common/constants';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
 import * as fetch from '../../../account/fetch';
 
-export async function init(settings) {
+export async function init() {
   const store = configureStore();
 
   // Do things that must happen before initial render

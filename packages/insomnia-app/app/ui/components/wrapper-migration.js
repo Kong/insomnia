@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import type { WrapperProps } from './wrapper';
-import { ACTIVITY_HOME } from '../../common/constants';
 import { ToggleSwitch } from 'insomnia-components';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { restartApp } from '../../common/migrate-from-designer';
@@ -12,7 +11,7 @@ import OnboardingContainer from './onboarding-container';
 import {
   disableActivityChange,
   enableActivityChange,
-  setActiveActivity,
+  goToNextActivity,
 } from '../redux/modules/global';
 
 type Step = 'options' | 'migrating' | 'results';
@@ -230,7 +229,7 @@ const MigrationBody = () => {
   );
 
   const cancel = React.useCallback(() => {
-    reduxDispatch(setActiveActivity(ACTIVITY_HOME));
+    reduxDispatch(goToNextActivity());
   }, [reduxDispatch]);
 
   switch (step) {
