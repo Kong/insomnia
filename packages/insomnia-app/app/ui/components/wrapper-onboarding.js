@@ -33,7 +33,6 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     db.onChange(this._handleDbChange);
   }
 
-  // eslint-disable-next-line camelcase
   componentWillUnmount() {
     // Unsubscribe DB listener
     db.offChange(this._handleDbChange);
