@@ -162,11 +162,11 @@ exports[`Snapshot for "inso run test -h" 1`] = `
 Run Insomnia unit test suites
 
 Options:
-  -e, --env <identifier>         environment to use
-  -t, --testNamePattern <regex>  run tests that match the regex
-  -r, --reporter <reporter>      standard reporters options are [dot, list,
-                                  min, progress, spec] (default: spec)
-  -b, --bail                     abort (\\"bail\\") after first test failure
-  --keepFile                     do not delete the generated test file
-  -h, --help                     display help for command"
+  -e, --env <identifier>                         environment to use
+  -t, --testNamePattern <regex>                  run tests that match the regex
+  -r, --reporter <reporter>                      standard reporters options are [dot, list,  min, progress, spec] (default: spec)
+  -ro, --reporter-options <option> [options...]  reporter-specific options
+  -b, --bail                                     abort (\\"bail\\") after first test failure
+  --keepFile                                     do not delete the generated test file
+  -h, --help                                     display help for command"
 `;
