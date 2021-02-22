@@ -8,11 +8,7 @@ import migrateFromDesigner, { restartApp } from '../../common/migrate-from-desig
 import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
 import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
-import {
-  disableActivityChange,
-  enableActivityChange,
-  goToNextActivity,
-} from '../redux/modules/global';
+import { goToNextActivity } from '../redux/modules/global';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -206,28 +202,16 @@ const MigrationBody = () => {
   const [step, setStep] = React.useState<Step>('options');
   const [error, setError] = React.useState<Error>(null);
 
+  const start = React.useCallback(async (options: MigrationOptions) => {
+    setStep('migrating');
+    const { error } = await migrateFromDesigner(options);
+    if (error) {
+      setError(error);
+    }
+    setStep('results');
+  }, []);
+
   const reduxDispatch = useDispatch();
-
-  const start = React.useCallback(
-    async (options: MigrationOptions) => {
-      // TODO: On occasion, the active activity would change to HOME while the migration was still running.
-      //  This action will explicitly lock the activity and can be removed after determining why the
-      //  activity changes unexpectedly during migration
-      reduxDispatch(disableActivityChange());
-      try {
-        setStep('migrating');
-        const { error } = await migrateFromDesigner(options);
-        if (error) {
-          setError(error);
-        }
-        setStep('results');
-      } finally {
-        reduxDispatch(enableActivityChange());
-      }
-    },
-    [reduxDispatch],
-  );
-
   const cancel = React.useCallback(() => {
     reduxDispatch(goToNextActivity());
   }, [reduxDispatch]);

@@ -45,8 +45,6 @@ const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
-const DISABLE_ACTIVITY_CHANGE = 'global/disable-activity-change';
-const ENABLE_ACTIVITY_CHANGE = 'global/enable-activity-change';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
@@ -91,17 +89,6 @@ function loadingReducer(state = false, action) {
   }
 }
 
-function canChangeActivityReducer(state = true, action) {
-  switch (action.type) {
-    case ENABLE_ACTIVITY_CHANGE:
-      return true;
-    case DISABLE_ACTIVITY_CHANGE:
-      return false;
-    default:
-      return state;
-  }
-}
-
 function loadingRequestsReducer(state = {}, action) {
   switch (action.type) {
     case LOAD_REQUEST_START:
@@ -128,7 +115,6 @@ export const reducer = combineReducers({
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
-  canChangeActivity: canChangeActivityReducer,
 });
 
 // ~~~~~~~ //
@@ -231,14 +217,6 @@ export function loadStart() {
 
 export function loadStop() {
   return { type: LOAD_STOP };
-}
-
-export function disableActivityChange() {
-  return { type: DISABLE_ACTIVITY_CHANGE };
-}
-
-export function enableActivityChange() {
-  return { type: DISABLE_ACTIVITY_CHANGE };
 }
 
 export function loadRequestStart(requestId) {
