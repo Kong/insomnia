@@ -5,7 +5,7 @@ import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { ACTIVITY_HOME, AUTOBIND_CFG, getAppLongName, getAppName } from '../../common/constants';
+import { AUTOBIND_CFG, getAppLongName, getAppName } from '../../common/constants';
 import type { WrapperProps } from './wrapper';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
@@ -33,6 +33,12 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     db.onChange(this._handleDbChange);
   }
 
+  // eslint-disable-next-line camelcase
+  componentWillUnmount() {
+    // Unsubscribe DB listener
+    db.offChange(this._handleDbChange);
+  }
+
   _handleDbChange(changes: Array<[string, BaseModel, boolean]>) {
     for (const change of changes) {
       if (change[1].type === models.workspace.type) {
@@ -43,13 +49,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     }
   }
 
-  async _handleDone() {
-    const { handleSetActiveActivity } = this.props.wrapperProps;
-
-    handleSetActiveActivity(ACTIVITY_HOME);
-
-    // Unsubscribe DB listener
-    db.offChange(this._handleDbChange);
+  _handleDone() {
+    this._nextActivity();
   }
 
   _handleBackStep(e: SyntheticEvent<HTMLAnchorElement>) {
@@ -77,6 +78,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   _handleImportFile() {
     const { handleImportFile } = this.props;
+    // TODO: this is going to blow away migrated data, needs to be smarter about forcing to current workspace
     handleImportFile(ForceToWorkspaceKeys.current);
   }
 
@@ -89,6 +91,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
       placeholder: 'https://example.com/openapi-spec.yaml',
       label: 'URI to Import',
       onComplete: value => {
+        // TODO: this is going to blow away migrated data, needs to be smarter about forcing to current workspace
         handleImportUri(value, ForceToWorkspaceKeys.current);
       },
     });
@@ -102,8 +105,11 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   }
 
   _handleSkipImport() {
-    const { handleSetActiveActivity } = this.props.wrapperProps;
-    handleSetActiveActivity(ACTIVITY_HOME);
+    this._nextActivity();
+  }
+
+  _nextActivity() {
+    this.props.wrapperProps.handleGoToNextActivity();
   }
 
   renderStep1() {

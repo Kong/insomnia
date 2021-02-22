@@ -156,6 +156,7 @@ export type WrapperProps = {
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
   handleSetActiveActivity: (activity: GlobalActivity) => void,
+  handleGoToNextActivity: () => void,
 
   // Properties
   activity: GlobalActivity,
