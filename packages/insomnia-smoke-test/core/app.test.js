@@ -5,11 +5,8 @@ import * as dropdown from '../modules/dropdown';
 import * as settings from '../modules/settings';
 import fs from 'fs';
 import { basicAuthCreds } from '../fixtures/constants';
-import * as onboarding from '../modules/onboarding';
-import * as migration from '../modules/migration';
-import * as home from '../modules/home';
 
-describe('Application launch', function() {
+describe.skip('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
 
@@ -21,51 +18,12 @@ describe('Application launch', function() {
     await stop(app);
   });
 
-  it('can skip migration and proceed onboarding', async () => {
-    await client.correctlyLaunched(app);
-
-    await migration.migrationMessageShown(app);
-    await migration.clickSkip(app);
-
-    await onboarding.analyticsMessageShown(app);
-    await onboarding.clickDontShare(app);
-    await onboarding.clickSkipImport(app);
-
-    await home.documentListingShown(app);
-  });
-
-  it('can migrate and proceed onboarding', async () => {
-    await client.correctlyLaunched(app);
-
-    await migration.migrationMessageShown(app);
-    await migration.clickStart(app);
-    await migration.successMessageShown(app);
-    await migration.clickRestart(app);
-
-    // Wait for app to restart
-    await app.client.pause(2000);
-
-    const count = await app.client.getWindowCount();
-    if (count === 0) {
-      console.log('No windows found');
-    }
-
-    await app.client.windowByIndex(0);
-
-    await onboarding.analyticsMessageShown(app);
-    await onboarding.clickDontShare(app);
-    await onboarding.clickSkipImport(app);
-
-    await home.documentListingShown(app);
-    await home.expectDocumentWithTitle(app, 'FROM DESIGNER');
-  });
-
-  xit('shows an initial window', async () => {
+  it('shows an initial window', async () => {
     await client.correctlyLaunched(app);
     await debug.workspaceDropdownExists(app);
   });
 
-  xit('sends JSON request', async () => {
+  it('sends JSON request', async () => {
     const url = 'http://127.0.0.1:4010/pets/1';
 
     await debug.workspaceDropdownExists(app);
@@ -76,7 +34,7 @@ describe('Application launch', function() {
     await debug.expect200(app);
   });
 
-  xit.each([true, false])(
+  it.each([true, false])(
     'imports swagger 2 and sends request: new workspace=%s ',
     async newWorkspace => {
       await debug.workspaceDropdownExists(app);
@@ -105,7 +63,7 @@ describe('Application launch', function() {
     },
   );
 
-  xit('sends CSV request and shows rich response', async () => {
+  it('sends CSV request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.csv';
 
     await debug.workspaceDropdownExists(app);
@@ -118,7 +76,7 @@ describe('Application launch', function() {
     await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
   });
 
-  xit('sends PDF request and shows rich response', async () => {
+  it('sends PDF request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.pdf';
 
     await debug.workspaceDropdownExists(app);
@@ -138,7 +96,7 @@ describe('Application launch', function() {
   //  3. sending basic auth with special characters encoded with IS0-8859-1 will succeed
   //  4. sending while basic auth is disabled within insomnnia will fail
 
-  xit('sends request with basic authentication', async () => {
+  it('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
     const { latin1, utf8 } = basicAuthCreds;
 

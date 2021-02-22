@@ -11,7 +11,7 @@ const isWindows = () => getAppPlatform() === 'win32';
 export const isBuild = () => process.env.BUNDLE === 'build';
 export const isPackage = () => process.env.BUNDLE === 'package';
 
-const spectronConfig = () => {
+const spectronConfig = designerDataPath => {
   let packagePathSuffix = '';
   if (isWindows()) {
     packagePathSuffix = path.join('win-unpacked', 'Insomnia.exe');
@@ -24,12 +24,17 @@ const spectronConfig = () => {
   const buildPath = path.join(__dirname, '../../insomnia-app/build');
   const packagePath = path.join(__dirname, '../../insomnia-app/dist', packagePathSuffix);
   const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Math.random()}`);
+  const env = { INSOMNIA_DATA_PATH: dataPath };
 
-  return { buildPath, packagePath, dataPath };
+  if (designerDataPath) {
+    env.DESIGNER_DATA_PATH = designerDataPath;
+  }
+
+  return { buildPath, packagePath, env };
 };
 
-export const launchApp = async () => {
-  const config = spectronConfig();
+export const launchApp = async designerDataPath => {
+  const config = spectronConfig(designerDataPath);
   return await launch(config);
 };
 
@@ -53,9 +58,7 @@ const launch = async config => {
     // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
     chromeDriverArgs: ['remote-debugging-port=9222'],
 
-    env: {
-      INSOMNIA_DATA_PATH: config.dataPath,
-    },
+    env: config.env,
   });
 
   await app.start().then(async () => {
