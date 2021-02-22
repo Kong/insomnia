@@ -6,7 +6,7 @@ import * as settings from '../modules/settings';
 import fs from 'fs';
 import { basicAuthCreds } from '../fixtures/constants';
 
-describe.skip('Application launch', function() {
+xdescribe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
 

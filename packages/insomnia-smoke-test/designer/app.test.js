@@ -9,7 +9,7 @@ import { isPackage, launchApp, stop } from '../modules/application';
 const itIf = condition => (condition ? it : it.skip);
 it.if = itIf;
 
-describe('Application launch', function() {
+xdescribe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
 

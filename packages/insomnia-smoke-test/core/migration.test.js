@@ -17,23 +17,30 @@ describe('Application launch', function() {
     await stop(app);
   });
 
-  it('can skip migration and proceed onboarding', async () => {
-    await client.correctlyLaunched(app);
+  const iterations = 20;
+  it.each(new Array(iterations).fill(1))(
+    '%# - can skip migration and proceed onboarding',
+    async () => {
+      await client.correctlyLaunched(app);
 
-    await migration.migrationMessageShown(app);
+      await migration.migrationMessageShown(app);
 
-    await migration.clickSkip(app);
+      await migration.clickSkip(app);
 
-    await onboarding.analyticsMessageShown(app);
-    await onboarding.clickDontShare(app);
-    await onboarding.clickSkipImport(app);
+      await onboarding.analyticsMessageShown(app);
+      await onboarding.clickDontShare(app);
+      await onboarding.clickSkipImport(app);
 
-    await home.documentListingShown(app);
-    await home.expectTotalDocuments(app, 1);
-    await home.expectDocumentWithTitle(app, 'Insomnia');
-  });
+      await home.documentListingShown(app);
+      await home.expectTotalDocuments(app, 1);
+      await home.expectDocumentWithTitle(app, 'Insomnia');
 
-  it('can migrate and proceed onboarding', async () => {
+      await app.restart();
+      await client.focusAfterRestart(app);
+    },
+  );
+
+  fit.each(new Array(iterations).fill(1))('%# - can migrate and proceed onboarding', async () => {
     await client.correctlyLaunched(app);
 
     await migration.migrationMessageShown(app);
@@ -41,15 +48,7 @@ describe('Application launch', function() {
     await migration.successMessageShown(app);
     await migration.clickRestart(app);
 
-    // Wait for app to restart
-    await app.client.pause(2000);
-
-    const count = await app.client.getWindowCount();
-    if (count === 0) {
-      console.log('No windows found');
-    }
-
-    await app.client.windowByIndex(0);
+    await client.focusAfterRestart(app);
 
     await onboarding.analyticsMessageShown(app);
     await onboarding.clickDontShare(app);
@@ -59,5 +58,10 @@ describe('Application launch', function() {
     await home.expectTotalDocuments(app, 2);
     await home.expectDocumentWithTitle(app, 'Insomnia');
     await home.expectDocumentWithTitle(app, 'BASIC-DESIGNER-FIXTURE'); // imported from fixture
+
+    await app.restart();
+    await client.focusAfterRestart(app);
+
+    await home.documentListingShown(app);
   });
 });

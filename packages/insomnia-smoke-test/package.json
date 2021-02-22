@@ -4,7 +4,7 @@
   "version": "2.2.27",
   "type": "module",
   "scripts": {
-    "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
+    "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern migration",
     "spectron:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
     "serve": "node server/index.js",
