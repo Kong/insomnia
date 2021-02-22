@@ -12,4 +12,6 @@ export const focusAfterRestart = async app => {
   if (count === 0) {
     console.log('No windows found');
   }
+
+  await app.client.windowByIndex(0);
 };

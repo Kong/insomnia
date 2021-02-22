@@ -17,30 +17,26 @@ describe('Application launch', function() {
     await stop(app);
   });
 
-  const iterations = 20;
-  it.each(new Array(iterations).fill(1))(
-    '%# - can skip migration and proceed onboarding',
-    async () => {
-      await client.correctlyLaunched(app);
+  it('can skip migration and proceed onboarding', async () => {
+    await client.correctlyLaunched(app);
 
-      await migration.migrationMessageShown(app);
+    await migration.migrationMessageShown(app);
 
-      await migration.clickSkip(app);
+    await migration.clickSkip(app);
 
-      await onboarding.analyticsMessageShown(app);
-      await onboarding.clickDontShare(app);
-      await onboarding.clickSkipImport(app);
+    await onboarding.analyticsMessageShown(app);
+    await onboarding.clickDontShare(app);
+    await onboarding.clickSkipImport(app);
 
-      await home.documentListingShown(app);
-      await home.expectTotalDocuments(app, 1);
-      await home.expectDocumentWithTitle(app, 'Insomnia');
+    await home.documentListingShown(app);
+    await home.expectTotalDocuments(app, 1);
+    await home.expectDocumentWithTitle(app, 'Insomnia');
 
-      await app.restart();
-      await client.focusAfterRestart(app);
-    },
-  );
+    await app.restart();
+    await client.focusAfterRestart(app);
+  });
 
-  fit.each(new Array(iterations).fill(1))('%# - can migrate and proceed onboarding', async () => {
+  it('can migrate and proceed onboarding', async () => {
     await client.correctlyLaunched(app);
 
     await migration.migrationMessageShown(app);

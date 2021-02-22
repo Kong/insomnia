@@ -23,7 +23,7 @@ const spectronConfig = designerDataPath => {
 
   const buildPath = path.join(__dirname, '../../insomnia-app/build');
   const packagePath = path.join(__dirname, '../../insomnia-app/dist', packagePathSuffix);
-  const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Math.random()}`);
+  const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Date.now()}`);
   const env = { INSOMNIA_DATA_PATH: dataPath };
 
   if (designerDataPath) {
