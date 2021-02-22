@@ -160,6 +160,20 @@ export const ACTIVITY_ONBOARDING: GlobalActivity = 'onboarding';
 export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
+export const isWorkspaceActivity = (activity: GlobalActivity): boolean => {
+  switch (activity) {
+    case ACTIVITY_SPEC:
+    case ACTIVITY_DEBUG:
+    case ACTIVITY_UNIT_TEST:
+      return true;
+    case ACTIVITY_HOME:
+    case ACTIVITY_ONBOARDING:
+    case ACTIVITY_MIGRATION:
+    default:
+      return false;
+  }
+};
+
 // HTTP Methods
 export const METHOD_GET = 'GET';
 export const METHOD_POST = 'POST';

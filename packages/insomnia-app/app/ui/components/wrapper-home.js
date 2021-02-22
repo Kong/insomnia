@@ -6,10 +6,10 @@ import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
-  ACTIVITY_HOME,
   ACTIVITY_SPEC,
   ACTIVITY_DEBUG,
   getAppName,
+  isWorkspaceActivity,
 } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
@@ -304,7 +304,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
-    if (!activeActivity || activeActivity === ACTIVITY_HOME) {
+    if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
       // or migration or onboarding
       handleSetActiveActivity(defaultActivity);
     } else {
