@@ -18,6 +18,7 @@ export const TestReporterEnum = {
 export type RunTestsOptions = GlobalOptions & {
   env?: string,
   reporter: $Keys<typeof TestReporterEnum>,
+  reporterOptions?: Array<string>,
   bail?: boolean,
   keepFile?: boolean,
   testNamePattern?: string,
@@ -61,7 +62,7 @@ export async function runInsomniaTests(
   identifier?: string,
   options: RunTestsOptions,
 ): Promise<boolean> {
-  const { reporter, ci, bail, keepFile, testNamePattern, env } = options;
+  const { reporter, reporterOptions, ci, bail, keepFile, testNamePattern, env } = options;
   // Loading database instance
   const db = await loadDb(options);
 
@@ -93,6 +94,7 @@ export async function runInsomniaTests(
 
   const config = {
     reporter,
+    reporterOptions,
     bail,
     keepFile,
     sendRequest,
