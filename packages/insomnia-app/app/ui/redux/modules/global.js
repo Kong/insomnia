@@ -244,6 +244,9 @@ function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): 
   }
 }
 
+/*
+  Go to the next activity in a sequential activity flow, depending on different conditions
+ */
 export function goToNextActivity() {
   return function(dispatch, getState) {
     const state = getState();
@@ -259,6 +262,9 @@ export function goToNextActivity() {
   };
 }
 
+/*
+  Go to an explicit activity
+ */
 export function setActiveActivity(activity: GlobalActivity) {
   // Don't need to await settings update
   switch (activity) {
@@ -674,6 +680,10 @@ function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
   return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
 }
 
+/*
+  Initialize with the cached active activity, and navigate to the next activity if necessary
+  This will also decide whether to start with the migration or onboarding activities
+ */
 function initActiveActivity() {
   return function(dispatch, getState) {
     const state = getState();

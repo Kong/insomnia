@@ -19,7 +19,7 @@ import {
   UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
 import HelpTooltip from '../help-tooltip';
-import type { HttpVersion } from '../../../common/constants';
+import type { GlobalActivity, HttpVersion } from '../../../common/constants';
 
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
@@ -40,7 +40,7 @@ type Props = {
   updateSetting: Function,
   handleToggleMenuBar: Function,
   handleRootCssChange: Function,
-  handleSetActiveActivity: () => void,
+  handleSetActiveActivity: (activity?: GlobalActivity) => void,
 };
 
 type State = {
