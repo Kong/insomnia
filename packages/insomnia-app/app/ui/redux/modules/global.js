@@ -280,7 +280,7 @@ export function setActiveActivity(activity: GlobalActivity) {
 
   window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
   trackEvent('Activity', 'Change', activity);
-  return { type: SET_ACTIVE_ACTIVITY, activity: activity };
+  return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 
 export function setActiveWorkspace(workspaceId: string) {

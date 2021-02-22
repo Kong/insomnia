@@ -1216,7 +1216,7 @@ class App extends PureComponent {
         }
 
         if (e.dataTransfer.files.length === 0) {
-          console.log('[drag] Ignored drop event beca use no files present');
+          console.log('[drag] Ignored drop event because no files present');
           return;
         }
 
