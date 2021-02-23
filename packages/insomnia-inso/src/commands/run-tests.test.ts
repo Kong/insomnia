@@ -1,5 +1,5 @@
 import { generate as _generate, runTestsCli as _runTestsCli } from 'insomnia-testing';
-import { runInsomniaTests, RunTestsOptions } from './run-tests';
+import { runInsomniaTests, RunTestsOptions, TestReporterEnum, isReporterFailure } from './run-tests';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import { GenerateConfigOptions } from './generate-config';
@@ -126,5 +126,25 @@ describe('runInsomniaTests()', () => {
     });
 
     await expect(result).toBeFalsy();
+  });
+
+  it('should prompt cli for test suites', async () => {
+    const result = await runInsomniaTests(undefined, {
+      ...base,
+      env: 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub',
+    });
+    await expect(result).toBe(false);
+  });
+
+  it('should report failure with logger name', async () => {
+    isReporterFailure('unknown-reporter', 'An invalid reporter has been provided');
+    expect(logger.__getLogs().fatal).toEqual([
+      'The following reporter `unknown-reporter` was not found!',
+    ]);
+  });
+
+  it('should report an unknown failure', async () => {
+    isReporterFailure('unknown-reporter', 'Javascript crashed');
+    expect(logger.__getLogs().fatal).toEqual(['An unknown error occurred: Javascript crashed']);
   });
 });

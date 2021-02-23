@@ -24,6 +24,15 @@ export type RunTestsOptions = GlobalOptions & {
   testNamePattern?: string,
 };
 
+export function isReporterFailure(reporter: string, err: string): void {
+  if (err.includes('invalid reporter')) {
+    logger.fatal(`The following reporter \`${reporter}\` was not found!`);
+  } else {
+    logger.fatal(`An unknown error occurred: ${err}`);
+  }
+  return false;
+}
+
 function isExternalReporter({ reporter }: RunTestsOptions): boolean {
   return reporter && !TestReporterEnum[reporter];
 }
@@ -102,12 +111,6 @@ export async function runInsomniaTests(
   };
 
   return isExternal
-    ? runTestsCli(testFiles, config)?.catch(e => {
-        if (e.toString().includes('invalid reporter')) {
-          logger.fatal(`The following reporter \`${reporter}\` was not found!`);
-        } else {
-          logger.fatal(`An unknown error occurred: ${e}`);
-        }
-      })
+    ? await runTestsCli(testFiles, config)?.catch(e => isReporterFailure(reporter, e.toString()))
     : await noConsoleLog(() => runTestsCli(testFiles, config));
 }
