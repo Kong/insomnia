@@ -85,20 +85,20 @@ const Options = ({ start, cancel }: OptionsProps) => {
       </p>
       <div className="text-left margin-top">
         <BooleanSetting
-          label="Copy Designer Application Settings"
-          name="useDesignerSettings"
+          label="Copy all workspaces"
+          name="copyWorkspaces"
           options={options}
           handleChange={handleSwitchChange}
         />
         <BooleanSetting
-          label="Copy Plugins"
+          label="Copy all plugins"
           name="copyPlugins"
           options={options}
           handleChange={handleSwitchChange}
         />
         <BooleanSetting
-          label="Copy Workspaces"
-          name="copyWorkspaces"
+          label="Copy Designer application settings"
+          name="useDesignerSettings"
           options={options}
           handleChange={handleSwitchChange}
         />
