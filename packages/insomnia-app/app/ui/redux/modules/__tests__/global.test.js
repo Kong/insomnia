@@ -28,11 +28,6 @@ import fs from 'fs';
 import { getDesignerDataDir } from '../../../../common/misc';
 
 jest.mock('../../../../common/analytics');
-// jest.mock('fs', () => {
-//   const fs = jest.requireActual('fs');
-//   fs.existsSync = jest.fn().mockReturnValue(false);
-//   return fs;
-// });
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -44,11 +39,14 @@ const createSettings = (hasPromptedMigration: boolean, hasPromptedOnboarding: bo
   return settings;
 };
 
-xdescribe('global', () => {
+describe('global', () => {
+  let fsExistsSyncSpy;
+
   beforeEach(async () => {
     await globalBeforeEach();
     jest.resetAllMocks();
     global.localStorage.clear();
+    fsExistsSyncSpy = jest.spyOn(fs, 'existsSync');
   });
 
   describe('setActiveActivity', () => {
@@ -233,7 +231,7 @@ xdescribe('global', () => {
 
     it('should prompt to migrate', async () => {
       const settings = createSettings(false, true);
-      fs.existsSync.mockReturnValue(true);
+      fsExistsSyncSpy.mockReturnValue(true);
 
       const store = mockStore({ global: {}, entities: { settings: [settings] } });
 
@@ -243,12 +241,12 @@ xdescribe('global', () => {
 
       await store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
-      expect(fs.existsSync).toHaveBeenCalledWith(getDesignerDataDir());
+      expect(fsExistsSyncSpy).toHaveBeenCalledWith(getDesignerDataDir());
     });
 
     it('should not prompt to migrate if default directory not found', async () => {
       const settings = createSettings(false, true);
-      fs.existsSync.mockReturnValue(false);
+      fsExistsSyncSpy.mockReturnValue(false);
 
       const store = mockStore({ global: {}, entities: { settings: [settings] } });
 
@@ -258,7 +256,7 @@ xdescribe('global', () => {
 
       await store.dispatch(initActiveActivity());
       expect(store.getActions()).toEqual([expectedEvent]);
-      expect(fs.existsSync).toHaveBeenCalledWith(getDesignerDataDir());
+      expect(fsExistsSyncSpy).toHaveBeenCalledWith(getDesignerDataDir());
     });
 
     it('should prompt to onboard', async () => {
