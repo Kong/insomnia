@@ -214,6 +214,7 @@
     "prompt-run": "^1.4.5",
     "react-hot-loader": "^4.13.0",
     "react-test-renderer": "^16.14.0",
+    "redux-mock-store": "^1.5.4",
     "source-map-loader": "^1.0.0",
     "spectron": "^11.1.0",
     "style-loader": "^0.23.1",

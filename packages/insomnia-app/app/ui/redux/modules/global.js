@@ -40,15 +40,15 @@ import {
 import { selectSettings } from '../selectors';
 import { getDesignerDataDir } from '../../../common/misc';
 
-const LOCALSTORAGE_PREFIX = 'insomnia::meta';
+export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 const LOAD_START = 'global/load-start';
 const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
-const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
-const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
+export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
+export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -663,7 +663,7 @@ export function exportRequestsToFile(requestIds) {
   };
 }
 
-function initActiveWorkspace() {
+export function initActiveWorkspace() {
   let workspaceId = null;
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
@@ -684,7 +684,7 @@ function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
   Initialize with the cached active activity, and navigate to the next activity if necessary
   This will also decide whether to start with the migration or onboarding activities
  */
-function initActiveActivity() {
+export function initActiveActivity() {
   return function(dispatch, getState) {
     const state = getState();
     const settings = selectSettings(state);
@@ -705,6 +705,7 @@ function initActiveActivity() {
     let overrideActivity = null;
     switch (activeActivity) {
       // If relaunched after a migration, go to the next activity
+      // Don't need to do this for onboarding because that doesn't require a restart
       case ACTIVITY_MIGRATION:
         overrideActivity = _getNextActivity(settings, activeActivity);
         break;
