@@ -44,9 +44,9 @@ const createSettings = (hasPromptedMigration: boolean, hasPromptedOnboarding: bo
   return settings;
 };
 
-xdescribe('global', () => {
-  beforeEach(() => {
-    globalBeforeEach();
+describe('global', () => {
+  beforeEach(async () => {
+    await globalBeforeEach();
     jest.resetAllMocks();
     global.localStorage.clear();
   });
