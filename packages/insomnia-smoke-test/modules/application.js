@@ -57,6 +57,7 @@ const launch = async config => {
     // Don't remove chromeDriverArgs
     // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
     chromeDriverArgs: ['remote-debugging-port=9222'],
+    waitTimeout: 20000,
 
     env: config.env,
   });
