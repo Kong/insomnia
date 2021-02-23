@@ -38,7 +38,7 @@ const TextSetting = ({ handleChange, label, name, options }: TextSettingProps) =
 type BooleanSettingProps = SettingProps & {
   handleChange: (boolean, Object, string) => void,
 };
-const BooleanSetting = ({ handleChange, label, name, options }: BooleanSettingProps) => {
+const BooleanSetting = ({ handleChange, label, name, options, hint }: BooleanSettingProps) => {
   if (!options.hasOwnProperty(name)) {
     throw new Error(`Invalid text setting name ${name}`);
   }
@@ -58,8 +58,8 @@ type OptionsProps = { start: MigrationOptions => void, cancel: () => void };
 const Options = ({ start, cancel }: OptionsProps) => {
   const [options, setOptions] = React.useState<MigrationOptions>(() => ({
     useDesignerSettings: false,
-    copyResponses: true,
-    copyPlugins: true,
+    copyWorkspaces: false,
+    copyPlugins: false,
     designerDataDir: getDesignerDataDir(),
     coreDataDir: getDataDirectory(),
   }));
@@ -71,6 +71,8 @@ const Options = ({ start, cancel }: OptionsProps) => {
   const handleSwitchChange = React.useCallback((checked: boolean, event: Object, id: string) => {
     setOptions(prevOpts => ({ ...prevOpts, [id]: checked }));
   }, []);
+
+  const canStart = options.useDesignerSettings || options.copyWorkspaces || options.copyPlugins;
 
   return (
     <>
@@ -95,8 +97,8 @@ const Options = ({ start, cancel }: OptionsProps) => {
           handleChange={handleSwitchChange}
         />
         <BooleanSetting
-          label="Copy Responses"
-          name="copyResponses"
+          label="Copy Workspaces"
+          name="copyWorkspaces"
           options={options}
           handleChange={handleSwitchChange}
         />
@@ -118,7 +120,11 @@ const Options = ({ start, cancel }: OptionsProps) => {
       </div>
 
       <div className="margin-top">
-        <button key="start" className="btn btn--clicky" onClick={() => start(options)}>
+        <button
+          key="start"
+          className="btn btn--clicky"
+          onClick={() => start(options)}
+          disabled={!canStart}>
           Start Migration
         </button>
         <button key="cancel" className="btn btn--super-compact" onClick={cancel}>

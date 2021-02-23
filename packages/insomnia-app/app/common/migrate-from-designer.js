@@ -58,7 +58,7 @@ type DBType = { [string]: Array<BaseModel> };
 export type MigrationOptions = {
   useDesignerSettings: boolean,
   copyPlugins: boolean,
-  copyResponses: boolean,
+  copyWorkspaces: boolean,
   designerDataDir: string,
   coreDataDir: string,
 };
@@ -149,7 +149,7 @@ export default async function migrateFromDesigner({
   designerDataDir,
   coreDataDir,
   copyPlugins,
-  copyResponses,
+  copyWorkspaces,
 }: MigrationOptions): Promise<MigrationResult> {
   const modelTypesToIgnore = [
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
@@ -215,7 +215,7 @@ export default async function migrateFromDesigner({
     console.log(`[db-merge] migrating version control data from designer to core`);
     await copyDirs(['version-control'], designerDataDir, coreDataDir);
 
-    if (copyResponses) {
+    if (copyWorkspaces) {
       console.log(`[db-merge] migrating response cache from designer to core`);
       await copyDirs(['responses'], designerDataDir, coreDataDir);
     } else {
