@@ -28,11 +28,11 @@ import fs from 'fs';
 import { getDesignerDataDir } from '../../../../common/misc';
 
 jest.mock('../../../../common/analytics');
-jest.mock('fs', () => {
-  const fs = jest.requireActual('fs');
-  fs.existsSync = jest.fn().mockReturnValue(false);
-  return fs;
-});
+// jest.mock('fs', () => {
+//   const fs = jest.requireActual('fs');
+//   fs.existsSync = jest.fn().mockReturnValue(false);
+//   return fs;
+// });
 
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
@@ -44,7 +44,7 @@ const createSettings = (hasPromptedMigration: boolean, hasPromptedOnboarding: bo
   return settings;
 };
 
-describe('global', () => {
+xdescribe('global', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     jest.resetAllMocks();
