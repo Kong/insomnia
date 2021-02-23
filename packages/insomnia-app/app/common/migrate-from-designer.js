@@ -151,12 +151,17 @@ export default async function migrateFromDesigner({
   copyPlugins,
   copyWorkspaces,
 }: MigrationOptions): Promise<MigrationResult> {
-  const modelTypesToIgnore = [
+  console.log(
+    `[db-merge] starting process for migrating from ${designerDataDir} to ${coreDataDir}`,
+  );
+
+  const nonWorkspaceModels = [
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
+    models.settings.type,
   ];
 
   // Every model except those to ignore and settings is a "workspace" model
-  const workspaceModels = difference(models.types(), ...modelTypesToIgnore, models.settings.type);
+  const workspaceModels = difference(models.types(), nonWorkspaceModels);
 
   const modelTypesToMerge = [];
 
@@ -168,7 +173,7 @@ export default async function migrateFromDesigner({
   }
 
   if (copyWorkspaces) {
-    modelTypesToMerge.push(workspaceModels);
+    modelTypesToMerge.push(...workspaceModels);
   }
 
   let backupDir = '';
@@ -179,14 +184,6 @@ export default async function migrateFromDesigner({
 
     // Load designer database
     const designerDb: DBType = await loadDesignerDb(modelTypesToMerge, designerDataDir);
-
-    // Ensure user is not migrating an existing Insomnia Core repo
-    // Hmmm we probably don't need this check
-    const designerSettings: Settings = designerDb[models.settings.type][0];
-    if (designerSettings.hasOwnProperty('hasPromptedToMigrateFromDesigner')) {
-      console.log('[db-merge] cannot merge database');
-      return;
-    }
 
     // For each model, batch upsert entries into the Core database
     for (const modelType of modelTypesToMerge) {
@@ -233,8 +230,6 @@ export default async function migrateFromDesigner({
     if (copyPlugins) {
       console.log(`[db-merge] migrating plugins from designer to core`);
       await migratePlugins(designerDataDir, coreDataDir);
-    } else {
-      console.log(`[db-merge] not migrating plugins`);
     }
 
     console.log('[db-merge] done!');
