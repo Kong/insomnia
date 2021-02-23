@@ -155,7 +155,21 @@ export default async function migrateFromDesigner({
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
   ];
 
-  const modelTypesToMerge = difference(models.types(), modelTypesToIgnore);
+  // Every model except those to ignore and settings is a "workspace" model
+  const workspaceModels = difference(models.types(), ...modelTypesToIgnore, models.settings.type);
+
+  const modelTypesToMerge = [];
+
+  if (useDesignerSettings) {
+    modelTypesToMerge.push(models.settings.type);
+    console.log(`[db-merge] keeping settings from Insomnia Designer`);
+  } else {
+    console.log(`[db-merge] keeping settings from Insomnia Core`);
+  }
+
+  if (copyWorkspaces) {
+    modelTypesToMerge.push(workspaceModels);
+  }
 
   let backupDir = '';
 
@@ -167,6 +181,7 @@ export default async function migrateFromDesigner({
     const designerDb: DBType = await loadDesignerDb(modelTypesToMerge, designerDataDir);
 
     // Ensure user is not migrating an existing Insomnia Core repo
+    // Hmmm we probably don't need this check
     const designerSettings: Settings = designerDb[models.settings.type][0];
     if (designerSettings.hasOwnProperty('hasPromptedToMigrateFromDesigner')) {
       console.log('[db-merge] cannot merge database');
@@ -179,23 +194,18 @@ export default async function migrateFromDesigner({
 
       // Decide how to merge settings
       if (modelType === models.settings.type) {
-        if (useDesignerSettings) {
-          console.log(`[db-merge] keeping settings from Insomnia Designer`);
-          const coreSettings = await models.settings.getOrCreate();
-          const propertiesToPersist = [
+        const coreSettings = await models.settings.getOrCreate();
+        const propertiesToPersist = [
             '_id',
             'hasPromptedOnboarding',
             'hasPromptedToMigrateFromDesigner',
           ];
           propertiesToPersist.forEach(s => {
             if (coreSettings.hasOwnProperty(s)) {
-              (entries[0]: Settings)[s] = coreSettings[s];
+        (entries[0]: Settings)[s] = coreSettings[s];
             }
           });
-        } else {
-          console.log(`[db-merge] keeping settings from Insomnia Core`);
-          continue;
-        }
+        // TODO: need to set hasPromptedOnboarding
       }
 
       // For each workspace coming from Designer, mark workspace.scope as 'designer'
@@ -212,14 +222,12 @@ export default async function migrateFromDesigner({
       await db.batchModifyDocs({ upsert: entries, remove: [] });
     }
 
-    console.log(`[db-merge] migrating version control data from designer to core`);
-    await copyDirs(['version-control'], designerDataDir, coreDataDir);
-
     if (copyWorkspaces) {
+      console.log(`[db-merge] migrating version control data from designer to core`);
+      await copyDirs(['version-control'], designerDataDir, coreDataDir);
+
       console.log(`[db-merge] migrating response cache from designer to core`);
       await copyDirs(['responses'], designerDataDir, coreDataDir);
-    } else {
-      console.log(`[db-merge] not migrating response cache`);
     }
 
     if (copyPlugins) {
