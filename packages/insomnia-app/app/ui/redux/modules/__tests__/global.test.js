@@ -44,7 +44,7 @@ const createSettings = (hasPromptedMigration: boolean, hasPromptedOnboarding: bo
   return settings;
 };
 
-describe('global', () => {
+xdescribe('global', () => {
   beforeEach(() => {
     globalBeforeEach();
     jest.resetAllMocks();
