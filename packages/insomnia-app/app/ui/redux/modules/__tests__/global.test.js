@@ -79,11 +79,10 @@ describe('global', () => {
 
       // We don't await the settings update in the action creator
       // so wait for it to update before checking
-      setTimeout(async () => {
-        const settings = await models.settings.getOrCreate();
-        expect(settings.hasPromptedToMigrateFromDesigner).toBe(false);
-        expect(settings.hasPromptedOnboarding).toBe(true);
-      });
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const settings = await models.settings.getOrCreate();
+      expect(settings.hasPromptedToMigrateFromDesigner).toBe(false);
+      expect(settings.hasPromptedOnboarding).toBe(true);
     });
 
     it('should update flag for migration prompted', async () => {
@@ -96,11 +95,10 @@ describe('global', () => {
 
       // We don't await the settings update in the action creator
       // so wait for it to update before checking
-      setTimeout(async () => {
-        const settings = await models.settings.getOrCreate();
-        expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
-        expect(settings.hasPromptedOnboarding).toBe(false);
-      });
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const settings = await models.settings.getOrCreate();
+      expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
+      expect(settings.hasPromptedOnboarding).toBe(false);
     });
   });
 
