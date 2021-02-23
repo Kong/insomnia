@@ -202,7 +202,6 @@ export default async function migrateFromDesigner({
         (entries[0]: Settings)[s] = coreSettings[s];
             }
           });
-        // TODO: need to set hasPromptedOnboarding
       }
 
       // For each workspace coming from Designer, mark workspace.scope as 'designer'
