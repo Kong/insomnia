@@ -111,10 +111,12 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateSSL: true,
 
-    // Feature flags
     hasPromptedToMigrateFromDesigner: false,
-    // TODO: This shouldn't default to false otherwise even users who update will be sent through onboarding
-    hasPromptedOnboarding: false,
+
+    // Users should only see onboarding during first launch, and anybody updating from an
+    // older version should not see it, so by default this flag is set to true, and is toggled
+    // to false during initialization
+    hasPromptedOnboarding: true,
   };
 }
 

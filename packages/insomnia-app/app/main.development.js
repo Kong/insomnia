@@ -49,6 +49,7 @@ app.on('ready', async () => {
 
   // Init the app
   await _trackStats();
+  await _initSettings();
   await _launchApp();
 
   // Init the rest
@@ -133,6 +134,15 @@ function _launchApp() {
       requestHeaders: details.requestHeaders,
     });
   });
+}
+
+async function _initSettings() {
+  const { launches } = await models.stats.get();
+
+  const firstLaunch = launches === 1;
+  if (firstLaunch) {
+    await models.settings.patch({ hasPromptedOnboarding: false });
+  }
 }
 
 async function _trackStats() {
