@@ -174,6 +174,20 @@ export const isWorkspaceActivity = (activity: GlobalActivity): boolean => {
   }
 };
 
+export const isValidActivity = (activity: GlobalActivity): boolean => {
+  switch (activity) {
+    case ACTIVITY_SPEC:
+    case ACTIVITY_DEBUG:
+    case ACTIVITY_UNIT_TEST:
+    case ACTIVITY_HOME:
+    case ACTIVITY_ONBOARDING:
+    case ACTIVITY_MIGRATION:
+      return true;
+    default:
+      return false;
+  }
+};
+
 // HTTP Methods
 export const METHOD_GET = 'GET';
 export const METHOD_POST = 'POST';

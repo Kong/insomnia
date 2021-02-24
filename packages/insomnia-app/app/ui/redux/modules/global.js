@@ -36,6 +36,7 @@ import {
   ACTIVITY_MIGRATION,
   ACTIVITY_ONBOARDING,
   DEPRECATED_ACTIVITY_INSOMNIA,
+  isValidActivity,
 } from '../../../common/constants';
 import { selectSettings } from '../selectors';
 import { getDesignerDataDir } from '../../../common/misc';
@@ -266,6 +267,8 @@ export function goToNextActivity() {
   Go to an explicit activity
  */
 export function setActiveActivity(activity: GlobalActivity) {
+  activity = _normalizaActivity(activity);
+
   // Don't need to await settings update
   switch (activity) {
     case ACTIVITY_MIGRATION:
@@ -680,6 +683,18 @@ function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
   return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
 }
 
+function _normalizaActivity(activity: GlobalActivity): GlobalActivity {
+  activity = _migrateDeprecatedActivity(activity);
+
+  if (isValidActivity(activity)) {
+    return activity;
+  } else {
+    const fallbackActivity = ACTIVITY_HOME;
+    console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
+    return fallbackActivity;
+  }
+}
+
 /*
   Initialize with the cached active activity, and navigate to the next activity if necessary
   This will also decide whether to start with the migration or onboarding activities
@@ -700,7 +715,7 @@ export function initActiveActivity() {
       // Nothing here...
     }
 
-    activeActivity = _migrateDeprecatedActivity(activeActivity);
+    activeActivity = _normalizaActivity(activeActivity);
 
     let overrideActivity = null;
     switch (activeActivity) {

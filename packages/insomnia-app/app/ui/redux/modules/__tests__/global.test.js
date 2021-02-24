@@ -216,6 +216,33 @@ describe('global', () => {
       expect(store.getActions()).toEqual([expectedEvent]);
     });
 
+    it.each(
+      'something',
+      null,
+      undefined,
+    )('should go to home is intialized with an unsupported value: %s', async activity => {
+      const settings = createSettings(true, true);
+
+      const store = mockStore({ global: {}, entities: { settings: [settings] } });
+
+      global.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
+      const expectedEvent = { type: SET_ACTIVE_ACTIVITY, activity: ACTIVITY_HOME };
+
+      await store.dispatch(initActiveActivity());
+      expect(store.getActions()).toEqual([expectedEvent]);
+    });
+
+    it('should go to home if local storage key not found', async () => {
+      const settings = createSettings(true, true);
+
+      const store = mockStore({ global: {}, entities: { settings: [settings] } });
+
+      const expectedEvent = { type: SET_ACTIVE_ACTIVITY, activity: ACTIVITY_HOME };
+
+      await store.dispatch(initActiveActivity());
+      expect(store.getActions()).toEqual([expectedEvent]);
+    });
+
     it('should go to home if initialized at migration and onboarding seen', async () => {
       const settings = createSettings(true, true);
 
