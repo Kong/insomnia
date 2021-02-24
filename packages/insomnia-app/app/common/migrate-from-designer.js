@@ -103,6 +103,9 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
 
   await removeDirs(designerPlugins, corePluginDir);
   await copyDirs(designerPlugins, designerPluginDir, corePluginDir);
+
+  // Remove plugin bundle from installed plugins because it's included with the app now
+  await removeDirs(['insomnia-plugin-kong-bundle'], corePluginDir);
 }
 
 async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
