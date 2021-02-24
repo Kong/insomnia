@@ -1,3 +1,3 @@
 jest.mock('node-libcurl');
 
-process.env.DEFAULT_APP_DATA_DIR = process.env.DEFAULT_APP_DATA_DIR || 'insomnia-app';
+process.env.DEFAULT_APP_NAME = process.env.DEFAULT_APP_NAME || 'insomnia-app';
