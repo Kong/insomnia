@@ -77,8 +77,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   _handleImportFile() {
     const { handleImportFile } = this.props;
-    // TODO: this is going to blow away migrated data, needs to be smarter about forcing to current workspace
-    handleImportFile(ForceToWorkspaceKeys.current);
+    handleImportFile(ForceToWorkspaceKeys.new);
   }
 
   _handleImportUri(defaultValue: string) {
@@ -90,8 +89,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
       placeholder: 'https://example.com/openapi-spec.yaml',
       label: 'URI to Import',
       onComplete: value => {
-        // TODO: this is going to blow away migrated data, needs to be smarter about forcing to current workspace
-        handleImportUri(value, ForceToWorkspaceKeys.current);
+        handleImportUri(value, ForceToWorkspaceKeys.new);
       },
     });
   }
