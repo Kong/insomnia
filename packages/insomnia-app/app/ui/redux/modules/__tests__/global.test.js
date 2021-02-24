@@ -68,7 +68,7 @@ describe('global', () => {
     });
 
     it('should update flag for onboarding prompted', async () => {
-      await models.settings.getOrCreate({
+      await models.settings.patch({
         hasPromptedToMigrateFromDesigner: false,
         hasPromptedOnboarding: false,
       });
@@ -84,7 +84,7 @@ describe('global', () => {
     });
 
     it('should update flag for migration prompted', async () => {
-      await models.settings.getOrCreate({
+      await models.settings.patch({
         hasPromptedToMigrateFromDesigner: false,
         hasPromptedOnboarding: false,
       });
