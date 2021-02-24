@@ -9,6 +9,7 @@ import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
 import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';
+import HelpTooltip from './help-tooltip';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -16,7 +17,9 @@ type SettingProps = {
   label: string,
   name: $Keys<MigrationOptions>,
   options: MigrationOptions,
+  help?: string,
 };
+
 type TextSettingProps = SettingProps & {
   handleChange: (SyntheticEvent<HTMLInputElement>) => void,
 };
@@ -38,17 +41,27 @@ const TextSetting = ({ handleChange, label, name, options }: TextSettingProps) =
 type BooleanSettingProps = SettingProps & {
   handleChange: (boolean, Object, string) => void,
 };
-const BooleanSetting = ({ handleChange, label, name, options, hint }: BooleanSettingProps) => {
+const BooleanSetting = ({ handleChange, label, name, options, help }: BooleanSettingProps) => {
   if (!options.hasOwnProperty(name)) {
     throw new Error(`Invalid text setting name ${name}`);
   }
+
+  const labelNode = React.useMemo(
+    () => (
+      <>
+        {label}
+        {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+      </>
+    ),
+    [help, label],
+  );
 
   return (
     <ToggleSwitch
       labelClassName="row margin-bottom wide"
       checked={options[name]}
       id={name}
-      label={label}
+      label={labelNode}
       onChange={handleChange}
     />
   );
@@ -85,22 +98,29 @@ const Options = ({ start, cancel }: OptionsProps) => {
       </p>
       <div className="text-left margin-top">
         <BooleanSetting
-          label="Copy all workspaces"
+          label="Copy Workspaces"
           name="copyWorkspaces"
           options={options}
           handleChange={handleSwitchChange}
+          help={
+            'This includes all resources linked to a workspace (eg. requests, proto files, environments, etc)'
+          }
         />
         <BooleanSetting
-          label="Copy all plugins"
+          label="Copy Plugins"
           name="copyPlugins"
           options={options}
           handleChange={handleSwitchChange}
+          help={
+            'Merge plugins between Designer and Insomnia, keeping the Designer version where a duplicate exists'
+          }
         />
         <BooleanSetting
-          label="Copy Designer application settings"
+          label="Copy Designer Application Settings"
           name="useDesignerSettings"
           options={options}
           handleChange={handleSwitchChange}
+          help={'Keep user preferences from Designer'}
         />
         <details>
           <summary className="margin-bottom">Advanced options</summary>
