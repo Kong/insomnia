@@ -1,9 +1,10 @@
 // @flow
 import { getAppDataDir } from '../data-directory';
+import path from 'path';
 
 jest.mock('os', () => ({
   ...jest.requireActual('os'),
-  homedir: (): string => '/homedir',
+  homedir: (): string => 'homedir',
 }));
 
 describe('getAppDataDir()', () => {
@@ -22,31 +23,33 @@ describe('getAppDataDir()', () => {
 
   it('should return the correct directory on macOS', () => {
     _setPlatform('darwin');
-    expect(getAppDataDir('testApp')).toBe('/homedir/Library/Application Support/testApp');
+    expect(getAppDataDir('testApp')).toBe(
+      path.join('homedir', 'Library', 'Application Support', 'testApp'),
+    );
   });
 
   it('should return the correct directory on Windows with APPDATA not set', () => {
     _setPlatform('win32');
     process.env.APPDATA = undefined;
-    expect(getAppDataDir('testApp')).toBe('/homedir/AppData/Roaming/testApp');
+    expect(getAppDataDir('testApp')).toBe(path.join('homedir', 'AppData', 'Roaming', 'testApp'));
   });
 
   it('should return the correct directory on Windows with APPDATA set', () => {
     _setPlatform('win32');
     process.env.APPDATA = 'test';
-    expect(getAppDataDir('testApp')).toBe('test/testApp');
+    expect(getAppDataDir('testApp')).toBe(path.join('test', 'testApp'));
   });
 
   it('should return the correct directory on Linux with XDG_DATA_HOME not set', () => {
     _setPlatform('linux');
     process.env.XDG_DATA_HOME = undefined;
-    expect(getAppDataDir('testApp')).toBe('/homedir/.config/testApp');
+    expect(getAppDataDir('testApp')).toBe(path.join('homedir', '.config', 'testApp'));
   });
 
   it('should return the correct directory on Linux with XDG_DATA_HOME set', () => {
     _setPlatform('linux');
-    process.env.XDG_DATA_HOME = '/test';
-    expect(getAppDataDir('testApp')).toBe('/test/testApp');
+    process.env.XDG_DATA_HOME = 'test';
+    expect(getAppDataDir('testApp')).toBe(path.join('test', 'testApp'));
   });
 
   it('should return nothing on other platforms', () => {
