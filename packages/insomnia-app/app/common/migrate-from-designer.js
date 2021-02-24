@@ -159,8 +159,16 @@ export default async function migrateFromDesigner({
         if (useDesignerSettings) {
           console.log(`[db-merge] keeping settings from Insomnia Designer`);
           const coreSettings = await models.settings.getOrCreate();
-          (entries[0]: Settings)._id = coreSettings._id;
-          (entries[0]: Settings).hasPromptedToMigrateFromDesigner = true;
+          const propertiesToPersist = [
+            '_id',
+            'hasPromptedOnboarding',
+            'hasPromptedToMigrateFromDesigner',
+          ];
+          propertiesToPersist.forEach(s => {
+            if (coreSettings.hasOwnProperty(s)) {
+              (entries[0]: Settings)[s] = coreSettings[s];
+            }
+          });
         } else {
           console.log(`[db-merge] keeping settings from Insomnia Core`);
           continue;

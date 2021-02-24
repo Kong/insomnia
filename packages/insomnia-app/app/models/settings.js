@@ -147,10 +147,10 @@ export async function patch(patch: $Shape<Settings>): Promise<Settings> {
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate(patch: $Shape<Settings> = {}): Promise<Settings> {
+export async function getOrCreate(): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
-    return create(patch);
+    return create();
   } else {
     return results[0];
   }
