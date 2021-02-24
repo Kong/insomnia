@@ -118,7 +118,7 @@ describe('actuallySend()', () => {
         VERBOSE: true,
       },
     });
-  });
+  }, 10000);
 
   it('sends a urlencoded', async () => {
     const workspace = await models.workspace.create();
