@@ -64,6 +64,18 @@ export const loadDb = async ({
     const dir = appDataDir || getAppDataDir(getDefaultAppName());
     db = await neDbAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``);
+
+    // Try to load from the Designer data dir, if the Core data directory does not exist
+    if (!db && !appDataDir) {
+      const designerDir = getAppDataDir('Insomnia Designer');
+      db = await neDbAdapter(designerDir);
+      db &&
+        logger.debug(
+          `Data store configured from Insomnia Designer app data directory at \`${path.resolve(
+            designerDir,
+          )}\``,
+        );
+    }
   }
 
   // return empty db
