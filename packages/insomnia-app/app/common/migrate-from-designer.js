@@ -99,7 +99,7 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   const corePluginDir = fsPath.join(coreDataDir, 'plugins');
 
   // get list of plugins in Designer
-  const designerPlugins = await fs.promises.readdir(designerPluginDir);
+  const designerPlugins = await readDirs(designerPluginDir);
 
   await removeDirs(designerPlugins, corePluginDir);
   await copyDirs(designerPlugins, designerPluginDir, corePluginDir);
@@ -114,19 +114,33 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   await removeDirs(pluginsToDelete, corePluginDir);
 }
 
+async function readDirs(srcDir: string): Array<string> {
+  if (fs.existsSync(srcDir)) {
+    return await fs.promises.readdir(srcDir);
+  } else {
+    return [];
+  }
+}
+
 async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
   for (const dir of dirs.filter(c => c)) {
     const src = fsPath.join(srcDir, dir);
     const dest = fsPath.join(destDir, dir);
 
-    await fsx.ensureDir(dest);
-    await fsx.copy(src, dest);
+    // If source exists, ensure the destination exists, and copy into it
+    if (fs.existsSync(src)) {
+      await fsx.ensureDir(dest);
+      await fsx.copy(src, dest);
+    }
   }
 }
 
 async function removeDirs(dirs: Array<string>, srcDir: string) {
   for (const dir of dirs.filter(c => c)) {
-    await fsx.remove(fsPath.join(srcDir, dir));
+    const dirToRemove = fsPath.join(srcDir, dir);
+    if (fs.existsSync(dirToRemove)) {
+      await fsx.remove(dirToRemove);
+    }
   }
 }
 

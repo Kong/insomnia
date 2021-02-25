@@ -361,7 +361,7 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
 
 export function getDesignerDataDir(): string {
   const { app } = electron.remote || electron;
-  return pathJoin(app.getPath('appData'), 'Insomnia Designer');
+  return process.env.DESIGNER_DATA_PATH || pathJoin(app.getPath('appData'), 'Insomnia Designer');
 }
 
 export function getDataDirectory(): string {
