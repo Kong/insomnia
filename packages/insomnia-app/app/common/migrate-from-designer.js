@@ -58,7 +58,7 @@ type DBType = { [string]: Array<BaseModel> };
 export type MigrationOptions = {
   useDesignerSettings: boolean,
   copyPlugins: boolean,
-  copyResponses: boolean,
+  copyWorkspaces: boolean,
   designerDataDir: string,
   coreDataDir: string,
 };
@@ -149,13 +149,32 @@ export default async function migrateFromDesigner({
   designerDataDir,
   coreDataDir,
   copyPlugins,
-  copyResponses,
+  copyWorkspaces,
 }: MigrationOptions): Promise<MigrationResult> {
-  const modelTypesToIgnore = [
+  console.log(
+    `[db-merge] starting process for migrating from ${designerDataDir} to ${coreDataDir}`,
+  );
+
+  const nonWorkspaceModels = [
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
+    models.settings.type,
   ];
 
-  const modelTypesToMerge = difference(models.types(), modelTypesToIgnore);
+  // Every model except those to ignore and settings is a "workspace" model
+  const workspaceModels = difference(models.types(), nonWorkspaceModels);
+
+  const modelTypesToMerge = [];
+
+  if (useDesignerSettings) {
+    modelTypesToMerge.push(models.settings.type);
+    console.log(`[db-merge] keeping settings from Insomnia Designer`);
+  } else {
+    console.log(`[db-merge] keeping settings from Insomnia Core`);
+  }
+
+  if (copyWorkspaces) {
+    modelTypesToMerge.push(...workspaceModels);
+  }
 
   let backupDir = '';
 
@@ -166,36 +185,23 @@ export default async function migrateFromDesigner({
     // Load designer database
     const designerDb: DBType = await loadDesignerDb(modelTypesToMerge, designerDataDir);
 
-    // Ensure user is not migrating an existing Insomnia Core repo
-    const designerSettings: Settings = designerDb[models.settings.type][0];
-    if (designerSettings.hasOwnProperty('hasPromptedToMigrateFromDesigner')) {
-      console.log('[db-merge] cannot merge database');
-      return;
-    }
-
     // For each model, batch upsert entries into the Core database
     for (const modelType of modelTypesToMerge) {
       const entries = designerDb[modelType];
 
-      // Decide how to merge settings
+      // Persist some settings from core
       if (modelType === models.settings.type) {
-        if (useDesignerSettings) {
-          console.log(`[db-merge] keeping settings from Insomnia Designer`);
-          const coreSettings = await models.settings.getOrCreate();
-          const propertiesToPersist = [
-            '_id',
-            'hasPromptedOnboarding',
-            'hasPromptedToMigrateFromDesigner',
-          ];
-          propertiesToPersist.forEach(s => {
-            if (coreSettings.hasOwnProperty(s)) {
-              (entries[0]: Settings)[s] = coreSettings[s];
-            }
-          });
-        } else {
-          console.log(`[db-merge] keeping settings from Insomnia Core`);
-          continue;
-        }
+        const coreSettings = await models.settings.getOrCreate();
+        const propertiesToPersist = [
+          '_id',
+          'hasPromptedOnboarding',
+          'hasPromptedToMigrateFromDesigner',
+        ];
+        propertiesToPersist.forEach(s => {
+          if (coreSettings.hasOwnProperty(s)) {
+            (entries[0]: Settings)[s] = coreSettings[s];
+          }
+        });
       }
 
       // For each workspace coming from Designer, mark workspace.scope as 'designer'
@@ -212,21 +218,17 @@ export default async function migrateFromDesigner({
       await db.batchModifyDocs({ upsert: entries, remove: [] });
     }
 
-    console.log(`[db-merge] migrating version control data from designer to core`);
-    await copyDirs(['version-control'], designerDataDir, coreDataDir);
+    if (copyWorkspaces) {
+      console.log(`[db-merge] migrating version control data from designer to core`);
+      await copyDirs(['version-control'], designerDataDir, coreDataDir);
 
-    if (copyResponses) {
       console.log(`[db-merge] migrating response cache from designer to core`);
       await copyDirs(['responses'], designerDataDir, coreDataDir);
-    } else {
-      console.log(`[db-merge] not migrating response cache`);
     }
 
     if (copyPlugins) {
       console.log(`[db-merge] migrating plugins from designer to core`);
       await migratePlugins(designerDataDir, coreDataDir);
-    } else {
-      console.log(`[db-merge] not migrating plugins`);
     }
 
     console.log('[db-merge] done!');
