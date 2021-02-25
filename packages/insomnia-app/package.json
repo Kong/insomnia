@@ -131,6 +131,7 @@
     "insomnia-plugin-file": "^2.2.24",
     "insomnia-plugin-hash": "^2.2.24",
     "insomnia-plugin-jsonpath": "^2.2.24",
+    "insomnia-plugin-kong-bundle": "^2.2.26",
     "insomnia-plugin-now": "^2.2.24",
     "insomnia-plugin-os": "^2.2.24",
     "insomnia-plugin-prompt": "^2.2.24",
