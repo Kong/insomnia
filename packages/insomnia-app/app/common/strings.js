@@ -1,6 +1,6 @@
 export const strings = {
   workspace: 'Workspace',
   workspaces: 'Workspaces',
-  apiSpec: 'Document',
+  document: 'Document',
   home: 'Dashboard',
 };

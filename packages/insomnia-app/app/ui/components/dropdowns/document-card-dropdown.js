@@ -42,7 +42,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     const { fileName } = apiSpec;
 
     showPrompt({
-      title: `Duplicate ${strings.apiSpec}`,
+      title: `Duplicate ${strings.document}`,
       defaultValue: fileName,
       submitName: 'Create',
       selectText: true,
@@ -62,7 +62,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     const { apiSpec } = this.props;
 
     showPrompt({
-      title: `Rename ${strings.apiSpec}`,
+      title: `Rename ${strings.document}`,
       defaultValue: apiSpec.fileName,
       submitName: 'Rename',
       selectText: true,
@@ -79,12 +79,12 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     const messages = [
       `Do you really want to delete "${apiSpec.fileName}"?`,
       isLastWorkspace
-        ? ` This is the only ${strings.apiSpec.toLowerCase()} so a new one will be created for you.`
+        ? ` This is the only ${strings.document.toLowerCase()} so a new one will be created for you.`
         : null,
     ];
 
     showModal(AskModal, {
-      title: `Delete ${strings.apiSpec}`,
+      title: `Delete ${strings.document}`,
       message: messages.join(' '),
       yesText: 'Yes',
       noText: 'Cancel',
