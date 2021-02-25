@@ -152,6 +152,14 @@ async function getNunjucks(renderMode: string) {
 
   const nj = nunjucks.configure(config);
 
+  // let allTemplateTagPlugins: Array<TemplateTag>;
+  // try {
+  //   plugins.ignorePlugin('insomnia-plugin-kong-bundle');
+  //   allTemplateTagPlugins = await plugins.getTemplateTags();
+  // } finally {
+  //   plugins.clearIgnores();
+  // }
+
   const allTemplateTagPlugins = await plugins.getTemplateTags();
   const allExtensions = allTemplateTagPlugins;
   for (let i = 0; i < allExtensions.length; i++) {
