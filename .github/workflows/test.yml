@@ -38,7 +38,7 @@ jobs:
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v2
         with:
-          name: smoke-test-screenshots
+          name: ${{ matrix.os }}-smoke-test-screenshots
           path: packages/insomnia-smoke-test/screenshots
       - name: Run CLI smoke tests
         run: npm run test:smoke:cli
