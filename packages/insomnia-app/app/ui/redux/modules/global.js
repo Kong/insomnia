@@ -234,7 +234,7 @@ export function loadRequestStop(requestId) {
 function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
   switch (currentActivity) {
     case ACTIVITY_MIGRATION:
-      // Have we the onboarding step? Go to home, otherwise go to onboarding
+      // Has seen the onboarding step? Go to home, otherwise go to onboarding
       return settings.hasPromptedOnboarding ? ACTIVITY_HOME : ACTIVITY_ONBOARDING;
     case ACTIVITY_ONBOARDING:
       // Always go to home after onboarding

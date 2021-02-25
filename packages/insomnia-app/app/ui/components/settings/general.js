@@ -551,10 +551,12 @@ class General extends React.PureComponent<Props, State> {
             <h2>Development</h2>
             <div className="form-row pad-top-sm">
               {this.renderBooleanSetting(
-                'Has prompted to migrate',
+                'Has been prompted to migrate from Insomnia Designer',
                 'hasPromptedToMigrateFromDesigner',
               )}
-              {this.renderBooleanSetting('Has prompted Onboarding', 'hasPromptedOnboarding')}
+            </div>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting('Has seen onboarding experience', 'hasPromptedOnboarding')}
             </div>
           </>
         )}
