@@ -41,7 +41,13 @@ describe('Migration', function() {
     await client.correctlyLaunched(app);
 
     await migration.migrationMessageShown(app);
+    await migration.ensureStartNotClickable(app);
+
+    await migration.toggleOption(app, 'Copy Workspaces');
+    await migration.toggleOption(app, 'Copy Plugins');
+    await migration.toggleOption(app, 'Copy Designer Application Settings');
     await migration.clickStart(app);
+
     await migration.successMessageShown(app);
     await migration.clickRestart(app);
 
