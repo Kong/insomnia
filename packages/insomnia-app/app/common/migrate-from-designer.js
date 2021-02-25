@@ -99,10 +99,18 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   const corePluginDir = fsPath.join(coreDataDir, 'plugins');
 
   // get list of plugins in Designer
-  const designerPlugins = await fs.promises.readdir(designerPluginDir);
+  const designerPlugins = await readDirs(designerPluginDir);
 
   await removeDirs(designerPlugins, corePluginDir);
   await copyDirs(designerPlugins, designerPluginDir, corePluginDir);
+}
+
+async function readDirs(srcDir: string): Array<string> {
+  if (fs.existsSync(srcDir)) {
+    return await fs.promises.readdir(srcDir);
+  } else {
+    return [];
+  }
 }
 
 async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
