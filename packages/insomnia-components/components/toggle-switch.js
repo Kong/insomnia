@@ -9,7 +9,7 @@ type Props = {
   checked?: boolean,
   disabled?: boolean,
   onChange(checked: boolean, Event, string): void | Promise<void>,
-  label?: string,
+  label?: React.Node,
 };
 
 const ThemedSwitch: React.ComponentType<{ checked: boolean }> = styled(Switch)`

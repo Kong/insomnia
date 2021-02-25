@@ -9,6 +9,7 @@ import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
 import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';
+import HelpTooltip from './help-tooltip';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -16,7 +17,9 @@ type SettingProps = {
   label: string,
   name: $Keys<MigrationOptions>,
   options: MigrationOptions,
+  help?: string,
 };
+
 type TextSettingProps = SettingProps & {
   handleChange: (SyntheticEvent<HTMLInputElement>) => void,
 };
@@ -38,17 +41,27 @@ const TextSetting = ({ handleChange, label, name, options }: TextSettingProps) =
 type BooleanSettingProps = SettingProps & {
   handleChange: (boolean, Object, string) => void,
 };
-const BooleanSetting = ({ handleChange, label, name, options }: BooleanSettingProps) => {
+const BooleanSetting = ({ handleChange, label, name, options, help }: BooleanSettingProps) => {
   if (!options.hasOwnProperty(name)) {
     throw new Error(`Invalid text setting name ${name}`);
   }
+
+  const labelNode = React.useMemo(
+    () => (
+      <>
+        {label}
+        {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+      </>
+    ),
+    [help, label],
+  );
 
   return (
     <ToggleSwitch
       labelClassName="row margin-bottom wide"
       checked={options[name]}
       id={name}
-      label={label}
+      label={labelNode}
       onChange={handleChange}
     />
   );
@@ -58,8 +71,8 @@ type OptionsProps = { start: MigrationOptions => void, cancel: () => void };
 const Options = ({ start, cancel }: OptionsProps) => {
   const [options, setOptions] = React.useState<MigrationOptions>(() => ({
     useDesignerSettings: false,
-    copyResponses: true,
-    copyPlugins: true,
+    copyWorkspaces: false,
+    copyPlugins: false,
     designerDataDir: getDesignerDataDir(),
     coreDataDir: getDataDirectory(),
   }));
@@ -72,6 +85,8 @@ const Options = ({ start, cancel }: OptionsProps) => {
     setOptions(prevOpts => ({ ...prevOpts, [id]: checked }));
   }, []);
 
+  const canStart = options.useDesignerSettings || options.copyWorkspaces || options.copyPlugins;
+
   return (
     <>
       <p>
@@ -83,22 +98,29 @@ const Options = ({ start, cancel }: OptionsProps) => {
       </p>
       <div className="text-left margin-top">
         <BooleanSetting
-          label="Copy Designer Application Settings"
-          name="useDesignerSettings"
+          label="Copy Workspaces"
+          name="copyWorkspaces"
           options={options}
           handleChange={handleSwitchChange}
+          help={
+            'This includes all resources linked to a workspace (eg. requests, proto files, environments, etc)'
+          }
         />
         <BooleanSetting
           label="Copy Plugins"
           name="copyPlugins"
           options={options}
           handleChange={handleSwitchChange}
+          help={
+            'Merge plugins between Designer and Insomnia, keeping the Designer version where a duplicate exists'
+          }
         />
         <BooleanSetting
-          label="Copy Responses"
-          name="copyResponses"
+          label="Copy Designer Application Settings"
+          name="useDesignerSettings"
           options={options}
           handleChange={handleSwitchChange}
+          help={'Keep user preferences from Designer'}
         />
         <details>
           <summary className="margin-bottom">Advanced options</summary>
@@ -118,7 +140,11 @@ const Options = ({ start, cancel }: OptionsProps) => {
       </div>
 
       <div className="margin-top">
-        <button key="start" className="btn btn--clicky" onClick={() => start(options)}>
+        <button
+          key="start"
+          className="btn btn--clicky"
+          onClick={() => start(options)}
+          disabled={!canStart}>
           Start Migration
         </button>
         <button key="cancel" className="btn btn--super-compact" onClick={cancel}>
