@@ -105,8 +105,11 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
   }
 
   async _onOpen() {
-    const plugins = await getDocumentActions();
-    this.setState({ actionPlugins: plugins });
+    // Only load document plugins if the scope is designer, for now
+    if (this.props.workspace.scope === 'designer') {
+      const plugins = await getDocumentActions();
+      this.setState({ actionPlugins: plugins });
+    }
   }
 
   async _handlePluginClick(p: DocumentAction) {
