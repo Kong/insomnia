@@ -35,5 +35,10 @@ jobs:
       - name: Run smoke tests
         timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
         run: npm run test:smoke:build
+      - name: Upload smoke test screenshots
+        uses: actions/upload-artifact@v2
+        with:
+          name: smoke-test-screenshots
+          path: packages/insomnia-smoke-test/screenshots
       - name: Run CLI smoke tests
         run: npm run test:smoke:cli

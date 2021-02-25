@@ -88,7 +88,7 @@ export const stop = async app => {
   }
 };
 
-export const takeScreenshotOnFailure = async app => {
+const takeScreenshotOnFailure = async app => {
   if (jasmine.currentTest.failedExpectations.length) {
     await takeScreenshot(app, jasmine.currentTest.fullName.replace(/ /g, '_'));
   }

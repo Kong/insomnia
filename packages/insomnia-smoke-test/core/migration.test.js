@@ -5,7 +5,7 @@ import * as migration from '../modules/migration';
 import * as home from '../modules/home';
 import path from 'path';
 
-describe('Application launch', function() {
+describe('Migration', function() {
   jest.setTimeout(50000);
   let app = null;
 
