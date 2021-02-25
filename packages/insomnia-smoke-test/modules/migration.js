@@ -1,5 +1,4 @@
 export const migrationMessageShown = async app => {
-  console.log('waiting for migration message');
   await app.client.waitUntilTextExists(
     '.onboarding__content__body p strong',
     'Migrate from Insomnia Designer',
@@ -23,7 +22,6 @@ export const clickStart = async app => {
 };
 
 export const successMessageShown = async app => {
-  console.log('waiting for success message');
   await app.client.waitUntilTextExists(
     '.onboarding__content__body p strong',
     'Migrated successfully!',
