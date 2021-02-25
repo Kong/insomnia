@@ -2,15 +2,13 @@
 
 import * as React from 'react';
 import type { WrapperProps } from './wrapper';
-import { ACTIVITY_HOME } from '../../common/constants';
 import { ToggleSwitch } from 'insomnia-components';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { restartApp } from '../../common/migrate-from-designer';
 import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
-import { bindActionCreators } from 'redux';
-import * as globalActions from '../redux/modules/global';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
+import { goToNextActivity } from '../redux/modules/global';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -199,14 +197,12 @@ const Fail = ({ error }: FailProps) => (
   </>
 );
 
-type MigrationBodyProps = {
-  handleSetActiveActivity: (activity?: GlobalActivity) => void,
-};
-const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
+const MigrationBody = () => {
+  // The migration step does not need to be in redux, but a loading state does need to exist there.
   const [step, setStep] = React.useState<Step>('options');
   const [error, setError] = React.useState<Error>(null);
 
-  const doMigration = React.useCallback(async (options: MigrationOptions) => {
+  const start = React.useCallback(async (options: MigrationOptions) => {
     setStep('migrating');
     const { error } = await migrateFromDesigner(options);
     if (error) {
@@ -215,13 +211,14 @@ const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
     setStep('results');
   }, []);
 
+  const reduxDispatch = useDispatch();
   const cancel = React.useCallback(() => {
-    handleSetActiveActivity(ACTIVITY_HOME);
-  }, [handleSetActiveActivity]);
+    reduxDispatch(goToNextActivity());
+  }, [reduxDispatch]);
 
   switch (step) {
     case 'options':
-      return <Options start={doMigration} cancel={cancel} />;
+      return <Options start={start} cancel={cancel} />;
     case 'migrating':
       return <Migrating />;
     case 'results':
@@ -233,20 +230,12 @@ const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleSetActiveActivity: (activity?: GlobalActivity) => void,
 |};
 
-const WrapperMigration = ({ wrapperProps, handleSetActiveActivity }: Props) => (
+const WrapperMigration = ({ wrapperProps }: Props) => (
   <OnboardingContainer wrapperProps={wrapperProps}>
-    <MigrationBody handleSetActiveActivity={handleSetActiveActivity} />
+    <MigrationBody />
   </OnboardingContainer>
 );
 
-function mapDispatchToProps(dispatch) {
-  const global = bindActionCreators(globalActions, dispatch);
-  return {
-    handleSetActiveActivity: global.setActiveActivity,
-  };
-}
-
-export default connect(null, mapDispatchToProps)(WrapperMigration);
+export default WrapperMigration;

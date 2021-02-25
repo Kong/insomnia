@@ -19,7 +19,7 @@ import {
   UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
 import HelpTooltip from '../help-tooltip';
-import type { HttpVersion } from '../../../common/constants';
+import type { GlobalActivity, HttpVersion } from '../../../common/constants';
 
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
@@ -536,24 +536,27 @@ class General extends React.PureComponent<Props, State> {
         <hr className="pad-top" />
 
         <h2>Migrate from Designer</h2>
+        <div className="form-row--start pad-top-sm">
+          <button className="btn btn--clicky pointer" onClick={this._handleStartMigration}>
+            Show migration workflow
+          </button>
+        </div>
+
         {isDevelopment() && (
           <>
+            <hr className="pad-top" />
+            <h2>Development</h2>
             <div className="form-row pad-top-sm">
               {this.renderBooleanSetting(
-                'Has prompted to migrate',
+                'Has been prompted to migrate from Insomnia Designer',
                 'hasPromptedToMigrateFromDesigner',
               )}
             </div>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting('Has seen onboarding experience', 'hasPromptedOnboarding')}
+            </div>
           </>
         )}
-        <div className="form-row pad-top-sm">
-          <button
-            className="btn btn--clicky pointer"
-            style={{ padding: 0 }}
-            onClick={this._handleStartMigration}>
-            Migrate from Designer
-          </button>
-        </div>
       </div>
     );
   }
