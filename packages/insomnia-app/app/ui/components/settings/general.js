@@ -536,18 +536,15 @@ class General extends React.PureComponent<Props, State> {
         <hr className="pad-top" />
 
         <h2>Migrate from Designer</h2>
-        <div className="form-row pad-top-sm">
-          <button
-            className="btn btn--clicky pointer"
-            style={{ padding: 0 }}
-            onClick={this._handleStartMigration}>
-            Migrate
+        <div className="form-row--start pad-top-sm">
+          <button className="btn btn--clicky pointer" onClick={this._handleStartMigration}>
+            Show migration workflow
           </button>
         </div>
-        <hr className="pad-top" />
 
         {isDevelopment() && (
           <>
+            <hr className="pad-top" />
             <h2>Development</h2>
             <div className="form-row pad-top-sm">
               {this.renderBooleanSetting(
