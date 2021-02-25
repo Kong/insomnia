@@ -220,7 +220,7 @@ describe('global', () => {
       'something',
       null,
       undefined,
-    )('should go to home is intialized with an unsupported value: %s', async activity => {
+    )('should go to home if initialized with an unsupported value: %s', async activity => {
       const settings = createSettings(true, true);
 
       const store = mockStore({ global: {}, entities: { settings: [settings] } });
