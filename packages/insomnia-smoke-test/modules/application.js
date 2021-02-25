@@ -2,6 +2,8 @@ import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
 import electronPath from '../../insomnia-app/node_modules/electron';
+import mkdirp from 'mkdirp';
+import fs from 'fs';
 
 const getAppPlatform = () => process.platform;
 const isMac = () => getAppPlatform() === 'darwin';
@@ -57,7 +59,7 @@ const launch = async config => {
     // Don't remove chromeDriverArgs
     // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
     chromeDriverArgs: ['remote-debugging-port=9222'],
-    waitTimeout: 40000,
+    // waitTimeout: 40000,
 
     env: config.env,
   });
@@ -75,12 +77,25 @@ const launch = async config => {
     //  https://github.com/electron-userland/spectron/issues/763
     await app.client.setTimeout({ implicit: 0 });
   });
-
   return app;
 };
 
 export const stop = async app => {
+  await takeScreenshotOnFailure(app);
+
   if (app && app.isRunning()) {
     await app.stop();
   }
+};
+
+export const takeScreenshotOnFailure = async app => {
+  if (jasmine.currentTest.failedExpectations.length) {
+    await takeScreenshot(app, jasmine.currentTest.fullName.replace(/ /g, '_'));
+  }
+};
+
+export const takeScreenshot = async (app, name) => {
+  mkdirp.sync('screenshots');
+  const buffer = await app.browserWindow.capturePage();
+  await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
 };
