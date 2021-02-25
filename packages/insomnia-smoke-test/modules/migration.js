@@ -10,15 +10,16 @@ export const clickSkip = async app => {
   const button = await app.client
     .$('.onboarding__content__body')
     .then(e => e.$(`button=Skip for now`));
-  await button.waitForDisplayed();
+  await button.waitForClickable();
   await button.click();
 };
 
 export const clickStart = async app => {
-  await app.client
+  const button = await app.client
     .$('.onboarding__content__body')
-    .then(e => e.$(`button=Start Migration`))
-    .then(e => e.click());
+    .then(e => e.$(`button=Start Migration`));
+  await button.waitForClickable();
+  await button.click();
 };
 
 export const successMessageShown = async app => {
