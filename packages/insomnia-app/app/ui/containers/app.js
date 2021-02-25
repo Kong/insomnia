@@ -1127,6 +1127,41 @@ class App extends PureComponent {
     }
   }
 
+  async _handleDbChange(changes) {
+    let needsRefresh = false;
+
+    for (const change of changes) {
+      const [type, doc, fromSync] = change;
+
+      const { vcs } = this.state;
+      const { activeRequest } = this.props;
+
+      // Force refresh if environment changes
+      // TODO: Only do this for environments in this workspace (not easy because they're nested)
+      if (doc.type === models.environment.type) {
+        console.log('[App] Forcing update from environment change', change);
+        needsRefresh = true;
+      }
+
+      // Force refresh if sync changes the active request
+      if (fromSync && activeRequest && doc._id === activeRequest._id) {
+        needsRefresh = true;
+        console.log('[App] Forcing update from request change', change);
+      }
+
+      // Delete VCS project if workspace deleted
+      if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
+        await vcs.removeProjectsForRoot(doc._id);
+      }
+    }
+
+    if (needsRefresh) {
+      setTimeout(() => {
+        this._wrapper && this._wrapper._forceRequestPaneRefresh();
+      }, 300);
+    }
+  }
+
   async componentDidMount() {
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
@@ -1140,40 +1175,7 @@ class App extends PureComponent {
     await this._updateVCS();
     await this._updateGitVCS(this.props.activeWorkspace);
 
-    db.onChange(async changes => {
-      let needsRefresh = false;
-
-      for (const change of changes) {
-        const [type, doc, fromSync] = change;
-
-        const { vcs } = this.state;
-        const { activeRequest } = this.props;
-
-        // Force refresh if environment changes
-        // TODO: Only do this for environments in this workspace (not easy because they're nested)
-        if (doc.type === models.environment.type) {
-          console.log('[App] Forcing update from environment change', change);
-          needsRefresh = true;
-        }
-
-        // Force refresh if sync changes the active request
-        if (fromSync && activeRequest && doc._id === activeRequest._id) {
-          needsRefresh = true;
-          console.log('[App] Forcing update from request change', change);
-        }
-
-        // Delete VCS project if workspace deleted
-        if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
-          await vcs.removeProjectsForRoot(doc._id);
-        }
-      }
-
-      if (needsRefresh) {
-        setTimeout(() => {
-          this._wrapper && this._wrapper._forceRequestPaneRefresh();
-        }, 300);
-      }
-    });
+    db.onChange(this._handleDbChange);
 
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
@@ -1250,6 +1252,7 @@ class App extends PureComponent {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
+    db.offChange(this._handleDbChange);
   }
 
   async _ensureWorkspaceChildren() {
@@ -1401,6 +1404,7 @@ App.propTypes = {
     _id: PropTypes.string.isRequired,
   }).isRequired,
   handleSetActiveActivity: PropTypes.func.isRequired,
+  handleGoToNextActivity: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
@@ -1539,6 +1543,7 @@ function mapDispatchToProps(dispatch) {
     handleStopLoading: global.loadRequestStop,
 
     handleSetActiveActivity: global.setActiveActivity,
+    handleGoToNextActivity: global.goToNextActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
     handleImportClipBoardToWorkspace: global.importClipBoard,

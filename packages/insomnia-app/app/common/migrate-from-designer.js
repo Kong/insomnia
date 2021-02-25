@@ -99,10 +99,18 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   const corePluginDir = fsPath.join(coreDataDir, 'plugins');
 
   // get list of plugins in Designer
-  const designerPlugins = await fs.promises.readdir(designerPluginDir);
+  const designerPlugins = await readDirs(designerPluginDir);
 
   await removeDirs(designerPlugins, corePluginDir);
   await copyDirs(designerPlugins, designerPluginDir, corePluginDir);
+}
+
+async function readDirs(srcDir: string): Array<string> {
+  if (fs.existsSync(srcDir)) {
+    return await fs.promises.readdir(srcDir);
+  } else {
+    return [];
+  }
 }
 
 async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
@@ -110,14 +118,20 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
     const src = fsPath.join(srcDir, dir);
     const dest = fsPath.join(destDir, dir);
 
-    await fsx.ensureDir(dest);
-    await fsx.copy(src, dest);
+    // If source exists, ensure the destination exists, and copy into it
+    if (fs.existsSync(src)) {
+      await fsx.ensureDir(dest);
+      await fsx.copy(src, dest);
+    }
   }
 }
 
 async function removeDirs(dirs: Array<string>, srcDir: string) {
   for (const dir of dirs.filter(c => c)) {
-    await fsx.remove(fsPath.join(srcDir, dir));
+    const dirToRemove = fsPath.join(srcDir, dir);
+    if (fs.existsSync(dirToRemove)) {
+      await fsx.remove(dirToRemove);
+    }
   }
 }
 
@@ -159,8 +173,16 @@ export default async function migrateFromDesigner({
         if (useDesignerSettings) {
           console.log(`[db-merge] keeping settings from Insomnia Designer`);
           const coreSettings = await models.settings.getOrCreate();
-          (entries[0]: Settings)._id = coreSettings._id;
-          (entries[0]: Settings).hasPromptedToMigrateFromDesigner = true;
+          const propertiesToPersist = [
+            '_id',
+            'hasPromptedOnboarding',
+            'hasPromptedToMigrateFromDesigner',
+          ];
+          propertiesToPersist.forEach(s => {
+            if (coreSettings.hasOwnProperty(s)) {
+              (entries[0]: Settings)[s] = coreSettings[s];
+            }
+          });
         } else {
           console.log(`[db-merge] keeping settings from Insomnia Core`);
           continue;
