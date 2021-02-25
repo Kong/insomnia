@@ -6,7 +6,9 @@ servers:
   - url: http://backend.com/path
 paths:
   /:
+    x-kong-name: x-kong-name-override-at-path-item
     get:
+      x-kong-name: x-kong-name-override-at-method
       operationId: listVersionsv2
       summary: List API versions
       responses:
@@ -78,6 +80,7 @@ paths:
                      ]
                     }
   /v2:
+    x-kong-name: x-kong-name-override-at-path-item
     get:
       operationId: getVersionDetailsv2
       summary: Show API version details
