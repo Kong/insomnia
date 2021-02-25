@@ -31,20 +31,24 @@ export function getSendRequestCallback(environmentId) {
 }
 
 async function sendAndTransform(requestId, environmentId) {
-  plugins.ignorePlugin('insomnia-plugin-kong-bundle');
-  const res = await send(requestId, environmentId);
-  const headersObj = {};
-  for (const h of res.headers || []) {
-    const name = h.name || '';
-    headersObj[name.toLowerCase()] = h.value || '';
+  try {
+    plugins.ignorePlugin('insomnia-plugin-kong-bundle');
+    const res = await send(requestId, environmentId);
+    const headersObj = {};
+    for (const h of res.headers || []) {
+      const name = h.name || '';
+      headersObj[name.toLowerCase()] = h.value || '';
+    }
+
+    const bodyBuffer = await getBodyBuffer(res);
+
+    return {
+      status: res.statusCode,
+      statusMessage: res.statusMessage,
+      data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
+      headers: headersObj,
+    };
+  } finally {
+    plugins.clearIgnores();
   }
-
-  const bodyBuffer = await getBodyBuffer(res);
-
-  return {
-    status: res.statusCode,
-    statusMessage: res.statusMessage,
-    data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
-    headers: headersObj,
-  };
 }
