@@ -212,15 +212,19 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
     };
 
     for (const p of appConfig().plugins) {
-      if (ignorePlugins.includes(p)) {
-        continue;
+      try {
+        if (ignorePlugins.includes(p)) {
+          continue;
+        }
+        const pluginJson = global.require(`${p}/package.json`);
+        if (ignorePlugins.includes(pluginJson.name)) {
+          continue;
+        }
+        const pluginModule = global.require(p);
+        pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
+      } catch (e) {
+        console.warn(`failed to load ${p}`, e);
       }
-      const pluginJson = global.require(`${p}/package.json`);
-      if (ignorePlugins.includes(pluginJson.name)) {
-        continue;
-      }
-      const pluginModule = global.require(p);
-      pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
     }
 
     await _traversePluginPath(pluginMap, allPaths, allConfigs);
