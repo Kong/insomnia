@@ -10,7 +10,7 @@ import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import { parseApiSpec } from '../../../common/api-specs';
-import Strings from '../../../common/strings';
+import { strings } from '../../../common/strings';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
@@ -42,7 +42,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     const { fileName } = apiSpec;
 
     showPrompt({
-      title: `Duplicate ${Strings.apiSpec}`,
+      title: `Duplicate ${strings.apiSpec}`,
       defaultValue: fileName,
       submitName: 'Create',
       selectText: true,
@@ -62,7 +62,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     const { apiSpec } = this.props;
 
     showPrompt({
-      title: `Rename ${Strings.apiSpec}`,
+      title: `Rename ${strings.apiSpec}`,
       defaultValue: apiSpec.fileName,
       submitName: 'Rename',
       selectText: true,
@@ -79,12 +79,12 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
     const messages = [
       `Do you really want to delete "${apiSpec.fileName}"?`,
       isLastWorkspace
-        ? ` This is the only ${Strings.apiSpec.toLowerCase()} so a new one will be created for you.`
+        ? ` This is the only ${strings.apiSpec.toLowerCase()} so a new one will be created for you.`
         : null,
     ];
 
     showModal(AskModal, {
-      title: `Delete ${Strings.apiSpec}`,
+      title: `Delete ${strings.apiSpec}`,
       message: messages.join(' '),
       yesText: 'Yes',
       noText: 'Cancel',

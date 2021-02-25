@@ -1,4 +1,4 @@
-export default {
+export const strings = {
   workspace: 'Workspace',
   workspaces: 'Workspaces',
   apiSpec: 'Document',

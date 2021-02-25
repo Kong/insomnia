@@ -94,7 +94,7 @@ import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../..
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
-import AppContext from '../../common/strings';
+import { strings } from '../../common/strings';
 import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
@@ -416,9 +416,8 @@ class App extends PureComponent {
 
   _workspaceRename(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    console.dir(AppContext);
     showPrompt({
-      title: `Rename ${AppContext.workspace}`,
+      title: `Rename ${strings.workspace}`,
       defaultValue: workspace.name,
       submitName: 'Rename',
       selectText: true,
@@ -433,7 +432,7 @@ class App extends PureComponent {
   _workspaceDeleteById(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
     showModal(AskModal, {
-      title: `Delete ${AppContext.workspace}`,
+      title: `Delete ${strings.workspace}`,
       message: `Do you really want to delete ${workspace.name}?`,
       yesText: 'Yes',
       noText: 'Cancel',
@@ -453,7 +452,7 @@ class App extends PureComponent {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
 
     showPrompt({
-      title: `Duplicate ${AppContext.workspace}`,
+      title: `Duplicate ${strings.workspace}`,
       defaultValue: workspace.name,
       submitName: 'Create',
       selectText: true,
