@@ -3,6 +3,7 @@ import nunjucks from 'nunjucks';
 import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 import * as plugins from '../plugins/index';
+import type { TemplateTag } from '../plugins/index';
 
 export class RenderError extends Error {
   message: string;
@@ -152,7 +153,14 @@ async function getNunjucks(renderMode: string) {
 
   const nj = nunjucks.configure(config);
 
-  const allTemplateTagPlugins = await plugins.getTemplateTags();
+  let allTemplateTagPlugins: Array<TemplateTag>;
+  try {
+    plugins.ignorePlugin('insomnia-plugin-kong-bundle');
+    allTemplateTagPlugins = await plugins.getTemplateTags();
+  } finally {
+    plugins.clearIgnores();
+  }
+
   const allExtensions = allTemplateTagPlugins;
   for (let i = 0; i < allExtensions.length; i++) {
     const { templateTag, plugin } = allExtensions[i];
