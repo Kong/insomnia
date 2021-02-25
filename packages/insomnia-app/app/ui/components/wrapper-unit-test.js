@@ -27,6 +27,7 @@ import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../common/send-request';
 import type { GlobalActivity } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
+import { trackSegmentEvent } from '../../common/analytics';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -148,6 +149,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           code: this.generateSendReqSnippet('', ''),
           name,
         });
+        trackSegmentEvent('UnitTest Created');
       },
     });
   }

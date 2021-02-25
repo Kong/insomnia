@@ -39,6 +39,14 @@ export function getGoogleAnalyticsLocation() {
   return appConfig().gaLocation;
 }
 
+export function getSegmentWriteKey() {
+  if (isDevelopment()) {
+    return appConfig().segmentWriteKeys.development;
+  }
+
+  return appConfig().segmentWriteKeys.production;
+}
+
 export function getAppPlatform() {
   return process.platform;
 }
