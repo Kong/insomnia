@@ -267,7 +267,7 @@ export function goToNextActivity() {
   Go to an explicit activity
  */
 export function setActiveActivity(activity: GlobalActivity) {
-  activity = _normalizaActivity(activity);
+  activity = _normalizeActivity(activity);
 
   // Don't need to await settings update
   switch (activity) {
@@ -683,7 +683,7 @@ function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
   return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
 }
 
-function _normalizaActivity(activity: GlobalActivity): GlobalActivity {
+function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   activity = _migrateDeprecatedActivity(activity);
 
   if (isValidActivity(activity)) {
@@ -715,7 +715,7 @@ export function initActiveActivity() {
       // Nothing here...
     }
 
-    activeActivity = _normalizaActivity(activeActivity);
+    activeActivity = _normalizeActivity(activeActivity);
 
     let overrideActivity = null;
     switch (activeActivity) {
