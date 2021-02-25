@@ -37,6 +37,7 @@ jobs:
         run: npm run test:smoke:build
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           name: ${{ matrix.os }}-smoke-test-screenshots
           path: packages/insomnia-smoke-test/screenshots
