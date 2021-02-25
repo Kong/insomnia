@@ -89,8 +89,7 @@ export function getClientString() {
 }
 
 export function changelogUrl(): string {
-  const { changelogBaseUrl, version } = appConfig();
-  return `${changelogBaseUrl}/${version}`;
+  return appConfig().changelogUrl;
 }
 
 // Global Stuff
@@ -149,6 +148,10 @@ export const MIN_PANE_HEIGHT = 0.01;
 export const DEFAULT_PANE_WIDTH = 0.5;
 export const DEFAULT_PANE_HEIGHT = 0.5;
 export const DEFAULT_SIDEBAR_WIDTH = 19;
+export const MIN_INTERFACE_FONT_SIZE = 8;
+export const MAX_INTERFACE_FONT_SIZE = 24;
+export const MIN_EDITOR_FONT_SIZE = 8;
+export const MAX_EDITOR_FONT_SIZE = 24;
 
 // Activities
 export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home' | 'migration' | 'onboarding';
