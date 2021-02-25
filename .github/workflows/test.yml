@@ -39,6 +39,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
+          if-no-files-found: ignore
           name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
           path: packages/insomnia-smoke-test/screenshots
       - name: Run CLI smoke tests
