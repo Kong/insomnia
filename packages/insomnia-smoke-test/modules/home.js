@@ -4,6 +4,7 @@ export const documentListingShown = async app => {
 };
 
 export const expectDocumentWithTitle = async (app, title) => {
+  console.log(`waiting for document with title ${title}`);
   await app.client.waitUntilTextExists('.document-listing__body', title);
 };
 

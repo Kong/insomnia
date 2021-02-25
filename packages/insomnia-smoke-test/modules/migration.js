@@ -1,4 +1,5 @@
 export const migrationMessageShown = async app => {
+  console.log('waiting for migration message');
   await app.client.waitUntilTextExists(
     '.onboarding__content__body p strong',
     'Migrate from Insomnia Designer',
@@ -6,10 +7,11 @@ export const migrationMessageShown = async app => {
 };
 
 export const clickSkip = async app => {
-  await app.client
+  const button = await app.client
     .$('.onboarding__content__body')
-    .then(e => e.$(`button=Skip for now`))
-    .then(e => e.click());
+    .then(e => e.$(`button=Skip for now`));
+  await button.waitForDisplayed();
+  await button.click();
 };
 
 export const clickStart = async app => {
@@ -20,6 +22,7 @@ export const clickStart = async app => {
 };
 
 export const successMessageShown = async app => {
+  console.log('waiting for success message');
   await app.client.waitUntilTextExists(
     '.onboarding__content__body p strong',
     'Migrated successfully!',

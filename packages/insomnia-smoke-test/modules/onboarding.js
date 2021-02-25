@@ -1,4 +1,6 @@
 export const analyticsMessageShown = async app => {
+  console.log(`waiting for analytics`);
+
   await app.client.waitUntilTextExists(
     '.onboarding__content__body p strong',
     'Share Usage Analytics with Kong Inc',
