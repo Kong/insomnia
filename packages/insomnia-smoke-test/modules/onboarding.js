@@ -1,7 +1,7 @@
-export const welcomeMessageShown = async app => {
+export const analyticsMessageShown = async app => {
   await app.client.waitUntilTextExists(
-    '.onboarding__content__header h1',
-    'Welcome to Insomnia Designer',
+    '.onboarding__content__body p strong',
+    'Share Usage Analytics with Kong Inc',
   );
 };
 

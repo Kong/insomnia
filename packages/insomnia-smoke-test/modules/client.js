@@ -5,7 +5,13 @@ export const correctlyLaunched = async app => {
   await expect(app.browserWindow.isFocused()).resolves.toBe(true);
 };
 
-export const resetToOnboarding = async app => {
-  await app.webContents.executeJavaScript("localStorage['insomnia::meta::activity'] = null;");
-  await app.browserWindow.reload(); // reload for local storage clearing to take effect
+export const focusAfterRestart = async app => {
+  await app.client.pause(4000);
+
+  const count = await app.client.getWindowCount();
+  if (count === 0) {
+    console.log('No windows found');
+  }
+
+  await app.client.windowByIndex(0);
 };
