@@ -287,7 +287,7 @@ class Plugins extends React.PureComponent<Props, State> {
             <div className="selectable force-pre-wrap">
               <b>{installPluginErrMsg}</b>
               {`\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the `}
-              <a href="https://insomnia.rest/plugins/">Plugin Hub.</a>
+              <a href="https://insomnia.rest/plugins">Plugin Hub.</a>
               <details>
                 <summary>Additionl Information</summary>
                 <pre className="pad-top-sm force-wrap selectable">

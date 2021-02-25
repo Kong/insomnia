@@ -28,3 +28,4 @@ graphql.config.json
 .cache
 .graphqlconfig
 schema.graphql
+packages/insomnia-smoke-test/screenshots

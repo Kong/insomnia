@@ -3,6 +3,8 @@ import { containsOnlyDeprecationWarnings, isDeprecatedDependencies } from '../pl
 describe('install.js', () => {
   describe('containsOnlyDeprecationWarning', () => {
     it('should return true when all lines in stderr are deprecation warnings', () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
       const stderr =
         // Warning #1
         'warning insomnia-plugin-xxx-yyy > xyz > xyz > xyz > xyz > xyz: ' +
@@ -17,8 +19,11 @@ describe('install.js', () => {
         'xyz is no longer maintained and not recommended for usage due to the number of issues. ' +
         'Please, upgrade your dependencies to the actual version of xyz.';
       expect(containsOnlyDeprecationWarnings(stderr)).toBe(true);
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(3);
     });
     it('should return false when stderr contains a deprecation warning and an error', () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
       const stderr =
         // Warning #1
         'warning insomnia-plugin-xxx-yyy > xyz > xyz > xyz > xyz > xyz: ' +
@@ -33,6 +38,7 @@ describe('install.js', () => {
         'xyz is no longer maintained and not recommended for usage due to the number of issues. ' +
         'Please, upgrade your dependencies to the actual version of xyz.';
       expect(containsOnlyDeprecationWarnings(stderr)).toBe(false);
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(2);
     });
   });
   describe('isDeprecatedDependencies', () => {

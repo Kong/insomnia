@@ -122,13 +122,13 @@ class Account extends React.PureComponent<Props, State> {
           </p>
           <br />
           <div className="pad">
-            <Link button className="btn btn--clicky" href="https://insomnia.rest/plus/">
+            <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing">
               Plus for Individuals <i className="fa fa-external-link" />
             </Link>
             <Link
               button
               className="margin-left-sm btn btn--clicky"
-              href="https://insomnia.rest/teams/">
+              href="https://insomnia.rest/pricing">
               Plus for Teams <i className="fa fa-external-link" />
             </Link>
           </div>

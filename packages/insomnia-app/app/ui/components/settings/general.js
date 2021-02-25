@@ -17,9 +17,13 @@ import {
   isWindows,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
+  MIN_INTERFACE_FONT_SIZE,
+  MAX_INTERFACE_FONT_SIZE,
+  MIN_EDITOR_FONT_SIZE,
+  MAX_EDITOR_FONT_SIZE,
 } from '../../../common/constants';
 import HelpTooltip from '../help-tooltip';
-import type { HttpVersion } from '../../../common/constants';
+import type { GlobalActivity, HttpVersion } from '../../../common/constants';
 
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
@@ -81,11 +85,22 @@ class General extends React.PureComponent<Props, State> {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
-    if (e.currentTarget.type === 'number') {
-      value = parseInt(value, 10);
+    if (el.type === 'number') {
+      value = parseInt(value, 10) || 0;
+      const min = parseInt(el.min, 10);
+      const max = parseInt(el.max, 10);
+
+      const moreThanMax = Number.isNaN(max) || value > max;
+      const lessThanMin = Number.isNaN(min) || value < min;
+
+      if (moreThanMax) {
+        value = max;
+      } else if (lessThanMin) {
+        value = min;
+      }
     }
 
-    if (e.currentTarget.value === '__NULL__') {
+    if (el.value === '__NULL__') {
       value = null;
     }
 
@@ -101,6 +116,7 @@ class General extends React.PureComponent<Props, State> {
 
   async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
+
     setFont(settings);
   }
 
@@ -280,9 +296,9 @@ class General extends React.PureComponent<Props, State> {
             </label>
           </div>
           {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-            min: 8,
-            max: 20,
-            onChange: this._handleFontSizeChange,
+            min: MIN_INTERFACE_FONT_SIZE,
+            max: MAX_INTERFACE_FONT_SIZE,
+            onBlur: this._handleFontSizeChange,
           })}
         </div>
 
@@ -310,8 +326,8 @@ class General extends React.PureComponent<Props, State> {
             </label>
           </div>
           {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
-            min: 8,
-            max: 20,
+            min: MIN_EDITOR_FONT_SIZE,
+            max: MAX_EDITOR_FONT_SIZE,
           })}
         </div>
 
@@ -536,24 +552,27 @@ class General extends React.PureComponent<Props, State> {
         <hr className="pad-top" />
 
         <h2>Migrate from Designer</h2>
+        <div className="form-row--start pad-top-sm">
+          <button className="btn btn--clicky pointer" onClick={this._handleStartMigration}>
+            Show migration workflow
+          </button>
+        </div>
+
         {isDevelopment() && (
           <>
+            <hr className="pad-top" />
+            <h2>Development</h2>
             <div className="form-row pad-top-sm">
               {this.renderBooleanSetting(
-                'Has prompted to migrate',
+                'Has been prompted to migrate from Insomnia Designer',
                 'hasPromptedToMigrateFromDesigner',
               )}
             </div>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting('Has seen onboarding experience', 'hasPromptedOnboarding')}
+            </div>
           </>
         )}
-        <div className="form-row pad-top-sm">
-          <button
-            className="btn btn--clicky pointer"
-            style={{ padding: 0 }}
-            onClick={this._handleStartMigration}>
-            Migrate from Designer
-          </button>
-        </div>
       </div>
     );
   }

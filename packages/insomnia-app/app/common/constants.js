@@ -89,8 +89,7 @@ export function getClientString() {
 }
 
 export function changelogUrl(): string {
-  const { changelogBaseUrl, version } = appConfig();
-  return `${changelogBaseUrl}/${version}`;
+  return appConfig().changelogUrl;
 }
 
 // Global Stuff
@@ -149,15 +148,48 @@ export const MIN_PANE_HEIGHT = 0.01;
 export const DEFAULT_PANE_WIDTH = 0.5;
 export const DEFAULT_PANE_HEIGHT = 0.5;
 export const DEFAULT_SIDEBAR_WIDTH = 19;
+export const MIN_INTERFACE_FONT_SIZE = 8;
+export const MAX_INTERFACE_FONT_SIZE = 24;
+export const MIN_EDITOR_FONT_SIZE = 8;
+export const MAX_EDITOR_FONT_SIZE = 24;
 
 // Activities
-export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home' | 'migration';
+export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home' | 'migration' | 'onboarding';
 export const ACTIVITY_SPEC: GlobalActivity = 'spec';
 export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
 export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
 export const ACTIVITY_HOME: GlobalActivity = 'home';
+export const ACTIVITY_ONBOARDING: GlobalActivity = 'onboarding';
 export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
+
+export const isWorkspaceActivity = (activity: GlobalActivity): boolean => {
+  switch (activity) {
+    case ACTIVITY_SPEC:
+    case ACTIVITY_DEBUG:
+    case ACTIVITY_UNIT_TEST:
+      return true;
+    case ACTIVITY_HOME:
+    case ACTIVITY_ONBOARDING:
+    case ACTIVITY_MIGRATION:
+    default:
+      return false;
+  }
+};
+
+export const isValidActivity = (activity: GlobalActivity): boolean => {
+  switch (activity) {
+    case ACTIVITY_SPEC:
+    case ACTIVITY_DEBUG:
+    case ACTIVITY_UNIT_TEST:
+    case ACTIVITY_HOME:
+    case ACTIVITY_ONBOARDING:
+    case ACTIVITY_MIGRATION:
+      return true;
+    default:
+      return false;
+  }
+};
 
 // HTTP Methods
 export const METHOD_GET = 'GET';

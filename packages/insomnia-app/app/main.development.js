@@ -43,12 +43,14 @@ global.window = global.window || undefined;
 app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
-  await errorHandling.init();
+  await _createModelInstances();
 
+  await errorHandling.init();
   await windowUtils.init();
 
   // Init the app
-  await _trackStats();
+  const updatedStats = await _trackStats();
+  await _updateFlags(updatedStats);
   await _launchApp();
 
   // Init the rest
@@ -135,7 +137,24 @@ function _launchApp() {
   });
 }
 
-async function _trackStats() {
+/*
+  Only one instance should exist of these models
+  On rare occasions, race conditions during initialization result in multiple being created
+  To avoid that, create them explicitly prior to any initialization steps
+ */
+async function _createModelInstances() {
+  await models.stats.get();
+  await models.settings.getOrCreate();
+}
+
+async function _updateFlags({ launches }: Stats) {
+  const firstLaunch = launches === 1;
+  if (firstLaunch) {
+    await models.settings.patch({ hasPromptedOnboarding: false });
+  }
+}
+
+async function _trackStats(): Promise<Stats> {
   // Handle the stats
   const oldStats = await models.stats.get();
   const stats: Stats = await models.stats.update({
@@ -179,4 +198,6 @@ async function _trackStats() {
       }
     }, 5000);
   });
+
+  return stats;
 }

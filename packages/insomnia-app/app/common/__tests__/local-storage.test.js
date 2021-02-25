@@ -43,6 +43,8 @@ describe('LocalStorage()', () => {
   });
 
   it('does handles malformed files', () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
 
@@ -53,9 +55,12 @@ describe('LocalStorage()', () => {
     // Assert that writing our file actually works
     fs.writeFileSync(path.join(basePath, 'key'), '{"good": "JSON"}');
     expect(localStorage.getItem('key', 'default')).toEqual({ good: 'JSON' });
+    expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
   it('does handles failing to write file', () => {
+    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
     const basePath = `/tmp/insomnia-localstorage-${Math.random()}`;
     const localStorage = new LocalStorage(basePath);
     fs.rmdirSync(basePath);
@@ -66,6 +71,7 @@ describe('LocalStorage()', () => {
     // Since the above operation failed to write, we should now get back
     // the default value
     expect(localStorage.getItem('key', 'different')).toBe('different');
+    expect(consoleErrorSpy).toHaveBeenCalled();
   });
 
   it('stores a key', () => {
