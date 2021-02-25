@@ -89,8 +89,7 @@ export function getClientString() {
 }
 
 export function changelogUrl(): string {
-  const { changelogBaseUrl, version } = appConfig();
-  return `${changelogBaseUrl}/${version}`;
+  return appConfig().changelogUrl;
 }
 
 // Global Stuff

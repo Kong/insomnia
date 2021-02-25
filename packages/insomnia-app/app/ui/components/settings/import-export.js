@@ -86,7 +86,7 @@ class ImportExport extends PureComponent {
             </DropdownItem>
           </Dropdown>
           &nbsp;&nbsp;
-          <Link href="https://insomnia.rest/create-run-button/" className="btn btn--compact" button>
+          <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
             Create Run Button
           </Link>
         </div>
