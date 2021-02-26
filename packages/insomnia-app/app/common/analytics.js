@@ -115,7 +115,7 @@ export async function trackSegmentEvent(event: String, properties?: Object) {
     if (!segmentClient) {
       segmentClient = new Analytics(getSegmentWriteKey(), {
         axiosConfig: {
-          adapter: global.require('axios/lib/adapters/http'),
+          ...(global?.require && { adapter: global.require('axios/lib/adapters/http') }),
         },
       });
     }
