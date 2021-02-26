@@ -115,12 +115,16 @@ export async function trackSegmentEvent(event: String, properties?: Object) {
     if (!segmentClient) {
       segmentClient = new Analytics(getSegmentWriteKey(), {
         axiosConfig: {
+          // This is needed to ensure that we use the NodeJS adapter in the render process
           ...(global?.require && { adapter: global.require('axios/lib/adapters/http') }),
         },
       });
     }
 
     const anonymousId = await getDeviceId();
+
+    // TODO: This currently always returns an empty string in the main process
+    // This is due to the session data being stored in localStorage
     const userId = getAccountId();
 
     segmentClient.track({
