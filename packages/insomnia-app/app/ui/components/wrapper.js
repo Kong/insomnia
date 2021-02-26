@@ -532,6 +532,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeGitRepository,
       activeRequest,
       activeWorkspace,
+      activeApiSpec,
       activeWorkspaceClientCertificates,
       activity,
       gitVCS,
@@ -661,6 +662,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               ref={registerModal}
               clientCertificates={activeWorkspaceClientCertificates}
               workspace={activeWorkspace}
+              apiSpec={activeApiSpec}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}
               editorKeyMap={settings.editorKeyMap}

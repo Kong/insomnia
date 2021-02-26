@@ -15,7 +15,7 @@ import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
 import type { Workspace } from '../../../models/workspace';
-import { isDocument } from '../../../models/helpers/is-model';
+import { isDesigner } from '../../../models/helpers/is-model';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 
 type Props = {
@@ -69,7 +69,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       selectText: true,
       label: 'Name',
       onComplete: async name => {
-        if (isDocument) {
+        if (isDesigner(workspace)) {
           await models.apiSpec.update(apiSpec, { fileName: name });
         } else {
           await models.workspace.update(workspace, { name });

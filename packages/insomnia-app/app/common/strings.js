@@ -1,6 +1,6 @@
 // @flow
 import type { Workspace } from '../models/workspace';
-import { isDocument } from '../models/helpers/is-model';
+import { isDesigner } from '../models/helpers/is-model';
 
 export const strings = {
   workspace: 'Workspace',
@@ -12,4 +12,4 @@ export const strings = {
 
 // Some helpers
 export const getWorkspaceLabel = (w: Workspace) =>
-  isDocument(w) ? strings.document : strings.collection;
+  isDesigner(w) ? strings.document : strings.collection;

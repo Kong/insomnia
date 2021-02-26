@@ -94,12 +94,13 @@ import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../..
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
-import { strings } from '../../common/strings';
+import { getWorkspaceLabel, strings } from '../../common/strings';
 import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
 import withDragDropContext from '../context/app/drag-drop-context';
+import getWorkspaceName from '../../models/helpers/get-workspace-name';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
@@ -450,15 +451,18 @@ class App extends PureComponent {
 
   _workspaceDuplicateById(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
 
     showPrompt({
-      title: `Duplicate ${strings.workspace}`,
-      defaultValue: workspace.name,
+      title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
         const newWorkspace = await db.duplicate(workspace, { name });
+        await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, { fileName: name });
+
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
 
