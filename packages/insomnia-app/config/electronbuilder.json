@@ -63,12 +63,15 @@
   "win": {
     "target": [
       "squirrel",
-      "zip"
+      "portable"
     ]
   },
   "squirrelWindows": {
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",
     "iconUrl": "__ICON_URL__"
+  },
+  "portable": {
+    "artifactName": "__BINARY_PREFIX__-${version}-portable.${ext}"
   },
   "linux": {
     "artifactName": "__BINARY_PREFIX__-${version}.${ext}",

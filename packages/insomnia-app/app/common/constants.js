@@ -84,6 +84,11 @@ export function isLinux() {
   return getAppPlatform() === 'linux';
 }
 
+export function updatesSupported() {
+  // Updates are not supported on Linux, or for Windows portable binaries
+  return !(isLinux() || (isWindows() && process.env.PORTABLE_EXECUTABLE_DIR));
+}
+
 export function isWindows() {
   return getAppPlatform() === 'win32';
 }
