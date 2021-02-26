@@ -142,20 +142,12 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const {
-      children,
-      workspaceId,
-      className,
-      handleDuplicateWorkspaceById,
-      handleRenameWorkspaceById,
-      handleDeleteWorkspaceById,
-      ...extraProps
-    } = this.props;
+    const { children, className } = this.props;
 
     const { actionPlugins, loadingActions } = this.state;
 
     return (
-      <Dropdown beside onOpen={this._onOpen} {...extraProps}>
+      <Dropdown beside onOpen={this._onOpen}>
         <DropdownButton className={className}>{children}</DropdownButton>
 
         <DropdownItem onClick={this._handleDuplicate}>Duplicate</DropdownItem>

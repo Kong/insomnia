@@ -418,14 +418,16 @@ class App extends PureComponent {
 
   _workspaceRename(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
+
     showPrompt({
-      title: `Rename ${strings.workspace}`,
-      defaultValue: workspace.name,
+      title: `Rename ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
       onComplete: async name => {
-        await models.workspace.update(workspace, { name: name });
+        await workspaceOperations.rename(workspace, apiSpec, name);
         callback();
       },
     });
