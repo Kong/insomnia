@@ -15,9 +15,9 @@ import MarkdownEditor from '../markdown-editor';
 import type { Workspace } from '../../../models/workspace';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import type { ApiSpec } from '../../../models/api-spec';
-import { isDesigner } from '../../../models/helpers/is-model';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import { getWorkspaceLabel } from '../../../common/strings';
+import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 
 type Props = {
   clientCertificates: Array<ClientCertificate>,
@@ -111,11 +111,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
   async _handleRename(name: string) {
     const { workspace, apiSpec } = this.props;
 
-    if (isDesigner(workspace)) {
-      await models.apiSpec.update(apiSpec, { fileName: name });
-    } else {
-      await models.workspace.update(workspace, { name });
-    }
+    await workspaceOperations.rename(workspace, apiSpec, name);
   }
 
   _handleDescriptionChange(description: string) {

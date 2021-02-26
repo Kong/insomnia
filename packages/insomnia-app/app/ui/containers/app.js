@@ -101,6 +101,7 @@ import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
 import withDragDropContext from '../context/app/drag-drop-context';
 import getWorkspaceName from '../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../models/helpers/workspace-operations';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
@@ -460,13 +461,10 @@ class App extends PureComponent {
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
-        const newWorkspace = await db.duplicate(workspace, { name });
-        await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, { fileName: name });
+        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
 
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
-
-        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
       },
     });
   }

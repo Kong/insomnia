@@ -11,12 +11,11 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import { parseApiSpec } from '../../../common/api-specs';
 import { getWorkspaceLabel } from '../../../common/strings';
-import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
 import type { Workspace } from '../../../models/workspace';
-import { isDesigner } from '../../../models/helpers/is-model';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 
 type Props = {
   apiSpec: ?ApiSpec,
@@ -49,10 +48,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       selectText: true,
       label: 'New Name',
       onComplete: async newName => {
-        const newWorkspace = await db.duplicate(workspace, { name: newName });
-        await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, { fileName: newName });
-
-        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
+        const newWorkspace = workspaceOperations.duplicate(workspace, newName);
 
         handleSetActiveWorkspace(newWorkspace._id);
       },
@@ -69,11 +65,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
       selectText: true,
       label: 'Name',
       onComplete: async name => {
-        if (isDesigner(workspace)) {
-          await models.apiSpec.update(apiSpec, { fileName: name });
-        } else {
-          await models.workspace.update(workspace, { name });
-        }
+        await workspaceOperations.rename(workspace, apiSpec, name);
       },
     });
   }
