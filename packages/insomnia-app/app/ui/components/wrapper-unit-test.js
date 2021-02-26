@@ -131,6 +131,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           name,
         });
         await this._handleSetActiveUnitTestSuite(unitTestSuite);
+        trackSegmentEvent('Test Suite Created');
       },
     });
   }
@@ -149,7 +150,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           code: this.generateSendReqSnippet('', ''),
           name,
         });
-        trackSegmentEvent('UnitTest Created');
+        trackSegmentEvent('Unit Test Created');
       },
     });
   }
@@ -169,10 +170,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   async _handleRunTests(): Promise<void> {
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
+    trackSegmentEvent('Ran All Unit Tests');
   }
 
   async _handleRunTest(unitTest: UnitTest): Promise<void> {
     await this._runTests([unitTest]);
+    trackSegmentEvent('Ran Individual Unit Test');
   }
 
   async _handleDeleteTest(unitTest: UnitTest): Promise<void> {
@@ -186,6 +189,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTest.remove(unitTest);
+        trackSegmentEvent('Unit Test Deleted');
       },
     });
   }
@@ -209,6 +213,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTestSuite.remove(unitTestSuite);
+        trackSegmentEvent('Test Suite Deleted');
       },
     });
   }
