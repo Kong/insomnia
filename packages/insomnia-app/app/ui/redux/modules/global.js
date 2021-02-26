@@ -272,6 +272,7 @@ export function setActiveActivity(activity: GlobalActivity) {
   // Don't need to await settings update
   switch (activity) {
     case ACTIVITY_MIGRATION:
+      trackEvent('Data', 'Migration', 'Manual');
       models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
       break;
     case ACTIVITY_ONBOARDING:
@@ -727,6 +728,7 @@ export function initActiveActivity() {
       // Always check if user has been prompted to migrate or onboard
       default:
         if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+          trackEvent('Data', 'Migration', 'Auto');
           overrideActivity = ACTIVITY_MIGRATION;
         } else if (!settings.hasPromptedOnboarding) {
           overrideActivity = ACTIVITY_ONBOARDING;

@@ -10,6 +10,7 @@ import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';
 import HelpTooltip from './help-tooltip';
+import { trackEvent } from '../../common/analytics';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -239,6 +240,7 @@ const MigrationBody = () => {
 
   const reduxDispatch = useDispatch();
   const cancel = React.useCallback(() => {
+    trackEvent('Data', 'Migration', 'Skip');
     reduxDispatch(goToNextActivity());
   }, [reduxDispatch]);
 
