@@ -30,7 +30,7 @@ import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { showAlert, showError, showModal, showPrompt } from './modals';
 import * as models from '../../models';
-import { trackEvent } from '../../common/analytics';
+import { trackEvent, trackSegmentEvent } from '../../common/analytics';
 import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
@@ -100,6 +100,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'designer',
         });
+        trackSegmentEvent('Document Created');
       },
     });
   }
@@ -114,6 +115,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'collection',
         });
+        trackSegmentEvent('Collection Created');
       },
     });
   }
