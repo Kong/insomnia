@@ -85,8 +85,17 @@ export function isLinux() {
 }
 
 export function updatesSupported() {
-  // Updates are not supported on Linux, or for Windows portable binaries
-  return !(isLinux() || (isWindows() && process.env.PORTABLE_EXECUTABLE_DIR));
+  // Updates are not supported on Linux
+  if (isLinux()) {
+    return false;
+  }
+
+  // Updates are not supported for Windows portable binaries
+  if (isWindows() && process.env.PORTABLE_EXECUTABLE_DIR) {
+    return false;
+  }
+
+  return true;
 }
 
 export function isWindows() {
