@@ -10,11 +10,13 @@ import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import { parseApiSpec } from '../../../common/api-specs';
-import { strings } from '../../../common/strings';
+import { getWorkspaceLabel } from '../../../common/strings';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
 import type { Workspace } from '../../../models/workspace';
+import { isDocument } from '../../../models/helpers/is-model';
+import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 
 type Props = {
   apiSpec: ?ApiSpec,
@@ -39,11 +41,10 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
 
   _handleDuplicate() {
     const { apiSpec, workspace, handleSetActiveWorkspace } = this.props;
-    const { fileName } = apiSpec;
 
     showPrompt({
-      title: `Duplicate ${strings.document}`,
-      defaultValue: fileName,
+      title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
@@ -59,16 +60,20 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleRename() {
-    const { apiSpec } = this.props;
+    const { apiSpec, workspace } = this.props;
 
     showPrompt({
-      title: `Rename ${strings.document}`,
-      defaultValue: apiSpec.fileName,
+      title: `Rename ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
-      onComplete: async fileName => {
-        await models.apiSpec.update(apiSpec, { fileName });
+      onComplete: async name => {
+        if (isDocument) {
+          await models.apiSpec.update(apiSpec, { fileName: name });
+        } else {
+          await models.workspace.update(workspace, { name });
+        }
       },
     });
   }
@@ -76,15 +81,17 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
   _handleDelete() {
     const { apiSpec, workspace, isLastWorkspace } = this.props;
 
+    const label = getWorkspaceLabel(workspace);
+
     const messages = [
-      `Do you really want to delete "${apiSpec.fileName}"?`,
+      `Do you really want to delete "${getWorkspaceName(workspace, apiSpec)}"?`,
       isLastWorkspace
-        ? ` This is the only ${strings.document.toLowerCase()} so a new one will be created for you.`
+        ? ` This is the only ${label.toLowerCase()} so a new one will be created for you.`
         : null,
     ];
 
     showModal(AskModal, {
-      title: `Delete ${strings.document}`,
+      title: `Delete ${label}`,
       message: messages.join(' '),
       yesText: 'Yes',
       noText: 'Cancel',
@@ -94,6 +101,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
         }
 
         if (isLastWorkspace) {
+          // Create a new workspace and default scope to designer
           await models.workspace.create({ name: getAppName(), scope: 'designer' });
         }
 

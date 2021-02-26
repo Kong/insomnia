@@ -1,6 +1,7 @@
 // @flow
 import type { BaseModel } from '../index';
 import { grpcRequest, request, requestGroup, protoFile, protoDirectory, workspace } from '../index';
+import type { Workspace } from '../workspace';
 
 export function isGrpcRequest(obj: BaseModel): boolean {
   return obj.type === grpcRequest.type;
@@ -33,4 +34,8 @@ export function isProtoDirectory(obj: BaseModel): boolean {
 
 export function isWorkspace(obj: BaseModel): boolean {
   return obj.type === workspace.type;
+}
+
+export function isDocument({ scope }: Workspace): boolean {
+  return scope === 'designer';
 }
