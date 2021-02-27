@@ -71,7 +71,7 @@ class SettingsModal extends PureComponent {
     let patch;
     switch (colorScheme) {
       case 'light':
-        patch = { theme: themeName };
+        patch = { lightTheme: themeName };
         break;
       case 'dark':
         patch = { darkTheme: themeName };
