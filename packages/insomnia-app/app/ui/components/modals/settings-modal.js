@@ -76,6 +76,7 @@ class SettingsModal extends PureComponent {
       case 'dark':
         patch = { darkTheme: themeName };
         break;
+      case 'default':
       default:
         patch = { theme: themeName };
         break;
