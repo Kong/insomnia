@@ -159,7 +159,6 @@ class Theme extends React.PureComponent<Props, State> {
 
     return (
       <>
-        <h2>Theme</h2>
         <div className="themes">{this.renderThemeRows()}</div>
         <div className="form-control form-control--thin">
           <label className="inline-block">
