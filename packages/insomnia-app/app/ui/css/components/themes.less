@@ -65,12 +65,12 @@
     overflow: hidden;
     box-shadow: 0 0 0 1px var(--hl-sm);
 
-    &.active {
+    &.active:not(:disabled) {
       box-shadow: 0 0 0 var(--padding-xs) var(--color-surprise);
     }
 
-    &.active,
-    &:hover {
+    &.active:not(:disabled),
+    &:hover:not(:disabled) {
       transform: scale(1.05);
     }
 
