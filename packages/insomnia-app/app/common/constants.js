@@ -39,6 +39,14 @@ export function getGoogleAnalyticsLocation() {
   return appConfig().gaLocation;
 }
 
+export function getSegmentWriteKey() {
+  if (isDevelopment()) {
+    return appConfig().segmentWriteKeys.development;
+  }
+
+  return appConfig().segmentWriteKeys.production;
+}
+
 export function getAppPlatform() {
   return process.platform;
 }
@@ -74,6 +82,20 @@ export function isMac() {
 
 export function isLinux() {
   return getAppPlatform() === 'linux';
+}
+
+export function updatesSupported() {
+  // Updates are not supported on Linux
+  if (isLinux()) {
+    return false;
+  }
+
+  // Updates are not supported for Windows portable binaries
+  if (isWindows() && process.env.PORTABLE_EXECUTABLE_DIR) {
+    return false;
+  }
+
+  return true;
 }
 
 export function isWindows() {

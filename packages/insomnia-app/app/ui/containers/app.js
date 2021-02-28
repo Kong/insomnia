@@ -100,6 +100,7 @@ import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
 import withDragDropContext from '../context/app/drag-drop-context';
+import { trackSegmentEvent } from '../../common/analytics';
 import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 
@@ -213,6 +214,7 @@ class App extends PureComponent {
           const request = await models.request.create({ parentId, name: 'New Request' });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
+          trackSegmentEvent('Request Created');
         },
       ],
       [
@@ -344,6 +346,7 @@ class App extends PureComponent {
       onComplete: requestId => {
         this._handleSetActiveRequest(requestId);
         models.stats.incrementCreatedRequests();
+        trackSegmentEvent('Request Created');
       },
     });
   }
@@ -697,6 +700,7 @@ class App extends PureComponent {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     // Start loading
     handleStartLoading(requestId);
@@ -781,6 +785,7 @@ class App extends PureComponent {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     handleStartLoading(requestId);
 

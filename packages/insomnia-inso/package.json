@@ -67,7 +67,6 @@
     "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",
     "enquirer": "^2.3.5",
-    "env-paths": "^2.2.0",
     "insomnia-plugin-base64": "^2.2.24",
     "insomnia-plugin-cookie-jar": "^2.2.24",
     "insomnia-plugin-core-themes": "^2.2.24",
