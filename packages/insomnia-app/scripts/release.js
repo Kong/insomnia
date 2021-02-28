@@ -32,7 +32,7 @@ async function start(app, version) {
   const distGlob = ext => path.posix.join('dist', '**', `*${ext}`);
   const assetGlobs = {
     darwin: [distGlob('.zip'), distGlob('.dmg')],
-    win32: [path.posix.join('dist', 'squirrel-windows', '*')],
+    win32: [path.posix.join('dist', 'squirrel-windows', '*'), path.posix.join('dist', '*.exe')],
     linux: [
       distGlob('.snap'),
       distGlob('.rpm'),

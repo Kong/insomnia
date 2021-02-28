@@ -12,7 +12,7 @@ import {
   getAppPlatform,
   getAppId,
   getAppVersion,
-  isLinux,
+  updatesSupported,
 } from '../../common/constants';
 import * as db from '../../common/database';
 import * as session from '../../account/session';
@@ -122,7 +122,7 @@ class Toast extends React.PureComponent<Props, State> {
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
         workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: isLinux(),
+        updatesNotSupported: !updatesSupported(),
         autoUpdatesDisabled: !settings.updateAutomatically,
         disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: settings.updateChannel,
