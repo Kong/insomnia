@@ -244,9 +244,13 @@ export async function importRaw(
     } else {
       // Set the workspace scope if creating a new workspace
       //  IF is creating a new workspace
-      //  AND imported resource has no preset scope property
+      //  AND imported resource has no preset scope property OR scope is null
       //  AND we have a function to get scope
-      if (isWorkspace(model) && !resource.hasOwnProperty('scope') && getWorkspaceScope) {
+      if (
+        isWorkspace(model) &&
+        (!resource.hasOwnProperty('scope') || resource.scope === null) &&
+        getWorkspaceScope
+      ) {
         (resource: Workspace).scope = await getWorkspaceScope();
       }
       newDoc = await db.docCreate(model.type, resource);
