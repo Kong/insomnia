@@ -12,9 +12,8 @@ import {
   EDITOR_KEY_MAP_VIM,
   HttpVersions,
   isDevelopment,
-  isLinux,
   isMac,
-  isWindows,
+  updatesSupported,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
   MIN_INTERFACE_FONT_SIZE,
@@ -471,7 +470,7 @@ class General extends React.PureComponent<Props, State> {
           )}
         </div>
 
-        {(isWindows() || isMac()) && (
+        {updatesSupported() && (
           <React.Fragment>
             <hr className="pad-top" />
             <div>
@@ -502,7 +501,7 @@ class General extends React.PureComponent<Props, State> {
           </React.Fragment>
         )}
 
-        {isLinux() && (
+        {!updatesSupported() && (
           <React.Fragment>
             <hr className="pad-top" />
             <h2>Software Updates</h2>

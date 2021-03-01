@@ -11,10 +11,13 @@ import {
   getAppVersion,
   getGoogleAnalyticsId,
   getGoogleAnalyticsLocation,
+  getSegmentWriteKey,
   isDevelopment,
 } from './constants';
 import type { RequestParameter } from '../models/request';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './misc';
+import Analytics from 'analytics-node';
+import { getAccountId } from '../account/session';
 
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
@@ -105,9 +108,61 @@ export async function getDeviceId(): Promise<string> {
   return deviceId;
 }
 
+let segmentClient = null;
+
+export async function trackSegmentEvent(event: String, properties?: Object) {
+  try {
+    if (!segmentClient) {
+      segmentClient = new Analytics(getSegmentWriteKey(), {
+        axiosConfig: {
+          // This is needed to ensure that we use the NodeJS adapter in the render process
+          ...(global?.require && { adapter: global.require('axios/lib/adapters/http') }),
+        },
+      });
+    }
+
+    const anonymousId = await getDeviceId();
+
+    // TODO: This currently always returns an empty string in the main process
+    // This is due to the session data being stored in localStorage
+    const userId = getAccountId();
+
+    segmentClient.track({
+      anonymousId,
+      userId,
+      event,
+      properties,
+      context: {
+        app: {
+          name: getAppName(),
+          version: getAppVersion(),
+        },
+        os: {
+          name: _getOsName(),
+          version: process.getSystemVersion(),
+        },
+      },
+    });
+  } catch (err) {
+    console.warn('[analytics] Error sending segment event', err);
+  }
+}
+
 // ~~~~~~~~~~~~~~~~~ //
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
+
+function _getOsName(): string {
+  const platform = getAppPlatform();
+  switch (platform) {
+    case 'darwin':
+      return 'mac';
+    case 'win32':
+      return 'windows';
+    default:
+      return platform;
+  }
+}
 
 // Exported for testing
 export async function _trackEvent(

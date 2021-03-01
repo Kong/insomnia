@@ -3,7 +3,7 @@
 import React from 'react';
 import { ACTIVITY_HOME } from '../../common/constants';
 import coreLogo from '../images/insomnia-core-logo.png';
-import strings from '../../common/strings';
+import { strings } from '../../common/strings';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import ActivityToggle from './activity-toggle';
 import type { WrapperProps } from './wrapper';
