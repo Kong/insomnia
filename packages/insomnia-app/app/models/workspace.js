@@ -3,6 +3,7 @@ import type { BaseModel } from './index';
 import * as models from './index';
 import * as db from '../common/database';
 import { getAppName } from '../common/constants';
+import { strings } from '../common/strings';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -20,7 +21,7 @@ export type Workspace = BaseModel & BaseWorkspace;
 
 export function init() {
   return {
-    name: 'New Workspace',
+    name: `New ${strings.collection}`,
     description: '',
     scope: 'collection',
   };

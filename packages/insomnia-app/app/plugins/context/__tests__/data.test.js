@@ -180,7 +180,7 @@ describe('app.export.*', () => {
           created: 111,
           description: '',
           modified: 222,
-          name: 'New Workspace',
+          name: 'New Collection',
           parentId: null,
           scope: 'collection',
         },

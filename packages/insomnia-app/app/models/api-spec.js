@@ -1,6 +1,7 @@
 // @flow
 import type { BaseModel } from './index';
 import * as db from '../common/database';
+import { strings } from '../common/strings';
 
 export const name = 'ApiSpec';
 export const type = 'ApiSpec';
@@ -18,7 +19,7 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 export function init(): BaseApiSpec {
   return {
-    fileName: 'Insomnia Designer',
+    fileName: `New ${strings.document}`,
     contents: '',
     contentType: 'yaml',
   };
