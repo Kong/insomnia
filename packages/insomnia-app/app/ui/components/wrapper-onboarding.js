@@ -5,7 +5,7 @@ import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { AUTOBIND_CFG, getAppLongName, getAppName } from '../../common/constants';
+import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 import type { WrapperProps } from './wrapper';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
@@ -17,6 +17,8 @@ type Props = {|
   wrapperProps: WrapperProps,
   handleImportFile: (forceToWorkspace: ForceToWorkspace) => any,
   handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => any,
+  header: string,
+  subHeader: string,
 |};
 
 type State = {|
@@ -172,7 +174,12 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     }
 
     return (
-      <OnboardingContainer wrapperProps={this.props.wrapperProps}>{stepBody}</OnboardingContainer>
+      <OnboardingContainer
+        wrapperProps={this.props.wrapperProps}
+        header={getAppLongName()}
+        subHeader={getAppSynopsis()}>
+        {stepBody}
+      </OnboardingContainer>
     );
   }
 }

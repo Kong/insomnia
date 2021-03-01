@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import type { WrapperProps } from './wrapper';
-import { ToggleSwitch } from 'insomnia-components';
+import { ToggleSwitch, Button } from 'insomnia-components';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { restartApp } from '../../common/migrate-from-designer';
 import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
@@ -90,13 +90,9 @@ const Options = ({ start, cancel }: OptionsProps) => {
   return (
     <>
       <p>
-        <strong>Migrate from Insomnia Designer</strong>
+        From the list below, select the individual items you would like to migrate from Designer.
       </p>
-      <p>
-        Insomnia Designer and Core are now Insomnia! Select the items below you'd like to migrate
-        from Designer.
-      </p>
-      <div className="text-left margin-top">
+      <div className="text-left">
         <BooleanSetting
           label="Copy Workspaces"
           name="copyWorkspaces"
@@ -140,13 +136,16 @@ const Options = ({ start, cancel }: OptionsProps) => {
       </div>
 
       <div className="margin-top">
-        <button
+        <Button
           key="start"
-          className="btn btn--clicky"
+          bg="surprise"
+          radius="3px"
+          size="medium"
+          variant="contained"
           onClick={() => start(options)}
           disabled={!canStart}>
           Start Migration
-        </button>
+        </Button>
         <button key="cancel" className="btn btn--super-compact" onClick={cancel}>
           Skip for now
         </button>
@@ -259,7 +258,10 @@ type Props = {|
 |};
 
 const WrapperMigration = ({ wrapperProps }: Props) => (
-  <OnboardingContainer wrapperProps={wrapperProps}>
+  <OnboardingContainer
+    wrapperProps={wrapperProps}
+    header="Migrate from Insomnia Designer"
+    subHeader="Insomnia Designer and Core are now Insomnia!">
     <MigrationBody />
   </OnboardingContainer>
 );
