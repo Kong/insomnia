@@ -146,6 +146,7 @@ export async function importRaw(
   }
 
   // Contains the ID of the workspace to be used with the import
+  let newWorkspace = false;
   generatedIds[WORKSPACE_ID_KEY] = async () => {
     const workspaceId = await getWorkspaceId();
 
@@ -155,6 +156,7 @@ export async function importRaw(
     // If none provided, create a new workspace
     if (workspace === null) {
       workspace = await models.workspace.create({ name: 'Imported Workspace' });
+      newWorkspace = true;
     }
 
     // Update this fn so it doesn't run again
@@ -240,15 +242,25 @@ export async function importRaw(
       }
     }
 
+    // Set the workspace scope (designer or collection)
+    //  IF is a workspace
+    //  AND importing to new workspace
+    //  AND imported resource has no preset scope property
+    //  AND we have a function oo get scope
+    if (
+      isWorkspace(model) &&
+      newWorkspace &&
+      !resource.hasOwnProperty('scope') &&
+      getWorkspaceScope
+    ) {
+      resource.scope = await getWorkspaceScope();
+    }
+
     const existingDoc = await db.get(model.type, resource._id);
     let newDoc: BaseModel;
     if (existingDoc) {
       newDoc = await db.docUpdate(existingDoc, resource);
     } else {
-      // Set the workspace scope when importing to new workspace
-      if (isWorkspace(model) && !resource.hasOwnProperty('scope') && getWorkspaceScope) {
-        resource.scope = await getWorkspaceScope();
-      }
       newDoc = await db.docCreate(model.type, resource);
 
       // Mark as not seen if we created a new workspace from sync
