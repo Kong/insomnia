@@ -336,6 +336,7 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
         const result = await importUtils.importUri(
           askToImportIntoWorkspace(workspaceId, forceToWorkspace),
           uri,
+          askToSetWorkspaceScope(),
         );
         importedWorkspaces = handleImportResult(
           result,
@@ -415,6 +416,7 @@ export function importUri(workspaceId: string, uri: string, forceToWorkspace?: F
       const result = await importUtils.importUri(
         askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         uri,
+        askToSetWorkspaceScope(),
       );
       importedWorkspaces = handleImportResult(
         result,

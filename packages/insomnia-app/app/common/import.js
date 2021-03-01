@@ -65,7 +65,7 @@ export type ImportResult = {
 export async function importUri(
   getWorkspaceId: () => Promise<string | null>,
   uri: string,
-  getWorkspaceScope?: () => Promise<WorkspaceScope | null>,
+  getWorkspaceScope?: () => Promise<WorkspaceScope>,
 ): Promise<ImportResult> {
   let rawText;
 
@@ -122,7 +122,7 @@ export async function importUri(
 export async function importRaw(
   getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
-  getWorkspaceScope?: () => Promise<WorkspaceScope | null>,
+  getWorkspaceScope?: () => Promise<WorkspaceScope>,
 ): Promise<ImportResult> {
   let results;
   try {
