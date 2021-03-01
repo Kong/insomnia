@@ -11,10 +11,17 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
+export const WorkspaceScopeKeys = {
+  designer: 'designer',
+  collection: 'collection',
+};
+
+export type WorkspaceScope = $Keys<typeof WorkspaceScopeKeys>;
+
 type BaseWorkspace = {
   name: string,
   description: string,
-  scope: 'designer' | 'collection',
+  scope: WorkspaceScope,
 };
 
 export type Workspace = BaseModel & BaseWorkspace;
@@ -48,7 +55,7 @@ export async function all(): Promise<Array<Workspace>> {
 
   if (workspaces.length === 0) {
     // Create default workspace
-    await create({ name: getAppName(), scope: 'collection' });
+    await create({ name: getAppName(), scope: WorkspaceScopeKeys.collection });
     return all();
   } else {
     return workspaces;
@@ -112,7 +119,10 @@ async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: Workspace): Workspace {
-  if (workspace.scope === 'designer' || workspace.scope === 'collection') {
+  if (
+    workspace.scope === WorkspaceScopeKeys.designer ||
+    workspace.scope === WorkspaceScopeKeys.collection
+  ) {
     return workspace;
   }
 
@@ -120,13 +130,13 @@ function _migrateScope(workspace: Workspace): Workspace {
   type OldScopeTypes = 'spec' | 'debug' | null;
   switch ((workspace.scope: OldScopeTypes)) {
     case 'spec': {
-      workspace.scope = 'designer';
+      workspace.scope = WorkspaceScopeKeys.designer;
       break;
     }
     case 'debug':
     case null:
     default:
-      workspace.scope = 'collection';
+      workspace.scope = WorkspaceScopeKeys.collection;
       break;
   }
 

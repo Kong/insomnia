@@ -24,7 +24,7 @@ import SettingsModal, {
 } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
 import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace } from './helpers';
+import { askToImportIntoWorkspace, askToSetWorkspaceScope } from './helpers';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
@@ -386,6 +386,7 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
       const result = await importUtils.importRaw(
         askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         schema,
+        askToSetWorkspaceScope(),
       );
       importedWorkspaces = handleImportResult(
         result,

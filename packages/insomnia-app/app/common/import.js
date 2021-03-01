@@ -20,6 +20,7 @@ import {
   isRequestGroup,
   isWorkspace,
 } from '../models/helpers/is-model';
+import type { WorkspaceScope } from '../models/workspace';
 
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
@@ -64,6 +65,7 @@ export type ImportResult = {
 export async function importUri(
   getWorkspaceId: () => Promise<string | null>,
   uri: string,
+  getWorkspaceScope?: () => Promise<WorkspaceScope | null>,
 ): Promise<ImportResult> {
   let rawText;
 
@@ -86,7 +88,7 @@ export async function importUri(
     rawText = decodeURIComponent(uri);
   }
 
-  const result = await importRaw(getWorkspaceId, rawText);
+  const result = await importRaw(getWorkspaceId, rawText, getWorkspaceScope);
   const { summary, error } = result;
 
   if (error) {
@@ -120,6 +122,7 @@ export async function importUri(
 export async function importRaw(
   getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
+  getWorkspaceScope?: () => Promise<WorkspaceScope | null>,
 ): Promise<ImportResult> {
   let results;
   try {
@@ -242,6 +245,10 @@ export async function importRaw(
     if (existingDoc) {
       newDoc = await db.docUpdate(existingDoc, resource);
     } else {
+      // Set the workspace scope when importing to new workspace
+      if (isWorkspace(model) && !resource.hasOwnProperty('scope') && getWorkspaceScope) {
+        resource.scope = await getWorkspaceScope();
+      }
       newDoc = await db.docCreate(model.type, resource);
 
       // Mark as not seen if we created a new workspace from sync
