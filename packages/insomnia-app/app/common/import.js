@@ -62,11 +62,12 @@ export type ImportResult = {
   summary: { [string]: Array<BaseModel> },
 };
 
-export async function importUri(
+export type ImportOptions = {
   getWorkspaceId: () => Promise<string | null>,
-  uri: string,
   getWorkspaceScope?: () => Promise<WorkspaceScope>,
-): Promise<ImportResult> {
+};
+
+export async function importUri(uri: string, options: ImportOptions): Promise<ImportResult> {
   let rawText;
 
   // If GH preview, force raw
@@ -88,7 +89,7 @@ export async function importUri(
     rawText = decodeURIComponent(uri);
   }
 
-  const result = await importRaw(getWorkspaceId, rawText, getWorkspaceScope);
+  const result = await importRaw(rawText, options);
   const { summary, error } = result;
 
   if (error) {
@@ -120,9 +121,8 @@ export async function importUri(
 }
 
 export async function importRaw(
-  getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
-  getWorkspaceScope?: () => Promise<WorkspaceScope>,
+  { getWorkspaceId, getWorkspaceScope }: ImportOptions,
 ): Promise<ImportResult> {
   let results;
   try {

@@ -348,7 +348,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     // Delaying generation so design to debug mode is smooth
     handleSetActiveActivity(nextActivity);
     setTimeout(() => {
-      importRaw(() => Promise.resolve(workspaceId), activeApiSpec.contents);
+      importRaw(activeApiSpec.content, {
+        getWorkspaceId: () => Promise.resolve(workspaceId),
+      });
     }, 1000);
   }
 

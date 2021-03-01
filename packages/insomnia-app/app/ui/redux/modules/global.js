@@ -7,7 +7,7 @@ import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
-import type { ImportResult } from '../../../common/import';
+import type { ImportOptions, ImportResult } from '../../../common/import';
 import * as importUtils from '../../../common/import';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
@@ -333,11 +333,12 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
     for (const p of paths) {
       try {
         const uri = `file://${p}`;
-        const result = await importUtils.importUri(
-          askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-          uri,
-          askToSetWorkspaceScope(),
-        );
+
+        const options: ImportOptions = {
+          getWorkspaceScope: askToSetWorkspaceScope(),
+          getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        };
+        const result = await importUtils.importUri(uri, options);
         importedWorkspaces = handleImportResult(
           result,
           'The file does not contain a valid specification.',
@@ -384,11 +385,11 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
     // Let's import all the paths!
     let importedWorkspaces = [];
     try {
-      const result = await importUtils.importRaw(
-        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-        schema,
-        askToSetWorkspaceScope(),
-      );
+      const options: ImportOptions = {
+        getWorkspaceScope: askToSetWorkspaceScope(),
+        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+      };
+      const result = await importUtils.importRaw(schema, options);
       importedWorkspaces = handleImportResult(
         result,
         'Your clipboard does not contain a valid specification.',
@@ -413,11 +414,11 @@ export function importUri(workspaceId: string, uri: string, forceToWorkspace?: F
 
     let importedWorkspaces = [];
     try {
-      const result = await importUtils.importUri(
-        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-        uri,
-        askToSetWorkspaceScope(),
-      );
+      const options: ImportOptions = {
+        getWorkspaceScope: askToSetWorkspaceScope(),
+        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+      };
+      const result = await importUtils.importUri(uri, options);
       importedWorkspaces = handleImportResult(
         result,
         'The URI does not contain a valid specification.',
