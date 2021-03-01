@@ -6,10 +6,10 @@ import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
-  ACTIVITY_HOME,
   ACTIVITY_SPEC,
   ACTIVITY_DEBUG,
   getAppName,
+  isWorkspaceActivity,
 } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
@@ -30,7 +30,7 @@ import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { showAlert, showError, showModal, showPrompt } from './modals';
 import * as models from '../../models';
-import { trackEvent } from '../../common/analytics';
+import { trackEvent, trackSegmentEvent } from '../../common/analytics';
 import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
@@ -100,6 +100,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'designer',
         });
+        trackSegmentEvent('Document Created');
       },
     });
   }
@@ -114,6 +115,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'collection',
         });
+        trackSegmentEvent('Collection Created');
       },
     });
   }
@@ -304,7 +306,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
-    if (!activeActivity || activeActivity === ACTIVITY_HOME) {
+    if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
+      // or migration or onboarding
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);

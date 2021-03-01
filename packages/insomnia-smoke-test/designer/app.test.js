@@ -1,4 +1,3 @@
-import * as onboarding from '../modules/onboarding';
 import * as client from '../modules/client';
 import * as home from '../modules/home';
 import * as settings from '../modules/settings';
@@ -10,7 +9,7 @@ import { isPackage, launchApp, stop } from '../modules/application';
 const itIf = condition => (condition ? it : it.skip);
 it.if = itIf;
 
-describe('Application launch', function() {
+xdescribe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
 
@@ -22,18 +21,7 @@ describe('Application launch', function() {
     await stop(app);
   });
 
-  it('can reset to and proceed through onboarding flow', async () => {
-    await client.correctlyLaunched(app);
-    await client.resetToOnboarding(app);
-
-    await onboarding.welcomeMessageShown(app);
-    await onboarding.clickDontShare(app);
-    await onboarding.clickSkipImport(app);
-
-    await home.documentListingShown(app);
-  });
-
-  it.if(isPackage())('can install and consume a plugin', async () => {
+  xit.if(isPackage())('can install and consume a plugin', async () => {
     await client.correctlyLaunched(app);
     await home.documentListingShown(app);
 

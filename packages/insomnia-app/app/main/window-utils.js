@@ -373,6 +373,14 @@ export function createWindow() {
           });
         },
       },
+      {
+        label: `${MNEMONIC_SYM}Restart`,
+        click: function() {
+          const { app } = electron.remote || electron;
+          app.relaunch();
+          app.exit();
+        },
+      },
     ],
   };
 

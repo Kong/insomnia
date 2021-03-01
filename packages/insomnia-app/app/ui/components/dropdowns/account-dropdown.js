@@ -54,7 +54,7 @@ const AccountDropdown = ({ className }: Props) => (
         </DropdownItem>
       )}
       {!session.isLoggedIn() && (
-        <DropdownItem key="invite" buttonClass={Link} href="https://insomnia.rest/pricing/" button>
+        <DropdownItem key="invite" buttonClass={Link} href="https://insomnia.rest/pricing" button>
           <StyledIconContainer>
             <i className="fa fa-users" />
           </StyledIconContainer>{' '}

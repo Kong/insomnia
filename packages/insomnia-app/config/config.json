@@ -9,13 +9,17 @@
   "longName": "Insomnia",
   "synopsis": "The Collaborative API Client and Design Tool",
   "icon": "https://github.com/kong/insomnia/blob/develop/packages/insomnia-app/app/icons/icon.ico?raw=true",
-  "changelogBaseUrl": "https://insomnia.rest/changelog/core",
+  "changelogUrl": "https://insomnia.rest/changelog",
   "theme": "default",
   "main": "main.min.js",
   "githubOrg": "Kong",
   "githubRepo": "insomnia",
   "gaId": "UA-8499472-34",
   "gaLocation": "https://core.lytics.insomnia.rest",
+  "segmentWriteKeys": {
+    "development": "rTOCSvGV23cHGJyb3HI9EUQDNA6ar7ay",
+    "production": "ChQgQr57USBL4VqO2x7flSFhU4gBuR9e"
+  },
   "plugins": [
     "insomnia-plugin-base64",
     "insomnia-plugin-hash",
@@ -27,6 +31,7 @@
     "insomnia-plugin-response",
     "insomnia-plugin-jsonpath",
     "insomnia-plugin-cookie-jar",
-    "insomnia-plugin-core-themes"
+    "insomnia-plugin-core-themes",
+    "insomnia-plugin-kong-bundle"
   ]
 }
