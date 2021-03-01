@@ -1,6 +1,6 @@
 export const migrationMessageShown = async app => {
   await app.client.waitUntilTextExists(
-    '.onboarding__content__body p strong',
+    '.onboarding__content__header h1',
     'Migrate from Insomnia Designer',
   );
 };
