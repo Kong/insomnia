@@ -402,15 +402,19 @@ export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectCom
   const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
 
   for (const prop in baseObj) {
-    if (!baseObj.hasOwnProperty(prop)) continue;
-    if (patchObj.hasOwnProperty(prop)) {
-      if (patchObj[prop] !== baseObj[prop]) {
-        const isBasePropObj = isObject(baseObj[prop]);
-        const isPatchPropObj = isObject(patchObj[prop]);
-        if (deep && isBasePropObj && isPatchPropObj) {
-          clonedBaseObj[prop] = diffPatchObj(baseObj[prop], patchObj[prop], deep);
+    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
+      continue;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(patchObj, prop)) {
+      const left = baseObj[prop];
+      const right = patchObj[prop];
+
+      if (right !== left) {
+        if (deep && isObject(left) && isObject(right)) {
+          clonedBaseObj[prop] = diffPatchObj(left, right, deep);
         } else {
-          clonedBaseObj[prop] = patchObj[prop];
+          clonedBaseObj[prop] = right;
         }
       }
     } else {
@@ -419,8 +423,11 @@ export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectCom
   }
 
   for (const prop in patchObj) {
-    if (!patchObj.hasOwnProperty(prop)) continue;
-    if (!baseObj.hasOwnProperty(prop)) {
+    if (!Object.prototype.hasOwnProperty.call(patchObj, prop)) {
+      continue;
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
       clonedBaseObj[prop] = patchObj[prop];
     }
   }

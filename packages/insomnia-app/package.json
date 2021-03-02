@@ -209,6 +209,7 @@
     "electron-notarize": "^0.3.0",
     "fast-glob": "^3.1.0",
     "file-loader": "^3.0.1",
+    "jest": "^26.0.1",
     "less": "^3.8.1",
     "less-loader": "^4.1.0",
     "license-checker": "^25.0.1",
