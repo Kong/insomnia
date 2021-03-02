@@ -450,7 +450,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
         <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
-          Blank Document
+          Design Document
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
           Request Collection
