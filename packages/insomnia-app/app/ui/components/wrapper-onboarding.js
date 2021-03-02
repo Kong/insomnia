@@ -2,6 +2,7 @@
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
+import { Button } from 'insomnia-components';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
@@ -122,9 +123,15 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
           Help us understand how <strong>you</strong> use {getAppLongName()} so we can make it
           better.
         </p>
-        <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
+        <Button
+          key="enable"
+          bg="surprise"
+          radius="3px"
+          size="medium"
+          variant="contained"
+          onClick={this._handleClickEnableAnalytics}>
           Share Usage Analytics
-        </button>
+        </Button>
         <button
           key="disable"
           className="btn btn--super-compact"
