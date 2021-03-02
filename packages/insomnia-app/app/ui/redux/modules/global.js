@@ -7,7 +7,7 @@ import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
-import type { ImportOptions, ImportResult } from '../../../common/import';
+import type { ImportRawConfig, ImportResult } from '../../../common/import';
 import * as importUtils from '../../../common/import';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
@@ -334,7 +334,7 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
       try {
         const uri = `file://${p}`;
 
-        const options: ImportOptions = {
+        const options: ImportRawConfig = {
           getWorkspaceScope: askToSetWorkspaceScope(),
           getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         };
@@ -385,7 +385,7 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
     // Let's import all the paths!
     let importedWorkspaces = [];
     try {
-      const options: ImportOptions = {
+      const options: ImportRawConfig = {
         getWorkspaceScope: askToSetWorkspaceScope(),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };
@@ -414,7 +414,7 @@ export function importUri(workspaceId: string, uri: string, forceToWorkspace?: F
 
     let importedWorkspaces = [];
     try {
-      const options: ImportOptions = {
+      const options: ImportRawConfig = {
         getWorkspaceScope: askToSetWorkspaceScope(),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };

@@ -6,7 +6,7 @@ import {
   importUri,
 } from '../../common/import';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
-import type { ImportOptions } from '../../common/import';
+import type { ImportRawConfig } from '../../common/import';
 
 type PluginImportOptions = { workspaceId?: string, scope?: WorkspaceScope };
 
@@ -15,10 +15,10 @@ export function init(): { data: { import: Object, export: Object } } {
     data: {
       import: {
         async uri(uri: string, options: PluginImportOptions = {}): Promise<void> {
-          await importUri(uri, buildImportOptions(options));
+          await importUri(uri, buildImportRawConfig(options));
         },
         async raw(text: string, options: PluginImportOptions = {}): Promise<void> {
-          await importRaw(text, buildImportOptions(options));
+          await importRaw(text, buildImportRawConfig(options));
         },
       },
       export: {
@@ -46,7 +46,7 @@ export function init(): { data: { import: Object, export: Object } } {
   };
 }
 
-function buildImportOptions(options: PluginImportOptions): ImportOptions {
+function buildImportRawConfig(options: PluginImportOptions): ImportRawConfig {
   const getWorkspaceId = () => Promise.resolve(options.workspaceId || null);
   const getWorkspaceScope = options.scope && (() => Promise.resolve(options.scope));
   return { getWorkspaceId, getWorkspaceScope };

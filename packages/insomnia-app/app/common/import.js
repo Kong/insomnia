@@ -76,12 +76,12 @@ type ConvertResult = {
   },
 };
 
-export type ImportOptions = {
+export type ImportRawConfig = {
   getWorkspaceId: () => Promise<string | null>,
   getWorkspaceScope?: string => Promise<WorkspaceScope>,
 };
 
-export async function importUri(uri: string, options: ImportOptions): Promise<ImportResult> {
+export async function importUri(uri: string, importConfig: ImportRawConfig): Promise<ImportResult> {
   let rawText;
 
   // If GH preview, force raw
@@ -103,7 +103,7 @@ export async function importUri(uri: string, options: ImportOptions): Promise<Im
     rawText = decodeURIComponent(uri);
   }
 
-  const result = await importRaw(rawText, options);
+  const result = await importRaw(rawText, importConfig);
   const { summary, error } = result;
 
   if (error) {
@@ -136,7 +136,7 @@ export async function importUri(uri: string, options: ImportOptions): Promise<Im
 
 export async function importRaw(
   rawContent: string,
-  { getWorkspaceId, getWorkspaceScope }: ImportOptions,
+  { getWorkspaceId, getWorkspaceScope }: ImportRawConfig,
 ): Promise<ImportResult> {
   let results: ConvertResult;
   try {
