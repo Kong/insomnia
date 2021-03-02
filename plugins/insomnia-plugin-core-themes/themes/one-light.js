@@ -24,6 +24,11 @@ module.exports = {
       xl: 'rgba(114, 121, 133, 0.8)',
     },
     styles: {
+      appHeader: {
+        background: {
+          default: '#eaeaeb',
+        },
+      },
       sidebar: {
         background: {
           default: '#eaeaeb',

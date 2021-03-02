@@ -510,7 +510,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
           <Header
-            className="app-header"
+            className="app-header theme--app-header"
             gridLeft={
               <React.Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
