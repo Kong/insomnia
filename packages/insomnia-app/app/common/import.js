@@ -64,7 +64,7 @@ export type ImportResult = {
 
 export type ImportOptions = {
   getWorkspaceId: () => Promise<string | null>,
-  getWorkspaceScope?: () => Promise<WorkspaceScope>,
+  getWorkspaceScope?: string => Promise<WorkspaceScope>,
 };
 
 export async function importUri(uri: string, options: ImportOptions): Promise<ImportResult> {
@@ -240,6 +240,10 @@ export async function importRaw(
     const existingDoc = await db.get(model.type, resource._id);
     let newDoc: BaseModel;
     if (existingDoc) {
+      // If workspace, don't overwrite the existing scope
+      if (isWorkspace(model)) {
+        (resource: Workspace).scope = (existingDoc: Workspace).scope;
+      }
       newDoc = await db.docUpdate(existingDoc, resource);
     } else {
       // Set the workspace scope if creating a new workspace
@@ -251,7 +255,7 @@ export async function importRaw(
         (!resource.hasOwnProperty('scope') || resource.scope === null) &&
         getWorkspaceScope
       ) {
-        (resource: Workspace).scope = await getWorkspaceScope();
+        (resource: Workspace).scope = await getWorkspaceScope(resource.name);
       }
       newDoc = await db.docCreate(model.type, resource);
 

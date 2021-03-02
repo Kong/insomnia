@@ -34,7 +34,10 @@ export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?:
 }
 
 export function askToSetWorkspaceScope(scope?: WorkspaceScope) {
-  return function() {
+  return function(name: string) {
+    const designerFullName = 'Design Document';
+    const collectionFullName = 'Request Collection';
+
     switch (scope) {
       case WorkspaceScopeKeys.collection:
       case WorkspaceScopeKeys.designer:
@@ -43,9 +46,9 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope) {
         return new Promise(resolve => {
           showModal(AskModal, {
             title: 'Import',
-            message: 'Do you want to import as a new request collection or new design document?',
-            yesText: 'Collection',
-            noText: 'Document',
+            message: `Do you want to import "${name}" as a ${designerFullName} or ${collectionFullName}?`,
+            noText: designerFullName,
+            yesText: collectionFullName,
             onDone: yes => {
               resolve(yes ? WorkspaceScopeKeys.collection : WorkspaceScopeKeys.designer);
             },
