@@ -63,7 +63,7 @@ module.exports = {
       },
       paneHeader: {
         foreground: {
-          default: '#666',
+          default: '#ccc',
         },
         background: {
           default: '#212121',
