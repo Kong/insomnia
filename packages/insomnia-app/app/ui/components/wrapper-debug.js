@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import PageLayout from './page-layout';
-import type { WrapperProps } from './wrapper';
+import type { HandleImportFileCallback, WrapperProps } from './wrapper';
 import RequestPane from './panes/request-pane';
 import ErrorBoundary from './error-boundary';
 import ResponsePane from './panes/response-pane';
@@ -11,7 +11,6 @@ import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { isGrpcRequest } from '../../models/helpers/is-model';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
@@ -31,7 +30,7 @@ type Props = {
   handleForceUpdateRequest: Function,
   handleForceUpdateRequestHeaders: Function,
   handleImport: Function,
-  handleImportFile: (forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
   handleRequestCreate: Function,
   handleRequestGroupCreate: Function,
   handleSendAndDownloadRequestWithActiveEnvironment: Function,

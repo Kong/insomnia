@@ -28,11 +28,11 @@ import RenderedQueryString from '../rendered-query-string';
 import RequestUrlBar from '../request-url-bar.js';
 import type { Settings } from '../../../models/settings';
 import RequestParametersEditor from '../editors/request-parameters-editor';
-import type { ForceToWorkspace } from '../../redux/modules/helpers';
 import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import type { HandleImportFileCallback } from '../wrapper';
 
 type Props = {
   // Functions
@@ -56,7 +56,7 @@ type Props = {
   updateSettingsUseBulkHeaderEditor: Function,
   updateSettingsUseBulkParametersEditor: Function,
   handleImport: Function,
-  handleImportFile: (forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
 
   // Other
   workspace: Workspace,
