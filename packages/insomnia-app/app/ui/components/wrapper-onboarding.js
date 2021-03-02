@@ -176,7 +176,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     return (
       <OnboardingContainer
         wrapperProps={this.props.wrapperProps}
-        header={getAppLongName()}
+        header={'Welcome to ' + getAppLongName()}
         subHeader={getAppSynopsis()}>
         {stepBody}
       </OnboardingContainer>
