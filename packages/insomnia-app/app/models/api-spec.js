@@ -29,7 +29,7 @@ export async function migrate(doc: ApiSpec): Promise<ApiSpec> {
   return doc;
 }
 
-export function getByParentId(workspaceId: string): Promise<ApiSpec> {
+export function getByParentId(workspaceId: string): Promise<ApiSpec | null> {
   return db.getWhere(type, { parentId: workspaceId });
 }
 
