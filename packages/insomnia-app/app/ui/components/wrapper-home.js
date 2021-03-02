@@ -499,7 +499,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces } = this.props.wrapperProps;
+    const { workspaces, isLoading } = this.props.wrapperProps;
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
@@ -515,6 +515,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
               <React.Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
                 <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
+                {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </React.Fragment>
             }
             gridRight={
