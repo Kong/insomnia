@@ -29,7 +29,7 @@ import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import type { GlobalActivity } from '../../../common/constants';
-import type { Workspace } from '../../../models/workspace';
+import type { Workspace, WorkspaceScope } from '../../../models/workspace';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -293,7 +293,15 @@ export function setActiveWorkspace(workspaceId: string) {
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
-export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
+export type ImportOptions = {
+  forceToWorkspace?: ForceToWorkspace,
+  forceToScope?: WorkspaceScope,
+};
+
+export function importFile(
+  workspaceId: string,
+  { forceToScope, forceToWorkspace }: ImportOptions = {},
+) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -335,7 +343,7 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
         const uri = `file://${p}`;
 
         const options: ImportRawConfig = {
-          getWorkspaceScope: askToSetWorkspaceScope(),
+          getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
           getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         };
         const result = await importUtils.importUri(uri, options);
@@ -371,7 +379,10 @@ function handleImportResult(result: ImportResult, errorMessage: string): Array<W
   return summary[models.workspace.type] || [];
 }
 
-export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
+export function importClipBoard(
+  workspaceId: string,
+  { forceToScope, forceToWorkspace }: ImportOptions = {},
+) {
   return async dispatch => {
     dispatch(loadStart());
     const schema = electron.clipboard.readText();
@@ -386,7 +397,7 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
     let importedWorkspaces = [];
     try {
       const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(),
+        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };
       const result = await importUtils.importRaw(schema, options);
@@ -408,14 +419,18 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
   };
 }
 
-export function importUri(workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) {
+export function importUri(
+  workspaceId: string,
+  uri: string,
+  { forceToScope, forceToWorkspace }: ImportOptions = {},
+) {
   return async dispatch => {
     dispatch(loadStart());
 
     let importedWorkspaces = [];
     try {
       const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(),
+        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };
       const result = await importUtils.importUri(uri, options);
