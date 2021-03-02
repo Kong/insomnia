@@ -337,7 +337,6 @@ export function importFile(
     }
 
     // Let's import all the paths!
-    let importedWorkspaces = [];
     for (const p of paths) {
       try {
         const uri = `file://${p}`;
@@ -347,19 +346,12 @@ export function importFile(
           getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
         };
         const result = await importUtils.importUri(uri, options);
-        importedWorkspaces = handleImportResult(
-          result,
-          'The file does not contain a valid specification.',
-        );
+        handleImportResult(result, 'The file does not contain a valid specification.');
       } catch (err) {
         showModal(AlertModal, { title: 'Import Failed', message: err + '' });
       } finally {
         dispatch(loadStop());
       }
-    }
-
-    if (importedWorkspaces.length === 1) {
-      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
     }
   };
 }
@@ -394,17 +386,13 @@ export function importClipBoard(
       return;
     }
     // Let's import all the paths!
-    let importedWorkspaces = [];
     try {
       const options: ImportRawConfig = {
         getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };
       const result = await importUtils.importRaw(schema, options);
-      importedWorkspaces = handleImportResult(
-        result,
-        'Your clipboard does not contain a valid specification.',
-      );
+      handleImportResult(result, 'Your clipboard does not contain a valid specification.');
     } catch (err) {
       showModal(AlertModal, {
         title: 'Import Failed',
@@ -412,9 +400,6 @@ export function importClipBoard(
       });
     } finally {
       dispatch(loadStop());
-    }
-    if (importedWorkspaces.length === 1) {
-      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
     }
   };
 }
@@ -427,25 +412,17 @@ export function importUri(
   return async dispatch => {
     dispatch(loadStart());
 
-    let importedWorkspaces = [];
     try {
       const options: ImportRawConfig = {
         getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };
       const result = await importUtils.importUri(uri, options);
-      importedWorkspaces = handleImportResult(
-        result,
-        'The URI does not contain a valid specification.',
-      );
+      handleImportResult(result, 'The URI does not contain a valid specification.');
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
       dispatch(loadStop());
-    }
-
-    if (importedWorkspaces.length === 1) {
-      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
     }
   };
 }
