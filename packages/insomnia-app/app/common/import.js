@@ -63,6 +63,19 @@ export type ImportResult = {
   summary: { [string]: Array<BaseModel> },
 };
 
+type ConvertResultType = {
+  id: string,
+  name: string,
+  description: string,
+};
+
+type ConvertResult = {
+  type: ConvertResultType,
+  data: {
+    resources: Array<Object>,
+  },
+};
+
 export type ImportOptions = {
   getWorkspaceId: () => Promise<string | null>,
   getWorkspaceScope?: string => Promise<WorkspaceScope>,
@@ -121,36 +134,11 @@ export async function importUri(uri: string, options: ImportOptions): Promise<Im
   return result;
 }
 
-async function updateResourceScope(
-  resource: Workspace,
-  resultsType: { id: string },
-  getWorkspaceScope?: () => Promise<WorkspaceScope>,
-) {
-  // Set the workspace scope if creating a new workspace
-  //  IF is creating a new workspace
-  //  AND imported resource has no preset scope property OR scope is null
-  //  AND we have a function to get scope
-  if ((!resource.hasOwnProperty('scope') || resource.scope === null) && getWorkspaceScope) {
-    const workspaceName = resource.name;
-    let specName;
-    // If is from insomnia v4 and the spec has contents, add to the name when prompting
-    if (isInsomniaV4Import(resultsType.id)) {
-      const spec: ApiSpec | null = await models.apiSpec.getByParentId(resource._id);
-
-      if (spec && spec.contents.trim()) {
-        specName = spec.fileName;
-      }
-    }
-    const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
-    (resource: Workspace).scope = await getWorkspaceScope(nameToPrompt);
-  }
-}
-
 export async function importRaw(
   rawContent: string,
   { getWorkspaceId, getWorkspaceScope }: ImportOptions,
 ): Promise<ImportResult> {
-  let results;
+  let results: ConvertResult;
   try {
     results = await convert(rawContent);
   } catch (err) {
@@ -273,7 +261,7 @@ export async function importRaw(
       newDoc = await db.docUpdate(existingDoc, resource);
     } else {
       if (isWorkspace(model)) {
-        await updateResourceScope(resource, resultsType, getWorkspaceScope);
+        await updateWorkspaceScope(resource, resultsType, getWorkspaceScope);
       }
       newDoc = await db.docCreate(model.type, resource);
 
@@ -289,7 +277,7 @@ export async function importRaw(
 
   // Store spec under workspace if it's OpenAPI
   for (const workspace of importedDocs[models.workspace.type]) {
-    if (isApiSpecImport(resultsType.id)) {
+    if (isApiSpecImport(resultsType)) {
       const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
         contents: rawContent,
         contentType: 'yaml',
@@ -316,12 +304,37 @@ export async function importRaw(
   };
 }
 
-export function isApiSpecImport(content: string): boolean {
-  return content === 'openapi3' || content === 'swagger2';
+async function updateWorkspaceScope(
+  resource: Workspace,
+  resultType: ConvertResultType,
+  getWorkspaceScope?: string => Promise<WorkspaceScope>,
+) {
+  // Set the workspace scope if creating a new workspace
+  //  IF is creating a new workspace
+  //  AND imported resource has no preset scope property OR scope is null
+  //  AND we have a function to get scope
+  if ((!resource.hasOwnProperty('scope') || resource.scope === null) && getWorkspaceScope) {
+    const workspaceName = resource.name;
+    let specName;
+    // If is from insomnia v4 and the spec has contents, add to the name when prompting
+    if (isInsomniaV4Import(resultType)) {
+      const spec: ApiSpec | null = await models.apiSpec.getByParentId(resource._id);
+
+      if (spec && spec.contents.trim()) {
+        specName = spec.fileName;
+      }
+    }
+    const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
+    (resource: Workspace).scope = await getWorkspaceScope(nameToPrompt);
+  }
 }
 
-export function isInsomniaV4Import(content: string): boolean {
-  return content === 'insomnia-4';
+export function isApiSpecImport({ id }: ConvertResultType): boolean {
+  return id === 'openapi3' || id === 'swagger2';
+}
+
+export function isInsomniaV4Import({ id }: ConvertResultType): boolean {
+  return id === 'insomnia-4';
 }
 
 export async function exportWorkspacesHAR(
