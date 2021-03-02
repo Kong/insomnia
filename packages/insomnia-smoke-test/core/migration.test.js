@@ -23,9 +23,7 @@ describe('Migration', function() {
     await migration.migrationMessageShown(app);
     await migration.clickSkip(app);
 
-    await onboarding.analyticsMessageShown(app);
-    await onboarding.clickDontShare(app);
-    await onboarding.clickSkipImport(app);
+    await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
     await home.expectTotalDocuments(app, 1);
@@ -53,9 +51,7 @@ describe('Migration', function() {
 
     await client.focusAfterRestart(app);
 
-    await onboarding.analyticsMessageShown(app);
-    await onboarding.clickDontShare(app);
-    await onboarding.clickSkipImport(app);
+    await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
     await home.expectTotalDocuments(app, 2);
