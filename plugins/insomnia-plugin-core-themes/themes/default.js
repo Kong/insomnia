@@ -31,9 +31,14 @@ module.exports = {
           default: '#333',
         },
       },
+      appHeader: {
+        background: {
+          default: '#2C2C2C',
+        },
+      },
       sidebar: {
         background: {
-          default: '#2e2f2b',
+          default: '#2C2C2C',
           success: '#7ecf2b',
           notice: '#f0e137',
           warning: '#ff9a1f',
@@ -58,10 +63,10 @@ module.exports = {
       },
       paneHeader: {
         foreground: {
-          default: '#666',
+          default: '#ccc',
         },
         background: {
-          default: '#fff',
+          default: '#212121',
           success: '#75ba24',
           notice: '#d8c84d',
           warning: '#ec8702',
@@ -72,7 +77,7 @@ module.exports = {
       },
       pane: {
         background: {
-          default: '#282925',
+          default: '#292929',
           success: '{{ styles.sidebar.background.success }}',
           notice: '{{ styles.sidebar.background.notice }}',
           warning: '{{ styles.sidebar.background.warning }}',

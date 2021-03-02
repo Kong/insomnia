@@ -116,6 +116,8 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     css += wrapStyles(n, '.theme--pane', getThemeBlockCSS(styles.pane));
     css += wrapStyles(n, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
 
+    css += wrapStyles(n, '.theme--app-header', getThemeBlockCSS(styles.appHeader));
+
     // Sidebar Styles
     css += wrapStyles(n, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));
     css += wrapStyles(n, '.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));

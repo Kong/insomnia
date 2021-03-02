@@ -94,13 +94,15 @@ import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../..
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
-import AppContext from '../../common/strings';
+import { getWorkspaceLabel, strings } from '../../common/strings';
 import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { trackSegmentEvent } from '../../common/analytics';
+import getWorkspaceName from '../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../models/helpers/workspace-operations';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
@@ -419,15 +421,16 @@ class App extends PureComponent {
 
   _workspaceRename(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    console.dir(AppContext);
+    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
+
     showPrompt({
-      title: `Rename ${AppContext.workspace}`,
-      defaultValue: workspace.name,
+      title: `Rename ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
       onComplete: async name => {
-        await models.workspace.update(workspace, { name: name });
+        await workspaceOperations.rename(workspace, apiSpec, name);
         callback();
       },
     });
@@ -436,7 +439,7 @@ class App extends PureComponent {
   _workspaceDeleteById(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
     showModal(AskModal, {
-      title: `Delete ${AppContext.workspace}`,
+      title: `Delete ${strings.workspace}`,
       message: `Do you really want to delete ${workspace.name}?`,
       yesText: 'Yes',
       noText: 'Cancel',
@@ -454,19 +457,19 @@ class App extends PureComponent {
 
   _workspaceDuplicateById(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
 
     showPrompt({
-      title: `Duplicate ${AppContext.workspace}`,
-      defaultValue: workspace.name,
+      title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
-        const newWorkspace = await db.duplicate(workspace, { name });
+        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
+
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
-
-        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
       },
     });
   }

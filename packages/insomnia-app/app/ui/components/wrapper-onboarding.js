@@ -7,19 +7,17 @@ import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
-import type { WrapperProps } from './wrapper';
+import type { HandleImportFileCallback, HandleImportUriCallback, WrapperProps } from './wrapper';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import OnboardingContainer from './onboarding-container';
+import { WorkspaceScopeKeys } from '../../models/workspace';
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleImportFile: (forceToWorkspace: ForceToWorkspace) => any,
-  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => any,
-  header: string,
-  subHeader: string,
+  handleImportFile: HandleImportFileCallback,
+  handleImportUri: HandleImportUriCallback,
 |};
 
 type State = {|
@@ -80,7 +78,10 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   _handleImportFile() {
     const { handleImportFile } = this.props;
-    handleImportFile(ForceToWorkspaceKeys.new);
+    handleImportFile({
+      forceToWorkspace: ForceToWorkspaceKeys.new,
+      forceToScope: WorkspaceScopeKeys.designer,
+    });
   }
 
   _handleImportUri(defaultValue: string) {
@@ -92,7 +93,10 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
       placeholder: 'https://example.com/openapi-spec.yaml',
       label: 'URI to Import',
       onComplete: value => {
-        handleImportUri(value, ForceToWorkspaceKeys.new);
+        handleImportUri(value, {
+          forceToWorkspace: ForceToWorkspaceKeys.new,
+          forceToScope: WorkspaceScopeKeys.designer,
+        });
       },
     });
   }

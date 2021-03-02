@@ -11,6 +11,7 @@ import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import fsx from 'fs-extra';
 import * as electron from 'electron';
+import { trackEvent } from './analytics';
 
 async function loadDesignerDb(types: Array<string>, designerDataDir: string): Promise<Object> {
   const designerDb = {};
@@ -166,6 +167,7 @@ export default async function migrateFromDesigner({
   const modelTypesToMerge = [];
 
   if (useDesignerSettings) {
+    trackEvent('Data', 'Migration', 'Settings');
     modelTypesToMerge.push(models.settings.type);
     console.log(`[db-merge] keeping settings from Insomnia Designer`);
   } else {
@@ -173,6 +175,7 @@ export default async function migrateFromDesigner({
   }
 
   if (copyWorkspaces) {
+    trackEvent('Data', 'Migration', 'Workspaces');
     modelTypesToMerge.push(...workspaceModels);
   }
 
@@ -228,15 +231,18 @@ export default async function migrateFromDesigner({
 
     if (copyPlugins) {
       console.log(`[db-merge] migrating plugins from designer to core`);
+      trackEvent('Data', 'Migration', 'Plugins');
       await migratePlugins(designerDataDir, coreDataDir);
     }
 
     console.log('[db-merge] done!');
 
+    trackEvent('Data', 'Migration', 'Success');
     return {};
   } catch (error) {
     console.log('[db-merge] an error occurred while migrating');
     console.error(error);
+    trackEvent('Data', 'Migration', 'Failure');
     await restoreCoreBackup(backupDir, coreDataDir);
     return { error };
   }
