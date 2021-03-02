@@ -388,7 +388,7 @@ describe('isApiSpecImport()', () => {
   });
 });
 
-describe('isApiSpecImport()', () => {
+describe('isInsomniaV4Import()', () => {
   it.each(['insomnia-4'])('should return true if spec id is %o', (id: string) => {
     expect(importUtil.isInsomniaV4Import({ id })).toBe(true);
   });
