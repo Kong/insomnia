@@ -15,6 +15,10 @@ export const clickWorkspaceDropdown = async app => {
   return dropdown;
 };
 
+export const goToDashboard = async app => {
+  await app.client.$('.header_left a').then(e => e.click());
+};
+
 export const createNewRequest = async (app, name) => {
   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 
