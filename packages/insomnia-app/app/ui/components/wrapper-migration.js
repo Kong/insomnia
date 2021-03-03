@@ -11,6 +11,7 @@ import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';
 import HelpTooltip from './help-tooltip';
 import { trackEvent } from '../../common/analytics';
+import fs from 'fs';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -18,22 +19,31 @@ type SettingProps = {
   label: string,
   name: $Keys<MigrationOptions>,
   options: MigrationOptions,
-  help?: string,
 };
 
 type TextSettingProps = SettingProps & {
   handleChange: (SyntheticEvent<HTMLInputElement>) => void,
+  errorMessage?: string,
 };
-const TextSetting = ({ handleChange, label, name, options }: TextSettingProps) => {
+const TextSetting = ({ handleChange, label, name, options, errorMessage }: TextSettingProps) => {
   if (!options.hasOwnProperty(name)) {
     throw new Error(`Invalid text setting name ${name}`);
   }
+
+  const hasError = !!errorMessage;
 
   return (
     <div className="form-control form-control--outlined margin-bottom">
       <label>
         {label}
-        <input type="text" name={name} defaultValue={options[name]} onChange={handleChange} />
+        <input
+          className={hasError && 'input--error'}
+          type="text"
+          name={name}
+          defaultValue={options[name]}
+          onBlur={handleChange}
+        />
+        {hasError && <div className="font-error space-top">{errorMessage}</div>}
       </label>
     </div>
   );
@@ -41,6 +51,7 @@ const TextSetting = ({ handleChange, label, name, options }: TextSettingProps) =
 
 type BooleanSettingProps = SettingProps & {
   handleChange: (boolean, Object, string) => void,
+  help?: string,
 };
 const BooleanSetting = ({ handleChange, label, name, options, help }: BooleanSettingProps) => {
   if (!options.hasOwnProperty(name)) {
@@ -79,14 +90,29 @@ const Options = ({ start, cancel }: OptionsProps) => {
   }));
 
   const handleInputChange = React.useCallback((e: SyntheticEvent<HTMLInputElement>) => {
-    setOptions(prevOpts => ({ ...prevOpts, [e.currentTarget.name]: e.currentTarget.value }));
+    const { name, value } = e.currentTarget;
+    setOptions(prevOpts => ({ ...prevOpts, [name]: value }));
   }, []);
 
   const handleSwitchChange = React.useCallback((checked: boolean, event: Object, id: string) => {
     setOptions(prevOpts => ({ ...prevOpts, [id]: checked }));
   }, []);
 
-  const canStart = options.useDesignerSettings || options.copyWorkspaces || options.copyPlugins;
+  const {
+    coreDataDir,
+    designerDataDir,
+    useDesignerSettings,
+    copyWorkspaces,
+    copyPlugins,
+  } = options;
+
+  const coreExists = React.useMemo(() => fs.existsSync(coreDataDir), [coreDataDir]);
+
+  const designerExists = React.useMemo(() => fs.existsSync(designerDataDir), [designerDataDir]);
+
+  const hasSomethingToMigrate = useDesignerSettings || copyWorkspaces || copyPlugins;
+  const dirsExist = coreExists && designerExists;
+  const canStart = hasSomethingToMigrate && dirsExist;
 
   return (
     <>
@@ -100,7 +126,7 @@ const Options = ({ start, cancel }: OptionsProps) => {
           options={options}
           handleChange={handleSwitchChange}
           help={
-            'This includes all resources linked to a workspace (eg. requests, proto files, environments, etc)'
+            'This includes all resources linked to a workspace (eg. requests, proto files, api specs, environments, etc)'
           }
         />
         <BooleanSetting
@@ -126,12 +152,14 @@ const Options = ({ start, cancel }: OptionsProps) => {
             name="designerDataDir"
             options={options}
             handleChange={handleInputChange}
+            errorMessage={!designerExists && 'Directory does not exist'}
           />
           <TextSetting
             label="Insomnia Data Directory"
             name="coreDataDir"
             options={options}
             handleChange={handleInputChange}
+            errorMessage={!coreExists && 'Directory does not exist'}
           />
         </details>
       </div>
