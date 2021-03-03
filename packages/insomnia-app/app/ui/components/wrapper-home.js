@@ -96,7 +96,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   _handleDocumentCreate() {
     showPrompt({
-      title: 'New Document',
+      title: 'Create New Design Document',
       submitName: 'Create',
       placeholder: 'spec-name.yaml',
       onComplete: async name => {
@@ -111,7 +111,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   _handleCollectionCreate() {
     showPrompt({
-      title: 'Create New Collection',
+      title: 'Create New Request Collection',
       placeholder: 'My Collection',
       submitName: 'Create',
       onComplete: async name => {

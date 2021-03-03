@@ -13,7 +13,9 @@ const isWindows = () => getAppPlatform() === 'win32';
 export const isBuild = () => process.env.BUNDLE === 'build';
 export const isPackage = () => process.env.BUNDLE === 'package';
 
-const spectronConfig = designerDataPath => {
+const spectronConfig = (
+  designerDataPath = path.join(__dirname, '..', 'fixtures', 'doesnt-exist'),
+) => {
   let packagePathSuffix = '';
   if (isWindows()) {
     packagePathSuffix = path.join('win-unpacked', 'Insomnia.exe');
