@@ -1,9 +1,11 @@
 import findAsync from './find-async';
 
-export const clickDropdownItemByText = async (dropdown, text) => {
+export const clickDropdownItemByText = async (dropdown, text, fromComponentLibrary = false) => {
   let item;
   await dropdown.waitUntil(async () => {
-    const items = await dropdown.react$$('DropdownItem');
+    const items = fromComponentLibrary
+      ? await dropdown.$$('button[class^=dropdown-item]')
+      : await dropdown.react$$('DropdownItem');
     item = await findAsync(items, async i => (await i.getText()) === text);
     return !!item;
   });

@@ -5,8 +5,10 @@ import * as dropdown from '../modules/dropdown';
 import * as settings from '../modules/settings';
 import fs from 'fs';
 import { basicAuthCreds } from '../fixtures/constants';
+import * as onboarding from '../modules/onboarding';
+import * as home from '../modules/home';
 
-xdescribe('Application launch', function() {
+describe('Application launch', function() {
   jest.setTimeout(50000);
   let app = null;
 
@@ -20,13 +22,20 @@ xdescribe('Application launch', function() {
 
   it('shows an initial window', async () => {
     await client.correctlyLaunched(app);
-    await debug.workspaceDropdownExists(app);
+    await onboarding.skipOnboardingFlow(app);
+    await home.documentListingShown(app);
   });
 
-  it('sends JSON request', async () => {
+  fit('sends JSON request', async () => {
     const url = 'http://127.0.0.1:4010/pets/1';
 
-    await debug.workspaceDropdownExists(app);
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    await home.documentListingShown(app);
+    const name = await home.createNewCollection(app);
+    await home.openDocumentWithTitle(app, name);
+
     await debug.createNewRequest(app, 'json');
     await debug.typeInUrlBar(app, url);
     await debug.clickSendRequest(app);
