@@ -40,7 +40,8 @@ export const openDocumentWithTitle = async (app, text) => {
 };
 
 export const expectTotalDocuments = async (app, count) => {
-  await app.client.waitUntilTextExists('.document-listing__footer', `${count} Documents`);
+  const label = count > 1 ? 'Documents' : 'Document';
+  await app.client.waitUntilTextExists('.document-listing__footer', `${count} ${label}`);
 };
 
 export const openDocumentMenuDropdown = async card => {
