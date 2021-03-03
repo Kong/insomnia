@@ -1,6 +1,6 @@
 import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { pluralize } from '../misc';
+import { diffPatchObj, pluralize } from '../misc';
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -215,5 +215,35 @@ describe('pluralize()', () => {
 
   it('should end with ies', () => {
     expect(pluralize('Directory')).toBe('Directories');
+  });
+});
+
+describe.only('diffPatchObj()', () => {
+  const a = { x: 1 };
+  const b = { x: 2, y: 3 };
+  const c = { x: 4, y: { z: 5 } };
+
+  it('does a basic merge', () => {
+    expect(diffPatchObj(a, b)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(b, a)).toEqual({ x: 1 });
+  });
+
+  it.skip('does a basic merge, deep', () => {
+    expect(diffPatchObj(a, c, true)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(c, a, true)).toEqual({ x: 1 });
+  });
+
+  it.skip('does a basic nested merge', () => {
+    expect(diffPatchObj(a, b)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(b, a)).toEqual({ x: 1, y: { z: 5 } });
+  });
+
+  it.skip('does a basic nested merge, deep', () => {
+    expect(diffPatchObj(a, c, true)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(c, a, true)).toEqual({ x: 1, y: { z: 5 } });
   });
 });
