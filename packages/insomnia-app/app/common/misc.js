@@ -413,12 +413,14 @@ export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectCom
       if (right !== left) {
         if (deep && isObject(left) && isObject(right)) {
           clonedBaseObj[prop] = diffPatchObj(left, right, deep);
+        } else if (isObject(left) && !isObject(right)) {
+          // when right is empty but left isn't, prefer left to avoid a sparse array
+          clonedBaseObj[prop] = left;
         } else {
+          // otherwise prefer right when both elements aren't objects to ensure values don't get overwritten
           clonedBaseObj[prop] = right;
         }
       }
-    } else {
-      delete clonedBaseObj[prop];
     }
   }
 
