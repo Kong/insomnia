@@ -131,10 +131,10 @@ describe('Application launch', function() {
     const docName = await home.createNewDocument(app);
 
     // Open card dropdown for the document
-    const documentDD = await home.openDocumentMenuDropdown(app, docName);
+    const parent = await home.openDocumentMenuDropdown(app, docName);
 
     // Click the "Deploy to Portal" button, installed from that plugin
-    await dropdown.clickDropdownItemByText(documentDD, 'Deploy to Portal');
+    await dropdown.clickDropdownItemByText(parent, 'Deploy to Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });

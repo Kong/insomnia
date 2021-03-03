@@ -42,7 +42,7 @@ export const openDocumentMenuDropdown = async (app, text) => {
   const card = await findCardWithTitle(app, text);
   const dropdown = await card.react$('DocumentCardDropdown');
   await dropdown.click();
-  return dropdown;
+  return card;
 };
 
 const openCreateDropdown = async app => {
