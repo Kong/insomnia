@@ -226,7 +226,7 @@ describe.only('diffPatchObj()', () => {
   it('does a basic merge', () => {
     expect(diffPatchObj(a, b)).toEqual({ x: 2, y: 3 });
 
-    expect(diffPatchObj(b, a)).toEqual({ x: 1 });
+    expect(diffPatchObj(b, a)).toEqual({ x: 1, y: 3 });
   });
 
   it.skip('does a basic merge, deep', () => {
