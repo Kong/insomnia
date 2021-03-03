@@ -36,7 +36,7 @@ import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from '../../common/constants';
 
-import { fuzzyMatchAll } from '../../common/misc';
+import { fuzzyMatchAll, pluralize } from '../../common/misc';
 import type {
   HandleImportClipboardCallback,
   HandleImportFileCallback,
@@ -59,6 +59,7 @@ import { parseApiSpec } from '../../common/api-specs';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
+import { strings } from '../../common/strings';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -505,6 +506,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces.map(this.renderCard).filter(c => c !== null);
 
+    const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
+
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
@@ -541,7 +544,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
               )}
             </div>
             <div className="document-listing__footer vertically-center">
-              <span>{cards.length} Documents</span>
+              <span>
+                {cards.length} {countLabel}
+              </span>
             </div>
           </div>
         )}
