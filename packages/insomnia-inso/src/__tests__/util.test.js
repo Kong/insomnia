@@ -1,5 +1,5 @@
 // @flow
-import { exit, logErrorExit1, getDefaultAppDataDir, getVersion, isDevelopment } from '../util';
+import { exit, logErrorExit1, getDefaultAppName, getVersion, isDevelopment } from '../util';
 import * as packageJson from '../../package.json';
 import { globalBeforeAll, globalBeforeEach } from '../../__jest__/before';
 import logger from '../logger';
@@ -104,7 +104,7 @@ describe('logErrorExit1()', () => {
   });
 });
 
-describe('getDefaultAppDataDir()', () => {
+describe('getDefaultAppName()', () => {
   const OLD_ENV = process.env;
 
   beforeEach(() => {
@@ -117,16 +117,14 @@ describe('getDefaultAppDataDir()', () => {
 
   it('should return value if set', () => {
     const value = 'dir';
-    process.env.DEFAULT_APP_DATA_DIR = value;
-    expect(getDefaultAppDataDir()).toBe(value);
+    process.env.DEFAULT_APP_NAME = value;
+    expect(getDefaultAppName()).toBe(value);
   });
 
   it('should throw error if not set', () => {
-    process.env.DEFAULT_APP_DATA_DIR = '';
+    process.env.DEFAULT_APP_NAME = '';
 
-    expect(getDefaultAppDataDir).toThrowError(
-      'Environment variable DEFAULT_APP_DATA_DIR is not set.',
-    );
+    expect(getDefaultAppName).toThrowError('Environment variable DEFAULT_APP_NAME is not set.');
   });
 });
 

@@ -432,7 +432,7 @@ describe('_repairDatabase()', () => {
 
     // Make sure we have everything
     expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('');
-    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Insomnia Designer');
+    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('New Document');
     expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name');
 
     // Run the fix algorithm

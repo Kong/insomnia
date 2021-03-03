@@ -30,18 +30,22 @@ import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { showAlert, showError, showModal, showPrompt } from './modals';
 import * as models from '../../models';
-import { trackEvent } from '../../common/analytics';
+import { trackEvent, trackSegmentEvent } from '../../common/analytics';
 import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from '../../common/constants';
 
 import { fuzzyMatchAll } from '../../common/misc';
-import type { WrapperProps } from './wrapper';
+import type {
+  HandleImportClipboardCallback,
+  HandleImportFileCallback,
+  HandleImportUriCallback,
+  WrapperProps,
+} from './wrapper';
 import Notice from './notice';
 import GitRepositorySettingsModal from '../components/modals/git-repository-settings-modal';
 import PageLayout from './page-layout';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { MemPlugin } from '../../sync/git/mem-plugin';
@@ -58,9 +62,9 @@ import AccountDropdown from './dropdowns/account-dropdown';
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleImportFile: (forceToWorkspace: ForceToWorkspace) => void,
-  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => void,
-  handleImportClipboard: (forceToWorkspace: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
+  handleImportUri: HandleImportUriCallback,
+  handleImportClipboard: HandleImportClipboardCallback,
 |};
 
 type State = {|
@@ -100,6 +104,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'designer',
         });
+        trackSegmentEvent('Document Created');
       },
     });
   }
@@ -114,16 +119,17 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'collection',
         });
+        trackSegmentEvent('Collection Created');
       },
     });
   }
 
   _handleImportFile() {
-    this.props.handleImportFile(ForceToWorkspaceKeys.new);
+    this.props.handleImportFile({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportClipBoard() {
-    this.props.handleImportClipboard(ForceToWorkspaceKeys.new);
+    this.props.handleImportClipboard({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportUri() {
@@ -133,7 +139,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
+        this.props.handleImportUri(uri, { forceToWorkspace: ForceToWorkspaceKeys.new });
       },
     });
   }
@@ -444,7 +450,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
         <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
-          Blank Document
+          Design Document
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
           Request Collection
@@ -493,7 +499,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces } = this.props.wrapperProps;
+    const { workspaces, isLoading } = this.props.wrapperProps;
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
@@ -504,11 +510,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
           <Header
-            className="app-header"
+            className="app-header theme--app-header"
             gridLeft={
               <React.Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
                 <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
+                {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </React.Fragment>
             }
             gridRight={

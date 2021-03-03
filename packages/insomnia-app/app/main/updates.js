@@ -7,6 +7,7 @@ import {
   isDevelopment,
   UPDATE_URL_MAC,
   UPDATE_URL_WINDOWS,
+  updatesSupported,
 } from '../common/constants';
 import * as models from '../models/index';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
@@ -18,6 +19,10 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
   const platform = process.platform;
   const settings = await models.settings.getOrCreate();
   let updateUrl = null;
+
+  if (!updatesSupported()) {
+    return null;
+  }
 
   if (platform === 'win32') {
     updateUrl = UPDATE_URL_WINDOWS;

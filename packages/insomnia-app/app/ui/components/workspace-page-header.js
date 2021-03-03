@@ -3,7 +3,7 @@
 import React from 'react';
 import { ACTIVITY_HOME } from '../../common/constants';
 import coreLogo from '../images/insomnia-core-logo.png';
-import strings from '../../common/strings';
+import { strings } from '../../common/strings';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import ActivityToggle from './activity-toggle';
 import type { WrapperProps } from './wrapper';
@@ -50,7 +50,7 @@ const WorkspacePageHeader = ({
 
   return (
     <Header
-      className="app-header"
+      className="app-header theme--app-header"
       gridLeft={
         <React.Fragment>
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />
