@@ -13,7 +13,7 @@ export const expectDocumentWithTitle = async (app, title) => {
   await app.client.waitUntilTextExists('.document-listing__body', title);
 };
 
-async function findCardWithTitle(app, text) {
+export const findCardWithTitle = async (app, text) => {
   let card;
   await app.client.waitUntil(async () => {
     const items = await app.client.$$('.document-listing__body div[class^=card__StyledCard]');
@@ -24,7 +24,12 @@ async function findCardWithTitle(app, text) {
     return !!card;
   });
   return card;
-}
+};
+
+export const cardHasBadge = async (card, text) => {
+  const badge = await card.$('.header-item.card-badge');
+  expect(await badge.getText()).toBe(text);
+};
 
 export const openDocumentWithTitle = async (app, text) => {
   const card = await findCardWithTitle(app, text);
@@ -38,11 +43,9 @@ export const expectTotalDocuments = async (app, count) => {
   await app.client.waitUntilTextExists('.document-listing__footer', `${count} Documents`);
 };
 
-export const openDocumentMenuDropdown = async (app, text) => {
-  const card = await findCardWithTitle(app, text);
+export const openDocumentMenuDropdown = async card => {
   const dropdown = await card.react$('DocumentCardDropdown');
   await dropdown.click();
-  return card;
 };
 
 const openCreateDropdown = async app => {
@@ -73,4 +76,10 @@ export const createNewDocument = async (app, prefix = 'doc') => {
   await modal.typeIntoModalInput(app, documentName);
   await modal.clickModalFooterByText(app, 'Create');
   return documentName;
+};
+
+export const importFromClipboard = async app => {
+  await openCreateDropdown(app);
+
+  await dropdown.clickDropdownItemByText(app.client, 'Clipboard', true);
 };

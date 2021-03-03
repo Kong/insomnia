@@ -131,14 +131,58 @@ describe('Application launch', function() {
     const docName = await home.createNewDocument(app);
 
     // Open card dropdown for the document
-    const parent = await home.openDocumentMenuDropdown(app, docName);
+    const card = await home.findCardWithTitle(app, docName);
+    await home.openDocumentMenuDropdown(card);
 
     // Click the "Deploy to Portal" button, installed from that plugin
-    await dropdown.clickDropdownItemByText(parent, 'Deploy to Portal');
+    await dropdown.clickDropdownItemByText(card, 'Deploy to Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
     await modal.close(app);
+  });
+
+  it('should prompt and import swagger from clipboard from home', async () => {
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    // Copy text to clipboard
+    const buffer = await fs.promises.readFile(`${__dirname}/../fixtures/swagger2.yaml`);
+    const swagger2Text = buffer.toString();
+    await app.electron.clipboard.writeText(swagger2Text);
+
+    // Expect one document at home
+    await home.documentListingShown(app);
+    await home.expectTotalDocuments(app, 1);
+    await home.expectDocumentWithTitle(app, 'Insomnia');
+    const name = 'E2E testing specification - swagger 2 1.0.0';
+
+    // Import from clipboard as collection
+    await home.importFromClipboard(app);
+    await modal.waitUntilOpened(app, { title: 'Import As' });
+    await modal.clickModalFooterByText(app, 'Request Collection');
+    await home.expectTotalDocuments(app, 2);
+
+    // Ensure is collection
+    const collCard = await home.findCardWithTitle(app, name);
+    await home.cardHasBadge(collCard, 'Collection');
+
+    // Delete the collection
+    await home.openDocumentMenuDropdown(collCard);
+    await dropdown.clickDropdownItemByText(collCard, 'Delete');
+    await modal.waitUntilOpened(app, { title: 'Delete Collection' });
+    await modal.clickModalFooterByText(app, 'Yes');
+    await home.expectTotalDocuments(app, 1);
+
+    // Import from clipboard as document
+    await home.importFromClipboard(app);
+    await modal.waitUntilOpened(app, { title: 'Import As' });
+    await modal.clickModalFooterByText(app, 'Design Document');
+    await home.expectTotalDocuments(app, 2);
+
+    // Ensure is document
+    const docCard = await home.findCardWithTitle(app, name);
+    await home.cardHasBadge(docCard, 'Document');
   });
 
   // This test will ensure that for an endpoint which expects basic auth:
