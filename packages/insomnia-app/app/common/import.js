@@ -266,19 +266,20 @@ export async function importRaw(
     let newDoc: BaseModel;
     if (existingDoc) {
       let updateDoc = resource;
+
+      // Do differential patching when enabled
+      if (enableDiffBasedPatching) {
+        updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
+      }
+
+      // Bypass differential update for urls when enabled
+      if (bypassDiffProps?.url && updateDoc.url) {
+        updateDoc.url = resource.url;
+      }
+
       // If workspace, don't overwrite the existing scope
       if (isWorkspace(model)) {
         (updateDoc: Workspace).scope = (existingDoc: Workspace).scope;
-      } else {
-        // Do differential patching when enabled
-        if (enableDiffBasedPatching) {
-          updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
-        }
-
-        // Bypass differential update for urls when enabled
-        if (bypassDiffProps?.url && updateDoc.url) {
-          updateDoc.url = resource.url;
-        }
       }
 
       newDoc = await db.docUpdate(existingDoc, updateDoc);
