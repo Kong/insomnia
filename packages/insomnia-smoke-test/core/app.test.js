@@ -123,7 +123,7 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  it('shows deploy to portal for design documents', async () => {
+  xit('shows deploy to portal for design documents', async () => {
     await client.correctlyLaunched(app);
     await onboarding.skipOnboardingFlow(app);
 
