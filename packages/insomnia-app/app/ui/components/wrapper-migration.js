@@ -12,7 +12,6 @@ import { goToNextActivity } from '../redux/modules/global';
 import HelpTooltip from './help-tooltip';
 import { trackEvent } from '../../common/analytics';
 import fs from 'fs';
-import classnames from 'classnames';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -38,7 +37,7 @@ const TextSetting = ({ handleChange, label, name, options, errorMessage }: TextS
       <label>
         {label}
         <input
-          className={classnames({ 'input--error': hasError })}
+          className={hasError && 'input--error'}
           type="text"
           name={name}
           defaultValue={options[name]}
@@ -127,7 +126,7 @@ const Options = ({ start, cancel }: OptionsProps) => {
           options={options}
           handleChange={handleSwitchChange}
           help={
-            'This includes all resources linked to a workspace (eg. requests, proto files, environments, etc)'
+            'This includes all resources linked to a workspace (eg. requests, proto files, api specs, environments, etc)'
           }
         />
         <BooleanSetting
