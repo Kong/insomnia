@@ -397,3 +397,37 @@ export function pluralize(text: string): string {
   // Add the trailer for pluralization
   return `${text.slice(0, text.length - chop)}${trailer}`;
 }
+
+export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectComparison {
+  const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
+
+  for (const prop in baseObj) {
+    if (!baseObj.hasOwnProperty(prop)) continue;
+    if (patchObj.hasOwnProperty(prop)) {
+      if (patchObj[prop] !== baseObj[prop]) {
+        const isBasePropObj = isObject(baseObj[prop]);
+        const isPatchPropObj = isObject(patchObj[prop]);
+        if (deep && isBasePropObj && isPatchPropObj) {
+          clonedBaseObj[prop] = diffPatchObj(baseObj[prop], patchObj[prop], deep);
+        } else {
+          clonedBaseObj[prop] = patchObj[prop];
+        }
+      }
+    } else {
+      delete clonedBaseObj[prop];
+    }
+  }
+
+  for (const prop in patchObj) {
+    if (!patchObj.hasOwnProperty(prop)) continue;
+    if (!baseObj.hasOwnProperty(prop)) {
+      clonedBaseObj[prop] = patchObj[prop];
+    }
+  }
+
+  return clonedBaseObj;
+}
+
+export function isObject(obj: any) {
+  return obj !== null && typeof obj === 'object';
+}

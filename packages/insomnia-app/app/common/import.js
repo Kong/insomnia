@@ -9,7 +9,7 @@ import { CONTENT_TYPE_GRAPHQL, getAppVersion } from './constants';
 import { showError, showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
-import { fnOrString, generateId } from './misc';
+import { fnOrString, generateId, diffPatchObj } from './misc';
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
 import {
@@ -79,6 +79,11 @@ type ConvertResult = {
 export type ImportRawConfig = {
   getWorkspaceId: () => Promise<string | null>,
   getWorkspaceScope?: string => Promise<WorkspaceScope>,
+  enableDiffBasedPatching?: boolean,
+  enableDiffDeep?: boolean,
+  bypassDiffProps?: {
+    url: string,
+  },
 };
 
 export async function importUri(uri: string, importConfig: ImportRawConfig): Promise<ImportResult> {
@@ -136,7 +141,13 @@ export async function importUri(uri: string, importConfig: ImportRawConfig): Pro
 
 export async function importRaw(
   rawContent: string,
-  { getWorkspaceId, getWorkspaceScope }: ImportRawConfig,
+  {
+    getWorkspaceId,
+    getWorkspaceScope,
+    enableDiffBasedPatching,
+    enableDiffDeep,
+    bypassDiffProps,
+  }: ImportRawConfig,
 ): Promise<ImportResult> {
   let results: ConvertResult;
   try {
@@ -254,11 +265,23 @@ export async function importRaw(
     const existingDoc = await db.get(model.type, resource._id);
     let newDoc: BaseModel;
     if (existingDoc) {
+      let updateDoc = resource;
       // If workspace, don't overwrite the existing scope
       if (isWorkspace(model)) {
-        (resource: Workspace).scope = (existingDoc: Workspace).scope;
+        (updateDoc: Workspace).scope = (existingDoc: Workspace).scope;
+      } else {
+        // Do differential patching when enabled
+        if (enableDiffBasedPatching) {
+          updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
+        }
+
+        // Bypass differential update for urls when enabled
+        if (bypassDiffProps?.url && updateDoc.url) {
+          updateDoc.url = resource.url;
+        }
       }
-      newDoc = await db.docUpdate(existingDoc, resource);
+
+      newDoc = await db.docUpdate(existingDoc, updateDoc);
     } else {
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource, resultsType, getWorkspaceScope);

@@ -347,6 +347,11 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     setTimeout(() => {
       importRaw(activeApiSpec.contents, {
         getWorkspaceId: () => Promise.resolve(workspaceId),
+        enableDiffBasedPatching: true,
+        enableDiffDeep: true,
+        bypassDiffProps: {
+          url: true,
+        },
       });
     }, 1000);
   }
