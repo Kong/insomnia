@@ -23,6 +23,7 @@ import PromptButton from '../base/prompt-button';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import { docsVersionControl } from '../../../common/documentation';
+import { strings } from '../../../common/strings';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -522,7 +523,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
           <DropdownItem onClick={this._handleShowDeleteModal} disabled={historyCount === 0}>
             <i className="fa fa-remove" />
-            Delete Workspace
+            Delete {strings.collection}
           </DropdownItem>
 
           <DropdownDivider>Local Branches</DropdownDivider>

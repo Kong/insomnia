@@ -88,7 +88,7 @@ function keyBinds(
 export const hotKeyRefs: { [string]: HotKeyDefinition } = {
   WORKSPACE_SHOW_SETTINGS: defineHotKey(
     'workspace_showSettings',
-    `Show ${strings.workspace} Settings`,
+    `Show ${strings.document} / ${strings.collection} Settings`,
   ),
 
   REQUEST_SHOW_SETTINGS: defineHotKey('request_showSettings', 'Show Request Settings'),

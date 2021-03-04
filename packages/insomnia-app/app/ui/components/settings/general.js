@@ -32,6 +32,7 @@ import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { bindActionCreators } from 'redux';
 import * as globalActions from '../../redux/modules/global';
 import { connect } from 'react-redux';
+import { stringsPlural } from '../../../common/strings';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -539,8 +540,8 @@ class General extends React.PureComponent<Props, State> {
           </label>
           <p className="txt-sm faint">
             Help Kong improve its products by sending anonymous data about features and plugins
-            used, hardware and software configuration, statistics on number of requests, workspaces,
-            etc.
+            used, hardware and software configuration, statistics on number of requests,{' '}
+            {stringsPlural.collection.toLowerCase()}, {stringsPlural.document.toLowerCase()}, etc.
           </p>
           <p className="txt-sm faint">
             Please note that this will not include personal data or any sensitive information, such

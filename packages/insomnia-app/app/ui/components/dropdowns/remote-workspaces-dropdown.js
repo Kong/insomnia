@@ -12,6 +12,7 @@ import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import * as db from '../../../common/database';
 import { showAlert } from '../modals';
+import { stringsPlural } from '../../../common/strings';
 
 type Props = {
   className?: string,
@@ -162,10 +163,10 @@ class RemoteWorkspacesDropdown extends React.Component<Props, State> {
     return (
       <Dropdown onOpen={this._refreshRemoteWorkspaces} renderButton={button}>
         <DropdownDivider>
-          Remote Workspaces{' '}
+          Remote {stringsPlural.collection}
           <HelpTooltip>
-            These workspaces have been shared with you via Insomnia Sync and do not yet exist on
-            your machine.
+            These {stringsPlural.collection.toLowerCase()} have been shared with you via Insomnia
+            Sync and do not yet exist on your machine.
           </HelpTooltip>{' '}
           {loading && <i className="fa fa-spin fa-refresh" />}
         </DropdownDivider>

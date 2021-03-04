@@ -1,6 +1,7 @@
 // @flow
 import type { Workspace } from '../models/workspace';
 import { isDesigner } from '../models/helpers/is-model';
+import { pluralize } from './misc';
 
 export const strings = {
   workspace: 'Workspace',
@@ -8,6 +9,11 @@ export const strings = {
   document: 'Document',
   collection: 'Collection',
   home: 'Dashboard',
+};
+
+export const stringsPlural = {
+  document: pluralize(strings.document),
+  collection: pluralize(strings.collection),
 };
 
 // Some helpers

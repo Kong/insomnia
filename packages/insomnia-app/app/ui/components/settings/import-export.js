@@ -5,8 +5,8 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
-import { strings } from '../../../common/strings';
 import { docsImportExport } from '../../../common/documentation';
+import { strings, stringsPlural } from '../../../common/strings';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ImportExport extends PureComponent {
@@ -56,11 +56,11 @@ class ImportExport extends PureComponent {
             <DropdownDivider>Choose Export Type</DropdownDivider>
             <DropdownItem onClick={handleShowExportRequestsModal}>
               <i className="fa fa-home" />
-              Current {strings.workspace}
+              Current {strings.document} / {strings.collection}
             </DropdownItem>
             <DropdownItem onClick={handleExportAll}>
               <i className="fa fa-empty" />
-              All {strings.workspaces}
+              All {stringsPlural.document} / {stringsPlural.collection}
             </DropdownItem>
           </Dropdown>
           &nbsp;&nbsp;
