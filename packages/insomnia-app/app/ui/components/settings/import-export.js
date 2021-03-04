@@ -6,6 +6,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
 import { strings } from '../../../common/strings';
+import { docsImportExport } from '../../../common/documentation';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ImportExport extends PureComponent {
@@ -45,11 +46,7 @@ class ImportExport extends PureComponent {
           <strong>Insomnia, Postman v2, HAR, Curl, Swagger, OpenAPI v3</strong>)
         </p>
         <p>
-          Don't see your format here?{' '}
-          <Link href="https://support.insomnia.rest/article/52-importing-and-exporting-data">
-            Add Your Own
-          </Link>
-          .
+          Don't see your format here? <Link href={docsImportExport}>Add Your Own</Link>.
         </p>
         <div className="pad-top">
           <Dropdown outline>

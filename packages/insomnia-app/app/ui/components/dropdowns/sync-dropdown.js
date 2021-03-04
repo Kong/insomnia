@@ -22,6 +22,7 @@ import * as session from '../../../account/session';
 import PromptButton from '../base/prompt-button';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
+import { docsVersionControl } from '../../../common/documentation';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -453,7 +454,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         Insomnia Sync{' '}
         <HelpTooltip>
           Sync and collaborate on workspaces{' '}
-          <Link href="https://support.insomnia.rest/article/67-version-control">
+          <Link href={docsVersionControl}>
             <span className="no-wrap">
               <br />
               Documentation <i className="fa fa-external-link" />
