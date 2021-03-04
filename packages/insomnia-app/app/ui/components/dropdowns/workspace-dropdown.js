@@ -25,7 +25,7 @@ import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
-import { getWorkspaceLabel } from '../../../common/strings';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { isDesigner } from '../../../models/helpers/is-model';
 
 type Props = {

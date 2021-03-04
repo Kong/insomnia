@@ -10,7 +10,7 @@ import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import { parseApiSpec } from '../../../common/api-specs';
-import { getWorkspaceLabel } from '../../../common/strings';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as models from '../../../models';
 import AskModal from '../modals/ask-modal';
 import type { Workspace } from '../../../models/workspace';
