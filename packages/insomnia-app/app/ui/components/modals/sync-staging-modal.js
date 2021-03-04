@@ -13,6 +13,7 @@ import * as models from '../../../models';
 import Tooltip from '../tooltip';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import { describeChanges } from '../../../sync/vcs/util';
+import { strings } from '../../../common/strings';
 
 type Props = {
   workspace: Workspace,
@@ -225,6 +226,10 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     } else {
       child = <i className="fa fa-question-circle info" />;
       message = 'Unknown';
+    }
+
+    if (type === models.workspace.type) {
+      type = strings.collection;
     }
 
     return (

@@ -77,7 +77,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
 
     if (!vcs.hasProject()) {
       this.setState({
-        error: 'Please set up sync to be able to share the workspace',
+        error: `Please set up sync to be able to share the ${strings.collection.toLowerCase()}`,
         loading: false,
       });
       return;
