@@ -2,8 +2,6 @@
 import { pluralize } from './misc';
 
 export const strings = {
-  workspace: 'Workspace',
-  workspaces: 'Workspaces',
   document: 'Document',
   collection: 'Collection',
   home: 'Dashboard',
