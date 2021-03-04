@@ -4,7 +4,12 @@ function insomniaDocs(slug: string): string {
 }
 
 export const docsBase = insomniaDocs('/');
-export const docsGitSync = insomniaDocs('/article/96-git-sync');
+export const docsGitSync = insomniaDocs('/article/193-git-sync');
+export const docsTemplateTags = insomniaDocs('/article/171-template-tags');
+export const docsVersionControl = insomniaDocs('/article/165-version-control-sync');
+export const docsPlugins = insomniaDocs('/article/173-plugins');
+export const docsImportExport = insomniaDocs('/article/172-importing-and-exporting-data');
+
 export const docsGitAccessToken = {
   github:
     'https://docs.github.com/github/authenticating-to-github/creating-a-personal-access-token',
