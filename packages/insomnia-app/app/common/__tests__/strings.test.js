@@ -1,6 +1,7 @@
 // @flow
 import * as models from '../../models';
-import { getWorkspaceLabel, strings } from '../strings';
+import { strings } from '../strings';
+import { getWorkspaceLabel } from '../get-workspace-label';
 
 describe('getWorkspaceLabel', () => {
   it('should return document label', () => {

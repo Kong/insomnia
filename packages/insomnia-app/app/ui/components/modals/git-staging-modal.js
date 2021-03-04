@@ -18,6 +18,7 @@ import PromptButton from '../base/prompt-button';
 import { gitRollback } from '../../../sync/git/git-rollback';
 import classnames from 'classnames';
 import parseGitPath from '../../../sync/git/parse-git-path';
+import { strings } from '../../../common/strings';
 
 type Props = {|
   workspace: Workspace,
@@ -251,6 +252,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
   renderOperation(item: Item) {
     let child = null;
     let message = '';
+    let type = item.type;
 
     if (item.status.includes('added')) {
       child = <i className="fa fa-plus-circle success" />;
@@ -266,10 +268,14 @@ class GitStagingModal extends React.PureComponent<Props, State> {
       message = 'Unknown';
     }
 
+    if (type === models.workspace.type) {
+      type = strings.document;
+    }
+
     return (
       <React.Fragment>
         <Tooltip message={message}>
-          {child} {item.type}
+          {child} {type}
         </Tooltip>
       </React.Fragment>
     );

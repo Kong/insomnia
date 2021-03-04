@@ -16,7 +16,7 @@ import type { Workspace } from '../../../models/workspace';
 import type { ClientCertificate } from '../../../models/client-certificate';
 import type { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
-import { getWorkspaceLabel } from '../../../common/strings';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 
 type Props = {

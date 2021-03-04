@@ -1,6 +1,5 @@
 // @flow
-import type { Workspace } from '../models/workspace';
-import { isDesigner } from '../models/helpers/is-model';
+import { pluralize } from './misc';
 
 export const strings = {
   workspace: 'Workspace',
@@ -10,6 +9,7 @@ export const strings = {
   home: 'Dashboard',
 };
 
-// Some helpers
-export const getWorkspaceLabel = (w: Workspace) =>
-  isDesigner(w) ? strings.document : strings.collection;
+export const stringsPlural = {
+  document: pluralize(strings.document),
+  collection: pluralize(strings.collection),
+};
