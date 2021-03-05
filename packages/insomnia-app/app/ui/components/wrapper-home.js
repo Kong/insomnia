@@ -6,10 +6,10 @@ import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
-  ACTIVITY_HOME,
   ACTIVITY_SPEC,
   ACTIVITY_DEBUG,
   getAppName,
+  isWorkspaceActivity,
 } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
@@ -30,18 +30,22 @@ import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { showAlert, showError, showModal, showPrompt } from './modals';
 import * as models from '../../models';
-import { trackEvent } from '../../common/analytics';
+import { trackEvent, trackSegmentEvent } from '../../common/analytics';
 import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from '../../common/constants';
 
-import { fuzzyMatchAll } from '../../common/misc';
-import type { WrapperProps } from './wrapper';
+import { fuzzyMatchAll, pluralize } from '../../common/misc';
+import type {
+  HandleImportClipboardCallback,
+  HandleImportFileCallback,
+  HandleImportUriCallback,
+  WrapperProps,
+} from './wrapper';
 import Notice from './notice';
 import GitRepositorySettingsModal from '../components/modals/git-repository-settings-modal';
 import PageLayout from './page-layout';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { MemPlugin } from '../../sync/git/mem-plugin';
@@ -55,12 +59,13 @@ import { parseApiSpec } from '../../common/api-specs';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
+import { strings } from '../../common/strings';
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleImportFile: (forceToWorkspace: ForceToWorkspace) => void,
-  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => void,
-  handleImportClipboard: (forceToWorkspace: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
+  handleImportUri: HandleImportUriCallback,
+  handleImportClipboard: HandleImportClipboardCallback,
 |};
 
 type State = {|
@@ -92,7 +97,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   _handleDocumentCreate() {
     showPrompt({
-      title: 'New Document',
+      title: 'Create New Design Document',
       submitName: 'Create',
       placeholder: 'spec-name.yaml',
       onComplete: async name => {
@@ -100,13 +105,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'designer',
         });
+        trackSegmentEvent('Document Created');
       },
     });
   }
 
   _handleCollectionCreate() {
     showPrompt({
-      title: 'Create New Collection',
+      title: 'Create New Request Collection',
       placeholder: 'My Collection',
       submitName: 'Create',
       onComplete: async name => {
@@ -114,16 +120,17 @@ class WrapperHome extends React.PureComponent<Props, State> {
           name,
           scope: 'collection',
         });
+        trackSegmentEvent('Collection Created');
       },
     });
   }
 
   _handleImportFile() {
-    this.props.handleImportFile(ForceToWorkspaceKeys.new);
+    this.props.handleImportFile({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportClipBoard() {
-    this.props.handleImportClipboard(ForceToWorkspaceKeys.new);
+    this.props.handleImportClipboard({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportUri() {
@@ -133,7 +140,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
+        this.props.handleImportUri(uri, { forceToWorkspace: ForceToWorkspaceKeys.new });
       },
     });
   }
@@ -304,7 +311,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
-    if (!activeActivity || activeActivity === ACTIVITY_HOME) {
+    if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
+      // or migration or onboarding
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);
@@ -442,14 +450,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
     return (
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleDocumentCreate}>
-          Blank Document
+        <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
+          Design Document
         </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleCollectionCreate}>
-          Blank Collection
+        <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
+          Request Collection
         </DropdownItem>
         <DropdownDivider>Import From</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-file" />} onClick={this._handleImportFile}>
+        <DropdownItem icon={<i className="fa fa-plus" />} onClick={this._handleImportFile}>
           File
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-link" />} onClick={this._handleImportUri}>
@@ -485,29 +493,32 @@ class WrapperHome extends React.PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        {this.renderCreateMenu()}
         <RemoteWorkspacesDropdown vcs={vcs} workspaces={workspaces} className="margin-left" />
+        {this.renderCreateMenu()}
       </div>
     );
   }
 
   render() {
-    const { workspaces } = this.props.wrapperProps;
+    const { workspaces, isLoading } = this.props.wrapperProps;
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces.map(this.renderCard).filter(c => c !== null);
+
+    const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
           <Header
-            className="app-header"
+            className="app-header theme--app-header"
             gridLeft={
               <React.Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
                 <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
+                {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </React.Fragment>
             }
             gridRight={
@@ -533,7 +544,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
               )}
             </div>
             <div className="document-listing__footer vertically-center">
-              <span>{cards.length} Documents</span>
+              <span>
+                {cards.length} {countLabel}
+              </span>
             </div>
           </div>
         )}

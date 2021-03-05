@@ -23,6 +23,7 @@ import {
   getAppName,
   SortOrder,
   ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
 } from '../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
@@ -85,7 +86,6 @@ import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestResult } from '../../models/unit-test-result';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
@@ -94,6 +94,7 @@ import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
 import WrapperMigration from './wrapper-migration';
+import type { ImportOptions } from '../redux/modules/global';
 
 const spectral = new Spectral();
 
@@ -102,16 +103,9 @@ export type WrapperProps = {
   handleActivateRequest: Function,
   handleSetSidebarFilter: Function,
   handleToggleMenuBar: Function,
-  handleImportFileToWorkspace: (workspaceId: string, forceToWorkspace?: ForceToWorkspace) => void,
-  handleImportClipBoardToWorkspace: (
-    workspaceId: string,
-    forceToWorkspace?: ForceToWorkspace,
-  ) => void,
-  handleImportUriToWorkspace: (
-    workspaceId: string,
-    uri: string,
-    forceToWorkspace?: ForceToWorkspace,
-  ) => void,
+  handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void,
+  handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void,
+  handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void,
   handleInitializeEntities: () => Promise<void>,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
@@ -155,6 +149,7 @@ export type WrapperProps = {
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
   handleSetActiveActivity: (activity: GlobalActivity) => void,
+  handleGoToNextActivity: () => void,
 
   // Properties
   activity: GlobalActivity,
@@ -202,6 +197,10 @@ export type WrapperProps = {
   activeRequest: Request | null,
   activeResponse: Response | null,
 };
+
+export type HandleImportFileCallback = (options?: ImportOptions) => void;
+export type HandleImportClipboardCallback = (options?: ImportOptions) => void;
+export type HandleImportUriCallback = (uri: string, options?: ImportOptions) => void;
 
 type State = {
   forceRefreshKey: number,
@@ -346,7 +345,14 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     // Delaying generation so design to debug mode is smooth
     handleSetActiveActivity(nextActivity);
     setTimeout(() => {
-      importRaw(() => Promise.resolve(workspaceId), activeApiSpec.contents);
+      importRaw(activeApiSpec.contents, {
+        getWorkspaceId: () => Promise.resolve(workspaceId),
+        enableDiffBasedPatching: true,
+        enableDiffDeep: true,
+        bypassDiffProps: {
+          url: true,
+        },
+      });
     }, 1000);
   }
 
@@ -365,16 +371,16 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return sUpdate(this.props.settings, { useBulkParametersEditor });
   }
 
-  _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
+  _handleImportFile(options?: ImportOptions): void {
+    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, options);
   }
 
-  _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
-    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, forceToWorkspace);
+  _handleImportUri(uri: string, options?: ImportOptions): void {
+    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, options);
   }
 
-  _handleImportClipBoard(forceToWorkspace?: ForceToWorkspace): void {
-    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
+  _handleImportClipBoard(options?: ImportOptions): void {
+    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, options);
   }
 
   _handleSetActiveResponse(responseId: string | null): void {
@@ -530,6 +536,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeGitRepository,
       activeRequest,
       activeWorkspace,
+      activeApiSpec,
       activeWorkspaceClientCertificates,
       activity,
       gitVCS,
@@ -659,6 +666,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               ref={registerModal}
               clientCertificates={activeWorkspaceClientCertificates}
               workspace={activeWorkspace}
+              apiSpec={activeApiSpec}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}
               editorKeyMap={settings.editorKeyMap}
@@ -863,7 +871,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
           {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
 
-          {activity === null && (
+          {(activity === ACTIVITY_ONBOARDING || activity === null) && (
             <WrapperOnboarding
               wrapperProps={this.props}
               handleImportFile={this._handleImportFile}

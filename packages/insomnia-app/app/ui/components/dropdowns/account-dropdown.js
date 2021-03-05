@@ -27,7 +27,7 @@ const StyledIconContainer = styled.div`
 const AccountDropdown = ({ className }: Props) => (
   <div className={className}>
     <Dropdown>
-      <DropdownButton>
+      <DropdownButton noWrap>
         <Tooltip delay={1000} position="bottom" message="Account">
           <CircleButton>
             <SvgIcon icon="user" />
@@ -54,7 +54,7 @@ const AccountDropdown = ({ className }: Props) => (
         </DropdownItem>
       )}
       {!session.isLoggedIn() && (
-        <DropdownItem key="invite" buttonClass={Link} href="https://insomnia.rest/pricing/" button>
+        <DropdownItem key="invite" buttonClass={Link} href="https://insomnia.rest/pricing" button>
           <StyledIconContainer>
             <i className="fa fa-users" />
           </StyledIconContainer>{' '}

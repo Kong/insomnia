@@ -3,7 +3,7 @@
 import React from 'react';
 import { ACTIVITY_HOME } from '../../common/constants';
 import coreLogo from '../images/insomnia-core-logo.png';
-import strings from '../../common/strings';
+import { strings } from '../../common/strings';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
 import ActivityToggle from './activity-toggle';
 import type { WrapperProps } from './wrapper';
@@ -26,11 +26,7 @@ const WorkspacePageHeader = ({
     activeEnvironment,
     settings,
     activity,
-    unseenWorkspaces,
-    vcs,
-    workspaces,
     isLoading,
-    handleSetActiveWorkspace,
   },
 }: Props) => {
   const collection = activeWorkspace.scope === 'collection';
@@ -46,18 +42,15 @@ const WorkspacePageHeader = ({
       displayName={collection ? activeWorkspace.name : activeApiSpec.fileName}
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
-      workspaces={workspaces}
-      unseenWorkspaces={unseenWorkspaces}
+      activeApiSpec={activeApiSpec}
       hotKeyRegistry={settings.hotKeyRegistry}
-      handleSetActiveWorkspace={handleSetActiveWorkspace}
       isLoading={isLoading}
-      vcs={vcs}
     />
   );
 
   return (
     <Header
-      className="app-header"
+      className="app-header theme--app-header"
       gridLeft={
         <React.Fragment>
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />

@@ -1,6 +1,7 @@
 import VCS from '../index';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { describeChanges } from '../util';
+import { globalBeforeEach } from '../../../__jest__/before-each';
 
 function newDoc(id) {
   return { id };
@@ -14,9 +15,10 @@ async function vcs(branch) {
 }
 
 describe('VCS', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     let ts = 1000000000000;
     Date.now = jest.fn(() => ts++);
+    await globalBeforeEach();
   });
 
   describe('status()', () => {

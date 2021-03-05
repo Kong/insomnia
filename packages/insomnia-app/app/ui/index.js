@@ -14,9 +14,6 @@ import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { initializeLogging } from '../common/log';
-import fs from 'fs';
-import { getDesignerDataDir } from '../common/misc';
-import { setActiveActivity } from './redux/modules/global';
 
 initializeLogging();
 
@@ -37,19 +34,6 @@ document.title = getAppLongName();
 
   // Create Redux store
   const store = await initStore();
-
-  // TODO: this will force users to bypass the onboarding screen.
-  //  Need to know all the rules for when to automatically show migration and what the previous/next step is
-
-  // Check if we should load from Designer
-  if (
-    !isDevelopment() &&
-    !settings.hasPromptedToMigrateFromDesigner &&
-    fs.existsSync(getDesignerDataDir())
-  ) {
-    store.dispatch(setActiveActivity(ACTIVITY_MIGRATION));
-    await models.settings.update(settings, { hasPromptedToMigrateFromDesigner: true });
-  }
 
   const render = App => {
     const TheHottestApp = hot(module)(App);

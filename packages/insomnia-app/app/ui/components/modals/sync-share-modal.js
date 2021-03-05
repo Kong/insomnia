@@ -12,6 +12,7 @@ import PromptButton from '../base/prompt-button';
 import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
 import { showModal } from './index';
+import { strings } from '../../../common/strings';
 
 type Props = {
   workspace: Workspace,
@@ -76,7 +77,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
 
     if (!vcs.hasProject()) {
       this.setState({
-        error: 'Please set up sync to be able to share the workspace',
+        error: `Please set up sync to be able to share the ${strings.collection.toLowerCase()}`,
         loading: false,
       });
       return;
@@ -108,7 +109,7 @@ class SyncShareModal extends React.PureComponent<Props, State> {
     const { workspace } = this.props;
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader key="header">Share Workspace</ModalHeader>
+        <ModalHeader key="header">Share {strings.collection}</ModalHeader>
         <ModalBody key="body" className="pad text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p>

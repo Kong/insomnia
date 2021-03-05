@@ -65,6 +65,7 @@ type BaseSettings = {
   useBulkParametersEditor: boolean,
   validateSSL: boolean,
   hasPromptedToMigrateFromDesigner: boolean,
+  hasPromptedOnboarding: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -122,8 +123,12 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateSSL: true,
 
-    // Feature flags
     hasPromptedToMigrateFromDesigner: false,
+
+    // Users should only see onboarding during first launch, and anybody updating from an
+    // older version should not see it, so by default this flag is set to true, and is toggled
+    // to false during initialization
+    hasPromptedOnboarding: true,
   };
 }
 
@@ -149,10 +154,15 @@ export async function update(settings: Settings, patch: $Shape<Settings>): Promi
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate(patch: $Shape<Settings> = {}): Promise<Settings> {
+export async function patch(patch: $Shape<Settings>): Promise<Settings> {
+  const settings = await getOrCreate();
+  return db.docUpdate(settings, patch);
+}
+
+export async function getOrCreate(): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
-    return create(patch);
+    return create();
   } else {
     return results[0];
   }
