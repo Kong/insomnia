@@ -8,7 +8,7 @@ import * as db from '../common/database';
 import { init as initStore } from './redux/modules';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
-import { ACTIVITY_MIGRATION, getAppLongName, isDevelopment } from '../common/constants';
+import { getAppLongName, isDevelopment } from '../common/constants';
 import { setFont, applyColorScheme } from '../plugins/misc';
 import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
