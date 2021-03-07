@@ -288,6 +288,7 @@ export async function setFont(settings: Object) {
 
   html.style.setProperty('--font-default', settings.fontInterface);
   html.style.setProperty('--font-monospace', settings.fontMonospace);
+  html.style.setProperty('--font-monospace-weight', settings.fontMonospaceWeight);
   html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');
   html.style.setProperty('font-size', `${settings.fontSize}px`);
 }

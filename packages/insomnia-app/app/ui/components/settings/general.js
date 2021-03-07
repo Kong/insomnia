@@ -20,6 +20,7 @@ import {
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
   MAX_EDITOR_FONT_SIZE,
+  EDITOR_FONT_WEITGHTS,
 } from '../../../common/constants';
 import HelpTooltip from '../help-tooltip';
 import type { GlobalActivity, HttpVersion } from '../../../common/constants';
@@ -112,6 +113,11 @@ class General extends React.PureComponent<Props, State> {
     const { app } = electron.remote || electron;
     app.relaunch();
     app.exit();
+  }
+
+  async _handleFontWeightChange(el: SyntheticEvent<HTMLInputElement>) {
+    const settings = await this._handleUpdateSetting(el);
+    setFont(settings);
   }
 
   async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
@@ -332,10 +338,34 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         <div className="form-row">
+          <div className="form-control form-control--outlined">
+            <label>
+              Editor Font Weight
+              {fontsMono ? (
+                <select
+                  name="fontMonospaceWeight"
+                  value={settings.fontMonospaceWeight}
+                  onChange={this._handleFontWeightChange}>
+                  {EDITOR_FONT_WEITGHTS.map((item, index) => (
+                    <option key={index} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select disabled>
+                  <option value="__NULL__">-- Unsupported Platform --</option>
+                </select>
+              )}
+            </label>
+          </div>
           {this.renderNumberSetting('Editor Indent Size', 'editorIndentSize', '', {
             min: 1,
             max: 16,
           })}
+        </div>
+
+        <div className="form-row">
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Key Map
