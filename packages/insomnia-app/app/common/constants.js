@@ -174,6 +174,17 @@ export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
+export const EDITOR_FONT_WEITGHTS = [
+  { label: 'Thin', value: 100 },
+  { label: 'UltraLight', value: 200 },
+  { label: 'Light', value: 300 },
+  { label: 'Normal', value: 400 },
+  { label: 'Medium', value: 500 },
+  { label: 'SemiBold', value: 600 },
+  { label: 'Bold', value: 700 },
+  { label: 'ExtraBold', value: 800 },
+  { label: 'Heavy', value: 900 },
+];
 
 // Activities
 export type GlobalActivity = 'spec' | 'debug' | 'unittest' | 'home' | 'migration' | 'onboarding';
