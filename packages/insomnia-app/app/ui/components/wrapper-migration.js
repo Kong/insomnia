@@ -4,14 +4,16 @@ import * as React from 'react';
 import type { WrapperProps } from './wrapper';
 import { ToggleSwitch, Button } from 'insomnia-components';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
-import migrateFromDesigner, { restartApp } from '../../common/migrate-from-designer';
+import migrateFromDesigner, {
+  existsAndIsDirectory,
+  restartApp,
+} from '../../common/migrate-from-designer';
 import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
 import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';
 import HelpTooltip from './help-tooltip';
 import { trackEvent } from '../../common/analytics';
-import fs from 'fs';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -106,9 +108,11 @@ const Options = ({ start, cancel }: OptionsProps) => {
     copyPlugins,
   } = options;
 
-  const coreExists = React.useMemo(() => fs.existsSync(coreDataDir), [coreDataDir]);
+  const coreExists = React.useMemo(() => existsAndIsDirectory(coreDataDir), [coreDataDir]);
 
-  const designerExists = React.useMemo(() => fs.existsSync(designerDataDir), [designerDataDir]);
+  const designerExists = React.useMemo(() => existsAndIsDirectory(designerDataDir), [
+    designerDataDir,
+  ]);
 
   const hasSomethingToMigrate = useDesignerSettings || copyWorkspaces || copyPlugins;
   const dirsExist = coreExists && designerExists;
