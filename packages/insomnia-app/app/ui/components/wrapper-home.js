@@ -90,9 +90,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   async __actuallyCreate(patch: $Shape<Workspace>) {
     const workspace = await models.workspace.create(patch);
+    const { handleSetActiveActivity } = this.props.wrapperProps;
     this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
-
     trackEvent('Workspace', 'Create');
+
+    workspace.scope === 'designer'
+      ? handleSetActiveActivity(ACTIVITY_SPEC)
+      : handleSetActiveActivity(ACTIVITY_DEBUG);
   }
 
   _handleDocumentCreate() {
