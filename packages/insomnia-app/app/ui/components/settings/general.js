@@ -90,8 +90,8 @@ class General extends React.PureComponent<Props, State> {
       const min = parseInt(el.min, 10);
       const max = parseInt(el.max, 10);
 
-      const moreThanMax = Number.isNaN(max) || value > max;
-      const lessThanMin = Number.isNaN(min) || value < min;
+      const moreThanMax = !Number.isNaN(max) && value > max;
+      const lessThanMin = !Number.isNaN(min) && value < min;
 
       if (moreThanMax) {
         value = max;
