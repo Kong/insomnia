@@ -508,7 +508,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces.map(this.renderCard).filter(c => c !== null);
+    const cards = workspaces
+      .map(this.renderCard)
+      .filter(c => c !== null)
+      .sort((c1, c2) => {
+        return c2.props.docLog.props.timestamp - c1.props.docLog.props.timestamp;
+      });
 
     const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
