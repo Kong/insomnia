@@ -324,7 +324,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     handleSetActiveWorkspace(id);
   }
 
-  renderCard(w: Workspace) {
+  renderCard(workspace: Workspace) {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -334,7 +334,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { filter } = this.state;
 
-    const apiSpec = apiSpecs.find(s => s.parentId === w._id);
+    const apiSpec = apiSpecs.find(apiSpec => apiSpec.parentId === workspace._id);
 
     let spec = null;
     let specFormat = null;
@@ -350,32 +350,35 @@ class WrapperHome extends React.PureComponent<Props, State> {
     }
 
     // Get cached branch from WorkspaceMeta
-    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === w._id);
+    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
     const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
     const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
     const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
 
     // WorkspaceMeta is a good proxy for last modified time
-    const workspaceModified = workspaceMeta ? workspaceMeta.modified : w.modified;
+    const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
     const modifiedLocally = apiSpec ? apiSpec.modified : workspaceModified;
+    let timestamp = null;
 
     let log = <TimeFromNow timestamp={modifiedLocally} />;
     let branch = lastActiveBranch;
-    if (w.scope === 'designer' && lastCommitTime && apiSpec?.modified > lastCommitTime) {
+    if (workspace.scope === 'designer' && lastCommitTime && apiSpec?.modified > lastCommitTime) {
       // Show locally unsaved changes for spec
       // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
+      timestamp = modifiedLocally;
       log = (
         <React.Fragment>
-          <TimeFromNow className="text-danger" timestamp={modifiedLocally} /> (unsaved)
+          <TimeFromNow className="text-danger" timestamp={timestamp} /> (unsaved)
         </React.Fragment>
       );
     } else if (lastCommitTime) {
       // Show last commit time and author
       branch = lastActiveBranch;
+      timestamp = lastCommitTime;
       log = (
         <React.Fragment>
-          <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
+          <TimeFromNow timestamp={timestamp} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
         </React.Fragment>
       );
     }
@@ -383,7 +386,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const docMenu = (
       <DocumentCardDropdown
         apiSpec={apiSpec}
-        workspace={w}
+        workspace={workspace}
         handleSetActiveWorkspace={handleSetActiveWorkspace}
         isLastWorkspace={workspaces.length === 1}>
         <SvgIcon icon="ellipsis" />
@@ -394,9 +397,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
     let format: string = '';
     let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
-    let title = w.name;
+    let title = workspace.name;
 
-    if (w.scope === 'designer') {
+    if (workspace.scope === 'designer') {
       label = 'Document';
       labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
@@ -421,26 +424,29 @@ class WrapperHome extends React.PureComponent<Props, State> {
       return null;
     }
 
-    return (
-      <Card
-        key={apiSpec._id}
-        docBranch={branch && <Highlight search={filter} text={branch} />}
-        docTitle={title && <Highlight search={filter} text={title} />}
-        docVersion={version && <Highlight search={filter} text={`v${version}`} />}
-        tagLabel={
-          label && (
-            <>
-              <span className="margin-right-xs">{labelIcon}</span>
-              <Highlight search={filter} text={label} />
-            </>
-          )
-        }
-        docLog={log}
-        docMenu={docMenu}
-        docFormat={format}
-        onClick={() => this._handleClickCard(w._id, defaultActivity)}
-      />
-    );
+    return ({
+      card: (
+        <Card
+          key={apiSpec._id}
+          docBranch={branch && <Highlight search={filter} text={branch} />}
+          docTitle={title && <Highlight search={filter} text={title} />}
+          docVersion={version && <Highlight search={filter} text={`v${version}`} />}
+          tagLabel={
+            label && (
+              <>
+                <span className="margin-right-xs">{labelIcon}</span>
+                <Highlight search={filter} text={label} />
+              </>
+            )
+          }
+          docLog={log}
+          docMenu={docMenu}
+          docFormat={format}
+          onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
+        />
+      ),
+      timestamp,
+    });
   }
 
   renderCreateMenu() {
@@ -511,9 +517,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const cards = workspaces
       .map(this.renderCard)
       .filter(c => c !== null)
-      .sort((c1, c2) => {
-        return c2.props.docLog.props.timestamp - c1.props.docLog.props.timestamp;
-      });
+      .sort(({ timestamp: a }, { timestamp: b }) => b - a)
+      .map(({ card }) => card)
 
     const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
