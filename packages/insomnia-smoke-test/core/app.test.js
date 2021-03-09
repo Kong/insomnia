@@ -34,8 +34,8 @@ describe('Application launch', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    const name = await home.createNewCollection(app);
-    await home.openDocumentWithTitle(app, name);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
 
     await debug.createNewRequest(app, 'json');
     await debug.typeInUrlBar(app, url);
@@ -91,8 +91,8 @@ describe('Application launch', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    const name = await home.createNewCollection(app);
-    await home.openDocumentWithTitle(app, name);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
 
     await debug.createNewRequest(app, 'csv');
     await debug.typeInUrlBar(app, url);
@@ -110,8 +110,8 @@ describe('Application launch', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    const name = await home.createNewCollection(app);
-    await home.openDocumentWithTitle(app, name);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
 
     await debug.createNewRequest(app, 'pdf');
     await debug.typeInUrlBar(app, url);
@@ -129,6 +129,7 @@ describe('Application launch', function() {
 
     await home.documentListingShown(app);
     const docName = await home.createNewDocument(app);
+    await debug.goToDashboard(app);
 
     // Open card dropdown for the document
     const card = await home.findCardWithTitle(app, docName);
@@ -198,8 +199,8 @@ describe('Application launch', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    const name = await home.createNewCollection(app);
-    await home.openDocumentWithTitle(app, name);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
 
     await debug.createNewRequest(app, 'basic-auth');
     await debug.typeInUrlBar(app, url);
