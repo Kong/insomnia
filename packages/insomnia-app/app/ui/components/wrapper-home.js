@@ -357,8 +357,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
-    const modifiedLocally = apiSpec ? apiSpec.modified : workspaceModified;
-    let timestamp = null;
+    const modifiedLocally =
+      apiSpec && workspace.scope === 'designer' ? apiSpec.modified : workspaceModified;
+    let timestamp = modifiedLocally;
 
     let log = <TimeFromNow timestamp={modifiedLocally} />;
     let branch = lastActiveBranch;
@@ -366,7 +367,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
       // Show locally unsaved changes for spec
       // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
-      timestamp = modifiedLocally;
       log = (
         <React.Fragment>
           <TimeFromNow className="text-danger" timestamp={timestamp} /> (unsaved)
@@ -424,7 +424,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       return null;
     }
 
-    return ({
+    return {
       card: (
         <Card
           key={apiSpec._id}
@@ -446,7 +446,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         />
       ),
       timestamp,
-    });
+    };
   }
 
   renderCreateMenu() {
@@ -518,7 +518,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       .map(this.renderCard)
       .filter(c => c !== null)
       .sort(({ timestamp: a }, { timestamp: b }) => b - a)
-      .map(({ card }) => card)
+      .map(({ card }) => card);
 
     const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
