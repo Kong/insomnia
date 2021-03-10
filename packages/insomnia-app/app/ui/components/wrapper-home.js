@@ -318,7 +318,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
     if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
-      // or migration or onboarding
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);
