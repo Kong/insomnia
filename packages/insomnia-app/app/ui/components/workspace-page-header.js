@@ -30,7 +30,7 @@ const WorkspacePageHeader = ({
   },
 }: Props) => {
   const collection = activeWorkspace.scope === 'collection';
-  const designer = !collection;
+  const design = !collection;
 
   const homeCallback = React.useCallback(
     () => handleActivityChange(activeWorkspace._id, ACTIVITY_HOME),
@@ -62,7 +62,7 @@ const WorkspacePageHeader = ({
         </React.Fragment>
       }
       gridCenter={
-        designer && (
+        design && (
           <ActivityToggle
             activity={activity}
             handleActivityChange={handleActivityChange}

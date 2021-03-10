@@ -96,7 +96,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
     trackEvent('Workspace', 'Create');
 
-    workspace.scope === 'designer'
+    workspace.scope === 'design'
       ? handleSetActiveActivity(ACTIVITY_SPEC)
       : handleSetActiveActivity(ACTIVITY_DEBUG);
   }
@@ -109,7 +109,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onComplete: async name => {
         await this.__actuallyCreate({
           name,
-          scope: 'designer',
+          scope: 'design',
         });
         trackSegmentEvent('Document Created');
       },
@@ -359,14 +359,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
     const modifiedLocally =
-      apiSpec && workspace.scope === WorkspaceScopeKeys.designer
+      apiSpec && workspace.scope === WorkspaceScopeKeys.design
         ? apiSpec.modified
         : workspaceModified;
 
     let log = <TimeFromNow timestamp={modifiedLocally} />;
     let branch = lastActiveBranch;
     if (
-      workspace.scope === WorkspaceScopeKeys.designer &&
+      workspace.scope === WorkspaceScopeKeys.design &&
       lastCommitTime &&
       apiSpec?.modified > lastCommitTime
     ) {
@@ -404,7 +404,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
 
-    if (workspace.scope === WorkspaceScopeKeys.designer) {
+    if (workspace.scope === WorkspaceScopeKeys.design) {
       label = 'Document';
       labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {

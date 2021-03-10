@@ -94,7 +94,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
 
         if (isLastWorkspace) {
           // Create a new workspace and default scope to designer
-          await models.workspace.create({ name: getAppName(), scope: 'designer' });
+          await models.workspace.create({ name: getAppName(), scope: 'design' });
         }
 
         await models.stats.incrementDeletedRequestsForDescendents(workspace);
@@ -106,7 +106,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
 
   async _onOpen() {
     // Only load document plugins if the scope is designer, for now
-    if (this.props.workspace.scope === 'designer') {
+    if (this.props.workspace.scope === 'design') {
       const plugins = await getDocumentActions();
       this.setState({ actionPlugins: plugins });
     }

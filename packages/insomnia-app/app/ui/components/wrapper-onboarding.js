@@ -82,7 +82,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     const { handleImportFile } = this.props;
     handleImportFile({
       forceToWorkspace: ForceToWorkspaceKeys.new,
-      forceToScope: WorkspaceScopeKeys.designer,
+      forceToScope: WorkspaceScopeKeys.design,
     });
   }
 
@@ -97,7 +97,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
       onComplete: value => {
         handleImportUri(value, {
           forceToWorkspace: ForceToWorkspaceKeys.new,
-          forceToScope: WorkspaceScopeKeys.designer,
+          forceToScope: WorkspaceScopeKeys.design,
         });
       },
     });

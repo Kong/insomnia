@@ -37,5 +37,5 @@ export function isWorkspace(obj: BaseModel): boolean {
 }
 
 export function isDesigner({ scope }: Workspace): boolean {
-  return scope === 'designer';
+  return scope === 'design';
 }

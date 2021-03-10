@@ -12,7 +12,7 @@ export const canDuplicate = true;
 export const canSync = true;
 
 export const WorkspaceScopeKeys = {
-  designer: 'designer',
+  designer: 'design',
   collection: 'collection',
 };
 
@@ -120,7 +120,7 @@ async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
  */
 function _migrateScope(workspace: Workspace): Workspace {
   if (
-    workspace.scope === WorkspaceScopeKeys.designer ||
+    workspace.scope === WorkspaceScopeKeys.design ||
     workspace.scope === WorkspaceScopeKeys.collection
   ) {
     return workspace;
@@ -130,7 +130,7 @@ function _migrateScope(workspace: Workspace): Workspace {
   type OldScopeTypes = 'spec' | 'debug' | null;
   switch ((workspace.scope: OldScopeTypes)) {
     case 'spec': {
-      workspace.scope = WorkspaceScopeKeys.designer;
+      workspace.scope = WorkspaceScopeKeys.design;
       break;
     }
     case 'debug':
