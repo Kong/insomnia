@@ -36,7 +36,7 @@ import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from '../../common/constants';
 
-import { fuzzyMatchAll, pluralize } from '../../common/misc';
+import { fuzzyMatchAll, isNotNullOrUndefined, pluralize } from '../../common/misc';
 import type {
   HandleImportClipboardCallback,
   HandleImportFileCallback,
@@ -60,6 +60,8 @@ import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
 import { strings } from '../../common/strings';
+import { WorkspaceScopeKeys } from '../../models/workspace';
+import { descendingNumberSort } from '../../common/sorting';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -90,9 +92,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   async __actuallyCreate(patch: $Shape<Workspace>) {
     const workspace = await models.workspace.create(patch);
+    const { handleSetActiveActivity } = this.props.wrapperProps;
     this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
-
     trackEvent('Workspace', 'Create');
+
+    workspace.scope === 'designer'
+      ? handleSetActiveActivity(ACTIVITY_SPEC)
+      : handleSetActiveActivity(ACTIVITY_DEBUG);
   }
 
   _handleDocumentCreate() {
@@ -312,7 +318,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
     if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
-      // or migration or onboarding
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);
@@ -320,7 +325,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     handleSetActiveWorkspace(id);
   }
 
-  renderCard(w: Workspace) {
+  renderCard(workspace: Workspace): { card: React.Node, lastModifiedTimestamp: number } {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -330,7 +335,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { filter } = this.state;
 
-    const apiSpec = apiSpecs.find(s => s.parentId === w._id);
+    const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
 
     let spec = null;
     let specFormat = null;
@@ -346,18 +351,25 @@ class WrapperHome extends React.PureComponent<Props, State> {
     }
 
     // Get cached branch from WorkspaceMeta
-    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === w._id);
+    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
     const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
     const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
     const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
 
     // WorkspaceMeta is a good proxy for last modified time
-    const workspaceModified = workspaceMeta ? workspaceMeta.modified : w.modified;
-    const modifiedLocally = apiSpec ? apiSpec.modified : workspaceModified;
+    const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
+    const modifiedLocally =
+      apiSpec && workspace.scope === WorkspaceScopeKeys.designer
+        ? apiSpec.modified
+        : workspaceModified;
 
     let log = <TimeFromNow timestamp={modifiedLocally} />;
     let branch = lastActiveBranch;
-    if (w.scope === 'designer' && lastCommitTime && apiSpec?.modified > lastCommitTime) {
+    if (
+      workspace.scope === WorkspaceScopeKeys.designer &&
+      lastCommitTime &&
+      apiSpec?.modified > lastCommitTime
+    ) {
       // Show locally unsaved changes for spec
       // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
@@ -379,7 +391,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const docMenu = (
       <DocumentCardDropdown
         apiSpec={apiSpec}
-        workspace={w}
+        workspace={workspace}
         handleSetActiveWorkspace={handleSetActiveWorkspace}
         isLastWorkspace={workspaces.length === 1}>
         <SvgIcon icon="ellipsis" />
@@ -390,9 +402,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
     let format: string = '';
     let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
-    let title = w.name;
+    let title = workspace.name;
 
-    if (w.scope === 'designer') {
+    if (workspace.scope === WorkspaceScopeKeys.designer) {
       label = 'Document';
       labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
@@ -417,7 +429,17 @@ class WrapperHome extends React.PureComponent<Props, State> {
       return null;
     }
 
-    return (
+    const lastModifiedFrom = [
+      workspace?.modified,
+      workspaceMeta?.modified,
+      apiSpec?.modified,
+      workspaceMeta?.cachedGitLastCommitTime,
+    ];
+    const lastModifiedTimestamp = lastModifiedFrom
+      .filter(isNotNullOrUndefined)
+      .sort(descendingNumberSort)[0];
+
+    const card = (
       <Card
         key={apiSpec._id}
         docBranch={branch && <Highlight search={filter} text={branch} />}
@@ -434,9 +456,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
         docLog={log}
         docMenu={docMenu}
         docFormat={format}
-        onClick={() => this._handleClickCard(w._id, defaultActivity)}
+        onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
       />
     );
+
+    return {
+      card,
+      lastModifiedTimestamp,
+    };
   }
 
   renderCreateMenu() {
@@ -504,7 +531,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces.map(this.renderCard).filter(c => c !== null);
+    const cards = workspaces
+      .map(this.renderCard)
+      .filter(isNotNullOrUndefined)
+      .sort((a, b) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
+      .map(c => c.card);
 
     const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
