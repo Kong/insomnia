@@ -36,7 +36,7 @@ import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from '../../common/constants';
 
-import { fuzzyMatchAll, pluralize } from '../../common/misc';
+import { fuzzyMatchAll, isNotNullOrUndefined, pluralize } from '../../common/misc';
 import type {
   HandleImportClipboardCallback,
   HandleImportFileCallback,
@@ -60,6 +60,8 @@ import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
 import { strings } from '../../common/strings';
+import { WorkspaceScopeKeys } from '../../models/workspace';
+import { descendingNumberSort } from '../../common/sorting';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -324,7 +326,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     handleSetActiveWorkspace(id);
   }
 
-  renderCard(workspace: Workspace) {
+  renderCard(workspace: Workspace): { card: React.Node, lastModifiedTimestamp: number } {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -334,7 +336,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { filter } = this.state;
 
-    const apiSpec = apiSpecs.find(apiSpec => apiSpec.parentId === workspace._id);
+    const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
 
     let spec = null;
     let specFormat = null;
@@ -358,27 +360,31 @@ class WrapperHome extends React.PureComponent<Props, State> {
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
     const modifiedLocally =
-      apiSpec && workspace.scope === 'designer' ? apiSpec.modified : workspaceModified;
-    let timestamp = modifiedLocally;
+      apiSpec && workspace.scope === WorkspaceScopeKeys.designer
+        ? apiSpec.modified
+        : workspaceModified;
 
     let log = <TimeFromNow timestamp={modifiedLocally} />;
     let branch = lastActiveBranch;
-    if (workspace.scope === 'designer' && lastCommitTime && apiSpec?.modified > lastCommitTime) {
+    if (
+      workspace.scope === WorkspaceScopeKeys.designer &&
+      lastCommitTime &&
+      apiSpec?.modified > lastCommitTime
+    ) {
       // Show locally unsaved changes for spec
       // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
       log = (
         <React.Fragment>
-          <TimeFromNow className="text-danger" timestamp={timestamp} /> (unsaved)
+          <TimeFromNow className="text-danger" timestamp={modifiedLocally} /> (unsaved)
         </React.Fragment>
       );
     } else if (lastCommitTime) {
       // Show last commit time and author
       branch = lastActiveBranch;
-      timestamp = lastCommitTime;
       log = (
         <React.Fragment>
-          <TimeFromNow timestamp={timestamp} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
+          <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
         </React.Fragment>
       );
     }
@@ -399,7 +405,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
 
-    if (workspace.scope === 'designer') {
+    if (workspace.scope === WorkspaceScopeKeys.designer) {
       label = 'Document';
       labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
@@ -424,28 +430,40 @@ class WrapperHome extends React.PureComponent<Props, State> {
       return null;
     }
 
+    const lastModifiedFrom = [
+      workspace.modified,
+      workspaceMeta.modified,
+      apiSpec.modified,
+      workspaceMeta.cachedGitLastCommitTime,
+    ];
+    const lastModifiedTimestamp = lastModifiedFrom
+      .filter(isNotNullOrUndefined)
+      .sort(descendingNumberSort)[0];
+
+    const card = (
+      <Card
+        key={apiSpec._id}
+        docBranch={branch && <Highlight search={filter} text={branch} />}
+        docTitle={title && <Highlight search={filter} text={title} />}
+        docVersion={version && <Highlight search={filter} text={`v${version}`} />}
+        tagLabel={
+          label && (
+            <>
+              <span className="margin-right-xs">{labelIcon}</span>
+              <Highlight search={filter} text={label} />
+            </>
+          )
+        }
+        docLog={log}
+        docMenu={docMenu}
+        docFormat={format}
+        onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
+      />
+    );
+
     return {
-      card: (
-        <Card
-          key={apiSpec._id}
-          docBranch={branch && <Highlight search={filter} text={branch} />}
-          docTitle={title && <Highlight search={filter} text={title} />}
-          docVersion={version && <Highlight search={filter} text={`v${version}`} />}
-          tagLabel={
-            label && (
-              <>
-                <span className="margin-right-xs">{labelIcon}</span>
-                <Highlight search={filter} text={label} />
-              </>
-            )
-          }
-          docLog={log}
-          docMenu={docMenu}
-          docFormat={format}
-          onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
-        />
-      ),
-      timestamp,
+      card,
+      lastModifiedTimestamp,
     };
   }
 
@@ -516,9 +534,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces
       .map(this.renderCard)
-      .filter(c => c !== null)
-      .sort(({ timestamp: a }, { timestamp: b }) => b - a)
-      .map(({ card }) => card);
+      .filter(isNotNullOrUndefined)
+      .sort((a, b) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
+      .map(c => c.card);
 
     const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
