@@ -430,10 +430,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
     }
 
     const lastModifiedFrom = [
-      workspace.modified,
-      workspaceMeta.modified,
-      apiSpec.modified,
-      workspaceMeta.cachedGitLastCommitTime,
+      workspace?.modified,
+      workspaceMeta?.modified,
+      apiSpec?.modified,
+      workspaceMeta?.cachedGitLastCommitTime,
     ];
     const lastModifiedTimestamp = lastModifiedFrom
       .filter(isNotNullOrUndefined)
