@@ -19,6 +19,7 @@ import HelpTooltip from '../help-tooltip';
 import Link from '../base/link';
 import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
+import { isNotNullOrUndefined } from '../../../common/misc';
 
 type Props = {|
   handleInitializeEntities: () => Promise<void>,
@@ -68,11 +69,20 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     // Clear cached items and return if no state
     if (!vcs.isInitialized() || !workspaceMeta.gitRepositoryId) {
-      await models.workspaceMeta.updateByParentId(workspace._id, {
-        cachedGitRepositoryBranch: null,
-        cachedGitLastAuthor: null,
-        cachedGitLastCommitTime: null,
-      });
+      // Don't update unnecessarily
+      const needsUpdate = [
+        workspaceMeta.cachedGitRepositoryBranch,
+        workspaceMeta.cachedGitLastAuthor,
+        workspaceMeta.cachedGitLastCommitTime,
+      ].some(isNotNullOrUndefined);
+
+      if (needsUpdate) {
+        await models.workspaceMeta.updateByParentId(workspace._id, {
+          cachedGitRepositoryBranch: null,
+          cachedGitLastAuthor: null,
+          cachedGitLastCommitTime: null,
+        });
+      }
       return;
     }
 

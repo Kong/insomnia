@@ -1,6 +1,6 @@
 import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { diffPatchObj, pluralize, snapNumberToLimits } from '../misc';
+import { diffPatchObj, isNotNullOrUndefined, pluralize, snapNumberToLimits } from '../misc';
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -269,5 +269,16 @@ describe('snapNumberToLimits()', () => {
     expect(snapNumberToLimits(5, 0, 3)).toBe(3);
     expect(snapNumberToLimits(5, null, 3)).toBe(3);
     expect(snapNumberToLimits(5, NaN, 3)).toBe(3);
+  });
+});
+
+describe('isNotNullOrUndefined', () => {
+  it('should return correctly', () => {
+    expect(isNotNullOrUndefined(0)).toBe(true);
+    expect(isNotNullOrUndefined('')).toBe(true);
+    expect(isNotNullOrUndefined(false)).toBe(true);
+
+    expect(isNotNullOrUndefined(null)).toBe(false);
+    expect(isNotNullOrUndefined(undefined)).toBe(false);
   });
 });
