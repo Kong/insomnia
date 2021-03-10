@@ -1,6 +1,6 @@
 import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { diffPatchObj, pluralize } from '../misc';
+import { diffPatchObj, isNotNullOrUndefined, pluralize, snapNumberToLimits } from '../misc';
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -218,7 +218,7 @@ describe('pluralize()', () => {
   });
 });
 
-describe.only('diffPatchObj()', () => {
+describe('diffPatchObj()', () => {
   const a = { x: 1 };
   const b = { x: 2, y: 3 };
   const c = { x: 4, y: { z: 5 } };
@@ -245,5 +245,40 @@ describe.only('diffPatchObj()', () => {
     expect(diffPatchObj(a, c, true)).toEqual({ x: 2, y: 3 });
 
     expect(diffPatchObj(c, a, true)).toEqual({ x: 1, y: { z: 5 } });
+  });
+});
+
+describe('snapNumberToLimits()', () => {
+  it('should return value', () => {
+    expect(snapNumberToLimits(2)).toBe(2);
+    expect(snapNumberToLimits(2, 0)).toBe(2);
+    expect(snapNumberToLimits(2, 0, 3)).toBe(2);
+    expect(snapNumberToLimits(2, 2, 2)).toBe(2);
+    expect(snapNumberToLimits(2, null, null)).toBe(2);
+    expect(snapNumberToLimits(2, NaN, NaN)).toBe(2);
+  });
+
+  it('should snap to min', () => {
+    expect(snapNumberToLimits(2, 3)).toBe(3);
+    expect(snapNumberToLimits(2, 3, 5)).toBe(3);
+    expect(snapNumberToLimits(2, 3, null)).toBe(3);
+    expect(snapNumberToLimits(2, 3, NaN)).toBe(3);
+  });
+
+  it('should snap to max', () => {
+    expect(snapNumberToLimits(5, 0, 3)).toBe(3);
+    expect(snapNumberToLimits(5, null, 3)).toBe(3);
+    expect(snapNumberToLimits(5, NaN, 3)).toBe(3);
+  });
+});
+
+describe('isNotNullOrUndefined', () => {
+  it('should return correctly', () => {
+    expect(isNotNullOrUndefined(0)).toBe(true);
+    expect(isNotNullOrUndefined('')).toBe(true);
+    expect(isNotNullOrUndefined(false)).toBe(true);
+
+    expect(isNotNullOrUndefined(null)).toBe(false);
+    expect(isNotNullOrUndefined(undefined)).toBe(false);
   });
 });

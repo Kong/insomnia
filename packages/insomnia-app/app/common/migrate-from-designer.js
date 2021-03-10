@@ -116,7 +116,7 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
 }
 
 async function readDirs(srcDir: string): Array<string> {
-  if (fs.existsSync(srcDir)) {
+  if (existsAndIsDirectory(srcDir)) {
     return await fs.promises.readdir(srcDir);
   } else {
     return [];
@@ -129,7 +129,7 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
     const dest = fsPath.join(destDir, dir);
 
     // If source exists, ensure the destination exists, and copy into it
-    if (fs.existsSync(src)) {
+    if (existsAndIsDirectory(src)) {
       await fsx.ensureDir(dest);
       await fsx.copy(src, dest);
     }
@@ -139,10 +139,14 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
 async function removeDirs(dirs: Array<string>, srcDir: string) {
   for (const dir of dirs.filter(c => c)) {
     const dirToRemove = fsPath.join(srcDir, dir);
-    if (fs.existsSync(dirToRemove)) {
+    if (existsAndIsDirectory(dirToRemove)) {
       await fsx.remove(dirToRemove);
     }
   }
+}
+
+export function existsAndIsDirectory(name: string): boolean {
+  return fs.existsSync(name) && fs.statSync(name).isDirectory();
 }
 
 export default async function migrateFromDesigner({
@@ -254,7 +258,7 @@ export async function restoreCoreBackup(backupDir: string, coreDataDir: string) 
     return;
   }
 
-  if (!fs.existsSync(backupDir)) {
+  if (!existsAndIsDirectory(backupDir)) {
     console.log(`[db-merge] nothing to restore: backup directory doesn't exist at ${backupDir}`);
     return;
   }
