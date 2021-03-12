@@ -15,12 +15,37 @@ export async function axiosRequest(config) {
     proxyUrl = settings.httpProxy;
   }
 
+  let shouldProxy = true;
+  if (settings.noProxy) {
+    const noProxy = settings.noProxy.split(',').map(function trim(s) {
+      return s.trim();
+    });
+
+    const { hostname } = urlParse(config.url);
+    shouldProxy = !noProxy.some(function proxyMatch(proxyElement) {
+      if (!proxyElement) {
+        return false;
+      }
+      if (proxyElement === '*') {
+        return true;
+      }
+      if (
+        proxyElement[0] === '.' &&
+        hostname.substr(hostname.length - proxyElement.length) === proxyElement
+      ) {
+        return true;
+      }
+
+      return hostname === proxyElement;
+    });
+  }
+
   const finalConfig = {
     ...config,
     adapter: global.require('axios/lib/adapters/http'),
   };
 
-  if (proxyUrl) {
+  if (proxyUrl && shouldProxy) {
     const { hostname, port } = urlParse(setDefaultProtocol(proxyUrl));
     finalConfig.proxy = { host: hostname, port };
   }
