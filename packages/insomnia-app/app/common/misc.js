@@ -440,3 +440,20 @@ export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectCom
 export function isObject(obj: any) {
   return obj !== null && typeof obj === 'object';
 }
+
+export function snapNumberToLimits(value: number, min?: number, max?: number): number {
+  const moreThanMax = max && !Number.isNaN(max) && value > max;
+  const lessThanMin = min && !Number.isNaN(min) && value < min;
+
+  if (moreThanMax) {
+    return max;
+  } else if (lessThanMin) {
+    return min;
+  }
+
+  return value;
+}
+
+export function isNotNullOrUndefined(obj: any): boolean {
+  return obj !== null && obj !== undefined;
+}
