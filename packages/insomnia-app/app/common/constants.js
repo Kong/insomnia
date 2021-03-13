@@ -23,6 +23,14 @@ export function getAppDefaultTheme() {
   return appConfig().theme;
 }
 
+export function getAppDefaultLightTheme() {
+  return appConfig().lightTheme;
+}
+
+export function getAppDefaultDarkTheme() {
+  return appConfig().darkTheme;
+}
+
 export function getAppSynopsis() {
   return appConfig().synopsis;
 }
