@@ -1,7 +1,13 @@
 // @flow
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import { getAppDefaultTheme, HttpVersions, UPDATE_CHANNEL_STABLE } from '../common/constants';
+import {
+  getAppDefaultTheme,
+  getAppDefaultLightTheme,
+  getAppDefaultDarkTheme,
+  HttpVersions,
+  UPDATE_CHANNEL_STABLE,
+} from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 import type { HttpVersion } from '../common/constants';
 
@@ -50,6 +56,9 @@ type BaseSettings = {
   proxyEnabled: boolean,
   showPasswords: boolean,
   theme: string,
+  autoDetectColorScheme: boolean,
+  lightTheme: string,
+  darkTheme: string,
   timeout: number,
   updateAutomatically: boolean,
   updateChannel: string,
@@ -106,6 +115,9 @@ export function init(): BaseSettings {
     proxyEnabled: false,
     showPasswords: false,
     theme: getAppDefaultTheme(),
+    autoDetectColorScheme: false,
+    lightTheme: getAppDefaultLightTheme(),
+    darkTheme: getAppDefaultDarkTheme(),
     timeout: 0,
     updateAutomatically: true,
     updateChannel: UPDATE_CHANNEL_STABLE,

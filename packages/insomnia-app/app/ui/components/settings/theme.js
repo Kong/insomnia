@@ -3,14 +3,19 @@ import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from '../base/button';
-import type { Theme as ThemeType } from '../../../plugins';
+import type { Theme as ThemeType, ColorScheme } from '../../../plugins';
 import { getThemes } from '../../../plugins';
+import HelpTooltip from '../help-tooltip';
 
 const THEMES_PER_ROW = 5;
 
 type Props = {
-  handleChangeTheme: string => void,
+  handleChangeTheme: (string, ColorScheme) => void,
   activeTheme: string,
+  handleAutoDetectColorSchemeChange: boolean => void,
+  autoDetectColorScheme: boolean,
+  activeLightTheme: string,
+  activeDarkTheme: string,
 };
 
 type State = {
@@ -36,8 +41,10 @@ class Theme extends React.PureComponent<Props, State> {
   }
 
   renderTheme(theme: ThemeType) {
-    const { handleChangeTheme, activeTheme } = this.props;
+    const { handleChangeTheme, activeTheme, autoDetectColorScheme } = this.props;
+
     const isActive = activeTheme === theme.theme.name;
+    const disabled = autoDetectColorScheme;
 
     return (
       <div
@@ -46,8 +53,8 @@ class Theme extends React.PureComponent<Props, State> {
         style={{ maxWidth: `${100 / THEMES_PER_ROW}%` }}>
         <h2 className="txt-lg">{theme.theme.displayName}</h2>
         <Button
-          onClick={handleChangeTheme}
-          value={theme.theme.name}
+          disabled={disabled}
+          onClick={() => handleChangeTheme(theme.theme.name, 'default')}
           className={isActive ? 'active' : ''}>
           <svg theme={theme.theme.name} width="100%" height="100%" viewBox="0 0 500 300">
             {/*
@@ -127,8 +134,59 @@ class Theme extends React.PureComponent<Props, State> {
     ));
   }
 
+  renderThemeSelect(scheme: 'light' | 'dark') {
+    const { activeLightTheme, activeDarkTheme, handleChangeTheme } = this.props;
+    const { themes } = this.state;
+
+    const activeColorTheme = scheme === 'light' ? activeLightTheme : activeDarkTheme;
+
+    return (
+      <div className="form-control form-control--outlined">
+        <label>
+          Preferred {scheme} color scheme
+          <HelpTooltip className="space-left">
+            Lets you choose the color scheme that is used in {scheme} mode.
+          </HelpTooltip>
+          <select
+            value={activeColorTheme}
+            onChange={e => handleChangeTheme(e.target.value, scheme)}>
+            {themes.map(theme => (
+              <option key={theme.theme.name} value={theme.theme.name}>
+                {theme.theme.displayName}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    );
+  }
+
   render() {
-    return <div className="themes pad-top">{this.renderThemeRows()}</div>;
+    const { autoDetectColorScheme, handleAutoDetectColorSchemeChange } = this.props;
+
+    return (
+      <>
+        <div className="themes">{this.renderThemeRows()}</div>
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Use OS color scheme
+            <HelpTooltip className="space-left">
+              Lets you choose one theme for light mode and one for dark mode.
+            </HelpTooltip>
+            <input
+              type="checkbox"
+              name="autoDetectColorScheme"
+              checked={autoDetectColorScheme}
+              onChange={e => handleAutoDetectColorSchemeChange(e.target.checked)}
+            />
+          </label>
+        </div>
+        <div className="form-row">
+          {this.renderThemeSelect('light')}
+          {this.renderThemeSelect('dark')}
+        </div>
+      </>
+    );
   }
 }
 
