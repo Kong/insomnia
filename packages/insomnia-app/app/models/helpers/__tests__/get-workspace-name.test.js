@@ -14,7 +14,7 @@ describe('getWorkspaceName', () => {
   it('returns api spec name', () => {
     const w = models.workspace.init();
     const s = models.apiSpec.init();
-    w.scope = 'designer';
+    w.scope = 'design';
     expect(getWorkspaceName(w, s)).toBe(s.fileName);
   });
 });

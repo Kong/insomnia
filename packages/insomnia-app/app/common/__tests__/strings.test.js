@@ -6,7 +6,7 @@ import { getWorkspaceLabel } from '../get-workspace-label';
 describe('getWorkspaceLabel', () => {
   it('should return document label', () => {
     const w = models.workspace.init();
-    w.scope = 'designer';
+    w.scope = 'design';
     expect(getWorkspaceLabel(w)).toBe(strings.document);
   });
 
