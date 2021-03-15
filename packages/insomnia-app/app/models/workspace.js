@@ -120,7 +120,6 @@ async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
  */
 function _migrateScope(workspace: Workspace): Workspace {
   if (
-    workspace.scope === WorkspaceScopeKeys.designer ||
     workspace.scope === WorkspaceScopeKeys.design ||
     workspace.scope === WorkspaceScopeKeys.collection
   ) {
