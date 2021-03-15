@@ -211,7 +211,7 @@ export default async function migrateFromDesigner({
         });
       }
 
-      // For each workspace coming from Designer, mark workspace.scope as 'designer'
+      // For each workspace coming from Designer, mark workspace.scope as 'design'
       if (modelType === models.workspace.type) {
         for (const workspace of entries) {
           (workspace: Workspace).scope = 'design';
