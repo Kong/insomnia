@@ -15,7 +15,7 @@ import Theme from '../settings/theme';
 import * as models from '../../../models/index';
 import { Curl } from 'node-libcurl';
 import Tooltip from '../tooltip';
-import { setTheme } from '../../../plugins/misc';
+import { applyColorScheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Account from '../settings/account';
 import { showModal } from './index';
@@ -65,11 +65,37 @@ class SettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  async _handleChangeTheme(theme, persist = true) {
-    await setTheme(theme);
+  async _handleChangeTheme(themeName, colorScheme, persist = true) {
+    const { settings } = this.props;
+
+    let patch;
+    switch (colorScheme) {
+      case 'light':
+        patch = { lightTheme: themeName };
+        break;
+      case 'dark':
+        patch = { darkTheme: themeName };
+        break;
+      case 'default':
+      default:
+        patch = { theme: themeName };
+        break;
+    }
+
+    applyColorScheme({ ...settings, ...patch });
 
     if (persist) {
-      models.settings.update(this.props.settings, { theme });
+      await models.settings.update(settings, patch);
+    }
+  }
+
+  async _handleAutoDetectColorSchemeChange(autoDetectColorScheme, persist = true) {
+    const { settings } = this.props;
+
+    applyColorScheme({ ...settings, autoDetectColorScheme });
+
+    if (persist) {
+      models.settings.update(settings, { autoDetectColorScheme });
     }
   }
 
@@ -147,8 +173,15 @@ class SettingsModal extends PureComponent {
                 handleImportUri={this._handleImportUri}
               />
             </TabPanel>
-            <TabPanel className="react-tabs__tab-panel scrollable">
-              <Theme handleChangeTheme={this._handleChangeTheme} activeTheme={settings.theme} />
+            <TabPanel className="react-tabs__tab-panel pad scrollable">
+              <Theme
+                handleChangeTheme={this._handleChangeTheme}
+                activeTheme={settings.theme}
+                handleAutoDetectColorSchemeChange={this._handleAutoDetectColorSchemeChange}
+                autoDetectColorScheme={settings.autoDetectColorScheme}
+                activeLightTheme={settings.lightTheme}
+                activeDarkTheme={settings.darkTheme}
+              />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <SettingsShortcuts

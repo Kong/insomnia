@@ -94,7 +94,6 @@ import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../..
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
-import { strings } from '../../common/strings';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
@@ -416,42 +415,6 @@ class App extends PureComponent {
         const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
         models.stats.incrementCreatedRequests();
-      },
-    });
-  }
-
-  _workspaceRename(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
-
-    showPrompt({
-      title: `Rename ${getWorkspaceLabel(workspace)}`,
-      defaultValue: getWorkspaceName(workspace, apiSpec),
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: async name => {
-        await workspaceOperations.rename(workspace, apiSpec, name);
-        callback();
-      },
-    });
-  }
-
-  _workspaceDeleteById(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    showModal(AskModal, {
-      title: `Delete ${strings.workspace}`,
-      message: `Do you really want to delete ${workspace.name}?`,
-      yesText: 'Yes',
-      noText: 'Cancel',
-      onDone: async isYes => {
-        if (!isYes) {
-          return;
-        }
-
-        await models.stats.incrementDeletedRequestsForDescendents(workspace);
-
-        await models.workspace.remove(workspace);
       },
     });
   }
@@ -984,7 +947,7 @@ class App extends PureComponent {
   async _handleReloadPlugins() {
     const { settings } = this.props;
     await plugins.reloadPlugins();
-    await themes.setTheme(settings.theme);
+    await themes.applyColorScheme(settings);
     templating.reload();
     console.log('[plugins] reloaded');
   }
@@ -1255,6 +1218,10 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
+
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addListener(async () => themes.applyColorScheme(this.props.settings));
   }
 
   componentWillUnmount() {
@@ -1358,9 +1325,6 @@ class App extends PureComponent {
                 handleDuplicateRequestGroup={App._requestGroupDuplicate}
                 handleMoveRequestGroup={App._requestGroupMove}
                 handleDuplicateWorkspace={this._workspaceDuplicate}
-                handleDuplicateWorkspaceById={this._workspaceDuplicateById}
-                handleRenameWorkspaceById={this._workspaceRename}
-                handleDeleteWorkspaceById={this._workspaceDeleteById}
                 handleCreateRequestGroup={this._requestGroupCreate}
                 handleGenerateCode={App._handleGenerateCode}
                 handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
