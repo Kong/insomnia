@@ -9,7 +9,7 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_REF: ${{ github.ref }}
   GITHUB_SHA: ${{ github.sha }}
-  NPM_CONFIG_TARGET: 9.1.0
+  NPM_CONFIG_TARGET: 9.3.5
   NPM_CONFIG_DISTURL: https://electronjs.org/headers
   NPM_CONFIG_RUNTIME: electron
 
