@@ -37,7 +37,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope) {
   return function(name: string) {
     switch (scope) {
       case WorkspaceScopeKeys.collection:
-      case WorkspaceScopeKeys.designer:
+      case WorkspaceScopeKeys.design:
         return scope;
       default:
         return new Promise(resolve => {
@@ -47,7 +47,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope) {
             noText: 'Request Collection',
             yesText: 'Design Document',
             onDone: yes => {
-              resolve(yes ? WorkspaceScopeKeys.designer : WorkspaceScopeKeys.collection);
+              resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
             },
           });
         });

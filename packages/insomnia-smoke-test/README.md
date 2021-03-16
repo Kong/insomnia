@@ -1,6 +1,6 @@
 # Insomnia Smoke Tests
 
-This project contains the smoke testing suite for Insomnia Core, Insomnia Designer and Inso.
+This project contains the smoke testing suite for Insomnia and Inso.
 
 Tests for the Electron app are written using [Spectron](https://github.com/electron-userland/spectron#application-api) (and [spectron-keys](https://github.com/jsantell/spectron-keys) for key inputs), while tests for the CLI use [execa](https://github.com/sindresorhus/execa).
 
@@ -9,8 +9,7 @@ Tests for the Electron app are written using [Spectron](https://github.com/elect
 |Folder|Purpose|
 |-|-|
 | `/cli` |tests for inso|
-| `/core` |tests for Insomnia Core|
-| `/designer` |tests for Insomnia Designer|
+| `/core` |tests for Insomnia |
 | `/server` |Express server used by the tests|
 | `/fixtures` |data used by tests and the server|
 | `/modules` |logical grouping of functionality (eg. `modals` , `tabs` , `settings` , `home` )|
@@ -23,26 +22,21 @@ From the root of this repository:
 
 ``` sh
 npm run bootstrap                   # Install packages and compile inso
-npm run app-build:smoke:core        # Compile Core
-npm run app-build:smoke:designer    # Compile Designer
+npm run app-build:smoke             # Compile Insomnia
 ```
 
 You can then run the smoke tests, again from the root:
 
 ``` sh
 npm run test:smoke:cli              # Run CLI tests
-npm run test:smoke:core:build       # Run Core tests
-npm run test:smoke:designer:build   # Run Designer tests
+npm run test:smoke:build       # Run Insomnia tests
 ```
 
 Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases (such as a [plugin installation](https://github.com/Kong/insomnia/blob/357b8f05f89fd5c07a75d8418670abe37b2882dc/packages/insomnia-smoke-test/designer/app.test.js#L36)), so we typically run tests against a build. To run packaged tests, from the root:
 
 ``` sh
-npm run app-package:smoke:core      # Package Core
-npm run app-package:smoke:designer  # Package Designer
-
-npm run test:smoke:core:package     # Run Core tests 
-npm run test:smoke:core:designer    # Run Designer tests
+npm run app-package:smoke      # Package Insomnia
+npm run test:smoke:package     # Run Insomnia tests 
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
@@ -58,11 +52,9 @@ npm run serve
 
 # In the second tab, run your tests
 npm run cli                         # Run CLI tests
-npm run spectron:core:build         # Core build tests
-npm run spectron:designer:build     # Designer build tests
+npm run spectron:build         # Insomnia build tests
 
-npm run spectron:core:package       # Core package tests
-npm run spectron:designer:package   # Designer package tests
+npm run spectron:package       # Insomnia package tests
 ```
 
 This will allow you to write and monitor the server separately from each test, speeding up the development cycle.
