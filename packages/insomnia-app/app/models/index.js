@@ -1,7 +1,9 @@
 // @flow
+import * as _apiSpec from './api-spec';
 import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
+import * as _gitRepository from './git-repository';
 import * as _oAuth2Token from './o-auth-2-token';
 import * as _pluginData from './plugin-data';
 import * as _request from './request';
@@ -12,6 +14,9 @@ import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _settings from './settings';
 import * as _stats from './stats';
+import * as _unitTest from './unit-test';
+import * as _unitTestResult from './unit-test-result';
+import * as _unitTestSuite from './unit-test-suite';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 import { generateId } from '../common/misc';
@@ -25,9 +30,11 @@ export type BaseModel = {
 };
 
 // Reference to each model
+export const apiSpec = _apiSpec;
 export const clientCertificate = _clientCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
+export const gitRepository = _gitRepository;
 export const oAuth2Token = _oAuth2Token;
 export const pluginData = _pluginData;
 export const request = _request;
@@ -38,6 +45,9 @@ export const requestVersion = _requestVersion;
 export const response = _response;
 export const settings = _settings;
 export const stats = _stats;
+export const unitTest = _unitTest;
+export const unitTestSuite = _unitTestSuite;
+export const unitTestResult = _unitTestResult;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
@@ -48,7 +58,9 @@ export function all() {
     workspace,
     workspaceMeta,
     environment,
+    gitRepository,
     cookieJar,
+    apiSpec,
     requestGroup,
     requestGroupMeta,
     request,
@@ -58,6 +70,9 @@ export function all() {
     oAuth2Token,
     clientCertificate,
     pluginData,
+    unitTestSuite,
+    unitTestResult,
+    unitTest,
   ];
 }
 
@@ -80,6 +95,16 @@ export function canSync(d: BaseModel): boolean {
 
 export function getModel(type: string): Object | null {
   return all().find(m => m.type === type) || null;
+}
+
+export function mustGetModel(type: string): Object {
+  const model = getModel(type);
+
+  if (!model) {
+    throw new Error(`The model type ${type} must exist but could not be found.`);
+  }
+
+  return model;
 }
 
 export function canDuplicate(type: string) {

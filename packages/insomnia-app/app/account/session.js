@@ -136,7 +136,7 @@ export async function changePasswordWithToken(rawNewPassphrase, confirmationCode
   const newEncSymmetricKey = JSON.stringify(newEncSymmetricKeyJSON);
 
   return fetch.post(
-    `/auth/change-password`,
+    '/auth/change-password',
     {
       code: confirmationCode,
       newEmail: newEmail,
@@ -275,7 +275,7 @@ function _getSessionData() {
 function _unsetSessionData() {
   const sessionId = getCurrentSessionId();
   window.localStorage.removeItem(_getSessionKey(sessionId));
-  window.localStorage.removeItem(`currentSessionId`);
+  window.localStorage.removeItem('currentSessionId');
 }
 
 function _getSessionKey(sessionId) {

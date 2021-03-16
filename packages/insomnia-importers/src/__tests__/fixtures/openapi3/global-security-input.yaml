@@ -10,6 +10,9 @@ components:
     Basic:
       type: http
       scheme: basic
+    Bearer:
+      type: http
+      scheme: bearer
     Key-Header:
       type: apiKey
       name: x-api_key

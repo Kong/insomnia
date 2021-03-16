@@ -40,18 +40,18 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
     e.preventDefault();
 
     const { requestGroup, selectedWorkspaceId } = this.state;
-    if (!requestGroup) {
+    if (!requestGroup || !selectedWorkspaceId) {
       return;
     }
 
-    const workspace = await models.workspace.getById(selectedWorkspaceId || 'n/a');
+    const workspace = await models.workspace.getById(selectedWorkspaceId);
     if (!workspace) {
       return;
     }
 
     const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
     await models.requestGroup.update(newRequestGroup, {
-      sortKey: -1e9,
+      metaSortKey: -1e9,
       parentId: selectedWorkspaceId,
       name: requestGroup.name, // Because duplicating will add (Copy) suffix
     });
@@ -80,7 +80,7 @@ class MoveRequestGroupModal extends React.PureComponent<Props, State> {
     const { selectedWorkspaceId } = this.state;
     return (
       <form onSubmit={this._handleSubmit}>
-        <Modal ref={this._setModalRef} {...this.props}>
+        <Modal ref={this._setModalRef} {...(this.props: Object)}>
           <ModalHeader key="header">Move Folder to Workspace</ModalHeader>
           <ModalBody key="body" className="pad">
             <div className="form-control form-control--outlined">

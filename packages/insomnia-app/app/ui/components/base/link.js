@@ -1,4 +1,5 @@
 // @flow
+import classnames from 'classnames';
 import * as React from 'react';
 import autobind from 'autobind-decorator';
 import * as misc from '../../../common/misc';
@@ -11,6 +12,7 @@ type Props = {|
   className?: string,
   children?: React.Node,
   disabled?: boolean,
+  noTheme?: boolean,
 |};
 
 @autobind
@@ -33,6 +35,7 @@ class Link extends React.PureComponent<Props> {
       children,
       className,
       disabled,
+      noTheme,
       ...other
     } = this.props;
     return button ? (
@@ -43,7 +46,7 @@ class Link extends React.PureComponent<Props> {
       <a
         href={href}
         onClick={this._handleClick}
-        className={(className || '') + ' theme--link'}
+        className={classnames(className, { 'theme--link': !noTheme })}
         disabled={disabled}
         {...other}>
         {children}

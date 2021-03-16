@@ -1,18 +1,15 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .cookie-modify.modal__body {
   overflow: visible;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
 
   table {
-    input:not([type="checkbox"]) {
-      padding: @padding-xs @padding-xxs;
+    input:not([type='checkbox']) {
+      padding: var(--padding-xs) var(--padding-xxs);
       width: 100%;
       background: none;
     }
-    
+
     td {
       cursor: pointer;
       vertical-align: middle;
@@ -21,8 +18,8 @@
     .btn {
       cursor: pointer;
       margin: 0;
-      padding: 0 @padding-sm;
-      height: @line-height-xs;
+      padding: 0 var(--padding-sm);
+      height: var(--line-height-xs);
     }
   }
 

@@ -40,7 +40,7 @@ export async function migrate(doc: ClientCertificate) {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<ClientCertificate> {
+export function create(patch: $Shape<ClientCertificate> = {}): Promise<ClientCertificate> {
   if (!patch.parentId) {
     throw new Error('New ClientCertificate missing `parentId`: ' + JSON.stringify(patch));
   }
@@ -48,7 +48,10 @@ export function create(patch: Object = {}): Promise<ClientCertificate> {
   return db.docCreate(type, patch);
 }
 
-export function update(cert: ClientCertificate, patch: Object = {}): Promise<ClientCertificate> {
+export function update(
+  cert: ClientCertificate,
+  patch: $Shape<ClientCertificate> = {},
+): Promise<ClientCertificate> {
   return db.docUpdate(cert, patch);
 }
 

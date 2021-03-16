@@ -43,6 +43,9 @@ describe('filterHeaders()', () => {
     expect(misc.filterHeaders(['bad'], null)).toEqual([]);
     expect(misc.filterHeaders(['bad'], 'good')).toEqual([]);
     expect(misc.filterHeaders(null, 'good')).toEqual([]);
+    expect(misc.filterHeaders([{ name: '', value: 'valid' }], '')).toEqual([]);
+    expect(misc.filterHeaders([{ name: 123, value: 123 }], 123)).toEqual([]);
+    expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], 123)).toEqual([]);
     expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], null)).toEqual([]);
     expect(misc.filterHeaders([{ name: 'good', value: 'valid' }], 'good')).toEqual([
       { name: 'good', value: 'valid' },
@@ -175,12 +178,18 @@ describe('fuzzyMatchAll()', () => {
 describe('chunkArray()', () => {
   it('works with exact divisor', () => {
     const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 3);
-    expect(chunks).toEqual([[1, 2, 3], [4, 5, 6]]);
+    expect(chunks).toEqual([
+      [1, 2, 3],
+      [4, 5, 6],
+    ]);
   });
 
   it('works with weird divisor', () => {
     const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 4);
-    expect(chunks).toEqual([[1, 2, 3, 4], [5, 6]]);
+    expect(chunks).toEqual([
+      [1, 2, 3, 4],
+      [5, 6],
+    ]);
   });
 
   it('works with empty', () => {

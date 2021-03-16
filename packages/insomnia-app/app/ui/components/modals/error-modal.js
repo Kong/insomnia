@@ -1,3 +1,5 @@
+// @flow
+
 import React, { PureComponent } from 'react';
 import autobind from 'autobind-decorator';
 import Modal from '../base/modal';
@@ -5,8 +7,15 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
+export type ErrorModalOptions = {|
+  title?: string,
+  error?: Error,
+  addCancel?: boolean,
+  message?: string,
+|};
+
 @autobind
-class ErrorModal extends PureComponent {
+class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
   constructor(props) {
     super(props);
 
@@ -31,11 +40,13 @@ class ErrorModal extends PureComponent {
     this.modal.hide();
   }
 
-  show(options = {}) {
+  show(options: ErrorModalOptions = {}) {
     const { title, error, addCancel, message } = options;
     this.setState({ title, error, addCancel, message });
 
     this.modal.show();
+
+    console.log('[ErrorModal]', error);
 
     return new Promise(resolve => {
       this._okCallback = resolve;
@@ -43,17 +54,22 @@ class ErrorModal extends PureComponent {
   }
 
   render() {
-    const { error, message, title, addCancel } = this.state;
+    const { error, title, addCancel } = this.state;
+
+    const message = this.state.message || error?.message;
 
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody className="wide pad">
-          {message ? <div className="notice error">{message}</div> : null}
+          {message ? <div className="notice error pre">{message}</div> : null}
           {error && (
-            <pre className="pad-top-sm force-wrap selectable">
-              <code>{error.stack || error}</code>
-            </pre>
+            <details>
+              <summary>Stack trace</summary>
+              <pre className="pad-top-sm force-wrap selectable">
+                <code className="wide">{error.stack || error}</code>
+              </pre>
+            </details>
           )}
         </ModalBody>
         <ModalFooter>

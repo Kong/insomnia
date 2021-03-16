@@ -1,0 +1,59 @@
+{
+  "__export_date": "2020-03-24T06:16:20.516Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_ID__",
+      "_type": "workspace",
+      "description": "",
+      "name": "Simple API overview 2.0.0",
+      "parentId": null
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
+      "data": {
+        "base_path": "",
+        "host": "example.com",
+        "scheme": "http"
+      },
+      "name": "OpenAPI env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__316fc296",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "List API versions",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__4dd01204",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "Show API version details",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/v2"
+    }
+  ]
+}

@@ -15,14 +15,17 @@ const MAX_HINT_LOOK_BACK = 100;
 const TYPE_VARIABLE = 'variable';
 const TYPE_TAG = 'tag';
 const TYPE_CONSTANT = 'constant';
+const TYPE_SNIPPET = 'snippet';
 const MAX_CONSTANTS = -1;
+const MAX_SNIPPETS = -1;
 const MAX_VARIABLES = -1;
 const MAX_TAGS = -1;
 
 const ICONS = {
-  [TYPE_CONSTANT]: { char: '&#x1d484;', title: 'Constant' },
-  [TYPE_VARIABLE]: { char: '&#x1d465;', title: 'Environment Variable' },
-  [TYPE_TAG]: { char: '&fnof;', title: 'Generator Tag' },
+  [TYPE_CONSTANT]: { char: '𝒄', title: 'Constant' },
+  [TYPE_SNIPPET]: { char: '§', title: 'Snippet' },
+  [TYPE_VARIABLE]: { char: '𝑥', title: 'Environment Variable' },
+  [TYPE_TAG]: { char: 'ƒ', title: 'Generator Tag' },
 };
 
 CodeMirror.defineExtension('isHintDropdownActive', function() {
@@ -65,6 +68,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
 
     const constants = options.getConstants ? await options.getConstants() : null;
     const variables = options.getVariables ? await options.getVariables() : null;
+    const snippets = options.getSnippets ? await options.getSnippets() : null;
     const tags = options.getTags ? await options.getTags() : null;
 
     // Actually show the hint
@@ -72,6 +76,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       // Insomnia-specific options
       constants: constants || [],
       variables: variables || [],
+      snippets: snippets || [],
       tags: tags || [],
       showAllOnNoMatch,
 
@@ -179,9 +184,16 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
  * @returns {Promise.<{list: Array, from, to}>}
  */
 function hint(cm, options) {
-  const variablesToMatch = options.variables || [];
-  const constantsToMatch = options.constants || [];
-  const tagsToMatch = options.tags || [];
+  // Add type to all things (except constants, which need to convert to an object)
+  const variablesToMatch = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
+  const snippetsToMatch = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
+  const tagsToMatch = (options.tags || []).map(v => ({ ...v, type: TYPE_TAG }));
+  const constantsToMatch = (options.constants || []).map(s => ({
+    name: s,
+    value: s,
+    displayValue: '', // No display since name === value
+    type: TYPE_CONSTANT,
+  }));
 
   // Get the text from the cursor back
   const cur = cm.getCursor();
@@ -271,6 +283,10 @@ function hint(cm, options) {
     );
   }
 
+  matchSegments(snippetsToMatch, nameSegment, TYPE_SNIPPET, MAX_SNIPPETS).forEach(m =>
+    highPriorityMatches.push(m),
+  );
+
   const matches = [...highPriorityMatches, ...lowPriorityMatches];
 
   // Autocomplete from longest matched segment
@@ -295,7 +311,11 @@ function hint(cm, options) {
  * @param self
  * @param data
  */
-function replaceHintMatch(cm, self, data) {
+async function replaceHintMatch(cm, self, data) {
+  if (typeof data.text === 'function') {
+    data.text = await data.text();
+  }
+
   const cur = cm.getCursor();
   const from = CodeMirror.Pos(cur.line, cur.ch - data.segment.length);
   const to = CodeMirror.Pos(cur.line, cur.ch);
@@ -355,7 +375,23 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
     const name = typeof t === 'string' ? t : t.name;
     const value = typeof t === 'string' ? '' : t.value;
     const displayName = t.displayName || name;
-    const defaultFill = typeof t === 'string' ? name : getDefaultFill(t.name, t.args);
+
+    // Generate the value we'll fill it with
+    let defaultFill;
+    if (t.type === TYPE_CONSTANT) {
+      defaultFill = t.value;
+    } else if (t.type === TYPE_SNIPPET) {
+      defaultFill = t.value;
+    } else if (t.type === TYPE_VARIABLE) {
+      // Variables fill with variable name, not value (eg. {{ foo }})
+      // TODO: This is extremely confusing and does not make any sense so let's
+      //  refactor this to a single unified format for all types
+      defaultFill = t.name;
+    } else if (t.type === TYPE_TAG) {
+      defaultFill = getDefaultFill(t.name, t.args);
+    } else {
+      throw new Error('Unidentified autocomplete type: ' + t.type);
+    }
 
     const matchSegment = segment.toLowerCase();
     const matchName = displayName.toLowerCase();
@@ -365,12 +401,17 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
       continue;
     }
 
+    let displayValue = t.displayValue;
+    if (typeof displayValue !== 'string' && typeof value !== 'function') {
+      displayValue = JSON.stringify(value);
+    }
+
     matches.push({
       // Custom Insomnia keys
       type,
       segment,
+      displayValue,
       comment: value,
-      displayValue: value ? JSON.stringify(value) : '',
       score: name.length, // In case we want to sort by this
 
       // CodeMirror

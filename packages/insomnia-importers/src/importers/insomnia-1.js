@@ -65,7 +65,7 @@ function importRequestGroupItem(item, parentId) {
 }
 
 function importRequestItem(item, parentId) {
-  let authentication = {};
+  const authentication = {};
   if (item.authentication) {
     authentication.username = item.authentication.username;
     authentication.password = item.authentication.password;

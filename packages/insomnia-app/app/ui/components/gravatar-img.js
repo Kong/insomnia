@@ -7,11 +7,12 @@ type Props = {|
   size?: number,
   fallback?: string,
   className?: string,
+  rouned?: boolean,
 |};
 
 class GravatarImg extends React.PureComponent<Props> {
   render() {
-    const { email, size: rawSize, className, fallback } = this.props;
+    const { email, size: rawSize, className, fallback, rounded } = this.props;
     const size = rawSize || 100;
     let src = fallback;
 
@@ -30,7 +31,7 @@ class GravatarImg extends React.PureComponent<Props> {
         alt="Profile picture"
         title="Profile picture"
         className={className}
-        style={{ width: cssSize, height: cssSize }}
+        style={{ width: cssSize, height: cssSize, borderRadius: rounded ? cssSize : null }}
       />
     );
   }

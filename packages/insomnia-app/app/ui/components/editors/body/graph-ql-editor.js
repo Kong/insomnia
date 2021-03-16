@@ -77,7 +77,7 @@ type State = {
 
 @autobind
 class GraphQLEditor extends React.PureComponent<Props, State> {
-  _disabledOperationMarkers: TextMarker[];
+  _disabledOperationMarkers: Array<TextMarker>;
   _documentAST: null | Object;
   _isMounted: boolean;
   _queryEditor: null | CodeMirror;
@@ -130,7 +130,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     const cursorIndex = _queryEditor.indexFromPos(cursor);
 
     let operationName = null;
-    let allOperationNames = [];
+    const allOperationNames = [];
 
     // Loop through all operations to see if one contains the cursor.
     for (let i = 0; i < operations.length; i++) {
@@ -303,7 +303,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
       newState.schemaFetchError = {
-        message: `Failed to to fetch schema: ${err.message}`,
+        message: `Failed to fetch schema: ${err.message}`,
         response: responsePatch,
       };
     }
@@ -390,6 +390,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   }
 
   _handleBodyChange(query: string, variables: ?Object, operationName: ?string): void {
+    this._setDocumentAST(query);
+
     const body: GraphQLBody = { query };
 
     if (variables) {
@@ -400,16 +402,6 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
       body.operationName = operationName;
     }
 
-    const newContent = GraphQLEditor._graphQLToString(body);
-
-    // This method gets called a lot so make sure we only do something if the
-    // new body has actually changed.
-    if (this.props.content === newContent) {
-      return;
-    }
-
-    this._setDocumentAST(query);
-
     // Find op if there isn't one yet
     if (!body.operationName) {
       const newOperationName = this._getCurrentOperation();
@@ -417,6 +409,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
         body.operationName = newOperationName;
       }
     }
+
+    const newContent = GraphQLEditor._graphQLToString(body);
 
     this.setState({
       variablesSyntaxError: '',
@@ -476,7 +470,8 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     return JSON.stringify(body);
   }
 
-  componentWillReceiveProps(nextProps: Props) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (this.state.automaticFetch && nextProps.request.url !== this.props.request.url) {
       clearTimeout(this._schemaFetchTimeout);
       this._schemaFetchTimeout = setTimeout(async () => {

@@ -43,6 +43,23 @@ class GraphQLExplorerSchema extends React.PureComponent<Props> {
     );
   }
 
+  renderSubscriptionType() {
+    const { schema, onNavigateType } = this.props;
+
+    const type = schema.getSubscriptionType();
+
+    if (!type) {
+      return null;
+    }
+
+    return (
+      <React.Fragment>
+        <span className="success">subscription</span>:{' '}
+        <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
+      </React.Fragment>
+    );
+  }
+
   render() {
     return (
       <div className="graphql-explorer__schema">
@@ -51,6 +68,7 @@ class GraphQLExplorerSchema extends React.PureComponent<Props> {
         <ul className="graphql-explorer__defs">
           <li>{this.renderQueryType()}</li>
           <li>{this.renderMutationType()}</li>
+          <li>{this.renderSubscriptionType()}</li>
         </ul>
       </div>
     );

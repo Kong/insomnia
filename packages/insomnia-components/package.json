@@ -1,0 +1,53 @@
+{
+  "name": "insomnia-components",
+  "version": "2.2.21",
+  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "description": "Insomnia UI component library",
+  "license": "MIT",
+  "repository": "https://github.com/kong/insomnia/tree/develop/packages/insomnia-components",
+  "main": "dist/index.js",
+  "scripts": {
+    "typecheck": "flow check",
+    "test": "npm run typecheck",
+    "build": "webpack --config webpack/webpack.prod.js --display errors-only",
+    "watch": "webpack --config webpack/webpack.dev.js --watch",
+    "build-storybook": "build-storybook --quiet",
+    "storybook": "start-storybook --port 3223",
+    "convert-svg": "rimraf assets/svgr && svgr --out-dir assets/svgr assets && rimraf assets/svgr/index.js",
+    "prepare": "npm run convert-svg && npm run build"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@storybook/addon-contexts": "^5.3.19",
+    "@storybook/addon-info": "^5.3.19",
+    "@storybook/addon-knobs": "^5.3.19",
+    "@storybook/react": "^5.3.19",
+    "@svgr/cli": "^5.3.0",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-inline-react-svg": "^1.1.1",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-use": "^15.3.2",
+    "storybook-addon-designs": "^5.4.1",
+    "styled-components": "^4.4.1",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.11",
+    "webpack-merge": "^4.2.2"
+  },
+  "dependencies": {
+    "autobind-decorator": "^2.4.0",
+    "classnames": "^2.2.6",
+    "framer-motion": "^1.10.3",
+    "fuzzysort": "^1.1.4",
+    "md5": "^2.2.1",
+    "prop-types": "^15.7.2",
+    "react-switch": "^5.0.1"
+  },
+  "peerDependencies": {
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "styled-components": "^4.4.1"
+  },
+  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
+}

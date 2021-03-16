@@ -1,7 +1,3 @@
-@import '../constants/colors';
-@import '../constants/dimensions';
-@import '../constants/fonts';
-
 .dropdown {
   position: relative;
   display: inline-block;
@@ -35,29 +31,29 @@
     position: fixed;
     top: 0;
     left: 0;
-    border: 1px solid @hl-sm;
+    border: 1px solid var(--hl-sm);
     box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
     background: var(--color-bg);
 
     // Separate it from it's surroundings a bit
-    margin: @padding-xxs 3px;
+    margin: var(--padding-xxs) 3px;
 
-    padding-top: @radius-md;
-    padding-bottom: @radius-md;
+    padding-top: var(--radius-md);
+    padding-bottom: var(--radius-md);
 
-    border-radius: @radius-md;
+    border-radius: var(--radius-md);
     overflow: auto;
 
     .dropdown__filter {
       border: 1px solid var(--hl-md);
-      margin: @padding-xs;
+      margin: var(--padding-xs);
       width: auto;
-      border-radius: @radius-sm;
+      border-radius: var(--radius-sm);
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding-left: @padding-sm;
+      padding-left: var(--padding-sm);
 
       // Can't "display: none" this because we need to be able to type
       // in it. So, we'll just store it off screen
@@ -66,7 +62,7 @@
 
       input {
         margin: 0;
-        padding: @padding-xs @padding-sm;
+        padding: var(--padding-xs) var(--padding-sm);
         color: var(--color-font);
       }
 
@@ -101,19 +97,19 @@
 
       .dropdown__hint,
       .dropdown__right {
-        color: @hl-xl;
+        color: var(--hl-xl);
         margin-left: auto;
-        padding-left: @padding-lg;
+        padding-left: var(--padding-lg);
       }
     }
 
     li > button {
       min-width: 15rem;
-      font-size: @font-size-md;
+      font-size: var(--font-size-md);
       text-align: left;
-      padding-right: @padding-md;
-      padding-left: @padding-sm;
-      height: @line-height-xs;
+      padding-right: var(--padding-md);
+      padding-left: var(--padding-sm);
+      height: var(--line-height-xs);
       width: 100%;
       display: block;
       color: var(--color-font) !important;
@@ -129,32 +125,32 @@
 
     li > button:hover:not(:disabled),
     li.active > button:not(:disabled) {
-      background: @hl-sm;
+      background: var(--hl-sm);
     }
 
     li > button:active:not(:disabled) {
-      background: @hl-md;
+      background: var(--hl-md);
     }
 
     .dropdown__divider {
-      border-bottom: 1px solid @hl-lg;
+      border-bottom: 1px solid var(--hl-lg);
       overflow: visible !important;
       height: 0;
-      margin: @padding-md @padding-md @padding-md @padding-md;
+      margin: var(--padding-md) var(--padding-md) var(--padding-md) var(--padding-md);
 
       .dropdown__divider__label {
         position: relative;
-        left: calc(-1 * @padding-sm);
+        left: calc(-1 * var(--padding-sm));
         top: -0.7rem;
-        color: @hl;
+        color: var(--hl);
         padding-right: 1em;
         background: var(--color-bg);
-        font-size: @font-size-xs;
+        font-size: var(--font-size-xs);
         text-transform: uppercase;
       }
 
       &.dropdown__divider--no-name {
-        margin: @padding-xs 0;
+        margin: var(--padding-xs) 0;
 
         .dropdown__divider__label {
           display: none;

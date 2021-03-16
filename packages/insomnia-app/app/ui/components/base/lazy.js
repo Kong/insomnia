@@ -13,7 +13,8 @@ class Lazy extends PureComponent {
     this.setState({ show: true });
   }
 
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     if (this.props.delay < 0) {
       // Show right away if negative delay passed
       this.show();

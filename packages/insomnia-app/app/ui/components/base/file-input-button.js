@@ -33,7 +33,7 @@ class FileInputButton extends React.PureComponent<Props> {
     this._button = n;
   }
 
-  _handleChooseFile() {
+  async _handleChooseFile() {
     // If no types are selected then default to just files and not directories
     const types = this.props.itemtypes ? this.props.itemtypes : ['file'];
     let title = 'Select ';
@@ -50,6 +50,7 @@ class FileInputButton extends React.PureComponent<Props> {
       title: title,
       buttonLabel: 'Select',
       properties: types.map(type => {
+        console.log('TYPE', type);
         if (type === 'file') {
           return 'openFile';
         }
@@ -65,27 +66,30 @@ class FileInputButton extends React.PureComponent<Props> {
       options.filters = [{ name: 'Files', extensions: this.props.extensions }];
     }
 
-    remote.dialog.showOpenDialog(options, async paths => {
-      // Only change the file if a new file was selected
-      if (!paths || paths.length === 0) {
-        return;
-      }
+    const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
 
-      const path = paths[0];
-      this.props.onChange(path);
-    });
+    // Only change the file if a new file was selected
+    if (canceled) {
+      return;
+    }
+
+    const path = filePaths[0];
+    this.props.onChange(path);
   }
 
   render() {
     const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
-    const fileName = pathBasename(path);
+
+    // NOTE: Basename fails if path is not a string, so let's make sure it is
+    const fileName = typeof path === 'string' ? pathBasename(path) : null;
+
     return (
       <button
         type="button"
         ref={this._setRef}
         onClick={this._handleChooseFile}
         title={path}
-        {...extraProps}>
+        {...(extraProps: Object)}>
         {showFileIcon && <i className="fa fa-file-o space-right" />}
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>

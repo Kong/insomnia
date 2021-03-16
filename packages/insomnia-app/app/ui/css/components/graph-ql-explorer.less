@@ -1,6 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .graphql-explorer {
   display: grid;
   grid-template-columns: 100%;
@@ -17,22 +14,22 @@
   color: var(--color-font);
 
   .markdown-preview__content *:first-child {
-    margin-top: @padding-sm;
+    margin-top: var(--padding-sm);
   }
 
   &__subheading {
     border-bottom: 1px solid var(--hl-md);
-    padding-bottom: @padding-sm;
-    margin-top: @padding-lg;
-    margin-bottom: @padding-md;
+    padding-bottom: var(--padding-sm);
+    margin-top: var(--padding-lg);
+    margin-bottom: var(--padding-md);
   }
 
   &__header {
     overflow: hidden;
-    border-bottom: 1px solid @hl-md;
+    border-bottom: 1px solid var(--hl-md);
     box-sizing: border-box;
-    height: @height-nav;
-    line-height: @line-height-md;
+    height: var(--height-nav);
+    line-height: var(--line-height-md);
     color: var(--color-font);
     display: flex;
     justify-content: space-between;
@@ -42,13 +39,13 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-size: @font-size-lg;
+      font-size: var(--font-size-lg);
       font-weight: bold;
     }
 
     & > * {
       white-space: nowrap;
-      padding-left: @padding-md;
+      padding-left: var(--padding-md);
       display: inline-block;
       margin: 0;
     }
@@ -60,7 +57,7 @@
 
   &__body {
     box-sizing: border-box;
-    padding: @padding-md @padding-md 10rem;
+    padding: var(--padding-md) var(--padding-md) 10rem;
     overflow: auto;
     height: 100%;
     max-height: 100%;
@@ -68,16 +65,16 @@
 
   &__defs {
     &__description {
-      margin-left: @padding-sm;
+      margin-left: var(--padding-sm);
       color: var(--color-font);
     }
 
     &__arg {
-      margin-left: @padding-md;
+      margin-left: var(--padding-md);
     }
 
     li {
-      margin-bottom: @padding-md;
+      margin-bottom: var(--padding-md);
     }
   }
 

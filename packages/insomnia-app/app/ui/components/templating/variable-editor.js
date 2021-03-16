@@ -66,7 +66,7 @@ class VariableEditor extends PureComponent {
     }
 
     const context = await this.props.handleGetRenderContext();
-    const variables = context.keys;
+    const variables = context.keys.sort((a, b) => (a.name < b.name ? -1 : 1));
     const variableSource = context.context.getKeysContext().keyContext[cleanedValue] || '';
     // Hack to skip updating if we unmounted for some reason
     if (this._select) {
@@ -88,7 +88,7 @@ class VariableEditor extends PureComponent {
           <label>
             Environment Variable
             <select ref={this._setSelectRef} value={value} onChange={this._handleChange}>
-              <option value={`{{ 'my custom template logic' | urlencode }}`}>-- Custom --</option>
+              <option value={"{{ 'my custom template logic' | urlencode }}"}>-- Custom --</option>
               {variables.map((v, i) => (
                 <option key={`${i}::${v.name}`} value={`{{ ${v.name} }}`}>
                   {v.name}

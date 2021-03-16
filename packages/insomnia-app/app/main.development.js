@@ -1,14 +1,17 @@
 // @flow
 import { checkIfRestartNeeded } from './main/squirrel-startup';
+import { appConfig } from '../config';
+import path from 'path';
 import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
-import { CHANGELOG_BASE_URL, getAppVersion, isDevelopment, isMac } from './common/constants';
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
+import { trackNonInteractiveEventQueueable } from './common/analytics';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -18,6 +21,15 @@ if (checkIfRestartNeeded()) {
 const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
 
+// Explicitly set userData folder from config because it's sketchy to
+// rely on electron-builder to use productName, which could be changed
+// by accident.
+if (!isDevelopment()) {
+  const defaultPath = app.getPath('userData');
+  const newPath = path.join(defaultPath, '../', appConfig().userDataFolder);
+  app.setPath('userData', newPath);
+}
+
 // So if (window) checks don't throw
 global.window = global.window || undefined;
 
@@ -26,6 +38,7 @@ app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
   await errorHandling.init();
+
   await windowUtils.init();
 
   // Init the app
@@ -107,8 +120,11 @@ function _launchApp() {
 
   // Don't send origin header from Insomnia app because we're not technically using CORS
   session.defaultSession.webRequest.onBeforeSendHeaders((details, fn) => {
-    delete details.requestHeaders['Origin'];
-    fn({ cancel: false, requestHeaders: details.requestHeaders });
+    delete details.requestHeaders.Origin;
+    fn({
+      cancel: false,
+      requestHeaders: details.requestHeaders,
+    });
   });
 }
 
@@ -127,6 +143,14 @@ async function _trackStats() {
   const firstLaunch = stats.launches === 1;
   const justUpdated = !firstLaunch && stats.currentVersion !== stats.lastVersion;
 
+  if (firstLaunch) {
+    trackNonInteractiveEventQueueable('General', 'First Launch', stats.currentVersion);
+  } else if (justUpdated) {
+    trackNonInteractiveEventQueueable('General', 'Updated', stats.currentVersion);
+  } else {
+    trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
+  }
+
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
     if (!justUpdated || !currentVersion) {
@@ -136,10 +160,10 @@ async function _trackStats() {
     const { BrowserWindow } = electron;
     const notification: ToastNotification = {
       key: `updated-${currentVersion}`,
-      url: `${CHANGELOG_BASE_URL}/${currentVersion}/`,
+      url: changelogUrl(),
       cta: "See What's New",
+      email: appConfig().gravatarEmail,
       message: `Updated to ${currentVersion}`,
-      email: 'support@insomnia.rest',
     };
 
     // Wait a bit before showing the user because the app just launched.

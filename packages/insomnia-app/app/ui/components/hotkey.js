@@ -23,7 +23,7 @@ class Hotkey extends React.PureComponent<Props> {
     const { keyCombination, keyBindings, className, useFallbackMessage } = this.props;
 
     if (keyCombination == null && keyBindings == null) {
-      console.error(`Hotkey needs one of keyCombination or keyBindings!`);
+      console.error('Hotkey needs one of keyCombination or keyBindings!');
       return null;
     }
 

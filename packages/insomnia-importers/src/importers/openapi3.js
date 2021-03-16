@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const changeCase = require('change-case');
 
 const SwaggerParser = require('swagger-parser');
 const { parse: urlParse } = require('url');
@@ -17,8 +18,19 @@ const SECURITY_TYPE = {
   OAUTH: 'oauth2',
   OPEN_ID: 'openIdConnect',
 };
-const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY];
-
+const HTTP_AUTH_SCHEME = {
+  BASIC: 'basic',
+  BEARER: 'bearer',
+};
+const OAUTH_FLOWS = {
+  AUTHORIZATION_CODE: 'authorizationCode',
+  CLIENT_CREDENTIALS: 'clientCredentials',
+  IMPLICIT: 'implicit',
+  PASSWORD: 'password',
+};
+const SUPPORTED_SECURITY_TYPES = [SECURITY_TYPE.HTTP, SECURITY_TYPE.API_KEY, SECURITY_TYPE.OAUTH];
+const SUPPORTED_HTTP_AUTH_SCHEMES = [HTTP_AUTH_SCHEME.BASIC, HTTP_AUTH_SCHEME.BEARER];
+const VARIABLE_SEARCH_VALUE = /{([^}]+)}/g;
 let requestCounts = {};
 
 module.exports.id = 'openapi3';
@@ -60,23 +72,26 @@ module.exports.convert = async function(rawData) {
     },
   };
 
-  const servers = api.servers.map(s => urlParse(s.url));
-  const defaultServer = servers[0] || urlParse('http://example.com/');
+  const defaultServerUrl = getDefaultServerUrl(api);
   const securityVariables = getSecurityEnvVariables(
     api.components && api.components.securitySchemes,
   );
 
-  const protocol = defaultServer.protocol || '';
+  const protocol = defaultServerUrl.protocol || '';
+
+  // Base path is pulled out of the URL, and the trailing slash is removed
+  const basePath = (defaultServerUrl.pathname || '').replace(/\/$/, '');
+
   const openapiEnv = {
     _type: 'environment',
-    _id: `env___BASE_ENVIRONMENT_ID___sub`,
+    _id: 'env___BASE_ENVIRONMENT_ID___sub',
     parentId: baseEnv._id,
     name: 'OpenAPI env',
     data: {
       // note: `URL.protocol` returns with trailing `:` (i.e. "https:")
       scheme: protocol.replace(/:$/, '') || ['http'],
-      base_path: defaultServer.pathname || '',
-      host: defaultServer.host || '',
+      base_path: basePath,
+      host: defaultServerUrl.host || '',
       ...securityVariables,
     },
   };
@@ -85,6 +100,60 @@ module.exports.convert = async function(rawData) {
 
   return [workspace, baseEnv, openapiEnv, ...endpoints];
 };
+
+/**
+ * Gets a server to use as the default
+ * Either the first server defined in the specification, or an example if none are specified
+ *
+ * @param {Object} api - openapi3 object
+ * @returns {UrlWithStringQuery} the resolved server URL
+ */
+function getDefaultServerUrl(api) {
+  const exampleServer = 'http://example.com/';
+  const servers = api.servers || [];
+  const firstServer = servers[0];
+  const foundServer = firstServer && firstServer.url;
+
+  if (!foundServer) {
+    return urlParse(exampleServer);
+  }
+
+  const url = resolveVariables(firstServer);
+
+  return urlParse(url);
+}
+
+/**
+ * Resolve default variables for a server url
+ *
+ * @param {Object} str - the server
+ * @returns {string} - the resolved url
+ */
+function resolveVariables(server) {
+  let resolvedUrl = server.url;
+  const variables = server.variables || {};
+
+  let shouldContinue = true;
+
+  do {
+    // Regexp contain the global flag (g), meaning we must execute our regex on the original string.
+    // https://stackoverflow.com/a/27753327
+    const [replace, name] = VARIABLE_SEARCH_VALUE.exec(server.url) || [];
+
+    const variable = variables && variables[name];
+    const value = variable && variable.default;
+
+    if (name && !value) {
+      // We found a variable in the url (name) but we have no default to replace it with (value)
+      throw new Error(`Server variable "${name}" missing default value`);
+    }
+
+    shouldContinue = !!name;
+    resolvedUrl = replace ? resolvedUrl.replace(replace, value) : resolvedUrl;
+  } while (shouldContinue);
+
+  return resolvedUrl;
+}
 
 /**
  * Parse string data into openapi 3 object (https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#oasObject)
@@ -120,7 +189,7 @@ function parseEndpoints(document) {
       const methods = Object.keys(schemasPerMethod);
 
       return methods
-        .filter(method => method !== 'parameters')
+        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
         .map(method => Object.assign({}, schemasPerMethod[method], { path, method }));
     })
     .reduce(
@@ -175,7 +244,7 @@ function importFolderItem(item, parentId) {
     parentId,
     _id: `fld___WORKSPACE_ID__${hash}`,
     _type: 'request_group',
-    name: item.name || `Folder {requestGroupCount}`,
+    name: item.name || 'Folder {requestGroupCount}',
     description: item.description || '',
   };
 }
@@ -224,7 +293,7 @@ function importRequest(endpointSchema, parentId, security, securitySchemes) {
  * @returns {string}
  */
 function pathWithParamsAsVariables(path) {
-  return path.replace(/{([^}]+)}/g, '{{ $1 }}');
+  return path.replace(VARIABLE_SEARCH_VALUE, '{{ $1 }}');
 }
 
 /**
@@ -258,7 +327,7 @@ function prepareHeaders(endpointSchema) {
  *
  * @param {Object} security - OpenAPI 3 security rules
  * @param {Object} securitySchemes - OpenAPI 3 security schemes
- * @returns {Object} headers or basic http authentication details
+ * @returns {Object} headers or basic|bearer http authentication details
  */
 function parseSecurity(security, securitySchemes) {
   if (!security || !securitySchemes) {
@@ -274,29 +343,36 @@ function parseSecurity(security, securitySchemes) {
       const securityName = Object.keys(securityPolicy)[0];
       return securitySchemes[securityName];
     })
-    .filter(schemeDetails => SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type));
+    .filter(
+      schemeDetails => schemeDetails && SUPPORTED_SECURITY_TYPES.includes(schemeDetails.type),
+    );
 
   const apiKeySchemes = supportedSchemes.filter(scheme => scheme.type === SECURITY_TYPE.API_KEY);
   const apiKeyHeaders = apiKeySchemes
     .filter(scheme => scheme.in === 'header')
     .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
   const apiKeyCookies = apiKeySchemes
     .filter(scheme => scheme.in === 'cookie')
-    .map(scheme => `${scheme.name}={{ apiKey }}`);
+    .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
+      return `${scheme.name}={{ ${variableName} }}`;
+    });
   const apiKeyCookieHeader = { name: 'Cookie', disabled: false, value: apiKeyCookies.join('; ') };
   const apiKeyParams = apiKeySchemes
     .filter(scheme => scheme.in === 'query')
     .map(scheme => {
+      const variableName = changeCase.camelCase(scheme.name);
       return {
         name: scheme.name,
         disabled: false,
-        value: '{{ apiKey }}',
+        value: `{{ ${variableName} }}`,
       };
     });
 
@@ -304,14 +380,29 @@ function parseSecurity(security, securitySchemes) {
     apiKeyHeaders.push(apiKeyCookieHeader);
   }
 
-  const httpAuth = supportedSchemes.find(
-    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
-  )
-    ? { type: 'basic', username: '{{ httpUsername }}', password: '{{ httpPassword }}' }
-    : {};
+  const authentication = (() => {
+    const authScheme = supportedSchemes.find(
+      scheme =>
+        [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) &&
+        SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
+    );
+
+    if (!authScheme) {
+      return {};
+    }
+
+    switch (authScheme.type) {
+      case SECURITY_TYPE.HTTP:
+        return parseHttpAuth(authScheme.scheme);
+      case SECURITY_TYPE.OAUTH:
+        return parseOAuth2(authScheme);
+      default:
+        return {};
+    }
+  })();
 
   return {
-    authentication: httpAuth,
+    authentication,
     headers: apiKeyHeaders,
     parameters: apiKeyParams,
   };
@@ -330,21 +421,44 @@ function getSecurityEnvVariables(securitySchemes) {
 
   const variables = {};
   const securitySchemesArray = Object.values(securitySchemes);
-  const hasApiKeyScheme = securitySchemesArray.some(
-    scheme => scheme.type === SECURITY_TYPE.API_KEY,
+  const apiKeyVariableNames = securitySchemesArray
+    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
+    .map(scheme => changeCase.camelCase(scheme.name));
+  const hasHttpBasicScheme = securitySchemesArray.some(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'basic',
   );
-  const hasHttpScheme = securitySchemesArray.some(scheme => scheme.type === SECURITY_TYPE.HTTP);
+  const hasHttpBearerScheme = securitySchemesArray.some(
+    scheme => scheme.type === SECURITY_TYPE.HTTP && scheme.scheme === 'bearer',
+  );
+  const oauth2Variables = securitySchemesArray.reduce((acc, scheme) => {
+    if (scheme.type === SECURITY_TYPE.OAUTH && scheme.scheme === 'bearer') {
+      acc.oauth2ClientId = 'clientId';
+      const flows = scheme.flows || {};
+      if (flows.authorizationCode || flows.clientCredentials || flows.password) {
+        acc.oauth2ClientSecret = 'clientSecret';
+      }
+      if (flows.password) {
+        acc.oauth2Username = 'username';
+        acc.oauth2Password = 'password';
+      }
+    }
+    return acc;
+  }, {});
 
-  if (hasApiKeyScheme) {
-    variables.apiKey = 'apiKey';
-  }
+  Array.from(new Set(apiKeyVariableNames)).forEach(name => {
+    variables[name] = name;
+  });
 
-  if (hasHttpScheme) {
+  if (hasHttpBasicScheme) {
     variables.httpUsername = 'username';
     variables.httpPassword = 'password';
   }
 
-  return variables;
+  if (hasHttpBearerScheme) {
+    variables.bearerToken = 'bearerToken';
+  }
+
+  return { ...variables, ...oauth2Variables };
 }
 
 /**
@@ -505,4 +619,98 @@ function generateUniqueRequestId(endpointSchema) {
   }
 
   return `req_${WORKSPACE_ID}${hash}${requestCounts[hash] || ''}`;
+}
+
+function parseHttpAuth(scheme) {
+  switch (scheme) {
+    case HTTP_AUTH_SCHEME.BASIC:
+      return importBasicAuthentication();
+    case HTTP_AUTH_SCHEME.BEARER:
+      return importBearerAuthentication();
+    default:
+      return {};
+  }
+}
+
+function parseOAuth2Scopes(flow) {
+  const scopes = Object.keys(flow.scopes || {});
+  return scopes.join(' ');
+}
+
+function mapOAuth2GrantType(grantType) {
+  const types = {
+    [OAUTH_FLOWS.AUTHORIZATION_CODE]: 'authorization_code',
+    [OAUTH_FLOWS.CLIENT_CREDENTIALS]: 'client_credentials',
+    [OAUTH_FLOWS.IMPLICIT]: 'implicit',
+    [OAUTH_FLOWS.PASSWORD]: 'password',
+  };
+
+  return types[grantType];
+}
+
+function parseOAuth2(scheme) {
+  const flows = Object.keys(scheme.flows);
+
+  if (!flows.length) {
+    return {};
+  }
+
+  const grantType = flows[0];
+  const flow = scheme.flows[grantType];
+
+  if (!flow) {
+    return {};
+  }
+
+  const base = {
+    clientId: '{{ oauth2ClientId }}',
+    grantType: mapOAuth2GrantType(grantType),
+    scope: parseOAuth2Scopes(flow),
+    type: 'oauth2',
+  };
+
+  switch (grantType) {
+    case OAUTH_FLOWS.AUTHORIZATION_CODE:
+      return {
+        ...base,
+        clientSecret: '{{ oauth2ClientSecret }}',
+        accessTokenUrl: flow.tokenUrl,
+        authorizationUrl: flow.authorizationUrl,
+      };
+    case OAUTH_FLOWS.CLIENT_CREDENTIALS:
+      return {
+        ...base,
+        clientSecret: '{{ oauth2ClientSecret }}',
+        accessTokenUrl: flow.tokenUrl,
+      };
+    case OAUTH_FLOWS.IMPLICIT:
+      return {
+        ...base,
+        authorizationUrl: flow.authorizationUrl,
+      };
+    case OAUTH_FLOWS.PASSWORD:
+      return {
+        ...base,
+        clientSecret: '{{ oauth2ClientSecret }}',
+        username: '{{ oauth2Username }}',
+        password: '{{ oauth2Password }}',
+        accessTokenUrl: flow.tokenUrl,
+      };
+  }
+}
+
+function importBearerAuthentication() {
+  return {
+    type: 'bearer',
+    token: '{{bearerToken}}',
+    prefix: '',
+  };
+}
+
+function importBasicAuthentication() {
+  return {
+    type: 'basic',
+    username: '{{ httpUsername }}',
+    password: '{{ httpPassword }}',
+  };
 }

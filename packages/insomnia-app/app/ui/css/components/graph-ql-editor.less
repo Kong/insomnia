@@ -1,6 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .graphql-editor {
   position: relative;
   display: grid;
@@ -12,8 +9,8 @@
 
   & > h2 {
     color: var(--hl);
-    padding: @padding-xs @padding-sm;
-    font-size: @font-size-md;
+    padding: var(--padding-xs) var(--padding-sm);
+    font-size: var(--font-size-md);
     border-top: 1px dashed var(--hl-sm);
   }
 
@@ -22,8 +19,8 @@
     top: 0;
     right: 0;
     z-index: 10;
-    margin: @padding-xs;
-    opacity: @opacity-subtle;
+    margin: var(--padding-xs);
+    opacity: var(--opacity-subtle);
 
     &:hover {
       opacity: 1;
@@ -62,7 +59,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: @padding-xxs @padding-sm;
+    padding: var(--padding-xxs) var(--padding-sm);
     flex-wrap: wrap;
   }
 
@@ -77,20 +74,20 @@
   background: var(--color-bg);
   position: fixed;
   z-index: 100;
-  padding: @padding-xs @padding-sm;
-  border: 1px solid @border-color;
+  padding: var(--padding-xs) var(--padding-sm);
+  border: 1px solid var(--hl-md);
   color: var(--color-font);
   font-weight: 600;
 
   .info-description {
     font-weight: initial;
-    padding-top: @padding-xs;
+    padding-top: var(--padding-xs);
 
     // HACK: Cancel out padding on parent container
-    margin-bottom: calc(@padding-sm * -1);
+    margin-bottom: calc(var(--padding-sm) * -1);
 
     & > * {
-      margin: @padding-xs 0 @padding-sm 0;
+      margin: var(--padding-xs) 0 var(--padding-sm) 0;
     }
   }
 

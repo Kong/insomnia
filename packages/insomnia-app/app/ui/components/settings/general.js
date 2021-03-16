@@ -4,11 +4,13 @@ import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
 import autobind from 'autobind-decorator';
 import HelpTooltip from '../help-tooltip';
+import type { HttpVersion } from '../../../common/constants';
 import {
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
+  HttpVersions,
   isLinux,
   isMac,
   isWindows,
@@ -16,10 +18,16 @@ import {
   UPDATE_CHANNEL_STABLE,
 } from '../../../common/constants';
 import type { Settings } from '../../../models/settings';
-import CheckForUpdatesButton from '../check-for-updates-button';
 import { setFont } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
+import FileInputButton from '../base/file-input-button';
+import { CertificateBundleType } from '../../../models/settings';
+import CheckForUpdatesButton from '../check-for-updates-button';
+
+// Font family regex to match certain monospace fonts that don't get
+// recognized as monospace
+const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 
 type Props = {
   settings: Settings,
@@ -30,6 +38,7 @@ type Props = {
 
 type State = {
   fonts: Array<{ family: string, monospace: boolean }> | null,
+  fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
 @autobind
@@ -38,16 +47,27 @@ class General extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       fonts: null,
+      fontsMono: null,
     };
   }
 
   async componentDidMount() {
     const allFonts = await fontScanner.getAvailableFonts();
+
+    // Find regular fonts
     const fonts = allFonts
       .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
       .sort((a, b) => (a.family > b.family ? 1 : -1));
 
-    this.setState({ fonts });
+    // Find monospaced fonts
+    // NOTE: Also include some others:
+    //  - https://github.com/Kong/insomnia/issues/1835
+    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
+
+    this.setState({
+      fonts,
+      fontsMono,
+    });
   }
 
   async _handleUpdateSetting(e: SyntheticEvent<HTMLInputElement>): Promise<Settings> {
@@ -65,9 +85,8 @@ class General extends React.PureComponent<Props, State> {
     return this.props.updateSetting(el.name, value);
   }
 
-  async _handleToggleMenuBar(e: SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(e);
-    this.props.handleToggleMenuBar(settings.autoHideMenuBar);
+  async _handleCaBundlePathChange(path: string) {
+    return this.props.updateSetting('caBundlePath', path);
   }
 
   async _handleUpdateSettingAndRestart(e: SyntheticEvent<HTMLInputElement>) {
@@ -75,11 +94,6 @@ class General extends React.PureComponent<Props, State> {
     const { app } = electron.remote || electron;
     app.relaunch();
     app.exit();
-  }
-
-  async _handleFontLigatureChange(el: SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
   }
 
   async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
@@ -90,6 +104,32 @@ class General extends React.PureComponent<Props, State> {
   async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
+  }
+
+  renderEnumSetting(
+    label: string,
+    name: string,
+    values: Array<{ name: string, value: any }>,
+    help: string,
+    forceRestart?: boolean,
+  ) {
+    const { settings } = this.props;
+    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
+    return (
+      <div className="form-control form-control--outlined pad-top-sm">
+        <label>
+          {label}
+          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+          <select value={settings[name] || '__NULL__'} name={name} onChange={onChange}>
+            {values.map(({ name, value }) => (
+              <option key={value} value={value}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    );
   }
 
   renderBooleanSetting(label: string, name: string, help: string, forceRestart?: boolean) {
@@ -142,14 +182,63 @@ class General extends React.PureComponent<Props, State> {
   }
 
   renderNumberSetting(label: string, name: string, help: string, props: Object) {
-    return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
+    return this.renderTextSetting(label, name, help, {
+      ...props,
+      type: 'number',
+    });
+  }
+
+  renderCertificateBundleSettings() {
+    const { settings } = this.props;
+
+    const defaultOption = (
+      <option value={CertificateBundleType.default}>-- System Default --</option>
+    );
+    const windowsOption = (
+      <option value={CertificateBundleType.windowsCertStore}>Windows Certificate Store</option>
+    );
+    const userOption = <option value={CertificateBundleType.userProvided}>Custom Bundle</option>;
+
+    const disabled = !settings.validateSSL;
+    return (
+      <React.Fragment>
+        {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
+        <div className="form-row pad-top-sm">
+          <div className="form-control form-control--outlined">
+            <label>Certificate Bundle</label>
+            <select
+              name="caBundleType"
+              value={settings.caBundleType}
+              disabled={disabled}
+              onChange={this._handleUpdateSetting}>
+              {defaultOption}
+              {isWindows() ? windowsOption : null}
+              {userOption}
+            </select>
+          </div>
+          {settings.caBundleType === CertificateBundleType.userProvided && (
+            <div className="form-control form-control--outlined">
+              <label>Custom Bundle</label>
+              <FileInputButton
+                className="btn btn--clicky"
+                name="CA Bundle"
+                onChange={this._handleCaBundlePathChange}
+                path={settings.caBundlePath}
+                showFileName
+                disabled={disabled}
+              />
+            </div>
+          )}
+        </div>
+      </React.Fragment>
+    );
   }
 
   render() {
     const { settings } = this.props;
-    const { fonts } = this.state;
+    const { fonts, fontsMono } = this.state;
     return (
-      <div>
+      <div className="pad-bottom">
         <div className="row-fill row-fill--top">
           <div>
             {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
@@ -161,7 +250,7 @@ class General extends React.PureComponent<Props, State> {
           </div>
           <div>
             {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}
-            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '')}
+            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '', true)}
             {this.renderBooleanSetting('Raw template syntax', 'nunjucksPowerUserMode', '', true)}
           </div>
         </div>
@@ -195,7 +284,6 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         <hr className="pad-top" />
-
         <h2>Font</h2>
 
         <div className="row-fill row-fill--top">
@@ -240,19 +328,17 @@ class General extends React.PureComponent<Props, State> {
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Font
-              {fonts ? (
+              {fontsMono ? (
                 <select
                   name="fontMonospace"
                   value={settings.fontMonospace || '__NULL__'}
                   onChange={this._handleFontChange}>
                   <option value="__NULL__">-- System Default --</option>
-                  {fonts
-                    .filter(i => i.monospace)
-                    .map((item, index) => (
-                      <option key={index} value={item.family}>
-                        {item.family}
-                      </option>
-                    ))}
+                  {fontsMono.map((item, index) => (
+                    <option key={index} value={item.family}>
+                      {item.family}
+                    </option>
+                  ))}
                 </select>
               ) : (
                 <select disabled>
@@ -290,10 +376,45 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
 
-        <h2>Network</h2>
+        <h2>Request / Response</h2>
+        <div className="row-fill row-fill--top">
+          <div>
+            {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
+            {this.renderBooleanSetting(
+              'Filter responses by environment',
+              'filterResponsesByEnv',
+              'Only show responses that were sent under the currently-active environment. This ' +
+                'adds additional separation when working with Development, Staging, Production ' +
+                'environments, for example.',
+            )}
+          </div>
+          <div>
+            {this.renderBooleanSetting('Disable JS in HTML preview', 'disableHtmlPreviewJs', '')}
+            {this.renderBooleanSetting(
+              'Disable Links in response viewer',
+              'disableResponsePreviewLinks',
+              '',
+            )}
+          </div>
+        </div>
 
-        {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
-        {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
+        <div className="form-row pad-top-sm">
+          {this.renderEnumSetting(
+            'Preferred HTTP version',
+            'preferredHttpVersion',
+            ([
+              { name: 'Default', value: HttpVersions.default },
+              { name: 'HTTP 1.0', value: HttpVersions.V1_0 },
+              { name: 'HTTP 1.1', value: HttpVersions.V1_1 },
+              { name: 'HTTP/2', value: HttpVersions.V2_0 },
+
+              // Enable when our version of libcurl supports HTTP/3
+              // { name: 'HTTP/3', value: HttpVersions.v3 },
+            ]: Array<{ name: string, value: HttpVersion }>),
+            'Preferred HTTP version to use for requests which will fall back if it cannot be' +
+              'negotiated',
+          )}
+        </div>
 
         <div className="form-row pad-top-sm">
           {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinite', {
@@ -317,13 +438,20 @@ class General extends React.PureComponent<Props, State> {
           )}
         </div>
 
+        <h3>Certificates</h3>
+
+        {this.renderCertificateBundleSettings()}
+
         <hr className="pad-top" />
 
         <h2>
           HTTP Network Proxy
           <HelpTooltip
             className="space-left txt-md"
-            style={{ maxWidth: '20rem', lineWrap: 'word' }}>
+            style={{
+              maxWidth: '20rem',
+              lineWrap: 'word',
+            }}>
             Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
           </HelpTooltip>
         </h2>
@@ -404,6 +532,29 @@ class General extends React.PureComponent<Props, State> {
         )}
 
         <br />
+
+        <hr className="pad-top" />
+        <h2>Data Sharing</h2>
+        <div className="form-control form-control--thin">
+          <label className="inline-block">
+            Send Usage Statistics{' '}
+            <input
+              type="checkbox"
+              name="enableAnalytics"
+              checked={!!settings.enableAnalytics}
+              onChange={this._handleUpdateSetting}
+            />
+          </label>
+          <p className="txt-sm faint">
+            Help Kong improve its products by sending anonymous data about features and plugins
+            used, hardware and software configuration, statistics on number of requests, workspaces,
+            etc.
+          </p>
+          <p className="txt-sm faint">
+            Please note that this will not include personal data or any sensitive information, such
+            as request data, names, etc.
+          </p>
+        </div>
 
         {session.isLoggedIn() && (
           <React.Fragment>

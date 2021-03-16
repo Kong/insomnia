@@ -105,9 +105,10 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
 
       const context = {
-        ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-        ...pluginContexts.store.init(p.plugin),
-        ...pluginContexts.network.init(activeEnvironmentId),
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+        ...(pluginContexts.data.init(): Object),
+        ...(pluginContexts.store.init(p.plugin): Object),
+        ...(pluginContexts.network.init(activeEnvironmentId): Object),
       };
 
       const requests = await models.request.findByParentId(requestGroup._id);
@@ -135,7 +136,7 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
     const { actionPlugins, loadingActions } = this.state;
 
     return (
-      <Dropdown ref={this._setDropdownRef} onOpen={this.onOpen} {...other}>
+      <Dropdown ref={this._setDropdownRef} onOpen={this.onOpen} {...(other: Object)}>
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>

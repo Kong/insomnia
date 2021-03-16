@@ -11,6 +11,7 @@ import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
 import MarkdownEditor from '../markdown-editor';
+import CopyButton from '../base/copy-button';
 
 const MODES = {
   'text/plain': 'Plain Text',
@@ -34,6 +35,7 @@ class CodePromptModal extends PureComponent {
       mode: 'text/plain',
       hideMode: false,
       enableRender: false,
+      showCopyButton: false,
     };
   }
 
@@ -66,6 +68,7 @@ class CodePromptModal extends PureComponent {
       enableRender,
       onChange,
       onModeChange,
+      showCopyButton,
     } = options;
 
     this._onChange = onChange;
@@ -81,6 +84,7 @@ class CodePromptModal extends PureComponent {
       hint,
       enableRender,
       hideMode,
+      showCopyButton,
       mode: realMode || this.state.mode || 'text/plain',
     });
 
@@ -108,12 +112,29 @@ class CodePromptModal extends PureComponent {
       mode,
       hideMode,
       enableRender,
+      showCopyButton,
     } = this.state;
 
     return (
       <Modal ref={this._setModalRef} freshState tall>
         <ModalHeader>{title}</ModalHeader>
-        <ModalBody className="wide tall" style={{ minHeight: '10rem' }}>
+        <ModalBody
+          noScroll
+          className="wide tall"
+          style={
+            showCopyButton
+              ? {
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr)',
+                  gridTemplateRows: 'auto minmax(0, 1fr)',
+                }
+              : { minHeight: '10rem' }
+          }>
+          {showCopyButton ? (
+            <div className="pad-top-sm pad-right-sm">
+              <CopyButton content={defaultValue} className="pull-right" />
+            </div>
+          ) : null}
           {mode === 'text/x-markdown' ? (
             <div className="pad-sm tall">
               <MarkdownEditor

@@ -1,0 +1,39 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  OS:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Run tests
+        run: npm test
+      - name: Build core for smoke tests
+        run: npm run app-build:smoke:core
+      - name: Build designer for smoke tests
+        run: npm run app-build:smoke:designer
+      - name: Run core smoke tests
+        run: npm run test:smoke:core
+      - name: Run designer smoke tests
+        run: npm run test:smoke:designer

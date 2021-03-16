@@ -1,6 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .wrapper {
   background-color: var(--color-bg);
   color: var(--color-font);
@@ -10,18 +7,72 @@
   //grid-template-rows: ...;
   //grid-template-columns: ...;
 
+  .filter-icon {
+    float: right;
+    margin-right: var(--padding-sm);
+    margin-top: -22px;
+    position: relative;
+    z-index: 1;
+    color: var(--hl-xl);
+  }
+
+  .btn-utility {
+    color: #fff;
+    background-color: var(--color-surprise);
+  }
+
+  .btn-create {
+    padding: var(--padding-sm) var(--padding-md);
+  }
+
+  .btn-utility-reverse {
+    color: var(--color-text);
+    background-color: var(--hl-xs);
+    border: none;
+  }
+
+  .btn-utility,
+  .btn-utility-reverse {
+    &:hover {
+      filter: brightness(0.8);
+    }
+  }
+
+  .btn-sync {
+    text-align: center;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    height: var(--line-height-xs);
+    display: flex !important;
+    flex-direction: row !important;
+    -webkit-box-align: center !important;
+    align-items: center !important;
+    padding-left: var(--padding-md);
+    padding-right: var(--padding-md);
+  }
+
   height: 100%;
   width: 100%;
 
+  @keyframes togglePill {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(0);
+    }
+  }
+
   .sidebar {
-    grid-column-start: 1;
-    grid-row-start: 1;
+    grid-column-start: 2;
+    grid-row-start: 2;
     grid-row-end: span 3;
     min-width: 0;
   }
 
   .drag {
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: span 3;
     position: relative;
 
@@ -35,44 +86,82 @@
       position: absolute;
       height: 100%;
       z-index: 9;
-      width: @drag-width;
+      width: var(--drag-width);
       top: 0;
       // More to the right so it doesn't cover scroll bars
-      left: calc((@drag-width / 8) * -1);
+      left: calc((var(--drag-width) / 8) * -1);
     }
   }
 
   .request-pane {
     min-width: 0;
-    grid-column-start: 3;
-    grid-row-start: 1;
+    grid-column-start: 4;
+    grid-row-start: 2;
     grid-row-end: span 3;
     background: inherit;
   }
 
   .response-pane {
     min-width: 0;
-    grid-column-start: 5;
-    grid-row-start: 1;
+    grid-column-start: 6;
+    grid-row-start: 2;
     grid-row-end: span 3;
     background: inherit;
   }
+
+  .app-header {
+    grid-column-start: 1;
+    grid-column-end: span 6;
+    grid-row-start: 1;
+    grid-row-end: span 1;
+  }
+
+  .layout-body {
+    grid-column-start: 1;
+    grid-column-end: span 6;
+    grid-row-start: 2;
+    grid-row-end: span 3;
+  }
+
+  .layout-body--sidebar {
+    grid-column-start: 3;
+    grid-column-end: span 4;
+    grid-row-start: 2;
+    grid-row-end: span 3;
+  }
+
+  .onboarding {
+    grid-column-start: 1;
+    grid-column-end: span 6;
+    grid-row-start: 1;
+    grid-row-end: span 3;
+  }
+}
+
+.drag--sidebar {
+  grid-column-start: 3;
+  z-index: 1000;
+  grid-column-end: span 1;
+}
+
+.drag--pane-horizontal {
+  grid-column-start: 5;
+  grid-column-end: span 1;
 }
 
 .wrapper--vertical {
   .request-pane {
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-column-end: span 3;
-    grid-row-start: 1;
+    grid-row-start: 2;
     grid-row-end: span 1;
   }
 
   .response-pane {
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-column-end: span 3;
-    grid-row-start: 3;
+    grid-row-start: 4;
     grid-row-end: span 1;
-    //z-index: 2; // So it covers the URL Bar and stuff
   }
 
   .drag--pane-horizontal {
@@ -81,23 +170,23 @@
 
   .drag--pane-vertical {
     display: block !important;
-    grid-column-start: 3;
+    grid-column-start: 4;
     grid-column-end: span 3;
-    grid-row-start: 2;
+    grid-row-start: 3;
     grid-row-end: span 1;
 
     & > * {
       cursor: ns-resize;
-      height: @drag-width;
+      height: var(--drag-width);
       width: 100%;
       left: 0;
       // More to the right so it doesn't cover scroll bars
-      top: calc(@drag-width / 2 * -1);
+      top: calc(var(--drag-width) / 2 * -1);
     }
   }
 }
 
-@media (max-width: @breakpoint-md) {
+@media (max-width: 880px) {
   .wrapper {
     .wrapper--vertical();
   }

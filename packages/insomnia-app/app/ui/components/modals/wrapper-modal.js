@@ -10,7 +10,9 @@ type State = {
   title: string,
   body: React.Node,
   bodyHTML: ?string,
-  tall: boolean,
+  tall: ?boolean,
+  skinny: ?boolean,
+  wide: ?boolean,
 };
 
 @autobind
@@ -25,6 +27,8 @@ class WrapperModal extends React.PureComponent<Props, State> {
       body: null,
       bodyHTML: null,
       tall: false,
+      skinny: false,
+      wide: false,
     };
   }
 
@@ -33,19 +37,21 @@ class WrapperModal extends React.PureComponent<Props, State> {
   }
 
   show(options: Object = {}) {
-    const { title, body, bodyHTML, tall } = options;
+    const { title, body, bodyHTML, tall, skinny, wide } = options;
     this.setState({
       title,
       body,
       bodyHTML,
       tall: !!tall,
+      skinny: !!skinny,
+      wide: !!wide,
     });
 
     this.modal && this.modal.show();
   }
 
   render() {
-    const { title, body, bodyHTML, tall } = this.state;
+    const { title, body, bodyHTML, tall, skinny, wide } = this.state;
 
     let finalBody = body;
     if (bodyHTML) {
@@ -53,7 +59,7 @@ class WrapperModal extends React.PureComponent<Props, State> {
     }
 
     return (
-      <Modal ref={this._setModalRef} tall={tall}>
+      <Modal ref={this._setModalRef} tall={tall} skinny={skinny} wide={wide}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody>{finalBody}</ModalBody>
       </Modal>

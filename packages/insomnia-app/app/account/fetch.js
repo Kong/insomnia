@@ -4,7 +4,7 @@ import zlib from 'zlib';
 
 let _userAgent = '';
 let _baseUrl = '';
-let _commandListeners = [];
+const _commandListeners = [];
 
 export function setup(userAgent, baseUrl) {
   _userAgent = userAgent;

@@ -116,7 +116,7 @@ class Modal extends PureComponent {
   }
 
   render() {
-    const { tall, wide, noEscape, className, children } = this.props;
+    const { tall, wide, skinny, noEscape, className, children } = this.props;
     const { open, zIndex, forceRefreshCounter } = this.state;
 
     if (!open) {
@@ -130,6 +130,7 @@ class Modal extends PureComponent {
       { 'modal--fixed-height': tall },
       { 'modal--noescape': noEscape },
       { 'modal--wide': wide },
+      { 'modal--skinny': skinny },
     );
 
     const styles = {};
@@ -161,6 +162,7 @@ class Modal extends PureComponent {
 Modal.propTypes = {
   tall: PropTypes.bool,
   wide: PropTypes.bool,
+  skinny: PropTypes.bool,
   noEscape: PropTypes.bool,
   dontFocus: PropTypes.bool,
   closeOnKeyCodes: PropTypes.array,

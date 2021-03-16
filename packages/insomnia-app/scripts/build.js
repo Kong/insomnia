@@ -1,36 +1,73 @@
-const packageJson = require('../package.json');
+const { appConfig } = require('../config');
 const childProcess = require('child_process');
 const webpack = require('webpack');
+const licenseChecker = require('license-checker');
 const rimraf = require('rimraf');
 const ncp = require('ncp').ncp;
 const path = require('path');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
-const configRenderer = require('../webpack/webpack.config.production.babel');
-const configMain = require('../webpack/webpack.config.electron.babel');
+const { getBuildContext } = require('./getBuildContext');
+const { APP_ID_INSOMNIA, APP_ID_DESIGNER } = require('../config');
 
 // Start build if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    await module.exports.start();
+    await module.exports.start(false);
   });
 }
 
-module.exports.start = async function() {
-  console.log('[build] Starting build');
-  console.log('[build] npm: ' + childProcess.spawnSync('npm', ['--version']).stdout);
-  console.log('[build] node: ' + childProcess.spawnSync('node', ['--version']).stdout);
+module.exports.start = async function(forceFromGitRef) {
+  const buildContext = getBuildContext(forceFromGitRef);
+  if (!buildContext.smokeTest && !buildContext.version) {
+    console.log(`[build] Skipping build for ref "${buildContext.gitRef}"`);
+    process.exit(0);
+  }
 
-  if (process.version.indexOf('v10.') !== 0) {
-    console.log('[build] Node v10.x.x is required to build');
+  if (process.env.APP_ID) {
+    console.log('Should not set APP_ID for builds. Use Git tag instead');
+    process.exit(1);
+  }
+
+  // Configure APP_ID env based on what we detected
+  if (buildContext.app === 'designer') {
+    process.env.APP_ID = APP_ID_DESIGNER;
+  } else if (buildContext.app === 'core') {
+    process.env.APP_ID = APP_ID_INSOMNIA;
+  }
+
+  if (!buildContext.smokeTest && appConfig().version !== buildContext.version) {
+    console.log(
+      `[build] App version mismatch with Git tag ${appConfig().version} != ${buildContext.version}`,
+    );
+    process.exit(1);
+  }
+
+  // These must be required after APP_ID environment variable is set above
+  const configRenderer = require('../webpack/webpack.config.production.babel');
+  const configMain = require('../webpack/webpack.config.electron.babel');
+  const buildFolder = path.join('../build', appConfig().appId);
+
+  if (buildContext.smokeTest) {
+    console.log(`[build] Starting build to smoke test ${buildContext.app}`);
+  } else {
+    console.log(`[build] Starting build for ref "${buildContext.gitRef}"`);
+  }
+  console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
+  console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
+
+  if (process.version.indexOf('v12.') !== 0) {
+    console.log('[build] Node v12.x.x is required to build');
     process.exit(1);
   }
 
   // Remove folders first
   console.log('[build] Removing existing directories');
-  await emptyDir('../build');
+  await emptyDir(buildFolder);
 
   // Build the things
+  console.log('[build] Building license list');
+  await buildLicenseList('../', path.join(buildFolder, 'opensource-licenses.txt'));
   console.log('[build] Building Webpack renderer');
   await buildWebpack(configRenderer);
   console.log('[build] Building Webpack main');
@@ -38,18 +75,19 @@ module.exports.start = async function() {
 
   // Copy necessary files
   console.log('[build] Copying files');
-  await copyFiles('../bin', '../build/');
-  await copyFiles('../app/static', '../build/static');
-  await copyFiles('../app/icons/', '../build/');
+  await copyFiles('../bin', buildFolder);
+  await copyFiles('../app/static', path.join(buildFolder, 'static'));
+  await copyFiles(`../app/icons/${appConfig().appId}`, buildFolder);
 
-  // Generate package.json
-  await generatePackageJson('../package.json', '../build/package.json');
+  // Generate necessary files needed by `electron-builder`
+  await generatePackageJson('../package.json', path.join(buildFolder, 'package.json'));
 
   // Install Node modules
   console.log('[build] Installing dependencies');
-  await install('../build/');
+  await install(buildFolder);
 
   console.log('[build] Complete!');
+  return buildContext;
 };
 
 async function buildWebpack(config) {
@@ -86,7 +124,7 @@ async function copyFiles(relSource, relDest) {
   return new Promise((resolve, reject) => {
     const source = path.resolve(__dirname, relSource);
     const dest = path.resolve(__dirname, relDest);
-    console.log(`[build] copy ${source} to ${dest}`);
+    console.log(`[build] copy "${relSource}" to "${relDest}"`);
     ncp(source, dest, err => {
       if (err) {
         reject(err);
@@ -97,41 +135,61 @@ async function copyFiles(relSource, relDest) {
   });
 }
 
+async function buildLicenseList(relSource, relDest) {
+  return new Promise((resolve, reject) => {
+    const source = path.resolve(__dirname, relSource);
+    const dest = path.resolve(__dirname, relDest);
+    mkdirp.sync(path.dirname(dest));
+
+    licenseChecker.init(
+      {
+        start: source,
+        production: true,
+      },
+      (err, packages) => {
+        if (err) {
+          return reject(err);
+        }
+
+        const out = [];
+        for (const pkgName of Object.keys(packages)) {
+          const { licenses, repository, publisher, email, licenseFile: lf } = packages[pkgName];
+          const licenseFile = (lf || '').includes('README') ? null : lf;
+          const txt = licenseFile ? fs.readFileSync(licenseFile) : '[no license file]';
+          const body = [
+            '-------------------------------------------------------------------------',
+            '',
+            `PACKAGE: ${pkgName}`,
+            licenses ? `LICENSES: ${licenses}` : null,
+            repository ? `REPOSITORY: ${repository}` : null,
+            publisher ? `PUBLISHER: ${publisher}` : null,
+            email ? `EMAIL: ${email}` : null,
+            '\n' + txt,
+          ]
+            .filter(v => v !== null)
+            .join('\n');
+
+          out.push(`${body}\n\n`);
+        }
+
+        const header = [
+          'This application bundles the following third-party packages in ',
+          'accordance with the following licenses:',
+          '-------------------------------------------------------------------------',
+          '',
+          '',
+        ].join('\n');
+
+        fs.writeFileSync(dest, header + out.join('\n\n'));
+        resolve();
+      },
+    );
+  });
+}
+
 async function install(relDir) {
   return new Promise(resolve => {
     const prefix = path.resolve(__dirname, relDir);
-
-    // // Link all plugins
-    // const plugins = path.resolve(__dirname, `../../../plugins`);
-    // for (const dir of fs.readdirSync(plugins)) {
-    //   if (dir.indexOf('.') === 0) {
-    //     continue;
-    //   }
-    //
-    //   console.log(`[build] Linking plugin ${dir}`);
-    //   const p = path.join(plugins, dir);
-    //   childProcess.spawnSync('npm', ['link', p], {
-    //     cwd: prefix,
-    //     shell: true,
-    //   });
-    // }
-
-    // // Link all packages
-    // const packages = path.resolve(__dirname, `../../../packages`);
-    // for (const dir of fs.readdirSync(packages)) {
-    //   // Don't like ourselves
-    //   if (dir === packageJson.name) {
-    //     continue;
-    //   }
-    //
-    //   if (dir.indexOf('.') === 0) {
-    //     continue;
-    //   }
-    //
-    //   console.log(`[build] Linking local package ${dir}`);
-    //   const p = path.join(packages, dir);
-    //   childProcess.spawnSync('npm', ['link', p], { cwd: prefix, shell: true });
-    // }
 
     const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
       cwd: prefix,
@@ -160,18 +218,22 @@ function generatePackageJson(relBasePkg, relOutPkg) {
 
   const basePkg = JSON.parse(fs.readFileSync(basePath));
 
+  const app = appConfig();
   const appPkg = {
-    name: packageJson.app.name,
-    version: basePkg.app.version,
-    productName: basePkg.app.productName,
-    longName: basePkg.app.longName,
+    name: app.name,
+    version: app.version,
+    productName: app.productName,
+    longName: app.longName,
     description: basePkg.description,
     license: basePkg.license,
     homepage: basePkg.homepage,
     author: basePkg.author,
+    copyright: `Copyright © ${new Date().getFullYear()} ${basePkg.author}`,
     main: 'main.min.js',
     dependencies: {},
   };
+
+  console.log(`[build] Generated build config for ${appPkg.name} ${appPkg.version}`);
 
   for (const key of Object.keys(appPkg)) {
     if (key === undefined) {
@@ -185,13 +247,13 @@ function generatePackageJson(relBasePkg, relOutPkg) {
   const unpackedDependencies = allDependencies.filter(name => !packedDependencies.includes(name));
 
   // Add dependencies
+  console.log(`[build] Adding ${unpackedDependencies.length} node dependencies`);
   for (const name of unpackedDependencies) {
     const version = basePkg.dependencies[name];
     if (!version) {
       throw new Error(`Failed to find packed dep "${name}" in dependencies`);
     }
     appPkg.dependencies[name] = version;
-    console.log(`[build] Adding native Node dep ${name}`);
   }
 
   fs.writeFileSync(outPath, JSON.stringify(appPkg, null, 2));

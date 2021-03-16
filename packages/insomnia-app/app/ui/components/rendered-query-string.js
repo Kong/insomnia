@@ -53,7 +53,8 @@ class RenderedQueryString extends PureComponent {
     clearTimeout(this._interval);
   }
 
-  componentWillReceiveProps(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.request._id !== this.props.request._id) {
       this._update(nextProps);
     } else {
@@ -62,7 +63,7 @@ class RenderedQueryString extends PureComponent {
   }
 
   render() {
-    let inner = null;
+    let inner;
     if (this.state.string) {
       inner = <span className="selectable force-wrap">{this.state.string}</span>;
     } else {
@@ -72,8 +73,9 @@ class RenderedQueryString extends PureComponent {
     return (
       <div className="wide scrollable">
         <CopyButton
+          size="small"
           content={this.state.string}
-          className="pull-right text-right icon"
+          className="pull-right"
           title="Copy URL"
           confirmMessage="">
           <i className="fa fa-copy" />

@@ -1,6 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .env-modal.modal__body {
   display: grid;
   grid-template-columns: 17rem minmax(0, 1fr);
@@ -9,8 +6,8 @@
   width: 100%;
 
   .env-modal__sidebar {
-    border-right: 1px solid @hl-md;
-    padding: @padding-md 0;
+    border-right: 1px solid var(--hl-md);
+    padding: var(--padding-md) 0;
     box-sizing: border-box;
     overflow-y: auto;
     height: 100%;
@@ -19,7 +16,7 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding: @padding-sm @padding-sm 0;
+      padding: var(--padding-sm) var(--padding-sm) 0;
 
       & > * {
         height: 100%;
@@ -28,13 +25,13 @@
 
       & > *:first-child {
         width: 100%;
-        padding: @padding-sm 0 @padding-sm @padding-sm;
+        padding: var(--padding-sm) 0 var(--padding-sm) var(--padding-sm);
       }
 
       button {
-        color: @hl;
+        color: var(--hl);
         height: 100%;
-        padding: @padding-sm;
+        padding: var(--padding-sm);
 
         &:hover {
           color: var(--color-font);
@@ -62,13 +59,14 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      padding: @padding-sm @padding-md @padding-sm;
-      height: @line-height-sm;
+      padding: var(--padding-sm) var(--padding-md) var(--padding-sm);
+      height: var(--line-height-sm);
     }
 
-    h1, h1 > * {
+    h1,
+    h1 > * {
       padding: 0;
-      font-size: @font-size-xl;
+      font-size: var(--font-size-xl);
       width: 100%;
     }
   }
@@ -80,11 +78,11 @@
   z-index: 100000;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: @line-height-xs;
-  color: @hl;
+  grid-template-rows: var(--line-height-xs);
+  color: var(--hl);
 
   & > button {
-    padding: 0 @padding-md 0 @padding-md;
+    padding: 0 var(--padding-md) 0 var(--padding-md);
     width: 100%;
 
     &:first-child {
@@ -96,7 +94,7 @@
       position: absolute;
       left: 0;
       opacity: 0;
-      color: var(--hl-lg)
+      color: var(--hl-lg);
     }
 
     .editable {
@@ -104,21 +102,21 @@
       overflow: hidden;
       text-overflow: ellipsis;
       display: block;
-      padding-right: @padding-xs;
+      padding-right: var(--padding-xs);
       box-sizing: border-box;
       width: 100%;
-      line-height: @line-height-xs;
+      line-height: var(--line-height-xs);
     }
   }
 
   &.env-modal__sidebar-item--dragging > button,
   &.env-modal__sidebar-item--active > button {
     color: var(--color-font);
-    background-color: @hl-xs;
+    background-color: var(--hl-xs);
   }
 
   &:hover > button {
-    background-color: @hl-xs;
+    background-color: var(--hl-xs);
   }
 
   &.env-modal__sidebar-item--dragging .drag-handle,
@@ -132,6 +130,6 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding-left: @padding-md;
+    padding-left: var(--padding-md);
   }
 }

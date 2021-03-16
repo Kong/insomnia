@@ -113,7 +113,7 @@ module.exports.templateTags = [
           const parameterNames = [];
 
           if (request.parameters.length === 0) {
-            throw new Error(`No query parameters available`);
+            throw new Error('No query parameters available');
           }
 
           for (const queryParameter of request.parameters) {
@@ -136,7 +136,7 @@ module.exports.templateTags = [
           const headerNames = [];
 
           if (request.headers.length === 0) {
-            throw new Error(`No headers available`);
+            throw new Error('No headers available');
           }
 
           for (const header of request.headers) {

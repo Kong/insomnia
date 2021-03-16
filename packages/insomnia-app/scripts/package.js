@@ -1,8 +1,7 @@
-const packageJson = require('../package.json');
+const { appConfig, electronBuilderConfig } = require('../config');
 const electronBuilder = require('electron-builder');
 const path = require('path');
 const rimraf = require('rimraf');
-const fs = require('fs');
 const buildTask = require('./build');
 
 const PLATFORM_MAP = {
@@ -15,7 +14,7 @@ const PLATFORM_MAP = {
 if (require.main === module) {
   process.nextTick(async () => {
     try {
-      await buildTask.start();
+      await buildTask.start(false);
       await module.exports.start();
     } catch (err) {
       console.log('[package] ERROR:', err);
@@ -28,27 +27,28 @@ module.exports.start = async function() {
   console.log('[package] Removing existing directories');
 
   if (process.env.KEEP_DIST_FOLDER !== 'yes') {
-    await emptyDir('../dist/*');
+    const appId = appConfig().appId;
+    await emptyDir(path.join('..', 'dist', appId, '*'));
   }
 
   console.log('[package] Packaging app');
-  await pkg('../.electronbuilder');
+  await pkg(electronBuilderConfig());
 
   console.log('[package] Complete!');
 };
 
-async function pkg(relConfigPath) {
-  const configPath = path.resolve(__dirname, relConfigPath);
+async function pkg(electronBuilderConfig) {
+  const app = appConfig();
 
   // Replace some things
-  const rawConfig = fs
-    .readFileSync(configPath, 'utf8')
-    .replace('__APP_ID__', packageJson.app.appId)
-    .replace('__ICON_URL__', packageJson.app.icon)
-    .replace('__EXECUTABLE_NAME__', packageJson.app.executableName)
-    .replace('__SYNOPSIS__', packageJson.app.synopsis);
-
-  // console.log(`[package] Using electron-builder config\n${rawConfig}`);
+  const rawConfig = JSON.stringify(electronBuilderConfig, null, 2)
+    .replace(/__APP_ID__/g, app.appId)
+    .replace(/__BINARY_PREFIX__/g, app.binaryPrefix)
+    .replace(/__EXECUTABLE_NAME__/g, app.executableName)
+    .replace(/__GITHUB_OWNER__/g, app.githubOrg)
+    .replace(/__GITHUB_REPO__/g, app.githubRepo)
+    .replace(/__ICON_URL__/g, app.icon)
+    .replace(/__SYNOPSIS__/g, app.synopsis);
 
   const config = JSON.parse(rawConfig);
   const targetPlatform = PLATFORM_MAP[process.platform];

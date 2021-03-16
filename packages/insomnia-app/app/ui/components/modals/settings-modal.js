@@ -7,21 +7,22 @@ import Button from '../base/button';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import SettingsShortcuts from '../settings/shortcuts';
-import About from '../settings/about';
 import General from '../settings/general';
 import ImportExport from '../settings/import-export';
-import Account from '../settings/account';
 import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
-import { Curl } from 'insomnia-libcurl';
-import { getAppName, getAppVersion } from '../../../common/constants';
+import { Curl } from 'node-libcurl';
+import { getAppName, getAppVersion, isInsomnia } from '../../../common/constants';
 import Tooltip from '../tooltip';
 import { setTheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
+import Account from '../settings/account';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
+export const TAB_INDEX_THEMES = 2;
+export const TAB_INDEX_PLUGINS = 5;
 
 @autobind
 class SettingsModal extends PureComponent {
@@ -64,7 +65,7 @@ class SettingsModal extends PureComponent {
   }
 
   async _handleChangeTheme(theme, persist = true) {
-    setTheme(theme);
+    await setTheme(theme);
 
     if (persist) {
       models.settings.update(this.props.settings, { theme });
@@ -76,6 +77,10 @@ class SettingsModal extends PureComponent {
   }
 
   show(currentTabIndex = 0) {
+    if (typeof currentTabIndex !== 'number') {
+      currentTabIndex = 0;
+    }
+
     this.setState({ currentTabIndex });
     this.modal.show();
   }
@@ -85,7 +90,7 @@ class SettingsModal extends PureComponent {
   }
 
   render() {
-    const { settings } = this.props;
+    const { settings, activity } = this.props;
     const { currentTabIndex } = this.state;
     const email = session.isLoggedIn() ? session.getFullName() : null;
 
@@ -116,14 +121,13 @@ class SettingsModal extends PureComponent {
               <Tab tabIndex="-1">
                 <Button value="Shortcuts">Keyboard</Button>
               </Tab>
-              <Tab tabIndex="-1">
-                <Button value="Account">Account</Button>
-              </Tab>
+              {isInsomnia(activity) && (
+                <Tab tabIndex="-1">
+                  <Button value="Account">Account</Button>
+                </Tab>
+              )}
               <Tab tabIndex="-1">
                 <Button value="Plugins">Plugins</Button>
-              </Tab>
-              <Tab tabIndex="-1">
-                <Button value="About">About</Button>
               </Tab>
             </TabList>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
@@ -152,14 +156,13 @@ class SettingsModal extends PureComponent {
                 handleUpdateKeyBindings={this._handleUpdateKeyBindings}
               />
             </TabPanel>
+            {isInsomnia(activity) && (
+              <TabPanel className="react-tabs__tab-panel pad scrollable">
+                <Account />
+              </TabPanel>
+            )}
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Account />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Plugins />
-            </TabPanel>
-            <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <About />
+              <Plugins settings={settings} updateSetting={this._handleUpdateSetting} />
             </TabPanel>
           </Tabs>
         </ModalBody>
@@ -178,6 +181,7 @@ SettingsModal.propTypes = {
 
   // Properties
   settings: PropTypes.object.isRequired,
+  activity: PropTypes.string.isRequired,
 };
 
 export default SettingsModal;

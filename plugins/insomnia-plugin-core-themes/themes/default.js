@@ -1,6 +1,6 @@
 module.exports = {
   name: 'default',
-  displayName: 'Default',
+  displayName: 'Core Default',
   theme: {
     background: {
       default: '#555',
@@ -42,7 +42,7 @@ module.exports = {
           info: '#46c1e6',
         },
         foreground: {
-          default: 'e0e0e0',
+          default: '#e0e0e0',
         },
         highlight: {
           default: '#999',

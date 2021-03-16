@@ -3,6 +3,7 @@ import * as React from 'react';
 import autobind from 'autobind-decorator';
 import CodeEditor from '../codemirror/code-editor';
 import orderedJSON from 'json-order';
+import { JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 
 export type EnvironmentInfo = {
   object: Object,
@@ -52,8 +53,8 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
 
     // Check for invalid key names
-    if (value) {
-      for (const key of Object.keys(value)) {
+    if (value && value.object) {
+      for (const key of Object.keys(value.object)) {
         if (!key.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/)) {
           warning = `"${key}" must only contain letters, numbers, and underscores`;
           break;
@@ -77,7 +78,11 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
 
   getValue(): EnvironmentInfo | null {
     if (this._editor) {
-      const data = orderedJSON.parse(this._editor.getValue(), '&', `~|`);
+      const data = orderedJSON.parse(
+        this._editor.getValue(),
+        JSON_ORDER_PREFIX,
+        JSON_ORDER_SEPARATOR,
+      );
 
       return {
         object: data.object,
@@ -111,7 +116,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     const defaultValue = orderedJSON.stringify(
       environmentInfo.object,
       environmentInfo.propertyOrder || null,
-      '~|',
+      JSON_ORDER_SEPARATOR,
     );
 
     return (
@@ -130,7 +135,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
           render={render}
           getRenderContext={getRenderContext}
           mode="application/json"
-          {...props}
+          {...(props: Object)}
         />
         {error && <p className="notice error margin">{error}</p>}
         {!error && warning && <p className="notice warning margin">{warning}</p>}

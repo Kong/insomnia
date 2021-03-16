@@ -1,13 +1,10 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .themes {
-  padding-top: @padding-lg;
+  padding-top: var(--padding-lg);
 
   .themes__row {
     display: flex;
     flex-direction: row;
-    margin-bottom: @padding-lg;
+    margin-bottom: var(--padding-lg);
   }
 
   .themes__theme {
@@ -15,8 +12,8 @@
 
     h2 {
       margin-top: 0;
-      margin-bottom: @padding-xs;
-      font-size: @font-size-md !important;
+      margin-bottom: var(--padding-xs);
+      font-size: var(--font-size-md) !important;
     }
 
     svg {
@@ -60,14 +57,14 @@
 
   button {
     position: relative;
-    margin: @padding-md @padding-md;
+    margin: var(--padding-md) var(--padding-md);
     font-size: 0;
-    border-radius: @radius-md;
+    border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: 0 0 0 1px @hl-sm;
+    box-shadow: 0 0 0 1px var(--hl-sm);
 
     &.active {
-      box-shadow: 0 0 0 @padding-xs var(--color-surprise);
+      box-shadow: 0 0 0 var(--padding-xs) var(--color-surprise);
     }
 
     &.active,
@@ -86,9 +83,9 @@
       align-items: center;
       font-weight: bold;
       position: absolute;
-      font-size: @font-size-md;
+      font-size: var(--font-size-md);
       text-transform: uppercase;
-      color: @hl-xl;
+      color: var(--hl-xl);
       left: 0;
       right: 0;
       top: 0;

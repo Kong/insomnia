@@ -73,11 +73,7 @@ describe('VCS', () => {
       );
       expect(Object.keys(status1.unstaged)).toEqual(['a', 'b', 'c']);
 
-      await v.stage(status1.stage, [
-        status1.unstaged['a'],
-        status1.unstaged['b'],
-        status1.unstaged['c'],
-      ]);
+      await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b, status1.unstaged.c]);
 
       await v.takeSnapshot(status1.stage, 'Add a/b/c');
       const history = await v.getHistory();
@@ -156,10 +152,10 @@ describe('VCS', () => {
       });
 
       const newStage = await v.stage(status.stage, [
-        status.unstaged['a'],
-        status.unstaged['notA'],
-        status.unstaged['c'],
-        status.unstaged['d'],
+        status.unstaged.a,
+        status.unstaged.notA,
+        status.unstaged.c,
+        status.unstaged.d,
       ]);
 
       const status2 = await v.status(
@@ -217,7 +213,7 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage = await v.stage(status.stage, [status.unstaged['a']]);
+      const stage = await v.stage(status.stage, [status.unstaged.a]);
 
       const status2 = await v.status(
         [
@@ -261,7 +257,7 @@ describe('VCS', () => {
       const v = await vcs('master');
 
       const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }], {});
-      const stage2 = await v.stage(status.stage, [status.unstaged['foo']]);
+      const stage2 = await v.stage(status.stage, [status.unstaged.foo]);
       await v.takeSnapshot(stage2, 'Add foo');
 
       const status2 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }], {});
@@ -285,7 +281,7 @@ describe('VCS', () => {
         {},
       );
 
-      const stage = await v.stage(status.stage, [status.unstaged['foo']]);
+      const stage = await v.stage(status.stage, [status.unstaged.foo]);
       expect(stage).toEqual({
         foo: {
           key: 'foo',
@@ -332,7 +328,7 @@ describe('VCS', () => {
       const v = await vcs('master');
 
       const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }], {});
-      const stage = await v.stage(status.stage, [status.unstaged['foo']]);
+      const stage = await v.stage(status.stage, [status.unstaged.foo]);
       await v.takeSnapshot(stage, 'Add foo');
 
       const history = await v.getHistory();
@@ -359,7 +355,7 @@ describe('VCS', () => {
       const v = await vcs('master');
 
       const status = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }], {});
-      const stage = await v.stage(status.stage, [status.unstaged['foo']]);
+      const stage = await v.stage(status.stage, [status.unstaged.foo]);
       await v.takeSnapshot(stage, 'Add foo');
 
       const history = await v.getHistory();
@@ -382,7 +378,7 @@ describe('VCS', () => {
       ]);
 
       const status2 = await v.status([], {});
-      const stage2 = await v.stage(status2.stage, [status2.unstaged['foo']]);
+      const stage2 = await v.stage(status2.stage, [status2.unstaged.foo]);
       await v.takeSnapshot(stage2, 'Delete foo');
       const history2 = await v.getHistory();
 
@@ -459,7 +455,7 @@ describe('VCS', () => {
 
       // Add something to master
       const status1 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }], {});
-      const stage1 = await v.stage(status1.stage, [status1.unstaged['foo']]);
+      const stage1 = await v.stage(status1.stage, [status1.unstaged.foo]);
       await v.takeSnapshot(stage1, 'Add foo');
 
       // Checkout branch
@@ -479,7 +475,7 @@ describe('VCS', () => {
 
       // Add something to master
       const status1 = await v.status([{ key: 'foo', name: 'Foo', document: newDoc('bar') }], {});
-      const stage1 = await v.stage(status1.stage, [status1.unstaged['foo']]);
+      const stage1 = await v.stage(status1.stage, [status1.unstaged.foo]);
       await v.takeSnapshot(stage1, 'Add foo');
 
       // Checkout branch
@@ -518,7 +514,7 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged['a'], status1.unstaged['b']]);
+      const stage1 = await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b]);
       await v.takeSnapshot(stage1, 'Add A and B');
       expect((await v.getHistory())[0].state).toEqual([
         expect.objectContaining({ key: 'a' }),
@@ -535,7 +531,7 @@ describe('VCS', () => {
         ],
         status1.stage,
       );
-      const stage2 = await v.stage(status2.stage, [status2.unstaged['b'], status2.unstaged['c']]);
+      const stage2 = await v.stage(status2.stage, [status2.unstaged.b, status2.unstaged.c]);
       await v.takeSnapshot(stage2, 'Add C, modify B');
       expect((await v.getHistory())[1].state).toEqual(
         expect.arrayContaining([
@@ -556,7 +552,7 @@ describe('VCS', () => {
         ],
         {},
       );
-      const stage1 = await v.stage(status1.stage, [status1.unstaged['a'], status1.unstaged['b']]);
+      const stage1 = await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b]);
       await v.takeSnapshot(stage1, 'message');
     });
 
@@ -566,7 +562,7 @@ describe('VCS', () => {
       // Add a file to master
       expect(await v.getBranch()).toBe('master');
       const status1 = await v.status([{ key: 'a', name: 'A', document: newDoc('aaa') }], {});
-      const stage = await v.stage(status1.stage, [status1.unstaged['a']]);
+      const stage = await v.stage(status1.stage, [status1.unstaged.a]);
       await v.takeSnapshot(stage, 'Add A');
       expect(await v.getHistory()).toEqual([
         {
@@ -592,7 +588,7 @@ describe('VCS', () => {
       expect(await v.getBranch()).toBe('new-branch');
 
       const status2 = await v.status([{ key: 'b', name: 'B', document: newDoc('bbb') }], {});
-      const stage2 = await v.stage(status2.stage, [status2.unstaged['b']]);
+      const stage2 = await v.stage(status2.stage, [status2.unstaged.b]);
       await v.takeSnapshot(stage2, 'Add B');
       expect(await v.getHistory()).toEqual([
         {

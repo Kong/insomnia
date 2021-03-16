@@ -1,7 +1,7 @@
 // @flow
 
 export function projects(): string {
-  return `/projects/`;
+  return '/projects/';
 }
 
 export function projectBase(projectId: string): string {

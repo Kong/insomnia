@@ -1,6 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .requests-tree {
   position: relative;
 
@@ -12,8 +9,8 @@
 
   .tree__list-root {
     // Add some space above so it's not so squished
-    padding-top: @padding-xxs;
-    padding-bottom: @padding-md;
+    padding-top: var(--padding-xxs);
+    padding-bottom: var(--padding-md);
     box-shadow: inset 0 2rem 2rem -2rem rgba(0, 0, 0, 0.03);
 
     overflow-y: auto;
@@ -37,12 +34,12 @@
 
   .tree__item {
     display: flex;
-    height: @line-height-xs;
+    height: var(--line-height-xs);
 
     & > button {
       flex-grow: 1;
-      color: @hl;
-      padding-left: @padding-sm;
+      color: var(--hl);
+      padding-left: var(--padding-sm);
     }
 
     & > * {
@@ -50,12 +47,12 @@
     }
 
     &.tree__item--big {
-      height: @line-height-sm;
+      height: var(--line-height-sm);
     }
 
     &:focus,
     &:hover {
-      background-color: @hl-xs;
+      background-color: var(--hl-xs);
       transition: background-color 0ms;
     }
 
@@ -66,13 +63,13 @@
     }
 
     .total-requests {
-      color: @hl-lg;
-      padding-left: @padding-xs;
+      color: var(--hl-lg);
+      padding-left: var(--padding-xs);
     }
   }
 
   .tree__item__icon {
-    padding-right: @padding-sm;
+    padding-right: var(--padding-sm);
   }
 
   .tree__item__checkbox > * {
@@ -82,27 +79,27 @@
   // Padding for nested folders
 
   .tree__list .tree__indent {
-    padding-left: @padding-sm;
+    padding-left: var(--padding-sm);
   }
 
   .tree__list .tree__list .tree__indent {
-    padding-left: calc(@padding-sm + @padding-md * 1);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 1);
   }
 
   .tree__list .tree__list .tree__list .tree__indent {
-    padding-left: calc(@padding-sm + @padding-md * 2);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 2);
   }
 
   .tree__list .tree__list .tree__list .tree__list .tree__indent {
-    padding-left: calc(@padding-sm + @padding-md * 3);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 3);
   }
 
   .tree__list .tree__list .tree__list .tree__list .tree__list .tree__indent {
-    padding-left: calc(@padding-sm + @padding-md * 4);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 4);
   }
 
   .tree__list .tree__list .tree__list .tree__list .tree__list .tree__list .tree__indent {
-    padding-left: calc(@padding-sm + @padding-md * 5);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 5);
   }
 
   .tree__list
@@ -113,6 +110,6 @@
     .tree__list
     .tree__list
     .tree__indent {
-    padding-left: calc(@padding-sm + @padding-md * 6);
+    padding-left: calc(var(--padding-sm) + var(--padding-md) * 6);
   }
 }

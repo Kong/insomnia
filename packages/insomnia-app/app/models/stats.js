@@ -32,11 +32,11 @@ export function migrate(doc: Stats): Stats {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<Stats> {
+export function create(patch: $Shape<Stats> = {}): Promise<Stats> {
   return db.docCreate(type, patch);
 }
 
-export async function update(patch: Object): Promise<Stats> {
+export async function update(patch: $Shape<Stats>): Promise<Stats> {
   const stats = await get();
   return db.docUpdate(stats, patch);
 }

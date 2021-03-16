@@ -86,10 +86,10 @@ module.exports.buildQueryParameter = function(param, strict) {
  */
 module.exports.buildQueryStringFromParams = function(parameters, strict) {
   strict = strict === undefined ? true : strict;
-  let items = [];
+  const items = [];
 
   for (const param of parameters) {
-    let built = module.exports.buildQueryParameter(param, strict);
+    const built = module.exports.buildQueryParameter(param, strict);
 
     if (!built) {
       continue;
@@ -117,7 +117,7 @@ module.exports.deconstructQueryStringToParams = function(qs, strict) {
 
   const stringPairs = qs.split('&');
 
-  for (let stringPair of stringPairs) {
+  for (const stringPair of stringPairs) {
     // NOTE: This only splits on first equals sign. '1=2=3' --> ['1', '2=3']
     const [encodedName, ...encodedValues] = stringPair.split('=');
     const encodedValue = encodedValues.join('=');

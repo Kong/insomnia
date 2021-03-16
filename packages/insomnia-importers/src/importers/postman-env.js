@@ -8,7 +8,7 @@ module.exports.convert = function(rawData) {
   let data;
   try {
     data = JSON.parse(rawData);
-    if (data['_postman_variable_scope'] === 'environment') {
+    if (data._postman_variable_scope === 'environment') {
       return importEnvironment(data);
     }
   } catch (e) {

@@ -101,7 +101,7 @@ function importPostData(obj) {
 
 function removeComment(obj) {
   const newObj = Object.assign({}, obj);
-  delete newObj['comment'];
+  delete newObj.comment;
   return newObj;
 }
 

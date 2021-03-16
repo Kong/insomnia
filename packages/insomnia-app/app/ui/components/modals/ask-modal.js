@@ -15,6 +15,7 @@ class AskModal extends PureComponent {
       message: '',
       yesText: 'Yes',
       noText: 'No',
+      loading: false,
     };
   }
 
@@ -26,10 +27,17 @@ class AskModal extends PureComponent {
     this.yesButton = n;
   }
 
-  _handleYes() {
-    this.hide();
-    this._doneCallback && this._doneCallback(true);
+  async _handleYes() {
+    this.setState({ loading: true });
+
+    if (this._doneCallback) {
+      // Wait for the callback to finish before closing
+      await this._doneCallback(true);
+    }
+
     this._promiseCallback(true);
+
+    this.hide();
   }
 
   _handleNo() {
@@ -52,6 +60,7 @@ class AskModal extends PureComponent {
       message: message || 'No message provided',
       yesText: yesText || 'Yes',
       noText: noText || 'No',
+      loading: false,
     });
 
     this.modal.show();
@@ -66,7 +75,7 @@ class AskModal extends PureComponent {
   }
 
   render() {
-    const { message, title, yesText, noText } = this.state;
+    const { message, title, yesText, noText, loading } = this.state;
 
     return (
       <Modal noEscape ref={this._setModalRef} closeOnKeyCodes={[13]}>
@@ -77,8 +86,12 @@ class AskModal extends PureComponent {
             <button className="btn" onClick={this._handleNo}>
               {noText}
             </button>
-            <button ref={this._setYesButtonRef} className="btn" onClick={this._handleYes}>
-              {yesText}
+            <button
+              ref={this._setYesButtonRef}
+              className="btn"
+              onClick={this._handleYes}
+              disabled={loading}>
+              {loading && <i className="fa fa-refresh fa-spin" />} {yesText}
             </button>
           </div>
         </ModalFooter>

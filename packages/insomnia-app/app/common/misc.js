@@ -2,10 +2,11 @@
 import * as electron from 'electron';
 import { Readable, Writable } from 'stream';
 import fuzzysort from 'fuzzysort';
-import uuid from 'uuid';
+import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+import type { GlobalActivity } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -28,16 +29,17 @@ export function filterParameters<T: Parameter>(parameters: Array<T>, name: strin
 }
 
 export function filterHeaders<T: Header>(headers: Array<T>, name: string): Array<T> {
-  if (!Array.isArray(headers) || !name) {
+  if (!Array.isArray(headers) || !name || !(typeof name === 'string')) {
     return [];
   }
 
   return headers.filter(h => {
-    if (!h || !h.name) {
+    // Never match against invalid headers
+    if (!h || !h.name || typeof h.name !== 'string') {
       return false;
-    } else {
-      return h.name.toLowerCase() === name.toLowerCase();
     }
+
+    return h.name.toLowerCase() === name.toLowerCase();
   });
 }
 
@@ -76,6 +78,11 @@ export function getLocationHeader<T: Header>(headers: Array<T>): T | null {
 
 export function getContentTypeHeader<T: Header>(headers: Array<T>): T | null {
   const matches = filterHeaders(headers, 'content-type');
+  return matches.length ? matches[0] : null;
+}
+
+export function getMethodOverrideHeader<T: Header>(headers: Array<T>): T | null {
+  const matches = filterHeaders(headers, 'x-http-method-override');
   return matches.length ? matches[0] : null;
 }
 
@@ -149,7 +156,7 @@ export function keyedDebounce(callback: Function, millis: number = DEBOUNCE_MILL
 export function debounce(callback: Function, millis: number = DEBOUNCE_MILLIS): Function {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
-    callback.apply(null, results['__key__']);
+    callback.apply(null, results.__key__);
   }, millis).bind(null, '__key__');
 }
 
@@ -160,7 +167,7 @@ export function describeByteSize(bytes: number, long: boolean = false): string {
   // NOTE: We multiply these by 2 so we don't end up with
   // values like 0 GB
 
-  let unit = long ? 'bytes' : 'B';
+  let unit;
   if (bytes < 1024 * 2) {
     size = bytes;
     unit = long ? 'bytes' : 'B';
@@ -230,7 +237,7 @@ export function jsonParseOr(str: string, fallback: any): any {
 }
 
 export function escapeHTML(unsafeText: string): string {
-  let div = document.createElement('div');
+  const div = document.createElement('div');
   div.innerText = unsafeText;
   return div.innerHTML;
 }
@@ -302,7 +309,11 @@ export function fuzzyMatchAll(
     return null;
   }
 
-  return { score: maxScore, indexes, target: allText.join(' ') };
+  return {
+    score: maxScore,
+    indexes,
+    target: allText.join(' '),
+  };
 }
 
 export function getViewportSize(): string | null {
@@ -361,4 +372,8 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
   }
 
   return chunks;
+}
+
+export function setActivityAttribute(activity: GlobalActivity) {
+  document.body.setAttribute('data-activity', activity);
 }

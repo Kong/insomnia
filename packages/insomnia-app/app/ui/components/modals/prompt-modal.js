@@ -87,7 +87,9 @@ class PromptModal extends React.PureComponent<Props, State> {
     e.preventDefault();
 
     if (this._input) {
-      this._done(this._input.value);
+      const result =
+        this._input.type === 'checkbox' ? this._input.checked.toString() : this._input.value;
+      this._done(result);
     }
   }
 
@@ -165,7 +167,11 @@ class PromptModal extends React.PureComponent<Props, State> {
       if (!this._input) {
         return;
       }
-      this._input.value = defaultValue || '';
+      if (inputType === 'checkbox') {
+        this._input.checked = !!defaultValue;
+      } else {
+        this._input.value = defaultValue || '';
+      }
       this._input.focus();
       selectText && this._input && this._input.select();
     }, 100);
@@ -226,21 +232,27 @@ class PromptModal extends React.PureComponent<Props, State> {
       sanitizedHints = hints.slice(0, 15).map(this._renderHintButton);
     }
 
+    let field = input;
+    if (label) {
+      const labelClasses = classnames({
+        'inline-block': inputType === 'checkbox',
+      });
+      field = (
+        <label htmlFor="prompt-input" className={labelClasses}>
+          {label} {input}
+        </label>
+      );
+    }
+
+    const divClassnames = classnames('form-control form-control--wide', {
+      'form-control--outlined': inputType !== 'checkbox',
+    });
     return (
       <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
-            <div className="form-control form-control--outlined form-control--wide">
-              {label ? (
-                <label>
-                  {label}
-                  {input}
-                </label>
-              ) : (
-                input
-              )}
-            </div>
+            <div className={divClassnames}>{field}</div>
             {sanitizedHints}
           </form>
         </ModalBody>

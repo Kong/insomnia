@@ -12,7 +12,8 @@ import {
   SIGNATURE_METHOD_HMAC_SHA256,
 } from './constants';
 import type { OAuth1SignatureMethod } from './constants';
-import type { RequestAuthentication } from '../../models/request';
+import type { RequestAuthentication, RequestBody } from '../../models/request';
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
@@ -55,6 +56,7 @@ export default async function(
   url: string,
   method: string,
   authentication: RequestAuthentication,
+  body: RequestBody | null = null,
 ): { [string]: string } {
   const oauth = new OAuth1({
     consumer: {
@@ -70,6 +72,7 @@ export default async function(
   const requestData = {
     url: url,
     method: method,
+    includeBodyHash: false,
     data: {
       // These are conditionally filled in below
     },
@@ -89,6 +92,13 @@ export default async function(
 
   if (authentication.verifier) {
     requestData.data.oauth_verifier = authentication.verifier;
+  }
+
+  if (authentication.includeBodyHash && body && body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
+    requestData.includeBodyHash = true;
+    for (const p of body.params || []) {
+      requestData.data[p.name] = p.value;
+    }
   }
 
   let token = null;

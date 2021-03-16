@@ -1,78 +1,81 @@
 {
-  "__export_date": "2019-10-12T17:23:25.171Z",
-  "__export_format": 4,
-  "__export_source": "insomnia.importers:v0.1.0",
   "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2020-02-19T03:46:03.524Z",
+  "__export_source": "insomnia.importers:v0.1.0",
   "resources": [
     {
-      "_id": "__WORKSPACE_ID__",
       "_type": "workspace",
-      "description": "",
+      "_id": "__WORKSPACE_ID__",
+      "parentId": null,
       "name": "Global Security 1.2",
-      "parentId": null
+      "description": ""
     },
     {
-      "_id": "__BASE_ENVIRONMENT_ID__",
-      "_type": "environment",
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Base environment",
       "data": {
         "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
       },
-      "name": "Base environment",
-      "parentId": "__WORKSPACE_ID__"
+      "_type": "environment",
+      "_id": "__BASE_ENVIRONMENT_ID__"
     },
     {
-      "_id": "env___BASE_ENVIRONMENT_ID___sub",
-      "_type": "environment",
+      "parentId": "__BASE_ENVIRONMENT_ID__",
+      "name": "OpenAPI env",
       "data": {
-        "apiKey": "apiKey",
+        "scheme": "https",
+        "apiKeyHere": "apiKeyHere",
+        "cookieName": "cookieName",
         "base_path": "/v1",
         "host": "api.server.test",
-        "httpPassword": "password",
         "httpUsername": "username",
-        "scheme": "https"
+        "httpPassword": "password",
+        "bearerToken": "bearerToken",
+        "xApiKey": "xApiKey"
       },
-      "name": "OpenAPI env",
-      "parentId": "__BASE_ENVIRONMENT_ID__"
+      "_type": "environment",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub"
     },
     {
-      "_id": "req___WORKSPACE_ID__21946b60",
-      "_type": "request",
-      "authentication": {
-        "password": "{{ httpPassword }}",
-        "type": "basic",
-        "username": "{{ httpUsername }}"
-      },
+      "parentId": "__WORKSPACE_ID__",
+      "name": "/global",
+      "url": "{{ base_url }}/global",
       "body": {},
+      "method": "GET",
+      "parameters": [],
       "headers": [
         {
-          "disabled": false,
           "name": "x-api_key",
-          "value": "{{ apiKey }}"
+          "disabled": false,
+          "value": "{{ xApiKey }}"
         }
       ],
-      "method": "GET",
-      "name": "/global",
-      "parameters": [],
-      "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/global"
+      "authentication": {
+        "type": "basic",
+        "username": "{{ httpUsername }}",
+        "password": "{{ httpPassword }}"
+      },
+      "_type": "request",
+      "_id": "req___WORKSPACE_ID__21946b60"
     },
     {
-      "_id": "req___WORKSPACE_ID__b410454b",
-      "_type": "request",
-      "authentication": {},
-      "body": {},
-      "headers": [],
-      "method": "GET",
+      "parentId": "__WORKSPACE_ID__",
       "name": "/override",
+      "url": "{{ base_url }}/override",
+      "body": {},
+      "method": "GET",
       "parameters": [
         {
-          "disabled": false,
           "name": "apiKeyHere",
-          "value": "{{ apiKey }}"
+          "disabled": false,
+          "value": "{{ apiKeyHere }}"
         }
       ],
-      "parentId": "__WORKSPACE_ID__",
-      "url": "{{ base_url }}/override"
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "req___WORKSPACE_ID__b410454b"
     }
   ]
 }

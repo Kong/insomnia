@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="14px" height="14px" viewBox="0 0 14 14" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <desc>Created with Sketch.</desc>
+    <g id="01-main-screens" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="03-editor-preview-on" transform="translate(-792.000000, -58.000000)" fill="#000000" fill-rule="nonzero">
+            <g id="header" transform="translate(0.000000, 38.000000)">
+                <g id="segmented-controller" transform="translate(637.000000, 11.000000)">
+                    <g id="btn-secondary">
+                        <g>
+                            <path d="M162,9 C165.865993,9 169,12.1340068 169,16 C169,19.8659932 165.865993,23 162,23 C158.134007,23 155,19.8659932 155,16 C155,12.1340068 158.134007,9 162,9 Z M162,10.5 C158.962434,10.5 156.5,12.9624339 156.5,16 C156.5,19.0375661 158.962434,21.5 162,21.5 C165.037566,21.5 167.5,19.0375661 167.5,16 C167.5,12.9624339 165.037566,10.5 162,10.5 Z M162.75,18 L162.75,19.5 L161.25,19.5 L161.25,18 L162.75,18 Z M162.75,12.5 L162.75,17 L161.25,17 L161.25,12.5 L162.75,12.5 Z" id="Combined-Shape"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

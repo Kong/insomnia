@@ -29,6 +29,8 @@ type Props = {
   responseId: string,
   bodyBuffer: Buffer | null,
   contentType: string,
+  disableHtmlPreviewJs: boolean,
+  disablePreviewLinks: boolean,
   filter: string,
   filterHistory: Array<string>,
   editorFontSize: number,
@@ -106,15 +108,11 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
           Headers for <code>{part.name}</code>
         </span>
       ),
-      body: (
-        <ResponseHeadersViewer
-          headers={[...part.headers, ...part.headers, ...part.headers, ...part.headers]}
-        />
-      ),
+      body: <ResponseHeadersViewer headers={[...part.headers]} />,
     });
   }
 
-  _handleSaveAsFile() {
+  async _handleSaveAsFile() {
     const { parts, activePart } = this.state;
     const part = parts[activePart];
 
@@ -141,21 +139,20 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       ],
     };
 
-    electron.remote.dialog.showSaveDialog(options, outputPath => {
-      if (!outputPath) {
-        return;
-      }
+    const { canceled, filePath } = await electron.remote.dialog.showSaveDialog(options);
+    if (canceled) {
+      return;
+    }
 
-      // Remember last exported path
-      window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
+    // Remember last exported path
+    window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
 
-      // Save the file
-      fs.writeFile(outputPath, part.value, err => {
-        if (err) {
-          console.warn('Failed to save multipart to file', err);
-        }
-      });
-    });
+    // Save the file
+    try {
+      await fs.promises.writeFile(filePath, part.value);
+    } catch (err) {
+      console.warn('Failed to save multipart to file', err);
+    }
   }
 
   _getParts(): Promise<Array<Part>> {
@@ -215,6 +212,8 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
   render() {
     const {
       download,
+      disableHtmlPreviewJs,
+      disablePreviewLinks,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
@@ -278,9 +277,10 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
         {selectedPart ? (
           <div className="tall wide">
             <ResponseViewer
-              key={`${responseId}::${activePart}`}
               bytes={selectedPart.bytes || 0}
               contentType={getContentTypeFromHeaders(selectedPart.headers, 'text/plain')}
+              disableHtmlPreviewJs={disableHtmlPreviewJs}
+              disablePreviewLinks={disablePreviewLinks}
               download={download}
               editorFontSize={editorFontSize}
               editorIndentSize={editorIndentSize}
@@ -290,6 +290,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
               filter={filter}
               filterHistory={filterHistory}
               getBody={this._getBody}
+              key={`${responseId}::${activePart}`}
               previewMode={PREVIEW_MODE_FRIENDLY}
               responseId={`${responseId}[${activePart}]`}
               updateFilter={null}

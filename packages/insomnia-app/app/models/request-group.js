@@ -18,7 +18,7 @@ type BaseRequestGroup = {
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
 
-export function init() {
+export function init(): BaseRequestGroup {
   return {
     name: 'New Folder',
     description: '',
@@ -32,7 +32,7 @@ export function migrate(doc: RequestGroup) {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<RequestGroup> {
+export function create(patch: $Shape<RequestGroup> = {}): Promise<RequestGroup> {
   if (!patch.parentId) {
     throw new Error('New RequestGroup missing `parentId`: ' + JSON.stringify(patch));
   }
@@ -40,7 +40,10 @@ export function create(patch: Object = {}): Promise<RequestGroup> {
   return db.docCreate(type, patch);
 }
 
-export function update(requestGroup: RequestGroup, patch: Object = {}): Promise<RequestGroup> {
+export function update(
+  requestGroup: RequestGroup,
+  patch: $Shape<RequestGroup> = {},
+): Promise<RequestGroup> {
   return db.docUpdate(requestGroup, patch);
 }
 
@@ -60,8 +63,13 @@ export function all(): Promise<Array<RequestGroup>> {
   return db.all(type);
 }
 
-export async function duplicate(requestGroup: RequestGroup): Promise<RequestGroup> {
-  const name = `${requestGroup.name} (Copy)`;
+export async function duplicate(
+  requestGroup: RequestGroup,
+  patch: $Shape<RequestGroup> = {},
+): Promise<RequestGroup> {
+  if (!patch.name) {
+    patch.name = `${requestGroup.name} (Copy)`;
+  }
 
   // Get sort key of next request
   const q = { metaSortKey: { $gt: requestGroup.metaSortKey } };
@@ -74,5 +82,5 @@ export async function duplicate(requestGroup: RequestGroup): Promise<RequestGrou
   const sortKeyIncrement = (nextSortKey - requestGroup.metaSortKey) / 2;
   const metaSortKey = requestGroup.metaSortKey + sortKeyIncrement;
 
-  return db.duplicate(requestGroup, { name, metaSortKey });
+  return db.duplicate(requestGroup, { metaSortKey, ...patch });
 }

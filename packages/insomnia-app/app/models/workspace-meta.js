@@ -14,29 +14,43 @@ export const canDuplicate = false;
 export const canSync = false;
 
 type BaseWorkspaceMeta = {
-  activeRequestId: string | null,
+  activeActivity: string | null,
   activeEnvironmentId: string | null,
+  activeRequestId: string | null,
+  activeUnitTestSuiteId: string | null,
+  cachedGitLastAuthor: string | null,
+  cachedGitLastCommitTime: number | null,
+  cachedGitRepositoryBranch: string | null,
+  gitRepositoryId: string | null,
+  hasSeen: boolean,
+  paneHeight: number,
+  paneWidth: number,
+  previewHidden: boolean,
   sidebarFilter: string,
   sidebarHidden: boolean,
   sidebarWidth: number,
-  paneWidth: number,
-  paneHeight: number,
-  hasSeen: boolean,
 };
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
 
 export function init(): BaseWorkspaceMeta {
   return {
-    parentId: null,
-    activeRequestId: null,
+    activeActivity: null,
     activeEnvironmentId: null,
+    activeRequestId: null,
+    activeUnitTestSuiteId: null,
+    cachedGitLastAuthor: null,
+    cachedGitLastCommitTime: null,
+    cachedGitRepositoryBranch: null,
+    gitRepositoryId: null,
+    hasSeen: true,
+    paneHeight: DEFAULT_PANE_HEIGHT,
+    paneWidth: DEFAULT_PANE_WIDTH,
+    parentId: null,
+    previewHidden: false,
     sidebarFilter: '',
     sidebarHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-    paneWidth: DEFAULT_PANE_WIDTH,
-    paneHeight: DEFAULT_PANE_HEIGHT,
-    hasSeen: true,
   };
 }
 
@@ -44,7 +58,7 @@ export function migrate(doc: WorkspaceMeta): WorkspaceMeta {
   return doc;
 }
 
-export function create(patch: Object = {}): Promise<WorkspaceMeta> {
+export function create(patch: $Shape<WorkspaceMeta> = {}): Promise<WorkspaceMeta> {
   if (!patch.parentId) {
     throw new Error(`New WorkspaceMeta missing parentId ${JSON.stringify(patch)}`);
   }
@@ -52,12 +66,27 @@ export function create(patch: Object = {}): Promise<WorkspaceMeta> {
   return db.docCreate(type, patch);
 }
 
-export function update(workspaceMeta: WorkspaceMeta, patch: Object = {}): Promise<WorkspaceMeta> {
+export function update(
+  workspaceMeta: WorkspaceMeta,
+  patch: $Shape<WorkspaceMeta> = {},
+): Promise<WorkspaceMeta> {
   return db.docUpdate(workspaceMeta, patch);
+}
+
+export async function updateByParentId(
+  workspaceId: string,
+  patch: Object = {},
+): Promise<WorkspaceMeta> {
+  const meta = await getByParentId(workspaceId);
+  return db.docUpdate(meta, patch);
 }
 
 export async function getByParentId(parentId: string): Promise<WorkspaceMeta | null> {
   return db.getWhere(type, { parentId });
+}
+
+export async function getByGitRepositoryId(gitRepositoryId: string): Promise<WorkspaceMeta | null> {
+  return db.getWhere(type, { gitRepositoryId });
 }
 
 export async function getOrCreateByParentId(parentId: string): Promise<WorkspaceMeta> {

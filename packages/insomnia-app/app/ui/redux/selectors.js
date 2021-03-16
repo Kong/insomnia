@@ -20,27 +20,28 @@ export const selectEntitiesLists = createSelector(
   },
 );
 
-export const selectEntitiesChildrenMap = createSelector(
-  selectEntitiesLists,
-  entities => {
-    const parentLookupMap = {};
-    for (const k of Object.keys(entities)) {
-      for (const e of entities[k]) {
-        if (!e.parentId) {
-          continue;
-        }
+export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
+  const parentLookupMap = {};
+  for (const k of Object.keys(entities)) {
+    for (const e of entities[k]) {
+      if (!e.parentId) {
+        continue;
+      }
 
-        if (parentLookupMap[e.parentId]) {
-          parentLookupMap[e.parentId].push(e);
-        } else {
-          parentLookupMap[e.parentId] = [e];
-        }
+      if (parentLookupMap[e.parentId]) {
+        parentLookupMap[e.parentId].push(e);
+      } else {
+        parentLookupMap[e.parentId] = [e];
       }
     }
+  }
 
-    return parentLookupMap;
-  },
-);
+  return parentLookupMap;
+});
+
+export const selectSettings = createSelector(selectEntitiesLists, entities => {
+  return entities.settings[0] || models.settings.init();
+});
 
 export const selectActiveWorkspace = createSelector(
   state => selectEntitiesLists(state).workspaces,
@@ -48,14 +49,6 @@ export const selectActiveWorkspace = createSelector(
   state => state.global.activeWorkspaceId,
   (workspaces, entities, activeWorkspaceId) => {
     return entities.workspaces[activeWorkspaceId] || workspaces[0];
-  },
-);
-
-export const selectActiveWorkspaceClientCertificates = createSelector(
-  selectEntitiesLists,
-  selectActiveWorkspace,
-  (entities, activeWorkspace) => {
-    return entities.clientCertificates.filter(c => c.parentId === activeWorkspace._id);
   },
 );
 
@@ -68,24 +61,55 @@ export const selectActiveWorkspaceMeta = createSelector(
   },
 );
 
-export const selectCollapsedRequestGroups = createSelector(
+export const selectActiveEnvironment = createSelector(
+  selectActiveWorkspaceMeta,
   selectEntitiesLists,
-  entities => {
-    const collapsed = {};
-
-    // Default all to collapsed
-    for (const requestGroup of entities.requestGroups) {
-      collapsed[requestGroup._id] = true;
+  (meta, entities) => {
+    if (!meta) {
+      return null;
     }
 
-    // Update those that have metadata (not all do)
-    for (const meta of entities.requestGroupMetas) {
-      collapsed[meta.parentId] = meta.collapsed;
-    }
-
-    return collapsed;
+    return entities.environments.find(e => e._id === meta.activeEnvironmentId) || null;
   },
 );
+
+export const selectActiveWorkspaceClientCertificates = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    return entities.clientCertificates.filter(c => c.parentId === activeWorkspace._id);
+  },
+);
+
+export const selectActiveGitRepository = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspaceMeta,
+  (entities, activeWorkspaceMeta) => {
+    if (!activeWorkspaceMeta) {
+      return null;
+    }
+
+    const id = activeWorkspaceMeta ? activeWorkspaceMeta.gitRepositoryId : 'n/a';
+    const repo = entities.gitRepositories.find(r => r._id === id);
+    return repo || null;
+  },
+);
+
+export const selectCollapsedRequestGroups = createSelector(selectEntitiesLists, entities => {
+  const collapsed = {};
+
+  // Default all to collapsed
+  for (const requestGroup of entities.requestGroups) {
+    collapsed[requestGroup._id] = true;
+  }
+
+  // Update those that have metadata (not all do)
+  for (const meta of entities.requestGroupMetas) {
+    collapsed[meta.parentId] = meta.collapsed;
+  }
+
+  return collapsed;
+});
 
 export const selectActiveWorkspaceEntities = createSelector(
   selectActiveWorkspace,
@@ -112,24 +136,21 @@ export const selectActiveWorkspaceEntities = createSelector(
   },
 );
 
-export const selectPinnedRequests = createSelector(
-  selectEntitiesLists,
-  entities => {
-    const pinned = {};
+export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
+  const pinned = {};
 
-    // Default all to unpinned
-    for (const request of entities.requests) {
-      pinned[request._id] = false;
-    }
+  // Default all to unpinned
+  for (const request of entities.requests) {
+    pinned[request._id] = false;
+  }
 
-    // Update those that have metadata (not all do)
-    for (const meta of entities.requestMetas) {
-      pinned[meta.parentId] = meta.pinned;
-    }
+  // Update those that have metadata (not all do)
+  for (const meta of entities.requestMetas) {
+    pinned[meta.parentId] = meta.pinned;
+  }
 
-    return pinned;
-  },
-);
+  return pinned;
+});
 
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
@@ -202,7 +223,7 @@ export const selectSidebarChildren = createSelector(
       return children;
     }
 
-    let pinnedChildren = [];
+    const pinnedChildren = [];
     const childrenTree = next(activeWorkspace._id, pinnedChildren);
     const matchedChildren = matchChildren(childrenTree);
 
@@ -246,16 +267,13 @@ export const selectActiveOAuth2Token = createSelector(
   },
 );
 
-export const selectUnseenWorkspaces = createSelector(
-  selectEntitiesLists,
-  entities => {
-    const { workspaces, workspaceMetas } = entities;
-    return workspaces.filter(workspace => {
-      const meta = workspaceMetas.find(m => m.parentId === workspace._id);
-      return !!(meta && !meta.hasSeen);
-    });
-  },
-);
+export const selectUnseenWorkspaces = createSelector(selectEntitiesLists, entities => {
+  const { workspaces, workspaceMetas } = entities;
+  return workspaces.filter(workspace => {
+    const meta = workspaceMetas.find(m => m.parentId === workspace._id);
+    return !!(meta && !meta.hasSeen);
+  });
+});
 
 export const selectActiveRequestMeta = createSelector(
   selectActiveRequest,
@@ -269,10 +287,24 @@ export const selectActiveRequestMeta = createSelector(
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
-  (activeRequest, entities) => {
+  selectActiveEnvironment,
+  selectSettings,
+  (activeRequest, entities, activeEnvironment, settings) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
+
+    // Filter responses down if the setting is enabled
     return entities.responses
-      .filter(response => requestId === response.parentId)
+      .filter(response => {
+        const requestMatches = requestId === response.parentId;
+
+        if (settings.filterResponsesByEnv) {
+          const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+          const environmentMatches = response.environmentId === activeEnvironmentId;
+          return requestMatches && environmentMatches;
+        } else {
+          return requestMatches;
+        }
+      })
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );
@@ -292,12 +324,67 @@ export const selectActiveResponse = createSelector(
   },
 );
 
-export const selectSyncItems = createSelector(
-  selectActiveWorkspaceEntities,
-  workspaceEntities =>
-    workspaceEntities.filter(models.canSync).map(doc => ({
-      key: doc._id,
-      name: doc.name || '',
-      document: doc,
-    })),
+export const selectActiveUnitTestResult = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    let recentResult = null;
+    for (const r of entities.unitTestResults) {
+      if (r.parentId !== activeWorkspace._id) {
+        continue;
+      }
+
+      if (!recentResult) {
+        recentResult = r;
+        continue;
+      }
+
+      if (r.created > recentResult.created) {
+        recentResult = r;
+      }
+    }
+
+    return recentResult;
+  },
+);
+
+export const selectActiveUnitTestSuite = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspaceMeta,
+  (entities, activeWorkspaceMeta) => {
+    if (!activeWorkspaceMeta) {
+      return null;
+    }
+
+    const id = activeWorkspaceMeta.activeUnitTestSuiteId;
+    return entities.unitTestSuites.find(s => s._id === id) || null;
+  },
+);
+
+export const selectActiveUnitTests = createSelector(
+  selectEntitiesLists,
+  selectActiveUnitTestSuite,
+  (entities, activeUnitTestSuite) => {
+    if (!activeUnitTestSuite) {
+      return [];
+    }
+
+    return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
+  },
+);
+
+export const selectActiveUnitTestSuites = createSelector(
+  selectEntitiesLists,
+  selectActiveWorkspace,
+  (entities, activeWorkspace) => {
+    return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace._id);
+  },
+);
+
+export const selectSyncItems = createSelector(selectActiveWorkspaceEntities, workspaceEntities =>
+  workspaceEntities.filter(models.canSync).map(doc => ({
+    key: doc._id,
+    name: doc.name || '',
+    document: doc,
+  })),
 );

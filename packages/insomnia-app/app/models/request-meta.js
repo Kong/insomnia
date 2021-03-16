@@ -41,7 +41,7 @@ export function migrate(doc: RequestMeta): RequestMeta {
   return doc;
 }
 
-export function create(patch: Object = {}) {
+export function create(patch: $Shape<RequestMeta> = {}) {
   if (!patch.parentId) {
     throw new Error('New RequestMeta missing `parentId` ' + JSON.stringify(patch));
   }
@@ -49,7 +49,7 @@ export function create(patch: Object = {}) {
   return db.docCreate(type, patch);
 }
 
-export function update(requestMeta: RequestMeta, patch: Object) {
+export function update(requestMeta: RequestMeta, patch: $Shape<RequestMeta>) {
   return db.docUpdate(requestMeta, patch);
 }
 

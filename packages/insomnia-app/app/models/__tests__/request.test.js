@@ -190,7 +190,10 @@ describe('migrate()', () => {
       headers: [{ name: 'content-type', value: 'application/x-www-form-urlencoded' }],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
-        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }],
+        params: [
+          { name: 'foo', value: 'bar' },
+          { name: 'baz', value: '{{ hello }}' },
+        ],
       },
       url: '',
     };
@@ -218,7 +221,10 @@ describe('migrate()', () => {
       ],
       body: {
         mimeType: 'application/x-www-form-urlencoded',
-        params: [{ name: 'foo', value: 'bar' }, { name: 'baz', value: '{{ hello }}' }],
+        params: [
+          { name: 'foo', value: 'bar' },
+          { name: 'baz', value: '{{ hello }}' },
+        ],
       },
       url: '',
     };

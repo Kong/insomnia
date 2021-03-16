@@ -10,17 +10,17 @@ import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import * as models from '../../../models';
 import { getAppName, getAppVersion } from '../../../common/constants';
-import { showAlert, showModal, showPrompt } from '../modals';
+import { showAlert, showError, showModal, showPrompt } from '../modals';
 import Link from '../base/link';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import WorkspaceShareSettingsModal from '../modals/workspace-share-settings-modal';
 import LoginModal from '../modals/login-modal';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import SyncShareModal from '../modals/sync-share-modal';
 import * as db from '../../../common/database';
 import VCS from '../../../sync/vcs';
@@ -29,38 +29,76 @@ import type { Project } from '../../../sync/types';
 import * as sync from '../../../sync-legacy/index';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
+import type { WorkspaceAction } from '../../../plugins';
+import { getWorkspaceActions } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import type { Environment } from '../../../models/environment';
 
 type Props = {
-  isLoading: boolean,
-  handleSetActiveWorkspace: (id: string) => void,
-  workspaces: Array<Workspace>,
-  unseenWorkspaces: Array<Workspace>,
+  activeEnvironment: Environment | null,
   activeWorkspace: Workspace,
-  hotKeyRegistry: HotKeyRegistry,
   enableSyncBeta: boolean,
+  handleSetActiveWorkspace: (id: string) => void,
+  hotKeyRegistry: HotKeyRegistry,
+  isLoading: boolean,
+  unseenWorkspaces: Array<Workspace>,
   vcs: VCS | null,
+  workspaces: Array<Workspace>,
 
   // Optional
   className?: string,
 };
 
 type State = {
-  remoteProjects: Array<Project>,
+  actionPlugins: Array<WorkspaceAction>,
+  loadingActions: { [string]: boolean },
   localProjects: Array<Project>,
   pullingProjects: { [string]: boolean },
+  remoteProjects: Array<Project>,
 };
 
 @autobind
 class WorkspaceDropdown extends React.PureComponent<Props, State> {
   _dropdown: ?Dropdown;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      remoteProjects: [],
-      localProjects: [],
-      pullingProjects: {},
-    };
+  state = {
+    actionPlugins: [],
+    loadingActions: {},
+    localProjects: [],
+    pullingProjects: {},
+    remoteProjects: [],
+  };
+
+  async _handlePluginClick(p: WorkspaceAction) {
+    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: true } }));
+
+    const { activeEnvironment, activeWorkspace } = this.props;
+
+    try {
+      const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
+
+      const context = {
+        ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER): Object),
+        ...(pluginContexts.data.init(): Object),
+        ...(pluginContexts.store.init(p.plugin): Object),
+        ...(pluginContexts.network.init(activeEnvironmentId): Object),
+      };
+
+      const docs = await db.withDescendants(activeWorkspace);
+      const requests: any = docs.filter(d => d.type === models.request.type && !(d: any).isPrivate);
+      const requestGroups: any = docs.filter(d => d.type === models.requestGroup.type);
+
+      await p.action(context, { requestGroups, requests, workspace: activeWorkspace });
+    } catch (err) {
+      showError({
+        title: 'Plugin Action Failed',
+        error: err,
+      });
+    }
+
+    this.setState(state => ({ loadingActions: { ...state.loadingActions, [p.label]: false } }));
+    this._dropdown && this._dropdown.hide();
   }
 
   async _handleDropdownHide() {
@@ -75,6 +113,10 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
   async _handleDropdownOpen() {
     this._refreshRemoteWorkspaces();
+
+    // Load action plugins
+    const plugins = await getWorkspaceActions();
+    this.setState({ actionPlugins: plugins });
   }
 
   async _refreshRemoteWorkspaces() {
@@ -230,6 +272,8 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
       </div>
     );
 
+    const { actionPlugins, loadingActions } = this.state;
+
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
@@ -238,7 +282,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
           className={classes}
           onOpen={this._handleDropdownOpen}
           onHide={this._handleDropdownHide}
-          {...other}>
+          {...(other: Object)}>
           <DropdownButton className="btn wide">
             <h1 className="no-pad text-left">
               <div className="pull-right">
@@ -344,6 +388,20 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
               <i className="fa fa-star surprise fa-outline" />
             </DropdownItem>
           )}
+          {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
+          {actionPlugins.map((p: WorkspaceAction) => (
+            <DropdownItem
+              key={p.label}
+              onClick={() => this._handlePluginClick(p)}
+              stayOpenAfterClick>
+              {loadingActions[p.label] ? (
+                <i className="fa fa-refresh fa-spin" />
+              ) : (
+                <i className={classnames('fa', p.icon || 'fa-code')} />
+              )}
+              {p.label}
+            </DropdownItem>
+          ))}
         </Dropdown>
       </KeydownBinder>
     );

@@ -205,11 +205,11 @@ export function initDB(config, forceReset) {
     const configPath = fsPath.join(basePath, 'sync/Config.db');
 
     // Fill in the defaults
-    _database['Resource'] = new NeDB(
+    _database.Resource = new NeDB(
       Object.assign({ filename: resourcePath, autoload: true }, config),
     );
 
-    _database['Config'] = new NeDB(Object.assign({ filename: configPath, autoload: true }, config));
+    _database.Config = new NeDB(Object.assign({ filename: configPath, autoload: true }, config));
 
     for (const key of Object.keys(_database)) {
       _database[key].persistence.setAutocompactionInterval(DB_PERSIST_INTERVAL);

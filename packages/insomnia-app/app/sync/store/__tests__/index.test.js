@@ -38,14 +38,14 @@ describe('store', () => {
       it('stores buffers directly', async () => {
         const s = new Store(new Driver());
 
-        await s.setItem('buff', Buffer.from(`{"hi": "there"}`, 'utf8'));
+        await s.setItem('buff', Buffer.from('{"hi": "there"}', 'utf8'));
         await s.setItem('json', { hi: 'there' });
 
         expect(await s.getItem('buff')).toEqual({ hi: 'there' });
         expect(await s.getItem('json')).toEqual({ hi: 'there' });
 
-        expect((await s._driver.getItem('buff')).toString('utf8')).toEqual(`{"hi": "there"}`);
-        expect((await s._driver.getItem('json')).toString('utf8')).toEqual(`{\n  "hi": "there"\n}`);
+        expect((await s._driver.getItem('buff')).toString('utf8')).toEqual('{"hi": "there"}');
+        expect((await s._driver.getItem('json')).toString('utf8')).toEqual('{\n  "hi": "there"\n}');
       });
     });
   }

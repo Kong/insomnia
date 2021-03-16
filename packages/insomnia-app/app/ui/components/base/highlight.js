@@ -7,18 +7,19 @@ import { fuzzyMatch } from '../../../common/misc';
 type Props = {|
   search: string,
   text: string,
+  blankValue?: String,
 |};
 
 @autobind
 class Highlight extends React.PureComponent<Props> {
   render() {
-    const { search, text, ...otherProps } = this.props;
+    const { search, text, blankValue, ...otherProps } = this.props;
 
     // Match loose here to make sure our highlighting always works
     const result = fuzzyMatch(search, text, { splitSpace: true, loose: true });
 
     if (!result) {
-      return <span {...otherProps}>{text}</span>;
+      return <span {...otherProps}>{text || blankValue || ''}</span>;
     }
 
     return (

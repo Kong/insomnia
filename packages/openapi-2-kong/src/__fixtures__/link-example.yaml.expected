@@ -1,0 +1,66 @@
+{
+  "services": [
+    {
+      "url":"http://backend.com/path",
+      "name": "Link_Example",
+      "plugins": [],
+      "routes": [
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
+          "name": "Link_Example-path-get",
+          "paths": ["\/2.0\/users\/(?<username>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
+          "name": "Link_Example-path_1-get",
+          "paths": ["\/2.0\/repositories\/(?<username>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
+          "name": "Link_Example-path_2-get",
+          "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
+          "name": "Link_Example-path_3-get",
+          "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
+          "name": "Link_Example-path_4-get",
+          "paths": [
+            "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)$"
+          ]
+        },
+        {
+          "methods": ["POST"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
+          "name": "Link_Example-path_5-post",
+          "paths": [
+            "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)\/merge$"
+          ]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_link-example.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
+      "name": "Link_Example",
+      "targets": [{"target": "backend.com:80"}]
+    }
+  ],
+  "_format_version": "1.1"
+}

@@ -6,7 +6,10 @@ describe('migrate()', () => {
   it('migrates client certificates properly', async () => {
     const workspace = await models.workspace.create({
       name: 'My Workspace',
-      certificates: [{ key: 'key', passphrase: 'mypass' }, { disabled: true, cert: 'cert' }],
+      certificates: [
+        { key: 'key', passphrase: 'mypass' },
+        { disabled: true, cert: 'cert' },
+      ],
     });
 
     const migratedWorkspace = await models.workspace.migrate(workspace);
@@ -54,5 +57,16 @@ describe('migrate()', () => {
     await models.workspace.migrate(migratedWorkspace);
     const certsAgain = await models.clientCertificate.findByParentId(workspace._id);
     expect(certsAgain.length).toBe(2);
+  });
+
+  it('creates api spec for workspace id', async () => {
+    const workspace = await models.workspace.create({ name: 'My Workspace' });
+    await models.apiSpec.removeWhere(workspace._id);
+    expect(await models.apiSpec.getByParentId(workspace._id)).toBe(null);
+
+    await models.workspace.migrate(workspace);
+    const spec = await models.apiSpec.getByParentId(workspace._id);
+    expect(spec).not.toBe(null);
+    expect(spec.fileName).toBe(workspace.name);
   });
 });

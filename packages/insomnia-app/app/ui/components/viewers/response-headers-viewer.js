@@ -3,6 +3,7 @@ import * as React from 'react';
 import CopyButton from '../base/copy-button';
 import type { ResponseHeader } from '../../../models/response';
 import Link from '../base/link';
+
 const { URL } = require('url');
 
 type Props = {
@@ -11,7 +12,7 @@ type Props = {
 
 function validateURL(urlString) {
   try {
-    let parsedUrl = new URL(urlString);
+    const parsedUrl = new URL(urlString);
     if (!parsedUrl.hostname) return false;
     return true;
   } catch (error) {
@@ -25,31 +26,33 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
 
     const headersString = headers.map(h => `${h.name}: ${h.value}`).join('\n');
 
-    return [
-      <table key="table" className="table--fancy table--striped table--compact">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {headers.map((h, i) => (
-            <tr className="selectable" key={i}>
-              <td style={{ width: '50%' }} className="force-wrap">
-                {h.name}
-              </td>
-              <td style={{ width: '50%' }} className="force-wrap">
-                {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
-              </td>
+    return (
+      <React.Fragment>
+        <table className="table--fancy table--striped table--compact">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Value</th>
             </tr>
-          ))}
-        </tbody>
-      </table>,
-      <p key="copy" className="pad-top">
-        <CopyButton className="pull-right btn btn--clicky" content={headersString} />
-      </p>,
-    ];
+          </thead>
+          <tbody>
+            {headers.map((h, i) => (
+              <tr className="selectable" key={i}>
+                <td style={{ width: '50%' }} className="force-wrap">
+                  {h.name}
+                </td>
+                <td style={{ width: '50%' }} className="force-wrap">
+                  {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p key="copy" className="pad-top">
+          <CopyButton className="pull-right" content={headersString} />
+        </p>
+      </React.Fragment>
+    );
   }
 }
 

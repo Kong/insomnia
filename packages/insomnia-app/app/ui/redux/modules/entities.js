@@ -103,6 +103,7 @@ export async function allDocs() {
     ...(await models.settings.all()),
     ...(await models.workspace.all()),
     ...(await models.workspaceMeta.all()),
+    ...(await models.gitRepository.all()),
     ...(await models.environment.all()),
     ...(await models.cookieJar.all()),
     ...(await models.requestGroup.all()),
@@ -113,5 +114,9 @@ export async function allDocs() {
     ...(await models.response.all()),
     ...(await models.oAuth2Token.all()),
     ...(await models.clientCertificate.all()),
+    ...(await models.apiSpec.all()),
+    ...(await models.unitTestSuite.all()),
+    ...(await models.unitTest.all()),
+    ...(await models.unitTestResult.all()),
   ];
 }

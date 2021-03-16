@@ -4,13 +4,15 @@
     "@babel/preset-flow"
   ],
   "plugins": [
+    "babel-plugin-styled-components",
     [
       "@babel/plugin-proposal-decorators",
       {
         "legacy": true
       }
     ],
-    ["@babel/plugin-proposal-class-properties", { "loose" : true }]
+    ["@babel/plugin-proposal-class-properties", { "loose" : true }],
+    "@babel/plugin-proposal-optional-chaining"
   ],
   "env": {
     "development": {
@@ -24,7 +26,7 @@
           "@babel/preset-env",
           {
             "targets": {
-              "node": "10"
+              "node": "12"
             }
           }
         ],

@@ -34,7 +34,7 @@ class RequestGroupRow extends React.PureComponent<Props> {
 
   handleSelect(e: SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;
-    let value = el.checked;
+    const value = el.checked;
     const { handleSetItemSelected, requestGroup } = this.props;
     return handleSetItemSelected(requestGroup._id, value);
   }

@@ -1,22 +1,24 @@
 {
   "name": "insomnia-plugin-cookie-jar",
-  "version": "1.0.20",
+  "version": "2.2.10",
   "author": "Preston Alvarado <pjalva1@hotmail.com>",
   "description": "Insomnia cookie jar template tag",
   "license": "MIT",
-  "repository": "https://github.com/getinsomnia/insomnia/tree/master/plugins/insomnia-plugin-cookie-jar",
+  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-cookie-jar",
   "bugs": {
-    "url": "https://github.com/getinsomnia/insomnia"
+    "url": "https://github.com/kong/insomnia"
   },
   "main": "index.js",
   "insomnia": {
-    "name": "cookieJar"
+    "name": "cookieJar",
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "^0.0.5"
+    "insomnia-cookies": "^2.2.10"
   },
-  "gitHead": "f325aef9ffe748b2d05562782852e83b16056210"
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }

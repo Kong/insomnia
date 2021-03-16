@@ -155,7 +155,7 @@ async function _getAccessToken(
   // See if we have a token already //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
-  let token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
+  const token: OAuth2Token | null = await models.oAuth2Token.getByParentId(requestId);
 
   if (!token) {
     return null;

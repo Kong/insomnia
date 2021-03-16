@@ -58,11 +58,16 @@ const BASE_CODEMIRROR_OPTIONS = {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
+
+    // Autocomplete
     'Ctrl-Space': 'autocomplete',
 
     // Change default find command from "find" to "findPersistent" so the
     // search box stays open after pressing Enter
     [isMac() ? 'Cmd-F' : 'Ctrl-F']: 'findPersistent',
+
+    'Shift-Tab': 'indentLess',
+    Tab: 'indentMore',
   }),
 
   // NOTE: Because the lint mode is initialized immediately, the lint gutter needs to
@@ -90,7 +95,8 @@ class CodeEditor extends React.Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._uniquenessKey = nextProps.uniquenessKey;
     this._previousUniquenessKey = this.props.uniquenessKey;
 
@@ -113,7 +119,6 @@ class CodeEditor extends React.Component {
       if (key === 'defaultValue') {
         continue;
       }
-
       if (this.props[key] !== nextProps[key]) {
         return true;
       }
@@ -155,6 +160,19 @@ class CodeEditor extends React.Component {
   setSelection(chStart, chEnd, lineStart, lineEnd) {
     if (this.codeMirror) {
       this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
+      this.codeMirror.scrollIntoView({ line: lineStart, char: chStart });
+    }
+  }
+
+  scrollToSelection(chStart, chEnd, lineStart, lineEnd) {
+    const selectionFocusPos = window.innerHeight / 2 - 100;
+    if (this.codeMirror) {
+      this.codeMirror.setSelection({ line: lineStart, ch: chStart }, { line: lineEnd, ch: chEnd });
+      this.codeMirror.scrollIntoView(
+        { line: lineStart, char: chStart },
+        // If sizing permits, position selection just above center
+        selectionFocusPos,
+      );
     }
   }
 
@@ -263,10 +281,10 @@ class CodeEditor extends React.Component {
     this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
     this.codeMirror.setSelections(selections, null, { scroll: false });
 
-    marks &&
-      marks.forEach(({ from, to }) => {
-        this.codeMirror.foldCode(from, to);
-      });
+    // Restore marks one-by-one
+    for (const { from, to } of marks || []) {
+      this.codeMirror.foldCode(from, to);
+    }
   }
 
   _setFilterInputRef(n) {
@@ -284,8 +302,38 @@ class CodeEditor extends React.Component {
       return;
     }
 
+    const foldOptions = {
+      widget: (from, to) => {
+        let count;
+        // Get open / close token
+        let startToken = '{';
+        let endToken = '}';
+
+        const prevLine = this.codeMirror.getLine(from.line);
+        if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
+          startToken = '[';
+          endToken = ']';
+        }
+
+        // Get json content
+        const internal = this.codeMirror.getRange(from, to);
+        const toParse = startToken + internal + endToken;
+
+        // Get key count
+        try {
+          const parsed = JSON.parse(toParse);
+          count = Object.keys(parsed).length;
+        } catch (e) {}
+        return count ? `\u21A4 ${count} \u21A6` : '\u2194';
+      },
+    };
+
     const { defaultValue, debounceMillis: ms } = this.props;
-    this.codeMirror = CodeMirror.fromTextArea(textarea, BASE_CODEMIRROR_OPTIONS);
+
+    this.codeMirror = CodeMirror.fromTextArea(textarea, {
+      ...BASE_CODEMIRROR_OPTIONS,
+      foldOptions,
+    });
 
     // Set default listeners
     const debounceMillis = typeof ms === 'number' ? ms : DEBOUNCE_MILLIS;
@@ -476,6 +524,7 @@ class CodeEditor extends React.Component {
       autoCloseBrackets,
       dynamicHeight,
       getAutocompleteConstants,
+      getAutocompleteSnippets,
       getRenderContext,
       hideGutters,
       hideLineNumbers,
@@ -509,7 +558,7 @@ class CodeEditor extends React.Component {
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
     const actuallyIndentWithTabs = indentWithTabs && !isYaml;
 
-    let options = {
+    const options = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
       mode: mode,
@@ -569,13 +618,8 @@ class CodeEditor extends React.Component {
       options.autoCloseBrackets = autoCloseBrackets;
     }
 
-    if (!hideGutters && options.lint) {
-      // Don't really need this
-      // options.gutters.push('CodeMirror-lint-markers');
-    }
-
     // Setup the hint options
-    if (getRenderContext || getAutocompleteConstants) {
+    if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
       let getVariables = null;
       let getTags = null;
       if (getRenderContext) {
@@ -611,6 +655,7 @@ class CodeEditor extends React.Component {
         getVariables,
         getTags,
         getConstants: getAutocompleteConstants,
+        getSnippets: getAutocompleteSnippets,
       };
     }
 
@@ -619,23 +664,39 @@ class CodeEditor extends React.Component {
     }
 
     // Strip of charset if there is one
-    const cm = this.codeMirror;
     Object.keys(options).map(key => {
-      let shouldSetOption = false;
-
-      if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
-        // Use stringify here because these could be infinitely recursive due to GraphQL
-        // schemas
-        shouldSetOption = JSON.stringify(options[key]) !== JSON.stringify(cm.options[key]);
-      } else if (!deepEqual(options[key], cm.options[key])) {
-        // Don't set the option if it hasn't changed
-        shouldSetOption = true;
-      }
-
-      if (shouldSetOption) {
-        cm.setOption(key, options[key]);
-      }
+      this._codemirrorSmartSetOption(key, options[key]);
     });
+  }
+
+  /**
+   * Set option if it's different than in the current Codemirror instance
+   */
+  _codemirrorSmartSetOption(key, value) {
+    const cm = this.codeMirror;
+    let shouldSetOption = false;
+
+    if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
+      // Use stringify here because these could be infinitely recursive due to GraphQL
+      // schemas
+      shouldSetOption = JSON.stringify(value) !== JSON.stringify(cm.options[key]);
+    } else if (!deepEqual(value, cm.options[key])) {
+      // Don't set the option if it hasn't changed
+      shouldSetOption = true;
+    }
+
+    // Don't set the option if it hasn't changed
+    if (!shouldSetOption) {
+      return;
+    }
+
+    // Set the option safely. When setting "lint", for example, it can throw an exception
+    // and cause the editor to break.
+    try {
+      cm.setOption(key, value);
+    } catch (err) {
+      console.log('Failed to set CodeMirror option', err.message, { key, value });
+    }
   }
 
   static _normalizeMode(mode) {
@@ -652,6 +713,8 @@ class CodeEditor extends React.Component {
       return 'application/edn';
     } else if (CodeEditor._isXML(mimeType)) {
       return 'application/xml';
+    } else if (mimeType.includes('kotlin')) {
+      return 'text/x-kotlin';
     } else {
       return mimeType;
     }
@@ -728,17 +791,24 @@ class CodeEditor extends React.Component {
   }
 
   _codemirrorValueBeforeChange(doc, change) {
-    // If we're in single-line mode, merge all changed lines into one
-    if (this.props.singleLine && change.text && change.text.length > 1) {
-      const text = change.text
-        .join('') // join all changed lines into one
-        .replace(/\n/g, ' '); // Convert all whitespace to spaces
-      change.update(change.from, change.to, [text]);
-    }
+    const value = this.codeMirror.getDoc().getValue();
+    // Suppress lint on empty doc or single space exists (default value)
+    if (value.trim() === '') {
+      this._codemirrorSmartSetOption('lint', false);
+    } else {
+      this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
+      // If we're in single-line mode, merge all changed lines into one
+      if (this.props.singleLine && change.text && change.text.length > 1) {
+        const text = change.text
+          .join('') // join all changed lines into one
+          .replace(/\n/g, ' '); // Convert all whitespace to spaces
+        change.update(change.from, change.to, [text]);
+      }
 
-    // Don't allow non-breaking spaces because they break the GraphQL syntax
-    if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
-      change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+      // Don't allow non-breaking spaces because they break the GraphQL syntax
+      if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
+        change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+      }
     }
   }
 
@@ -767,10 +837,14 @@ class CodeEditor extends React.Component {
 
     const value = this.codeMirror.getDoc().getValue();
 
-    const lint = value.length > MAX_SIZE_FOR_LINTING ? false : !this.props.noLint;
+    // Disable linting if the document reaches a maximum size or is empty
+    const shouldLint =
+      value.length > MAX_SIZE_FOR_LINTING || value.length === 0 ? false : !this.props.noLint;
     const existingLint = this.codeMirror.options.lint || false;
-    if (lint !== existingLint) {
-      this.codeMirror.setOption('lint', lint);
+    if (shouldLint !== existingLint) {
+      const { lintOptions } = this.props;
+      const lint = shouldLint ? lintOptions || true : false;
+      this._codemirrorSmartSetOption('lint', lint);
     }
 
     this.props.onChange(value);
@@ -789,7 +863,8 @@ class CodeEditor extends React.Component {
 
     this._originalCode = code;
 
-    // Don't ignore changes from prettify
+    // If we're setting initial value, don't trigger onChange because the
+    // user hasn't done anything yet
     if (!forcePrettify) {
       this._ignoreNextChange = true;
     }
@@ -854,12 +929,14 @@ class CodeEditor extends React.Component {
       style,
       type,
       isVariableUncovered,
+      raw,
     } = this.props;
 
     const classes = classnames(className, {
       editor: true,
       'editor--dynamic-height': dynamicHeight,
       'editor--readonly': readOnly,
+      'raw-editor': raw,
     });
 
     const toolbarChildren = [];
@@ -945,9 +1022,11 @@ class CodeEditor extends React.Component {
             id={id}
             ref={this._handleInitTextarea}
             style={{ display: 'none' }}
-            defaultValue=" "
             readOnly={readOnly}
             autoComplete="off"
+            // NOTE: When setting this to empty string, it breaks the _ignoreNextChange
+            //   logic on initial component mount
+            defaultValue=" "
           />
         </div>
         {toolbar}
@@ -971,6 +1050,7 @@ CodeEditor.propTypes = {
   nunjucksPowerUserMode: PropTypes.bool,
   getRenderContext: PropTypes.func,
   getAutocompleteConstants: PropTypes.func,
+  getAutocompleteSnippets: PropTypes.func,
   keyMap: PropTypes.string,
   mode: PropTypes.string,
   id: PropTypes.string,
@@ -1007,6 +1087,7 @@ CodeEditor.propTypes = {
   jumpOptions: PropTypes.object,
   uniquenessKey: PropTypes.any,
   isVariableUncovered: PropTypes.bool,
+  raw: PropTypes.bool,
 };
 
 export default CodeEditor;

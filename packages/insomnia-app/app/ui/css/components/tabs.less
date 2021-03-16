@@ -1,9 +1,3 @@
-@import '../constants/colors';
-@import '../constants/dimensions';
-
-@border-color: var(--hl-md);
-@focus-color: var(--hl-md);
-
 .react-tabs {
   width: 100%;
   height: 100%;
@@ -21,11 +15,9 @@
     background-color: var(--color-bg);
     overflow: auto;
 
-    @scrollbar-height: @padding-sm;
-
     &::-webkit-scrollbar {
-      height: @scrollbar-height;
-      border-radius: calc(@scrollbar-height / 2);
+      height: var(--padding-sm);
+      border-radius: calc(var(--padding-sm) / 2);
     }
 
     &::-webkit-scrollbar-track {
@@ -46,16 +38,16 @@
 
     &::after {
       width: 100%;
-      height: @line-height-sm;
+      height: var(--line-height-sm);
       content: '';
-      border-bottom: 1px solid @border-color;
+      border-bottom: 1px solid var(--hl-md);
     }
   }
 
   .react-tabs__tab {
-    height: @line-height-sm;
+    height: var(--line-height-sm);
     border: 1px solid transparent;
-    border-bottom: 1px solid @border-color;
+    border-bottom: 1px solid var(--hl-md);
     border-top: 0 !important;
     white-space: nowrap;
     display: flex;
@@ -93,26 +85,26 @@
     }
 
     & > * {
-      color: @hl;
+      color: var(--hl);
       height: 100%;
-      padding-left: calc(@padding-md / 4);
-      padding-right: calc(@padding-md / 4);
+      padding-left: calc(var(--padding-md) / 4);
+      padding-right: calc(var(--padding-md) / 4);
 
       &:first-child {
-        padding-left: @padding-md;
+        padding-left: var(--padding-md);
       }
 
       &:last-child {
-        padding-right: @padding-md;
+        padding-right: var(--padding-md);
       }
     }
 
     &:not(.react-tabs__tab--selected) .dropdown i.fa {
-      opacity: @opacity-super-subtle;
+      opacity: var(--opacity-super-subtle);
     }
 
     &.react-tabs__tab--selected:focus {
-      background-color: @focus-color;
+      background-color: var(--hl-md);
     }
 
     &.react-tabs__tab button:focus {
@@ -120,7 +112,7 @@
     }
 
     &.react-tabs__tab--selected {
-      border: 1px solid @border-color;
+      border: 1px solid var(--hl-md);
       border-bottom-color: transparent;
 
       * {

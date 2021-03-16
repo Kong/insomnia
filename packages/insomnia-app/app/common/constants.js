@@ -1,4 +1,5 @@
-import * as packageJSON from '../../package.json';
+// @flow
+import { appConfig } from '../../config';
 import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
@@ -7,19 +8,39 @@ import { getDataDirectory } from './misc';
 // App Stuff
 
 export function getAppVersion() {
-  return packageJSON.app.version;
+  return appConfig().version;
 }
 
 export function getAppLongName() {
-  return packageJSON.app.longName;
+  return appConfig().longName;
 }
 
 export function getAppName() {
-  return packageJSON.app.productName;
+  return appConfig().productName;
+}
+
+export function getAppDefaultTheme() {
+  return appConfig().theme;
+}
+
+export function getAppSynopsis() {
+  return appConfig().synopsis;
+}
+
+export function getDefaultAppId() {
+  return process.env.APP_ID;
 }
 
 export function getAppId() {
-  return packageJSON.app.appId;
+  return appConfig().appId;
+}
+
+export function getGoogleAnalyticsId() {
+  return appConfig().gaId;
+}
+
+export function getGoogleAnalyticsLocation() {
+  return appConfig().gaLocation;
 }
 
 export function getAppPlatform() {
@@ -28,6 +49,19 @@ export function getAppPlatform() {
 
 export function getAppEnvironment() {
   return process.env.INSOMNIA_ENV || 'production';
+}
+
+export function getAppReleaseDate() {
+  return new Date(process.env.RELEASE_DATE).toLocaleDateString();
+}
+
+export function getBrowserUserAgent() {
+  const ua = encodeURIComponent(
+    String(window.navigator.userAgent)
+      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
+  ).replace('%2C', ',');
+  return ua;
 }
 
 export function getTempDir() {
@@ -54,17 +88,23 @@ export function isDevelopment() {
   return getAppEnvironment() === 'development';
 }
 
+export function isInsomnia(activity: GlobalActivity): boolean {
+  return activity === ACTIVITY_INSOMNIA;
+}
+
 export function getClientString() {
   return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
+}
+
+export function changelogUrl(): string {
+  const { changelogBaseUrl, version } = appConfig();
+  return `${changelogBaseUrl}/${version}`;
 }
 
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
 export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
-export const GA_ID = 'UA-86416787-1';
-export const GA_LOCATION = 'https://desktop.insomnia.rest/';
-export const CHANGELOG_BASE_URL = 'https://insomnia.rest/changelog';
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
@@ -94,6 +134,10 @@ export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
 // API
 export const API_BASE_URL = 'https://api.insomnia.rest';
 
+// PLUGINS
+export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
+export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
+
 // UI Stuff
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;
@@ -106,6 +150,14 @@ export const MIN_PANE_HEIGHT = 0.01;
 export const DEFAULT_PANE_WIDTH = 0.5;
 export const DEFAULT_PANE_HEIGHT = 0.5;
 export const DEFAULT_SIDEBAR_WIDTH = 19;
+
+// Activities
+export type GlobalActivity = 'spec' | 'debug' | 'monitor' | 'home';
+export const ACTIVITY_SPEC: GlobalActivity = 'spec';
+export const ACTIVITY_DEBUG: GlobalActivity = 'debug';
+export const ACTIVITY_UNIT_TEST: GlobalActivity = 'unittest';
+export const ACTIVITY_HOME: GlobalActivity = 'home';
+export const ACTIVITY_INSOMNIA: GlobalActivity = 'insomnia';
 
 // HTTP Methods
 export const METHOD_GET = 'GET';
@@ -177,6 +229,21 @@ export const AUTH_ASAP = 'asap';
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
 
+// json-order constants
+export const JSON_ORDER_PREFIX = '&';
+export const JSON_ORDER_SEPARATOR = '~|';
+
+// HTTP version codes
+export const HttpVersions = {
+  V1_0: 'V1_0',
+  V1_1: 'V1_1',
+  V2_0: 'V2_0',
+  v3: 'v3',
+  default: 'default',
+};
+
+export type HttpVersion = $Keys<typeof HttpVersions>;
+
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
@@ -241,7 +308,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   // 200s
 
   200: 'The request has succeeded.',
-  201: 'The request has succeeded and a new resource has been created as a result of it. This is typically the response sent after a PUT request.',
+  201: 'The request has succeeded and a new resource has been created as a result. This is typically the response sent after POST requests, or some PUT requests.',
   202: 'The request has been received but not yet acted upon. It is non-committal, meaning that there is no way in HTTP to later send an asynchronous response indicating the outcome of processing the request. It is intended for cases where another process or server handles the request, or for batch processing.',
   203: 'This response code means returned meta-information set is not exact set as available from the origin server, but collected from a local or a third party copy. Except this condition, 200 OK response should be preferred instead of this response.',
   204: 'There is no content to send for this request, but the headers may be useful. The user-agent may update its cached headers for this resource with the new ones.',
@@ -307,4 +374,85 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   508: 'The server detected an infinite loop while processing the request.',
   510: 'Further extensions to the request are required for the server to fulfill it.',
   511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
+};
+
+export const RESPONSE_CODE_REASONS = {
+  // Special
+  [STATUS_CODE_PLUGIN_ERROR]: 'Plugin Error',
+
+  // 100s
+
+  100: 'Continue',
+  101: 'Switching Protocols',
+
+  // 200s
+
+  200: 'OK',
+  201: 'Created',
+  202: 'Accepted',
+  203: 'Non-Authoritative Information',
+  204: 'No Content',
+  205: 'Reset Content',
+  206: 'Partial Content',
+  207: 'Multi-Status',
+  208: 'Already Reported',
+  226: 'IM Used',
+
+  // 300s
+
+  300: 'Multiple Choices',
+  301: 'Moved Permanently',
+  302: 'Found',
+  303: 'See Other',
+  304: 'Not Modified',
+  305: 'Use Proxy',
+  306: 'Switch Proxy',
+  307: 'Temporary Redirect',
+  308: 'Permanent Redirect',
+
+  // 400s
+
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  402: 'Payment Required',
+  403: 'Forbidden',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  406: 'Not Acceptable',
+  407: 'Proxy Authentication Required',
+  408: 'Request Timeout',
+  409: 'Conflict',
+  410: 'Gone',
+  411: 'Length Required',
+  412: 'Precondition Failed',
+  413: 'Payload Too Large',
+  414: 'URI Too Long',
+  415: 'Unsupported Media Type',
+  416: 'Range Not Satisfiable',
+  417: 'Expectation Failed',
+  418: "I'm a Teapot",
+  421: 'Misdirected Request',
+  422: 'Unprocessable Entity',
+  423: 'Locked',
+  424: 'Failed Dependency',
+  425: 'Too Early',
+  426: 'Upgrade Required',
+  428: 'Precondition Required',
+  429: 'Too Many Requests',
+  431: 'Request Header Fields Too Large',
+  451: 'Unavailable For Legal Reasons',
+
+  // 500s
+
+  500: 'Internal Server Error',
+  501: 'Not Implemented',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout',
+  505: 'HTTP Version Not Supported',
+  506: 'Variant Also Negotiates',
+  507: 'Insufficient Storage',
+  508: 'Loop Detected',
+  510: 'Not Extended',
+  511: 'Network Authentication Required',
 };

@@ -23,7 +23,7 @@ describe('migrate()', () => {
     const newModel = await models.initModel(models.response.type, initialModel);
     const expectedBodyPath = path.join(
       getDataDirectory(),
-      `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`,
+      'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip',
     );
     const storedBody = models.response.getBodyBuffer(newModel);
 
@@ -43,7 +43,7 @@ describe('migrate()', () => {
     jest.runAllTimers();
     const expectedBodyPath = path.join(
       getDataDirectory(),
-      `responses/fc3ff98e8c6a0d3087d515c0473f8677.zip`,
+      'responses/fc3ff98e8c6a0d3087d515c0473f8677.zip',
     );
     const storedBody = models.response.getBodyBuffer(newModel);
 
@@ -115,27 +115,33 @@ describe('migrate()', () => {
 
   it('migrates leaves bodyCompression for null', async () => {
     expect(
-      (await models.initModel(models.response.type, {
-        bodyPath: '/foo/bar',
-        bodyCompression: null,
-      })).bodyCompression,
+      (
+        await models.initModel(models.response.type, {
+          bodyPath: '/foo/bar',
+          bodyCompression: null,
+        })
+      ).bodyCompression,
     ).toBe(null);
   });
 
   it('migrates sets bodyCompression to zip if does not have one yet', async () => {
     expect(
-      (await models.initModel(models.response.type, {
-        bodyPath: '/foo/bar',
-      })).bodyCompression,
+      (
+        await models.initModel(models.response.type, {
+          bodyPath: '/foo/bar',
+        })
+      ).bodyCompression,
     ).toBe('zip');
   });
 
   it('migrates leaves bodyCompression if string', async () => {
     expect(
-      (await models.initModel(models.response.type, {
-        bodyPath: '/foo/bar',
-        bodyCompression: 'zip',
-      })).bodyCompression,
+      (
+        await models.initModel(models.response.type, {
+          bodyPath: '/foo/bar',
+          bodyCompression: 'zip',
+        })
+      ).bodyCompression,
     ).toBe('zip');
   });
 });
@@ -159,8 +165,8 @@ describe('cleanDeletedResponses()', function() {
 
   it('only deletes response files that are not in db', async function() {
     const responsesDir = path.join(getDataDirectory(), 'responses');
-    let dbResponseIds = await createModels(responsesDir, 10);
-    let notDbResponseIds = [];
+    const dbResponseIds = await createModels(responsesDir, 10);
+    const notDbResponseIds = [];
     for (let index = 100; index < 110; index++) {
       notDbResponseIds.push('res_' + index);
     }
@@ -192,7 +198,7 @@ async function createModels(responsesDir, count) {
     return [];
   }
 
-  let responseIds = [];
+  const responseIds = [];
 
   for (let index = 0; index < count; index++) {
     const workspaceId = 'wrk_' + index;

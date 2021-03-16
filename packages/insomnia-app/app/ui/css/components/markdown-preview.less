@@ -1,7 +1,3 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-@import '../constants/fonts';
-
 // .markdown-preview {
 // }
 
@@ -13,43 +9,43 @@
   }
 
   h1 {
-    font-size: @font-size-xxl;
+    font-size: var(--font-size-xxl);
     border-bottom: 1px solid var(--hl-sm);
     font-weight: bold;
   }
 
   h2 {
-    font-size: @font-size-xl;
+    font-size: var(--font-size-xl);
     border-bottom: 1px solid var(--hl-sm);
     font-weight: bold;
   }
 
   h3 {
-    font-size: @font-size-lg;
+    font-size: var(--font-size-lg);
     font-weight: bold;
   }
 
   h4 {
-    font-size: @font-size-md;
+    font-size: var(--font-size-md);
     font-weight: bold;
     opacity: 0.9;
   }
 
   h5 {
-    font-size: @font-size-sm;
+    font-size: var(--font-size-sm);
     font-weight: bold;
     opacity: 0.9;
   }
 
   h6 {
-    font-size: @font-size-sm;
+    font-size: var(--font-size-sm);
     font-weight: bold;
     opacity: 0.8;
   }
 
   & > * {
     line-height: 1.7em;
-    margin: @padding-sm 0 @padding-md 0;
+    margin: var(--padding-sm) 0 var(--padding-md) 0;
     padding: 0;
 
     &:first-child {
@@ -68,34 +64,34 @@
 
   blockquote {
     border-left: 0.4em solid var(--hl-md);
-    padding: @padding-xxs @padding-md;
+    padding: var(--padding-xxs) var(--padding-md);
 
     p {
-      margin: @padding-xs 0;
+      margin: var(--padding-xs) 0;
     }
   }
 
   *:not(pre) > code {
-    padding: @padding-xxs @padding-xs;
-    font-size: @font-size-sm;
-    line-height: @font-size-xs;
-    font-family: @font-monospace;
+    padding: var(--padding-xxs) var(--padding-xs);
+    font-size: var(--font-size-sm);
+    line-height: var(--font-size-xs);
+    font-family: var(--font-monospace);
   }
 
   code {
     background-color: var(--hl-xs);
     border: 1px solid var(--hl-sm);
-    border-radius: @radius-sm;
+    border-radius: var(--radius-sm);
   }
 
   pre > code {
-    padding: @padding-sm;
+    padding: var(--padding-sm);
     overflow-x: auto;
   }
 
   & > ul,
   & > ol {
-    padding-left: @padding-xs;
+    padding-left: var(--padding-xs);
   }
 
   & > ul {
@@ -116,18 +112,18 @@
 
   ul,
   ol {
-    margin-left: @padding-md;
+    margin-left: var(--padding-md);
   }
 
   table {
     width: 100%;
-    background: @hl-xxs;
+    background: var(--hl-xxs);
     border-spacing: 2px;
     border-collapse: collapse;
 
     td,
     th {
-      padding: @padding-xxs @padding-sm;
+      padding: var(--padding-xxs) var(--padding-sm);
     }
 
     th {
@@ -145,7 +141,7 @@
     }
 
     thead tr {
-      background: @hl-xxs;
+      background: var(--hl-xxs);
     }
   }
 

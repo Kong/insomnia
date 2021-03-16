@@ -1,4 +1,8 @@
 {
-  "version": "independent",
-  "packages": ["plugins/*", "packages/*"]
+  "tagVersionPrefix": "lib@",
+  "version": "2.2.21",
+  "packages": [
+    "packages/*",
+    "plugins/*"
+  ]
 }

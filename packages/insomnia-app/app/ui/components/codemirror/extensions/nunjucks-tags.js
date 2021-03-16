@@ -256,8 +256,11 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
 
       if (tagDefinition) {
         // Try rendering these so we can show errors if needed
+        const liveDisplayName = tagDefinition.liveDisplayName(tagData.args);
         const firstArg = tagDefinition.args[0];
-        if (firstArg && firstArg.type === 'enum') {
+        if (liveDisplayName) {
+          innerHTML = liveDisplayName;
+        } else if (firstArg && firstArg.type === 'enum') {
           const argData = tagData.args[0];
           const foundOption = firstArg.options.find(d => d.value === argData.value);
           const option = foundOption || firstArg.options[0];
@@ -265,7 +268,8 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
         } else {
           innerHTML = tagDefinition.displayName || tagData.name;
         }
-        title = await render(text);
+        const preview = await render(text);
+        title = tagDefinition.disablePreview(tagData.args) ? preview.replace(/./g, '*') : preview;
       } else {
         innerHTML = cleanedStr;
         title = 'Unrecognized tag';

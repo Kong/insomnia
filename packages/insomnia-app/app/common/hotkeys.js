@@ -1,6 +1,7 @@
 // @flow
 import { keyboardKeys } from './keyboard-keys';
 import { ALT_SYM, CTRL_SYM, isMac, META_SYM, SHIFT_SYM } from './constants';
+import AppContext from './strings';
 
 /**
  * The readable definition of a hotkey.
@@ -84,8 +85,11 @@ function keyBinds(
  * The collection of available hotkeys' and their definitions.
  */
 // Not using dot, because NeDB prohibits field names to contain dots.
-export const hotKeyRefs = {
-  WORKSPACE_SHOW_SETTINGS: defineHotKey('workspace_showSettings', 'Show Workspace Settings'),
+export const hotKeyRefs: { [string]: HotKeyDefinition } = {
+  WORKSPACE_SHOW_SETTINGS: defineHotKey(
+    'workspace_showSettings',
+    `Show ${AppContext.workspace} Settings`,
+  ),
 
   REQUEST_SHOW_SETTINGS: defineHotKey('request_showSettings', 'Show Request Settings'),
 
@@ -135,6 +139,8 @@ export const hotKeyRefs = {
 
   SIDEBAR_FOCUS_FILTER: defineHotKey('sidebar_focusFilter', 'Filter Sidebar'),
 
+  SIDEBAR_TOGGLE: defineHotKey('sidebar_toggle', 'Toggle Sidebar'),
+
   RESPONSE_FOCUS: defineHotKey('response_focus', 'Focus Response'),
 
   SHOW_COOKIES_EDITOR: defineHotKey('showCookiesEditor', 'Edit Cookies'),
@@ -156,6 +162,13 @@ export const hotKeyRefs = {
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
 
   ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
+
+  // Designer-specific
+  SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
+  SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
+  SHOW_MONITOR: defineHotKey('activity_monitor', 'Show Monitor Activity'),
+  SHOW_HOME: defineHotKey('activity_home', 'Show Home Activity'),
+  FILTER_DOCUMENTS: defineHotKey('documents_filter', 'Focus Documents Filter'),
 };
 
 /**
@@ -265,6 +278,11 @@ const defaultRegistry: HotKeyRegistry = {
     keyComb(true, false, true, false, keyboardKeys.f.keyCode),
   ),
 
+  [hotKeyRefs.SIDEBAR_TOGGLE.id]: keyBinds(
+    keyComb(false, false, false, true, keyboardKeys.backslash.keyCode),
+    keyComb(true, false, false, false, keyboardKeys.backslash.keyCode),
+  ),
+
   [hotKeyRefs.RESPONSE_FOCUS.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.singlequote.keyCode),
     keyComb(true, false, false, false, keyboardKeys.singlequote.keyCode),
@@ -319,10 +337,35 @@ const defaultRegistry: HotKeyRegistry = {
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
   ),
+
+  [hotKeyRefs.SHOW_SPEC_EDITOR.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.s.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.s.keyCode),
+  ),
+
+  [hotKeyRefs.SHOW_TEST.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.t.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.t.keyCode),
+  ),
+
+  [hotKeyRefs.SHOW_MONITOR.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.m.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.m.keyCode),
+  ),
+
+  [hotKeyRefs.SHOW_HOME.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.h.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.h.keyCode),
+  ),
+
+  [hotKeyRefs.FILTER_DOCUMENTS.id]: keyBinds(
+    keyComb(false, false, false, true, keyboardKeys.f.keyCode),
+    keyComb(true, false, false, false, keyboardKeys.f.keyCode),
+  ),
 };
 
 function copyKeyCombs(sources: Array<KeyCombination>): Array<KeyCombination> {
-  let targets: Array<KeyCombination> = [];
+  const targets: Array<KeyCombination> = [];
   sources.forEach(keyComb => {
     targets.push(Object.assign({}, keyComb));
   });
@@ -347,7 +390,7 @@ export function newDefaultKeyBindings(hotKeyRefId: string): KeyBindings {
  * @returns {HotKeyRegistry}
  */
 export function newDefaultRegistry(): HotKeyRegistry {
-  let newDefaults: HotKeyRegistry = {};
+  const newDefaults: HotKeyRegistry = {};
   for (const refId in defaultRegistry) {
     if (!defaultRegistry.hasOwnProperty(refId)) {
       continue;

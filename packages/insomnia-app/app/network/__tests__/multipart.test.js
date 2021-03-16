@@ -34,10 +34,11 @@ describe('buildMultipart()', () => {
     const { filePath, boundary, contentLength } = await buildMultipart([
       { name: 'foo', value: 'bar' },
       { name: 'json', value: '{"hello": "world"}', multiline: 'application/json' },
+      { name: 'text', value: 'text', multiline: true },
     ]);
 
     expect(boundary).toBe(DEFAULT_BOUNDARY);
-    expect(contentLength).toBe(221);
+    expect(contentLength).toBe(297);
     expect(fs.readFileSync(filePath, 'utf8')).toBe(
       [
         `--${boundary}`,
@@ -49,6 +50,10 @@ describe('buildMultipart()', () => {
         'Content-Type: application/json',
         '',
         '{"hello": "world"}',
+        `--${boundary}`,
+        'Content-Disposition: form-data; name="text"',
+        '',
+        'text',
         `--${boundary}--`,
         '',
       ].join('\r\n'),

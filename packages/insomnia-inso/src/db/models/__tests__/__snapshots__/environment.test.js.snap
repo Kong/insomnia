@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Environment promptEnvironment() should match snapshot of autocomplete config 1`] = `
+Object {
+  "choices": Array [
+    Object {
+      "hint": "env_env_123456",
+      "message": "sub env",
+      "name": "env_env_123456",
+      "value": "sub env - env_env_123456",
+    },
+    Object {
+      "hint": "env_env_dummy",
+      "message": "dummy sub env",
+      "name": "env_env_dummy",
+      "value": "dummy sub env - env_env_dummy",
+    },
+  ],
+  "message": "Select an environment",
+  "name": "environment",
+}
+`;

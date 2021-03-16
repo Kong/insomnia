@@ -110,7 +110,8 @@ class WorkspaceShareSettingsModal extends PureComponent {
     this.modal.hide();
   }
 
-  componentWillMount() {
+  // eslint-disable-next-line camelcase
+  UNSAFE_componentWillMount() {
     this._resetState();
   }
 

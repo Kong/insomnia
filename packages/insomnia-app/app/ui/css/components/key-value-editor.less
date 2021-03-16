@@ -1,8 +1,5 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-
 .key-value-editor {
-  padding: @padding-md 0;
+  padding: var(--padding-md) 0;
 
   // This is the actual row
   .key-value-editor__row-wrapper {
@@ -11,7 +8,7 @@
     align-items: center;
     flex-direction: row;
     width: 100%;
-    padding-bottom: @padding-sm;
+    padding-bottom: var(--padding-sm);
     box-sizing: border-box;
 
     &.key-value-editor__row-wrapper--dragging {
@@ -28,8 +25,8 @@
       right: 0;
       left: 0;
       border-bottom: 2px dotted var(--color-surprise);
-      content: " ";
-      display: block
+      content: ' ';
+      display: block;
     }
 
     // So the line appears on the next row
@@ -49,14 +46,15 @@
   }
 
   .key-value-editor__drag {
-    width: @line-height-sm;
-    min-width: @line-height-sm;
+    width: var(--line-height-sm);
+    min-width: var(--line-height-sm);
     text-align: center;
     box-sizing: border-box;
     overflow: hidden;
 
     // Remove hover effect
-    &, &:hover {
+    &,
+    &:hover {
       color: var(--hl);
     }
   }
@@ -67,12 +65,13 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    padding: 0 @padding-sm 0 0;
+    padding: 0 var(--padding-sm) 0 0;
     box-sizing: border-box;
 
     // Pad the first form if there's no drag handle before it
-    &:first-child, &:first-child .form-control {
-      padding-left: @padding-md;
+    &:first-child,
+    &:first-child .form-control {
+      padding-left: var(--padding-md);
     }
 
     .form-control {
@@ -83,17 +82,18 @@
       }
     }
 
-    input, .input {
+    input,
+    .input {
       margin: 0;
     }
 
     & > * {
-      padding: 0 @padding-xs;
+      padding: 0 var(--padding-xs);
     }
 
     & > button,
     .dropdown > button {
-      color: @hl;
+      color: var(--hl);
       margin: 0;
 
       &:hover,

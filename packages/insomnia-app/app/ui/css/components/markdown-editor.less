@@ -1,13 +1,9 @@
-@import '../constants/dimensions';
-@import '../constants/colors';
-@import '../constants/fonts';
-
 .markdown-editor {
   border: 1px solid var(--hl-md);
   box-sizing: border-box;
 
   .markdown-editor__edit {
-    padding: @padding-xs @padding-sm;
+    padding: var(--padding-xs) var(--padding-sm);
   }
 
   &.markdown-editor--dynamic-height {
@@ -33,7 +29,7 @@
 
   .markdown-editor__preview {
     max-height: 35vh;
-    padding: @padding-sm;
+    padding: var(--padding-sm);
     overflow: auto;
   }
 }

@@ -1,18 +1,15 @@
-@import '../constants/colors';
-@import '../constants/dimensions';
-
 ::-webkit-scrollbar {
-  width: @scrollbar-width;
-  height: @scrollbar-width;
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
 }
 
 ::-webkit-scrollbar-track {
-  background-color: @hl-xs;
+  background-color: var(--hl-xs);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: @hl-md;
-  border-radius: @padding-sm;
+  background: var(--hl-md);
+  border-radius: var(--padding-sm);
 }
 
 ::-webkit-scrollbar-corner {

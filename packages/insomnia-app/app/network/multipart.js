@@ -22,14 +22,17 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
         } catch (err) {
           reject(err);
         }
+
         const stream = fs.createReadStream(path);
         stream.once('end', () => {
           resolve();
         });
-        stream.pipe(
-          writeStream,
-          { end: false },
-        );
+
+        stream.once('error', err => {
+          reject(err);
+        });
+
+        stream.pipe(writeStream, { end: false });
         totalSize += size;
       });
     }
@@ -75,7 +78,7 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
         const contentType = param.multiline;
         addString(`Content-Disposition: form-data; name="${name}"`);
         addString(lineBreak);
-        if (contentType) {
+        if (typeof contentType === 'string') {
           addString(`Content-Type: ${contentType}`);
           addString(lineBreak);
         }
@@ -89,11 +92,11 @@ export async function buildMultipart(params: Array<RequestBodyParameter>) {
     addString(`--${DEFAULT_BOUNDARY}--`);
     addString(lineBreak);
 
-    writeStream.on('error', err => {
+    writeStream.once('error', err => {
       reject(err);
     });
 
-    writeStream.on('close', () => {
+    writeStream.once('close', () => {
       resolve({
         boundary: DEFAULT_BOUNDARY,
         filePath,

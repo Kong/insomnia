@@ -1,6 +1,7 @@
 import * as plugin from '../request';
 import * as models from '../../../models';
 import { globalBeforeEach } from '../../../__jest__/before-each';
+import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
 
 const CONTEXT = {
   user_key: 'my_user_key',
@@ -28,6 +29,7 @@ describe('init()', () => {
       'addHeader',
       'addParameter',
       'getAuthentication',
+      'getBody',
       'getBodyText',
       'getEnvironment',
       'getEnvironmentVariable',
@@ -44,6 +46,7 @@ describe('init()', () => {
       'removeHeader',
       'removeParameter',
       'setAuthenticationParameter',
+      'setBody',
       'setBodyText',
       'setCookie',
       'setHeader',
@@ -63,6 +66,7 @@ describe('init()', () => {
     expect(Object.keys(result)).toEqual(['request']);
     expect(Object.keys(result.request).sort()).toEqual([
       'getAuthentication',
+      'getBody',
       'getBodyText',
       'getEnvironment',
       'getEnvironmentVariable',
@@ -98,7 +102,10 @@ describe('request.*', () => {
         { name: 'hello', value: 'world' },
         { name: 'Content-Type', value: 'application/json' },
       ],
-      parameters: [{ name: 'foo', value: 'bar' }, { name: 'message', value: 'Hello World!' }],
+      parameters: [
+        { name: 'foo', value: 'bar' },
+        { name: 'message', value: 'Hello World!' },
+      ],
     });
   });
 
@@ -222,5 +229,21 @@ describe('request.*', () => {
     result.request.setAuthenticationParameter('foo', 'baz');
     expect(result.request.getAuthentication()).toEqual({ foo: 'baz' });
     expect(request.authentication).toEqual({ foo: 'baz' });
+  });
+
+  it('works for request body', async () => {
+    const result = plugin.init(await models.request.getById('req_1'), CONTEXT);
+    expect(result.request.getBody()).toEqual({ text: 'body' });
+    const newBody = {
+      mimeType: CONTENT_TYPE_FORM_URLENCODED,
+      params: [
+        {
+          name: 'foo',
+          value: 'bar',
+        },
+      ],
+    };
+    result.request.setBody(newBody);
+    expect(result.request.getBody()).toEqual(newBody);
   });
 });

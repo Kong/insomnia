@@ -1,4 +1,4 @@
-import { getAuthHeader } from '../authentication';
+import { _buildBearerHeader, getAuthHeader } from '../authentication';
 import { AUTH_OAUTH_1 } from '../../common/constants';
 
 describe('OAuth 1.0', () => {
@@ -101,5 +101,22 @@ describe('OAuth 1.0', () => {
         ].join(', '),
       ),
     );
+  });
+});
+
+describe('_buildBearerHeader()', () => {
+  it('uses default prefix', () => {
+    const result = _buildBearerHeader('token', '');
+    expect(result).toEqual({ name: 'Authorization', value: 'Bearer token' });
+  });
+
+  it('uses specified prefix', () => {
+    const result = _buildBearerHeader('token', 'custom');
+    expect(result).toEqual({ name: 'Authorization', value: 'custom token' });
+  });
+
+  it('uses no prefix', () => {
+    const result = _buildBearerHeader('token', 'NO_PREFIX');
+    expect(result).toEqual({ name: 'Authorization', value: 'token' });
   });
 });

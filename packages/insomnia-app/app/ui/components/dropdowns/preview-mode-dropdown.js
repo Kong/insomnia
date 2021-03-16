@@ -1,16 +1,35 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// @flow
+import * as React from 'react';
 import autobind from 'autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
 
+type Props = {|
+  download: (pretty: boolean) => any,
+  fullDownload: (pretty: boolean) => any,
+  updatePreviewMode: string => any,
+  previewMode: string,
+  showPrettifyOption?: boolean,
+|};
+
 @autobind
-class PreviewModeDropdown extends PureComponent {
-  _handleClick(previewMode) {
-    this.props.updatePreviewMode(previewMode);
+class PreviewModeDropdown extends React.PureComponent<Props> {
+  async _handleClick(previewMode: string) {
+    const { updatePreviewMode } = this.props;
+    await updatePreviewMode(previewMode);
   }
 
-  renderPreviewMode(mode) {
+  async _handleDownloadPrettify() {
+    const { download } = this.props;
+    download(true);
+  }
+
+  async _handleDownloadNormal() {
+    const { download } = this.props;
+    download(false);
+  }
+
+  renderPreviewMode(mode: string) {
     const { previewMode } = this.props;
     return (
       <DropdownItem key={mode} onClick={this._handleClick} value={mode}>
@@ -21,7 +40,8 @@ class PreviewModeDropdown extends PureComponent {
   }
 
   render() {
-    const { download, fullDownload, previewMode } = this.props;
+    const { fullDownload, previewMode, showPrettifyOption } = this.props;
+
     return (
       <Dropdown beside>
         <DropdownButton className="tall">
@@ -31,27 +51,23 @@ class PreviewModeDropdown extends PureComponent {
         <DropdownDivider>Preview Mode</DropdownDivider>
         {PREVIEW_MODES.map(this.renderPreviewMode)}
         <DropdownDivider>Actions</DropdownDivider>
-        <DropdownItem onClick={download}>
+        <DropdownItem onClick={this._handleDownloadNormal}>
           <i className="fa fa-save" />
-          Save Response Body
+          Save Raw Response
         </DropdownItem>
+        {showPrettifyOption && (
+          <DropdownItem onClick={this._handleDownloadPrettify}>
+            <i className="fa fa-save" />
+            Save Prettified Response
+          </DropdownItem>
+        )}
         <DropdownItem onClick={fullDownload}>
-          <i className="fa fa-save" />
-          Save Full Response
+          <i className="fa fa-bug" />
+          Save HTTP Debug
         </DropdownItem>
       </Dropdown>
     );
   }
 }
-
-PreviewModeDropdown.propTypes = {
-  // Functions
-  updatePreviewMode: PropTypes.func.isRequired,
-  download: PropTypes.func.isRequired,
-  fullDownload: PropTypes.func.isRequired,
-
-  // Required
-  previewMode: PropTypes.string.isRequired,
-};
 
 export default PreviewModeDropdown;

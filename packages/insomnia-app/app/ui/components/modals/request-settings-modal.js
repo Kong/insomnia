@@ -119,17 +119,17 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
 
   async _handleMoveToWorkspace() {
     const { activeWorkspaceIdToCopyTo, request } = this.state;
-    if (!request) {
+    if (!request || !activeWorkspaceIdToCopyTo) {
       return;
     }
 
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
+    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
     if (!workspace) {
       return;
     }
 
     await models.request.update(request, {
-      sortKey: -1e9, // Move to top of sort order
+      metaSortKey: -1e9, // Move to top of sort order
       parentId: activeWorkspaceIdToCopyTo,
     });
 
@@ -141,18 +141,18 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
 
   async _handleCopyToWorkspace() {
     const { activeWorkspaceIdToCopyTo, request } = this.state;
-    if (!request) {
+    if (!request || !activeWorkspaceIdToCopyTo) {
       return;
     }
 
-    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo || 'n/a');
+    const workspace = await models.workspace.getById(activeWorkspaceIdToCopyTo);
     if (!workspace) {
       return;
     }
 
     const newRequest = await models.request.duplicate(request);
     await models.request.update(newRequest, {
-      sortKey: -1e9, // Move to top of sort order
+      metaSortKey: -1e9, // Move to top of sort order
       name: request.name, // Because duplicate will add (Copy) suffix
       parentId: activeWorkspaceIdToCopyTo,
     });
@@ -245,7 +245,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
             <DebouncedInput
               delay={500}
               type="text"
-              placeholder="My Request"
+              placeholder={request.url || 'My Request'}
               defaultValue={request.name}
               onChange={this._handleNameChange}
             />

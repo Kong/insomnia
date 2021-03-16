@@ -17,10 +17,10 @@ const PLUGIN = {
 describe('init()', () => {
   beforeEach(globalBeforeEach);
   it('initializes correctly', async () => {
-    const result = plugin.init({ name: PLUGIN });
-    expect(Object.keys(result)).toEqual(['import', 'export']);
-    expect(Object.keys(result.export).sort()).toEqual(['har', 'insomnia']);
-    expect(Object.keys(result.import).sort()).toEqual(['raw', 'uri']);
+    const { data } = plugin.init({ name: PLUGIN });
+    expect(Object.keys(data)).toEqual(['import', 'export']);
+    expect(Object.keys(data.export).sort()).toEqual(['har', 'insomnia']);
+    expect(Object.keys(data.import).sort()).toEqual(['raw', 'uri']);
   });
 });
 
@@ -39,9 +39,9 @@ describe('app.import.*', () => {
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
     expect(await db.count(models.request.type)).toBe(0);
 
-    const result = plugin.init(PLUGIN);
+    const { data } = plugin.init(PLUGIN);
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
-    await result.import.uri(`file://${filename}`);
+    await data.import.uri(`file://${filename}`);
 
     const allWorkspaces = await db.all(models.workspace.type);
     expect(allWorkspaces).toEqual([
@@ -54,6 +54,7 @@ describe('app.import.*', () => {
         name: 'New',
         parentId: null,
         type: 'Workspace',
+        scope: null,
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -89,9 +90,9 @@ describe('app.import.*', () => {
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
     expect(await db.count(models.request.type)).toBe(0);
 
-    const result = plugin.init(PLUGIN);
+    const { data } = plugin.init(PLUGIN);
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
-    await result.import.raw(fs.readFileSync(filename, 'utf8'));
+    await data.import.raw(fs.readFileSync(filename, 'utf8'));
 
     const allWorkspaces = await db.all(models.workspace.type);
     expect(allWorkspaces).toEqual([
@@ -104,6 +105,7 @@ describe('app.import.*', () => {
         name: 'New',
         parentId: null,
         type: 'Workspace',
+        scope: null,
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -161,8 +163,8 @@ describe('app.export.*', () => {
   it('insomnia', async () => {
     modals.showModal = jest.fn();
 
-    const result = plugin.init(PLUGIN);
-    const exported = await result.export.insomnia();
+    const { data } = plugin.init(PLUGIN);
+    const exported = await data.export.insomnia();
     const exportedData = JSON.parse(exported);
     expect(typeof exportedData.__export_date).toBe('string');
     exportedData.__export_date = '2017-11-24T18:09:18.480Z';
@@ -180,6 +182,7 @@ describe('app.export.*', () => {
           modified: 222,
           name: 'New Workspace',
           parentId: null,
+          scope: null,
         },
         {
           _id: 'req_1',
@@ -211,8 +214,8 @@ describe('app.export.*', () => {
   it('har', async () => {
     modals.showModal = jest.fn();
 
-    const result = plugin.init(PLUGIN);
-    const exported = await result.export.har();
+    const { data } = plugin.init(PLUGIN);
+    const exported = await data.export.har();
     const exportedData = JSON.parse(exported);
     exportedData.log.entries[0].startedDateTime = '2017-11-24T18:12:12.849Z';
     expect(exportedData).toEqual({

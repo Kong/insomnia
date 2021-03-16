@@ -5,17 +5,19 @@ import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
-import uuid from 'uuid';
-import { getDataDirectory } from './misc';
+import * as uuid from 'uuid';
+import { generateId, getDataDirectory } from './misc';
+import { mustGetModel } from '../models';
+import type { Workspace } from '../models/workspace';
 
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
 export const CHANGE_REMOVE = 'remove';
 
 const database = {};
-const db = {
+const db = ({
   _empty: true,
-};
+}: Object);
 
 // ~~~~~~~ //
 // HELPERS //
@@ -39,7 +41,12 @@ export async function initClient() {
   console.log('[db] Initialized DB client');
 }
 
-export async function init(types: Array<string>, config: Object = {}, forceReset: boolean = false) {
+export async function init(
+  types: Array<string>,
+  config: Object = {},
+  forceReset: boolean = false,
+  consoleLog: () => void = console.log,
+) {
   if (forceReset) {
     changeListeners = [];
     for (const attr of Object.keys(db)) {
@@ -54,7 +61,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
   // Fill in the defaults
   for (const modelType of types) {
     if (db[modelType]) {
-      console.log(`[db] Already initialized DB.${modelType}`);
+      consoleLog(`[db] Already initialized DB.${modelType}`);
       continue;
     }
 
@@ -94,7 +101,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
   }
 
   if (!config.inMemoryOnly) {
-    console.log(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
+    consoleLog(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
   }
 
   // This isn't the best place for this but w/e
@@ -109,25 +116,25 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
 
       if (type === CHANGE_REMOVE && typeof m.hookRemove === 'function') {
         try {
-          await m.hookRemove(doc);
+          await m.hookRemove(doc, consoleLog);
         } catch (err) {
-          console.log(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
+          consoleLog(`[db] Delete hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
 
       if (type === CHANGE_INSERT && typeof m.hookInsert === 'function') {
         try {
-          await m.hookInsert(doc);
+          await m.hookInsert(doc, consoleLog);
         } catch (err) {
-          console.log(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
+          consoleLog(`[db] Insert hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
 
       if (type === CHANGE_UPDATE && typeof m.hookUpdate === 'function') {
         try {
-          await m.hookUpdate(doc);
+          await m.hookUpdate(doc, consoleLog);
         } catch (err) {
-          console.log(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
+          consoleLog(`[db] Update hook failed for ${type} ${doc._id}: ${err.message}`);
         }
       }
     }
@@ -135,7 +142,7 @@ export async function init(types: Array<string>, config: Object = {}, forceReset
 
   for (const model of models.all()) {
     if (typeof model.hookDatabaseInit === 'function') {
-      await model.hookDatabaseInit();
+      await model.hookDatabaseInit(consoleLog);
     }
   }
 }
@@ -169,13 +176,18 @@ export const bufferChanges = (database.bufferChanges = async function(
   return ++bufferChangesId;
 });
 
-export const flushChangesAsync = (database.flushChangesAsync = async function() {
+export const flushChangesAsync = (database.flushChangesAsync = async function(
+  fake: boolean = false,
+) {
   process.nextTick(async () => {
-    await flushChanges();
+    await flushChanges(0, fake);
   });
 });
 
-export const flushChanges = (database.flushChanges = async function(id: number = 0) {
+export const flushChanges = (database.flushChanges = async function(
+  id: number = 0,
+  fake: boolean = false,
+) {
   if (db._empty) return _send('flushChanges', ...arguments);
 
   // Only flush if ID is 0 or the current flush ID is the same as passed
@@ -189,6 +201,11 @@ export const flushChanges = (database.flushChanges = async function(id: number =
 
   if (changes.length === 0) {
     // No work to do
+    return;
+  }
+
+  if (fake) {
+    console.log(`[db] Dropped ${changes.length} changes.`);
     return;
   }
 
@@ -346,13 +363,18 @@ export const upsert = (database.upsert = async function(
 export const insert = (database.insert = async function<T: BaseModel>(
   doc: T,
   fromSync: boolean = false,
+  initializeModel: boolean = true,
 ): Promise<T> {
   if (db._empty) return _send('insert', ...arguments);
 
   return new Promise(async (resolve, reject) => {
     let docWithDefaults;
     try {
-      docWithDefaults = await models.initModel(doc.type, doc);
+      if (initializeModel) {
+        docWithDefaults = await models.initModel(doc.type, doc);
+      } else {
+        docWithDefaults = doc;
+      }
     } catch (err) {
       return reject(err);
     }
@@ -483,6 +505,7 @@ export async function docUpdate<T: BaseModel>(
   originalDoc: T,
   ...patches: Array<Object>
 ): Promise<T> {
+  // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
   const doc = await models.initModel(
     originalDoc.type,
     originalDoc,
@@ -566,7 +589,7 @@ export const withAncestors = (database.withAncestors = async function(
   let docsToReturn = doc ? [doc] : [];
 
   async function next(docs: Array<BaseModel>): Promise<Array<BaseModel>> {
-    let foundDocs = [];
+    const foundDocs = [];
     for (const d: BaseModel of docs) {
       for (const type of types) {
         // If the doc is null, we want to search for parentId === null
@@ -597,13 +620,20 @@ export const duplicate = (database.duplicate = async function<T: BaseModel>(
   const flushId = await database.bufferChanges();
 
   async function next<T: BaseModel>(docToCopy: T, patch: Object): Promise<T> {
-    // 1. Copy the doc
-    const newDoc = Object.assign({}, docToCopy, patch);
-    delete newDoc._id;
-    delete newDoc.created;
-    delete newDoc.modified;
+    const model = mustGetModel(docToCopy.type);
 
-    const createdDoc = await docCreate(newDoc.type, newDoc);
+    const overrides = {
+      _id: generateId(model.prefix),
+      modified: Date.now(),
+      created: Date.now(),
+      type: docToCopy.type, // Ensure this is not overwritten by the patch
+    };
+
+    // 1. Copy the doc
+    const newDoc = Object.assign({}, docToCopy, patch, overrides);
+
+    // Don't initialize the model during insert, and simply duplicate
+    const createdDoc = await database.insert(newDoc, false, false);
 
     // 2. Get all the children
     for (const type of allTypes()) {
@@ -651,10 +681,24 @@ async function _send<T>(fnName: string, ...args: Array<any>): Promise<T> {
  * Run various database repair scripts
  */
 export async function _repairDatabase() {
-  console.log(`[fix] Running database repairs`);
+  console.log('[fix] Running database repairs');
   for (const workspace of await find(models.workspace.type)) {
     await _repairBaseEnvironments(workspace);
     await _fixMultipleCookieJars(workspace);
+    await _applyApiSpecName(workspace);
+  }
+}
+
+/**
+ * This function ensures that apiSpec exists for each workspace
+ * If the filename on the apiSpec is not set or is the default initialized name
+ * It will apply the workspace name to it
+ */
+async function _applyApiSpecName(workspace: Workspace) {
+  const apiSpec = await models.apiSpec.getByParentId(workspace._id);
+
+  if (!apiSpec.fileName || apiSpec.fileName === models.apiSpec.init().fileName) {
+    await models.apiSpec.update(apiSpec, { fileName: workspace.name });
   }
 }
 

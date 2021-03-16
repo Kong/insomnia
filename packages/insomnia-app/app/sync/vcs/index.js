@@ -559,7 +559,7 @@ export default class VCS {
     }
 
     // Fetch snapshots and blobs from remote branch
-    let snapshotsToFetch: Array<string> = [];
+    const snapshotsToFetch: Array<string> = [];
     for (const snapshotId of remoteBranch.snapshots) {
       const localSnapshot = await this._getSnapshot(snapshotId);
       if (!localSnapshot) {

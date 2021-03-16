@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { clipboard } from 'electron';
 import PropTypes from 'prop-types';
 import autobind from 'autobind-decorator';
+import { Button } from 'insomnia-components';
 
 @autobind
 class CopyButton extends PureComponent {
@@ -47,7 +48,7 @@ class CopyButton extends PureComponent {
     const confirm = typeof confirmMessage === 'string' ? confirmMessage : 'Copied';
 
     return (
-      <button {...other} title={title} onClick={this._handleClick}>
+      <Button {...other} title={title} onClick={this._handleClick}>
         {showConfirmation ? (
           <span>
             {confirm} <i className="fa fa-check-circle-o" />
@@ -55,7 +56,7 @@ class CopyButton extends PureComponent {
         ) : (
           children || 'Copy to Clipboard'
         )}
-      </button>
+      </Button>
     );
   }
 }

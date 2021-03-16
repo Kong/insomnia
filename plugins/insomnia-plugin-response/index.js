@@ -2,6 +2,10 @@ const jq = require('jsonpath');
 const iconv = require('iconv-lite');
 const { query: queryXPath } = require('insomnia-xpath');
 
+function isFilterableField(field) {
+  return field !== 'raw' && field !== 'url';
+}
+
 module.exports.templateTags = [
   {
     name: 'response',
@@ -27,6 +31,11 @@ module.exports.templateTags = [
             description: 'value of response header',
             value: 'header',
           },
+          {
+            displayName: 'Request URL',
+            description: 'Url of initiating request',
+            value: 'url',
+          },
         ],
       },
       {
@@ -37,7 +46,7 @@ module.exports.templateTags = [
       {
         type: 'string',
         encoding: 'base64',
-        hide: args => args[0].value === 'raw',
+        hide: args => !isFilterableField(args[0].value),
         displayName: args => {
           switch (args[0].value) {
             case 'body':
@@ -65,19 +74,31 @@ module.exports.templateTags = [
             value: 'no-history',
           },
           {
+            displayName: 'When Expired',
+            description: 'resend when existing response has expired',
+            value: 'when-expired',
+          },
+          {
             displayName: 'Always',
             description: 'resend request when needed',
             value: 'always',
           },
         ],
       },
+      {
+        displayName: 'Max age (seconds)',
+        help: 'The maximum age of a response to use before it expires',
+        type: 'number',
+        hide: args => args[3].value !== 'when-expired',
+        defaultValue: 60,
+      },
     ],
 
-    async run(context, field, id, filter, resendBehavior) {
+    async run(context, field, id, filter, resendBehavior, maxAgeSeconds) {
       filter = filter || '';
       resendBehavior = (resendBehavior || 'never').toLowerCase();
 
-      if (!['body', 'header', 'raw'].includes(field)) {
+      if (!['body', 'header', 'raw', 'url'].includes(field)) {
         throw new Error(`Invalid response field ${field}`);
       }
 
@@ -90,7 +111,8 @@ module.exports.templateTags = [
         throw new Error(`Could not find request ${id}`);
       }
 
-      let response = await context.util.models.response.getLatestForRequestId(id);
+      const environmentId = context.context.getEnvironmentId();
+      let response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
       let shouldResend = false;
       if (context.context.getExtraInfo('fromResponseTag')) {
@@ -99,6 +121,13 @@ module.exports.templateTags = [
         shouldResend = false;
       } else if (resendBehavior === 'no-history') {
         shouldResend = !response;
+      } else if (resendBehavior === 'when-expired') {
+        if (!response) {
+          shouldResend = true;
+        } else {
+          const ageSeconds = (Date.now() - response.created) / 1000;
+          shouldResend = ageSeconds > maxAgeSeconds;
+        }
       } else if (resendBehavior === 'always') {
         shouldResend = true;
       }
@@ -132,7 +161,7 @@ module.exports.templateTags = [
         throw new Error('No successful responses for request');
       }
 
-      if (field !== 'raw' && !filter) {
+      if (isFilterableField(field) && !filter) {
         throw new Error(`No ${field} filter specified`);
       }
 
@@ -140,6 +169,8 @@ module.exports.templateTags = [
 
       if (field === 'header') {
         return matchHeader(response.headers, sanitizedFilter);
+      } else if (field === 'url') {
+        return response.url;
       } else if (field === 'raw') {
         const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
         const match = response.contentType.match(/charset=([\w-]+)/);
@@ -221,7 +252,7 @@ function matchXPath(bodyStr, query) {
 
 function matchHeader(headers, name) {
   if (!headers.length) {
-    throw new Error(`No headers available`);
+    throw new Error('No headers available');
   }
 
   const header = headers.find(h => h.name.toLowerCase() === name.toLowerCase());

@@ -470,6 +470,45 @@ describe('Response tag', () => {
       );
     });
 
+    it('sends when behavior=when-expired and no responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 60)).toBe('Response res_1');
+    });
+
+    it('sends when behavior=when-expired and response is old', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          created: Date.now() - 60000,
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 30)).toBe('Response res_2');
+    });
+
+    it('does not send when behavior=when-expired and response is new', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          _id: 'res_existing',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'text/plain',
+          _body: 'Response res_existing',
+          created: Date.now() - 60000,
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 90)).toBe(
+        'Response res_existing',
+      );
+    });
+
     it('does not send when behavior=never and no responses', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
       const responses = [];
@@ -533,6 +572,9 @@ function _genTestContext(requests, responses, extraInfoRoot) {
   return {
     renderPurpose: 'send',
     context: {
+      getEnvironmentId() {
+        return null;
+      },
       getExtraInfo(key) {
         if (_extraInfo) {
           return _extraInfo[key] || null;
@@ -558,7 +600,7 @@ function _genTestContext(requests, responses, extraInfoRoot) {
       },
     },
     store: {
-      hasItem: key => store.hasOwnProperty(key),
+      hasItem: key => Object.prototype.hasOwnProperty.call(store, key),
       getItem: key => store[key],
       removeItem: key => {
         delete store[key];
@@ -575,7 +617,7 @@ function _genTestContext(requests, responses, extraInfoRoot) {
           },
         },
         response: {
-          getLatestForRequestId(requestId) {
+          getLatestForRequestId(requestId, environmentId) {
             return responses.find(r => r.parentId === requestId) || null;
           },
           getBodyBuffer(response) {

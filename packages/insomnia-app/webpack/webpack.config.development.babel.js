@@ -13,6 +13,18 @@ module.exports = {
     'webpack/hot/only-dev-server',
     ...baseConfig.entry,
   ],
+  module: {
+    ...baseConfig.module,
+    rules: [
+      ...baseConfig.module.rules,
+      {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+        include: [/insomnia-components/],
+      },
+    ],
+  },
   output: {
     ...baseConfig.output,
     publicPath: '/',
@@ -23,6 +35,9 @@ module.exports = {
     publicPath: '/',
     hot: true,
     disableHostCheck: true,
+
+    // This is needed for source-maps to resolve correctly
+    contentBase: '/',
   },
   plugins: [
     ...baseConfig.plugins,
