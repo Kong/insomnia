@@ -63,6 +63,7 @@ import { strings } from '../../common/strings';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import { descendingNumberSort } from '../../common/sorting';
 import { addDotGit, translateSSHtoHTTP } from '../../sync/git/utils';
+import { http } from '../../sync/git/http-plugin';
 
 type Props = {|
   wrapperProps: WrapperProps,

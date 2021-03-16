@@ -26,7 +26,7 @@ type GitCredentialsToken = {
   token: string,
 };
 
-const onAuth = ({ username, token }: GitCredentialsToken) => () => ({
+const onAuth = ({ username, token }: GitCredentialsToken = {}) => () => ({
   username,
   password: token,
 });
@@ -74,25 +74,24 @@ export type PushResponse = {
 // We should set this explicitly (even if set to an empty string), because we have other code (such as fs plugins
 // and unit tests) that depend on the clone directory.
 export const GIT_CLONE_DIR = '.';
-const _gitInternalDirName = 'git';
+const gitInternalDirName = 'git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
 
-export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, _gitInternalDirName);
+export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName);
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
 
 export class GitVCS {
-  _git: Object;
-  _baseOpts: {
+  baseOpts: {
     dir: string,
     gitdir?: string,
     fs: Object,
     http: Object,
   };
 
-  _initialized: boolean;
+  initialized: boolean;
 
   constructor() {
-    this._initialized = false;
+    this.initialized = false;
   }
 
   async init({
@@ -100,13 +99,11 @@ export class GitVCS {
     fs,
     gitDirectory,
   }: {
-    directory: string,
-    fs: Object,
-    gitDirectory: string,
+    directory?: string,
+    fs?: Object,
+    gitDirectory?: string,
   }) {
-    this._git = git;
-
-    this._baseOpts = {
+    this.baseOpts = {
       dir: directory,
       gitdir: gitDirectory,
       fs,
@@ -114,14 +111,14 @@ export class GitVCS {
       onMessage,
     };
 
-    if (await this._repoExists()) {
+    if (await this.repoExists()) {
       console.log(`[git] Opened repo for ${gitDirectory}`);
     } else {
       console.log(`[git] Initialized repo in ${gitDirectory}`);
-      await git.init({ ...this._baseOpts });
+      await git.init(this.baseOpts);
     }
 
-    this._initialized = true;
+    this.initialized = true;
   }
 
   async initFromClone({
@@ -137,9 +134,7 @@ export class GitVCS {
     fs: Object,
     gitDirectory: string,
   }) {
-    this._git = git;
-
-    this._baseOpts = {
+    this.baseOpts = {
       dir: directory,
       gitdir: gitDirectory,
       fs,
@@ -148,7 +143,7 @@ export class GitVCS {
     };
 
     const cloneParams = {
-      ...this._baseOpts,
+      ...this.baseOpts,
       onAuthFailure,
       onAuthSuccess,
       url,
@@ -167,21 +162,21 @@ export class GitVCS {
 
     console.log(`[git] Clones repo to ${gitDirectory} from ${url}`);
 
-    this._initialized = true;
+    this.initialized = true;
   }
 
   isInitialized(): boolean {
-    return this._initialized;
+    return this.initialized;
   }
 
   async listFiles(): Promise<Array<string>> {
     console.log('[git] List files');
-    const files = await git.listFiles({ ...this._baseOpts });
+    const files = await git.listFiles({ ...this.baseOpts });
     return files.map(convertToOsSep);
   }
 
   async getBranch(): Promise<string> {
-    const branch = await git.currentBranch({ ...this._baseOpts });
+    const branch = await git.currentBranch({ ...this.baseOpts });
     if (typeof branch !== 'string') {
       throw new Error('No active branch');
     }
@@ -191,26 +186,26 @@ export class GitVCS {
 
   async listBranches(): Promise<Array<string>> {
     const branch = await this.getBranch();
-    const branches = await git.listBranches({ ...this._baseOpts });
+    const branches = await git.listBranches({ ...this.baseOpts });
 
     // For some reason, master isn't in branches on fresh repo (no commits)
     if (!branches.includes(branch)) {
       branches.push(branch);
     }
 
-    return GitVCS._sortBranches(branches);
+    return GitVCS.sortBranches(branches);
   }
 
   async listRemoteBranches(): Promise<Array<string>> {
-    const branches = await git.listBranches({ ...this._baseOpts, remote: 'origin' });
+    const branches = await git.listBranches({ ...this.baseOpts, remote: 'origin' });
 
     // Don't care about returning remote HEAD
-    return GitVCS._sortBranches(branches.filter(b => b !== 'HEAD'));
+    return GitVCS.sortBranches(branches.filter(b => b !== 'HEAD'));
   }
 
   async status(filepath: string) {
     return git.status({
-      ...this._baseOpts,
+      ...this.baseOpts,
       filepath: convertToPosixSep(filepath),
     });
   }
@@ -219,7 +214,7 @@ export class GitVCS {
     relPath = convertToPosixSep(relPath);
     console.log(`[git] Add ${relPath}`);
     return git.add({
-      ...this._baseOpts,
+      ...this.baseOpts,
       filepath: relPath,
     });
   }
@@ -227,12 +222,12 @@ export class GitVCS {
   async remove(relPath: string): Promise<void> {
     relPath = convertToPosixSep(relPath);
     console.log(`[git] Remove relPath=${relPath}`);
-    return git.remove({ ...this._baseOpts, filepath: relPath });
+    return git.remove({ ...this.baseOpts, filepath: relPath });
   }
 
   async addRemote(url: string): Promise<GitRemoteConfig> {
     console.log(`[git] Add Remote url=${url}`);
-    await git.addRemote({ ...this._baseOpts, remote: 'origin', url, force: true });
+    await git.addRemote({ ...this.baseOpts, remote: 'origin', url, force: true });
     const config = await this.getRemote('origin');
 
     if (config === null) {
@@ -244,12 +239,12 @@ export class GitVCS {
   }
 
   async listRemotes(): Promise<Array<GitRemoteConfig>> {
-    return git.listRemotes({ ...this._baseOpts });
+    return git.listRemotes({ ...this.baseOpts });
   }
 
   async getAuthor(): Promise<GitAuthor> {
-    const name = await git.setConfig({ ...this._baseOpts, path: 'user.name' });
-    const email = await git.setConfig({ ...this._baseOpts, path: 'user.email' });
+    const name = await git.setConfig({ ...this.baseOpts, path: 'user.name' });
+    const email = await git.setConfig({ ...this.baseOpts, path: 'user.email' });
     return {
       name: name || '',
       email: email || '',
@@ -257,9 +252,9 @@ export class GitVCS {
   }
 
   async setAuthor(name: string, email: string): Promise<void> {
-    console.log({ ...this._baseOpts, name, email });
-    await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
-    await git.setConfig({ ...this._baseOpts, path: 'user.email', value: email });
+    console.log({ ...this.baseOpts, name, email });
+    await git.setConfig({ ...this.baseOpts, path: 'user.name', value: name });
+    await git.setConfig({ ...this.baseOpts, path: 'user.email', value: email });
   }
 
   async getRemote(name: string): Promise<GitRemoteConfig | null> {
@@ -270,7 +265,7 @@ export class GitVCS {
   async commit(message: string): Promise<string> {
     console.log(`[git] Commit "${message}"`);
     trackEvent('Git', 'Commit');
-    return git.commit({ ...this._baseOpts, message });
+    return git.commit({ ...this.baseOpts, message });
   }
 
   /**
@@ -290,7 +285,7 @@ export class GitVCS {
     }
 
     const remoteInfo = await git.getRemoteInfo({
-      ...this._baseOpts,
+      ...this.baseOpts,
       onAuth: onAuth(gitCredentials),
       onAuthFailure,
       onAuthSuccess,
@@ -316,7 +311,7 @@ export class GitVCS {
 
     // eslint-disable-next-line no-unreachable
     const response: PushResponse = await git.push({
-      ...this._baseOpts,
+      ...this.baseOpts,
       remote: 'origin',
       onAuth: onAuth(gitCredentials),
       onAuthFailure,
@@ -338,7 +333,7 @@ export class GitVCS {
     trackEvent('Git', 'Pull');
 
     return git.pull({
-      ...this._baseOpts,
+      ...this.baseOpts,
       onAuth: onAuth(gitCredentials),
       onAuthFailure,
       onAuthSuccess,
@@ -352,7 +347,7 @@ export class GitVCS {
     const ours = await this.getBranch();
     console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
     trackEvent('Git', 'Merge');
-    return git.merge({ ...this._baseOpts, ours, theirs: theirBranch });
+    return git.merge({ ...this.baseOpts, ours, theirs: theirBranch });
   }
 
   async fetch(
@@ -363,7 +358,7 @@ export class GitVCS {
     console.log('[git] Fetch remote=origin');
 
     return git.fetch({
-      ...this._baseOpts,
+      ...this.baseOpts,
       onAuth: onAuth(gitCredentials),
       onAuthFailure,
       onAuthSuccess,
@@ -376,34 +371,24 @@ export class GitVCS {
   }
 
   async log(depth?: number): Promise<Array<GitLogEntry>> {
-    let err = null;
-    let log = [];
-
     try {
-      log = await git.log({ ...this._baseOpts, depth });
-    } catch (e) {
-      err = e;
-    }
-
-    if (err && err.code === 'ResolveRefError') {
-      return [];
-    }
-
-    if (err) {
-      throw err;
-    } else {
-      return log;
+      return await git.log({ ...this.baseOpts, depth });
+    } catch (error) {
+      if (error.code === 'NotFoundError') {
+        return [];
+      }
+      throw error;
     }
   }
 
   async branch(branch: string, checkout: boolean = false): Promise<void> {
     trackEvent('Git', 'Create Branch');
-    await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
+    await git.branch({ ...this.baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 
   async deleteBranch(branch: string): Promise<void> {
     trackEvent('Git', 'Delete Branch');
-    await git.deleteBranch({ ...this._baseOpts, ref: branch });
+    await git.deleteBranch({ ...this.baseOpts, ref: branch });
   }
 
   async checkout(branch: string): Promise<void> {
@@ -412,7 +397,7 @@ export class GitVCS {
 
     if (branches.includes(branch)) {
       trackEvent('Git', 'Checkout Branch');
-      await git.fastCheckout({ ...this._baseOpts, ref: branch, remote: 'origin' });
+      await git.checkout({ ...this.baseOpts, ref: branch, remote: 'origin' });
     } else {
       await this.branch(branch, true);
     }
@@ -421,8 +406,8 @@ export class GitVCS {
   async undoPendingChanges(fileFilter?: Array<String>): Promise<void> {
     console.log('[git] Undo pending changes');
 
-    await git.fastCheckout({
-      ...this._baseOpts,
+    await git.checkout({
+      ...this.baseOpts,
       ref: await this.getBranch(),
       remote: 'origin',
       force: true,
@@ -433,7 +418,7 @@ export class GitVCS {
   async readObjFromTree(treeOid: string, objPath: string): Object | null {
     try {
       const obj = await git.readObject({
-        ...this._baseOpts,
+        ...this.baseOpts,
         oid: treeOid,
         filepath: convertToPosixSep(objPath),
         encoding: 'utf8',
@@ -445,9 +430,9 @@ export class GitVCS {
     }
   }
 
-  async _repoExists() {
+  async repoExists() {
     try {
-      await git.setConfig({ ...this._baseOpts, path: '' });
+      await git.setConfig({ ...this.baseOpts, path: '' });
     } catch (err) {
       return false;
     }
@@ -456,10 +441,10 @@ export class GitVCS {
   }
 
   getFs() {
-    return this._baseOpts.fs;
+    return this.baseOpts.fs;
   }
 
-  static _sortBranches(branches: Array<string>) {
+  static sortBranches(branches: Array<string>) {
     const newBranches = [...branches];
     newBranches.sort((a: string, b: string) => {
       if (a === 'master') {

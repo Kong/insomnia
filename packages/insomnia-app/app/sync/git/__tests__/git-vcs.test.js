@@ -20,7 +20,7 @@ describe('Git-VCS', () => {
       const fs = MemPlugin.createPlugin();
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       // No files exist yet
@@ -43,7 +43,7 @@ describe('Git-VCS', () => {
       await fs.promises.writeFile('/other.txt', 'other');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       expect(await vcs.status(barTxt)).toBe('*added');
@@ -58,12 +58,11 @@ describe('Git-VCS', () => {
       expect(await vcs.status(fooTxt)).toBe('*added');
     });
 
-    it('Returns empty log without first commit', async () => {
+    it.only('Returns empty log without first commit', async () => {
       const fs = MemPlugin.createPlugin();
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
-
       expect(await vcs.log()).toEqual([]);
     });
 
@@ -76,7 +75,7 @@ describe('Git-VCS', () => {
       await fs.promises.writeFile('other.txt', 'should be ignored');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
       await vcs.add(fooTxt);
       await vcs.commit('First commit!');
@@ -86,23 +85,31 @@ describe('Git-VCS', () => {
 
       expect(await vcs.log()).toEqual([
         {
-          author: {
-            email: 'karen@example.com',
-            name: 'Karen Brown',
-            timestamp: 1000000000,
-            timezoneOffset: 0,
+          commit: {
+            author: {
+              email: 'karen@example.com',
+              name: 'Karen Brown',
+              timestamp: 1000000000,
+              timezoneOffset: 0,
+            },
+            committer: {
+              email: 'karen@example.com',
+              name: 'Karen Brown',
+              timestamp: 1000000000,
+              timezoneOffset: 0,
+            },
+            message: 'First commit!\n',
+            parent: [],
+            tree: '14819d8019f05edb70a29850deb09a4314ad0afc',
           },
-          committer: {
-            email: 'karen@example.com',
-            name: 'Karen Brown',
-            timestamp: 1000000000,
-            timezoneOffset: 0,
-          },
-          message: 'First commit!\n',
           oid: '76f804a23eef9f52017bf93f4bc0bfde45ec8a93',
-          parent: [],
-          tree: '14819d8019f05edb70a29850deb09a4314ad0afc',
-        },
+          payload: `tree 14819d8019f05edb70a29850deb09a4314ad0afc
+author Karen Brown <karen@example.com> 1000000000 +0000
+committer Karen Brown <karen@example.com> 1000000000 +0000
+
+First commit!
+`
+      },
       ]);
 
       await fs.promises.unlink(fooTxt);
@@ -125,7 +132,7 @@ describe('Git-VCS', () => {
       await fs.promises.writeFile(barTxt, 'bar');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
       await vcs.add(fooTxt);
       await vcs.commit('First commit!');
@@ -171,7 +178,7 @@ describe('Git-VCS', () => {
       await fs.promises.writeFile(folderBarTxt, originalContent);
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
 
       // Commit
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
@@ -208,7 +215,7 @@ describe('Git-VCS', () => {
       const fs = MemPlugin.createPlugin();
       await fs.promises.mkdir(GIT_INSOMNIA_DIR);
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
 
       // Write to all files
       await Promise.all(files.map(f => fs.promises.writeFile(f, originalContent)));
@@ -249,7 +256,7 @@ describe('Git-VCS', () => {
       await fs.promises.writeFile(dirFooTxt, 'foo');
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       await vcs.add(dirFooTxt);

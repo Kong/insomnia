@@ -114,7 +114,7 @@ describe('git rollback', () => {
       await fs.promises.writeFile(bazTxt, originalContent);
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs });
 
       // Commit
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
