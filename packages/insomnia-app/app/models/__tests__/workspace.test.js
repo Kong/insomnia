@@ -76,7 +76,7 @@ describe('migrate()', () => {
     const debugW = await models.workspace.create({ scope: 'debug' });
     const nullW = await models.workspace.create({ scope: null });
     const somethingElseW = await models.workspace.create({ scope: 'something' });
-    const designerW = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
+    const designW = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
     const collectionW = await models.workspace.create({ scope: WorkspaceScopeKeys.collection });
 
     await models.workspace.migrate(specW);
@@ -88,7 +88,7 @@ describe('migrate()', () => {
     expect(debugW.scope).toBe(WorkspaceScopeKeys.collection);
     expect(nullW.scope).toBe(WorkspaceScopeKeys.collection);
     expect(somethingElseW.scope).toBe(WorkspaceScopeKeys.collection);
-    expect(designerW.scope).toBe(WorkspaceScopeKeys.design);
+    expect(designW.scope).toBe(WorkspaceScopeKeys.design);
     expect(collectionW.scope).toBe(WorkspaceScopeKeys.collection);
   });
 });

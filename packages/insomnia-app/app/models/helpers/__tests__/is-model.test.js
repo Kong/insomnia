@@ -120,7 +120,7 @@ describe('isWorkspace', () => {
   });
 });
 
-describe('isDesigner', () => {
+describe('isDesign', () => {
   it('should be true', () => {
     const w = models.workspace.init();
     w.scope = WorkspaceScopeKeys.design;
