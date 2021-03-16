@@ -2,6 +2,7 @@
 import type { BaseModel } from '../index';
 import { grpcRequest, request, requestGroup, protoFile, protoDirectory, workspace } from '../index';
 import type { Workspace } from '../workspace';
+import { WorkspaceScopeKeys } from '../../models/workspace';
 
 export function isGrpcRequest(obj: BaseModel): boolean {
   return obj.type === grpcRequest.type;
@@ -37,5 +38,5 @@ export function isWorkspace(obj: BaseModel): boolean {
 }
 
 export function isDesigner({ scope }: Workspace): boolean {
-  return scope === 'design';
+  return scope === WorkspaceScopeKeys.design;
 }

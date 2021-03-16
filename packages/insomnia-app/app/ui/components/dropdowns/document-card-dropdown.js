@@ -16,6 +16,7 @@ import AskModal from '../modals/ask-modal';
 import type { Workspace } from '../../../models/workspace';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
 
 type Props = {
   apiSpec: ?ApiSpec,
@@ -94,7 +95,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
 
         if (isLastWorkspace) {
           // Create a new workspace and default scope to designer
-          await models.workspace.create({ name: getAppName(), scope: 'design' });
+          await models.workspace.create({ name: getAppName(), scope: WorkspaceScopeKeys.design });
         }
 
         await models.stats.incrementDeletedRequestsForDescendents(workspace);
@@ -106,7 +107,7 @@ class DocumentCardDropdown extends React.PureComponent<Props, State> {
 
   async _onOpen() {
     // Only load document plugins if the scope is designer, for now
-    if (this.props.workspace.scope === 'design') {
+    if (this.props.workspace.scope === WorkspaceScopeKeys.design) {
       const plugins = await getDocumentActions();
       this.setState({ actionPlugins: plugins });
     }

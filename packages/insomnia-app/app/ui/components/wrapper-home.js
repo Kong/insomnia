@@ -96,7 +96,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
     trackEvent('Workspace', 'Create');
 
-    workspace.scope === 'design'
+    workspace.scope === WorkspaceScopeKeys.design
       ? handleSetActiveActivity(ACTIVITY_SPEC)
       : handleSetActiveActivity(ACTIVITY_DEBUG);
   }
@@ -109,7 +109,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onComplete: async name => {
         await this.__actuallyCreate({
           name,
-          scope: 'design',
+          scope: WorkspaceScopeKeys.design,
         });
         trackSegmentEvent('Document Created');
       },
