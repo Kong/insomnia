@@ -59,7 +59,7 @@ class WrapperDebug extends React.PureComponent<Props> {
     const { vcs, activeWorkspace, syncItems } = this.props.wrapperProps;
 
     const collection = activeWorkspace.scope === 'collection';
-    const designer = !collection;
+    const design = !collection;
 
     const share = session.isLoggedIn() && collection && (
       <Button variant="contained" onClick={showSyncShareModal}>
@@ -71,7 +71,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       <SyncDropdown workspace={activeWorkspace} vcs={vcs} syncItems={syncItems} />
     );
 
-    const gitSync = designer && gitSyncDropdown;
+    const gitSync = design && gitSyncDropdown;
     const sync = betaSync || gitSync;
 
     return (

@@ -122,7 +122,7 @@ describe('isWorkspace', () => {
 describe('isDesigner', () => {
   it('should be true', () => {
     const w = models.workspace.init();
-    w.scope = 'designer';
+    w.scope = 'design';
     expect(isDesigner(w)).toBe(true);
   });
 
