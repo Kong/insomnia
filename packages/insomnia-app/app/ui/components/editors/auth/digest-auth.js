@@ -95,8 +95,8 @@ class DigestAuth extends React.PureComponent<Props> {
                   password={authentication.password}
                   onChange={this._handleChangePassword}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
-                  render={handleRender}
-                  getRenderContext={handleGetRenderContext}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
                   isVariableUncovered={isVariableUncovered}
                 />
               </td>
