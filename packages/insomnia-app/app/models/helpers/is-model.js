@@ -37,6 +37,10 @@ export function isWorkspace(obj: BaseModel): boolean {
   return obj.type === workspace.type;
 }
 
-export function isDesigner({ scope }: Workspace): boolean {
+export function isDesign({ scope }: Workspace): boolean {
   return scope === WorkspaceScopeKeys.design;
+}
+
+export function isCollection({ scope }: Workspace): boolean {
+  return scope === WorkspaceScopeKeys.collection;
 }

@@ -2,12 +2,12 @@
 import * as models from '../index';
 import * as db from '../../common/database';
 
-import { isDesigner } from './is-model';
+import { isDesign } from './is-model';
 import type { Workspace } from '../workspace';
 import type { ApiSpec } from '../api-spec';
 
 export async function rename(w: Workspace, s: ApiSpec, name: string): Promise<void> {
-  if (isDesigner(w)) {
+  if (isDesign(w)) {
     await models.apiSpec.update(s, { fileName: name });
   } else {
     await models.workspace.update(w, { name });
