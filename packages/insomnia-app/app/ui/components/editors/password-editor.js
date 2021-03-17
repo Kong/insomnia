@@ -11,8 +11,8 @@ type State = {
 };
 
 type Props = {
-  render: Function,
-  getRenderContext: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   onChange: Function,
   password: string,
