@@ -363,7 +363,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
         ? apiSpec.modified
         : workspaceModified;
 
-    let log = <TimeFromNow timestamp={modifiedLocally} />;
+    // Span spec, workspace and sync related timestamps for card display latest
+    let docTimeStamps = [workspaceModified, lastCommitTime, apiSpec.modified];
+    docTimeStamps = docTimeStamps.filter(stamp => stamp !== undefined);
+    const docLastModified = Math.max(...docTimeStamps);
+
+    let log = <TimeFromNow timestamp={docLastModified} />;
     let branch = lastActiveBranch;
     if (
       workspace.scope === WorkspaceScopeKeys.design &&
