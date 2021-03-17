@@ -109,17 +109,6 @@ class General extends React.PureComponent<Props, State> {
     app.exit();
   }
 
-  async _handleFontWeightChange(el: SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
-  }
-
-  async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-
-    setFont(settings);
-  }
-
   async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
@@ -298,7 +287,7 @@ class General extends React.PureComponent<Props, State> {
           {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
             min: MIN_INTERFACE_FONT_SIZE,
             max: MAX_INTERFACE_FONT_SIZE,
-            onBlur: this._handleFontSizeChange,
+            onBlur: this._handleFontChange,
           })}
         </div>
 
@@ -339,10 +328,10 @@ class General extends React.PureComponent<Props, State> {
                 <select
                   name="fontMonospaceWeight"
                   value={settings.fontMonospaceWeight}
-                  onChange={this._handleFontWeightChange}>
-                  {EDITOR_FONT_WEITGHTS.map((item, index) => (
-                    <option key={index} value={item.value}>
-                      {item.label}
+                  onChange={this._handleFontChange}>
+                  {Object.entries(EDITOR_FONT_WEITGHTS).map(e => (
+                    <option key={e[1]} value={e[1]}>
+                      {e[0]}
                     </option>
                   ))}
                 </select>

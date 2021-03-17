@@ -7,6 +7,7 @@ import {
   getAppDefaultDarkTheme,
   HttpVersions,
   UPDATE_CHANNEL_STABLE,
+  EDITOR_FONT_WEITGHTS,
 } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 import type { HttpVersion } from '../common/constants';
@@ -97,7 +98,7 @@ export function init(): BaseSettings {
     clearOAuth2SessionOnRestart: true,
     fontInterface: null,
     fontMonospace: null,
-    fontMonospaceWeight: 400,
+    fontMonospaceWeight: EDITOR_FONT_WEITGHTS.Normal,
     fontSize: 13,
     fontVariantLigatures: false,
     forceVerticalLayout: false,
