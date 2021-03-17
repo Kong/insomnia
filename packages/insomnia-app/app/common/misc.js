@@ -6,7 +6,6 @@ import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
-import type { GlobalActivity } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -360,6 +359,11 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
   });
 }
 
+export function getDesignerDataDir(): string {
+  const { app } = electron.remote || electron;
+  return process.env.DESIGNER_DATA_PATH || pathJoin(app.getPath('appData'), 'Insomnia Designer');
+}
+
 export function getDataDirectory(): string {
   const { app } = electron.remote || electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
@@ -372,10 +376,6 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
   }
 
   return chunks;
-}
-
-export function setActivityAttribute(activity: GlobalActivity) {
-  document.body.setAttribute('data-activity', activity);
 }
 
 export function pluralize(text: string): string {
@@ -396,4 +396,64 @@ export function pluralize(text: string): string {
 
   // Add the trailer for pluralization
   return `${text.slice(0, text.length - chop)}${trailer}`;
+}
+
+export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectComparison {
+  const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
+
+  for (const prop in baseObj) {
+    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
+      continue;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(patchObj, prop)) {
+      const left = baseObj[prop];
+      const right = patchObj[prop];
+
+      if (right !== left) {
+        if (deep && isObject(left) && isObject(right)) {
+          clonedBaseObj[prop] = diffPatchObj(left, right, deep);
+        } else if (isObject(left) && !isObject(right)) {
+          // when right is empty but left isn't, prefer left to avoid a sparse array
+          clonedBaseObj[prop] = left;
+        } else {
+          // otherwise prefer right when both elements aren't objects to ensure values don't get overwritten
+          clonedBaseObj[prop] = right;
+        }
+      }
+    }
+  }
+
+  for (const prop in patchObj) {
+    if (!Object.prototype.hasOwnProperty.call(patchObj, prop)) {
+      continue;
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
+      clonedBaseObj[prop] = patchObj[prop];
+    }
+  }
+
+  return clonedBaseObj;
+}
+
+export function isObject(obj: any) {
+  return obj !== null && typeof obj === 'object';
+}
+
+export function snapNumberToLimits(value: number, min?: number, max?: number): number {
+  const moreThanMax = max && !Number.isNaN(max) && value > max;
+  const lessThanMin = min && !Number.isNaN(min) && value < min;
+
+  if (moreThanMax) {
+    return max;
+  } else if (lessThanMin) {
+    return min;
+  }
+
+  return value;
+}
+
+export function isNotNullOrUndefined(obj: any): boolean {
+  return obj !== null && obj !== undefined;
 }

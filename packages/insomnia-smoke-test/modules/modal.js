@@ -21,10 +21,16 @@ export const close = async (app, modalName) => {
   await modal.$('button.modal__close-btn').then(e => e.click());
 };
 
-export const clickModalFooterByText = async (app, modalName, text) => {
-  const modal = await app.client.react$(modalName);
-  await modal.waitForDisplayed();
-  const btn = await modal.$(`.modal__footer`).then(e => e.$(`button*=${text}`));
+export const clickModalFooterByText = async (app, text) => {
+  const btn = await app.client
+    .$('.modal[aria-hidden=false] .modal__footer')
+    .then(e => e.$(`button*=${text}`));
   await btn.waitForClickable();
   await btn.click();
+};
+
+export const typeIntoModalInput = async (app, text) => {
+  const input = await app.client.$('.modal input');
+  await input.waitUntil(() => input.isFocused());
+  await input.keys(text);
 };

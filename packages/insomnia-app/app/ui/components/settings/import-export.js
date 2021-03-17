@@ -1,12 +1,14 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
-import Strings from '../../../common/strings';
+import { docsImportExport } from '../../../common/documentation';
+import { strings, stringsPlural } from '../../../common/strings';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ImportExport extends PureComponent {
   _handleImportUri() {
     const promptOptions = {
@@ -44,11 +46,7 @@ class ImportExport extends PureComponent {
           <strong>Insomnia, Postman v2, HAR, Curl, Swagger, OpenAPI v3</strong>)
         </p>
         <p>
-          Don't see your format here?{' '}
-          <Link href="https://support.insomnia.rest/article/52-importing-and-exporting-data">
-            Add Your Own
-          </Link>
-          .
+          Don't see your format here? <Link href={docsImportExport}>Add Your Own</Link>.
         </p>
         <div className="pad-top">
           <Dropdown outline>
@@ -58,11 +56,11 @@ class ImportExport extends PureComponent {
             <DropdownDivider>Choose Export Type</DropdownDivider>
             <DropdownItem onClick={handleShowExportRequestsModal}>
               <i className="fa fa-home" />
-              Current {Strings.workspace}
+              Current {strings.document} / {strings.collection}
             </DropdownItem>
             <DropdownItem onClick={handleExportAll}>
               <i className="fa fa-empty" />
-              All {Strings.workspaces}
+              All {stringsPlural.document} / {stringsPlural.collection}
             </DropdownItem>
           </Dropdown>
           &nbsp;&nbsp;
@@ -85,7 +83,7 @@ class ImportExport extends PureComponent {
             </DropdownItem>
           </Dropdown>
           &nbsp;&nbsp;
-          <Link href="https://insomnia.rest/create-run-button/" className="btn btn--compact" button>
+          <Link href="https://insomnia.rest/create-run-button" className="btn btn--compact" button>
             Create Run Button
           </Link>
         </div>

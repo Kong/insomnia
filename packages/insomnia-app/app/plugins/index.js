@@ -77,6 +77,7 @@ export type SpecInfo = {
 
 export type ConfigGenerator = {
   plugin: Plugin,
+  label: string,
   generate: (info: SpecInfo) => Promise<{ document?: string, error?: string }>,
 };
 
@@ -102,10 +103,25 @@ export type Theme = {
   theme: PluginTheme,
 };
 
+export type ColorScheme = 'default' | 'light' | 'dark';
+
 let plugins: ?Array<Plugin> = null;
 
+let ignorePlugins: Array<string> = [];
+
 export async function init(): Promise<void> {
+  clearIgnores();
   await reloadPlugins();
+}
+
+export function ignorePlugin(name: string) {
+  if (!ignorePlugins.includes(name)) {
+    ignorePlugins.push(name);
+  }
+}
+
+export function clearIgnores() {
+  ignorePlugins = [];
 }
 
 async function _traversePluginPath(
@@ -200,7 +216,13 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
     };
 
     for (const p of appConfig().plugins) {
+      if (ignorePlugins.includes(p)) {
+        continue;
+      }
       const pluginJson = global.require(`${p}/package.json`);
+      if (ignorePlugins.includes(pluginJson.name)) {
+        continue;
+      }
       const pluginModule = global.require(p);
       pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
     }

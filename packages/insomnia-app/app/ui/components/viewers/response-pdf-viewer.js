@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import * as PDF from 'pdfjs-dist/webpack';
 
 type Props = {
@@ -12,7 +13,7 @@ type State = {
   numPages: number | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponsePDFViewer extends React.PureComponent<Props, State> {
   container: ?HTMLDivElement;
   debounceTimeout: any;

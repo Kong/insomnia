@@ -1,3 +1,4 @@
+import { hot } from 'react-hot-loader';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
@@ -8,10 +9,7 @@ import { init as initStore } from './redux/modules';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';
 import { getAppLongName, isDevelopment } from '../common/constants';
-import { setFont, setTheme } from '../plugins/misc';
-import { AppContainer } from 'react-hot-loader';
-import { DragDropContext } from 'react-dnd';
-import DNDBackend from './dnd-backend';
+import { setFont, applyColorScheme } from '../plugins/misc';
 import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
@@ -31,33 +29,23 @@ document.title = getAppLongName();
   if (settings.clearOAuth2SessionOnRestart) {
     initNewOAuthSession();
   }
-  await setTheme(settings.theme);
+  await applyColorScheme(settings);
   await setFont(settings);
 
   // Create Redux store
   const store = await initStore();
 
-  const context = DragDropContext(DNDBackend);
-  const render = Component => {
-    const DnDComponent = context(Component);
+  const render = App => {
+    const TheHottestApp = hot(module)(App);
     ReactDOM.render(
-      <AppContainer>
-        <Provider store={store}>
-          <DnDComponent />
-        </Provider>
-      </AppContainer>,
+      <Provider store={store}>
+        <TheHottestApp />
+      </Provider>,
       document.getElementById('root'),
     );
   };
 
   render(App);
-
-  // Hot Module Replacement API
-  if (module.hot) {
-    // module.hot.accept('./containers/app', () => {
-    //   render(App);
-    // });
-  }
 })();
 
 // Export some useful things for dev

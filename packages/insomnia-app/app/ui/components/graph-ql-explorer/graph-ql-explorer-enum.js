@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import MarkdownPreview from '../markdown-preview';
 import type { GraphQLEnumValue } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
@@ -9,7 +10,7 @@ type Props = {|
   type: GraphQLEnumType,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLExplorerEnum extends React.PureComponent<Props> {
   renderDescription() {
     const { type } = this.props;

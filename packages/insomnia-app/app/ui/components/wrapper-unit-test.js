@@ -1,14 +1,13 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, ACTIVITY_HOME } from '../../common/constants';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
-  Breadcrumb,
   Button,
   Dropdown,
   DropdownItem,
-  Header,
   ListGroup,
   UnitTestItem,
   UnitTestResultItem,
@@ -16,7 +15,6 @@ import {
 import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
-import designerLogo from '../images/insomnia-designer-logo.svg';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';
@@ -26,10 +24,10 @@ import Editable from './base/editable';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
-import ActivityToggle from './activity-toggle';
 import { getSendRequestCallback } from '../../common/send-request';
 import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_HOME } from '../../common/constants';
+import WorkspacePageHeader from './workspace-page-header';
+import { trackSegmentEvent } from '../../common/analytics';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -43,7 +41,7 @@ type State = {|
   resultsError: string | null,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,
@@ -133,6 +131,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           name,
         });
         await this._handleSetActiveUnitTestSuite(unitTestSuite);
+        trackSegmentEvent('Test Suite Created');
       },
     });
   }
@@ -151,6 +150,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           code: this.generateSendReqSnippet('', ''),
           name,
         });
+        trackSegmentEvent('Unit Test Created');
       },
     });
   }
@@ -170,10 +170,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   async _handleRunTests(): Promise<void> {
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
+    trackSegmentEvent('Ran All Unit Tests');
   }
 
   async _handleRunTest(unitTest: UnitTest): Promise<void> {
     await this._runTests([unitTest]);
+    trackSegmentEvent('Ran Individual Unit Test');
   }
 
   async _handleDeleteTest(unitTest: UnitTest): Promise<void> {
@@ -187,6 +189,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTest.remove(unitTest);
+        trackSegmentEvent('Unit Test Deleted');
       },
     });
   }
@@ -210,6 +213,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTestSuite.remove(unitTestSuite);
+        trackSegmentEvent('Test Suite Deleted');
       },
     });
   }
@@ -434,7 +438,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
-  renderPageSidebar(): React.Node {
+  _renderPageSidebar(): React.Node {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
@@ -478,38 +482,26 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
+  _renderPageHeader() {
+    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
+
+    return (
+      <WorkspacePageHeader
+        wrapperProps={wrapperProps}
+        handleActivityChange={handleActivityChange}
+        gridRight={gitSyncDropdown}
+      />
+    );
+  }
+
   render() {
-    const { handleActivityChange, gitSyncDropdown } = this.props;
-    const { activeWorkspace, activity, activeApiSpec } = this.props.wrapperProps;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageSidebar={this.renderPageSidebar}
+        renderPageSidebar={this._renderPageSidebar}
         renderPaneOne={this._renderTestSuite}
         renderPaneTwo={this._renderResults}
-        renderPageHeader={() => (
-          <Header
-            className="app-header"
-            gridLeft={
-              <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb
-                  className="breadcrumb"
-                  crumbs={['Documents', activeApiSpec.fileName]}
-                  onClick={this._handleBreadcrumb}
-                />
-              </React.Fragment>
-            }
-            gridCenter={
-              <ActivityToggle
-                activity={activity}
-                handleActivityChange={handleActivityChange}
-                workspace={activeWorkspace}
-              />
-            }
-            gridRight={gitSyncDropdown}
-          />
-        )}
+        renderPageHeader={this._renderPageHeader}
       />
     );
   }

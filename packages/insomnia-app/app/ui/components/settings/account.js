@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Link from '../base/link';
 import LoginModal from '../modals/login-modal';
 import { hideAllModals, showModal } from '../modals/index';
@@ -20,7 +21,7 @@ type State = {
   finishedResetting: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Account extends React.PureComponent<Props, State> {
   state = {
     code: '',
@@ -121,13 +122,13 @@ class Account extends React.PureComponent<Props, State> {
           </p>
           <br />
           <div className="pad">
-            <Link button className="btn btn--clicky" href="https://insomnia.rest/plus/">
+            <Link button className="btn btn--clicky" href="https://insomnia.rest/pricing">
               Plus for Individuals <i className="fa fa-external-link" />
             </Link>
             <Link
               button
               className="margin-left-sm btn btn--clicky"
-              href="https://insomnia.rest/teams/">
+              href="https://insomnia.rest/pricing">
               Plus for Teams <i className="fa fa-external-link" />
             </Link>
           </div>
@@ -162,7 +163,7 @@ class Account extends React.PureComponent<Props, State> {
             <code className="code--compact">{session.getEmail()}</code>
           </p>
           <br />
-          <Link button href="https://insomnia.rest/app/" className="btn btn--clicky">
+          <Link button href="https://app.insomnia.rest" className="btn btn--clicky">
             Manage Account
           </Link>
           <PromptButton className="space-left btn btn--clicky" onClick={this._handleLogout}>

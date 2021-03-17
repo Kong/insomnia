@@ -1,8 +1,8 @@
 // @flow
 import * as React from 'react';
 import ReactDOM from 'react-dom';
-import autobind from 'autobind-decorator';
-import { isMac } from '../../common/constants';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { isMac, AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {
   children: React.Node,
@@ -13,7 +13,7 @@ type Props = {
   stopMetaPropagation?: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class KeydownBinder extends React.PureComponent<Props> {
   _handleKeydown(e: KeyboardEvent) {
     const { stopMetaPropagation, onKeydown, disabled } = this.props;

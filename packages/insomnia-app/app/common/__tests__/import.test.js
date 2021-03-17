@@ -376,14 +376,26 @@ describe('export', () => {
   });
 });
 
-describe('isApiSpec()', () => {
+describe('isApiSpecImport()', () => {
   it.each(['swagger2', 'openapi3'])('should return true if spec id is %o', (id: string) => {
-    expect(importUtil.isApiSpec(id)).toBe(true);
+    expect(importUtil.isApiSpecImport({ id })).toBe(true);
   });
 
   it('should return false if spec id is not valid', () => {
     const id = 'invalid-id';
 
-    expect(importUtil.isApiSpec(id)).toBe(false);
+    expect(importUtil.isApiSpecImport({ id })).toBe(false);
+  });
+});
+
+describe('isInsomniaV4Import()', () => {
+  it.each(['insomnia-4'])('should return true if spec id is %o', (id: string) => {
+    expect(importUtil.isInsomniaV4Import({ id })).toBe(true);
+  });
+
+  it('should return false if spec id is not valid', () => {
+    const id = 'invalid-id';
+
+    expect(importUtil.isInsomniaV4Import({ id })).toBe(false);
   });
 });

@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
@@ -21,6 +22,8 @@ import * as session from '../../../account/session';
 import PromptButton from '../base/prompt-button';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
+import { docsVersionControl } from '../../../common/documentation';
+import { strings } from '../../../common/strings';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -55,7 +58,7 @@ type State = {
   remoteProjects: Array<Project>,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncDropdown extends React.PureComponent<Props, State> {
   checkInterval: IntervalID;
   refreshOnNextSyncItems = false;
@@ -377,15 +380,15 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     }
 
     return (
-      <DropdownButton className="btn btn--compact wide text-left overflow-hidden row-spaced">
+      <DropdownButton className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced">
         <div className="ellipsis">
           <i className="fa fa-code-fork space-right" />{' '}
           {initializing ? 'Initializing...' : currentBranch}
         </div>
         <div className="space-left">
-          <Tooltip message={snapshotToolTipMsg} delay={800}>
+          <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
             <i
-              className={classnames('icon fa fa-cube fa--fixed-width', {
+              className={classnames('fa fa-cube fa--fixed-width', {
                 'super-duper-faint': !canCreateSnapshot,
               })}
             />
@@ -397,7 +400,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               {loadingPull ? (
                 loadIcon
               ) : (
-                <Tooltip message={pullToolTipMsg} delay={800}>
+                <Tooltip message={pullToolTipMsg} delay={800} position="bottom">
                   <i
                     className={classnames('fa fa-cloud-download fa--fixed-width', {
                       'super-duper-faint': !canPull,
@@ -409,7 +412,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
               {loadingPush ? (
                 loadIcon
               ) : (
-                <Tooltip message={pushToolTipMsg} delay={800}>
+                <Tooltip message={pushToolTipMsg} delay={800} position="bottom">
                   <i
                     className={classnames('fa fa-cloud-upload fa--fixed-width', {
                       'super-duper-faint': !canPush,
@@ -452,7 +455,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
         Insomnia Sync{' '}
         <HelpTooltip>
           Sync and collaborate on workspaces{' '}
-          <Link href="https://support.insomnia.rest/article/67-version-control">
+          <Link href={docsVersionControl}>
             <span className="no-wrap">
               <br />
               Documentation <i className="fa fa-external-link" />
@@ -520,7 +523,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
           <DropdownItem onClick={this._handleShowDeleteModal} disabled={historyCount === 0}>
             <i className="fa fa-remove" />
-            Delete Workspace
+            Delete {strings.collection}
           </DropdownItem>
 
           <DropdownDivider>Local Branches</DropdownDivider>

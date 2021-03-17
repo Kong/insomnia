@@ -60,6 +60,9 @@ export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
 
 export function all() {
+  // NOTE: This list should be from most to least specific (ie. parents above children)
+  // For example, stats, settings and workspace are global models, with workspace being the top-most parent,
+  // so they must be at the top
   return [
     stats,
     settings,

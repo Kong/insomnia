@@ -1,30 +1,32 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
+import { Button } from 'insomnia-components';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
-import { ACTIVITY_HOME, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
-import type { WrapperProps } from './wrapper';
-import PageLayout from './page-layout';
+import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
+import type { HandleImportFileCallback, HandleImportUriCallback, WrapperProps } from './wrapper';
 import * as db from '../../common/database';
 import chartSrc from '../images/chart.svg';
-import imgSrcDesigner from '../images/insomnia-designer-logo.png';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
+import OnboardingContainer from './onboarding-container';
+import { WorkspaceScopeKeys } from '../../models/workspace';
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleImportFile: (forceToWorkspace: ForceToWorkspace) => any,
-  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => any,
+  handleImportFile: HandleImportFileCallback,
+  handleImportUri: HandleImportUriCallback,
+  header: string,
+  subHeader: string,
 |};
 
 type State = {|
   step: number,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperOnboarding extends React.PureComponent<Props, State> {
   state = {
     step: 1,
@@ -32,6 +34,11 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   componentDidMount() {
     db.onChange(this._handleDbChange);
+  }
+
+  componentWillUnmount() {
+    // Unsubscribe DB listener
+    db.offChange(this._handleDbChange);
   }
 
   _handleDbChange(changes: Array<[string, BaseModel, boolean]>) {
@@ -44,13 +51,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     }
   }
 
-  async _handleDone() {
-    const { handleSetActiveActivity } = this.props.wrapperProps;
-
-    handleSetActiveActivity(ACTIVITY_HOME);
-
-    // Unsubscribe DB listener
-    db.offChange(this._handleDbChange);
+  _handleDone() {
+    this._nextActivity();
   }
 
   _handleBackStep(e: SyntheticEvent<HTMLAnchorElement>) {
@@ -78,7 +80,10 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   _handleImportFile() {
     const { handleImportFile } = this.props;
-    handleImportFile(ForceToWorkspaceKeys.current);
+    handleImportFile({
+      forceToWorkspace: ForceToWorkspaceKeys.new,
+      forceToScope: WorkspaceScopeKeys.design,
+    });
   }
 
   _handleImportUri(defaultValue: string) {
@@ -90,7 +95,10 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
       placeholder: 'https://example.com/openapi-spec.yaml',
       label: 'URI to Import',
       onComplete: value => {
-        handleImportUri(value, ForceToWorkspaceKeys.current);
+        handleImportUri(value, {
+          forceToWorkspace: ForceToWorkspaceKeys.new,
+          forceToScope: WorkspaceScopeKeys.design,
+        });
       },
     });
   }
@@ -103,8 +111,11 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
   }
 
   _handleSkipImport() {
-    const { handleSetActiveActivity } = this.props.wrapperProps;
-    handleSetActiveActivity(ACTIVITY_HOME);
+    this._nextActivity();
+  }
+
+  _nextActivity() {
+    this.props.wrapperProps.handleGoToNextActivity();
   }
 
   renderStep1() {
@@ -118,9 +129,15 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
           Help us understand how <strong>you</strong> use {getAppLongName()} so we can make it
           better.
         </p>
-        <button key="enable" className="btn btn--clicky" onClick={this._handleClickEnableAnalytics}>
+        <Button
+          key="enable"
+          bg="surprise"
+          radius="3px"
+          size="medium"
+          variant="contained"
+          onClick={this._handleClickEnableAnalytics}>
           Share Usage Analytics
-        </button>
+        </Button>
         <button
           key="disable"
           className="btn btn--super-compact"
@@ -159,7 +176,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     );
   }
 
-  renderPageBody() {
+  render() {
     const { step } = this.state;
 
     let stepBody;
@@ -170,28 +187,12 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     }
 
     return (
-      <div className="onboarding">
-        <div className="onboarding__background theme--sidebar" />
-        <div className="onboarding__content theme--dialog">
-          <div className="img-container">
-            <img src={imgSrcDesigner} alt="Kong" />
-          </div>
-          <header className="onboarding__content__header">
-            <h1>Welcome to {getAppLongName()}</h1>
-            <h2>{getAppSynopsis()}</h2>
-          </header>
-          <div className="onboarding__content__body">{stepBody}</div>
-        </div>
-      </div>
-    );
-  }
-
-  render() {
-    return (
-      <PageLayout
+      <OnboardingContainer
         wrapperProps={this.props.wrapperProps}
-        renderPageBody={() => this.renderPageBody()}
-      />
+        header={'Welcome to ' + getAppLongName()}
+        subHeader={getAppSynopsis()}>
+        {stepBody}
+      </OnboardingContainer>
     );
   }
 }

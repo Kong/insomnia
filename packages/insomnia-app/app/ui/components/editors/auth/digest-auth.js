@@ -2,8 +2,10 @@
 
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
+import PasswordEditor from '../password-editor';
 import Button from '../../base/button';
 import type { Settings } from '../../../../models/settings';
 import type { Request, RequestAuthentication } from '../../../../models/request';
@@ -19,7 +21,7 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class DigestAuth extends React.PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
@@ -86,22 +88,17 @@ class DigestAuth extends React.PureComponent<Props> {
                   Password
                 </label>
               </td>
-              <td className="wide">
-                <div
-                  className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled,
-                  })}>
-                  <OneLineEditor
-                    type={showPasswords ? 'text' : 'password'}
-                    id="password"
-                    onChange={this._handleChangePassword}
-                    defaultValue={authentication.password || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    render={handleRender}
-                    getRenderContext={handleGetRenderContext}
-                    isVariableUncovered={isVariableUncovered}
-                  />
-                </div>
+              <td className="flex wide">
+                <PasswordEditor
+                  showAllPasswords={showPasswords}
+                  disabled={authentication.disabled}
+                  password={authentication.password}
+                  onChange={this._handleChangePassword}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  render={handleRender}
+                  getRenderContext={handleGetRenderContext}
+                  isVariableUncovered={isVariableUncovered}
+                />
               </td>
             </tr>
             <tr>

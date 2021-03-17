@@ -1,6 +1,12 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  DEBOUNCE_MILLIS,
+  EDITOR_KEY_MAP_VIM,
+  isMac,
+} from '../../../common/constants';
 import CodeMirror from 'codemirror';
 import classnames from 'classnames';
 import clone from 'clone';
@@ -10,7 +16,7 @@ import { showModal } from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
 import prettify from 'insomnia-prettify';
-import { DEBOUNCE_MILLIS, EDITOR_KEY_MAP_VIM, isMac } from '../../../common/constants';
+
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import './base-imports';
 import { getTagDefinitions } from '../../../templating/index';
@@ -78,7 +84,7 @@ const BASE_CODEMIRROR_OPTIONS = {
   gutters: ['CodeMirror-lint-markers'],
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CodeEditor extends React.Component {
   constructor(props) {
     super(props);

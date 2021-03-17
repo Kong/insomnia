@@ -1,6 +1,23 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  ACTIVITY_HOME,
+  COLLAPSE_SIDEBAR_REMS,
+  DEFAULT_PANE_HEIGHT,
+  DEFAULT_PANE_WIDTH,
+  DEFAULT_SIDEBAR_WIDTH,
+  getAppName,
+  MAX_PANE_HEIGHT,
+  MAX_PANE_WIDTH,
+  MAX_SIDEBAR_REMS,
+  MIN_PANE_HEIGHT,
+  MIN_PANE_WIDTH,
+  MIN_SIDEBAR_REMS,
+  PREVIEW_MODE_SOURCE,
+  ACTIVITY_MIGRATION,
+} from '../../common/constants';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
 import { parse as urlParse } from 'url';
@@ -14,23 +31,7 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import {
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  COLLAPSE_SIDEBAR_REMS,
-  DEFAULT_PANE_HEIGHT,
-  DEFAULT_PANE_WIDTH,
-  DEFAULT_SIDEBAR_WIDTH,
-  MAX_PANE_HEIGHT,
-  MAX_PANE_WIDTH,
-  MAX_SIDEBAR_REMS,
-  MIN_PANE_HEIGHT,
-  MIN_PANE_WIDTH,
-  MIN_SIDEBAR_REMS,
-  PREVIEW_MODE_SOURCE,
-  getAppId,
-  getAppName,
-} from '../../common/constants';
+
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
 import * as db from '../../common/database';
@@ -64,9 +65,9 @@ import RequestRenderErrorModal from '../components/modals/request-render-error-m
 import * as network from '../../network/network';
 import {
   debounce,
+  generateId,
   getContentDispositionHeader,
   getDataDirectory,
-  generateId,
 } from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
@@ -80,6 +81,7 @@ import KeydownBinder from '../components/keydown-binder';
 import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
@@ -92,15 +94,17 @@ import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../..
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
-import AppContext from '../../common/strings';
-import { APP_ID_INSOMNIA } from '../../../config';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
+import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
+import withDragDropContext from '../context/app/drag-drop-context';
+import { trackSegmentEvent } from '../../common/analytics';
+import getWorkspaceName from '../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../models/helpers/workspace-operations';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
   constructor(props) {
     super(props);
@@ -210,6 +214,7 @@ class App extends PureComponent {
           const request = await models.request.create({ parentId, name: 'New Request' });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
+          trackSegmentEvent('Request Created');
         },
       ],
       [
@@ -341,6 +346,7 @@ class App extends PureComponent {
       onComplete: requestId => {
         this._handleSetActiveRequest(requestId);
         models.stats.incrementCreatedRequests();
+        trackSegmentEvent('Request Created');
       },
     });
   }
@@ -413,56 +419,21 @@ class App extends PureComponent {
     });
   }
 
-  _workspaceRename(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    console.dir(AppContext);
-    showPrompt({
-      title: `Rename ${AppContext.workspace}`,
-      defaultValue: workspace.name,
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: async name => {
-        await models.workspace.update(workspace, { name: name });
-        callback();
-      },
-    });
-  }
-
-  _workspaceDeleteById(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    showModal(AskModal, {
-      title: `Delete ${AppContext.workspace}`,
-      message: `Do you really want to delete ${workspace.name}?`,
-      yesText: 'Yes',
-      noText: 'Cancel',
-      onDone: async isYes => {
-        if (!isYes) {
-          return;
-        }
-
-        await models.stats.incrementDeletedRequestsForDescendents(workspace);
-
-        await models.workspace.remove(workspace);
-      },
-    });
-  }
-
   _workspaceDuplicateById(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
 
     showPrompt({
-      title: `Duplicate ${AppContext.workspace}`,
-      defaultValue: workspace.name,
+      title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
-        const newWorkspace = await db.duplicate(workspace, { name });
+        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
+
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
-
-        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
       },
     });
   }
@@ -693,6 +664,7 @@ class App extends PureComponent {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     // Start loading
     handleStartLoading(requestId);
@@ -777,6 +749,7 @@ class App extends PureComponent {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     handleStartLoading(requestId);
 
@@ -974,15 +947,9 @@ class App extends PureComponent {
   async _handleReloadPlugins() {
     const { settings } = this.props;
     await plugins.reloadPlugins();
-    await themes.setTheme(settings.theme);
+    await themes.applyColorScheme(settings);
     templating.reload();
     console.log('[plugins] reloaded');
-  }
-
-  _handleToggleInsomniaActivity() {
-    const { activity, handleSetActiveActivity } = this.props;
-
-    handleSetActiveActivity(activity === ACTIVITY_INSOMNIA ? ACTIVITY_HOME : ACTIVITY_INSOMNIA);
   }
 
   /**
@@ -1000,10 +967,11 @@ class App extends PureComponent {
 
     let title;
 
-    if (activity === ACTIVITY_HOME) {
+    if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else {
-      title = getAppId() === APP_ID_INSOMNIA ? activeWorkspace.name : activeApiSpec.fileName;
+      title =
+        activeWorkspace.scope === 'collection' ? activeWorkspace.name : activeApiSpec.fileName;
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }
@@ -1131,6 +1099,41 @@ class App extends PureComponent {
     }
   }
 
+  async _handleDbChange(changes) {
+    let needsRefresh = false;
+
+    for (const change of changes) {
+      const [type, doc, fromSync] = change;
+
+      const { vcs } = this.state;
+      const { activeRequest } = this.props;
+
+      // Force refresh if environment changes
+      // TODO: Only do this for environments in this workspace (not easy because they're nested)
+      if (doc.type === models.environment.type) {
+        console.log('[App] Forcing update from environment change', change);
+        needsRefresh = true;
+      }
+
+      // Force refresh if sync changes the active request
+      if (fromSync && activeRequest && doc._id === activeRequest._id) {
+        needsRefresh = true;
+        console.log('[App] Forcing update from request change', change);
+      }
+
+      // Delete VCS project if workspace deleted
+      if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
+        await vcs.removeProjectsForRoot(doc._id);
+      }
+    }
+
+    if (needsRefresh) {
+      setTimeout(() => {
+        this._wrapper && this._wrapper._forceRequestPaneRefresh();
+      }, 300);
+    }
+  }
+
   async componentDidMount() {
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
@@ -1144,48 +1147,13 @@ class App extends PureComponent {
     await this._updateVCS();
     await this._updateGitVCS(this.props.activeWorkspace);
 
-    db.onChange(async changes => {
-      let needsRefresh = false;
-
-      for (const change of changes) {
-        const [type, doc, fromSync] = change;
-
-        const { vcs } = this.state;
-        const { activeRequest } = this.props;
-
-        // Force refresh if environment changes
-        // TODO: Only do this for environments in this workspace (not easy because they're nested)
-        if (doc.type === models.environment.type) {
-          console.log('[App] Forcing update from environment change', change);
-          needsRefresh = true;
-        }
-
-        // Force refresh if sync changes the active request
-        if (fromSync && activeRequest && doc._id === activeRequest._id) {
-          needsRefresh = true;
-          console.log('[App] Forcing update from request change', change);
-        }
-
-        // Delete VCS project if workspace deleted
-        if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
-          await vcs.removeProjectsForRoot(doc._id);
-        }
-      }
-
-      if (needsRefresh) {
-        setTimeout(() => {
-          this._wrapper && this._wrapper._forceRequestPaneRefresh();
-        }, 300);
-      }
-    });
+    db.onChange(this._handleDbChange);
 
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
 
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
-
-    ipcRenderer.on('toggle-insomnia', this._handleToggleInsomniaActivity);
 
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
@@ -1250,12 +1218,17 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
+
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addListener(async () => themes.applyColorScheme(this.props.settings));
   }
 
   componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
+    db.offChange(this._handleDbChange);
   }
 
   async _ensureWorkspaceChildren() {
@@ -1352,9 +1325,6 @@ class App extends PureComponent {
                 handleDuplicateRequestGroup={App._requestGroupDuplicate}
                 handleMoveRequestGroup={App._requestGroupMove}
                 handleDuplicateWorkspace={this._workspaceDuplicate}
-                handleDuplicateWorkspaceById={this._workspaceDuplicateById}
-                handleRenameWorkspaceById={this._workspaceRename}
-                handleDeleteWorkspaceById={this._workspaceDeleteById}
                 handleCreateRequestGroup={this._requestGroupCreate}
                 handleGenerateCode={App._handleGenerateCode}
                 handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
@@ -1407,6 +1377,7 @@ App.propTypes = {
     _id: PropTypes.string.isRequired,
   }).isRequired,
   handleSetActiveActivity: PropTypes.func.isRequired,
+  handleGoToNextActivity: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
@@ -1545,6 +1516,7 @@ function mapDispatchToProps(dispatch) {
     handleStopLoading: global.loadRequestStop,
 
     handleSetActiveActivity: global.setActiveActivity,
+    handleGoToNextActivity: global.goToNextActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
     handleImportClipBoardToWorkspace: global.importClipBoard,
@@ -1626,4 +1598,4 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(withDragDropContext(App));

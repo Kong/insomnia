@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
-import { REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { REQUEST_TIME_TO_SHOW_COUNTER, AUTOBIND_CFG } from '../../common/constants';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseTimer extends PureComponent {
   constructor(props) {
     super(props);

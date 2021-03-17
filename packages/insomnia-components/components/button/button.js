@@ -38,6 +38,7 @@ const StyledButton: React.ComponentType<ButtonProps> = styled.button`
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
+  justify-content: center !important;
   border: 1px solid transparent;
 
   ${({ radius }) => css`

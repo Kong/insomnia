@@ -432,7 +432,7 @@ describe('_repairDatabase()', () => {
 
     // Make sure we have everything
     expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('');
-    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Insomnia Designer');
+    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('New Document');
     expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name');
 
     // Run the fix algorithm
@@ -442,6 +442,50 @@ describe('_repairDatabase()', () => {
     expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('Workspace 1'); // Should fix
     expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Workspace 2'); // Should fix
     expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name'); // should not fix
+  });
+
+  it('fixes old git uris', async () => {
+    const oldRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+      uriNeedsMigration: true,
+    });
+    const oldRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+      uriNeedsMigration: true,
+    });
+    const newRepoWithSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar.git',
+    });
+    const newRepoWithoutSuffix = await models.gitRepository.create({
+      uri: 'https://github.com/foo/bar',
+    });
+
+    await db._repairDatabase();
+
+    expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, oldRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar.git',
+        uriNeedsMigration: false,
+      }),
+    );
+    expect(await db.get(models.gitRepository.type, newRepoWithoutSuffix._id)).toEqual(
+      expect.objectContaining({
+        uri: 'https://github.com/foo/bar',
+        uriNeedsMigration: false,
+      }),
+    );
   });
 });
 

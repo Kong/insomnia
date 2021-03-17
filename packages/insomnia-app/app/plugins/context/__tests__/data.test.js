@@ -54,7 +54,7 @@ describe('app.import.*', () => {
         name: 'New',
         parentId: null,
         type: 'Workspace',
-        scope: null,
+        scope: 'collection',
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -105,7 +105,7 @@ describe('app.import.*', () => {
         name: 'New',
         parentId: null,
         type: 'Workspace',
-        scope: null,
+        scope: 'collection',
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -180,9 +180,9 @@ describe('app.export.*', () => {
           created: 111,
           description: '',
           modified: 222,
-          name: 'New Workspace',
+          name: 'New Collection',
           parentId: null,
-          scope: null,
+          scope: 'collection',
         },
         {
           _id: 'req_1',

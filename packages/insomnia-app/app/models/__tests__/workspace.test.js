@@ -69,4 +69,25 @@ describe('migrate()', () => {
     expect(spec).not.toBe(null);
     expect(spec.fileName).toBe(workspace.name);
   });
+
+  it('translates the scope correctly', async () => {
+    const specW = await models.workspace.create({ scope: 'spec' });
+    const debugW = await models.workspace.create({ scope: 'debug' });
+    const nullW = await models.workspace.create({ scope: null });
+    const somethingElseW = await models.workspace.create({ scope: 'something' });
+    const designerW = await models.workspace.create({ scope: 'design' });
+    const collectionW = await models.workspace.create({ scope: 'collection' });
+
+    await models.workspace.migrate(specW);
+    await models.workspace.migrate(debugW);
+    await models.workspace.migrate(nullW);
+    await models.workspace.migrate(somethingElseW);
+
+    expect(specW.scope).toBe('design');
+    expect(debugW.scope).toBe('collection');
+    expect(nullW.scope).toBe('collection');
+    expect(somethingElseW.scope).toBe('collection');
+    expect(designerW.scope).toBe('design');
+    expect(collectionW.scope).toBe('collection');
+  });
 });

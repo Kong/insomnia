@@ -1,6 +1,7 @@
 import * as models from '../../index';
 import { difference } from 'lodash';
 import {
+  isDesigner,
   isGrpcRequest,
   isGrpcRequestId,
   isProtoDirectory,
@@ -115,5 +116,19 @@ describe('isWorkspace', () => {
 
   it.each(unsupported)('should return false: "%s"', type => {
     expect(isWorkspace({ type })).toBe(false);
+  });
+});
+
+describe('isDesigner', () => {
+  it('should be true', () => {
+    const w = models.workspace.init();
+    w.scope = 'design';
+    expect(isDesigner(w)).toBe(true);
+  });
+
+  it('should be false', () => {
+    const w = models.workspace.init();
+    w.scope = 'collection';
+    expect(isDesigner(w)).toBe(false);
   });
 });

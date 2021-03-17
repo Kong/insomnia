@@ -1,8 +1,13 @@
-import { getAppId } from './constants';
-import { APP_ID_INSOMNIA } from '../../config';
+// @flow
+import { pluralize } from './misc';
 
-export default {
-  workspace: getAppId() === APP_ID_INSOMNIA ? 'Workspace' : 'Document',
-  workspaces: getAppId() === APP_ID_INSOMNIA ? 'Workspaces' : 'Documents',
-  apiSpec: 'Document',
+export const strings = {
+  document: 'Document',
+  collection: 'Collection',
+  home: 'Dashboard',
+};
+
+export const stringsPlural = {
+  document: pluralize(strings.document),
+  collection: pluralize(strings.collection),
 };

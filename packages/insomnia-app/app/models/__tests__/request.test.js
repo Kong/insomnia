@@ -1,5 +1,7 @@
 import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { newBodyGraphQL } from '../request';
+import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
 
 describe('init()', () => {
   beforeEach(globalBeforeEach);
@@ -341,5 +343,30 @@ describe('migrate()', () => {
 
     const migrated = await models.initModel(models.request.type, original);
     expect(migrated).toEqual(expected);
+  });
+});
+
+describe('newBodyGraphQL()', () => {
+  it('strips \\\\n characters', () => {
+    const input =
+      '{"query": "query getCustomer() {\\\\n id\\\\n name\\\\n email\\\\n __typename\\\\n }\\\\n"}';
+    const expectedTextOutput = '{"query": "query getCustomer() { id name email __typename }"}';
+    const actualOutput = newBodyGraphQL(input);
+
+    expect(actualOutput).toEqual({ mimeType: CONTENT_TYPE_GRAPHQL, text: expectedTextOutput });
+  });
+
+  it('does nothing to empty string', () => {
+    const input = '';
+    const expectedTextOutput = '';
+    const actualOutput = newBodyGraphQL(input);
+    expect(actualOutput).toEqual({ mimeType: CONTENT_TYPE_GRAPHQL, text: expectedTextOutput });
+  });
+
+  it('does nothing to object that has no \\\\n characters', () => {
+    const input = '{ "foo": "bar" }';
+    const expectedTextOutput = '{ "foo": "bar" }';
+    const actualOutput = newBodyGraphQL(input);
+    expect(actualOutput).toEqual({ mimeType: CONTENT_TYPE_GRAPHQL, text: expectedTextOutput });
   });
 });
