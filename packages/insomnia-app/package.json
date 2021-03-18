@@ -9,7 +9,7 @@
   "scripts": {
     "typecheck": "flow check",
     "test": "npm run test:jest",
-    "test:jest": "cross-env NODE_ENV=test npx jest --silent",
+    "test:jest": "cross-env NODE_ENV=test jest --silent",
     "test-appveyor": "npm run test -- --maxWorkers 1",
     "start:electron": "cross-env NODE_ENV=development webpack --config ./webpack/webpack.config.electron.babel.js && electron .",
     "start:dev-server": "webpack-dev-server --config ./webpack/webpack.config.development.babel.js",
