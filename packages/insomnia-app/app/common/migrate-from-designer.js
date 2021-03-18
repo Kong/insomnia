@@ -12,6 +12,7 @@ import type { Settings } from '../models/settings';
 import fsx from 'fs-extra';
 import * as electron from 'electron';
 import { trackEvent } from './analytics';
+import { WorkspaceScopeKeys } from '../models/workspace';
 
 async function loadDesignerDb(types: Array<string>, designerDataDir: string): Promise<Object> {
   const designerDb = {};
@@ -214,7 +215,7 @@ export default async function migrateFromDesigner({
       // For each workspace coming from Designer, mark workspace.scope as 'design'
       if (modelType === models.workspace.type) {
         for (const workspace of entries) {
-          (workspace: Workspace).scope = 'design';
+          (workspace: Workspace).scope = WorkspaceScopeKeys.design;
         }
       }
 
