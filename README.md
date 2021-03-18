@@ -1,6 +1,5 @@
 # Insomnia REST Client
 
-[![Travis](https://api.travis-ci.org/Kong/insomnia.svg)](https://travis-ci.org/Kong/insomnia)
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 [![CodeFund](https://img.shields.io/badge/codefund-advertiser-success.svg)](https://codefund.io)
@@ -74,7 +73,7 @@ sudo apt-get install build-essential
 Also on Linux, if Electron is failing during the bootstrap process, run the following
 ```bash
 # Clear Electron install conflicts
-rm -rf ~/cache/electron
+rm -rf ~/.cache/electron
 ```
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
@@ -99,7 +98,7 @@ Search, discover, and install plugins from the Insomnia [Plugin Hub](https://ins
 
 ## Community Projects
 
-- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) – Generate beautiful API documentation pages using your Insomnia export file.
+- [Insomnia Documenter](https://github.com/jozsefsallai/insomnia-documenter) – Generate beautiful API documentation pages using the [documenter plugin](https://insomnia.rest/plugins/insomnia-plugin-documenter) or your Insomnia export file.
 - [GitHub API Spec Importer](https://github.com/swinton/github-rest-apis-for-insomnia) – A complete set of GitHub REST API route specifications that can be imported straight into Insomnia.
 - [Swaggymnia](https://github.com/mlabouardy/swaggymnia) – Generate [Swagger](https://swagger.io/) documentation for your existing API in Insomnia.
 

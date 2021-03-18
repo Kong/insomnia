@@ -1,7 +1,7 @@
 import * as networkUtils from '../network';
 import fs from 'fs';
 import { join as pathJoin, resolve as pathResolve } from 'path';
-import { getRenderedRequest } from '../../common/render';
+import { getRenderedRequestAndContext } from '../../common/render';
 import * as models from '../../models';
 import {
   AUTH_AWS_IAM,
@@ -18,6 +18,8 @@ import { globalBeforeEach } from '../../__jest__/before-each';
 import { DEFAULT_BOUNDARY } from '../multipart';
 
 const CONTEXT = {};
+
+const getRenderedRequest = async (...args) => (await getRenderedRequestAndContext(...args)).request;
 
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);
@@ -97,18 +99,16 @@ describe('actuallySend()', () => {
         ACCEPT_ENCODING: '',
         COOKIEFILE: '',
         FOLLOWLOCATION: true,
-        HTTPAUTH: 'Basic',
         HTTPHEADER: [
           'Content-Type: application/json',
           'Empty;',
           'Expect:',
           'Transfer-Encoding:',
+          'Authorization: Basic dXNlcjpwYXNz',
           'Accept: */*',
           'Accept-Encoding:',
         ],
         NOPROGRESS: true,
-        USERNAME: 'user',
-        PASSWORD: 'pass',
         POSTFIELDS: 'foo=bar',
         POST: 1,
         PROXY: '',
@@ -247,17 +247,15 @@ describe('actuallySend()', () => {
         CUSTOMREQUEST: 'GET',
         ACCEPT_ENCODING: '',
         FOLLOWLOCATION: true,
-        HTTPAUTH: 'Basic',
         HTTPHEADER: [
           'Content-Type: application/json',
           'Expect:',
           'Transfer-Encoding:',
+          'Authorization: Basic dXNlcjpwYXNz',
           'Accept: */*',
           'Accept-Encoding:',
         ],
         NOPROGRESS: true,
-        USERNAME: 'user',
-        PASSWORD: 'pass',
         POSTFIELDS: 'foo=bar',
         PROXY: '',
         TIMEOUT_MS: 0,
@@ -615,6 +613,54 @@ describe('actuallySend()', () => {
     expect(JSON.parse(r.getBodyBuffer(responseV3)).options.HTTP_VERSION).toBe('v3');
     expect(JSON.parse(r.getBodyBuffer(responseDefault)).options.HTTP_VERSION).toBe(undefined);
     expect(JSON.parse(r.getBodyBuffer(responseInvalid)).options.HTTP_VERSION).toBe(undefined);
+  });
+
+  it('requests can be cancelled by requestId', async () => {
+    // GIVEN
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+
+    const request1 = Object.assign(models.request.init(), {
+      _id: 'req_15',
+      parentId: workspace._id,
+      url: 'http://unix:3000/requestA',
+      method: 'GET',
+    });
+
+    const request2 = Object.assign(models.request.init(), {
+      _id: 'req_10',
+      parentId: workspace._id,
+      url: 'http://unix:3000/requestB',
+      method: 'GET',
+    });
+
+    const renderedRequest1 = await getRenderedRequest(request1);
+    const renderedRequest2 = await getRenderedRequest(request2);
+
+    // WHEN
+    const response1Promise = networkUtils._actuallySend(
+      renderedRequest1,
+      CONTEXT,
+      workspace,
+      settings,
+    );
+    const response2Promise = networkUtils._actuallySend(
+      renderedRequest2,
+      CONTEXT,
+      workspace,
+      settings,
+    );
+
+    await networkUtils.cancelRequestById(renderedRequest1._id);
+    const response1 = await response1Promise;
+    const response2 = await response2Promise;
+
+    // THEN
+    expect(response1.statusMessage).toBe('Cancelled');
+    expect(response2.statusMessage).toBe('OK');
+
+    expect(networkUtils.hasCancelFunctionForId(request1._id)).toBe(false);
+    expect(networkUtils.hasCancelFunctionForId(request2._id)).toBe(false);
   });
 });
 

@@ -1,23 +1,24 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { basename as pathBasename } from 'path';
-import { remote } from 'electron';
+import selectFileOrFolder from '../../../common/select-file-or-folder';
 
 type Props = {
   // Required
-  onChange: Function,
-  path: string,
+  onChange: (path: string) => void,
 
   // Optional
-  itemtypes?: Array<string>,
+  path?: string,
+  itemtypes?: Array<'file' | 'directory'>,
   extensions?: Array<string>,
   showFileName?: boolean,
   showFileIcon?: boolean,
   name?: string,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class FileInputButton extends React.PureComponent<Props> {
   _button: ?HTMLButtonElement;
 
@@ -34,47 +35,17 @@ class FileInputButton extends React.PureComponent<Props> {
   }
 
   async _handleChooseFile() {
-    // If no types are selected then default to just files and not directories
-    const types = this.props.itemtypes ? this.props.itemtypes : ['file'];
-    let title = 'Select ';
-    if (types.includes('file')) {
-      title += ' File';
-      if (types.length > 2) {
-        title += ' or';
-      }
-    }
-    if (types.includes('directory')) {
-      title += ' Directory';
-    }
-    const options = {
-      title: title,
-      buttonLabel: 'Select',
-      properties: types.map(type => {
-        console.log('TYPE', type);
-        if (type === 'file') {
-          return 'openFile';
-        }
-        if (type === 'directory') {
-          return 'openDirectory';
-        }
-      }),
-      filters: [{ name: 'All Files', extensions: ['*'] }],
-    };
-
-    // If extensions are provided then filter for just those extensions
-    if (this.props.extensions) {
-      options.filters = [{ name: 'Files', extensions: this.props.extensions }];
-    }
-
-    const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
+    const { canceled, filePath } = await selectFileOrFolder({
+      itemTypes: this.props.itemtypes,
+      extensions: this.props.extensions,
+    });
 
     // Only change the file if a new file was selected
     if (canceled) {
       return;
     }
 
-    const path = filePaths[0];
-    this.props.onChange(path);
+    this.props.onChange(filePath);
   }
 
   render() {

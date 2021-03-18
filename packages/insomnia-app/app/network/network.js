@@ -27,7 +27,6 @@ import * as uuid from 'uuid';
 import * as models from '../models';
 import {
   AUTH_AWS_IAM,
-  AUTH_BASIC,
   AUTH_DIGEST,
   AUTH_NETRC,
   AUTH_NTLM,
@@ -38,7 +37,6 @@ import {
   HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
   isWindows,
-  isMac,
 } from '../common/constants';
 import {
   delay,
@@ -63,7 +61,7 @@ import {
 } from 'insomnia-url';
 import fs from 'fs';
 import * as db from '../common/database';
-import * as CACerts from './cacert';
+import CACerts from './ca-certs';
 import winCa from 'win-ca';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
@@ -113,13 +111,27 @@ const LIBCURL_DEBUG_MIGRATION_MAP = {
   '': '',
 };
 
-let cancelRequestFunction = null;
+const cancelRequestFunctionMap = {};
 let lastUserInteraction = Date.now();
 
-export async function cancelCurrentRequest() {
-  if (typeof cancelRequestFunction === 'function') {
-    return cancelRequestFunction();
+export async function cancelRequestById(requestId) {
+  if (hasCancelFunctionForId(requestId)) {
+    const cancelRequestFunction = cancelRequestFunctionMap[requestId];
+    if (typeof cancelRequestFunction === 'function') {
+      return cancelRequestFunction();
+    }
   }
+  console.log(`[network] Failed to cancel req=${requestId} because cancel function not found`);
+}
+
+function clearCancelFunctionForId(requestId) {
+  if (hasCancelFunctionForId(requestId)) {
+    delete cancelRequestFunctionMap[requestId];
+  }
+}
+
+export function hasCancelFunctionForId(requestId) {
+  return cancelRequestFunctionMap.hasOwnProperty(requestId);
 }
 
 export async function _actuallySend(
@@ -154,6 +166,9 @@ export async function _actuallySend(
       noPlugins: boolean = false,
     ): Promise<void> {
       const timelinePath = await storeTimeline(timeline);
+
+      // Tear Down the cancellation logic
+      clearCancelFunctionForId(renderedRequest._id);
 
       const environmentId = environment ? environment._id : null;
       const responsePatchBeforeHooks = Object.assign(
@@ -228,7 +243,7 @@ export async function _actuallySend(
 
     try {
       // Setup the cancellation logic
-      cancelRequestFunction = async () => {
+      cancelRequestFunctionMap[renderedRequest._id] = async () => {
         await respond(
           {
             elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
@@ -442,18 +457,17 @@ export async function _actuallySend(
       } else if (settings.caBundleType === CertificateBundleType.userProvided) {
         setOpt(Curl.option.CAINFO, settings.caBundlePath);
         console.log('[net] Set CA to user provided file ', settings.caBundlePath);
-      } else if (isMac()) {
-        // Thanks to libcurl, Mac will use certificates form the OS.
       } else {
+        // Setup CA Root Certificates
         const baseCAPath = getTempDir();
-        const fullCAPath = pathJoin(baseCAPath, CACerts.filename);
+        const fullCAPath = pathJoin(baseCAPath, 'ca-certs.pem');
 
         try {
           fs.statSync(fullCAPath);
         } catch (err) {
           // Doesn't exist yet, so write it
           mkdirp.sync(baseCAPath);
-          fs.writeFileSync(fullCAPath, CACerts.blob);
+          fs.writeFileSync(fullCAPath, CACerts);
           console.log('[net] Set CA to', fullCAPath);
         }
 
@@ -655,12 +669,7 @@ export async function _actuallySend(
 
       // Handle Authorization header
       if (!hasAuthHeader(headers) && !renderedRequest.authentication.disabled) {
-        if (renderedRequest.authentication.type === AUTH_BASIC) {
-          const { username, password } = renderedRequest.authentication;
-          setOpt(Curl.option.HTTPAUTH, CurlAuth.Basic);
-          setOpt(Curl.option.USERNAME, username || '');
-          setOpt(Curl.option.PASSWORD, password || '');
-        } else if (renderedRequest.authentication.type === AUTH_DIGEST) {
+        if (renderedRequest.authentication.type === AUTH_DIGEST) {
           const { username, password } = renderedRequest.authentication;
           setOpt(Curl.option.HTTPAUTH, CurlAuth.Digest);
           setOpt(Curl.option.USERNAME, username || '');
@@ -1028,6 +1037,7 @@ async function _applyRequestPluginHooks(
       ...(pluginContexts.data.init(): Object),
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext): Object),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()): Object),
     };
 
     try {
@@ -1043,11 +1053,11 @@ async function _applyRequestPluginHooks(
 
 async function _applyResponsePluginHooks(
   response: ResponsePatch,
-  request: RenderedRequest,
-  renderContext: Object,
+  renderedRequest: RenderedRequest,
+  renderedContext: Object,
 ): Promise<ResponsePatch> {
   const newResponse = clone(response);
-  const newRequest = clone(request);
+  const newRequest = clone(renderedRequest);
 
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
@@ -1055,7 +1065,8 @@ async function _applyResponsePluginHooks(
       ...(pluginContexts.data.init(): Object),
       ...(pluginContexts.store.init(plugin): Object),
       ...(pluginContexts.response.init(newResponse): Object),
-      ...(pluginContexts.request.init(newRequest, renderContext, true): Object),
+      ...(pluginContexts.request.init(newRequest, renderedContext, true): Object),
+      ...(pluginContexts.network.init(renderedContext.getEnvironmentId()): Object),
     };
 
     try {

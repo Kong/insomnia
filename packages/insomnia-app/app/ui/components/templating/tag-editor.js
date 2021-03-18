@@ -1,20 +1,31 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import clone from 'clone';
 import * as templating from '../../../templating';
-import type { NunjucksParsedTag, NunjucksParsedTagArg } from '../../../templating/utils';
+import type {
+  NunjucksActionTag,
+  NunjucksParsedTag,
+  NunjucksParsedTagArg,
+} from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import { delay, fnOrString } from '../../../common/misc';
+import { metaSortKeySort } from '../../../common/sorting';
 import type { BaseModel } from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
+import type { Request } from '../../../models/request';
+import type { RequestGroup } from '../../../models/request-group';
+import { isRequest, isRequestGroup } from '../../../models/helpers/is-model';
 import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
+import { getTemplateTags } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context';
 
 type Props = {
   handleRender: Function,
@@ -36,7 +47,7 @@ type State = {
   variables: Array<{ name: string, value: string }>,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class TagEditor extends React.PureComponent<Props, State> {
   _select: ?HTMLSelectElement;
 
@@ -103,6 +114,20 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
+  _sortRequests(_models: Array<Request | RequestGroup>, parentId: string) {
+    let sortedModels = [];
+    _models
+      .filter(model => model.parentId === parentId)
+      .sort(metaSortKeySort)
+      .forEach(model => {
+        if (isRequest(model)) sortedModels.push(model);
+        if (isRequestGroup(model))
+          sortedModels = sortedModels.concat(this._sortRequests(_models, model._id));
+      });
+
+    return sortedModels;
+  }
+
   async _refreshModels(workspace: Workspace) {
     this.setState({ loadingDocs: true });
 
@@ -115,6 +140,10 @@ class TagEditor extends React.PureComponent<Props, State> {
       allDocs[doc.type].push(doc);
     }
 
+    const requests = allDocs[models.request.type] || [];
+    const requestGroups = allDocs[models.requestGroup.type] || [];
+    const sortedReqs = this._sortRequests(requests.concat(requestGroups), this.props.workspace._id);
+    allDocs[models.request.type] = sortedReqs;
     this.setState({
       allDocs,
       loadingDocs: false,
@@ -250,6 +279,20 @@ class TagEditor extends React.PureComponent<Props, State> {
     const tagDefinitions = await templating.getTagDefinitions();
     const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
     this._update(this.state.tagDefinitions, tagDefinition, null, false);
+  }
+
+  async _handleActionClick(action: NunjucksActionTag) {
+    const templateTags = await getTemplateTags();
+    const activeTemplateTag = templateTags.find(({ templateTag }) => {
+      return templateTag.name === this.state.activeTagData.name;
+    });
+
+    const helperContext = {
+      ...pluginContexts.store.init(activeTemplateTag.plugin),
+    };
+
+    await action.run(helperContext);
+    return this._handleRefresh();
   }
 
   _setSelectRef(n: ?HTMLSelectElement) {
@@ -626,6 +669,33 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
+  renderActions(actions = []) {
+    return (
+      <div className="form-row">
+        <div className="form-control">
+          <label>Actions</label>
+          <div className="form-row">{actions.map(this.renderAction)}</div>
+        </div>
+      </div>
+    );
+  }
+
+  renderAction(action: NunjucksActionTag, index: number) {
+    const name = action.name;
+    const icon = action.icon ? <i className={action.icon} /> : undefined;
+
+    return (
+      <button
+        key={name}
+        className="btn btn--clicky btn--largest"
+        type="button"
+        onClick={() => this._handleActionClick(action)}>
+        {icon}
+        {name}
+      </button>
+    );
+  }
+
   render() {
     const { error, preview, activeTagDefinition, activeTagData, rendering } = this.state;
 
@@ -671,6 +741,9 @@ class TagEditor extends React.PureComponent<Props, State> {
           activeTagDefinition.args.map((argDefinition: NunjucksParsedTagArg, index) =>
             this.renderArg(argDefinition, activeTagData.args, index),
           )}
+
+        {activeTagDefinition?.actions?.length && this.renderActions(activeTagDefinition.actions)}
+
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
             <label>

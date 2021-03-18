@@ -123,6 +123,14 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
 
     // HTTP Basic Authentication
     case AUTH_BASIC:
+      return {
+        type,
+        useISO88591: oldAuth.useISO88591 || false,
+        disabled: oldAuth.disabled || false,
+        username: oldAuth.username || '',
+        password: oldAuth.password || '',
+      };
+
     case AUTH_DIGEST:
     case AUTH_NTLM:
       return {
@@ -202,6 +210,20 @@ export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
 
   const mimeType = contentType.split(';')[0];
   return { mimeType, text: rawBody };
+}
+
+export function newBodyGraphQL(rawBody: string): RequestBody {
+  try {
+    // Only strip the newlines if rawBody is a parsable JSON
+    JSON.parse(rawBody);
+    return { mimeType: CONTENT_TYPE_GRAPHQL, text: rawBody.replace(/\\\\n/g, '') };
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      return { mimeType: CONTENT_TYPE_GRAPHQL, text: rawBody };
+    } else {
+      throw e;
+    }
+  }
 }
 
 export function newBodyFormUrlEncoded(parameters: Array<RequestBodyParameter> | null): RequestBody {
@@ -320,7 +342,7 @@ export function updateMimeType(
     if (contentTypeHeader) {
       contentTypeHeader.value = CONTENT_TYPE_JSON;
     }
-    body = newBodyRaw(oldBody.text || '', CONTENT_TYPE_GRAPHQL);
+    body = newBodyGraphQL(oldBody.text || '');
   } else if (typeof mimeType !== 'string') {
     // No body
     body = newBodyNone();

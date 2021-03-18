@@ -1,11 +1,11 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
-import { isInsomnia } from '../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
 
 type Props = {
   wrapperProps: WrapperProps,
@@ -14,11 +14,13 @@ type Props = {
   renderPageSidebar?: () => React.Node,
   renderPageHeader?: () => React.Node,
   renderPageBody?: () => React.Node,
+  renderPaneOne?: () => React.Node,
+  renderPaneTwo?: () => React.Node,
 };
 
 type State = {};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class PageLayout extends React.PureComponent<Props, State> {
   // Special request updaters
   _handleStartDragSidebar(e: Event): void {
@@ -29,38 +31,50 @@ class PageLayout extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { renderPageBody, renderPageHeader, renderPageSidebar, wrapperProps } = this.props;
+    const {
+      renderPaneOne,
+      renderPaneTwo,
+      renderPageBody,
+      renderPageHeader,
+      renderPageSidebar,
+      wrapperProps,
+    } = this.props;
 
     const {
-      activity,
       activeEnvironment,
       activeGitRepository,
-      activeWorkspace,
       gitVCS,
       handleInitializeEntities,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
       handleSetActiveWorkspace,
       handleSetSidebarRef,
-      handleShowSettingsModal,
+      handleSetRequestPaneRef,
+      handleSetResponsePaneRef,
+      handleStartDragPaneHorizontal,
+      handleResetDragPaneHorizontal,
+      handleStartDragPaneVertical,
+      handleResetDragPaneVertical,
       isLoading,
       paneHeight,
       paneWidth,
       settings,
       sidebarHidden,
       sidebarWidth,
-      syncItems,
       unseenWorkspaces,
-      vcs,
       workspaces,
     } = wrapperProps;
 
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
 
-    const gridRows = `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`;
+    const paneTwo = renderPaneTwo && renderPaneTwo();
+
+    const gridRows = paneTwo
+      ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
+      : `auto 1fr`;
     const gridColumns =
       `auto ${realSidebarWidth}rem 0 ` +
-      `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)`;
+      `${paneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
 
     return (
       <div
@@ -104,7 +118,6 @@ class PageLayout extends React.PureComponent<Props, State> {
               ref={handleSetSidebarRef}
               activeEnvironment={activeEnvironment}
               activeGitRepository={activeGitRepository}
-              enableSyncBeta={settings.enableSyncBeta}
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
@@ -113,23 +126,11 @@ class PageLayout extends React.PureComponent<Props, State> {
               hotKeyRegistry={settings.hotKeyRegistry}
               isLoading={isLoading}
               showEnvironmentsModal={this._handleShowEnvironmentsModal}
-              syncItems={syncItems}
               unseenWorkspaces={unseenWorkspaces}
-              vcs={vcs}
               gitVCS={gitVCS}
               width={sidebarWidth}
-              workspace={activeWorkspace}
               workspaces={workspaces}>
               {renderPageSidebar()}
-              {!isInsomnia(activity) && (
-                <div className="sidebar__footer">
-                  <button
-                    className="btn btn--compact wide row-spaced"
-                    onClick={handleShowSettingsModal}>
-                    Preferences <i className="fa fa-gear" />
-                  </button>
-                </div>
-              )}
             </Sidebar>
 
             <div className="drag drag--sidebar">
@@ -140,11 +141,53 @@ class PageLayout extends React.PureComponent<Props, State> {
             </div>
           </ErrorBoundary>
         )}
+        {renderPageBody ? (
+          <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>
+        ) : (
+          <>
+            {renderPaneOne && (
+              <ErrorBoundary showAlert>
+                <Pane position="one" ref={handleSetRequestPaneRef}>
+                  {renderPaneOne()}
+                </Pane>
+              </ErrorBoundary>
+            )}
+            {paneTwo && (
+              <>
+                <div className="drag drag--pane-horizontal">
+                  <div
+                    onMouseDown={handleStartDragPaneHorizontal}
+                    onDoubleClick={handleResetDragPaneHorizontal}
+                  />
+                </div>
 
-        {renderPageBody && <ErrorBoundary showAlert>{renderPageBody()}</ErrorBoundary>}
+                <div className="drag drag--pane-vertical">
+                  <div
+                    onMouseDown={handleStartDragPaneVertical}
+                    onDoubleClick={handleResetDragPaneVertical}
+                  />
+                </div>
+
+                <ErrorBoundary showAlert>
+                  <Pane position="two" ref={handleSetResponsePaneRef}>
+                    {paneTwo}
+                  </Pane>
+                </ErrorBoundary>
+              </>
+            )}
+          </>
+        )}
       </div>
     );
   }
 }
 
 export default PageLayout;
+
+class Pane extends React.PureComponent {
+  render() {
+    return (
+      <section className={`pane-${this.props.position} theme--pane`}>{this.props.children}</section>
+    );
+  }
+}

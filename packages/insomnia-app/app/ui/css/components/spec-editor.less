@@ -1,63 +1,6 @@
-.spec-editor {
-  display: grid;
-  width: 100%;
-  height: 100%;
-
-  grid-template-areas: 'appheader appheader' 'body-left body-right';
-  grid-template-rows: auto 1fr;
-  grid-template-columns: 1fr 1fr;
-
-  border-left: 1px solid var(--hl-md);
-
-  &.preview-hidden {
-    grid-template-columns: 1fr 0;
-  }
-
-  &__header {
-    grid-area: header;
-    background: var(--color-bg);
-    color: var(--color-font);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    border-bottom: 1px solid var(--hl-md);
-
-    &__buttons {
-      margin-left: auto;
-
-      & > button {
-        align-self: stretch;
-        height: 100%;
-        background: none;
-        border: none !important;
-      }
-    }
-
-    h1 {
-      padding: 0 var(--padding-md);
-      margin: 0;
-    }
-  }
-
-  &__body {
-    grid-area: body-left;
-    background: var(--color-bg);
-    color: var(--color-font);
-    display: grid;
-    grid-template-columns: 100%;
-    grid-template-rows: 1fr auto;
-  }
-}
-
-.spec-editor-sidebar {
-  overflow: hidden;
-  overflow-y: auto;
-}
-
 #swagger-ui-wrapper {
-  border-left: 1px solid var(--hl-sm);
+  height: 100%;
   overflow-y: scroll;
-  grid-area: body-right;
 
   .nostyle,
   .renderedMarkdown,
@@ -100,7 +43,6 @@
   code {
     color: var(--color-font);
     background-color: var(--hl-md);
-
   }
 
   .scheme-container {
@@ -109,7 +51,6 @@
 
   section.schemes {
     div:first-child {
-
       &:not('.modal-ux-header') {
         float: left;
       }
@@ -140,7 +81,8 @@
     fill: var(--color-font);
   }
 
-  .opblock-section-header, .opblock {
+  .opblock-section-header,
+  .opblock {
     background-color: var(--hl-xs);
   }
 

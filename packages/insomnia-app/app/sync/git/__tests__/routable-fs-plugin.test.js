@@ -1,11 +1,8 @@
 import { MemPlugin } from '../mem-plugin';
 import { routableFSPlugin } from '../routable-fs-plugin';
 import { GIT_CLONE_DIR } from '../git-vcs';
-import path from 'path';
-jest.mock('path');
 
-describe.each(['win32', 'posix'])('routableFSPlugin using path.%s', type => {
-  beforeAll(() => path.__mockPath(type));
+describe('routableFSPlugin', () => {
   afterAll(() => jest.restoreAllMocks());
   it('routes .git and other files to separate places', async () => {
     const pGit = MemPlugin.createPlugin();

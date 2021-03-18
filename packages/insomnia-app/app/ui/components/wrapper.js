@@ -13,7 +13,18 @@ import type {
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  getAppName,
+  SortOrder,
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+} from '../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
 import WrapperModal from './modals/wrapper-modal';
@@ -35,7 +46,6 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import RequestSettingsModal from './modals/request-settings-modal';
-import SetupSyncModal from './modals/setup-sync-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
 import GitStagingModal from './modals/git-staging-modal';
@@ -45,10 +55,10 @@ import SyncMergeModal from './modals/sync-merge-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncShareModal from './modals/sync-share-modal';
 import SyncBranchesModal from './modals/sync-branches-modal';
+import SyncDeleteModal from './modals/sync-delete-modal';
 import RequestRenderErrorModal from './modals/request-render-error-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
-import WorkspaceShareSettingsModal from './modals/workspace-share-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
 import * as db from '../../common/database';
 import * as models from '../../models/index';
@@ -76,20 +86,15 @@ import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestResult } from '../../models/unit-test-result';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { GlobalActivity } from '../../common/constants';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-  getAppName,
-} from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
+import ProtoFilesModal from './modals/proto-files-modal';
+import { GrpcDispatchModalWrapper } from '../context/grpc';
+import WrapperMigration from './wrapper-migration';
+import type { ImportOptions } from '../redux/modules/global';
 
 const spectral = new Spectral();
 
@@ -98,16 +103,9 @@ export type WrapperProps = {
   handleActivateRequest: Function,
   handleSetSidebarFilter: Function,
   handleToggleMenuBar: Function,
-  handleImportFileToWorkspace: (workspaceId: string, forceToWorkspace?: ForceToWorkspace) => void,
-  handleImportClipBoardToWorkspace: (
-    workspaceId: string,
-    forceToWorkspace?: ForceToWorkspace,
-  ) => void,
-  handleImportUriToWorkspace: (
-    workspaceId: string,
-    uri: string,
-    forceToWorkspace?: ForceToWorkspace,
-  ) => void,
+  handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void,
+  handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void,
+  handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void,
   handleInitializeEntities: () => Promise<void>,
   handleExportFile: Function,
   handleShowExportRequestsModal: Function,
@@ -121,9 +119,6 @@ export type WrapperProps = {
   handleDuplicateRequestGroup: Function,
   handleMoveRequestGroup: Function,
   handleDuplicateWorkspace: Function,
-  handleDuplicateWorkspaceById: (onComplete: () => void, workspaceId: string) => void,
-  handleRenameWorkspaceById: (onComplete: () => void, workspaceId: string) => void,
-  handleDeleteWorkspaceById: (onComplete: () => void, workspaceId: string) => void,
   handleCreateRequestGroup: Function,
   handleGenerateCodeForActiveRequest: Function,
   handleGenerateCode: Function,
@@ -137,6 +132,7 @@ export type WrapperProps = {
   handleSetResponseFilter: Function,
   handleSetActiveResponse: Function,
   handleSetSidebarRef: Function,
+  handleSidebarSort: (sortOrder: SortOrder) => void,
   handleStartDragSidebar: Function,
   handleResetDragSidebar: Function,
   handleStartDragPaneHorizontal: Function,
@@ -150,6 +146,7 @@ export type WrapperProps = {
   handleUpdateRequestMimeType: Function,
   handleUpdateDownloadPath: Function,
   handleSetActiveActivity: (activity: GlobalActivity) => void,
+  handleGoToNextActivity: () => void,
 
   // Properties
   activity: GlobalActivity,
@@ -198,6 +195,10 @@ export type WrapperProps = {
   activeResponse: Response | null,
 };
 
+export type HandleImportFileCallback = (options?: ImportOptions) => void;
+export type HandleImportClipboardCallback = (options?: ImportOptions) => void;
+export type HandleImportUriCallback = (uri: string, options?: ImportOptions) => void;
+
 type State = {
   forceRefreshKey: number,
   activeGitBranch: string,
@@ -213,7 +214,7 @@ const rUpdate = (request, ...args) => {
 
 const sUpdate = models.settings.update;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Wrapper extends React.PureComponent<WrapperProps, State> {
   constructor(props: any) {
     super(props);
@@ -341,7 +342,14 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     // Delaying generation so design to debug mode is smooth
     handleSetActiveActivity(nextActivity);
     setTimeout(() => {
-      importRaw(() => Promise.resolve(workspaceId), activeApiSpec.contents);
+      importRaw(activeApiSpec.contents, {
+        getWorkspaceId: () => Promise.resolve(workspaceId),
+        enableDiffBasedPatching: true,
+        enableDiffDeep: true,
+        bypassDiffProps: {
+          url: true,
+        },
+      });
     }, 1000);
   }
 
@@ -360,16 +368,16 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return sUpdate(this.props.settings, { useBulkParametersEditor });
   }
 
-  _handleImportFile(forceToWorkspace?: ForceToWorkspace): void {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
+  _handleImportFile(options?: ImportOptions): void {
+    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, options);
   }
 
-  _handleImportUri(uri: string, forceToWorkspace?: ForceToWorkspace): void {
-    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, forceToWorkspace);
+  _handleImportUri(uri: string, options?: ImportOptions): void {
+    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, options);
   }
 
-  _handleImportClipBoard(forceToWorkspace?: ForceToWorkspace): void {
-    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, forceToWorkspace);
+  _handleImportClipBoard(options?: ImportOptions): void {
+    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, options);
   }
 
   _handleSetActiveResponse(responseId: string | null): void {
@@ -425,11 +433,15 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
         title: 'Deleting Last Workspace',
         message: 'Since you deleted your only workspace, a new one has been created for you.',
         onConfirm: async () => {
+          await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
+
           await models.workspace.create({ name: getAppName() });
           await models.workspace.remove(activeWorkspace);
         },
       });
     } else {
+      await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
+
       await models.workspace.remove(activeWorkspace);
     }
   }
@@ -521,6 +533,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       activeGitRepository,
       activeRequest,
       activeWorkspace,
+      activeApiSpec,
       activeWorkspaceClientCertificates,
       activity,
       gitVCS,
@@ -533,6 +546,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
       handleRender,
       handleSetActiveWorkspace,
       handleShowExportRequestsModal,
+      handleSidebarSort,
       handleToggleMenuBar,
       isVariableUncovered,
       requestMetas,
@@ -639,12 +653,17 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               workspace={activeWorkspace}
             />
 
-            <MoveRequestGroupModal ref={registerModal} workspaces={workspaces} />
+            <MoveRequestGroupModal
+              ref={registerModal}
+              workspaces={workspaces}
+              activeWorkspace={activeWorkspace}
+            />
 
             <WorkspaceSettingsModal
               ref={registerModal}
               clientCertificates={activeWorkspaceClientCertificates}
               workspace={activeWorkspace}
+              apiSpec={activeApiSpec}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}
               editorKeyMap={settings.editorKeyMap}
@@ -657,8 +676,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
               isVariableUncovered={isVariableUncovered}
             />
-
-            <WorkspaceShareSettingsModal ref={registerModal} workspace={activeWorkspace} />
 
             <GenerateCodeModal
               ref={registerModal}
@@ -677,7 +694,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleImportUri={this._handleImportUri}
               handleToggleMenuBar={handleToggleMenuBar}
               settings={settings}
-              activity={activity}
             />
 
             <ResponseDebugModal ref={registerModal} settings={settings} />
@@ -705,8 +721,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
-
-            <SetupSyncModal ref={registerModal} workspace={activeWorkspace} />
 
             {gitVCS && (
               <React.Fragment>
@@ -745,6 +759,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                   vcs={vcs}
                   syncItems={syncItems}
                 />
+                <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               </React.Fragment>
@@ -770,6 +785,16 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               childObjects={sidebarChildren.all}
               handleExportRequestsToFile={handleExportRequestsToFile}
             />
+
+            <GrpcDispatchModalWrapper>
+              {dispatch => (
+                <ProtoFilesModal
+                  ref={registerModal}
+                  grpcDispatch={dispatch}
+                  workspace={activeWorkspace}
+                />
+              )}
+            </GrpcDispatchModalWrapper>
           </ErrorBoundary>
         </div>
         <React.Fragment key={`views::${this.state.activeGitBranch}`}>
@@ -800,7 +825,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
           )}
 
-          {(activity === ACTIVITY_DEBUG || activity === ACTIVITY_INSOMNIA) && (
+          {activity === ACTIVITY_DEBUG && (
             <WrapperDebug
               forceRefreshKey={this.state.forceRefreshKey}
               gitSyncDropdown={gitSyncDropdown}
@@ -823,6 +848,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleSetResponseFilter={this._handleSetResponseFilter}
               handleShowCookiesModal={this._handleShowCookiesModal}
               handleShowRequestSettingsModal={this._handleShowRequestSettingsModal}
+              handleSidebarSort={handleSidebarSort}
               handleUpdateRequestAuthentication={Wrapper._handleUpdateRequestAuthentication}
               handleUpdateRequestBody={Wrapper._handleUpdateRequestBody}
               handleUpdateRequestHeaders={Wrapper._handleUpdateRequestHeaders}
@@ -840,7 +866,9 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
           )}
 
-          {activity === null && (
+          {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
+
+          {(activity === ACTIVITY_ONBOARDING || activity === null) && (
             <WrapperOnboarding
               wrapperProps={this.props}
               handleImportFile={this._handleImportFile}

@@ -11,6 +11,9 @@ import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
+import * as templatingUtils from '../templating/utils';
+import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import { isRequestGroup } from '../models/helpers/is-model';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -28,6 +31,9 @@ export type RenderedRequest = Request & {
   cookies: Array<{ name: string, value: string, disabled?: boolean }>,
   cookieJar: CookieJar,
 };
+
+export type RenderedGrpcRequest = GrpcRequest;
+export type RenderedGrpcRequestBody = GrpcRequestBody;
 
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
@@ -246,18 +252,14 @@ export async function render<T>(
 }
 
 export async function getRenderContext(
-  request: Request,
+  request: Request | GrpcRequest,
   environmentId: string | null,
   ancestors: Array<BaseModel> | null = null,
   purpose: RenderPurpose | null = null,
   extraInfo: ExtraRenderInfo | null = null,
 ): Promise<Object> {
   if (!ancestors) {
-    ancestors = await db.withAncestors(request, [
-      models.request.type,
-      models.requestGroup.type,
-      models.workspace.type,
-    ]);
+    ancestors = await _getRequestAncestors(request);
   }
 
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
@@ -276,28 +278,30 @@ export async function getRenderContext(
   function getKeySource(subObject, inKey, inSource) {
     // Add key to map if it's not root
     if (inKey) {
-      keySource[inKey] = inSource;
+      keySource[templatingUtils.normalizeToDotAndBracketNotation(inKey)] = inSource;
     }
 
     // Recurse down for Objects and Arrays
     const typeStr = Object.prototype.toString.call(subObject);
     if (typeStr === '[object Object]') {
       for (const key of Object.keys(subObject)) {
-        getKeySource(subObject[key], inKey ? `${inKey}.${key}` : key, inSource);
+        getKeySource(subObject[key], templatingUtils.forceBracketNotation(inKey, key), inSource);
       }
     } else if (typeStr === '[object Array]') {
       for (let i = 0; i < subObject.length; i++) {
-        getKeySource(subObject[i], `${inKey}[${i}]`, inSource);
+        getKeySource(subObject[i], templatingUtils.forceBracketNotation(inKey, i), inSource);
       }
     }
   }
 
+  const inKey = templating.NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
+
   // Get Keys from root environment
-  getKeySource((rootEnvironment || {}).data, '', 'root');
+  getKeySource((rootEnvironment || {}).data, inKey, 'root');
 
   // Get Keys from sub environment
   if (subEnvironment) {
-    getKeySource(subEnvironment.data || {}, '', subEnvironment.name || '');
+    getKeySource(subEnvironment.data || {}, inKey, subEnvironment.name || '');
   }
 
   // Get Keys from ancestors (e.g. Folders)
@@ -305,11 +309,11 @@ export async function getRenderContext(
     for (let idx = 0; idx < ancestors.length; idx++) {
       const ancestor: any = ancestors[idx] || {};
       if (
-        ancestor.type === 'RequestGroup' &&
+        isRequestGroup(ancestor) &&
         ancestor.hasOwnProperty('environment') &&
         ancestor.hasOwnProperty('name')
       ) {
-        getKeySource(ancestor.environment || {}, '', ancestor.name || '');
+        getKeySource(ancestor.environment || {}, inKey, ancestor.name || '');
       }
     }
   }
@@ -341,17 +345,68 @@ export async function getRenderContext(
   return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
 }
 
+export async function getRenderedGrpcRequest(
+  request: GrpcRequest,
+  environmentId: string | null,
+  purpose?: RenderPurpose,
+  extraInfo?: ExtraRenderInfo,
+  skipBody?: boolean,
+): Promise<{ request: RenderedGrpcRequest, context: Object }> {
+  const renderContext = await getRenderContext(
+    request,
+    environmentId,
+    null,
+    purpose,
+    extraInfo || null,
+  );
+
+  const description = request.description;
+
+  // Render description separately because it's lower priority
+  request.description = '';
+
+  // Ignore body by default and only include if specified to
+  const ignorePathRegex = skipBody ? /^body.*/ : null;
+
+  // Render all request properties
+  const renderedRequest: RenderedGrpcRequest = await render(
+    request,
+    renderContext,
+    ignorePathRegex,
+  );
+
+  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+
+  return renderedRequest;
+}
+
+export async function getRenderedGrpcRequestMessage(
+  request: GrpcRequest,
+  environmentId: string | null,
+  purpose?: RenderPurpose,
+  extraInfo?: ExtraRenderInfo,
+): Promise<RenderedGrpcRequestBody> {
+  const renderContext = await getRenderContext(
+    request,
+    environmentId,
+    null,
+    purpose,
+    extraInfo || null,
+  );
+
+  // Render request body
+  const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
+
+  return renderedBody;
+}
+
 export async function getRenderedRequestAndContext(
   request: Request,
   environmentId: string | null,
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
 ): Promise<{ request: RenderedRequest, context: Object }> {
-  const ancestors = await db.withAncestors(request, [
-    models.request.type,
-    models.requestGroup.type,
-    models.workspace.type,
-  ]);
+  const ancestors = await _getRequestAncestors(request);
   const workspace = ancestors.find(doc => doc.type === models.workspace.type);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
@@ -442,15 +497,6 @@ export async function getRenderedRequestAndContext(
   };
 }
 
-export async function getRenderedRequest(
-  request: Request,
-  environmentId: string,
-  purpose?: RenderPurpose,
-): Promise<RenderedRequest> {
-  const result = await getRenderedRequestAndContext(request, environmentId, purpose);
-  return result.request;
-}
-
 /**
  * Sort the keys that may have Nunjucks last, so that other keys get
  * defined first. Very important if env variables defined in same obj
@@ -469,4 +515,13 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Object): Array<string> {
     const k2Sort = _nunjucksSortValue(finalRenderContext[k2]);
     return k1Sort - k2Sort;
   });
+}
+
+async function _getRequestAncestors(request: Request | GrpcRequest): Promise<Array<BaseModel>> {
+  return await db.withAncestors(request, [
+    models.request.type,
+    models.grpcRequest.type,
+    models.requestGroup.type,
+    models.workspace.type,
+  ]);
 }

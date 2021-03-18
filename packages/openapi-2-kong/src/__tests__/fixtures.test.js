@@ -5,17 +5,16 @@ import { generate } from '../index';
 describe('fixtures', () => {
   const root = path.join(__dirname, '../__fixtures__/');
 
-  for (const name of fs.readdirSync(root)) {
-    if (name.includes('.expected')) {
-      continue;
-    }
+  const fileBases = fs.readdirSync(root).filter(name => !name.includes('.expected'));
 
-    const inputPath = path.join(root, name);
-    const expectedPath = inputPath + '.expected';
+  for (const fileBase of fileBases) {
+    const inputPath = path.join(root, fileBase);
+    const expectedBase = `${path.parse(fileBase).name}.expected.json`;
+    const expectedPath = path.join(root, expectedBase);
 
     const expected = fs.readFileSync(expectedPath, 'utf8');
 
-    it(`converts ${name}`, async () => {
+    it(`converts ${fileBase}`, async () => {
       const result = await generate(inputPath, 'kong-declarative-config');
       expect(result.documents.length).toBe(1);
 

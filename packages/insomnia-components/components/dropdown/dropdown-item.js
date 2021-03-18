@@ -1,10 +1,11 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
-import styled from 'styled-components';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import styled, { css } from 'styled-components';
 
 const StyledButton = styled.button`
   display: flex;
+  align-items: center;
   min-width: 15rem;
   font-size: var(--font-size-md);
   text-align: left;
@@ -26,6 +27,13 @@ const StyledButton = styled.button`
   &:active:not(:disabled) {
     background: var(--hl-md);
   }
+
+  ${({ selected }) =>
+    selected &&
+    css`
+      background: var(--hl-xs) !important;
+      font-weight: bold;
+    `};
 
   &:disabled {
     opacity: 0.5;
@@ -49,9 +57,13 @@ const StyledInner = styled.div`
 
 const StyledText = styled.div`
   white-space: nowrap;
-
+  display: flex;
+  align-items: center;
   & > *:not(:first-child) {
     margin-left: 0.3em;
+  }
+  input + label {
+    padding-top: 0px !important;
   }
 `;
 
@@ -62,7 +74,7 @@ const StyledIconContainer = styled.div`
   padding-right: var(--padding-md);
 `;
 
-@autobind
+@autoBindMethodsForReact
 class DropdownItem extends PureComponent {
   _handleClick(e) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
@@ -130,6 +142,7 @@ DropdownItem.propTypes = {
   right: PropTypes.node,
   className: PropTypes.string,
   color: PropTypes.string,
+  selected: PropTypes.bool,
 };
 
 export default DropdownItem;

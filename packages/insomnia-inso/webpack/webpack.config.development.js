@@ -7,7 +7,7 @@ module.exports = merge(base, {
   plugins: [
     new webpack.DefinePlugin({
       __DEV__: true,
-      'process.env.DEFAULT_APP_DATA_DIR': JSON.stringify('insomnia-app'),
+      'process.env.DEFAULT_APP_NAME': JSON.stringify('insomnia-app'),
     }),
   ],
 });

@@ -1,94 +1,10 @@
 .unit-tests {
-  display: grid;
-  width: 100%;
   height: 100%;
 
-  grid-template-areas: 'appheader appheader' 'body-left body-right';
-  grid-template-rows: auto 1fr;
-  grid-template-columns: 2fr 1fr;
-
-  border-left: 1px solid var(--hl-md);
-
-  &.preview-hidden {
-    grid-template-columns: 1fr 0;
-  }
-
-  &__tests {
-    grid-area: body-left;
-    background: var(--color-bg);
-    color: var(--color-font);
-    overflow-y: auto;
-    box-sizing: border-box;
-
-    &__block {
-      height: auto;
-      width: 100%;
-      border-bottom: 1px dashed var(--hl-md);
-      padding-bottom: var(--padding-md);
-
-      .editor {
-        overflow-y: hidden !important;
-      }
-
-      &__header {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        padding:0px var(--padding-sm) 0px 0px;
-
-        button {
-          padding: 0px var(--padding-sm);
-          flex: 0 0 auto;
-        }
-
-        h2 {
-          font-size: var(--font-size-lg);
-          flex: 1 1 auto;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        & > * {
-          margin-top: var(--padding-md);
-          margin-bottom: var(--padding-md);
-        }
-
-        & > *:first-child {
-          margin-right: auto;
-          margin-left: var(--padding-md);
-        }
-
-        .form-control {
-          width: 100%;
-          max-width: 18rem;
-          flex: 0 0 auto;
-          padding: var(--padding-xxs) var(--padding-sm);
-          border: 1px solid var(--hl-md);
-          border-radius: var(--radius-sm);
-          margin-right: var(--padding-sm);
-          select {
-            border: none;
-            background: none;
-          }
-          * {
-            margin: 0;
-          }
-        }
-      }
-    }
-  }
-
-  &__results {
-    border-left: 1px solid var(--hl-md);
-    grid-area: body-right;
-    background: var(--color-bg);
-    color: var(--color-font);
-    overflow-y: auto;
-
-    ul {
-      padding-top: var(--padding-sm);
-    }
+  .editor {
+    overflow-y: hidden !important;
+    max-height: 25em;
+    margin: var(--padding-sm) 0 var(--padding-md) 0;
   }
 
   &__sidebar {
@@ -142,7 +58,12 @@
     padding-right: 0;
     border-bottom: 1px solid var(--hl-md);
     display: flex;
+    position: sticky;
+    // Double that of CodeMirror's topmost element.
+    z-index: 20;
+    top: 0;
     align-items: center;
+    background: var(--color-bg);
 
     button {
       flex: 0 0 auto;

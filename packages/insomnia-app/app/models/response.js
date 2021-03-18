@@ -86,7 +86,7 @@ export async function migrate(doc: Object) {
 }
 
 export function hookDatabaseInit(consoleLog: () => void = console.log) {
-  consoleLog('Init responses DB');
+  consoleLog('[db] Init responses DB');
   process.nextTick(async () => {
     await models.response.cleanDeletedResponses();
   });

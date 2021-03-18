@@ -141,7 +141,7 @@ components:
         name:
           type: string
         tag:
-          type: string    
+          type: string
 
     Error:
       required:

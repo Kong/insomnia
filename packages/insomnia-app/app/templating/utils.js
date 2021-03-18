@@ -1,6 +1,8 @@
 // @flow
 
 import type { PluginArgumentEnumOption } from './extensions';
+import objectPath from 'objectpath';
+import type { PluginStore } from '../plugins/context';
 
 export type NunjucksParsedTagArg = {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model',
@@ -20,9 +22,16 @@ export type NunjucksParsedTagArg = {
   extensions?: Array<string>,
 };
 
+export type NunjucksActionTag = {
+  name: string,
+  icon?: string,
+  run: (context: PluginStore) => Promise<void>,
+};
+
 export type NunjucksParsedTag = {
   name: string,
   args: Array<NunjucksParsedTagArg>,
+  actions: Array<NunjucksActionTag>,
   rawValue?: string,
   displayName?: string,
   description?: string,
@@ -42,21 +51,29 @@ export function getKeys(obj: any, prefix: string = ''): Array<{ name: string, va
 
   if (typeOfObj === '[object Array]') {
     for (let i = 0; i < obj.length; i++) {
-      allKeys = [...allKeys, ...getKeys(obj[i], `${prefix}[${i}]`)];
+      allKeys = [...allKeys, ...getKeys(obj[i], forceBracketNotation(prefix, i))];
     }
   } else if (typeOfObj === '[object Object]') {
     const keys = Object.keys(obj);
     for (const key of keys) {
-      const newPrefix = prefix ? `${prefix}.${key}` : key;
-      allKeys = [...allKeys, ...getKeys(obj[key], newPrefix)];
+      allKeys = [...allKeys, ...getKeys(obj[key], forceBracketNotation(prefix, key))];
     }
   } else if (typeOfObj === '[object Function]') {
     // Ignore functions
   } else if (prefix) {
-    allKeys.push({ name: prefix, value: obj });
+    allKeys.push({ name: normalizeToDotAndBracketNotation(prefix), value: obj });
   }
 
   return allKeys;
+}
+
+export function forceBracketNotation(prefix: string, key: string | number): string {
+  // Prefix is already in bracket notation because getKeys is recursive
+  return `${prefix}${objectPath.stringify([key], "'", true)}`;
+}
+
+export function normalizeToDotAndBracketNotation(prefix: string): string {
+  return objectPath.normalize(prefix);
 }
 
 /**

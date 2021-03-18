@@ -1,6 +1,7 @@
 import clone from 'clone';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
+import { pluralize } from '../../../common/misc';
 
 const ENTITY_CHANGES = 'entities/changes';
 const ENTITY_INITIALIZE = 'entities/initialize';
@@ -10,26 +11,10 @@ const ENTITY_INITIALIZE = 'entities/initialize';
 // ~~~~~~~~ //
 
 function getReducerName(type) {
-  let trailer = 's';
-  let chop = 0;
-
-  // Things already ending with 's' stay that way
-  if (type.match(/s$/)) {
-    trailer = '';
-    chop = 0;
-  }
-
-  // Things ending in 'y' convert to ies
-  if (type.match(/y$/)) {
-    trailer = 'ies';
-    chop = 1;
-  }
-
   // Lowercase first letter (camel case)
   const lowerFirstLetter = `${type.slice(0, 1).toLowerCase()}${type.slice(1)}`;
 
-  // Add the trailer for pluralization
-  return `${lowerFirstLetter.slice(0, lowerFirstLetter.length - chop)}${trailer}`;
+  return pluralize(lowerFirstLetter);
 }
 
 const initialState = {};
@@ -118,5 +103,9 @@ export async function allDocs() {
     ...(await models.unitTestSuite.all()),
     ...(await models.unitTest.all()),
     ...(await models.unitTestResult.all()),
+    ...(await models.protoFile.all()),
+    ...(await models.protoDirectory.all()),
+    ...(await models.grpcRequest.all()),
+    ...(await models.grpcRequestMeta.all()),
   ];
 }

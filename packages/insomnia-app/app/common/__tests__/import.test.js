@@ -187,6 +187,28 @@ describe('export', () => {
       name: 'Request 1',
       parentId: w._id,
     });
+    const pf1 = await models.protoFile.create({
+      name: 'ProtoFile 1',
+      parentId: w._id,
+    });
+    const gr1 = await models.grpcRequest.create({
+      name: 'Grpc Request 1',
+      parentId: w._id,
+      protoFileId: pf1._id,
+    });
+    const pd = await models.protoDirectory.create({
+      name: 'ProtoDirectory 1',
+      parentId: w._id,
+    });
+    const pf2 = await models.protoFile.create({
+      name: 'ProtoFile 2',
+      parentId: pd._id,
+    });
+    const gr2 = await models.grpcRequest.create({
+      name: 'Grpc Request 2',
+      parentId: w._id,
+      protoFileId: pf2._id,
+    });
     const f2 = await models.requestGroup.create({
       name: 'Folder 2',
       parentId: w._id,
@@ -229,13 +251,18 @@ describe('export', () => {
         expect.objectContaining({ _id: f2._id }),
         expect.objectContaining({ _id: r2._id }),
         expect.objectContaining({ _id: ePub._id }),
+        expect.objectContaining({ _id: gr1._id }),
+        expect.objectContaining({ _id: pd._id }),
+        expect.objectContaining({ _id: pf1._id }),
+        expect.objectContaining({ _id: gr2._id }),
+        expect.objectContaining({ _id: pf2._id }),
       ]),
     });
-    expect(exportWorkspacesDataJson.resources.length).toBe(8);
+    expect(exportWorkspacesDataJson.resources.length).toBe(13);
 
     // Test export some requests only.
-    const exportRequestsJson = await importUtil.exportRequestsData([r1], false, 'json');
-    const exportRequestsYaml = await importUtil.exportRequestsData([r1], false, 'yaml');
+    const exportRequestsJson = await importUtil.exportRequestsData([r1, gr1], false, 'json');
+    const exportRequestsYaml = await importUtil.exportRequestsData([r1, gr1], false, 'yaml');
     const exportRequestsDataJSON = JSON.parse(exportRequestsJson);
     const exportRequestsDataYAML = YAML.parse(exportRequestsYaml);
 
@@ -250,11 +277,14 @@ describe('export', () => {
         expect.objectContaining({ _id: jar._id }),
         expect.objectContaining({ _id: r1._id }),
         expect.objectContaining({ _id: ePub._id }),
+        expect.objectContaining({ _id: gr1._id }),
+        expect.objectContaining({ _id: pf1._id }),
+        expect.objectContaining({ _id: pf2._id }),
       ]),
     });
 
-    expect(exportRequestsDataJSON.resources.length).toBe(6);
-    expect(exportRequestsDataYAML.resources.length).toBe(6);
+    expect(exportRequestsDataJSON.resources.length).toBe(10);
+    expect(exportRequestsDataYAML.resources.length).toBe(10);
 
     // Ensure JSON and YAML are the same
     expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);
@@ -266,9 +296,26 @@ describe('export', () => {
       contents: 'openapi: "3.0.0"',
     });
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
+    const pd = await models.protoDirectory.create({
+      name: 'ProtoDirectory 1',
+      parentId: w._id,
+    });
+    const pf1 = await models.protoFile.create({
+      name: 'ProtoFile 1',
+      parentId: w._id,
+    });
+    const pf2 = await models.protoFile.create({
+      name: 'ProtoFile 2',
+      parentId: pd._id,
+    });
     const r1 = await models.request.create({
       name: 'Request 1',
       parentId: w._id,
+    });
+    const gr1 = await models.grpcRequest.create({
+      name: 'Grpc Request 1',
+      parentId: w._id,
+      protoFileId: pf1._id,
     });
     const f2 = await models.requestGroup.create({
       name: 'Folder 2',
@@ -277,6 +324,19 @@ describe('export', () => {
     const r2 = await models.request.create({
       name: 'Request 2',
       parentId: f2._id,
+    });
+    const gr2 = await models.grpcRequest.create({
+      name: 'Grpc Request 2',
+      parentId: f2._id,
+      protoFileId: pf2._id,
+    });
+    const uts1 = await models.unitTestSuite.create({
+      name: 'Unit Test Suite One',
+      parentId: w._id,
+    });
+    const ut1 = await models.unitTest.create({
+      name: 'Unit Test One',
+      parentId: uts1._id,
     });
     const eBase = await models.environment.getOrCreateForWorkspace(w);
     const ePub = await models.environment.create({
@@ -290,6 +350,7 @@ describe('export', () => {
     });
 
     const result = await importUtil.exportWorkspacesData(w, false, 'json');
+
     expect(JSON.parse(result)).toEqual({
       _type: 'export',
       __export_format: 4,
@@ -299,8 +360,15 @@ describe('export', () => {
         expect.objectContaining({ _id: w._id }),
         expect.objectContaining({ _id: eBase._id }),
         expect.objectContaining({ _id: jar._id }),
+        expect.objectContaining({ _id: pd._id }),
+        expect.objectContaining({ _id: pf1._id }),
+        expect.objectContaining({ _id: pf2._id }),
         expect.objectContaining({ _id: r1._id }),
         expect.objectContaining({ _id: r2._id }),
+        expect.objectContaining({ _id: gr1._id }),
+        expect.objectContaining({ _id: gr2._id }),
+        expect.objectContaining({ _id: uts1._id }),
+        expect.objectContaining({ _id: ut1._id }),
         expect.objectContaining({ _id: ePub._id }),
         expect.objectContaining({ _id: spec._id }),
       ]),
@@ -308,14 +376,26 @@ describe('export', () => {
   });
 });
 
-describe('isApiSpec()', () => {
+describe('isApiSpecImport()', () => {
   it.each(['swagger2', 'openapi3'])('should return true if spec id is %o', (id: string) => {
-    expect(importUtil.isApiSpec(id)).toBe(true);
+    expect(importUtil.isApiSpecImport({ id })).toBe(true);
   });
 
   it('should return false if spec id is not valid', () => {
     const id = 'invalid-id';
 
-    expect(importUtil.isApiSpec(id)).toBe(false);
+    expect(importUtil.isApiSpecImport({ id })).toBe(false);
+  });
+});
+
+describe('isInsomniaV4Import()', () => {
+  it.each(['insomnia-4'])('should return true if spec id is %o', (id: string) => {
+    expect(importUtil.isInsomniaV4Import({ id })).toBe(true);
+  });
+
+  it('should return false if spec id is not valid', () => {
+    const id = 'invalid-id';
+
+    expect(importUtil.isInsomniaV4Import({ id })).toBe(false);
   });
 });

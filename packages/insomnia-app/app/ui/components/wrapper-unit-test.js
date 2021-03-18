@@ -1,22 +1,20 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, ACTIVITY_HOME } from '../../common/constants';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
-  Breadcrumb,
   Button,
   Dropdown,
   DropdownItem,
-  Header,
-  SvgIcon,
   ListGroup,
-  ListGroupItem,
+  UnitTestItem,
   UnitTestResultItem,
 } from 'insomnia-components';
+import UnitTestEditable from './unit-test-editable';
 import ErrorBoundary from './error-boundary';
 import CodeEditor from './codemirror/code-editor';
-import designerLogo from '../images/insomnia-designer-logo.svg';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';
@@ -26,10 +24,10 @@ import Editable from './base/editable';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import SelectModal from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
-import ActivityToggle from './activity-toggle';
 import { getSendRequestCallback } from '../../common/send-request';
 import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_HOME } from '../../common/constants';
+import WorkspacePageHeader from './workspace-page-header';
+import { trackSegmentEvent } from '../../common/analytics';
 
 type Props = {|
   children: SidebarChildObjects,
@@ -43,7 +41,7 @@ type State = {|
   resultsError: string | null,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperUnitTest extends React.PureComponent<Props, State> {
   state = {
     testsRunning: null,
@@ -133,6 +131,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           name,
         });
         await this._handleSetActiveUnitTestSuite(unitTestSuite);
+        trackSegmentEvent('Test Suite Created');
       },
     });
   }
@@ -151,6 +150,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           code: this.generateSendReqSnippet('', ''),
           name,
         });
+        trackSegmentEvent('Unit Test Created');
       },
     });
   }
@@ -170,10 +170,12 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   async _handleRunTests(): Promise<void> {
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
+    trackSegmentEvent('Ran All Unit Tests');
   }
 
   async _handleRunTest(unitTest: UnitTest): Promise<void> {
     await this._runTests([unitTest]);
+    trackSegmentEvent('Ran Individual Unit Test');
   }
 
   async _handleDeleteTest(unitTest: UnitTest): Promise<void> {
@@ -187,6 +189,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTest.remove(unitTest);
+        trackSegmentEvent('Unit Test Deleted');
       },
     });
   }
@@ -210,6 +213,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTestSuite.remove(unitTestSuite);
+        trackSegmentEvent('Test Suite Deleted');
       },
     });
   }
@@ -285,7 +289,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return selectableRequests;
   }
 
-  renderResults(): React.Node {
+  _renderResults(): React.Node {
     const { activeUnitTestResult } = this.props.wrapperProps;
     const { testsRunning, resultsError } = this.state;
 
@@ -320,30 +324,38 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
       );
     }
 
-    const { stats, tests } = activeUnitTestResult.results;
-
-    return (
-      <div className="unit-tests__results">
-        {activeUnitTestResult && (
-          <div key={activeUnitTestResult._id}>
-            <div className="unit-tests__top-header">
-              {stats.failures ? (
-                <h2 className="warning">
-                  Tests Failed {stats.failures}/{stats.tests}
-                </h2>
-              ) : (
-                <h2 className="success">
-                  Tests Passed {stats.passes}/{stats.tests}
-                </h2>
-              )}
+    if (activeUnitTestResult.results) {
+      const { stats, tests } = activeUnitTestResult.results;
+      return (
+        <div className="unit-tests__results">
+          {activeUnitTestResult && (
+            <div key={activeUnitTestResult._id}>
+              <div className="unit-tests__top-header">
+                {stats.failures ? (
+                  <h2 className="warning">
+                    Tests Failed {stats.failures}/{stats.tests}
+                  </h2>
+                ) : (
+                  <h2 className="success">
+                    Tests Passed {stats.passes}/{stats.tests}
+                  </h2>
+                )}
+              </div>
+              <ListGroup>
+                {tests.map((t, i) => (
+                  <UnitTestResultItem key={i} item={t} />
+                ))}
+              </ListGroup>
             </div>
-            <ListGroup>
-              {tests.map((t, i) => (
-                <UnitTestResultItem key={i} item={t} />
-              ))}
-            </ListGroup>
-          </div>
-        )}
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="unit-tests">
+        <div className="unit-tests__top-header">
+          <h2 className="success">Awaiting Test Execution</h2>
+        </div>
       </div>
     );
   }
@@ -351,45 +363,24 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
   renderUnitTest(unitTest: UnitTest): React.Node {
     const { settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
-
     const selectableRequests = this.buildSelectableRequests();
 
     return (
-      <ListGroupItem key={unitTest._id}>
-        <div className="unit-tests__tests__block__header">
-          <h2 className="pad-left-md">
-            <Editable
-              singleClick
-              onSubmit={this._handleChangeTestName.bind(this, unitTest)}
-              value={unitTest.name}
-            />
-          </h2>
-          <div className="form-control form-control--outlined">
-            <select
-              name="request"
-              id="request"
-              onChange={this._handleSetActiveRequest.bind(this, unitTest)}
-              value={unitTest.requestId || '__NULL__'}>
-              <option value="__NULL__">
-                {selectableRequests.length ? '-- Select Request --' : '-- No Requests --'}
-              </option>
-              {selectableRequests.map(({ name, request }) => (
-                <option key={request._id} value={request._id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Button
-            variant="text"
-            disabled={testsRunning && testsRunning.find(t => t._id === unitTest._id)}
-            onClick={() => this._handleRunTest(unitTest)}>
-            <SvgIcon icon="play" />
-          </Button>
-          <Button variant="text" onClick={() => this._handleDeleteTest(unitTest)}>
-            <SvgIcon icon="trashcan" />
-          </Button>
-        </div>
+      <UnitTestItem
+        item={unitTest}
+        key={unitTest._id}
+        onSetActiveRequest={this._handleSetActiveRequest.bind(this, unitTest)}
+        onDeleteTest={this._handleDeleteTest.bind(this, unitTest)}
+        onRunTest={this._handleRunTest.bind(this, unitTest)}
+        testsRunning={testsRunning}
+        selectedRequestId={unitTest.requestId}
+        selectableRequests={selectableRequests}
+        testNameEditable={
+          <UnitTestEditable
+            onSubmit={this._handleChangeTestName.bind(this, unitTest)}
+            value={unitTest.name}
+          />
+        }>
         <CodeEditor
           dynamicHeight
           manualPrettify
@@ -407,54 +398,47 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
           lineWrapping={settings.editorLineWrapping}
           placeholder=""
         />
-      </ListGroupItem>
+      </UnitTestItem>
     );
   }
 
-  renderPageBody(): React.Node {
+  _renderTestSuite(): React.Node {
     const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
     if (!activeUnitTestSuite) {
-      return (
-        <div className="unit-tests layout-body--sidebar theme--pane">
-          <div className="unit-tests__tests theme--pane__body pad">No test suite selected</div>
-        </div>
-      );
+      return <div className="unit-tests pad theme--pane__body">No test suite selected</div>;
     }
 
     return (
-      <div className="unit-tests layout-body--sidebar theme--pane">
-        <div className="unit-tests__tests theme--pane__body">
-          <div className="unit-tests__top-header">
-            <h2>
-              <Editable
-                singleClick
-                onSubmit={this._handleChangeActiveSuiteName}
-                value={activeUnitTestSuite.name}
-              />
-            </h2>
-            <Button variant="outlined" onClick={this._handleCreateTest}>
-              New Test
-            </Button>
-            <Button
-              variant="contained"
-              bg="surprise"
-              onClick={this._handleRunTests}
-              size="default"
-              disabled={testsRunning}>
-              {testsRunning ? 'Running... ' : 'Run Tests'}
-              <i className="fa fa-play space-left"></i>
-            </Button>
-          </div>
-          <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
+      <div className="unit-tests theme--pane__body">
+        <div className="unit-tests__top-header">
+          <h2>
+            <Editable
+              singleClick
+              onSubmit={this._handleChangeActiveSuiteName}
+              value={activeUnitTestSuite.name}
+            />
+          </h2>
+          <Button variant="outlined" onClick={this._handleCreateTest}>
+            New Test
+          </Button>
+          <Button
+            variant="contained"
+            bg="surprise"
+            onClick={this._handleRunTests}
+            size="default"
+            disabled={testsRunning}>
+            {testsRunning ? 'Running... ' : 'Run Tests'}
+            <i className="fa fa-play space-left"></i>
+          </Button>
         </div>
-        {this.renderResults()}
+        <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
       </div>
     );
   }
 
-  renderPageSidebar(): React.Node {
+  _renderPageSidebar(): React.Node {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';
@@ -498,37 +482,26 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
+  _renderPageHeader() {
+    const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
+
+    return (
+      <WorkspacePageHeader
+        wrapperProps={wrapperProps}
+        handleActivityChange={handleActivityChange}
+        gridRight={gitSyncDropdown}
+      />
+    );
+  }
+
   render() {
-    const { handleActivityChange, gitSyncDropdown } = this.props;
-    const { activeWorkspace, activity, activeApiSpec } = this.props.wrapperProps;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageSidebar={this.renderPageSidebar}
-        renderPageBody={this.renderPageBody}
-        renderPageHeader={() => (
-          <Header
-            className="app-header"
-            gridLeft={
-              <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb
-                  className="breadcrumb"
-                  crumbs={['Documents', activeApiSpec.fileName]}
-                  onClick={this._handleBreadcrumb}
-                />
-              </React.Fragment>
-            }
-            gridCenter={
-              <ActivityToggle
-                activity={activity}
-                handleActivityChange={handleActivityChange}
-                workspace={activeWorkspace}
-              />
-            }
-            gridRight={gitSyncDropdown}
-          />
-        )}
+        renderPageSidebar={this._renderPageSidebar}
+        renderPaneOne={this._renderTestSuite}
+        renderPaneTwo={this._renderResults}
+        renderPageHeader={this._renderPageHeader}
       />
     );
   }

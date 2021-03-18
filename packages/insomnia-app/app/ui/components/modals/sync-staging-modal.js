@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -12,6 +13,7 @@ import * as models from '../../../models';
 import Tooltip from '../tooltip';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import { describeChanges } from '../../../sync/vcs/util';
+import { strings } from '../../../common/strings';
 
 type Props = {
   workspace: Workspace,
@@ -46,7 +48,7 @@ const _initialState: State = {
   lookupMap: {},
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncStagingModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   _onSnapshot: ?() => void;
@@ -224,6 +226,10 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     } else {
       child = <i className="fa fa-question-circle info" />;
       message = 'Unknown';
+    }
+
+    if (type === models.workspace.type) {
+      type = strings.collection;
     }
 
     return (

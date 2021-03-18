@@ -7,29 +7,31 @@ import SidebarTextItem from './sidebar-text-item';
 type Props = {
   info: Object,
   childrenVisible: boolean,
+  onClick: (section: string, ...args: Array<string>) => void,
 };
 
 function SidebarInfo(props: Props) {
   const { title, description, version, license } = props.info;
+
   return (
     <SidebarPanel childrenVisible={props.childrenVisible}>
       {title && (
-        <SidebarItem>
+        <SidebarItem onClick={() => props.onClick('info', 'title')}>
           <SidebarTextItem label={'Title:'} headline={title} />
         </SidebarItem>
       )}
       {description && (
-        <SidebarItem>
+        <SidebarItem onClick={() => props.onClick('info', 'description')}>
           <SidebarTextItem label={'Description:'} headline={description} />
         </SidebarItem>
       )}
       {version && (
-        <SidebarItem>
+        <SidebarItem onClick={() => props.onClick('info', 'version')}>
           <SidebarTextItem label={'Version:'} headline={version} />
         </SidebarItem>
       )}
       {license && license.name && (
-        <SidebarItem>
+        <SidebarItem onClick={() => props.onClick('info', 'license')}>
           <SidebarTextItem label={'License:'} headline={license.name} />
         </SidebarItem>
       )}

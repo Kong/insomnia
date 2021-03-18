@@ -1,5 +1,4 @@
 import { createSelector } from 'reselect';
-import { fuzzyMatchAll } from '../../common/misc';
 import * as models from '../../models';
 
 // ~~~~~~~~~ //
@@ -139,97 +138,21 @@ export const selectActiveWorkspaceEntities = createSelector(
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
   const pinned = {};
 
+  const requests = [...entities.requests, ...entities.grpcRequests];
+  const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
+
   // Default all to unpinned
-  for (const request of entities.requests) {
+  for (const request of requests) {
     pinned[request._id] = false;
   }
 
   // Update those that have metadata (not all do)
-  for (const meta of entities.requestMetas) {
+  for (const meta of requestMetas) {
     pinned[meta.parentId] = meta.pinned;
   }
 
   return pinned;
 });
-
-export const selectSidebarChildren = createSelector(
-  selectCollapsedRequestGroups,
-  selectPinnedRequests,
-  selectActiveWorkspace,
-  selectActiveWorkspaceMeta,
-  selectEntitiesChildrenMap,
-  (collapsed, pinned, activeWorkspace, activeWorkspaceMeta, childrenMap) => {
-    const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
-
-    function next(parentId, pinnedChildren) {
-      const children = (childrenMap[parentId] || [])
-        .filter(doc => {
-          return doc.type === models.request.type || doc.type === models.requestGroup.type;
-        })
-        .sort((a, b) => {
-          if (a.metaSortKey === b.metaSortKey) {
-            return a._id > b._id ? -1 : 1;
-          } else {
-            return a.metaSortKey < b.metaSortKey ? -1 : 1;
-          }
-        });
-
-      if (children.length > 0) {
-        return children.map(c => {
-          const child = {
-            doc: c,
-            hidden: false,
-            collapsed: !!collapsed[c._id],
-            pinned: !!pinned[c._id],
-          };
-
-          if (child.pinned) {
-            pinnedChildren.push(child);
-          }
-
-          // Don't add children of requests
-          child.children = c.type === models.request.type ? [] : next(c._id, pinnedChildren);
-
-          return child;
-        });
-      } else {
-        return children;
-      }
-    }
-
-    function matchChildren(children, parentNames = []) {
-      // Bail early if no filter defined
-      if (!sidebarFilter) {
-        return children;
-      }
-
-      for (const child of children) {
-        // Gather all parents so we can match them too
-        matchChildren(child.children, [...parentNames, child.doc.name]);
-
-        const hasMatchedChildren = child.children.find(c => c.hidden === false);
-
-        // Try to match request attributes
-        const { name, method } = child.doc;
-        const match = fuzzyMatchAll(sidebarFilter, [name, method, ...parentNames], {
-          splitSpace: true,
-        });
-
-        // Update hidden state depending on whether it matched
-        const matched = hasMatchedChildren || match;
-        child.hidden = !matched;
-      }
-
-      return children;
-    }
-
-    const pinnedChildren = [];
-    const childrenTree = next(activeWorkspace._id, pinnedChildren);
-    const matchedChildren = matchChildren(childrenTree);
-
-    return { pinned: pinnedChildren, all: matchedChildren };
-  },
-);
 
 export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
@@ -245,7 +168,7 @@ export const selectActiveRequest = createSelector(
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
     const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
-    return entities.requests[id] || null;
+    return entities.requests[id] || entities.grpcRequests[id] || null;
   },
 );
 

@@ -2,28 +2,41 @@
 import * as React from 'react';
 import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
-import HelpTooltip from '../help-tooltip';
-import type { HttpVersion } from '../../../common/constants';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
+  ACTIVITY_MIGRATION,
+  AUTOBIND_CFG,
   EDITOR_KEY_MAP_DEFAULT,
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
   HttpVersions,
-  isLinux,
-  isMac,
+  isDevelopment,
   isWindows,
+  isMac,
+  updatesSupported,
   UPDATE_CHANNEL_BETA,
   UPDATE_CHANNEL_STABLE,
+  MIN_INTERFACE_FONT_SIZE,
+  MAX_INTERFACE_FONT_SIZE,
+  MIN_EDITOR_FONT_SIZE,
+  MAX_EDITOR_FONT_SIZE,
 } from '../../../common/constants';
+import HelpTooltip from '../help-tooltip';
+import type { GlobalActivity, HttpVersion } from '../../../common/constants';
+
 import type { Settings } from '../../../models/settings';
 import { setFont } from '../../../plugins/misc';
-import * as session from '../../../account/session';
 import Tooltip from '../tooltip';
 import FileInputButton from '../base/file-input-button';
 import { CertificateBundleType } from '../../../models/settings';
 import CheckForUpdatesButton from '../check-for-updates-button';
+import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { bindActionCreators } from 'redux';
+import * as globalActions from '../../redux/modules/global';
+import { connect } from 'react-redux';
+import { stringsPlural } from '../../../common/strings';
+import { snapNumberToLimits } from '../../../common/misc';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -31,9 +44,11 @@ const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 
 type Props = {
   settings: Settings,
+  hideModal: () => void,
   updateSetting: Function,
   handleToggleMenuBar: Function,
   handleRootCssChange: Function,
+  handleSetActiveActivity: (activity?: GlobalActivity) => void,
 };
 
 type State = {
@@ -41,7 +56,7 @@ type State = {
   fontsMono: Array<{ family: string, monospace: boolean }> | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class General extends React.PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -74,11 +89,15 @@ class General extends React.PureComponent<Props, State> {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
-    if (e.currentTarget.type === 'number') {
-      value = parseInt(value, 10);
+    if (el.type === 'number') {
+      value = snapNumberToLimits(
+        parseInt(value, 10) || 0,
+        parseInt(el.min, 10),
+        parseInt(el.max, 10),
+      );
     }
 
-    if (e.currentTarget.value === '__NULL__') {
+    if (el.value === '__NULL__') {
       value = null;
     }
 
@@ -98,12 +117,18 @@ class General extends React.PureComponent<Props, State> {
 
   async _handleFontSizeChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
+
     setFont(settings);
   }
 
   async _handleFontChange(el: SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
+  }
+
+  _handleStartMigration() {
+    this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
+    this.props.hideModal();
   }
 
   renderEnumSetting(
@@ -241,7 +266,7 @@ class General extends React.PureComponent<Props, State> {
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
           <div>
-            {this.renderBooleanSetting('Force bulk header editor', 'useBulkHeaderEditor', '')}
+            {this.renderBooleanSetting('Use bulk header editor', 'useBulkHeaderEditor', '')}
             {this.renderBooleanSetting(
               'Vertical request/response layout',
               'forceVerticalLayout',
@@ -318,9 +343,9 @@ class General extends React.PureComponent<Props, State> {
             </label>
           </div>
           {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-            min: 8,
-            max: 20,
-            onChange: this._handleFontSizeChange,
+            min: MIN_INTERFACE_FONT_SIZE,
+            max: MAX_INTERFACE_FONT_SIZE,
+            onBlur: this._handleFontSizeChange,
           })}
         </div>
 
@@ -348,8 +373,8 @@ class General extends React.PureComponent<Props, State> {
             </label>
           </div>
           {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
-            min: 8,
-            max: 20,
+            min: MIN_EDITOR_FONT_SIZE,
+            max: MAX_EDITOR_FONT_SIZE,
           })}
         </div>
 
@@ -444,6 +469,23 @@ class General extends React.PureComponent<Props, State> {
 
         <hr className="pad-top" />
 
+        <h2>Security</h2>
+        <div className="form-row pad-top-sm">
+          {this.renderBooleanSetting(
+            'Clear OAuth 2 session on start',
+            'clearOAuth2SessionOnRestart',
+            'Clears the session of the OAuth2 popup window every time Insomnia is launched',
+          )}
+          <button
+            className="btn btn--clicky pointer"
+            style={{ padding: 0 }}
+            onClick={initNewOAuthSession}>
+            Clear OAuth 2 session
+          </button>
+        </div>
+
+        <hr className="pad-top" />
+
         <h2>
           HTTP Network Proxy
           <HelpTooltip
@@ -478,7 +520,7 @@ class General extends React.PureComponent<Props, State> {
           )}
         </div>
 
-        {(isWindows() || isMac()) && (
+        {updatesSupported() && (
           <React.Fragment>
             <hr className="pad-top" />
             <div>
@@ -509,7 +551,7 @@ class General extends React.PureComponent<Props, State> {
           </React.Fragment>
         )}
 
-        {isLinux() && (
+        {!updatesSupported() && (
           <React.Fragment>
             <hr className="pad-top" />
             <h2>Software Updates</h2>
@@ -547,8 +589,8 @@ class General extends React.PureComponent<Props, State> {
           </label>
           <p className="txt-sm faint">
             Help Kong improve its products by sending anonymous data about features and plugins
-            used, hardware and software configuration, statistics on number of requests, workspaces,
-            etc.
+            used, hardware and software configuration, statistics on number of requests,{' '}
+            {stringsPlural.collection.toLowerCase()}, {stringsPlural.document.toLowerCase()}, etc.
           </p>
           <p className="txt-sm faint">
             Please note that this will not include personal data or any sensitive information, such
@@ -556,15 +598,40 @@ class General extends React.PureComponent<Props, State> {
           </p>
         </div>
 
-        {session.isLoggedIn() && (
-          <React.Fragment>
-            <hr />
-            {this.renderBooleanSetting('Enable version control beta', 'enableSyncBeta', '', true)}
-          </React.Fragment>
+        <hr className="pad-top" />
+
+        <h2>Migrate from Designer</h2>
+        <div className="form-row--start pad-top-sm">
+          <button className="btn btn--clicky pointer" onClick={this._handleStartMigration}>
+            Show migration workflow
+          </button>
+        </div>
+
+        {isDevelopment() && (
+          <>
+            <hr className="pad-top" />
+            <h2>Development</h2>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting(
+                'Has been prompted to migrate from Insomnia Designer',
+                'hasPromptedToMigrateFromDesigner',
+              )}
+            </div>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting('Has seen onboarding experience', 'hasPromptedOnboarding')}
+            </div>
+          </>
         )}
       </div>
     );
   }
 }
 
-export default General;
+function mapDispatchToProps(dispatch) {
+  const global = bindActionCreators(globalActions, dispatch);
+  return {
+    handleSetActiveActivity: global.setActiveActivity,
+  };
+}
+
+export default connect(null, mapDispatchToProps)(General);

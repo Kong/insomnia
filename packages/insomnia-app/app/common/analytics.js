@@ -11,10 +11,13 @@ import {
   getAppVersion,
   getGoogleAnalyticsId,
   getGoogleAnalyticsLocation,
+  getSegmentWriteKey,
   isDevelopment,
 } from './constants';
 import type { RequestParameter } from '../models/request';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './misc';
+import Analytics from 'analytics-node';
+import { getAccountId } from '../account/session';
 
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
@@ -90,9 +93,76 @@ export function trackPageView(path: string) {
   });
 }
 
+export async function getDeviceId(): Promise<string> {
+  const settings = await models.settings.getOrCreate();
+
+  let { deviceId } = settings;
+  if (!deviceId) {
+    // Migrate old GA ID into settings model if needed
+    const oldId = (window && window.localStorage.getItem('gaClientId')) || null;
+    deviceId = oldId || uuid.v4();
+
+    await models.settings.update(settings, { deviceId });
+  }
+
+  return deviceId;
+}
+
+let segmentClient = null;
+
+export async function trackSegmentEvent(event: String, properties?: Object) {
+  try {
+    if (!segmentClient) {
+      segmentClient = new Analytics(getSegmentWriteKey(), {
+        axiosConfig: {
+          // This is needed to ensure that we use the NodeJS adapter in the render process
+          ...(global?.require && { adapter: global.require('axios/lib/adapters/http') }),
+        },
+      });
+    }
+
+    const anonymousId = await getDeviceId();
+
+    // TODO: This currently always returns an empty string in the main process
+    // This is due to the session data being stored in localStorage
+    const userId = getAccountId();
+
+    segmentClient.track({
+      anonymousId,
+      userId,
+      event,
+      properties,
+      context: {
+        app: {
+          name: getAppName(),
+          version: getAppVersion(),
+        },
+        os: {
+          name: _getOsName(),
+          version: process.getSystemVersion(),
+        },
+      },
+    });
+  } catch (err) {
+    console.warn('[analytics] Error sending segment event', err);
+  }
+}
+
 // ~~~~~~~~~~~~~~~~~ //
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
+
+function _getOsName(): string {
+  const platform = getAppPlatform();
+  switch (platform) {
+    case 'darwin':
+      return 'mac';
+    case 'win32':
+      return 'windows';
+    default:
+      return platform;
+  }
+}
 
 // Exported for testing
 export async function _trackEvent(
@@ -129,15 +199,7 @@ export async function _trackPageView(location: string) {
 }
 
 async function _getDefaultParams(): Promise<Array<RequestParameter>> {
-  const settings = await models.settings.getOrCreate();
-
-  // Migrate old GA ID into settings model
-  let { deviceId } = settings;
-  if (!deviceId) {
-    const oldId = (window && window.localStorage.gaClientId) || null;
-    deviceId = oldId || uuid.v4();
-    await models.settings.update(settings, { deviceId });
-  }
+  const deviceId = await getDeviceId();
 
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
   const ua = String(window?.navigator?.userAgent)

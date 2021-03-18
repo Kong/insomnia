@@ -2,8 +2,8 @@
 import type { BaseModel } from './index';
 import * as models from './index';
 import * as db from '../common/database';
-import { getAppId, getAppName } from '../common/constants';
-import { APP_ID_DESIGNER } from '../../config';
+import { getAppName } from '../common/constants';
+import { strings } from '../common/strings';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -11,19 +11,26 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
+export const WorkspaceScopeKeys = {
+  design: 'design',
+  collection: 'collection',
+};
+
+export type WorkspaceScope = $Keys<typeof WorkspaceScopeKeys>;
+
 type BaseWorkspace = {
   name: string,
   description: string,
-  scope: 'spec' | 'debug' | null,
+  scope: WorkspaceScope,
 };
 
 export type Workspace = BaseModel & BaseWorkspace;
 
 export function init() {
   return {
-    name: 'New Workspace',
+    name: `New ${strings.collection}`,
     description: '',
-    scope: null,
+    scope: WorkspaceScopeKeys.collection,
   };
 }
 
@@ -31,6 +38,7 @@ export async function migrate(doc: Workspace): Promise<Workspace> {
   doc = await _migrateExtractClientCertificates(doc);
   doc = await _migrateEnsureName(doc);
   await models.apiSpec.getOrCreateForParentId(doc._id, { fileName: doc.name });
+  doc = _migrateScope(doc);
   return doc;
 }
 
@@ -46,7 +54,8 @@ export async function all(): Promise<Array<Workspace>> {
   const workspaces = await db.all(type);
 
   if (workspaces.length === 0) {
-    await create({ name: getAppName(), scope: getAppId() === APP_ID_DESIGNER ? 'spec' : null });
+    // Create default workspace
+    await create({ name: getAppName(), scope: WorkspaceScopeKeys.collection });
     return all();
   } else {
     return workspaces;
@@ -101,6 +110,38 @@ async function _migrateExtractClientCertificates(workspace: Workspace): Promise<
 async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
   if (typeof workspace.name !== 'string') {
     workspace.name = 'My Workspace';
+  }
+
+  return workspace;
+}
+
+/**
+ * Ensure workspace scope is set to a valid entry
+ */
+function _migrateScope(workspace: Workspace): Workspace {
+  if (
+    workspace.scope === WorkspaceScopeKeys.design ||
+    workspace.scope === WorkspaceScopeKeys.collection
+  ) {
+    return workspace;
+  }
+
+  // Translate the old value
+  type OldScopeTypes = 'spec' | 'debug' | 'designer' | null;
+  switch ((workspace.scope: OldScopeTypes)) {
+    case 'spec': {
+      workspace.scope = WorkspaceScopeKeys.design;
+      break;
+    }
+    case 'designer': {
+      workspace.scope = WorkspaceScopeKeys.design;
+      break;
+    }
+    case 'debug':
+    case null:
+    default:
+      workspace.scope = WorkspaceScopeKeys.collection;
+      break;
   }
 
   return workspace;

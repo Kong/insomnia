@@ -1,11 +1,14 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
+import PasswordEditor from '../password-editor';
 import Button from '../../base/button';
 import type { Settings } from '../../../../models/settings';
 import type { Request, RequestAuthentication } from '../../../../models/request';
+import HelpTooltip from '../../help-tooltip';
 
 type Props = {
   handleRender: Function,
@@ -18,8 +21,16 @@ type Props = {
   isVariableUncovered: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class BasicAuth extends React.PureComponent<Props> {
+  _handleUseISO88591() {
+    const { request, onChange } = this.props;
+    onChange(request, {
+      ...request.authentication,
+      useISO88591: !request.authentication.useISO88591,
+    });
+  }
+
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, {
@@ -85,22 +96,17 @@ class BasicAuth extends React.PureComponent<Props> {
                   Password
                 </label>
               </td>
-              <td className="wide">
-                <div
-                  className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled,
-                  })}>
-                  <OneLineEditor
-                    type={showPasswords ? 'text' : 'password'}
-                    id="password"
-                    onChange={this._handleChangePassword}
-                    defaultValue={authentication.password || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    render={handleRender}
-                    getRenderContext={handleGetRenderContext}
-                    isVariableUncovered={isVariableUncovered}
-                  />
-                </div>
+              <td className="flex wide">
+                <PasswordEditor
+                  showAllPasswords={showPasswords}
+                  disabled={authentication.disabled}
+                  password={authentication.password}
+                  onChange={this._handleChangePassword}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  isVariableUncovered={isVariableUncovered}
+                />
               </td>
             </tr>
             <tr>
@@ -121,6 +127,32 @@ class BasicAuth extends React.PureComponent<Props> {
                       <i className="fa fa-square-o" />
                     ) : (
                       <i className="fa fa-check-square-o" />
+                    )}
+                  </Button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td className="pad-right no-wrap valign-middle">
+                <label htmlFor="use-iso-8859-1" className="label--small no-pad">
+                  Use ISO 8859-1
+                  <HelpTooltip>
+                    Check this to use ISO-8859-1 encoding instead of default UTF-8
+                  </HelpTooltip>
+                </label>
+              </td>
+              <td className="wide">
+                <div className="form-control form-control--underlined">
+                  <Button
+                    className="btn btn--super-duper-compact"
+                    id="use-iso-8859-1"
+                    onClick={this._handleUseISO88591}
+                    value={authentication.useISO88591}
+                    title={authentication.useISO88591 ? 'Enable item' : 'Disable item'}>
+                    {authentication.useISO88591 ? (
+                      <i className="fa fa-check-square-o" />
+                    ) : (
+                      <i className="fa fa-square-o" />
                     )}
                   </Button>
                 </div>

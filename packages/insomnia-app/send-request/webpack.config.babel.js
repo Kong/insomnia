@@ -30,6 +30,14 @@ module.exports = {
           loader: 'babel-loader',
         },
       },
+      {
+        test: require.resolve('../app/network/ca-certs.js'),
+        use: [
+          {
+            loader: 'val-loader',
+          },
+        ],
+      },
     ],
   },
   externals: [
@@ -44,7 +52,6 @@ module.exports = {
     },
   },
   plugins: [
-    // Set the APP_ID environment variable because it's required to access the app config
-    new webpack.DefinePlugin({ 'process.env.APP_ID': JSON.stringify('com.insomnia.designer') }),
+    new webpack.ProvidePlugin({ window: path.resolve(path.join(__dirname, './window-shim')) }),
   ],
 };

@@ -4,7 +4,8 @@ import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
@@ -27,6 +28,7 @@ import Button from '../../base/button';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import type { Settings } from '../../../../models/settings';
+import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 
 type Props = {
   handleRender: Function,
@@ -53,7 +55,7 @@ const getAccessTokenUrls = () => accessTokenUrls;
 
 let showAdvanced = false;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class OAuth2Auth extends React.PureComponent<Props, State> {
   constructor(props: any) {
     super(props);
@@ -161,6 +163,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('clientSecret', value);
   }
 
+  _handleChangePkce(value: boolean): void {
+    this._handleChangeProperty('usePkce', value);
+  }
+
   _handleChangeAuthorizationUrl(value: string): void {
     this._handleChangeProperty('authorizationUrl', value);
   }
@@ -227,6 +233,36 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
                 <i className="fa fa-square-o" />
               ) : (
                 <i className="fa fa-check-square-o" />
+              )}
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
+  renderUsePkceRow(onChange: boolean => void): React.Element<*> {
+    const { request } = this.props;
+    const { authentication } = request;
+    return (
+      <tr key="use-pkce">
+        <td className="pad-right no-wrap valign-middle">
+          <label htmlFor="use-pkce" className="label--small no-pad">
+            Use PKCE
+          </label>
+        </td>
+        <td className="wide">
+          <div className="form-control form-control--underlined no-margin">
+            <Button
+              className="btn btn--super-duper-compact"
+              id="use-pkce"
+              onClick={onChange}
+              value={!authentication.usePkce}
+              title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}>
+              {authentication.usePkce ? (
+                <i className="fa fa-check-square-o" />
+              ) : (
+                <i className="fa fa-square-o" />
               )}
             </Button>
           </div>
@@ -336,6 +372,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
       this._handleChangeClientSecret,
     );
 
+    const usePkce = this.renderUsePkceRow(this._handleChangePkce);
+
     const authorizationUrl = this.renderInputRow(
       'Authorization URL',
       'authorizationUrl',
@@ -422,6 +460,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
         accessTokenUrl,
         clientId,
         clientSecret,
+        usePkce,
         redirectUri,
         enabled,
       ];
@@ -547,6 +586,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
             {showAdvanced && fields.advanced}
           </tbody>
         </table>
+        {showAdvanced ? (
+          <div className="pad-top text-right">
+            <button className="btn btn--clicky" onClick={initNewOAuthSession}>
+              Clear OAuth 2 session
+            </button>
+          </div>
+        ) : null}
         <div className="notice subtle margin-top text-left">
           {error && <p className="selectable notice warning margin-bottom">{error}</p>}
           {this.renderError()}

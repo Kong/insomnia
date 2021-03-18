@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc/dist/es6';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
@@ -14,12 +15,13 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
+
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
 import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
+import { docsTemplateTags } from '../../../common/documentation';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
@@ -98,9 +100,10 @@ const SidebarList = SortableContainer(
   ),
 );
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   environmentEditorRef: ?EnvironmentEditor;
+  environmentColorInputRef: HTMLInputElement;
   colorChangeTimeout: any;
   saveTimeout: any;
   modal: Modal;
@@ -126,6 +129,10 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
   _setEditorRef(n: ?EnvironmentEditor) {
     this.environmentEditorRef = n;
+  }
+
+  _setInputColorRef(ref: HTMLInputElement | null) {
+    this.environmentColorInputRef = ref;
   }
 
   _setModalRef(n: Modal | null) {
@@ -329,33 +336,19 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   }
 
   async _handleClickColorChange(environment: Environment) {
-    let el = document.querySelector('#env-color-picker');
-
-    // Remove existing child so we reset the event handlers. This
-    // was easier than trying to clean them up later.
-    if (el && el.parentNode) {
-      el.parentNode.removeChild(el);
-    }
-
-    el = document.createElement('input');
-    el.id = 'env-color-picker';
-    el.type = 'color';
-    document.body && document.body.appendChild(el);
-
     const color = environment.color || '#7d69cb';
-
     if (!environment.color) {
       await this._handleChangeEnvironmentColor(environment, color);
     }
 
-    el.setAttribute('value', color);
-    el.addEventListener('input', (e: Event) => {
-      if (e.target instanceof HTMLInputElement) {
-        this._handleChangeEnvironmentColor(environment, e.target && e.target.value);
-      }
-    });
+    this.environmentColorInputRef?.click();
+  }
 
-    el.click();
+  _handleInputColorChange(event: SyntheticEvent<HTMLInputElement>) {
+    this._handleChangeEnvironmentColor(
+      this._getActiveEnvironment(),
+      event.target && event.target.value,
+    );
   }
 
   _saveChanges() {
@@ -473,6 +466,14 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
 
               {activeEnvironment && rootEnvironment !== activeEnvironment ? (
                 <React.Fragment>
+                  <input
+                    className="hidden"
+                    type="color"
+                    value={activeEnvironment.color}
+                    ref={this._setInputColorRef}
+                    onInput={this._handleInputColorChange}
+                  />
+
                   <Dropdown className="space-right" right>
                     <DropdownButton className="btn btn--clicky">
                       {activeEnvironment.color && (
@@ -535,10 +536,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         <ModalFooter>
           <div className="margin-left italic txt-sm tall">
             * Environment data can be used for&nbsp;
-            <Link href="https://support.insomnia.rest/article/40-template-tags">
-              Nunjucks Templating
-            </Link>{' '}
-            in your requests
+            <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
           </div>
           <button className="btn" disabled={!isValid} onClick={this.hide}>
             Done

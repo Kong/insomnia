@@ -11,6 +11,14 @@ describe('getBasicAuthHeader()', () => {
     });
   });
 
+  it('succeed with username and password using iso-8859-1 encoding', () => {
+    const header = getBasicAuthHeader('user', 'password-é', 'latin1');
+    expect(header).toEqual({
+      name: 'Authorization',
+      value: 'Basic dXNlcjpwYXNzd29yZC3p',
+    });
+  });
+
   it('succeed with no username', () => {
     const header = getBasicAuthHeader(null, 'password');
     expect(header).toEqual({

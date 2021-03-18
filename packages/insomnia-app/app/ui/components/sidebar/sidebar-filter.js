@@ -1,22 +1,25 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
+
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
+import SidebarSortDropdown from './sidebar-sort-dropdown';
 
 type Props = {
   onChange: string => void,
   requestCreate: () => void,
   requestGroupCreate: () => void,
+  sidebarSort: (sortOrder: SortOrder) => void,
   filter: string,
   hotKeyRegistry: HotKeyRegistry,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarFilter extends React.PureComponent<Props> {
   _input: ?HTMLInputElement;
   _triggerTimeout: TimeoutID;
@@ -57,7 +60,7 @@ class SidebarFilter extends React.PureComponent<Props> {
   }
 
   render() {
-    const { filter, hotKeyRegistry } = this.props;
+    const { filter, hotKeyRegistry, sidebarSort } = this.props;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <div className="sidebar__filter">
@@ -75,6 +78,7 @@ class SidebarFilter extends React.PureComponent<Props> {
               </button>
             )}
           </div>
+          <SidebarSortDropdown handleSort={sidebarSort} />
           <SidebarCreateDropdown
             handleCreateRequest={this._handleRequestCreate}
             handleCreateRequestGroup={this._handleRequestGroupCreate}

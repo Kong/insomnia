@@ -1,0 +1,13 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+package time;
+
+service TimeService {
+  rpc GetTime(google.protobuf.Empty) returns (TimeResponse);
+}
+
+message TimeResponse {
+  google.protobuf.Timestamp timestamp_value = 27;
+}

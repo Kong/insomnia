@@ -33,11 +33,11 @@ export default class SidebarParameters extends React.Component<Props> {
       <div>
         {filteredValues.map(parameter => (
           <React.Fragment key={parameter}>
-            <SidebarItem>
+            <SidebarItem onClick={() => onClick('components', 'parameters', parameter)}>
               <div>
                 <SvgIcon icon={IconEnum.indentation} />
               </div>
-              <span onClick={() => onClick('components', 'parameters', parameter)}>
+              <span>
                 <Tooltip message={parameters[parameter].description} position="right">
                   {parameter}
                 </Tooltip>

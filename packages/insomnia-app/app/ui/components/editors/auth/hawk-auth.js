@@ -2,9 +2,14 @@
 
 import * as React from 'react';
 import classnames from 'classnames';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  HAWK_ALGORITHM_SHA1,
+  HAWK_ALGORITHM_SHA256,
+} from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import { HAWK_ALGORITHM_SHA1, HAWK_ALGORITHM_SHA256 } from '../../../../common/constants';
+
 import HelpTooltip from '../../help-tooltip';
 import Button from '../../base/button';
 import type { Request, RequestAuthentication } from '../../../../models/request';
@@ -18,7 +23,7 @@ type Props = {
   onChange: (Request, RequestAuthentication) => Promise<Request>,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class HawkAuth extends React.PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;

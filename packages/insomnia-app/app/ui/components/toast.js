@@ -1,17 +1,24 @@
 // @flow
 import * as React from 'react';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import styled from 'styled-components';
 import classnames from 'classnames';
-import { appConfig } from '../../../config';
-import GravatarImg from './gravatar-img';
 import Link from './base/link';
 import * as models from '../../models/index';
-import * as constants from '../../common/constants';
+import {
+  AUTOBIND_CFG,
+  getAppName,
+  getAppPlatform,
+  getAppId,
+  getAppVersion,
+  updatesSupported,
+} from '../../common/constants';
 import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
-import appIconSrc from '../images/logo.png';
+import imgSrcCore from '../images/insomnia-core-logo.png';
+import { getDeviceId } from '../../common/analytics';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -20,7 +27,6 @@ export type ToastNotification = {
   url: string,
   cta: string,
   message: string,
-  email?: string,
 };
 
 type Props = {};
@@ -30,7 +36,34 @@ type State = {
   visible: boolean,
 };
 
-@autobind
+const StyledLogo: React.ComponentType<{}> = styled.div`
+  margin: var(--padding-xs) var(--padding-sm) var(--padding-xs) var(--padding-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  img {
+    max-width: 5rem;
+  }
+`;
+
+const StyledContent: React.ComponentType<{}> = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 0 var(--padding-xs) 0 var(--padding-xs);
+  max-width: 20rem;
+`;
+
+const StyledFooter: React.ComponentType<{}> = styled.footer`
+  padding-top: var(--padding-sm);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+`;
+
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Toast extends React.PureComponent<Props, State> {
   _interval: any;
 
@@ -39,6 +72,7 @@ class Toast extends React.PureComponent<Props, State> {
     this.state = {
       notification: null,
       visible: false,
+      appName: getAppName(),
     };
   }
 
@@ -81,17 +115,21 @@ class Toast extends React.PureComponent<Props, State> {
       const data = {
         firstLaunch: stats.created,
         launches: stats.launches,
-        platform: constants.getAppPlatform(),
-        app: constants.getAppId(),
-        version: constants.getAppVersion(),
+        platform: getAppPlatform(),
+        app: getAppId(),
+        version: getAppVersion(),
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
         workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: constants.isLinux(),
+        updatesNotSupported: !updatesSupported(),
         autoUpdatesDisabled: !settings.updateAutomatically,
         disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: settings.updateChannel,
+        deviceId: await getDeviceId(),
+        createdRequests: stats.createdRequests,
+        deletedRequests: stats.deletedRequests,
+        executedRequests: stats.executedRequests,
       };
 
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
@@ -106,11 +144,6 @@ class Toast extends React.PureComponent<Props, State> {
     // No new notifications
     if (!notification || this._hasSeenNotification(notification)) {
       return;
-    }
-
-    // Set default properties
-    if (!notification.email) {
-      notification.email = appConfig().gravatarEmail;
     }
 
     // Remember that we've seen it
@@ -168,7 +201,7 @@ class Toast extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { notification, visible } = this.state;
+    const { notification, visible, appName } = this.state;
 
     if (!notification) {
       return null;
@@ -179,12 +212,12 @@ class Toast extends React.PureComponent<Props, State> {
         className={classnames('toast theme--dialog', {
           'toast--show': visible,
         })}>
-        <div className="toast__image">
-          <GravatarImg email={notification.email} fallback={appIconSrc} size={100} rounded />
-        </div>
-        <div className="toast__content">
-          <p className="toast__message">{notification ? notification.message : 'Unknown'}</p>
-          <footer className="toast__actions">
+        <StyledLogo>
+          <img src={imgSrcCore} alt={appName} />
+        </StyledLogo>
+        <StyledContent>
+          <p>{notification ? notification.message : 'Unknown'}</p>
+          <StyledFooter>
             <button
               className="btn btn--super-duper-compact btn--outlined"
               onClick={this._handleCancelClick}>
@@ -198,8 +231,8 @@ class Toast extends React.PureComponent<Props, State> {
               href={notification.url}>
               {notification.cta}
             </Link>
-          </footer>
-        </div>
+          </StyledFooter>
+        </StyledContent>
       </div>
     );
   }

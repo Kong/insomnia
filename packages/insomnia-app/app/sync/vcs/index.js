@@ -36,6 +36,7 @@ import { chunkArray, generateId } from '../../common/misc';
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
+import { strings } from '../../common/strings';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -83,6 +84,13 @@ export default class VCS {
     for (const project of toRemove) {
       await this._removeProject(project);
     }
+  }
+
+  async archiveProject(): Promise<void> {
+    const projectId = this._projectId();
+    await this._queryProjectArchive(projectId);
+    await this._store.removeItem(paths.project(projectId));
+    this._project = null;
   }
 
   async switchProject(rootDocumentId: string): Promise<void> {
@@ -367,15 +375,19 @@ export default class VCS {
     };
   }
 
-  async getHistoryCount(): Promise<number> {
-    const branch = await this._getCurrentBranch();
+  async getHistoryCount(branchName?: string): Promise<number> {
+    const branch = branchName ? await this._getBranch(branchName) : await this._getCurrentBranch();
     return branch.snapshots.length;
   }
 
-  async getHistory(): Promise<Array<Snapshot>> {
+  async getHistory(count: number = 0): Promise<Array<Snapshot>> {
     const branch = await this._getCurrentBranch();
     const snapshots = [];
-    for (const id of branch.snapshots) {
+
+    const total = branch.snapshots.length;
+    const slice = count <= 0 || count > total ? 0 : total - count;
+
+    for (const id of branch.snapshots.slice(slice)) {
       const snapshot = await this._getSnapshot(id);
       if (snapshot === null) {
         throw new Error(`Failed to get snapshot id=${id}`);
@@ -716,7 +728,8 @@ export default class VCS {
     const { data, errors } = await fetch.post('/graphql?' + name, { query, variables }, sessionId);
 
     if (errors && errors.length) {
-      throw new Error(`Failed to query ${name}`);
+      console.log(`[sync] Failed to query ${name}`, errors);
+      throw new Error(`Failed to query ${name}: ${errors[0].message}`);
     }
 
     return data;
@@ -727,7 +740,7 @@ export default class VCS {
       `
           query ($projectId: ID!, $ids: [ID!]!) {
             blobsMissing(project: $projectId, ids: $ids) {
-              missing 
+              missing
             }
           }
         `,
@@ -766,7 +779,7 @@ export default class VCS {
     await this._runGraphQL(
       `
       mutation ($projectId: ID!, $branch: String!) {
-        branchRemove(project: $projectId, name: $branch) 
+        branchRemove(project: $projectId, name: $branch)
       }`,
       {
         projectId: this._projectId(),
@@ -1127,32 +1140,25 @@ export default class VCS {
   }
 
   async _queryProjectTeams(): Promise<Array<Team>> {
-    const run = async () => {
-      const { project } = await this._runGraphQL(
-        `
-        query ($id: ID!) {
-          project(id: $id) {
-            teams {
-              id
-              name
-            }
+    const { project } = await this._runGraphQL(
+      `
+      query ($id: ID!) {
+        project(id: $id) {
+          teams {
+            id
+            name
           }
         }
-      `,
-        {
-          id: this._projectId(),
-        },
-        'project.teams',
-      );
-      return project;
-    };
+      }
+    `,
+      {
+        id: this._projectId(),
+      },
+      'project.teams',
+    );
 
-    let project = await run();
-
-    // Retry once if project doesn't exist yet
-    if (project === null) {
-      await this._getOrCreateRemoteProject();
-      project = await run();
+    if (!project) {
+      throw new Error(`Please push the ${strings.collection.toLowerCase()} to be able to share it`);
     }
 
     return project.teams;
@@ -1490,6 +1496,22 @@ export default class VCS {
 
   async _hasBlob(id: string): Promise<boolean> {
     return this._store.hasItem(paths.blob(this._projectId(), id));
+  }
+
+  async _queryProjectArchive(projectId: string): Promise<void> {
+    await this._runGraphQL(
+      `
+        mutation ($id: ID!) {
+          projectArchive(id: $id)
+        }
+      `,
+      {
+        id: projectId,
+      },
+      'projectArchive',
+    );
+
+    console.log(`[sync] Archived remote project ${projectId}`);
   }
 }
 

@@ -1,7 +1,7 @@
-const welcomeMessageShown = async app => {
+const analyticsMessageShown = async app => {
   await app.client.waitUntilTextExists(
-    '.onboarding__content__header h1',
-    'Welcome to Insomnia Designer',
+    '.onboarding__content__body p strong',
+    'Share Usage Analytics with Kong Inc',
   );
 };
 
@@ -19,8 +19,8 @@ const clickSkipImport = async app => {
     .then(e => e.click());
 };
 
-module.exports = {
-  welcomeMessageShown,
-  clickDontShare,
-  clickSkipImport,
+export const skipOnboardingFlow = async app => {
+  await analyticsMessageShown(app);
+  await clickDontShare(app);
+  await clickSkipImport(app);
 };

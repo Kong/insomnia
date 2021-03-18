@@ -22,7 +22,7 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
   }
 
   h6 {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     display: flex;
     flex-grow: 1;
     &:hover {
@@ -46,6 +46,7 @@ const StyledHeader: React.ComponentType<{}> = styled.li`
 
     svg {
       margin-left: var(--padding-sm);
+      font-size: var(--font-size-xl);
 
       &:hover {
         fill: var(--color-font);
@@ -61,20 +62,30 @@ const SidebarHeader = ({
   toggleFilter,
   sectionVisible,
   children,
-}: Props) => (
-  <StyledHeader>
-    <h6 onClick={toggleSection}>{headerTitle}</h6>
-    <div>
-      {children || (
-        <motion.span
-          onClick={toggleFilter}
-          initial={{ opacity: sectionVisible ? 0.6 : 0 }}
-          animate={{ opacity: sectionVisible ? 0.6 : 0 }}>
-          <SvgIcon icon={IconEnum.search} />
-        </motion.span>
-      )}
-    </div>
-  </StyledHeader>
-);
+}: Props) => {
+  const handleFilterClick =
+    sectionVisible && toggleFilter // only handle a click if the section is open
+      ? e => {
+          e.stopPropagation(); // Prevent a parent from also handling the click
+          toggleFilter();
+        }
+      : undefined;
+
+  return (
+    <StyledHeader onClick={toggleSection}>
+      <h6>{headerTitle}</h6>
+      <div>
+        {children || (
+          <motion.span
+            onClick={handleFilterClick}
+            initial={{ opacity: sectionVisible ? 0.6 : 0 }}
+            animate={{ opacity: sectionVisible ? 0.6 : 0 }}>
+            <SvgIcon icon={IconEnum.search} />
+          </motion.span>
+        )}
+      </div>
+    </StyledHeader>
+  );
+};
 
 export default SidebarHeader;

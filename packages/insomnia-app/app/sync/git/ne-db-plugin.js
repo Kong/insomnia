@@ -4,21 +4,17 @@ import * as db from '../../common/database';
 import * as models from '../../models';
 import YAML from 'yaml';
 import Stat from './stat';
-import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME } from './git-vcs';
+import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
+import parseGitPath from './parse-git-path';
 
 export default class NeDBPlugin {
   _workspaceId: string;
-  _cloneDirRegExp: RegExp;
 
   constructor(workspaceId: string) {
     if (!workspaceId) {
       throw new Error('Cannot use NeDBPlugin without workspace ID');
     }
     this._workspaceId = workspaceId;
-
-    // The win32 separator is a single backslash (\), but we have to escape both the JS string and RegExp.
-    const pathSep = path.sep === path.win32.sep ? '\\\\' : '/';
-    this._cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}${pathSep}`);
   }
 
   static createPlugin(workspaceId: string) {
@@ -38,7 +34,7 @@ export default class NeDBPlugin {
       options = { encoding: options };
     }
 
-    const { root, type, id } = this._parsePath(filePath);
+    const { root, type, id } = parseGitPath(filePath);
 
     if (root === null || id === null || type === null) {
       throw this._errMissing(filePath);
@@ -72,7 +68,7 @@ export default class NeDBPlugin {
 
   async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>): Promise<void> {
     filePath = path.normalize(filePath);
-    const { root, id, type } = this._parsePath(filePath);
+    const { root, id, type } = parseGitPath(filePath);
 
     if (root !== GIT_INSOMNIA_DIR_NAME) {
       console.log(`[git] Ignoring external file ${filePath}`);
@@ -94,7 +90,7 @@ export default class NeDBPlugin {
 
   async unlink(filePath: string, ...x: Array<any>): Promise<void> {
     filePath = path.normalize(filePath);
-    const { id, type } = this._parsePath(filePath);
+    const { id, type } = parseGitPath(filePath);
 
     if (!id || !type) {
       throw new Error(`Cannot unlink file ${filePath}`);
@@ -112,7 +108,7 @@ export default class NeDBPlugin {
   async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
     filePath = path.normalize(filePath);
 
-    const { root, type, id } = this._parsePath(filePath);
+    const { root, type, id } = parseGitPath(filePath);
 
     let docs = [];
     let otherFolders = [];
@@ -127,6 +123,9 @@ export default class NeDBPlugin {
         models.apiSpec.type,
         models.unitTestSuite.type,
         models.unitTest.type,
+        models.grpcRequest.type,
+        models.protoFile.type,
+        models.protoDirectory.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
@@ -203,25 +202,6 @@ export default class NeDBPlugin {
 
   async symlink(targetPath: string, filePath: string, ...x: Array<any>): Promise<void> {
     throw new Error('NeDBPlugin symlink not supported');
-  }
-
-  _parsePath(filePath: string): { root: string | null, type: string | null, id: string | null } {
-    filePath = path.normalize(filePath);
-
-    // FilePath will start with the clone directory. We want to remove the clone dir, so that the
-    // segments can be extracted correctly.
-    filePath = filePath.replace(this._cloneDirRegExp, '');
-
-    // Ignore empty and current directory '.' segments
-    const [root, type, idRaw] = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
-
-    const id = typeof idRaw === 'string' ? idRaw.replace(/\.(json|yml)$/, '') : idRaw;
-
-    return {
-      root: root || null,
-      type: type || null,
-      id: id || null,
-    };
   }
 
   _errMissing(filePath: string): Error {

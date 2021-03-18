@@ -1,7 +1,13 @@
 // @flow
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-import { getAppDefaultTheme, HttpVersions, UPDATE_CHANNEL_STABLE } from '../common/constants';
+import {
+  getAppDefaultTheme,
+  getAppDefaultLightTheme,
+  getAppDefaultDarkTheme,
+  HttpVersions,
+  UPDATE_CHANNEL_STABLE,
+} from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 import type { HttpVersion } from '../common/constants';
 
@@ -37,6 +43,7 @@ type BaseSettings = {
   environmentHighlightColorStyle: string,
   filterResponsesByEnv: boolean,
   followRedirects: boolean,
+  clearOAuth2SessionOnRestart: boolean,
   fontInterface: string | null,
   fontMonospace: string | null,
   fontSize: number,
@@ -56,6 +63,9 @@ type BaseSettings = {
   proxyEnabled: boolean,
   showPasswords: boolean,
   theme: string,
+  autoDetectColorScheme: boolean,
+  lightTheme: string,
+  darkTheme: string,
   timeout: number,
   updateAutomatically: boolean,
   updateChannel: string,
@@ -64,9 +74,8 @@ type BaseSettings = {
   validateSSL: boolean,
   caBundleType: CertificateBundleTypeKeys,
   caBundlePath: string,
-
-  // Feature flags
-  enableSyncBeta: boolean,
+  hasPromptedToMigrateFromDesigner: boolean,
+  hasPromptedOnboarding: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -94,6 +103,7 @@ export function init(): BaseSettings {
     environmentHighlightColorStyle: 'sidebar-indicator',
     filterResponsesByEnv: false,
     followRedirects: true,
+    clearOAuth2SessionOnRestart: true,
     fontInterface: null,
     fontMonospace: null,
     fontSize: 13,
@@ -113,6 +123,9 @@ export function init(): BaseSettings {
     proxyEnabled: false,
     showPasswords: false,
     theme: getAppDefaultTheme(),
+    autoDetectColorScheme: false,
+    lightTheme: getAppDefaultLightTheme(),
+    darkTheme: getAppDefaultDarkTheme(),
     timeout: 0,
     updateAutomatically: true,
     updateChannel: UPDATE_CHANNEL_STABLE,
@@ -122,8 +135,12 @@ export function init(): BaseSettings {
     caBundleType: CertificateBundleType.default,
     caBundlePath: '',
 
-    // Feature flags
-    enableSyncBeta: false,
+    hasPromptedToMigrateFromDesigner: false,
+
+    // Users should only see onboarding during first launch, and anybody updating from an
+    // older version should not see it, so by default this flag is set to true, and is toggled
+    // to false during initialization
+    hasPromptedOnboarding: true,
   };
 }
 
@@ -149,10 +166,15 @@ export async function update(settings: Settings, patch: $Shape<Settings>): Promi
   return db.docUpdate(settings, patch);
 }
 
-export async function getOrCreate(patch: $Shape<Settings> = {}): Promise<Settings> {
+export async function patch(patch: $Shape<Settings>): Promise<Settings> {
+  const settings = await getOrCreate();
+  return db.docUpdate(settings, patch);
+}
+
+export async function getOrCreate(): Promise<Settings> {
   const results = await db.all(type);
   if (results.length === 0) {
-    return create(patch);
+    return create();
   } else {
     return results[0];
   }

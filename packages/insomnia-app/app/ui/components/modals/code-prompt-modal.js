@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -22,7 +23,7 @@ const MODES = {
   'text/html': 'HTML',
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class CodePromptModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -158,6 +159,7 @@ class CodePromptModal extends PureComponent {
               <div className="form-control form-control--outlined form-control--tall tall">
                 <CodeEditor
                   hideLineNumbers
+                  manualPrettify
                   className="tall"
                   defaultValue={defaultValue}
                   placeholder={placeholder}

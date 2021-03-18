@@ -19,12 +19,12 @@ export async function exit(result: Promise<boolean>): Promise<void> {
   return result.then(r => process.exit(r ? 0 : 1)).catch(logErrorExit1);
 }
 
-export function getDefaultAppDataDir(): string {
-  const dir = process.env.DEFAULT_APP_DATA_DIR;
+export function getDefaultAppName(): string {
+  const name = process.env.DEFAULT_APP_NAME;
 
-  if (!dir) {
-    throw new Error('Environment variable DEFAULT_APP_DATA_DIR is not set.');
+  if (!name) {
+    throw new Error('Environment variable DEFAULT_APP_NAME is not set.');
   }
 
-  return dir;
+  return name;
 }

@@ -5,6 +5,7 @@ import path from 'path';
 import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
 import * as updates from './main/updates';
+import * as grpcIpcMain from './main/grpc-ipc-main';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import * as database from './common/database';
@@ -12,14 +13,19 @@ import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/cons
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
+import log, { initializeLogging } from './common/log';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
   process.exit(0);
 }
 
+initializeLogging();
+
 const { app, ipcMain, session } = electron;
 const commandLineArgs = process.argv.slice(1);
+
+log.info(`Running version ${getAppVersion()}`);
 
 // Explicitly set userData folder from config because it's sketchy to
 // rely on electron-builder to use productName, which could be changed
@@ -37,16 +43,19 @@ global.window = global.window || undefined;
 app.on('ready', async () => {
   // Init some important things first
   await database.init(models.types());
-  await errorHandling.init();
+  await _createModelInstances();
 
+  await errorHandling.init();
   await windowUtils.init();
 
   // Init the app
-  await _trackStats();
+  const updatedStats = await _trackStats();
+  await _updateFlags(updatedStats);
   await _launchApp();
 
   // Init the rest
   await updates.init();
+  grpcIpcMain.init();
 });
 
 // Set as default protocol
@@ -128,7 +137,24 @@ function _launchApp() {
   });
 }
 
-async function _trackStats() {
+/*
+  Only one instance should exist of these models
+  On rare occasions, race conditions during initialization result in multiple being created
+  To avoid that, create them explicitly prior to any initialization steps
+ */
+async function _createModelInstances() {
+  await models.stats.get();
+  await models.settings.getOrCreate();
+}
+
+async function _updateFlags({ launches }: Stats) {
+  const firstLaunch = launches === 1;
+  if (firstLaunch) {
+    await models.settings.patch({ hasPromptedOnboarding: false });
+  }
+}
+
+async function _trackStats(): Promise<Stats> {
   // Handle the stats
   const oldStats = await models.stats.get();
   const stats: Stats = await models.stats.update({
@@ -162,7 +188,6 @@ async function _trackStats() {
       key: `updated-${currentVersion}`,
       url: changelogUrl(),
       cta: "See What's New",
-      email: appConfig().gravatarEmail,
       message: `Updated to ${currentVersion}`,
     };
 
@@ -173,4 +198,6 @@ async function _trackStats() {
       }
     }, 5000);
   });
+
+  return stats;
 }

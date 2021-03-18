@@ -6,6 +6,8 @@ function isFilterableField(field) {
   return field !== 'raw' && field !== 'url';
 }
 
+const defaultTriggerBehaviour = 'never';
+
 module.exports.templateTags = [
   {
     name: 'response',
@@ -62,6 +64,7 @@ module.exports.templateTags = [
         displayName: 'Trigger Behavior',
         help: 'Configure when to resend the dependent request',
         type: 'enum',
+        defaultValue: defaultTriggerBehaviour,
         options: [
           {
             displayName: 'Never',
@@ -89,14 +92,17 @@ module.exports.templateTags = [
         displayName: 'Max age (seconds)',
         help: 'The maximum age of a response to use before it expires',
         type: 'number',
-        hide: args => args[3].value !== 'when-expired',
+        hide: args => {
+          const triggerBehavior = (args[3] && args[3].value) || defaultTriggerBehaviour;
+          return triggerBehavior !== 'when-expired';
+        },
         defaultValue: 60,
       },
     ],
 
     async run(context, field, id, filter, resendBehavior, maxAgeSeconds) {
       filter = filter || '';
-      resendBehavior = (resendBehavior || 'never').toLowerCase();
+      resendBehavior = (resendBehavior || defaultTriggerBehaviour).toLowerCase();
 
       if (!['body', 'header', 'raw', 'url'].includes(field)) {
         throw new Error(`Invalid response field ${field}`);

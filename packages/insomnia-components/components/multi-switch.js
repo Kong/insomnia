@@ -18,7 +18,7 @@ const ThemedButtonGroup: React.ComponentType<RadioButtonGroupProps> = styled(Rad
 
   span {
     text-transform: uppercase;
-    padding: var(--padding-xs) var(--padding-md);
+    padding: var(--padding-xxs) var(--padding-md);
     color: var(--hl);
     background: transparent;
     font-size: var(--font-size-sm);

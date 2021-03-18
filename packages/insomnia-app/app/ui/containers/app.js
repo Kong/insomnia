@@ -1,6 +1,23 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import {
+  AUTOBIND_CFG,
+  ACTIVITY_HOME,
+  COLLAPSE_SIDEBAR_REMS,
+  DEFAULT_PANE_HEIGHT,
+  DEFAULT_PANE_WIDTH,
+  DEFAULT_SIDEBAR_WIDTH,
+  getAppName,
+  MAX_PANE_HEIGHT,
+  MAX_PANE_WIDTH,
+  MAX_SIDEBAR_REMS,
+  MIN_PANE_HEIGHT,
+  MIN_PANE_WIDTH,
+  MIN_SIDEBAR_REMS,
+  PREVIEW_MODE_SOURCE,
+  ACTIVITY_MIGRATION,
+} from '../../common/constants';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote } from 'electron';
 import { parse as urlParse } from 'url';
@@ -14,23 +31,7 @@ import Toast from '../components/toast';
 import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import {
-  ACTIVITY_HOME,
-  ACTIVITY_INSOMNIA,
-  COLLAPSE_SIDEBAR_REMS,
-  DEFAULT_PANE_HEIGHT,
-  DEFAULT_PANE_WIDTH,
-  DEFAULT_SIDEBAR_WIDTH,
-  MAX_PANE_HEIGHT,
-  MAX_PANE_WIDTH,
-  MAX_SIDEBAR_REMS,
-  MIN_PANE_HEIGHT,
-  MIN_PANE_WIDTH,
-  MIN_SIDEBAR_REMS,
-  PREVIEW_MODE_SOURCE,
-  getAppId,
-  getAppName,
-} from '../../common/constants';
+
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
 import * as db from '../../common/database';
@@ -51,18 +52,23 @@ import {
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
-  selectSidebarChildren,
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
 } from '../redux/selectors';
+import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
 import GenerateCodeModal from '../components/modals/generate-code-modal';
 import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
 import RequestSettingsModal from '../components/modals/request-settings-modal';
 import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
 import * as network from '../../network/network';
-import { debounce, getContentDispositionHeader, getDataDirectory } from '../../common/misc';
+import {
+  debounce,
+  generateId,
+  getContentDispositionHeader,
+  getDataDirectory,
+} from '../../common/misc';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -75,6 +81,7 @@ import KeydownBinder from '../components/keydown-binder';
 import ErrorBoundary from '../components/error-boundary';
 import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
@@ -87,10 +94,22 @@ import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../..
 import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
-import AppContext from '../../common/strings';
-import { APP_ID_INSOMNIA } from '../../../config';
+import { getWorkspaceLabel } from '../../common/get-workspace-label';
+import {
+  isCollection,
+  isGrpcRequest,
+  isGrpcRequestId,
+  isRequestGroup,
+} from '../../models/helpers/is-model';
+import * as requestOperations from '../../models/helpers/request-operations';
+import { GrpcProvider } from '../context/grpc';
+import { sortMethodMap } from '../../common/sorting';
+import withDragDropContext from '../context/app/drag-drop-context';
+import { trackSegmentEvent } from '../../common/analytics';
+import getWorkspaceName from '../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../models/helpers/workspace-operations';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
   constructor(props) {
     super(props);
@@ -120,6 +139,8 @@ class App extends PureComponent {
     );
 
     this._globalKeyMap = null;
+
+    this._updateVCSLock = null;
   }
 
   _setGlobalKeyMap() {
@@ -197,6 +218,8 @@ class App extends PureComponent {
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           const request = await models.request.create({ parentId, name: 'New Request' });
           await this._handleSetActiveRequest(request._id);
+          models.stats.incrementCreatedRequests();
+          trackSegmentEvent('Request Created');
         },
       ],
       [
@@ -219,11 +242,12 @@ class App extends PureComponent {
           showModal(AskModal, {
             title: 'Delete Request?',
             message: `Really delete ${activeRequest.name}?`,
-            onDone: confirmed => {
+            onDone: async confirmed => {
               if (!confirmed) {
                 return;
               }
-              models.request.remove(activeRequest);
+              await requestOperations.remove(activeRequest);
+              models.stats.incrementDeletedRequests();
             },
           });
         },
@@ -251,15 +275,18 @@ class App extends PureComponent {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
-          if (!this.props.activeRequest) {
+          const { activeRequest, entities } = this.props;
+          if (!activeRequest) {
             return;
           }
 
-          const metas = Object.values(this.props.entities.requestMetas).find(
-            m => m.parentId === this.props.activeRequest._id,
-          );
+          const entitiesToCheck = isGrpcRequest(activeRequest)
+            ? entities.grpcRequestMetas
+            : entities.requestMetas;
 
-          await this._handleSetRequestPinned(this.props.activeRequest, !(metas && metas.pinned));
+          const meta = Object.values(entitiesToCheck).find(m => m.parentId === activeRequest._id);
+
+          await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
         },
       ],
       [hotKeyRefs.PLUGIN_RELOAD, this._handleReloadPlugins],
@@ -321,10 +348,42 @@ class App extends PureComponent {
   _requestCreate(parentId) {
     showModal(RequestCreateModal, {
       parentId,
-      onComplete: request => {
-        this._handleSetActiveRequest(request._id);
+      onComplete: requestId => {
+        this._handleSetActiveRequest(requestId);
+        models.stats.incrementCreatedRequests();
+        trackSegmentEvent('Request Created');
       },
     });
+  }
+
+  async _recalculateMetaSortKey(docs) {
+    function __updateDoc(doc, metaSortKey) {
+      return models.getModel(doc.type).update(doc, { metaSortKey });
+    }
+
+    return Promise.all(docs.map((doc, i) => __updateDoc(doc, i * 100)));
+  }
+
+  async _sortSidebar(order, parentId) {
+    let flushId;
+    if (!parentId) {
+      parentId = this.props.activeWorkspace._id;
+      flushId = await db.bufferChanges();
+    }
+
+    const docs = [
+      ...(await models.requestGroup.findByParentId(parentId)),
+      ...(await models.request.findByParentId(parentId)),
+      ...(await models.grpcRequest.findByParentId(parentId)),
+    ].sort(sortMethodMap[order]);
+    await this._recalculateMetaSortKey(docs);
+
+    // sort RequestGroups recursively
+    await Promise.all(docs.filter(isRequestGroup).map(g => this._sortSidebar(order, g._id)));
+
+    if (flushId) {
+      await db.flushChanges(flushId);
+    }
   }
 
   static async _requestGroupDuplicate(requestGroup) {
@@ -335,7 +394,9 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        await models.requestGroup.duplicate(requestGroup, { name });
+        const newRequestGroup = await models.requestGroup.duplicate(requestGroup, { name });
+
+        models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
       },
     });
   }
@@ -356,55 +417,26 @@ class App extends PureComponent {
       label: 'New Name',
       selectText: true,
       onComplete: async name => {
-        const newRequest = await models.request.duplicate(request, { name });
+        const newRequest = await requestOperations.duplicate(request, { name });
         await this._handleSetActiveRequest(newRequest._id);
-      },
-    });
-  }
-
-  _workspaceRename(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    console.dir(AppContext);
-    showPrompt({
-      title: `Rename ${AppContext.workspace}`,
-      defaultValue: workspace.name,
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: async name => {
-        await models.workspace.update(workspace, { name: name });
-        callback();
-      },
-    });
-  }
-
-  _workspaceDeleteById(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    showModal(AskModal, {
-      title: `Delete ${AppContext.workspace}`,
-      message: `Do you really want to delete ${workspace.name}?`,
-      yesText: 'Yes',
-      noText: 'Cancel',
-      onDone: async isYes => {
-        if (!isYes) {
-          return;
-        }
-        await models.workspace.remove(workspace);
+        models.stats.incrementCreatedRequests();
       },
     });
   }
 
   _workspaceDuplicateById(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
 
     showPrompt({
-      title: `Duplicate ${AppContext.workspace}`,
-      defaultValue: workspace.name,
+      title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
-        const newWorkspace = await db.duplicate(workspace, { name });
+        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
+
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
       },
@@ -430,7 +462,7 @@ class App extends PureComponent {
 
   async _handleGetRenderContext() {
     const context = await this._fetchRenderContext();
-    const keys = getKeys(context);
+    const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
     return { context, keys };
   }
 
@@ -488,12 +520,12 @@ class App extends PureComponent {
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
-    const requestMeta = await models.requestMeta.getByParentId(requestId);
-    if (requestMeta) {
-      return models.requestMeta.update(requestMeta, patch);
+    const isGrpc = isGrpcRequestId(requestId);
+
+    if (isGrpc) {
+      return models.grpcRequestMeta.updateOrCreateByParentId(requestId, patch);
     } else {
-      const newPatch = Object.assign({ parentId: requestId }, patch);
-      return models.requestMeta.create(newPatch);
+      return models.requestMeta.updateOrCreateByParentId(requestId, patch);
     }
   }
 
@@ -613,7 +645,7 @@ class App extends PureComponent {
   async _getDownloadLocation() {
     const options = {
       title: 'Select Download Location',
-      buttonLabel: 'Send and Save',
+      buttonLabel: 'Save',
     };
 
     const defaultPath = window.localStorage.getItem('insomnia.sendAndDownloadLocation');
@@ -635,12 +667,9 @@ class App extends PureComponent {
       return;
     }
 
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last one
-    const key = request._id;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     // Start loading
     handleStartLoading(requestId);
@@ -705,15 +734,15 @@ class App extends PureComponent {
           </div>
         ),
       });
+    } finally {
+      // Unset active response because we just made a new one
+      await App._updateRequestMetaByParentId(requestId, {
+        activeResponseId: null,
+      });
+
+      // Stop loading
+      handleStopLoading(requestId);
     }
-
-    // Unset active response because we just made a new one
-    await App._updateRequestMetaByParentId(requestId, {
-      activeResponseId: null,
-    });
-
-    // Stop loading
-    handleStopLoading(requestId);
   }
 
   async _handleSendRequestWithEnvironment(requestId, environmentId) {
@@ -723,12 +752,9 @@ class App extends PureComponent {
       return;
     }
 
-    // NOTE: Since request is by far the most popular event, we will throttle
-    // it so that we only track it if the request has changed since the last noe
-    const key = `${request._id}::${request.modified}`;
-    if (this._sendRequestTrackingKey !== key) {
-      this._sendRequestTrackingKey = key;
-    }
+    // Update request stats
+    models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     handleStartLoading(requestId);
 
@@ -926,15 +952,9 @@ class App extends PureComponent {
   async _handleReloadPlugins() {
     const { settings } = this.props;
     await plugins.reloadPlugins();
-    await themes.setTheme(settings.theme);
+    await themes.applyColorScheme(settings);
     templating.reload();
     console.log('[plugins] reloaded');
-  }
-
-  _handleToggleInsomniaActivity() {
-    const { activity, handleSetActiveActivity } = this.props;
-
-    handleSetActiveActivity(activity === ACTIVITY_INSOMNIA ? ACTIVITY_HOME : ACTIVITY_INSOMNIA);
   }
 
   /**
@@ -952,10 +972,10 @@ class App extends PureComponent {
 
     let title;
 
-    if (activity === ACTIVITY_HOME) {
+    if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else {
-      title = getAppId() === APP_ID_INSOMNIA ? activeWorkspace.name : activeApiSpec.fileName;
+      title = isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }
@@ -1053,6 +1073,9 @@ class App extends PureComponent {
   }
 
   async _updateVCS() {
+    const lock = generateId();
+    this._updateVCSLock = lock;
+
     const { activeWorkspace } = this.props;
 
     // Get the vcs and set it to null in the state while we update it
@@ -1074,7 +1097,45 @@ class App extends PureComponent {
 
     await vcs.switchProject(activeWorkspace._id);
 
-    this.setState({ vcs });
+    // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
+    if (this._updateVCSLock === lock) {
+      this.setState({ vcs });
+    }
+  }
+
+  async _handleDbChange(changes) {
+    let needsRefresh = false;
+
+    for (const change of changes) {
+      const [type, doc, fromSync] = change;
+
+      const { vcs } = this.state;
+      const { activeRequest } = this.props;
+
+      // Force refresh if environment changes
+      // TODO: Only do this for environments in this workspace (not easy because they're nested)
+      if (doc.type === models.environment.type) {
+        console.log('[App] Forcing update from environment change', change);
+        needsRefresh = true;
+      }
+
+      // Force refresh if sync changes the active request
+      if (fromSync && activeRequest && doc._id === activeRequest._id) {
+        needsRefresh = true;
+        console.log('[App] Forcing update from request change', change);
+      }
+
+      // Delete VCS project if workspace deleted
+      if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
+        await vcs.removeProjectsForRoot(doc._id);
+      }
+    }
+
+    if (needsRefresh) {
+      setTimeout(() => {
+        this._wrapper && this._wrapper._forceRequestPaneRefresh();
+      }, 300);
+    }
   }
 
   async componentDidMount() {
@@ -1087,51 +1148,16 @@ class App extends PureComponent {
     this._updateDocumentTitle();
 
     // Update VCS
-    await this._updateVCS(this.props.activeWorkspace);
+    await this._updateVCS();
     await this._updateGitVCS(this.props.activeWorkspace);
 
-    db.onChange(async changes => {
-      let needsRefresh = false;
-
-      for (const change of changes) {
-        const [type, doc, fromSync] = change;
-
-        const { vcs } = this.state;
-        const { activeRequest } = this.props;
-
-        // Force refresh if environment changes
-        // TODO: Only do this for environments in this workspace (not easy because they're nested)
-        if (doc.type === models.environment.type) {
-          console.log('[App] Forcing update from environment change', change);
-          needsRefresh = true;
-        }
-
-        // Force refresh if sync changes the active request
-        if (fromSync && activeRequest && doc._id === activeRequest._id) {
-          needsRefresh = true;
-          console.log('[App] Forcing update from request change', change);
-        }
-
-        // Delete VCS project if workspace deleted
-        if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
-          await vcs.removeProjectsForRoot(doc._id);
-        }
-      }
-
-      if (needsRefresh) {
-        setTimeout(() => {
-          this._wrapper && this._wrapper._forceRequestPaneRefresh();
-        }, 300);
-      }
-    });
+    db.onChange(this._handleDbChange);
 
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
 
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
-
-    ipcRenderer.on('toggle-insomnia', this._handleToggleInsomniaActivity);
 
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
@@ -1196,12 +1222,17 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
+
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addListener(async () => themes.applyColorScheme(this.props.settings));
   }
 
   componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
+    db.offChange(this._handleDbChange);
   }
 
   async _ensureWorkspaceChildren() {
@@ -1239,12 +1270,6 @@ class App extends PureComponent {
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps) {
     this._ensureWorkspaceChildren(nextProps);
-
-    // Update VCS if needed
-    const { activeWorkspace } = this.props;
-    if (nextProps.activeWorkspace._id !== activeWorkspace._id) {
-      this._updateVCS(nextProps.activeWorkspace);
-    }
   }
 
   // eslint-disable-next-line camelcase
@@ -1275,70 +1300,70 @@ class App extends PureComponent {
 
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
-        <div className="app" key={uniquenessKey}>
-          <ErrorBoundary showAlert>
-            <Wrapper
-              {...this.props}
-              ref={this._setWrapperRef}
-              paneWidth={paneWidth}
-              paneHeight={paneHeight}
-              sidebarWidth={sidebarWidth}
-              handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
-              handleSetRequestPinned={this._handleSetRequestPinned}
-              handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
-              handleActivateRequest={this._handleSetActiveRequest}
-              handleSetRequestPaneRef={this._setRequestPaneRef}
-              handleSetResponsePaneRef={this._setResponsePaneRef}
-              handleSetSidebarRef={this._setSidebarRef}
-              handleStartDragSidebar={this._startDragSidebar}
-              handleResetDragSidebar={this._resetDragSidebar}
-              handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
-              handleStartDragPaneVertical={this._startDragPaneVertical}
-              handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
-              handleResetDragPaneVertical={this._resetDragPaneVertical}
-              handleCreateRequest={this._requestCreate}
-              handleRender={this._handleRenderText}
-              handleGetRenderContext={this._handleGetRenderContext}
-              handleDuplicateRequest={this._requestDuplicate}
-              handleDuplicateRequestGroup={App._requestGroupDuplicate}
-              handleMoveRequestGroup={App._requestGroupMove}
-              handleDuplicateWorkspace={this._workspaceDuplicate}
-              handleDuplicateWorkspaceById={this._workspaceDuplicateById}
-              handleRenameWorkspaceById={this._workspaceRename}
-              handleDeleteWorkspaceById={this._workspaceDeleteById}
-              handleCreateRequestGroup={this._requestGroupCreate}
-              handleGenerateCode={App._handleGenerateCode}
-              handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
-              handleCopyAsCurl={this._handleCopyAsCurl}
-              handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
-              handleSetResponseFilter={this._handleSetResponseFilter}
-              handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
-              handleSendAndDownloadRequestWithEnvironment={
-                this._handleSendAndDownloadRequestWithEnvironment
-              }
-              handleSetActiveResponse={this._handleSetActiveResponse}
-              handleSetActiveRequest={this._handleSetActiveRequest}
-              handleSetActiveEnvironment={this._handleSetActiveEnvironment}
-              handleSetSidebarFilter={this._handleSetSidebarFilter}
-              handleToggleMenuBar={this._handleToggleMenuBar}
-              handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-              handleShowExportRequestsModal={this._handleShowExportRequestsModal}
-              handleShowSettingsModal={App._handleShowSettingsModal}
-              handleUpdateDownloadPath={this._handleUpdateDownloadPath}
-              isVariableUncovered={isVariableUncovered}
-              headerEditorKey={forceRefreshHeaderCounter + ''}
-              vcs={vcs}
-              gitVCS={gitVCS}
-            />
-          </ErrorBoundary>
+        <GrpcProvider>
+          <div className="app" key={uniquenessKey}>
+            <ErrorBoundary showAlert>
+              <Wrapper
+                {...this.props}
+                ref={this._setWrapperRef}
+                paneWidth={paneWidth}
+                paneHeight={paneHeight}
+                sidebarWidth={sidebarWidth}
+                handleCreateRequestForWorkspace={this._requestCreateForWorkspace}
+                handleSetRequestPinned={this._handleSetRequestPinned}
+                handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
+                handleActivateRequest={this._handleSetActiveRequest}
+                handleSetRequestPaneRef={this._setRequestPaneRef}
+                handleSetResponsePaneRef={this._setResponsePaneRef}
+                handleSetSidebarRef={this._setSidebarRef}
+                handleStartDragSidebar={this._startDragSidebar}
+                handleResetDragSidebar={this._resetDragSidebar}
+                handleStartDragPaneHorizontal={this._startDragPaneHorizontal}
+                handleStartDragPaneVertical={this._startDragPaneVertical}
+                handleResetDragPaneHorizontal={this._resetDragPaneHorizontal}
+                handleResetDragPaneVertical={this._resetDragPaneVertical}
+                handleCreateRequest={this._requestCreate}
+                handleRender={this._handleRenderText}
+                handleGetRenderContext={this._handleGetRenderContext}
+                handleDuplicateRequest={this._requestDuplicate}
+                handleDuplicateRequestGroup={App._requestGroupDuplicate}
+                handleMoveRequestGroup={App._requestGroupMove}
+                handleDuplicateWorkspace={this._workspaceDuplicate}
+                handleCreateRequestGroup={this._requestGroupCreate}
+                handleGenerateCode={App._handleGenerateCode}
+                handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
+                handleCopyAsCurl={this._handleCopyAsCurl}
+                handleSetResponsePreviewMode={this._handleSetResponsePreviewMode}
+                handleSetResponseFilter={this._handleSetResponseFilter}
+                handleSendRequestWithEnvironment={this._handleSendRequestWithEnvironment}
+                handleSendAndDownloadRequestWithEnvironment={
+                  this._handleSendAndDownloadRequestWithEnvironment
+                }
+                handleSetActiveResponse={this._handleSetActiveResponse}
+                handleSetActiveRequest={this._handleSetActiveRequest}
+                handleSetActiveEnvironment={this._handleSetActiveEnvironment}
+                handleSetSidebarFilter={this._handleSetSidebarFilter}
+                handleToggleMenuBar={this._handleToggleMenuBar}
+                handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
+                handleShowExportRequestsModal={this._handleShowExportRequestsModal}
+                handleShowSettingsModal={App._handleShowSettingsModal}
+                handleUpdateDownloadPath={this._handleUpdateDownloadPath}
+                isVariableUncovered={isVariableUncovered}
+                headerEditorKey={forceRefreshHeaderCounter + ''}
+                handleSidebarSort={this._sortSidebar}
+                vcs={vcs}
+                gitVCS={gitVCS}
+              />
+            </ErrorBoundary>
 
-          <ErrorBoundary showAlert>
-            <Toast />
-          </ErrorBoundary>
+            <ErrorBoundary showAlert>
+              <Toast />
+            </ErrorBoundary>
 
-          {/* Block all mouse activity by showing an overlay while dragging */}
-          {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
-        </div>
+            {/* Block all mouse activity by showing an overlay while dragging */}
+            {this.state.showDragOverlay ? <div className="blocker-overlay" /> : null}
+          </div>
+        </GrpcProvider>
       </KeydownBinder>
     );
   }
@@ -1356,6 +1381,7 @@ App.propTypes = {
     _id: PropTypes.string.isRequired,
   }).isRequired,
   handleSetActiveActivity: PropTypes.func.isRequired,
+  handleGoToNextActivity: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
@@ -1494,6 +1520,7 @@ function mapDispatchToProps(dispatch) {
     handleStopLoading: global.loadRequestStop,
 
     handleSetActiveActivity: global.setActiveActivity,
+    handleGoToNextActivity: global.goToNextActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
     handleImportClipBoardToWorkspace: global.importClipBoard,
@@ -1522,7 +1549,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 
   function __updateDoc(doc, patch) {
-    models.getModel(docToMove.type).update(doc, patch);
+    return models.getModel(docToMove.type).update(doc, patch);
   }
 
   if (targetId === null) {
@@ -1534,6 +1561,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   // NOTE: using requestToTarget's parentId so we can switch parents!
   const docs = [
     ...(await models.request.findByParentId(parentId)),
+    ...(await models.grpcRequest.findByParentId(parentId)),
     ...(await models.requestGroup.findByParentId(parentId)),
   ].sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));
 
@@ -1574,4 +1602,4 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(withDragDropContext(App));

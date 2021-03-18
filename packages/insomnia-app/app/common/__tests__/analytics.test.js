@@ -25,7 +25,7 @@ describe('init()', () => {
   });
 
   it('does not work with tracking disabled', async () => {
-    const settings = await models.settings.getOrCreate({
+    const settings = await models.settings.patch({
       enableAnalytics: false,
       deviceId: 'device',
     });
@@ -38,7 +38,7 @@ describe('init()', () => {
   });
 
   it('works with tracking enabled', async () => {
-    const settings = await models.settings.getOrCreate({
+    const settings = await models.settings.patch({
       enableAnalytics: true,
       deviceId: 'device',
     });
@@ -74,7 +74,7 @@ describe('init()', () => {
   });
 
   it('tracks non-interactive event', async () => {
-    await models.settings.getOrCreate({
+    await models.settings.patch({
       deviceId: 'device',
       enableAnalytics: true,
     });
@@ -109,7 +109,7 @@ describe('init()', () => {
   });
 
   it('tracks page view', async () => {
-    await models.settings.getOrCreate({
+    await models.settings.patch({
       deviceId: 'device',
       enableAnalytics: true,
     });
@@ -141,7 +141,7 @@ describe('init()', () => {
   });
 
   it('tracking page view remembers path', async () => {
-    await models.settings.getOrCreate({
+    await models.settings.patch({
       deviceId: 'device',
       enableAnalytics: true,
     });

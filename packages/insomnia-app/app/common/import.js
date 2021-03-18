@@ -9,9 +9,19 @@ import { CONTENT_TYPE_GRAPHQL, getAppVersion } from './constants';
 import { showError, showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
-import { fnOrString, generateId } from './misc';
+import { fnOrString, generateId, diffPatchObj } from './misc';
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
+import {
+  isGrpcRequest,
+  isProtoDirectory,
+  isProtoFile,
+  isRequest,
+  isRequestGroup,
+  isWorkspace,
+} from '../models/helpers/is-model';
+import type { Workspace, WorkspaceScope } from '../models/workspace';
+import type { ApiSpec } from '../models/api-spec';
 
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
@@ -19,22 +29,32 @@ const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
 const EXPORT_FORMAT = 4;
 
 const EXPORT_TYPE_REQUEST = 'request';
+const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
 const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
+const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
+const EXPORT_TYPE_UNIT_TEST = 'unit_test';
 const EXPORT_TYPE_WORKSPACE = 'workspace';
 const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
 const EXPORT_TYPE_ENVIRONMENT = 'environment';
 const EXPORT_TYPE_API_SPEC = 'api_spec';
+const EXPORT_TYPE_PROTO_FILE = 'proto_file';
+const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
 
 // If we come across an ID of this form, we will replace it with a new one
 const REPLACE_ID_REGEX = /__\w+_\d+__/g;
 
 const MODELS = {
   [EXPORT_TYPE_REQUEST]: models.request,
+  [EXPORT_TYPE_GRPC_REQUEST]: models.grpcRequest,
   [EXPORT_TYPE_REQUEST_GROUP]: models.requestGroup,
+  [EXPORT_TYPE_UNIT_TEST_SUITE]: models.unitTestSuite,
+  [EXPORT_TYPE_UNIT_TEST]: models.unitTest,
   [EXPORT_TYPE_WORKSPACE]: models.workspace,
   [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
   [EXPORT_TYPE_ENVIRONMENT]: models.environment,
   [EXPORT_TYPE_API_SPEC]: models.apiSpec,
+  [EXPORT_TYPE_PROTO_FILE]: models.protoFile,
+  [EXPORT_TYPE_PROTO_DIRECTORY]: models.protoDirectory,
 };
 
 export type ImportResult = {
@@ -43,10 +63,30 @@ export type ImportResult = {
   summary: { [string]: Array<BaseModel> },
 };
 
-export async function importUri(
+type ConvertResultType = {
+  id: string,
+  name: string,
+  description: string,
+};
+
+type ConvertResult = {
+  type: ConvertResultType,
+  data: {
+    resources: Array<Object>,
+  },
+};
+
+export type ImportRawConfig = {
   getWorkspaceId: () => Promise<string | null>,
-  uri: string,
-): Promise<ImportResult> {
+  getWorkspaceScope?: string => Promise<WorkspaceScope>,
+  enableDiffBasedPatching?: boolean,
+  enableDiffDeep?: boolean,
+  bypassDiffProps?: {
+    url: string,
+  },
+};
+
+export async function importUri(uri: string, importConfig: ImportRawConfig): Promise<ImportResult> {
   let rawText;
 
   // If GH preview, force raw
@@ -68,7 +108,7 @@ export async function importUri(
     rawText = decodeURIComponent(uri);
   }
 
-  const result = await importRaw(getWorkspaceId, rawText);
+  const result = await importRaw(rawText, importConfig);
   const { summary, error } = result;
 
   if (error) {
@@ -100,10 +140,16 @@ export async function importUri(
 }
 
 export async function importRaw(
-  getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
+  {
+    getWorkspaceId,
+    getWorkspaceScope,
+    enableDiffBasedPatching,
+    enableDiffDeep,
+    bypassDiffProps,
+  }: ImportRawConfig,
 ): Promise<ImportResult> {
-  let results;
+  let results: ConvertResult;
   try {
     results = await convert(rawContent);
   } catch (err) {
@@ -114,7 +160,7 @@ export async function importRaw(
     };
   }
 
-  const { data } = results;
+  const { data, type: resultsType } = results;
 
   // Generate all the ids we may need
   const generatedIds: { [string]: string | Function } = {};
@@ -129,17 +175,14 @@ export async function importRaw(
     const workspaceId = await getWorkspaceId();
 
     // First try getting the workspace to overwrite
-    let workspace = await models.workspace.getById(workspaceId || 'n/a');
-
-    // If none provided, create a new workspace
-    if (workspace === null) {
-      workspace = await models.workspace.create({ name: 'Imported Workspace' });
-    }
+    const workspace = await models.workspace.getById(workspaceId || 'n/a');
 
     // Update this fn so it doesn't run again
-    generatedIds[WORKSPACE_ID_KEY] = workspace._id;
+    const idToUse = workspace?._id || generateId(models.workspace.prefix);
 
-    return workspace._id;
+    generatedIds[WORKSPACE_ID_KEY] = idToUse;
+
+    return idToUse;
   };
 
   // Contains the ID of the base environment to be used with the import
@@ -193,7 +236,7 @@ export async function importRaw(
     // Hack to switch to GraphQL based on finding `graphql` in the URL path
     // TODO: Support this in a better way
     if (
-      model.type === models.request.type &&
+      isRequest(model) &&
       resource.body &&
       typeof resource.body.text === 'string' &&
       typeof resource.url === 'string' &&
@@ -205,7 +248,7 @@ export async function importRaw(
 
     // Try adding Content-Type JSON if no Content-Type exists
     if (
-      model.type === models.request.type &&
+      isRequest(model) &&
       resource.body &&
       typeof resource.body.text === 'string' &&
       Array.isArray(resource.headers) &&
@@ -222,12 +265,32 @@ export async function importRaw(
     const existingDoc = await db.get(model.type, resource._id);
     let newDoc: BaseModel;
     if (existingDoc) {
-      newDoc = await db.docUpdate(existingDoc, resource);
+      let updateDoc = resource;
+
+      // Do differential patching when enabled
+      if (enableDiffBasedPatching) {
+        updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
+      }
+
+      // Bypass differential update for urls when enabled
+      if (bypassDiffProps?.url && updateDoc.url) {
+        updateDoc.url = resource.url;
+      }
+
+      // If workspace, don't overwrite the existing scope
+      if (isWorkspace(model)) {
+        (updateDoc: Workspace).scope = (existingDoc: Workspace).scope;
+      }
+
+      newDoc = await db.docUpdate(existingDoc, updateDoc);
     } else {
+      if (isWorkspace(model)) {
+        await updateWorkspaceScope(resource, resultsType, getWorkspaceScope);
+      }
       newDoc = await db.docCreate(model.type, resource);
 
       // Mark as not seen if we created a new workspace from sync
-      if (newDoc.type === models.workspace.type) {
+      if (isWorkspace(newDoc)) {
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(newDoc._id);
         await models.workspaceMeta.update(workspaceMeta, { hasSeen: false });
       }
@@ -238,7 +301,7 @@ export async function importRaw(
 
   // Store spec under workspace if it's OpenAPI
   for (const workspace of importedDocs[models.workspace.type]) {
-    if (isApiSpec(results.type.id)) {
+    if (isApiSpecImport(resultsType)) {
       const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
         contents: rawContent,
         contentType: 'yaml',
@@ -247,26 +310,57 @@ export async function importRaw(
       importedDocs[spec.type].push(spec);
     }
 
-    // Set default environment if there is one
+    // Set active environment when none is currently selected and one exists
     const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
     const envs = importedDocs[models.environment.type];
-    meta.activeEnvironmentId = envs.length > 0 ? envs[0]._id : null;
-    await models.workspaceMeta.update(meta);
+    if (!meta.activeEnvironmentId && envs.length > 0) {
+      meta.activeEnvironmentId = envs[0]._id;
+      await models.workspaceMeta.update(meta);
+    }
   }
 
   await db.flushChanges();
 
-  trackEvent('Data', 'Import', results.type.id);
+  trackEvent('Data', 'Import', resultsType.id);
 
   return {
-    source: results.type && typeof results.type.id === 'string' ? results.type.id : 'unknown',
+    source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
     summary: importedDocs,
     error: null,
   };
 }
 
-export function isApiSpec(content: string): boolean {
-  return content === 'openapi3' || content === 'swagger2';
+async function updateWorkspaceScope(
+  resource: Workspace,
+  resultType: ConvertResultType,
+  getWorkspaceScope?: string => Promise<WorkspaceScope>,
+) {
+  // Set the workspace scope if creating a new workspace
+  //  IF is creating a new workspace
+  //  AND imported resource has no preset scope property OR scope is null
+  //  AND we have a function to get scope
+  if ((!resource.hasOwnProperty('scope') || resource.scope === null) && getWorkspaceScope) {
+    const workspaceName = resource.name;
+    let specName;
+    // If is from insomnia v4 and the spec has contents, add to the name when prompting
+    if (isInsomniaV4Import(resultType)) {
+      const spec: ApiSpec | null = await models.apiSpec.getByParentId(resource._id);
+
+      if (spec && spec.contents.trim()) {
+        specName = spec.fileName;
+      }
+    }
+    const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
+    (resource: Workspace).scope = await getWorkspaceScope(nameToPrompt);
+  }
+}
+
+export function isApiSpecImport({ id }: ConvertResultType): boolean {
+  return id === 'openapi3' || id === 'swagger2';
+}
+
+export function isInsomniaV4Import({ id }: ConvertResultType): boolean {
+  return id === 'insomnia-4';
 }
 
 export async function exportWorkspacesHAR(
@@ -274,7 +368,7 @@ export async function exportWorkspacesHAR(
   includePrivateDocs: boolean = false,
 ): Promise<string> {
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
+  const requests: Array<BaseModel> = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
 
@@ -290,7 +384,7 @@ export async function exportRequestsHAR(
       models.workspace.type,
       models.requestGroup.type,
     ]);
-    const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+    const workspace = ancestors.find(isWorkspace);
     mapRequestIdToWorkspace[request._id] = workspace;
     if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
       continue;
@@ -338,7 +432,7 @@ export async function exportWorkspacesData(
   format: 'json' | 'yaml',
 ): Promise<string> {
   const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: Array<BaseModel> = docs.filter(doc => doc.type === models.request.type);
+  const requests: Array<BaseModel> = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
 
@@ -354,10 +448,10 @@ export async function exportRequestsData(
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
     resources: [],
   };
-
   const docs: Array<BaseModel> = [];
   const workspaces: Array<BaseModel> = [];
   const mapTypeAndIdToDoc: Object = {};
+
   for (const req of requests) {
     const ancestors: Array<BaseModel> = clone(await db.withAncestors(req));
     for (const ancestor of ancestors) {
@@ -367,7 +461,7 @@ export async function exportRequestsData(
       }
       mapTypeAndIdToDoc[key] = ancestor;
       docs.push(ancestor);
-      if (ancestor.type === models.workspace.type) {
+      if (isWorkspace(ancestor)) {
         workspaces.push(ancestor);
       }
     }
@@ -379,7 +473,11 @@ export async function exportRequestsData(
       return (
         d.type === models.cookieJar.type ||
         d.type === models.environment.type ||
-        d.type === models.apiSpec.type
+        d.type === models.apiSpec.type ||
+        d.type === models.unitTestSuite.type ||
+        d.type === models.unitTest.type ||
+        isProtoFile(d) ||
+        isProtoDirectory(d)
       );
     });
     docs.push(...descendants);
@@ -390,9 +488,14 @@ export async function exportRequestsData(
       // Only export these model types.
       if (
         !(
-          d.type === models.request.type ||
-          d.type === models.requestGroup.type ||
-          d.type === models.workspace.type ||
+          d.type === models.unitTestSuite.type ||
+          d.type === models.unitTest.type ||
+          isRequest(d) ||
+          isGrpcRequest(d) ||
+          isRequestGroup(d) ||
+          isProtoFile(d) ||
+          isProtoDirectory(d) ||
+          isWorkspace(d) ||
           d.type === models.cookieJar.type ||
           d.type === models.environment.type ||
           d.type === models.apiSpec.type
@@ -404,16 +507,26 @@ export async function exportRequestsData(
       return !(d: Object).isPrivate || includePrivateDocs;
     })
     .map((d: Object) => {
-      if (d.type === models.workspace.type) {
+      if (isWorkspace(d)) {
         d._type = EXPORT_TYPE_WORKSPACE;
       } else if (d.type === models.cookieJar.type) {
         d._type = EXPORT_TYPE_COOKIE_JAR;
       } else if (d.type === models.environment.type) {
         d._type = EXPORT_TYPE_ENVIRONMENT;
-      } else if (d.type === models.requestGroup.type) {
+      } else if (d.type === models.unitTestSuite.type) {
+        d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
+      } else if (d.type === models.unitTest.type) {
+        d._type = EXPORT_TYPE_UNIT_TEST;
+      } else if (isRequestGroup(d)) {
         d._type = EXPORT_TYPE_REQUEST_GROUP;
-      } else if (d.type === models.request.type) {
+      } else if (isRequest(d)) {
         d._type = EXPORT_TYPE_REQUEST;
+      } else if (isGrpcRequest(d)) {
+        d._type = EXPORT_TYPE_GRPC_REQUEST;
+      } else if (isProtoFile(d)) {
+        d._type = EXPORT_TYPE_PROTO_FILE;
+      } else if (isProtoDirectory(d)) {
+        d._type = EXPORT_TYPE_PROTO_DIRECTORY;
       } else if (d.type === models.apiSpec.type) {
         d._type = EXPORT_TYPE_API_SPEC;
       }
@@ -424,7 +537,6 @@ export async function exportRequestsData(
     });
 
   trackEvent('Data', 'Export', `Insomnia ${format}`);
-
   if (format.toLowerCase() === 'yaml') {
     return YAML.stringify(data);
   } else if (format.toLowerCase() === 'json') {

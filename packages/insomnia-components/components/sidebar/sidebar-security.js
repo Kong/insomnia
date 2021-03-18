@@ -32,11 +32,11 @@ export default class SidebarSecurity extends React.Component<Props> {
       <div>
         {filteredValues.map(scheme => (
           <React.Fragment key={scheme}>
-            <SidebarItem>
+            <SidebarItem onClick={() => onClick('components', 'securitySchemes', scheme)}>
               <div>
                 <SvgIcon icon={IconEnum.key} />
               </div>
-              <span onClick={() => onClick('components', 'securitySchemes', scheme)}>{scheme}</span>
+              <span>{scheme}</span>
             </SidebarItem>
           </React.Fragment>
         ))}

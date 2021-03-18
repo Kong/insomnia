@@ -3,6 +3,7 @@ import nunjucks from 'nunjucks';
 import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 import * as plugins from '../plugins/index';
+import type { TemplateTag } from '../plugins/index';
 
 export class RenderError extends Error {
   message: string;
@@ -16,6 +17,7 @@ export class RenderError extends Error {
 export const RENDER_ALL = 'all';
 export const RENDER_VARS = 'variables';
 export const RENDER_TAGS = 'tags';
+export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 
 // Cached globals
 let nunjucksVariablesOnly = null;
@@ -35,13 +37,16 @@ export function render(
   config: { context?: Object, path?: string, renderMode?: string } = {},
 ): Promise<string> {
   const context = config.context || {};
+  // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
+  // old: {{ arr[0].prop }}
+  // new: {{ _['arr-name-with-dash'][0].prop }}
+  const templatingContext = { ...context, [NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME]: context };
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
 
   return new Promise(async (resolve, reject) => {
     const nj = await getNunjucks(renderMode);
-
-    nj.renderString(text, context, (err, result) => {
+    nj.renderString(text, templatingContext, (err, result) => {
       if (err) {
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
@@ -96,6 +101,7 @@ export async function getTagDefinitions(): Promise<Array<NunjucksParsedTag>> {
       description: ext.getDescription(),
       disablePreview: ext.getDisablePreview(),
       args: ext.getArgs(),
+      actions: ext.getActions(),
     }));
 }
 
@@ -147,7 +153,14 @@ async function getNunjucks(renderMode: string) {
 
   const nj = nunjucks.configure(config);
 
-  const allTemplateTagPlugins = await plugins.getTemplateTags();
+  let allTemplateTagPlugins: Array<TemplateTag>;
+  try {
+    plugins.ignorePlugin('insomnia-plugin-kong-bundle');
+    allTemplateTagPlugins = await plugins.getTemplateTags();
+  } finally {
+    plugins.clearIgnores();
+  }
+
   const allExtensions = allTemplateTagPlugins;
   for (let i = 0; i < allExtensions.length; i++) {
     const { templateTag, plugin } = allExtensions[i];
@@ -157,9 +170,7 @@ async function getNunjucks(renderMode: string) {
 
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`
-    nj.addFilter('debug', o => {
-      return o;
-    });
+    nj.addFilter('debug', o => o);
   }
 
   // ~~~~~~~~~~~~~~~~~~~~ //
