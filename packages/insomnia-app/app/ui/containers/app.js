@@ -95,7 +95,12 @@ import NeDBPlugin from '../../sync/git/ne-db-plugin';
 import FSPlugin from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
-import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
+import {
+  isCollection,
+  isGrpcRequest,
+  isGrpcRequestId,
+  isRequestGroup,
+} from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
@@ -970,8 +975,7 @@ class App extends PureComponent {
     if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else {
-      title =
-        activeWorkspace.scope === 'collection' ? activeWorkspace.name : activeApiSpec.fileName;
+      title = isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }

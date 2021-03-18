@@ -30,7 +30,7 @@ export function init() {
   return {
     name: `New ${strings.collection}`,
     description: '',
-    scope: 'collection',
+    scope: WorkspaceScopeKeys.collection,
   };
 }
 

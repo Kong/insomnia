@@ -11,8 +11,8 @@ type State = {
 };
 
 type Props = {
-  render: Function,
-  getRenderContext: Function,
+  handleRender: Function,
+  handleGetRenderContext: Function,
   nunjucksPowerUserMode: boolean,
   onChange: Function,
   password: string,
@@ -56,7 +56,6 @@ class PasswordEditor extends React.PureComponent<Props, State> {
           <OneLineEditor
             type={showAllPasswords || showPassword ? 'text' : 'password'}
             id="password"
-            testId="password"
             onChange={onChange}
             defaultValue={password || ''}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
@@ -69,8 +68,7 @@ class PasswordEditor extends React.PureComponent<Props, State> {
           <Button
             className="btn btn--super-duper-compact pointer"
             onClick={this._handleShowPassword}
-            value={showPassword}
-            testId="password-reveal">
+            value={showPassword}>
             {showPassword ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
           </Button>
         )}
