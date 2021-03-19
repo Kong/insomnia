@@ -154,17 +154,17 @@ module.exports.templateTags = [
           const headerNamesStr = headerNames.map(n => `"${n}"`).join(',\n\t');
           throw new Error(`No header with name "${name}".\nChoices are [\n\t${headerNamesStr}\n]`);
         case 'oauth2-access':
-          const token = await context.util.models.oAuth2Token.getByRequestId(request._id);
-          if (!token || !token.accessToken) {
+          const access = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!access || !access.accessToken) {
             throw new Error('No OAuth 2.0 access tokens found for request');
           }
-          return token.accessToken;
+          return access.accessToken;
         case 'oauth2-identity':
-          const tok = await context.util.models.oAuth2Token.getByRequestId(request._id);
-          if (!tok || !tok.identityToken) {
+          const identity = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!identity || !identity.identityToken) {
             throw new Error('No OAuth 2.0 identity tokens found for request');
           }
-          return tok.identityToken;
+          return identity.identityToken;
         case 'name':
           return request.name;
         case 'folder':
