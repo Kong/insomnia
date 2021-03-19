@@ -85,7 +85,7 @@ function generateTestLines(n: number, test: ?Test): Array<string> {
   const lines = [];
 
   // Define test it() block (all test cases are async by default)
-  lines.push(indent(n, `it('${escapeJsStr(test.name)}', async () => {`));
+  lines.push(indent(n, `it('${escapeJsStr(test.name)}', async function() {`));
 
   // Add helper variables that are necessary
   const { defaultRequestId } = test;
