@@ -53,12 +53,18 @@ module.exports.templateTags = [
             displayName: 'OAuth 2.0 Identity Token',
             value: 'oauth2-identity',
           },
+          {
+            displayName: 'OAuth 2.0 Refresh Token',
+            value: 'oauth2-refresh',
+          },
         ],
       },
       {
         type: 'string',
         hide: args =>
-          ['url', 'oauth2-access', 'oauth2-identity', 'name', 'folder'].includes(args[0].value),
+          ['url', 'oauth2-access', 'oauth2-identity', 'oauth2-refresh', 'name', 'folder'].includes(
+            args[0].value,
+          ),
         displayName: args => {
           switch (args[0].value) {
             case 'cookie':
@@ -165,6 +171,12 @@ module.exports.templateTags = [
             throw new Error('No OAuth 2.0 identity tokens found for request');
           }
           return identity.identityToken;
+        case 'oauth2-refresh':
+          const refresh = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!refresh || !refresh.refreshToken) {
+            throw new Error('No OAuth 2.0 refresh tokens found for request');
+          }
+          return refresh.refreshToken;
         case 'name':
           return request.name;
         case 'folder':
