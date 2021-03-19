@@ -46,15 +46,19 @@ module.exports.templateTags = [
             description: 'cookie value by name',
           },
           {
-            displayName: 'OAuth 2.0 Token',
-            value: 'oauth2',
-            description: 'access token',
+            displayName: 'OAuth 2.0 Access Token',
+            value: 'oauth2-access',
+          },
+          {
+            displayName: 'OAuth 2.0 Identity Token',
+            value: 'oauth2-identity',
           },
         ],
       },
       {
         type: 'string',
-        hide: args => ['url', 'oauth2', 'name', 'folder'].includes(args[0].value),
+        hide: args =>
+          ['url', 'oauth2-access', 'oauth2-identity', 'name', 'folder'].includes(args[0].value),
         displayName: args => {
           switch (args[0].value) {
             case 'cookie':
@@ -149,12 +153,18 @@ module.exports.templateTags = [
 
           const headerNamesStr = headerNames.map(n => `"${n}"`).join(',\n\t');
           throw new Error(`No header with name "${name}".\nChoices are [\n\t${headerNamesStr}\n]`);
-        case 'oauth2':
+        case 'oauth2-access':
           const token = await context.util.models.oAuth2Token.getByRequestId(request._id);
-          if (!token) {
-            throw new Error('No OAuth 2.0 tokens found for request');
+          if (!token || !token.accessToken) {
+            throw new Error('No OAuth 2.0 access tokens found for request');
           }
           return token.accessToken;
+        case 'oauth2-identity':
+          const tok = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!tok || !tok.identityToken) {
+            throw new Error('No OAuth 2.0 identity tokens found for request');
+          }
+          return tok.identityToken;
         case 'name':
           return request.name;
         case 'folder':
