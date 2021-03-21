@@ -124,7 +124,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onComplete: async name => {
         await this.__actuallyCreate({
           name,
-          scope: 'collection',
+          scope: WorkspaceScopeKeys.collection,
         });
         trackSegmentEvent('Collection Created');
       },
@@ -409,14 +409,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
       </DocumentCardDropdown>
     );
     const version = spec?.info?.version || '';
-    let label: string = 'Collection';
+    let label: string = strings.collection;
     let format: string = '';
     let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
 
     if (workspace.scope === WorkspaceScopeKeys.design) {
-      label = 'Document';
+      label = strings.document;
       labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
         format = `OpenAPI ${specFormatVersion}`;

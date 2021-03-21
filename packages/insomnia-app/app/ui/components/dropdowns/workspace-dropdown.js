@@ -26,7 +26,7 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { isDesigner } from '../../../models/helpers/is-model';
+import { isDesign } from '../../../models/helpers/is-model';
 
 type Props = {
   displayName: string,
@@ -170,7 +170,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
               {p.label}
             </DropdownItem>
           ))}
-          {isDesigner(activeWorkspace) && (
+          {isDesign(activeWorkspace) && (
             <>
               {configGeneratorPlugins.length > 0 && (
                 <DropdownDivider>Config Generators</DropdownDivider>
