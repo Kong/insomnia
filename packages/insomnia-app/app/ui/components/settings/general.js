@@ -40,6 +40,17 @@ import { snapNumberToLimits } from '../../../common/misc';
 // recognized as monospace
 const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 
+// Function to remove duplicates form array
+const REMOVE_DUPLICATES = (acc, current) => {
+  const item = acc.find(font => font.family === current.family);
+
+  if (!item) {
+    return acc.concat([current]);
+  } else {
+    return acc;
+  }
+};
+
 type Props = {
   settings: Settings,
   hideModal: () => void,
@@ -51,7 +62,7 @@ type Props = {
 
 type State = {
   fonts: Array<{ family: string, monospace: boolean }> | null,
-  fontsMono: Array<{ family: string, monospace: boolean }> | null,
+  fontsMono: Array<{ family: string, monospace: boolean, weights: Array<number> }> | null,
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -72,10 +83,22 @@ class General extends React.PureComponent<Props, State> {
       .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)
       .sort((a, b) => (a.family > b.family ? 1 : -1));
 
-    // Find monospaced fonts
+    // Find monospaced fonts with installed weights for each font family
     // NOTE: Also include some others:
     //  - https://github.com/Kong/insomnia/issues/1835
-    const fontsMono = fonts.filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX));
+    const fontsMono = allFonts
+      .filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX && !i.italic))
+      .map(({ family, monospace }) => {
+        const weights = allFonts
+          .filter(i => i.family === family)
+          .map(item => item.weight)
+          .filter((item, index, self) => self.indexOf(item) === index)
+          .sort((a, b) => (a > b ? 1 : -1));
+
+        return { family, monospace, weights };
+      })
+      .reduce(REMOVE_DUPLICATES, [])
+      .sort((a, b) => (a.family > b.family ? 1 : -1));
 
     this.setState({
       fonts,
@@ -329,11 +352,21 @@ class General extends React.PureComponent<Props, State> {
                   name="fontMonospaceWeight"
                   value={settings.fontMonospaceWeight}
                   onChange={this._handleFontChange}>
-                  {Object.entries(EDITOR_FONT_WEITGHTS).map(e => (
-                    <option key={e[1]} value={e[1]}>
-                      {e[0]}
-                    </option>
-                  ))}
+                  {settings.fontMonospace
+                    ? fontsMono
+                        .find(i => i.family === settings.fontMonospace)
+                        .weights.map((item, index) => (
+                          <option key={index} value={item}>
+                            {Object.keys(EDITOR_FONT_WEITGHTS).find(
+                              key => EDITOR_FONT_WEITGHTS[key] === item,
+                            )}
+                          </option>
+                        ))
+                    : Object.entries(EDITOR_FONT_WEITGHTS).map(e => (
+                        <option key={e[1]} value={e[1]}>
+                          {e[0]}
+                        </option>
+                      ))}
                 </select>
               ) : (
                 <select disabled>
