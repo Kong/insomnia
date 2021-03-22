@@ -1,5 +1,6 @@
 import { axiosRequest } from '../../network/axios-request';
 
+/** This is a client for isomorphic-git {@link https://isomorphic-git.org/docs/en/http} */
 export const http = {
   request: async config => {
     let response;
