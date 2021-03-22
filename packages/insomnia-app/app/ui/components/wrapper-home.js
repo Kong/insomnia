@@ -188,7 +188,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
           depth: 1,
         };
         try {
-          // TODO: see if there's a way to retry
           await git.clone(cloneParams);
         } catch (err) {
           if (!cloneParams.url.endsWith('.git')) {
