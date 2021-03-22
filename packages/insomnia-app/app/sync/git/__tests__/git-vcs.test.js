@@ -58,7 +58,7 @@ describe('Git-VCS', () => {
       expect(await vcs.status(fooTxt)).toBe('*added');
     });
 
-    it.only('Returns empty log without first commit', async () => {
+    it('Returns empty log without first commit', async () => {
       const fs = MemPlugin.createPlugin();
       const vcs = new GitVCS();
       await vcs.init({ directory: GIT_CLONE_DIR, fs });
