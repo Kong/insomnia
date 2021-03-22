@@ -47,7 +47,11 @@ module.exports.templateTags = [
           },
           {
             displayName: 'OAuth 2.0 Access Token',
-            value: 'oauth2-access',
+            value: 'oauth2',
+            /* 
+              This value is left as is and not renamed to 'oauth2-access' so as to not
+              break the current release's usage of `oauth2`.
+            */
           },
           {
             displayName: 'OAuth 2.0 Identity Token',
@@ -62,7 +66,7 @@ module.exports.templateTags = [
       {
         type: 'string',
         hide: args =>
-          ['url', 'oauth2-access', 'oauth2-identity', 'oauth2-refresh', 'name', 'folder'].includes(
+          ['url', 'oauth2', 'oauth2-identity', 'oauth2-refresh', 'name', 'folder'].includes(
             args[0].value,
           ),
         displayName: args => {
@@ -159,7 +163,7 @@ module.exports.templateTags = [
 
           const headerNamesStr = headerNames.map(n => `"${n}"`).join(',\n\t');
           throw new Error(`No header with name "${name}".\nChoices are [\n\t${headerNamesStr}\n]`);
-        case 'oauth2-access':
+        case 'oauth2':
           const access = await context.util.models.oAuth2Token.getByRequestId(request._id);
           if (!access || !access.accessToken) {
             throw new Error('No OAuth 2.0 access tokens found for request');

@@ -87,6 +87,20 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     }
   }
 
+  async _handleUpdateIdentityToken(e: SyntheticEvent<HTMLInputElement>): Promise<void> {
+    const { oAuth2Token } = this.props;
+    const identityToken = e.currentTarget.value;
+
+    if (oAuth2Token) {
+      await models.oAuth2Token.update(oAuth2Token, { identityToken });
+    } else {
+      await models.oAuth2Token.create({
+        identityToken,
+        parentId: this.props.request._id,
+      });
+    }
+  }
+
   async _handleUpdateRefreshToken(e: SyntheticEvent<HTMLInputElement>): Promise<void> {
     const { oAuth2Token } = this.props;
     const refreshToken = e.currentTarget.value;
@@ -612,7 +626,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
               <input
                 value={(tok && tok.identityToken) || ''}
                 placeholder="n/a"
-                onChange={this._handleUpdateAccessToken}
+                onChange={this._handleUpdateIdentityToken}
               />
             </label>
           </div>
