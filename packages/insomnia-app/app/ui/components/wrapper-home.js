@@ -165,14 +165,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
         const fs = MemPlugin.createPlugin();
 
-        repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
+        const url = translateSSHtoHTTP(repoSettingsPatch.uri);
 
         // Pull settings returned from dialog and shallow-clone the repo
-        const {
-          credentials: { username, token: password },
-          uri: url,
-        } = repoSettingsPatch;
-        console.log({ repoSettingsPatch });
         const cloneParams = {
           fs,
           http,
@@ -182,8 +177,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
           singleBranch: true,
           url,
           onAuth: () => ({
-            username,
-            password,
+            username: repoSettingsPatch.credentials.username,
+            password: repoSettingsPatch.credentials.token,
           }),
           depth: 1,
         };
