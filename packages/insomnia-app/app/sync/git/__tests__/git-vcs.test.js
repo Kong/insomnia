@@ -108,8 +108,8 @@ author Karen Brown <karen@example.com> 1000000000 +0000
 committer Karen Brown <karen@example.com> 1000000000 +0000
 
 First commit!
-`
-      },
+`,
+        },
       ]);
 
       await fs.promises.unlink(fooTxt);
