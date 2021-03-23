@@ -195,17 +195,24 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
               // by this point the clone was successful, so update with this syntax
               repoSettingsPatch.uri = url;
+
+              showError({
+                title:
+                  'Error Cloning Repository: failed without `.git` suffix but eventually succeeded after retrying with the `.git` suffix added',
+                message: err.message,
+              });
+              return false;
             } catch (error) {
               // TODO: verify there's not a way to combine these
               showError({
-                title: 'Error Cloning Repository with .git',
+                title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
                 message: error.message,
-                error,
               });
+              return false;
             }
           }
 
-          showError({ title: 'Error Cloning Repository', message: err.message, error: err });
+          showError({ title: 'Error Cloning Repository', message: err.message });
           return false;
         }
 
