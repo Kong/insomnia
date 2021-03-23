@@ -1,8 +1,8 @@
 {
   "private": true,
   "name": "insomnia-smoke-test",
-  "version": "2.2.30",
   "license": "MIT",
+  "version": "2.2.31",
   "type": "module",
   "scripts": {
     "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
