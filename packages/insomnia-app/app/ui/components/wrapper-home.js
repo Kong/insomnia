@@ -165,7 +165,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
         const fs = MemPlugin.createPlugin();
 
-        const url = translateSSHtoHTTP(repoSettingsPatch.uri);
+        let url = translateSSHtoHTTP(repoSettingsPatch.uri);
 
         // Pull settings returned from dialog and shallow-clone the repo
         const cloneParams = {
@@ -187,9 +187,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
         } catch (err) {
           if (!cloneParams.url.endsWith('.git')) {
             try {
+              url = addDotGit(cloneParams);
               await git.clone({
                 ...cloneParams,
-                url: addDotGit(cloneParams),
+                url,
               });
 
               // by this point the clone was successful, so update with this syntax
