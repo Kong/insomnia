@@ -363,7 +363,18 @@ class WrapperHome extends React.PureComponent<Props, State> {
         ? apiSpec.modified
         : workspaceModified;
 
-    let log = <TimeFromNow timestamp={modifiedLocally} />;
+    // Span spec, workspace and sync related timestamps for card last modified label and sort order
+    const lastModifiedFrom = [
+      workspace?.modified,
+      workspaceMeta?.modified,
+      apiSpec?.modified,
+      workspaceMeta?.cachedGitLastCommitTime,
+    ];
+    const lastModifiedTimestamp = lastModifiedFrom
+      .filter(isNotNullOrUndefined)
+      .sort(descendingNumberSort)[0];
+
+    let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
     let branch = lastActiveBranch;
     if (
       workspace.scope === WorkspaceScopeKeys.design &&
@@ -428,16 +439,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
     if (filter && !matchResults) {
       return null;
     }
-
-    const lastModifiedFrom = [
-      workspace?.modified,
-      workspaceMeta?.modified,
-      apiSpec?.modified,
-      workspaceMeta?.cachedGitLastCommitTime,
-    ];
-    const lastModifiedTimestamp = lastModifiedFrom
-      .filter(isNotNullOrUndefined)
-      .sort(descendingNumberSort)[0];
 
     const card = (
       <Card
