@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Create a bug report for Insomnia
-labels: C-bug, S-unverified
+labels: B-bug, S-unverified
 
 ---
 
