@@ -189,7 +189,7 @@ class ResponsePane extends React.PureComponent<Props> {
   }
 
   _handleFilteredResponseBody(passedResponse) {
-    // i will take this and change the state so I can get the correct state when downloading
+    // passedResponse is the current state for download. Set this to filteredResponse
     this.setState({
       filteredResponse: passedResponse,
     });
