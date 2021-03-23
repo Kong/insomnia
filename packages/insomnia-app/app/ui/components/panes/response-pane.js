@@ -70,6 +70,13 @@ type Props = {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponsePane extends React.PureComponent<Props> {
+  constructor(props) {
+    super(props);
+    this.state = {
+      filteredResponse: [],
+    };
+  }
+
   _responseViewer: any;
 
   _setResponseViewerRef(n: any) {
@@ -181,6 +188,36 @@ class ResponsePane extends React.PureComponent<Props> {
     }
   }
 
+  _handleFilteredResponseBody(passedResponse) {
+    // i will take this and change the state so I can get the correct state when downloading
+    this.setState({
+      filteredResponse: passedResponse,
+    });
+  }
+
+  async _getFilteredResponse() {
+    const { request } = this.props;
+
+    if (!request) {
+      // Should never happen
+      console.warn('No response to _getFilteredResponse download');
+      return;
+    }
+
+    const options = {
+      title: 'Save Filtered Response',
+      buttonLabel: 'Save',
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.json`,
+    };
+
+    const { canceled, filePath: outputPath } = await remote.dialog.showSaveDialog(options);
+    if (canceled) {
+      return;
+    }
+    const to = fs.createWriteStream(outputPath);
+    to.write(this.state.filteredResponse);
+  }
+
   render() {
     const {
       disableHtmlPreviewJs,
@@ -255,6 +292,7 @@ class ResponsePane extends React.PureComponent<Props> {
           <TabList>
             <Tab tabIndex="-1">
               <PreviewModeDropdown
+                downloadFilteredResponse={this._getFilteredResponse}
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
                 previewMode={previewMode}
@@ -302,6 +340,7 @@ class ResponsePane extends React.PureComponent<Props> {
               responseId={response._id}
               updateFilter={response.error ? null : handleSetFilter}
               url={response.url}
+              changeFilteredResponse={this._handleFilteredResponseBody}
             />
           </TabPanel>
           <TabPanel className="react-tabs__tab-panel scrollable-container">

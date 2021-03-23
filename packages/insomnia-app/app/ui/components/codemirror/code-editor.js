@@ -902,7 +902,7 @@ class CodeEditor extends React.Component {
         code = this._prettifyJSON(code);
       }
     }
-
+    if (this.props.changeFilteredResponse) this.props.changeFilteredResponse(code);
     this.codeMirror.setValue(code || '');
   }
 

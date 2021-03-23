@@ -5,6 +5,7 @@ import { AUTOBIND_CFG, getPreviewModeName, PREVIEW_MODES } from '../../../common
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 
 type Props = {|
+  downloadFilteredResponse: () => any,
   download: (pretty: boolean) => any,
   fullDownload: (pretty: boolean) => any,
   updatePreviewMode: string => any,
@@ -27,6 +28,11 @@ class PreviewModeDropdown extends React.PureComponent<Props> {
   async _handleDownloadNormal() {
     const { download } = this.props;
     download(false);
+  }
+
+  async _handleFilteredResponse() {
+    const { downloadFilteredResponse } = this.props;
+    downloadFilteredResponse();
   }
 
   renderPreviewMode(mode: string) {
@@ -54,6 +60,10 @@ class PreviewModeDropdown extends React.PureComponent<Props> {
         <DropdownItem onClick={this._handleDownloadNormal}>
           <i className="fa fa-save" />
           Save Raw Response
+        </DropdownItem>
+        <DropdownItem onClick={this._handleFilteredResponse}>
+          <i className="fa fa-save" />
+          Save Filtered Response
         </DropdownItem>
         {showPrettifyOption && (
           <DropdownItem onClick={this._handleDownloadPrettify}>

@@ -40,7 +40,7 @@ type Props = {
   previewMode: string,
   responseId: string,
   url: string,
-
+  changeFilteredResponse: Function,
   // Optional
   updateFilter: Function | null,
   error: string | null,
@@ -213,6 +213,7 @@ class ResponseViewer extends React.Component<Props, State> {
       responseId,
       updateFilter,
       url,
+      changeFilteredResponse,
     } = this.props;
     let contentType = this.props.contentType;
 
@@ -417,6 +418,7 @@ class ResponseViewer extends React.Component<Props, State> {
           readOnly
           uniquenessKey={responseId}
           updateFilter={updateFilter}
+          changeFilteredResponse={changeFilteredResponse}
         />
       );
     }
