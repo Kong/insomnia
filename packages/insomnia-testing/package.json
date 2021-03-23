@@ -1,6 +1,7 @@
 {
   "name": "insomnia-testing",
   "version": "2.2.29",
+  "license": "MIT",
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
