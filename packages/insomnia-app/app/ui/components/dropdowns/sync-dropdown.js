@@ -255,8 +255,10 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   async _handleEnableSync() {
+    this.setState({ loadingProjectPull: true });
     const { vcs, workspace } = this.props;
     await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+    await this.refreshMainAttributes({ loadingProjectPull: false });
   }
 
   _handleShowDeleteModal() {

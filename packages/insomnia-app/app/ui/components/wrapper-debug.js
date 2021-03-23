@@ -10,7 +10,7 @@ import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import { AUTOBIND_CFG } from '../../common/constants';
-import { isGrpcRequest } from '../../models/helpers/is-model';
+import { isCollection, isDesign, isGrpcRequest } from '../../models/helpers/is-model';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
@@ -58,8 +58,8 @@ class WrapperDebug extends React.PureComponent<Props> {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
     const { vcs, activeWorkspace, syncItems } = this.props.wrapperProps;
 
-    const collection = activeWorkspace.scope === 'collection';
-    const designer = !collection;
+    const collection = isCollection(activeWorkspace);
+    const design = isDesign(activeWorkspace);
 
     const share = session.isLoggedIn() && collection && (
       <Button variant="contained" onClick={showSyncShareModal}>
@@ -71,7 +71,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       <SyncDropdown workspace={activeWorkspace} vcs={vcs} syncItems={syncItems} />
     );
 
-    const gitSync = designer && gitSyncDropdown;
+    const gitSync = design && gitSyncDropdown;
     const sync = betaSync || gitSync;
 
     return (

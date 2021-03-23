@@ -96,7 +96,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
     trackEvent('Workspace', 'Create');
 
-    workspace.scope === 'designer'
+    workspace.scope === WorkspaceScopeKeys.design
       ? handleSetActiveActivity(ACTIVITY_SPEC)
       : handleSetActiveActivity(ACTIVITY_DEBUG);
   }
@@ -109,7 +109,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onComplete: async name => {
         await this.__actuallyCreate({
           name,
-          scope: 'designer',
+          scope: WorkspaceScopeKeys.design,
         });
         trackSegmentEvent('Document Created');
       },
@@ -124,7 +124,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onComplete: async name => {
         await this.__actuallyCreate({
           name,
-          scope: 'collection',
+          scope: WorkspaceScopeKeys.collection,
         });
         trackSegmentEvent('Collection Created');
       },
@@ -359,14 +359,25 @@ class WrapperHome extends React.PureComponent<Props, State> {
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
     const modifiedLocally =
-      apiSpec && workspace.scope === WorkspaceScopeKeys.designer
+      apiSpec && workspace.scope === WorkspaceScopeKeys.design
         ? apiSpec.modified
         : workspaceModified;
 
-    let log = <TimeFromNow timestamp={modifiedLocally} />;
+    // Span spec, workspace and sync related timestamps for card last modified label and sort order
+    const lastModifiedFrom = [
+      workspace?.modified,
+      workspaceMeta?.modified,
+      apiSpec?.modified,
+      workspaceMeta?.cachedGitLastCommitTime,
+    ];
+    const lastModifiedTimestamp = lastModifiedFrom
+      .filter(isNotNullOrUndefined)
+      .sort(descendingNumberSort)[0];
+
+    let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
     let branch = lastActiveBranch;
     if (
-      workspace.scope === WorkspaceScopeKeys.designer &&
+      workspace.scope === WorkspaceScopeKeys.design &&
       lastCommitTime &&
       apiSpec?.modified > lastCommitTime
     ) {
@@ -398,14 +409,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
       </DocumentCardDropdown>
     );
     const version = spec?.info?.version || '';
-    let label: string = 'Collection';
+    let label: string = strings.collection;
     let format: string = '';
     let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
 
-    if (workspace.scope === WorkspaceScopeKeys.designer) {
-      label = 'Document';
+    if (workspace.scope === WorkspaceScopeKeys.design) {
+      label = strings.document;
       labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
         format = `OpenAPI ${specFormatVersion}`;
@@ -428,16 +439,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
     if (filter && !matchResults) {
       return null;
     }
-
-    const lastModifiedFrom = [
-      workspace?.modified,
-      workspaceMeta?.modified,
-      apiSpec?.modified,
-      workspaceMeta?.cachedGitLastCommitTime,
-    ];
-    const lastModifiedTimestamp = lastModifiedFrom
-      .filter(isNotNullOrUndefined)
-      .sort(descendingNumberSort)[0];
 
     const card = (
       <Card
