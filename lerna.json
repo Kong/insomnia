@@ -1,6 +1,6 @@
 {
   "tagVersionPrefix": "lib@",
-  "version": "2.2.30",
+  "version": "2.2.31",
   "includeMergedTags": true,
   "packages": [
     "packages/*",
