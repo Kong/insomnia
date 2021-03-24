@@ -8,8 +8,12 @@
     margin: var(--padding-sm) 0 var(--padding-md) 0;
   }
 
-  &__sidebar {
+  &__sidebar, &__results {
     overflow-y: auto;
+    height:100%;
+  }
+
+  &__sidebar {
     display: flex;
     flex-direction: column;
 
@@ -52,11 +56,6 @@
         box-sizing: border-box;
       }
     }
-  }
-
-  &__results {
-    height:100%;
-    overflow-y: auto;
   }
 
   &__top-header {
