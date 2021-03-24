@@ -1,10 +1,9 @@
 /**
  * Set a default protocol for a URL
- * @param url {string} - URL to set protocol on
- * @param [defaultProto='http:'] {string} - default protocol
- * @returns {string}
+ * @param url URL to set protocol on
+ * @param [defaultProto='http:'] default protocol
  */
-module.exports.setDefaultProtocol = function(url, defaultProto) {
+export const setDefaultProtocol = (url: string, defaultProto?: string) => {
   const trimmedUrl = url.trim();
   defaultProto = defaultProto || 'http:';
 

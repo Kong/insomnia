@@ -1,15 +1,14 @@
-const querystring = require('../querystring');
-const { getJoiner } = querystring._internal;
-const {
+import {
+  getJoiner,
   joinUrlAndQueryString,
   buildQueryParameter,
   buildQueryStringFromParams,
   deconstructQueryStringToParams,
   smartEncodeUrl,
-} = querystring;
+} from './querystring';
 
 describe('querystring', () => {
-  describe('_getJoiner()', () => {
+  describe('getJoiner()', () => {
     it('gets joiner for bare URL', () => {
       const joiner = getJoiner('http://google.com');
       expect(joiner).toBe('?');
