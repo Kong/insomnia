@@ -4,7 +4,7 @@ import { trackEvent } from '../../common/analytics';
 import { http } from './http-plugin';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
-import { addDotGit } from './utils';
+import { addDotGit, onMessage, onAuthFailure, onAuthSuccess } from './utils';
 
 export type GitAuthor = {|
   name: string,
@@ -30,15 +30,6 @@ const onAuth = ({ username, token }: GitCredentialsToken = {}) => () => ({
   username,
   password: token,
 });
-const onMessage = (message: string) => {
-  console.log(`[git-event] ${message}`);
-};
-const onAuthFailure = (message: string) => {
-  console.log(`[git-event] Auth Failure: ${message}`);
-};
-const onAuthSuccess = (message: string) => {
-  console.log(`[git-event] Auth Success: ${message}`);
-};
 
 export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
 
@@ -86,6 +77,13 @@ export class GitVCS {
     gitdir?: string,
     fs: Object,
     http: Object,
+    onMessage: (message: string) => void,
+    onAuthFailure: (message: string) => void,
+    onAuthSuccess: (message: string) => void,
+  } = {
+    onMessage,
+    onAuthFailure,
+    onAuthSuccess,
   };
 
   initialized: boolean;
@@ -104,11 +102,11 @@ export class GitVCS {
     gitDirectory?: string,
   }) {
     this.baseOpts = {
+      ...this.baseOpts,
       dir: directory,
       gitdir: gitDirectory,
       fs,
       http,
-      onMessage,
     };
 
     if (await this.repoExists()) {
@@ -135,6 +133,7 @@ export class GitVCS {
     gitDirectory: string,
   }) {
     this.baseOpts = {
+      ...this.baseOpts,
       dir: directory,
       gitdir: gitDirectory,
       fs,
@@ -144,6 +143,7 @@ export class GitVCS {
 
     const cloneParams = {
       ...this.baseOpts,
+      onMessage,
       onAuthFailure,
       onAuthSuccess,
       url,
@@ -287,8 +287,6 @@ export class GitVCS {
     const remoteInfo = await git.getRemoteInfo({
       ...this.baseOpts,
       onAuth: onAuth(gitCredentials),
-      onAuthFailure,
-      onAuthSuccess,
       forPush: true,
       url: remote.url,
     });
@@ -314,8 +312,6 @@ export class GitVCS {
       ...this.baseOpts,
       remote: 'origin',
       onAuth: onAuth(gitCredentials),
-      onAuthFailure,
-      onAuthSuccess,
       force,
     });
 
@@ -335,8 +331,6 @@ export class GitVCS {
     return git.pull({
       ...this.baseOpts,
       onAuth: onAuth(gitCredentials),
-      onAuthFailure,
-      onAuthSuccess,
       remote: 'origin',
       singleBranch: true,
       fast: true,
@@ -360,8 +354,6 @@ export class GitVCS {
     return git.fetch({
       ...this.baseOpts,
       onAuth: onAuth(gitCredentials),
-      onAuthFailure,
-      onAuthSuccess,
       singleBranch,
       remote: 'origin',
       depth,

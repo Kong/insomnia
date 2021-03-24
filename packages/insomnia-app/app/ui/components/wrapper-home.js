@@ -62,7 +62,13 @@ import AccountDropdown from './dropdowns/account-dropdown';
 import { strings } from '../../common/strings';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import { descendingNumberSort } from '../../common/sorting';
-import { addDotGit, translateSSHtoHTTP } from '../../sync/git/utils';
+import {
+  addDotGit,
+  translateSSHtoHTTP,
+  onMessage,
+  onAuthFailure,
+  onAuthSuccess,
+} from '../../sync/git/utils';
 import { http } from '../../sync/git/http-plugin';
 
 type Props = {|
@@ -176,6 +182,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
           gitdir: GIT_INTERNAL_DIR,
           singleBranch: true,
           url,
+          onMessage,
+          onAuthFailure,
+          onAuthSuccess,
           onAuth: () => ({
             username: repoSettingsPatch.credentials.username,
             password: repoSettingsPatch.credentials.token,

@@ -14,3 +14,15 @@ export const addDotGit = ({ url }: { url: string }) => {
 
   return `${url}.git`;
 };
+
+export const onMessage = (message: string) => {
+  console.log(`[git-event] ${message}`);
+};
+
+export const onAuthFailure = (message: string) => {
+  console.log(`[git-event] Auth Failure: ${message}`);
+};
+
+export const onAuthSuccess = (message: string) => {
+  console.log(`[git-event] Auth Success: ${message}`);
+};
