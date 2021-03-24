@@ -4,13 +4,23 @@ const STATE_IN_NUN_COM = 'nuncom';
 const STATE_IN_STRING = 'string';
 const STATE_NONE = 'none';
 
-const NUNJUCKS_OPEN_STATES = {
+const NUNJUCKS_OPEN_STATES: {
+  '{{': typeof STATE_IN_NUN_VAR;
+  '{%': typeof STATE_IN_NUN_TAG;
+  '{#': typeof STATE_IN_NUN_COM;
+  [anythingElse: string]: string | undefined;
+} = {
   '{{': STATE_IN_NUN_VAR,
   '{%': STATE_IN_NUN_TAG,
   '{#': STATE_IN_NUN_COM,
 };
 
-const NUNJUCKS_CLOSE_STATES = {
+const NUNJUCKS_CLOSE_STATES: {
+  '}}': typeof STATE_IN_NUN_VAR;
+  '%}': typeof STATE_IN_NUN_TAG;
+  '#}': typeof STATE_IN_NUN_COM;
+  [anythingElse: string]: string | undefined;
+} = {
   '}}': STATE_IN_NUN_VAR,
   '%}': STATE_IN_NUN_TAG,
   '#}': STATE_IN_NUN_COM,
@@ -20,13 +30,8 @@ const NUNJUCKS_CLOSE_STATES = {
  * Format a JSON string without parsing it as JavaScript.
  *
  * Code taken from jsonlint (http://zaa.ch/jsonlint/)
- *
- * @param json
- * @param indentChars
- * @param replaceUnicode
- * @returns {string}
  */
-module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = true) {
+export const prettify = (json: string | undefined, indentChars = '\t', replaceUnicode = true) => {
   if (!json) {
     return '';
   }
@@ -35,7 +40,7 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
   // we need to convert all escaped unicode characters to proper unicode characters.
   if (replaceUnicode) {
     try {
-      json = _convertUnicode(json);
+      json = convertUnicode(json);
     } catch (err) {
       // Just in case (should never happen)
       console.warn('Prettify failed to handle unicode', err);
@@ -47,9 +52,9 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
   const tab = indentChars;
   let newJson = '';
   let indentLevel = 0;
-  let currentChar = null;
-  let nextChar = null;
-  let nextTwo = null;
+  let currentChar: string | null = null;
+  let nextChar: string | null = null;
+  let nextTwo: string | null = null;
   let state = STATE_NONE;
 
   for (; i < il; i += 1) {
@@ -79,7 +84,7 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
         state = STATE_NONE;
         if (closeState === STATE_IN_NUN_COM) {
           // Put comments on their own lines
-          newJson += nextTwo + '\n' + _repeatString(tab, indentLevel);
+          newJson += nextTwo + '\n' + repeatString(tab, indentLevel);
         } else {
           newJson += nextTwo;
         }
@@ -106,7 +111,7 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
 
     switch (currentChar) {
       case ',':
-        newJson += currentChar + '\n' + _repeatString(tab, indentLevel);
+        newJson += currentChar + '\n' + repeatString(tab, indentLevel);
         continue;
       case '{':
         if (nextChar === '}') {
@@ -114,7 +119,7 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
           i++;
         } else {
           indentLevel++;
-          newJson += currentChar + '\n' + _repeatString(tab, indentLevel);
+          newJson += currentChar + '\n' + repeatString(tab, indentLevel);
         }
         continue;
       case '[':
@@ -123,16 +128,16 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
           i++;
         } else {
           indentLevel++;
-          newJson += currentChar + '\n' + _repeatString(tab, indentLevel);
+          newJson += currentChar + '\n' + repeatString(tab, indentLevel);
         }
         continue;
       case '}':
         indentLevel--;
-        newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
+        newJson += '\n' + repeatString(tab, indentLevel) + currentChar;
         continue;
       case ']':
         indentLevel--;
-        newJson += '\n' + _repeatString(tab, indentLevel) + currentChar;
+        newJson += '\n' + repeatString(tab, indentLevel) + currentChar;
         continue;
       case ':':
         newJson += ': ';
@@ -157,19 +162,15 @@ module.exports.prettify = function(json, indentChars = '\t', replaceUnicode = tr
   return newJson.replace(/^\s*\n/gm, '');
 };
 
-function _repeatString(s, count) {
-  return new Array(count + 1).join(s);
-}
+const repeatString = (str: string, count: number) => {
+  return new Array(count + 1).join(str);
+};
 
 /**
  * Convert escaped unicode characters to real characters. Any JSON parser will do this by
  * default. This is really fast too. Around 25ms for ~2MB of data with LOTS of unicode.
- *
- * @param originalStr
- * @returns {string}
- * @private
  */
-function _convertUnicode(originalStr) {
+const convertUnicode = (originalStr: string) => {
   let m;
   let c;
   let cStr;
@@ -206,4 +207,4 @@ function _convertUnicode(originalStr) {
   convertedStr += originalStr.slice(lastI, originalStr.length);
 
   return convertedStr;
-}
+};

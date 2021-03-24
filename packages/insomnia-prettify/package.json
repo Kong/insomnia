@@ -4,8 +4,19 @@
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Prettification utilities for Insomnia",
   "license": "MIT",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "scripts": {
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
+    "build": "tsc --build tsconfig.build.json",
     "test": "jest"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
