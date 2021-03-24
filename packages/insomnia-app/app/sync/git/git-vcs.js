@@ -81,7 +81,7 @@ export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName);
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
 
 export class GitVCS {
-  baseOpts: {
+  _baseOpts: {
     dir: string,
     gitdir?: string,
     fs: Object,
@@ -99,8 +99,8 @@ export class GitVCS {
   }
 
   async init({ directory, fs, gitDirectory }: InitOptions) {
-    this.baseOpts = {
-      ...this.baseOpts,
+    this._baseOpts = {
+      ...this._baseOpts,
       dir: directory,
       gitdir: gitDirectory,
       fs,
@@ -111,15 +111,15 @@ export class GitVCS {
       console.log(`[git] Opened repo for ${gitDirectory}`);
     } else {
       console.log(`[git] Initialized repo in ${gitDirectory}`);
-      await git.init(this.baseOpts);
+      await git.init(this._baseOpts);
     }
 
     this.initialized = true;
   }
 
   async initFromClone({ url, gitCredentials, directory, fs, gitDirectory }: InitFromCloneOptions) {
-    this.baseOpts = {
-      ...this.baseOpts,
+    this._baseOpts = {
+      ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
       dir: directory,
       gitdir: gitDirectory,
@@ -128,7 +128,7 @@ export class GitVCS {
     };
 
     const cloneParams = {
-      ...this.baseOpts,
+      ...this._baseOpts,
       url,
       singleBranch: true,
     };
@@ -154,12 +154,12 @@ export class GitVCS {
 
   async listFiles(): Promise<Array<string>> {
     console.log('[git] List files');
-    const files = await git.listFiles({ ...this.baseOpts });
+    const files = await git.listFiles({ ...this._baseOpts });
     return files.map(convertToOsSep);
   }
 
   async getBranch(): Promise<string> {
-    const branch = await git.currentBranch({ ...this.baseOpts });
+    const branch = await git.currentBranch({ ...this._baseOpts });
     if (typeof branch !== 'string') {
       throw new Error('No active branch');
     }
@@ -169,7 +169,7 @@ export class GitVCS {
 
   async listBranches(): Promise<Array<string>> {
     const branch = await this.getBranch();
-    const branches = await git.listBranches({ ...this.baseOpts });
+    const branches = await git.listBranches({ ...this._baseOpts });
 
     // For some reason, master isn't in branches on fresh repo (no commits)
     if (!branches.includes(branch)) {
@@ -180,7 +180,7 @@ export class GitVCS {
   }
 
   async listRemoteBranches(): Promise<Array<string>> {
-    const branches = await git.listBranches({ ...this.baseOpts, remote: 'origin' });
+    const branches = await git.listBranches({ ...this._baseOpts, remote: 'origin' });
 
     // Don't care about returning remote HEAD
     return GitVCS.sortBranches(branches.filter(b => b !== 'HEAD'));
@@ -188,7 +188,7 @@ export class GitVCS {
 
   async status(filepath: string) {
     return git.status({
-      ...this.baseOpts,
+      ...this._baseOpts,
       filepath: convertToPosixSep(filepath),
     });
   }
@@ -197,7 +197,7 @@ export class GitVCS {
     relPath = convertToPosixSep(relPath);
     console.log(`[git] Add ${relPath}`);
     return git.add({
-      ...this.baseOpts,
+      ...this._baseOpts,
       filepath: relPath,
     });
   }
@@ -205,12 +205,12 @@ export class GitVCS {
   async remove(relPath: string): Promise<void> {
     relPath = convertToPosixSep(relPath);
     console.log(`[git] Remove relPath=${relPath}`);
-    return git.remove({ ...this.baseOpts, filepath: relPath });
+    return git.remove({ ...this._baseOpts, filepath: relPath });
   }
 
   async addRemote(url: string): Promise<GitRemoteConfig> {
     console.log(`[git] Add Remote url=${url}`);
-    await git.addRemote({ ...this.baseOpts, remote: 'origin', url, force: true });
+    await git.addRemote({ ...this._baseOpts, remote: 'origin', url, force: true });
     const config = await this.getRemote('origin');
 
     if (config === null) {
@@ -222,12 +222,12 @@ export class GitVCS {
   }
 
   async listRemotes(): Promise<Array<GitRemoteConfig>> {
-    return git.listRemotes({ ...this.baseOpts });
+    return git.listRemotes({ ...this._baseOpts });
   }
 
   async getAuthor(): Promise<GitAuthor> {
-    const name = await git.getConfig({ ...this.baseOpts, path: 'user.name' });
-    const email = await git.getConfig({ ...this.baseOpts, path: 'user.email' });
+    const name = await git.getConfig({ ...this._baseOpts, path: 'user.name' });
+    const email = await git.getConfig({ ...this._baseOpts, path: 'user.email' });
     return {
       name: name || '',
       email: email || '',
@@ -235,8 +235,8 @@ export class GitVCS {
   }
 
   async setAuthor(name: string, email: string): Promise<void> {
-    await git.setConfig({ ...this.baseOpts, path: 'user.name', value: name });
-    await git.setConfig({ ...this.baseOpts, path: 'user.email', value: email });
+    await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
+    await git.setConfig({ ...this._baseOpts, path: 'user.email', value: email });
   }
 
   async getRemote(name: string): Promise<GitRemoteConfig | null> {
@@ -247,7 +247,7 @@ export class GitVCS {
   async commit(message: string): Promise<string> {
     console.log(`[git] Commit "${message}"`);
     trackEvent('Git', 'Commit');
-    return git.commit({ ...this.baseOpts, message });
+    return git.commit({ ...this._baseOpts, message });
   }
 
   /**
@@ -267,7 +267,7 @@ export class GitVCS {
     }
 
     const remoteInfo = await git.getRemoteInfo({
-      ...this.baseOpts,
+      ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
       forPush: true,
       url: remote.url,
@@ -291,7 +291,7 @@ export class GitVCS {
 
     // eslint-disable-next-line no-unreachable
     const response: PushResponse = await git.push({
-      ...this.baseOpts,
+      ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
       remote: 'origin',
       force,
@@ -311,7 +311,7 @@ export class GitVCS {
     trackEvent('Git', 'Pull');
 
     return git.pull({
-      ...this.baseOpts,
+      ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
       remote: 'origin',
       singleBranch: true,
@@ -323,7 +323,7 @@ export class GitVCS {
     const ours = await this.getBranch();
     console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
     trackEvent('Git', 'Merge');
-    return git.merge({ ...this.baseOpts, ours, theirs: theirBranch });
+    return git.merge({ ...this._baseOpts, ours, theirs: theirBranch });
   }
 
   async fetch(
@@ -334,7 +334,7 @@ export class GitVCS {
     console.log('[git] Fetch remote=origin');
 
     return git.fetch({
-      ...this.baseOpts,
+      ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
       singleBranch,
       remote: 'origin',
@@ -346,7 +346,7 @@ export class GitVCS {
 
   async log(depth?: number): Promise<Array<GitLogEntry>> {
     try {
-      return await git.log({ ...this.baseOpts, depth });
+      return await git.log({ ...this._baseOpts, depth });
     } catch (error) {
       if (error.code === 'NotFoundError') {
         return [];
@@ -357,12 +357,12 @@ export class GitVCS {
 
   async branch(branch: string, checkout: boolean = false): Promise<void> {
     trackEvent('Git', 'Create Branch');
-    await git.branch({ ...this.baseOpts, ref: branch, checkout, remote: 'origin' });
+    await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 
   async deleteBranch(branch: string): Promise<void> {
     trackEvent('Git', 'Delete Branch');
-    await git.deleteBranch({ ...this.baseOpts, ref: branch });
+    await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
   async checkout(branch: string): Promise<void> {
@@ -371,7 +371,7 @@ export class GitVCS {
 
     if (branches.includes(branch)) {
       trackEvent('Git', 'Checkout Branch');
-      await git.checkout({ ...this.baseOpts, ref: branch, remote: 'origin' });
+      await git.checkout({ ...this._baseOpts, ref: branch, remote: 'origin' });
     } else {
       await this.branch(branch, true);
     }
@@ -381,7 +381,7 @@ export class GitVCS {
     console.log('[git] Undo pending changes');
 
     await git.checkout({
-      ...this.baseOpts,
+      ...this._baseOpts,
       ref: await this.getBranch(),
       remote: 'origin',
       force: true,
@@ -392,7 +392,7 @@ export class GitVCS {
   async readObjFromTree(treeOid: string, objPath: string): Object | null {
     try {
       const obj = await git.readObject({
-        ...this.baseOpts,
+        ...this._baseOpts,
         oid: treeOid,
         filepath: convertToPosixSep(objPath),
         encoding: 'utf8',
@@ -406,7 +406,7 @@ export class GitVCS {
 
   async repoExists() {
     try {
-      await git.getConfig({ ...this.baseOpts, path: '' });
+      await git.getConfig({ ...this._baseOpts, path: '' });
     } catch (err) {
       return false;
     }
@@ -415,7 +415,7 @@ export class GitVCS {
   }
 
   getFs() {
-    return this.baseOpts.fs;
+    return this._baseOpts.fs;
   }
 
   static sortBranches(branches: Array<string>) {
