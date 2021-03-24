@@ -243,8 +243,8 @@ export class GitVCS {
   }
 
   async getAuthor(): Promise<GitAuthor> {
-    const name = await git.setConfig({ ...this.baseOpts, path: 'user.name' });
-    const email = await git.setConfig({ ...this.baseOpts, path: 'user.email' });
+    const name = await git.getConfig({ ...this.baseOpts, path: 'user.name' });
+    const email = await git.getConfig({ ...this.baseOpts, path: 'user.email' });
     return {
       name: name || '',
       email: email || '',
@@ -424,7 +424,7 @@ export class GitVCS {
 
   async repoExists() {
     try {
-      await git.setConfig({ ...this.baseOpts, path: '' });
+      await git.getConfig({ ...this.baseOpts, path: '' });
     } catch (err) {
       return false;
     }
