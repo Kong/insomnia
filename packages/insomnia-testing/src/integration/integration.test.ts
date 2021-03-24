@@ -1,20 +1,23 @@
-// @flow
-import axios from 'axios';
 import { generate } from '../generate';
 import { runTests } from '../run';
+import _axios from 'axios';
+import { AxiosMock } from '../__mocks__/axios';
+
+const axios = _axios as AxiosMock;
 
 jest.mock('axios');
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
-    const testSrc = await generate([
+    const testSrc = generate([
       {
         name: 'Example TestSuite',
         suites: [],
         tests: [
           {
             name: 'should return -1 when the value is not present',
-            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
+            code:
+              'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);',
             defaultRequestId: null,
           },
           {
@@ -25,23 +28,22 @@ describe('integration', () => {
         ],
       },
     ]);
-
     const { stats } = await runTests(testSrc);
-
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
   });
 
   it('generates and runs more than once', async () => {
-    const testSrc = await generate([
+    const testSrc = generate([
       {
         name: 'Example TestSuite',
         suites: [],
         tests: [
           {
             name: 'should return -1 when the value is not present',
-            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
+            code:
+              'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
             defaultRequestId: null,
           },
           {
@@ -52,13 +54,11 @@ describe('integration', () => {
         ],
       },
     ]);
-
     const { stats, failures } = await runTests(testSrc);
     expect(failures).toEqual([]);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
-
     const { stats: stats2 } = await runTests(testSrc);
     expect(failures).toEqual([]);
     expect(stats2.tests).toBe(2);
@@ -67,14 +67,15 @@ describe('integration', () => {
   });
 
   it('generates and runs more than once', async () => {
-    const testSrc = await generate([
+    const testSrc = generate([
       {
         name: 'Example TestSuite',
         suites: [],
         tests: [
           {
             name: 'should return -1 when the value is not present',
-            code: 'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
+            code:
+              'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
             defaultRequestId: null,
           },
           {
@@ -85,13 +86,11 @@ describe('integration', () => {
         ],
       },
     ]);
-
     const { stats, failures } = await runTests(testSrc);
     expect(failures).toEqual([]);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
-
     const { stats: stats2, failures: failures2 } = await runTests(testSrc);
     expect(failures2).toEqual([]);
     expect(stats2.tests).toBe(2);
@@ -102,16 +101,27 @@ describe('integration', () => {
   it('sends an HTTP request', async () => {
     axios.__setResponse('GET', '200.insomnia.rest', {
       status: 200,
-      headers: { 'content-type': 'application/json' },
-      data: { foo: 'bar' },
+      headers: {
+        'content-type': 'application/json',
+      },
+      data: {
+        foo: 'bar',
+      },
+      statusText: '',
+      config: {},
     });
 
     axios.__setResponse('GET', '301.insomnia.rest', {
       status: 301,
-      headers: { location: '/blog' },
+      headers: {
+        location: '/blog',
+      },
+      data: undefined,
+      statusText: '',
+      config: {},
     });
 
-    const testSrc = await generate([
+    const testSrc = generate([
       {
         name: 'Example TestSuite',
         suites: [],
@@ -120,16 +130,16 @@ describe('integration', () => {
             name: 'Tests referencing request by ID',
             defaultRequestId: null,
             code: [
-              `const resp = await insomnia.send('req_123');`,
-              `expect(resp.status).to.equal(301);`,
+              'const resp = await insomnia.send(\'req_123\');',
+              'expect(resp.status).to.equal(301);',
             ].join('\n'),
           },
           {
             name: 'Tests referencing default request',
             defaultRequestId: 'req_123',
             code: [
-              `const resp = await insomnia.send();`,
-              `expect(resp.status).to.equal(301);`,
+              'const resp = await insomnia.send();',
+              'expect(resp.status).to.equal(301);',
             ].join('\n'),
           },
         ],

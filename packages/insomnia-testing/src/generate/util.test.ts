@@ -1,6 +1,4 @@
-// @flow
-
-import { escapeJsStr, indent } from '../util';
+import { escapeJsStr, indent } from './util';
 
 describe('util', () => {
   describe('indent()', () => {
@@ -15,8 +13,10 @@ describe('util', () => {
     });
 
     it('indents multi-line blocks', () => {
-      const text = `function greet() {\n  console.log('Hello World!');\n}`;
-      expect(indent(1, text)).toBe(`  function greet() {\n    console.log('Hello World!');\n  }`);
+      const text = 'function greet() {\n  console.log(\'Hello World!\');\n}';
+      expect(indent(1, text)).toBe(
+        '  function greet() {\n    console.log(\'Hello World!\');\n  }',
+      );
     });
   });
 
@@ -24,7 +24,9 @@ describe('util', () => {
     it('does not escape something without quotes', () => {
       expect(escapeJsStr('Hello World')).toBe('Hello World');
     });
+
     it('escapes something with quotes', () => {
+      // eslint-disable-next-line quotes -- want to test both quote styles
       expect(escapeJsStr(`"Hello" 'World'`)).toBe(`"Hello" \\'World\\'`);
     });
   });
