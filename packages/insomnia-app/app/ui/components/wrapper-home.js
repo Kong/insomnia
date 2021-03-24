@@ -74,6 +74,8 @@ type State = {|
   filter: string,
 |};
 
+type OnWorkspaceCreateCallback = Workspace => Promise<void> | void;
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperHome extends React.PureComponent<Props, State> {
   state = {
@@ -90,8 +92,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.setState({ filter: e.currentTarget.value });
   }
 
-  async __actuallyCreate(patch: $Shape<Workspace>) {
+  async __actuallyCreate(patch: $Shape<Workspace>, onCreate?: OnWorkspaceCreateCallback) {
     const workspace = await models.workspace.create(patch);
+    if (onCreate) {
+      await onCreate(workspace);
+    }
     const { handleSetActiveActivity } = this.props.wrapperProps;
     this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
     trackEvent('Workspace', 'Create');
@@ -101,16 +106,19 @@ class WrapperHome extends React.PureComponent<Props, State> {
       : handleSetActiveActivity(ACTIVITY_DEBUG);
   }
 
-  _handleDocumentCreate() {
+  _handleDocumentCreate(onCreate?: OnWorkspaceCreateCallback) {
     showPrompt({
       title: 'Create New Design Document',
       submitName: 'Create',
       placeholder: 'spec-name.yaml',
       onComplete: async name => {
-        await this.__actuallyCreate({
-          name,
-          scope: WorkspaceScopeKeys.design,
-        });
+        await this.__actuallyCreate(
+          {
+            name,
+            scope: WorkspaceScopeKeys.design,
+          },
+          onCreate,
+        );
         trackSegmentEvent('Document Created');
       },
     });
@@ -191,20 +199,23 @@ class WrapperHome extends React.PureComponent<Props, State> {
             return true;
           }
 
-          showAlert({
+          return showAlert({
             title: 'Clone Problem',
-            message: (
-              <React.Fragment>
-                Could not locate{' '}
-                <code>
-                  {base}/{name}
-                </code>{' '}
-                directory in repository.
-              </React.Fragment>
-            ),
+            okLabel: 'Yes',
+            addCancel: true,
+            message: `Could not locate "${base}/${name}" directory in repository. Would you like to link this repository to a new ${strings.document.toLowerCase()}?`,
+            onConfirm: async () => {
+              await this._handleDocumentCreate(async createdWorkspace => {
+                // Store GitRepository settings and set it as active
+                const newRepo = await models.gitRepository.create({
+                  ...repoSettingsPatch,
+                  needsFullClone: true,
+                });
+                const meta = await models.workspaceMeta.getOrCreateByParentId(createdWorkspace._id);
+                await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });
+              });
+            },
           });
-
-          return false;
         };
 
         if (!(await ensureDir(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME))) {
