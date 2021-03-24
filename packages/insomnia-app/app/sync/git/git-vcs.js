@@ -4,7 +4,7 @@ import { trackEvent } from '../../common/analytics';
 import { http } from './http-plugin';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
-import { addDotGit, onMessage, onAuthFailure, onAuthSuccess } from './utils';
+import { addDotGit, gitCallbacks } from './utils';
 
 export type GitAuthor = {|
   name: string,
@@ -25,11 +25,6 @@ type GitCredentialsToken = {
   username: string,
   token: string,
 };
-
-const onAuth = ({ username, token }: GitCredentialsToken = {}) => () => ({
-  username,
-  password: token,
-});
 
 export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
 
@@ -94,11 +89,8 @@ export class GitVCS {
     onMessage: (message: string) => void,
     onAuthFailure: (message: string) => void,
     onAuthSuccess: (message: string) => void,
-  } = {
-    onMessage,
-    onAuthFailure,
-    onAuthSuccess,
-  };
+    onAuth: () => void,
+  } = gitCallbacks();
 
   initialized: boolean;
 
@@ -128,18 +120,15 @@ export class GitVCS {
   async initFromClone({ url, gitCredentials, directory, fs, gitDirectory }: InitFromCloneOptions) {
     this.baseOpts = {
       ...this.baseOpts,
+      ...gitCallbacks(gitCredentials),
       dir: directory,
       gitdir: gitDirectory,
       fs,
       http,
-      onAuth: onAuth(gitCredentials),
     };
 
     const cloneParams = {
       ...this.baseOpts,
-      onMessage,
-      onAuthFailure,
-      onAuthSuccess,
       url,
       singleBranch: true,
     };
@@ -279,7 +268,7 @@ export class GitVCS {
 
     const remoteInfo = await git.getRemoteInfo({
       ...this.baseOpts,
-      onAuth: onAuth(gitCredentials),
+      ...gitCallbacks(gitCredentials),
       forPush: true,
       url: remote.url,
     });
@@ -303,8 +292,8 @@ export class GitVCS {
     // eslint-disable-next-line no-unreachable
     const response: PushResponse = await git.push({
       ...this.baseOpts,
+      ...gitCallbacks(gitCredentials),
       remote: 'origin',
-      onAuth: onAuth(gitCredentials),
       force,
     });
 
@@ -323,7 +312,7 @@ export class GitVCS {
 
     return git.pull({
       ...this.baseOpts,
-      onAuth: onAuth(gitCredentials),
+      ...gitCallbacks(gitCredentials),
       remote: 'origin',
       singleBranch: true,
       fast: true,
@@ -346,7 +335,7 @@ export class GitVCS {
 
     return git.fetch({
       ...this.baseOpts,
-      onAuth: onAuth(gitCredentials),
+      ...gitCallbacks(gitCredentials),
       singleBranch,
       remote: 'origin',
       depth,

@@ -15,14 +15,26 @@ export const addDotGit = ({ url }: { url: string }) => {
   return `${url}.git`;
 };
 
-export const onMessage = (message: string) => {
+const onMessage = (message: string) => {
   console.log(`[git-event] ${message}`);
 };
 
-export const onAuthFailure = (message: string) => {
+const onAuthFailure = (message: string) => {
   console.log(`[git-event] Auth Failure: ${message}`);
 };
 
-export const onAuthSuccess = (message: string) => {
+const onAuthSuccess = (message: string) => {
   console.log(`[git-event] Auth Success: ${message}`);
 };
+
+const onAuth = (credentials?: { username: string, password: string } = {}) => () => ({
+  username: credentials.username,
+  password: credentials.password,
+});
+
+export const gitCallbacks = (credentials?: { username: string, password: string }) => ({
+  onMessage,
+  onAuthFailure,
+  onAuthSuccess,
+  onAuth: onAuth(credentials),
+});
