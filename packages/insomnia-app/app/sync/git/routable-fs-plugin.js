@@ -31,9 +31,7 @@ export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object 
     return result;
   };
 
-  const methods = {
-    enumerable: true,
-  };
+  const methods = {};
 
   methods.readFile = execMethod.bind(methods, 'readFile');
   methods.writeFile = execMethod.bind(methods, 'writeFile');

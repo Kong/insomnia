@@ -27,8 +27,6 @@ export const fsPlugin = (basePath: string) => {
 
   return {
     promises: {
-      /** this `enumerable` property is crucial, because it is the mechanism for telling isomorphic-git to exclusively use the promise API. {@link https://isomorphic-git.org/docs/en/fs#implementing-your-own-fs} */
-      enumerable: true,
       readFile: wrap(fs.promises.readFile),
       writeFile: wrap(fs.promises.writeFile),
       unlink: wrap(fs.promises.unlink),
