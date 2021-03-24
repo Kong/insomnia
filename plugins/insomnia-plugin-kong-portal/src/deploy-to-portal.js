@@ -26,6 +26,8 @@ type Props = {
   },
 };
 
+type AxiosError = Object;
+
 type State = {|
   workspaceId: string,
   kongPortalRbacToken: string,
@@ -33,7 +35,7 @@ type State = {|
   kongPortalUrl: string,
   kongPortalUserWorkspace: string,
   isLoading: boolean,
-  showConnectionError: boolean,
+  connectionError: AxiosError | Error | null,
   showUploadError: boolean,
   forceSpecOverwrite: boolean,
   kongSpecFileName: string,
@@ -59,7 +61,7 @@ class DeployToPortal extends React.Component<Props, State> {
     kongPortalUserWorkspace: '',
     kongSpecFileName: '',
     isLoading: false,
-    showConnectionError: false,
+    connectionError: null,
     showUploadError: false,
     kongPortalLegacyMode: false,
     kongPortalDeployView: 'edit',
@@ -185,7 +187,7 @@ class DeployToPortal extends React.Component<Props, State> {
         const guiHost = response.data.configuration.portal_gui_host;
         this.setState({
           kongPortalLegacyMode: response.data.configuration.portal_is_legacy,
-          showConnectionError: false,
+          connectionError: null,
           kongPortalDeployView: 'upload',
           kongPortalUrl: urlJoin(`http://${guiHost}`, kongPortalUserWorkspace),
         });
@@ -194,8 +196,9 @@ class DeployToPortal extends React.Component<Props, State> {
       }
     } catch (error) {
       trackEvent('Portal', 'Connection Error');
+      console.log('Connection error', error);
       this._handleLoadingToggle(false);
-      this.setState({ showConnectionError: true });
+      this.setState({ connectionError: error });
     }
   }
 
@@ -237,7 +240,7 @@ class DeployToPortal extends React.Component<Props, State> {
       kongSpecFileName,
       kongPortalUserWorkspace,
       kongPortalDeployView,
-      showConnectionError,
+      connectionError,
       kongPortalRbacToken,
       isLoading,
       showUploadError,
@@ -252,14 +255,36 @@ class DeployToPortal extends React.Component<Props, State> {
 
     // Check view
     if (kongPortalDeployView === 'edit') {
+      let connectionErrorElement = null;
+
+      if (connectionError) {
+        const stack = connectionError.stack;
+        let messageToShow = stack;
+        if (connectionError?.isAxiosError && connectionError.response) {
+          const response: Object = connectionError.response;
+          messageToShow = `${response.status} ${response.statusText}`;
+          const responseMessage = response.data?.message;
+          if (responseMessage) {
+            messageToShow += `: ${responseMessage}`;
+          }
+        }
+
+        connectionErrorElement = (
+          <p className="notice error margin-top-sm text-left">
+            Error. Please check your settings and try again.
+            <details className="margin-top-sm">
+              <summary>More details</summary>
+              <pre className="pad-top-sm selectable">
+                <code className="wide overflow-auto">{messageToShow}</code>
+              </pre>
+            </details>
+          </p>
+        );
+      }
       return (
         // Kong Connection Details
         <form className="pad" onSubmit={this._handleConnectKong}>
-          {showConnectionError && (
-            <p className="notice error margin-top-sm">
-              Error. Please check your settings and try again.
-            </p>
-          )}
+          {connectionErrorElement}
           <div className="form-control form-control--outlined">
             <label>
               Kong API URL
