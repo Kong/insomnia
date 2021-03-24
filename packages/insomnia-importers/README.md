@@ -23,7 +23,7 @@ npm install -g insomnia-importers
 For programmatic usage, install in project
 
 ```bash
-npm install --save insomnia-importers
+npm install insomnia-importers
 ```
 
 ## Command Line Usage
@@ -53,7 +53,7 @@ const importers = require('insomnia-importers');
 Run all tests
 
 ```shell
-npm test
+npm run test
 ```
 
 Run test watcher

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": ".",
+    "lib": ["ES2019"],
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src",
+    "package.json"
+  ],
+  "exclude": [
+    "**/*.test.ts"
+  ]
+}
