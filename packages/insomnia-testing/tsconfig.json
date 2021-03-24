@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "webpack.config.js",
+    "jest.config.js",
+    "src"
+  ],
+  "exclude": []
+}

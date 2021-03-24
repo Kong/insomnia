@@ -1,7 +1,6 @@
-// @flow
-
-import type { TestResults } from '../index';
-import { runTests } from '../index';
+import { runTests } from './run';
+import { TestResults } from './entities';
+import { SendRequestCallback } from './insomnia';
 
 const exampleTest = `
 const { expect } = chai;
@@ -50,17 +49,29 @@ describe('run', () => {
   });
 
   it('calls sendRequest() callback', async () => {
-    const sendRequest = jest.fn(() => Promise.resolve({ status: 200 }));
-    const { stats }: TestResults = await runTests(exampleTestWithRequest, {
-      requests: [{ _id: 'req_123' }],
-      sendRequest,
-    });
+    const sendRequest = jest.fn(() =>
+      Promise.resolve({
+        status: 200,
+      }),
+    ) as unknown as SendRequestCallback;
+    const { stats }: TestResults = await runTests(
+      exampleTestWithRequest,
+      {
+        requests: [
+          {
+            _id: 'req_123',
+          },
+        ],
+        sendRequest,
+      },
+    );
     expect(sendRequest).toHaveBeenCalledWith('req_123');
     expect(stats.passes).toBe(1);
   });
 
   it('throws on invalid JavaScript', async () => {
     let err;
+
     try {
       await runTests('this is invalid');
     } catch (e) {
