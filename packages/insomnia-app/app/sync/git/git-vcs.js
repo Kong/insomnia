@@ -31,19 +31,18 @@ export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
 export type GitHash = string;
 export type GitRef = GitHash | string;
 
+export type GitTimestamp = {
+  timezoneOffset: number,
+  timestamp: number,
+};
+
 export type GitLogEntry = {|
   oid: string,
   commit: {
     message: string,
     tree: GitRef,
-    author: GitAuthor & {
-      timezoneOffset: number,
-      timestamp: number,
-    },
-    committer: GitAuthor & {
-      timezoneOffset: number,
-      timestamp: number,
-    },
+    author: GitAuthor & GitTimestamp,
+    committer: GitAuthor & GitTimestamp,
     parent: Array<GitRef>,
   },
   payload: string,
