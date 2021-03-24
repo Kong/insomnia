@@ -1,9 +1,9 @@
-const fs = require('fs');
-const path = require('path');
-const { prettify } = require('../json');
+import fs from 'fs';
+import path from 'path';
+import { prettify } from './json';
 
 describe('prettify()', () => {
-  const basePath = path.join(__dirname, '../__fixtures__');
+  const basePath = path.join(__dirname, './fixtures');
   const files = fs.readdirSync(basePath);
   for (const file of files) {
     if (!file.match(/-input\.json$/)) {
