@@ -252,7 +252,6 @@ export class GitVCS {
   }
 
   async setAuthor(name: string, email: string): Promise<void> {
-    console.log({ ...this.baseOpts, name, email });
     await git.setConfig({ ...this.baseOpts, path: 'user.name', value: name });
     await git.setConfig({ ...this.baseOpts, path: 'user.email', value: email });
   }
