@@ -60,6 +60,20 @@ export type PushResponse = {
   headers?: object,
 };
 
+type InitOptions = {
+  directory?: string,
+  fs?: Object,
+  gitDirectory?: string,
+};
+
+type InitFromCloneOptions = {
+  url: string,
+  gitCredentials: GitCredentials,
+  directory: string,
+  fs: Object,
+  gitDirectory: string,
+};
+
 // isomorphic-git internally will default an empty ('') clone directory to '.'
 // Ref: https://github.com/isomorphic-git/isomorphic-git/blob/4e66704d05042624bbc78b85ee5110d5ee7ec3e2/src/utils/normalizePath.js#L10
 // We should set this explicitly (even if set to an empty string), because we have other code (such as fs plugins
@@ -92,15 +106,7 @@ export class GitVCS {
     this.initialized = false;
   }
 
-  async init({
-    directory,
-    fs,
-    gitDirectory,
-  }: {
-    directory?: string,
-    fs?: Object,
-    gitDirectory?: string,
-  }) {
+  async init({ directory, fs, gitDirectory }: InitOptions) {
     this.baseOpts = {
       ...this.baseOpts,
       dir: directory,
@@ -119,19 +125,7 @@ export class GitVCS {
     this.initialized = true;
   }
 
-  async initFromClone({
-    url,
-    gitCredentials,
-    directory,
-    fs,
-    gitDirectory,
-  }: {
-    url: string,
-    gitCredentials: GitCredentials,
-    directory: string,
-    fs: Object,
-    gitDirectory: string,
-  }) {
+  async initFromClone({ url, gitCredentials, directory, fs, gitDirectory }: InitFromCloneOptions) {
     this.baseOpts = {
       ...this.baseOpts,
       dir: directory,
