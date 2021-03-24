@@ -1,4 +1,4 @@
-const { setDefaultProtocol } = require('../protocol');
+import { setDefaultProtocol } from './protocol';
 
 describe('setDefaultProtocol()', () => {
   it('no-ops on empty url', () => {
