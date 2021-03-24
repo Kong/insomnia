@@ -1,5 +1,6 @@
 .unit-tests {
   height: 100%;
+  overflow-y: auto;
 
   .editor {
     overflow-y: hidden !important;
@@ -8,6 +9,7 @@
   }
 
   &__sidebar {
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
 
@@ -50,6 +52,11 @@
         box-sizing: border-box;
       }
     }
+  }
+
+  &__results {
+    height:100%;
+    overflow-y: auto;
   }
 
   &__top-header {
