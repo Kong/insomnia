@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "."
+  },
+  "include": [
+    "src",
+    "package.json",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "jest",
+    ".babelrc.js",
+    "jest.config.js",
+    "webpack",
+    "bin",
+    "assets",
+    "**/@types/mocha/*",
+    "**/*.test.ts",
+    "**/__snapshots__/**",
+    "**/__mocks__/*"
+  ]
+}

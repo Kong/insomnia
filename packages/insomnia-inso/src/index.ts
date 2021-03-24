@@ -1,0 +1,1 @@
+export { go } from './cli';

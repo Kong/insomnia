@@ -1,26 +1,34 @@
 const path = require('path');
+
 const nodeExternals = require('webpack-node-externals');
 
-module.exports = {
-  entry: { index: './src/cli.js' },
+module.exports = /** @type { import('webpack').Configuration } */ ({
+  entry: './src/index.ts',
   target: 'node',
-  devtool: 'source-map',
   output: {
     path: path.resolve(__dirname, '..', 'dist'),
-    filename: '[name].js',
+    filename: 'index.js',
     library: 'insomniacli',
     libraryTarget: 'commonjs2',
   },
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
         exclude: [/node_modules/],
-        use: {
-          loader: 'babel-loader',
+        options: {
+          configFile: 'tsconfig.build.json',
         },
       },
     ],
   },
-  externals: [nodeExternals()],
-};
+  resolve: {
+    extensions: ['.js', '.ts'],
+  },
+  externals: [
+    'node-libcurl',
+    'mocha',
+    nodeExternals(),
+  ],
+});
