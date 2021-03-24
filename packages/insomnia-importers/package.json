@@ -8,21 +8,33 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia"
   },
-  "main": "index.js",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "bin": {
-    "insomnia-import": "./bin/cli"
+    "insomnia-import": "./dist/src/cli"
   },
   "scripts": {
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
+    "build": "tsc --build tsconfig.build.json",
     "test": "jest --silent"
   },
   "dependencies": {
-    "apiconnect-wsdl": "^1.8.29",
+    "apiconnect-wsdl": "^1.8.31",
     "change-case": "^4.1.1",
-    "commander": "^2.20.0",
+    "commander": "^7.1.0",
     "lodash": "^4.17.15",
-    "shell-quote": "^1.6.1",
-    "swagger-parser": "^6.0.5",
-    "yaml": "^1.5.0"
+    "shell-quote": "^1.7.2",
+    "@apidevtools/swagger-parser": "10.0.2",
+    "yaml": "^1.10.0"
   },
-  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1",
+  "devDependencies": {
+    "@types/lodash": "^4.14.168",
+    "@types/shell-quote": "^1.7.0",
+    "@types/yaml": "^1.9.7",
+    "openapi-types": "^7.0.1"
+  }
 }
