@@ -165,7 +165,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
         const fsClient = MemClient.createClient();
 
-        let url = translateSSHtoHTTP(repoSettingsPatch.uri);
+        const originalUrl = translateSSHtoHTTP(repoSettingsPatch.uri);
 
         // Pull settings returned from dialog and shallow-clone the repo
         const cloneParams = {
@@ -179,41 +179,33 @@ class WrapperHome extends React.PureComponent<Props, State> {
           dir: GIT_CLONE_DIR,
           gitdir: GIT_INTERNAL_DIR,
           singleBranch: true,
-          url,
+          url: originalUrl,
           depth: 1,
         };
         try {
           await git.clone(cloneParams);
-        } catch (err) {
-          if (!cloneParams.url.endsWith('.git')) {
-            try {
-              url = addDotGit(cloneParams);
-              await git.clone({
-                ...cloneParams,
-                url,
-              });
-
-              // by this point the clone was successful, so update with this syntax
-              repoSettingsPatch.uri = url;
-
-              showError({
-                title:
-                  'Error Cloning Repository: failed without `.git` suffix but eventually succeeded after retrying with the `.git` suffix added',
-                message: err.message,
-              });
-              return false;
-            } catch (error) {
-              // TODO: verify there's not a way to combine these
-              showError({
-                title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
-                message: error.message,
-              });
-              return false;
-            }
+        } catch (originalUrlError) {
+          if (cloneParams.url.endsWith('.git')) {
+            showError({ title: 'Error Cloning Repository', message: originalUrlError.message });
+            return;
           }
 
-          showError({ title: 'Error Cloning Repository', message: err.message });
-          return false;
+          const dotGitUrl = addDotGit(cloneParams);
+          try {
+            await git.clone({
+              ...cloneParams,
+              url: dotGitUrl,
+            });
+
+            // by this point the clone was successful, so update with this syntax
+            repoSettingsPatch.uri = dotGitUrl;
+          } catch (dotGitError) {
+            showError({
+              title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
+              message: `failed to clone with original url (${originalUrl}): ${originalUrlError.message};\n\nalso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
+            });
+            return;
+          }
         }
 
         const ensureDir = async (base: string, name: string): Promise<boolean> => {
@@ -250,17 +242,19 @@ class WrapperHome extends React.PureComponent<Props, State> {
         const workspaceDirs = await fsClient.promises.readdir(workspaceBase);
 
         if (workspaceDirs.length > 1) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             message: 'Multiple workspaces found in repository',
           });
+          return;
         }
 
         if (workspaceDirs.length === 0) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             message: 'No workspaces found in repository',
           });
+          return;
         }
 
         const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
@@ -271,7 +265,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         const existingWorkspace = await models.workspace.getById(workspace._id);
 
         if (existingWorkspace) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             okLabel: 'Done',
             message: (
@@ -281,6 +275,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
               </React.Fragment>
             ),
           });
+          return;
         }
 
         // Prompt user to confirm importing the workspace
