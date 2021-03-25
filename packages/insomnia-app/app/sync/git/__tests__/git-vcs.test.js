@@ -267,11 +267,11 @@ First commit!
       await vcs.commit('Second');
 
       const log = await vcs.log();
-      expect(await vcs.readObjFromTree(log[0].tree, dirFooTxt)).toBe('foo bar');
-      expect(await vcs.readObjFromTree(log[1].tree, dirFooTxt)).toBe('foo');
+      expect(await vcs.readObjFromTree(log[0].commit.tree, dirFooTxt)).toBe('foo bar');
+      expect(await vcs.readObjFromTree(log[1].commit.tree, dirFooTxt)).toBe('foo');
 
       // Some extra checks
-      expect(await vcs.readObjFromTree(log[1].tree, 'missing')).toBe(null);
+      expect(await vcs.readObjFromTree(log[1].commit.tree, 'missing')).toBe(null);
       expect(await vcs.readObjFromTree('missing', 'missing')).toBe(null);
     });
   });

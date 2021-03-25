@@ -205,7 +205,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
       }
 
       if (!this.statusNames[gitPath] && log.length > 0) {
-        const docYML = await vcs.readObjFromTree(log[0].tree, gitPath);
+        const docYML = await vcs.readObjFromTree(log[0].commit.tree, gitPath);
         if (!docYML) {
           continue;
         }
