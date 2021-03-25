@@ -4,7 +4,7 @@ import { trackEvent } from '../../common/analytics';
 import { httpClient } from './http-client';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
-import { addDotGit, gitCallbacks } from './utils';
+import { gitCallbacks } from './utils';
 
 export type GitAuthor = {|
   name: string,
@@ -134,16 +134,7 @@ export class GitVCS {
       url,
       singleBranch: true,
     };
-    try {
-      await git.clone(cloneParams);
-    } catch (error) {
-      if (!url.endsWith('.git')) {
-        git.clone({
-          ...cloneParams,
-          url: addDotGit(cloneParams),
-        });
-      }
-    }
+    await git.clone(cloneParams);
 
     console.log(`[git] Clones repo to ${gitDirectory} from ${url}`);
 
