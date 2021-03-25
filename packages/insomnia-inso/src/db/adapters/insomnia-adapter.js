@@ -4,6 +4,26 @@ import type { DbAdapter } from '../index';
 import YAML from 'yaml';
 import { emptyDb } from '../index';
 
+/**
+ * When exporting, models.[kind].type is translated to his CamelCase corrispettive.
+ *
+ * It is then set to the property _type, and the type property is removed.
+ * Therefore, when importing, we just need to do the reverse of this.
+ *
+ * e.g Exporting:
+ * <pre>
+ * delete models.unitTest.type;
+ * models.unitTest._type = 'unit_test';
+ * </pre>
+ *
+ * e.g Importing:
+ * <pre>
+ * delete models.unitTest._type;
+ * models.unitTest.type = 'unitTest';
+ * </pre>
+ *
+ * @see packages/insomnia-app/app/common/import.js
+ */
 const modelTypeToExportTypeMap = {
   api_spec: 'ApiSpec',
   environment: 'Environment',
@@ -21,22 +41,33 @@ const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
   const db = emptyDb();
   // Now, reading and parsing
   const content = await fs.promises.readFile(path, { encoding: 'utf-8' });
-  const object = YAML.parse(content);
+  const parsed = YAML.parse(content);
   // We are supporting only v4 files
-  if (object.__export_format !== 4) return null;
+  if (parsed.__export_format !== 4) return null;
   // Read resources field which should contains all available objects
-  const importedModels = object?.resources;
+  const importedModels = parsed.resources;
   // Check if we have to filter
-  const restricted = filterTypes && filterTypes?.length !== 0;
+  const restricted = filterTypes && filterTypes.length !== 0;
+  // Transform to set for faster comparison
+  // If it is undefined, it will return an empty set
+  filterTypes = new Set<string>(filterTypes);
   // Execute translation between un-mapped and mapped models
   importedModels.forEach(item => {
-    // Rename field, transform value and delete obsolete one
-    item.type = modelTypeToExportTypeMap[item._type];
-    delete item._type;
-    // Filtering
+    // Do we need to filter?
     if (restricted) {
-      db[item.type] && filterTypes.includes(item.type) && db[item.type].push(item);
+      // If so, is it an allowed type?
+      if (filterTypes.has(modelTypeToExportTypeMap[item._type])) {
+        // Rename field, transform value and delete obsolete one
+        item.type = modelTypeToExportTypeMap[item._type];
+        delete item._type;
+        // Store it
+        db[item.type] && db[item.type].push(item);
+      }
     } else {
+      // Rename field, transform value and delete obsolete one
+      item.type = modelTypeToExportTypeMap[item._type];
+      delete item._type;
+      // Store it
       db[item.type] && db[item.type].push(item);
     }
   });
