@@ -1,7 +1,7 @@
 // @flow
 import * as git from 'isomorphic-git';
 import { trackEvent } from '../../common/analytics';
-import { http } from './http-plugin';
+import { httpClient } from './http-client';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
 import { addDotGit, gitCallbacks } from './utils';
@@ -103,7 +103,7 @@ export class GitVCS {
       dir: directory,
       gitdir: gitDirectory,
       fs,
-      http,
+      http: httpClient,
     };
 
     if (await this.repoExists()) {
@@ -123,7 +123,7 @@ export class GitVCS {
       dir: directory,
       gitdir: gitDirectory,
       fs,
-      http,
+      http: httpClient,
     };
 
     const cloneParams = {

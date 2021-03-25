@@ -63,7 +63,7 @@ import { strings } from '../../common/strings';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import { descendingNumberSort } from '../../common/sorting';
 import { addDotGit, translateSSHtoHTTP, gitCallbacks } from '../../sync/git/utils';
-import { http } from '../../sync/git/http-plugin';
+import { httpClient } from '../../sync/git/http-client';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -174,7 +174,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             password: repoSettingsPatch.credentials.token,
           }),
           fs: fsClient,
-          http,
+          http: httpClient,
           core,
           dir: GIT_CLONE_DIR,
           gitdir: GIT_INTERNAL_DIR,
