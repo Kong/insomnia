@@ -1,6 +1,6 @@
 import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { setupDateMocks } from './util';
-import { MemPlugin } from '../mem-plugin';
+import { MemClient } from '../mem-client';
 import path from 'path';
 import * as git from 'isomorphic-git';
 
@@ -17,10 +17,10 @@ describe('Git-VCS', () => {
 
   describe('common operations', () => {
     it('listFiles()', async () => {
-      const fs = MemPlugin.createPlugin();
+      const fsClient = MemClient.createClient();
 
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       // No files exist yet
@@ -28,22 +28,22 @@ describe('Git-VCS', () => {
       expect(files1).toEqual([]);
 
       // File does not exist in git index
-      await fs.promises.writeFile('foo.txt', 'bar');
+      await fsClient.promises.writeFile('foo.txt', 'bar');
       const files2 = await vcs.listFiles();
       expect(files2).toEqual([]);
     });
 
     it('stage and unstage file', async () => {
-      const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fs.promises.writeFile(fooTxt, 'foo');
-      await fs.promises.writeFile(barTxt, 'bar');
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(fooTxt, 'foo');
+      await fsClient.promises.writeFile(barTxt, 'bar');
 
       // Files outside namespace should be ignored
-      await fs.promises.writeFile('/other.txt', 'other');
+      await fsClient.promises.writeFile('/other.txt', 'other');
 
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       expect(await vcs.status(barTxt)).toBe('*added');
@@ -59,23 +59,23 @@ describe('Git-VCS', () => {
     });
 
     it('Returns empty log without first commit', async () => {
-      const fs = MemPlugin.createPlugin();
+      const fsClient = MemClient.createClient();
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
       expect(await vcs.log()).toEqual([]);
     });
 
     it('commit file', async () => {
-      const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fs.promises.writeFile(fooTxt, 'foo');
-      await fs.promises.writeFile(barTxt, 'bar');
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(fooTxt, 'foo');
+      await fsClient.promises.writeFile(barTxt, 'bar');
 
-      await fs.promises.writeFile('other.txt', 'should be ignored');
+      await fsClient.promises.writeFile('other.txt', 'should be ignored');
 
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
       await vcs.add(fooTxt);
       await vcs.commit('First commit!');
@@ -112,7 +112,7 @@ First commit!
         },
       ]);
 
-      await fs.promises.unlink(fooTxt);
+      await fsClient.promises.unlink(fooTxt);
       expect(await vcs.status(barTxt)).toBe('*added');
       expect(await vcs.status(fooTxt)).toBe('*deleted');
 
@@ -126,13 +126,13 @@ First commit!
     });
 
     it('create branch', async () => {
-      const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fs.promises.writeFile(fooTxt, 'foo');
-      await fs.promises.writeFile(barTxt, 'bar');
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(fooTxt, 'foo');
+      await fsClient.promises.writeFile(barTxt, 'bar');
 
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
       await vcs.add(fooTxt);
       await vcs.commit('First commit!');
@@ -170,15 +170,15 @@ First commit!
       const folderBarTxt = path.join(folder, 'bar.txt');
       const originalContent = 'content';
 
-      const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fs.promises.writeFile(fooTxt, originalContent);
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(fooTxt, originalContent);
 
-      await fs.promises.mkdir(folder);
-      await fs.promises.writeFile(folderBarTxt, originalContent);
+      await fsClient.promises.mkdir(folder);
+      await fsClient.promises.writeFile(folderBarTxt, originalContent);
 
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
 
       // Commit
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
@@ -187,8 +187,8 @@ First commit!
       await vcs.commit('First commit!');
 
       // Change the file
-      await fs.promises.writeFile(fooTxt, 'changedContent');
-      await fs.promises.writeFile(folderBarTxt, 'changedContent');
+      await fsClient.promises.writeFile(fooTxt, 'changedContent');
+      await fsClient.promises.writeFile(folderBarTxt, 'changedContent');
       expect(await vcs.status(fooTxt)).toBe('*modified');
       expect(await vcs.status(folderBarTxt)).toBe('*modified');
 
@@ -200,8 +200,8 @@ First commit!
       expect(await vcs.status(folderBarTxt)).toBe('unmodified');
 
       // Expect original doc to have reverted
-      expect((await fs.promises.readFile(fooTxt)).toString()).toBe(originalContent);
-      expect((await fs.promises.readFile(folderBarTxt)).toString()).toBe(originalContent);
+      expect((await fsClient.promises.readFile(fooTxt)).toString()).toBe(originalContent);
+      expect((await fsClient.promises.readFile(folderBarTxt)).toString()).toBe(originalContent);
     });
 
     it('should remove pending changes from select tracked files', async () => {
@@ -212,13 +212,13 @@ First commit!
       const originalContent = 'content';
       const changedContent = 'changedContent';
 
-      const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
 
       // Write to all files
-      await Promise.all(files.map(f => fs.promises.writeFile(f, originalContent)));
+      await Promise.all(files.map(f => fsClient.promises.writeFile(f, originalContent)));
 
       // Commit all files
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
@@ -226,7 +226,7 @@ First commit!
       await vcs.commit('First commit!');
 
       // Change all files
-      await Promise.all(files.map(f => fs.promises.writeFile(f, changedContent)));
+      await Promise.all(files.map(f => fsClient.promises.writeFile(f, changedContent)));
       await Promise.all(files.map(f => expect(vcs.status(foo1Txt)).resolves.toBe('*modified')));
 
       // Undo foo1 and foo2, but not foo3
@@ -236,33 +236,33 @@ First commit!
       expect(await vcs.status(foo2Txt)).toBe('unmodified');
 
       // Expect original doc to have reverted for foo1 and foo2
-      expect((await fs.promises.readFile(foo1Txt)).toString()).toBe(originalContent);
-      expect((await fs.promises.readFile(foo2Txt)).toString()).toBe(originalContent);
+      expect((await fsClient.promises.readFile(foo1Txt)).toString()).toBe(originalContent);
+      expect((await fsClient.promises.readFile(foo2Txt)).toString()).toBe(originalContent);
 
       // Expect changed content for foo3
       expect(await vcs.status(foo3Txt)).toBe('*modified');
-      expect((await fs.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
+      expect((await fsClient.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
     });
   });
 
   describe('readObjectFromTree()', () => {
     it('reads an object from tree', async () => {
-      const fs = MemPlugin.createPlugin();
+      const fsClient = MemClient.createClient();
       const dir = path.join(GIT_INSOMNIA_DIR, 'dir');
       const dirFooTxt = path.join(dir, 'foo.txt');
 
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fs.promises.mkdir(dir);
-      await fs.promises.writeFile(dirFooTxt, 'foo');
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.mkdir(dir);
+      await fsClient.promises.writeFile(dirFooTxt, 'foo');
 
       const vcs = new GitVCS();
-      await vcs.init({ directory: GIT_CLONE_DIR, fs });
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
 
       await vcs.add(dirFooTxt);
       await vcs.commit('First');
 
-      await fs.promises.writeFile(dirFooTxt, 'foo bar');
+      await fsClient.promises.writeFile(dirFooTxt, 'foo bar');
       await vcs.add(dirFooTxt);
       await vcs.commit('Second');
 

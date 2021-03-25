@@ -48,7 +48,7 @@ import GitRepositorySettingsModal from '../components/modals/git-repository-sett
 import PageLayout from './page-layout';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { MemPlugin } from '../../sync/git/mem-plugin';
+import { MemClient } from '../../sync/git/mem-client';
 import {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
@@ -163,7 +163,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
         const core = Math.random() + '';
 
-        const fs = MemPlugin.createPlugin();
+        const fsClient = MemClient.createClient();
 
         let url = translateSSHtoHTTP(repoSettingsPatch.uri);
 
@@ -173,7 +173,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             username: repoSettingsPatch.credentials.username,
             password: repoSettingsPatch.credentials.token,
           }),
-          fs,
+          fs: fsClient,
           http,
           core,
           dir: GIT_CLONE_DIR,
@@ -217,7 +217,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         }
 
         const ensureDir = async (base: string, name: string): Promise<boolean> => {
-          const rootDirs = await fs.promises.readdir(base);
+          const rootDirs = await fsClient.promises.readdir(base);
           if (rootDirs.includes(name)) {
             return true;
           }
@@ -247,7 +247,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         }
 
         const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-        const workspaceDirs = await fs.promises.readdir(workspaceBase);
+        const workspaceDirs = await fsClient.promises.readdir(workspaceBase);
 
         if (workspaceDirs.length > 1) {
           return showAlert({
@@ -264,7 +264,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
         }
 
         const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
-        const workspaceJson = await fs.promises.readFile(workspacePath);
+        const workspaceJson = await fsClient.promises.readFile(workspacePath);
         const workspace = YAML.parse(workspaceJson.toString());
 
         // Check if the workspace already exists
@@ -304,13 +304,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
             const bufferId = await db.bufferChanges();
 
             // Loop over all model folders in root
-            for (const modelType of await fs.promises.readdir(GIT_INSOMNIA_DIR)) {
+            for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
               const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
 
               // Loop over all documents in model folder and save them
-              for (const docFileName of await fs.promises.readdir(modelDir)) {
+              for (const docFileName of await fsClient.promises.readdir(modelDir)) {
                 const docPath = path.join(modelDir, docFileName);
-                const docYaml = await fs.promises.readFile(docPath);
+                const docYaml = await fsClient.promises.readFile(docPath);
                 const doc = YAML.parse(docYaml.toString());
                 await db.upsert(doc);
               }
