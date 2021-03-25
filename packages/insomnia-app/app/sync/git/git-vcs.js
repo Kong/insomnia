@@ -68,10 +68,13 @@ type InitFromCloneOptions = {
   gitDirectory: string,
 };
 
-// isomorphic-git internally will default an empty ('') clone directory to '.'
-// Ref: https://github.com/isomorphic-git/isomorphic-git/blob/4e66704d05042624bbc78b85ee5110d5ee7ec3e2/src/utils/normalizePath.js#L10
-// We should set this explicitly (even if set to an empty string), because we have other code (such as fs plugins
-// and unit tests) that depend on the clone directory.
+/**
+ * isomorphic-git internally will default an empty ('') clone directory to '.'
+ *
+ * Ref: https://github.com/isomorphic-git/isomorphic-git/blob/4e66704d05042624bbc78b85ee5110d5ee7ec3e2/src/utils/normalizePath.js#L10
+ *
+ * We should set this explicitly (even if set to an empty string), because we have other code (such as fs clients and unit tests) that depend on the clone directory.
+ */
 export const GIT_CLONE_DIR = '.';
 const gitInternalDirName = 'git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';

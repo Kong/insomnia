@@ -92,7 +92,7 @@ import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
 import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
 import { NeDBClient } from '../../sync/git/ne-db-client';
-import { fsPlugin } from '../../sync/git/fs-plugin';
+import { fsClient } from '../../sync/git/fs-client';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import {
@@ -1026,29 +1026,25 @@ class App extends PureComponent {
     }
 
     if (activeGitRepository) {
-      // Create FS plugin
+      // Create FS client
       const baseDir = path.join(
         getDataDirectory(),
         `version-control/git/${activeGitRepository._id}`,
       );
+
+      /** All app data is stored within the a namespaced directory at the root of the repository and is read/written from the local NeDB database */
       const neDbClient = NeDBClient.createClient(activeWorkspace._id);
-      const pGitData = fsPlugin(baseDir);
-      const pOtherData = fsPlugin(path.join(baseDir, 'other'));
 
-      const routableFS = routableFSClient(
-        // All data outside the directories listed below will be stored in an 'other'
-        // directory. This is so we can support files that exist outside the ones
-        // the app is specifically in charge of.
-        pOtherData,
-        {
-          // All app data is stored within the a namespaced directory at the root of the
-          // repository and is read/written from the local NeDB database
-          [GIT_INSOMNIA_DIR]: neDbClient,
+      /** All git metadata is stored in a git/ directory on the filesystem */
+      const gitDataClient = fsClient(baseDir);
 
-          // All git metadata is stored in a git/ directory on the filesystem
-          [GIT_INTERNAL_DIR]: pGitData,
-        },
-      );
+      /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
+      const otherDatClient = fsClient(path.join(baseDir, 'other'));
+
+      const routableFS = routableFSClient(otherDatClient, {
+        [GIT_INSOMNIA_DIR]: neDbClient,
+        [GIT_INTERNAL_DIR]: gitDataClient,
+      });
 
       // Init VCS
       const { credentials, uri } = activeGitRepository;

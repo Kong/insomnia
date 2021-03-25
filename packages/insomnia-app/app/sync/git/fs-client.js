@@ -15,9 +15,9 @@ type FSWraps =
   | fs.FSPromise.readlink
   | fs.FSPromise.symlink;
 
-/** This is a plugin for isomorphic-git. {@link https://isomorphic-git.org/docs/en/fs} */
-export const fsPlugin = (basePath: string) => {
-  console.log(`[fsPlugin] Created in ${basePath}`);
+/** This is a client for isomorphic-git. {@link https://isomorphic-git.org/docs/en/fs} */
+export const fsClient = (basePath: string) => {
+  console.log(`[fsClient] Created in ${basePath}`);
   mkdirp.sync(basePath);
 
   const wrap = (fn: FSWraps) => async (filePath: string, ...args: Array<any>): Promise<T> => {
