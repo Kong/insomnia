@@ -163,7 +163,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
         const core = Math.random() + '';
 
-        const fsClient = MemClient.createClient();
+        let fsClient = MemClient.createClient();
 
         const originalUrl = translateSSHtoHTTP(repoSettingsPatch.uri);
 
@@ -192,8 +192,10 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
           const dotGitUrl = addDotGit(cloneParams);
           try {
+            fsClient = MemClient.createClient();
             await git.clone({
               ...cloneParams,
+              fs: fsClient,
               url: dotGitUrl,
             });
 
