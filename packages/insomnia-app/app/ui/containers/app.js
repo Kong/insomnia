@@ -91,7 +91,7 @@ import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
 import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
-import NeDBPlugin from '../../sync/git/ne-db-plugin';
+import { NeDBClient } from '../../sync/git/ne-db-client';
 import { fsPlugin } from '../../sync/git/fs-plugin';
 import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
@@ -1031,7 +1031,7 @@ class App extends PureComponent {
         getDataDirectory(),
         `version-control/git/${activeGitRepository._id}`,
       );
-      const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id);
       const pGitData = fsPlugin(baseDir);
       const pOtherData = fsPlugin(path.join(baseDir, 'other'));
 
@@ -1043,7 +1043,7 @@ class App extends PureComponent {
         {
           // All app data is stored within the a namespaced directory at the root of the
           // repository and is read/written from the local NeDB database
-          [GIT_INSOMNIA_DIR]: pNeDb,
+          [GIT_INSOMNIA_DIR]: neDbClient,
 
           // All git metadata is stored in a git/ directory on the filesystem
           [GIT_INTERNAL_DIR]: pGitData,
