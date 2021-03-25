@@ -2,14 +2,13 @@
 import path from 'path';
 
 /**
- * An isometric-git FS plugin that can route to various plugins depending on
- * what the filePath is.
+ * An isometric-git FS client that can route to various client depending on what the filePath is.
  *
- * @param defaultFS – default plugin
- * @param otherFS – map of path prefixes to plugins
+ * @param defaultFS – default client
+ * @param otherFS – map of path prefixes to clients
  * @returns {{promises: *}}
  */
-export function routableFSPlugin(defaultFS: Object, otherFS: { [string]: Object }) {
+export function routableFSClient(defaultFS: Object, otherFS: { [string]: Object }) {
   const execMethod = async (method: string, filePath: string, ...args: Array<any>) => {
     filePath = path.normalize(filePath);
 

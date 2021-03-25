@@ -93,7 +93,7 @@ import SyncMergeModal from '../components/modals/sync-merge-modal';
 import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
 import { NeDBClient } from '../../sync/git/ne-db-client';
 import { fsPlugin } from '../../sync/git/fs-plugin';
-import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
+import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import {
   isCollection,
@@ -1035,7 +1035,7 @@ class App extends PureComponent {
       const pGitData = fsPlugin(baseDir);
       const pOtherData = fsPlugin(path.join(baseDir, 'other'));
 
-      const routableFS = routableFSPlugin(
+      const routableFS = routableFSClient(
         // All data outside the directories listed below will be stored in an 'other'
         // directory. This is so we can support files that exist outside the ones
         // the app is specifically in charge of.
