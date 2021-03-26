@@ -1,6 +1,6 @@
 // @flow
 
-import { getName, parseUrl } from '../common';
+import { getName, parseUrl, fillServerVariables } from '../common';
 
 export function generateUpstreams(api: OpenApi3Spec, tags: Array<string>) {
   const servers = api.servers || [];
@@ -16,8 +16,9 @@ export function generateUpstreams(api: OpenApi3Spec, tags: Array<string>) {
   };
 
   for (const server of servers) {
+    const serverWithVars = fillServerVariables(server);
     upstream.targets.push({
-      target: parseUrl(server.url).host,
+      target: parseUrl(serverWithVars).host,
     });
   }
 
