@@ -19,8 +19,10 @@ import {
 import { strings } from '../../../common/strings';
 import path from 'path';
 import YAML from 'yaml';
-import React from 'react';
+import * as React from 'react';
 import * as db from '../../../common/database';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
+import type { GitRepository } from '../../../models/git-repository';
 
 type OnWorkspaceCreateCallback = Workspace => Promise<void> | void;
 
@@ -38,9 +40,12 @@ const actuallyCreate = (patch: $Shape<Workspace>, onCreate?: OnWorkspaceCreateCa
   };
 };
 
-export type CreateWorkspaceCallback = ({ scope: WorkspaceScope }) => void;
+export type CreateWorkspaceCallback = ({
+  scope: WorkspaceScope,
+  onCreate: OnWorkspaceCreateCallback,
+}) => void;
 
-export const createWorkspace: CreateWorkspaceCallback = ({ scope }) => {
+export const createWorkspace: CreateWorkspaceCallback = ({ scope, onCreate }) => {
   return dispatch => {
     const design = isDesign({ scope });
 
@@ -54,14 +59,51 @@ export const createWorkspace: CreateWorkspaceCallback = ({ scope }) => {
       placeholder: defaultValue,
       defaultValue,
       onComplete: async name => {
-        await dispatch(actuallyCreate({ name, scope }));
+        await dispatch(actuallyCreate({ name, scope }, onCreate));
         trackSegmentEvent(segmentEvent);
       },
     });
   };
 };
 
-type GitCloneWorkspaceCallback = () => void;
+const createWorkspaceWithGitRepo = (gitRepo: GitRepository) => {
+  return dispatch =>
+    dispatch(
+      createWorkspace({
+        scope: WorkspaceScopeKeys.design,
+        onCreate: async wrk => {
+          await createGitRepoSettings(wrk._id, gitRepo);
+        },
+      }),
+    );
+};
+
+const createGitRepoSettings = async (workspaceId: string, gitRepo: GitRepository) => {
+  const newRepo = await models.gitRepository.create(gitRepo);
+  const meta = await models.workspaceMeta.getOrCreateByParentId(workspaceId);
+  await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });
+};
+
+const cloneProblem = (message: React.Node) => {
+  showAlert({
+    title: 'Clone Problem',
+    message,
+  });
+};
+
+const noDocumentFound = (gitRepo: GitRepository) => {
+  return dispatch => {
+    showAlert({
+      title: `No ${strings.document.toLowerCase()} found`,
+      okLabel: 'Yes',
+      addCancel: true,
+      message: `No ${strings.document.toLowerCase()} found in the repository for import. Would you like to create a new one?`,
+      onConfirm: async () => await dispatch(createWorkspaceWithGitRepo(gitRepo)),
+    });
+  };
+};
+
+export type GitCloneWorkspaceCallback = () => void;
 
 export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
   return dispatch => {
@@ -70,6 +112,8 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
       onSubmitEdits: async repoSettingsPatch => {
+        repoSettingsPatch.needsFullClone = true;
+
         trackEvent('Git', 'Clone');
 
         const core = Math.random() + '';
@@ -104,30 +148,16 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
             return true;
           }
 
-          showAlert({
-            title: 'Clone Problem',
-            okLabel: 'Yes',
-            addCancel: true,
-            message: `Could not locate "${base}/${name}" directory in repository. Would you like to link this repository to a new ${strings.document.toLowerCase()}?`,
-            onConfirm: async () => {
-              await this._handleDocumentCreate(async createdWorkspace => {
-                // Store GitRepository settings
-                const newRepo = await models.gitRepository.create({
-                  ...repoSettingsPatch,
-                  needsFullClone: true,
-                });
-                const meta = await models.workspaceMeta.getOrCreateByParentId(createdWorkspace._id);
-                await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });
-              });
-            },
-          });
+          return false;
         };
 
         if (!(await ensureDir(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME))) {
+          dispatch(noDocumentFound(repoSettingsPatch));
           return;
         }
 
         if (!(await ensureDir(GIT_INSOMNIA_DIR, models.workspace.type))) {
+          dispatch(noDocumentFound(repoSettingsPatch));
           return;
         }
 
@@ -135,17 +165,13 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
         const workspaceDirs = await f.readdir(workspaceBase);
 
         if (workspaceDirs.length > 1) {
-          return showAlert({
-            title: 'Clone Problem',
-            message: 'Multiple workspaces found in repository',
-          });
+          cloneProblem('Multiple workspaces found in repository; expected one.');
+          return;
         }
 
         if (workspaceDirs.length === 0) {
-          return showAlert({
-            title: 'Clone Problem',
-            message: 'No workspaces found in repository',
-          });
+          dispatch(noDocumentFound(repoSettingsPatch));
+          return;
         }
 
         const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
@@ -156,16 +182,13 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
         const existingWorkspace = await models.workspace.getById(workspace._id);
 
         if (existingWorkspace) {
-          return showAlert({
-            title: 'Clone Problem',
-            okLabel: 'Done',
-            message: (
-              <React.Fragment>
-                Workspace <strong>{existingWorkspace.name}</strong> already exists. Please delete it
-                before cloning.
-              </React.Fragment>
-            ),
-          });
+          cloneProblem(
+            <>
+              Workspace <strong>{existingWorkspace.name}</strong> already exists. Please delete it
+              before cloning.
+            </>,
+          );
+          return;
         }
 
         // Prompt user to confirm importing the workspace
@@ -173,18 +196,14 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
           title: 'Project Found',
           okLabel: 'Import',
           message: (
-            <React.Fragment>
+            <>
               Workspace <strong>{workspace.name}</strong> found in repository. Would you like to
               import it?
-            </React.Fragment>
+            </>
           ),
 
           // Import all docs to the DB
           onConfirm: async () => {
-            const {
-              wrapperProps: { handleSetActiveWorkspace },
-            } = this.props;
-
             // Stop the DB from pushing updates to the UI temporarily
             const bufferId = await db.bufferChanges();
 
@@ -202,15 +221,10 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
             }
 
             // Store GitRepository settings and set it as active
-            const newRepo = await models.gitRepository.create({
-              ...repoSettingsPatch,
-              needsFullClone: true,
-            });
-            const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-            await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });
+            await createGitRepoSettings(workspace._id, repoSettingsPatch);
 
             // Activate the workspace after importing everything
-            await handleSetActiveWorkspace(workspace._id);
+            dispatch(setActiveWorkspace(workspace._id));
 
             // Flush DB changes
             await db.flushChanges(bufferId);
