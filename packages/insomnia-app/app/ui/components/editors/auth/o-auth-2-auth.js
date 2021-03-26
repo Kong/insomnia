@@ -514,7 +514,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     */
     const expDigitCount = exp.toString().length;
     exp = exp * 10 ** (13 - expDigitCount);
-    console.log(exp);
+
     return (
       <span>
         &#x28;expires <TimeFromNow timestamp={exp} />
