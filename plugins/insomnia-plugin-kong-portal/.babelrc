@@ -1,7 +1,8 @@
 {
   "plugins": [
     ["@babel/plugin-proposal-decorators", {"legacy": true}],
-    "@babel/plugin-proposal-class-properties"
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-proposal-optional-chaining"
   ],
   "presets": [
     "@babel/preset-flow",
