@@ -30,7 +30,7 @@ import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { showAlert, showError, showModal, showPrompt } from './modals';
 import * as models from '../../models';
-import { trackEvent, trackSegmentEvent } from '../../common/analytics';
+import { trackEvent } from '../../common/analytics';
 import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
@@ -62,19 +62,21 @@ import AccountDropdown from './dropdowns/account-dropdown';
 import { strings } from '../../common/strings';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import { descendingNumberSort } from '../../common/sorting';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as workspaceActions from '../redux/modules/workspace';
 
 type Props = {|
   wrapperProps: WrapperProps,
   handleImportFile: HandleImportFileCallback,
   handleImportUri: HandleImportUriCallback,
   handleImportClipboard: HandleImportClipboardCallback,
+  handleCreateWorkspace: CreateWorkspaceCallback,
 |};
 
 type State = {|
   filter: string,
 |};
-
-type OnWorkspaceCreateCallback = Workspace => Promise<void> | void;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperHome extends React.PureComponent<Props, State> {
@@ -92,51 +94,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.setState({ filter: e.currentTarget.value });
   }
 
-  async __actuallyCreate(patch: $Shape<Workspace>, onCreate?: OnWorkspaceCreateCallback) {
-    const workspace = await models.workspace.create(patch);
-    if (onCreate) {
-      await onCreate(workspace);
-    }
-    const { handleSetActiveActivity } = this.props.wrapperProps;
-    this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
-    trackEvent('Workspace', 'Create');
-
-    workspace.scope === WorkspaceScopeKeys.design
-      ? handleSetActiveActivity(ACTIVITY_SPEC)
-      : handleSetActiveActivity(ACTIVITY_DEBUG);
-  }
-
-  _handleDocumentCreate(onCreate?: OnWorkspaceCreateCallback) {
-    showPrompt({
-      title: 'Create New Design Document',
-      submitName: 'Create',
-      placeholder: 'spec-name.yaml',
-      onComplete: async name => {
-        await this.__actuallyCreate(
-          {
-            name,
-            scope: WorkspaceScopeKeys.design,
-          },
-          onCreate,
-        );
-        trackSegmentEvent('Document Created');
-      },
-    });
+  _handleDocumentCreate() {
+    this.props.handleCreateWorkspace({ scope: WorkspaceScopeKeys.design });
   }
 
   _handleCollectionCreate() {
-    showPrompt({
-      title: 'Create New Request Collection',
-      placeholder: 'My Collection',
-      submitName: 'Create',
-      onComplete: async name => {
-        await this.__actuallyCreate({
-          name,
-          scope: WorkspaceScopeKeys.collection,
-        });
-        trackSegmentEvent('Collection Created');
-      },
-    });
+    this.props.handleCreateWorkspace({ scope: WorkspaceScopeKeys.collection });
   }
 
   _handleImportFile() {
@@ -199,14 +162,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
             return true;
           }
 
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             okLabel: 'Yes',
             addCancel: true,
             message: `Could not locate "${base}/${name}" directory in repository. Would you like to link this repository to a new ${strings.document.toLowerCase()}?`,
             onConfirm: async () => {
               await this._handleDocumentCreate(async createdWorkspace => {
-                // Store GitRepository settings and set it as active
+                // Store GitRepository settings
                 const newRepo = await models.gitRepository.create({
                   ...repoSettingsPatch,
                   needsFullClone: true,
@@ -598,4 +561,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 }
 
-export default WrapperHome;
+function mapDispatchToProps(dispatch) {
+  const workspace = bindActionCreators(workspaceActions, dispatch);
+
+  return {
+    handleCreateWorkspace: workspace.createWorkspace,
+  };
+}
+
+export default connect(null, mapDispatchToProps)(WrapperHome);
