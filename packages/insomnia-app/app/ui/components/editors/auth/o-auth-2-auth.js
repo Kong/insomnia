@@ -497,6 +497,32 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     return { basic: basicFields, advanced: advancedFields };
   }
 
+  static renderExpiryFromJWT(token: string): React.Element<*> | string | null {
+    if (!token) {
+      return null;
+    }
+
+    const base64Url = token.split('.')[1];
+    let { exp } = JSON.parse(window.atob(base64Url));
+    if (!exp) {
+      return '(never expires)';
+    }
+    /* 
+      Need to find exp's digit count and then remove digits or pad it with 0s to 
+      make it exactly 13 digits. As the 'TimeFromNow' component only seems to 
+      render 13 digit epochs correctly.
+    */
+    const expDigitCount = exp.toString().length;
+    exp = exp * 10 ** (13 - expDigitCount);
+    console.log(exp);
+    return (
+      <span>
+        &#x28;expires <TimeFromNow timestamp={exp} />
+        &#x29;
+      </span>
+    );
+  }
+
   static renderExpireAt(token: ?OAuth2Token): React.Element<*> | string | null {
     if (!token || !token.accessToken) {
       return null;
@@ -505,7 +531,6 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     if (!token.expiresAt) {
       return '(never expires)';
     }
-
     return (
       <span>
         &#x28;expires <TimeFromNow timestamp={token.expiresAt} />
@@ -555,7 +580,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     const { request, oAuth2Token: tok } = this.props;
     const { loading, error, showAdvanced } = this.state;
 
-    const expireLabel = OAuth2Auth.renderExpireAt(tok);
+    const accessExpireLabel = OAuth2Auth.renderExpireAt(tok);
+    const identityExpireLabel = OAuth2Auth.renderExpiryFromJWT(tok.identityToken);
     const fields = this.renderGrantTypeFields(request.authentication.grantType);
 
     return (
@@ -622,7 +648,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </div>
           <div className="form-control form-control--outlined">
             <label>
-              <small>Identity Token {tok ? <em>{expireLabel}</em> : null}</small>
+              <small>Identity Token {tok ? <em>{identityExpireLabel}</em> : null}</small>
               <input
                 value={(tok && tok.identityToken) || ''}
                 placeholder="n/a"
@@ -632,7 +658,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </div>
           <div className="form-control form-control--outlined">
             <label>
-              <small>Access Token {tok ? <em>{expireLabel}</em> : null}</small>
+              <small>Access Token {tok ? <em>{accessExpireLabel}</em> : null}</small>
               <input
                 value={(tok && tok.accessToken) || ''}
                 placeholder="n/a"
