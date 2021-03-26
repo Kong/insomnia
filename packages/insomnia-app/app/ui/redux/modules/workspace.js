@@ -8,8 +8,7 @@ import { isDesign } from '../../../models/helpers/is-model';
 import { showAlert, showError, showModal, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveWorkspace } from './global';
 import GitRepositorySettingsModal from '../../components/modals/git-repository-settings-modal';
-import git from 'isomorphic-git';
-import { MemPlugin } from '../../../sync/git/mem-plugin';
+import * as git from 'isomorphic-git';
 import {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
@@ -103,9 +102,9 @@ const noDocumentFound = (gitRepo: GitRepository) => {
   };
 };
 
-export type GitCloneWorkspaceCallback = () => void;
+export type GitCloneWorkspaceCallback = ({ createFsPlugin: () => Object }) => void;
 
-export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
+export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin }) => {
   return dispatch => {
     // This is a huge flow and we don't really have anywhere to put something like this. I guess
     // it's fine here for now (?)
@@ -120,7 +119,7 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = () => {
 
         // Create in-memory filesystem to perform clone
         const plugins = git.cores.create(core);
-        const fsPlugin = MemPlugin.createPlugin();
+        const fsPlugin = createFsPlugin();
         plugins.set('fs', fsPlugin);
 
         // Pull settings returned from dialog and shallow-clone the repo
