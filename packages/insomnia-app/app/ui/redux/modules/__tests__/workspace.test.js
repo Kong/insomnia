@@ -126,11 +126,6 @@ describe('workspace', () => {
     afterEach(() => {
       const actions = store.getActions();
 
-      // Should always dispatch LOAD_START and LOAD_STOP
-      expect(actions).toStrictEqual(
-        expect.arrayContaining([{ type: LOAD_START }, { type: LOAD_STOP }]),
-      );
-
       // Should always contain one LOAD_START and one LOAD_END
       expect(actions.filter(({ type }) => type === LOAD_START)).toHaveLength(1);
       expect(actions.filter(({ type }) => type === LOAD_STOP)).toHaveLength(1);

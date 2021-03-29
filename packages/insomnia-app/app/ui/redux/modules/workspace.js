@@ -57,6 +57,7 @@ export const createWorkspace: CreateWorkspaceCallback = ({ scope, onCreate }) =>
       submitName: 'Create',
       placeholder: defaultValue,
       defaultValue,
+      selectText: true,
       onComplete: async name => {
         await dispatch(actuallyCreate({ name, scope }, onCreate));
         trackSegmentEvent(segmentEvent);
