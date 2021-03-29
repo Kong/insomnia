@@ -8,7 +8,7 @@ import * as modals from '../../../components/modals';
 import * as models from '../../../../models';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../../common/constants';
-import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
+import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
 import { MemPlugin } from '../../../../sync/git/mem-plugin';
 import { generateId } from '../../../../common/misc';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
@@ -158,6 +158,8 @@ describe('workspace', () => {
 
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
+        { type: LOAD_START },
+        { type: LOAD_STOP },
         { type: SET_ACTIVE_WORKSPACE, workspaceId: workspace._id },
         { type: SET_ACTIVE_ACTIVITY, activity: ACTIVITY_SPEC },
       ]);
@@ -220,7 +222,7 @@ describe('workspace', () => {
       expect(alertArgs.message).toBe('Multiple workspaces found in repository; expected one.');
 
       // Ensure activity is activated
-      expect(store.getActions()).toHaveLength(0);
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
     });
 
     it('should fail if workspace already exists', async () => {
@@ -249,7 +251,7 @@ describe('workspace', () => {
       );
 
       // Ensure activity is activated
-      expect(store.getActions()).toHaveLength(0);
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
     });
 
     it('should fail if exception during clone', async () => {
@@ -265,7 +267,7 @@ describe('workspace', () => {
       expect(errorArgs.error).toBe(err);
 
       // Ensure activity is activated
-      expect(store.getActions()).toHaveLength(0);
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
     });
 
     it('should import workspace and apiSpec', async () => {
@@ -327,7 +329,9 @@ describe('workspace', () => {
 
       // Ensure workspace is enabled
       expect(store.getActions()).toEqual([
+        { type: LOAD_START },
         { type: SET_ACTIVE_WORKSPACE, workspaceId: workspace._id },
+        { type: LOAD_STOP },
       ]);
     });
   });

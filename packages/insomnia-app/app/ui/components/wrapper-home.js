@@ -53,6 +53,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as workspaceActions from '../redux/modules/workspace';
 import { GitCloneWorkspaceCallback } from '../redux/modules/workspace';
+import { MemPlugin } from '../../sync/git/mem-plugin';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -112,7 +113,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   _handleWorkspaceClone() {
-    this.props.handleGitCloneWorkspace();
+    this.props.handleGitCloneWorkspace({ createFsPlugin: MemPlugin.createPlugin });
   }
 
   _handleKeyDown(e) {

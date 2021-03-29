@@ -44,8 +44,8 @@ import { getDesignerDataDir } from '../../../common/misc';
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
-const LOAD_START = 'global/load-start';
-const LOAD_STOP = 'global/load-stop';
+export const LOAD_START = 'global/load-start';
+export const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';

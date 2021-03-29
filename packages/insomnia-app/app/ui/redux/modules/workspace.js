@@ -6,7 +6,7 @@ import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
 import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { isDesign } from '../../../models/helpers/is-model';
 import { showAlert, showError, showModal, showPrompt } from '../../components/modals';
-import { setActiveActivity, setActiveWorkspace } from './global';
+import { loadStart, loadStop, setActiveActivity, setActiveWorkspace } from './global';
 import GitRepositorySettingsModal from '../../components/modals/git-repository-settings-modal';
 import * as git from 'isomorphic-git';
 import {
@@ -106,6 +106,8 @@ export type GitCloneWorkspaceCallback = ({ createFsPlugin: () => Object }) => vo
 
 export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin }) => {
   return dispatch => {
+    dispatch(loadStart());
+
     // This is a huge flow and we don't really have anywhere to put something like this. I guess
     // it's fine here for now (?)
     showModal(GitRepositorySettingsModal, {
@@ -137,7 +139,8 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin })
           });
         } catch (err) {
           showError({ title: 'Error Cloning Repository', message: err.message, error: err });
-          return false;
+          dispatch(loadStop());
+          return;
         }
 
         const f = fsPlugin.promises;
@@ -152,11 +155,13 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin })
 
         if (!(await ensureDir(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME))) {
           dispatch(noDocumentFound(repoSettingsPatch));
+          dispatch(loadStop());
           return;
         }
 
         if (!(await ensureDir(GIT_INSOMNIA_DIR, models.workspace.type))) {
           dispatch(noDocumentFound(repoSettingsPatch));
+          dispatch(loadStop());
           return;
         }
 
@@ -165,11 +170,13 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin })
 
         if (workspaces.length > 1) {
           cloneProblem('Multiple workspaces found in repository; expected one.');
+          dispatch(loadStop());
           return;
         }
 
         if (workspaces.length === 0) {
           dispatch(noDocumentFound(repoSettingsPatch));
+          dispatch(loadStop());
           return;
         }
 
@@ -187,6 +194,7 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin })
               before cloning.
             </>,
           );
+          dispatch(loadStop());
           return;
         }
 
@@ -227,6 +235,7 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin })
 
             // Flush DB changes
             await db.flushChanges(bufferId);
+            dispatch(loadStop());
           },
         });
       },
