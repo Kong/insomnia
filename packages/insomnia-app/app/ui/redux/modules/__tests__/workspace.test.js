@@ -12,6 +12,7 @@ import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
 import { MemPlugin } from '../../../../sync/git/mem-plugin';
 import { generateId } from '../../../../common/misc';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
+import path from 'path';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
@@ -105,10 +106,7 @@ describe('workspace', () => {
   });
 
   describe('gitCloneWorkspace', () => {
-    it('should prompt to create workspace if no GIT_INSOMNIA_DIR found', async () => {
-      const store = mockStore();
-      const memPlugin = MemPlugin.createPlugin();
-
+    const shouldPromptToCreateWorkspace = async (store, memPlugin) => {
       // dispatch clone action
       store.dispatch(gitCloneWorkspace({ createFsPlugin: () => memPlugin }));
 
@@ -160,12 +158,45 @@ describe('workspace', () => {
         { type: SET_ACTIVE_WORKSPACE, workspaceId: workspace._id },
         { type: SET_ACTIVE_ACTIVITY, activity: ACTIVITY_SPEC },
       ]);
+    };
+
+    it('should prompt to create workspace if no GIT_INSOMNIA_DIR found', async () => {
+      const store = mockStore();
+      const memPlugin = MemPlugin.createPlugin();
+
+      await shouldPromptToCreateWorkspace(store, memPlugin);
     });
+
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR/workspace found', async () => {
       const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
       await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
 
+      await shouldPromptToCreateWorkspace(store, memPlugin);
+    });
+
+    it('should prompt to create workspace if no GIT_INSOMNIA_DIR/workspace/wrk_*.json found', async () => {
+      const store = mockStore();
+      const memPlugin = MemPlugin.createPlugin();
+      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR, models.workspace.type);
+
+      await shouldPromptToCreateWorkspace(store, memPlugin);
+    });
+
+    it('should show error if multiple workspaces found', async () => {
+      const store = mockStore();
+      const memPlugin = MemPlugin.createPlugin();
+
+      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+
+      const wrk1Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_1.json');
+      const wrk2Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_2.json');
+
+      await memPlugin.promises.writeFile(wrk1Json, '{}');
+      await memPlugin.promises.writeFile(wrk2Json, '{}');
+
       // dispatch clone action
       store.dispatch(gitCloneWorkspace({ createFsPlugin: () => memPlugin }));
 
@@ -176,47 +207,12 @@ describe('workspace', () => {
       repoSettings._id = generateId(models.gitRepository.prefix);
       await onSubmitEdits(repoSettings);
 
-      expect(trackEvent).toHaveBeenCalledWith('Git', 'Clone');
-
-      // show alert asking to create a document
       const alertArgs = getAndClearShowAlertMockArgs();
-      expect(alertArgs.title).toBe('No document found');
-      expect(alertArgs.okLabel).toBe('Yes');
-      expect(alertArgs.addCancel).toBe(true);
-      expect(alertArgs.message).toBe(
-        'No document found in the repository for import. Would you like to create a new one?',
-      );
-
-      // Confirm
-      await alertArgs.onConfirm();
-
-      // Should show new design doc prompt
-      const promptArgs = getAndClearShowPromptMockArgs();
-      expect(promptArgs.title).toBe('Create New Design Document');
-
-      // Submit new design doc name
-      await promptArgs.onComplete('name');
-
-      // Ensure workspace created
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace.name).toBe('name');
-      expect(workspace.scope).toBe(WorkspaceScopeKeys.design);
-
-      // Ensure git repo is linked
-      const meta = await models.workspaceMeta.getByParentId(workspace._id);
-      expect(meta.gitRepositoryId).toBe(repoSettings._id);
-
-      // Ensure tracking events
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Document Created');
-      expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
+      expect(alertArgs.title).toBe('Clone Problem');
+      expect(alertArgs.message).toBe('Multiple workspaces found in repository; expected one.');
 
       // Ensure activity is activated
-      expect(store.getActions()).toEqual([
-        { type: SET_ACTIVE_WORKSPACE, workspaceId: workspace._id },
-        { type: SET_ACTIVE_ACTIVITY, activity: ACTIVITY_SPEC },
-      ]);
+      expect(store.getActions()).toHaveLength(0);
     });
   });
 });

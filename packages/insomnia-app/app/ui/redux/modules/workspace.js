@@ -161,19 +161,19 @@ export const gitCloneWorkspace: GitCloneWorkspaceCallback = ({ createFsPlugin })
         }
 
         const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-        const workspaceDirs = await f.readdir(workspaceBase);
+        const workspaces = await f.readdir(workspaceBase);
 
-        if (workspaceDirs.length > 1) {
+        if (workspaces.length > 1) {
           cloneProblem('Multiple workspaces found in repository; expected one.');
           return;
         }
 
-        if (workspaceDirs.length === 0) {
+        if (workspaces.length === 0) {
           dispatch(noDocumentFound(repoSettingsPatch));
           return;
         }
 
-        const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
+        const workspacePath = path.join(workspaceBase, workspaces[0]);
         const workspaceJson = await f.readFile(workspacePath);
         const workspace = YAML.parse(workspaceJson.toString());
 
