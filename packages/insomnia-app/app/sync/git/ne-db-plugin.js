@@ -6,6 +6,7 @@ import YAML from 'yaml';
 import Stat from './stat';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
+import { isWorkspace } from '../../models/helpers/is-model';
 
 export default class NeDBPlugin {
   _workspaceId: string;
@@ -83,6 +84,13 @@ export default class NeDBPlugin {
 
     if (type !== doc.type) {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+    }
+
+    // I'm not sure if this is the right place to put this check...
+    if (isWorkspace(doc) && doc._id !== this._workspaceId) {
+      throw new Error(
+        'This repository is connected to a different document; please clone from the dashboard.',
+      );
     }
 
     await db.upsert(doc, true);

@@ -12,7 +12,6 @@ import GitStagingModal from '../modals/git-staging-modal';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import type { GitRepository } from '../../../models/git-repository';
-import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 import GitLogModal from '../modals/git-log-modal';
 import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
@@ -20,6 +19,8 @@ import Link from '../base/link';
 import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
+import { MemPlugin } from '../../../sync/git/mem-plugin';
+import { connectOrUpdateGitRepository } from '../../../sync/git/connect-or-update-git-repository';
 
 type Props = {|
   handleInitializeEntities: () => Promise<void>,
@@ -185,20 +186,11 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleConfig() {
-    const { gitRepository } = this.props;
-    showModal(GitRepositorySettingsModal, {
+    const { gitRepository, workspace } = this.props;
+    connectOrUpdateGitRepository({
+      createFsPlugin: MemPlugin.createPlugin,
       gitRepository,
-      onSubmitEdits: async patch => {
-        const { workspace } = this.props;
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-
-        if (gitRepository) {
-          await models.gitRepository.update(gitRepository, patch);
-        } else {
-          const repo = await models.gitRepository.create(patch);
-          await models.workspaceMeta.update(workspaceMeta, { gitRepositoryId: repo._id });
-        }
-      },
+      workspace,
     });
   }
 
