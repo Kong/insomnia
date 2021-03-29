@@ -117,8 +117,32 @@ describe('workspace', () => {
   });
 
   describe('gitCloneWorkspace', () => {
-    const shouldPromptToCreateWorkspace = async (store, memPlugin) => {
-      const repoSettings = await dispatchCloneAndSubmitSettings(store, memPlugin);
+    let store;
+    beforeEach(() => {
+      store = mockStore();
+    });
+
+    // Check loading events
+    afterEach(() => {
+      const actions = store.getActions();
+
+      // Should always dispatch LOAD_START and LOAD_STOP
+      expect(actions).toStrictEqual(
+        expect.arrayContaining([{ type: LOAD_START }, { type: LOAD_STOP }]),
+      );
+
+      // Should always contain one LOAD_START and one LOAD_END
+      expect(actions.filter(({ type }) => type === LOAD_START)).toHaveLength(1);
+      expect(actions.filter(({ type }) => type === LOAD_STOP)).toHaveLength(1);
+
+      // LOAD_START should never be before LOAD_STOP
+      const startActionIndex = actions.findIndex(({ type }) => type === LOAD_START);
+      const stopActionIndex = actions.findIndex(({ type }) => type === LOAD_STOP);
+      expect(stopActionIndex).toBeGreaterThan(startActionIndex);
+    });
+
+    const shouldPromptToCreateWorkspace = async memPlugin => {
+      const repoSettings = await dispatchCloneAndSubmitSettings(memPlugin);
 
       expect(trackEvent).toHaveBeenCalledWith('Git', 'Clone');
 
@@ -165,7 +189,7 @@ describe('workspace', () => {
       ]);
     };
 
-    const dispatchCloneAndSubmitSettings = async (store, memPlugin) => {
+    const dispatchCloneAndSubmitSettings = async memPlugin => {
       // dispatch clone action
       store.dispatch(gitCloneWorkspace({ createFsPlugin: () => memPlugin }));
 
@@ -179,31 +203,27 @@ describe('workspace', () => {
     };
 
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR found', async () => {
-      const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
 
-      await shouldPromptToCreateWorkspace(store, memPlugin);
+      await shouldPromptToCreateWorkspace(memPlugin);
     });
 
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR/workspace found', async () => {
-      const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
       await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
 
-      await shouldPromptToCreateWorkspace(store, memPlugin);
+      await shouldPromptToCreateWorkspace(memPlugin);
     });
 
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR/workspace/wrk_*.json found', async () => {
-      const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
       await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
       await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
 
-      await shouldPromptToCreateWorkspace(store, memPlugin);
+      await shouldPromptToCreateWorkspace(memPlugin);
     });
 
     it('should fail if multiple workspaces found', async () => {
-      const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
 
       await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
@@ -215,7 +235,7 @@ describe('workspace', () => {
       await memPlugin.promises.writeFile(wrk1Json, '{}');
       await memPlugin.promises.writeFile(wrk2Json, '{}');
 
-      await dispatchCloneAndSubmitSettings(store, memPlugin);
+      await dispatchCloneAndSubmitSettings(memPlugin);
 
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Clone Problem');
@@ -226,7 +246,6 @@ describe('workspace', () => {
     });
 
     it('should fail if workspace already exists', async () => {
-      const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
 
       await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
@@ -240,7 +259,7 @@ describe('workspace', () => {
       );
 
       await memPlugin.promises.writeFile(workspaceJson, JSON.stringify(workspace));
-      await dispatchCloneAndSubmitSettings(store, memPlugin);
+      await dispatchCloneAndSubmitSettings(memPlugin);
 
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Clone Problem');
@@ -255,11 +274,10 @@ describe('workspace', () => {
     });
 
     it('should fail if exception during clone', async () => {
-      const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
       const err = new Error('some error');
       (git.clone: JestMockFn).mockRejectedValue(err);
-      await dispatchCloneAndSubmitSettings(store, memPlugin);
+      await dispatchCloneAndSubmitSettings(memPlugin);
       const errorArgs = getAndClearShowErrorMockArgs();
 
       expect(errorArgs.title).toBe('Error Cloning Repository');
@@ -271,7 +289,6 @@ describe('workspace', () => {
     });
 
     it('should import workspace and apiSpec', async () => {
-      const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
 
       // Create workspace and apiSpec dirs
@@ -296,7 +313,7 @@ describe('workspace', () => {
       await memPlugin.promises.writeFile(apiSpecJson, JSON.stringify(apiSpec));
 
       // Clone
-      const repoSettings = await dispatchCloneAndSubmitSettings(store, memPlugin);
+      const repoSettings = await dispatchCloneAndSubmitSettings(memPlugin);
 
       // Show confirmation
       const alertArgs = getAndClearShowAlertMockArgs();
