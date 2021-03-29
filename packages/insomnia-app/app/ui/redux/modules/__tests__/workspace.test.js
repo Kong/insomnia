@@ -268,13 +268,16 @@ describe('workspace', () => {
       expect(store.getActions()).toHaveLength(0);
     });
 
-    it('should import workspace', async () => {
+    it('should import workspace and apiSpec', async () => {
       const store = mockStore();
       const memPlugin = MemPlugin.createPlugin();
 
+      // Create workspace and apiSpec dirs
       await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
       await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.apiSpec.type));
 
+      // Write workspace file
       const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
       const workspaceJson = path.join(
         GIT_INSOMNIA_DIR,
@@ -284,8 +287,16 @@ describe('workspace', () => {
       await models.workspace.remove(workspace);
       await memPlugin.promises.writeFile(workspaceJson, JSON.stringify(workspace));
 
+      // Write ApiSpec file
+      const apiSpec = await models.apiSpec.getOrCreateForParentId(workspace._id);
+      const apiSpecJson = path.join(GIT_INSOMNIA_DIR, models.apiSpec.type, `${apiSpec._id}.json`);
+      await models.apiSpec.removeWhere(workspace._id);
+      await memPlugin.promises.writeFile(apiSpecJson, JSON.stringify(apiSpec));
+
+      // Clone
       const repoSettings = await dispatchCloneAndSubmitSettings(store, memPlugin);
 
+      // Show confirmation
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Project Found');
       expect(alertArgs.okLabel).toBe('Import');
@@ -298,16 +309,23 @@ describe('workspace', () => {
 
       await alertArgs.onConfirm();
 
+      // Ensure workspace imported
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const clonedWorkspace = workspaces[0];
       expect(clonedWorkspace).toStrictEqual(workspace);
 
+      // Ensure ApiSpec imported
+      const apiSpecs = await models.apiSpec.all();
+      expect(apiSpecs).toHaveLength(1);
+      const clonedApiSpec = apiSpecs[0];
+      expect(clonedApiSpec).toStrictEqual(apiSpec);
+
       // Ensure git repo is linked
       const meta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(meta.gitRepositoryId).toBe(repoSettings._id);
 
-      // Ensure activity is activated
+      // Ensure workspace is enabled
       expect(store.getActions()).toEqual([
         { type: SET_ACTIVE_WORKSPACE, workspaceId: workspace._id },
       ]);
