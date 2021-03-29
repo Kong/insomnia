@@ -149,23 +149,6 @@ describe('NeDBPlugin', () => {
       );
     });
 
-    it('should throw error if workspace id does not match', async () => {
-      // Assemble
-      const workspaceId = 'wrk_1';
-      const pNeDB = new NeDBPlugin(workspaceId);
-
-      const wrk = { _id: 'wrk_2', type: models.workspace.type, parentId: workspaceId };
-      const filePath = path.join(GIT_INSOMNIA_DIR, wrk.type, `wrk_2.yml`);
-
-      // Act
-      const promiseResult = pNeDB.writeFile(filePath, YAML.stringify(wrk));
-
-      // Assert
-      await expect(promiseResult).rejects.toThrowError(
-        'This repository already contains a workspace, and cannot be connected to this one to avoid data loss. Please clone from the dashboard.',
-      );
-    });
-
     it('should throw error if type does not match', async () => {
       // Assemble
       const workspaceId = 'wrk_1';
