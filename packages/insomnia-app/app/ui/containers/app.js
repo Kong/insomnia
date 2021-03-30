@@ -1041,6 +1041,7 @@ class App extends PureComponent {
       /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
       const otherDatClient = fsClient(path.join(baseDir, 'other'));
 
+      /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
       const routableFS = routableFSClient(otherDatClient, {
         [GIT_INSOMNIA_DIR]: neDbClient,
         [GIT_INTERNAL_DIR]: gitDataClient,
