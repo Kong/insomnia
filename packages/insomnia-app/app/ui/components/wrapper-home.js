@@ -161,8 +161,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onSubmitEdits: async repoSettingsPatch => {
         trackEvent('Git', 'Clone');
 
-        const core = Math.random() + '';
-
         let fsClient = MemClient.createClient();
 
         const originalUrl = translateSSHtoHTTP(repoSettingsPatch.uri);
@@ -175,7 +173,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
           }),
           fs: fsClient,
           http: httpClient,
-          core,
           dir: GIT_CLONE_DIR,
           gitdir: GIT_INTERNAL_DIR,
           singleBranch: true,
