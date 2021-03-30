@@ -103,7 +103,16 @@ describe('runInsomniaTests()', () => {
       bail: false,
       keepFile: false,
       reporter: 'custom-reporter',
-      reporterOptions: ['key1=value1', 'key2=value2'],
+      reporterOptions: [
+        'key1=value1',
+        'key2=value2',
+        'path=/tmp/9047ue.txt',
+        'delimiter="="',
+        'delimiter2==',
+        'someBoolStuff=true',
+        'someNumber=5',
+        'someNumber2=10.52',
+      ],
       env: 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub',
     };
 
@@ -116,6 +125,12 @@ describe('runInsomniaTests()', () => {
       reporterOptions: {
         key1: 'value1',
         key2: 'value2',
+        path: '/tmp/9047ue.txt',
+        delimiter: '"="',
+        delimiter2: '=',
+        someBoolStuff: true,
+        someNumber: 5,
+        someNumber2: 10.52,
       },
       sendRequest: expect.any(Function),
       testFilter: undefined,

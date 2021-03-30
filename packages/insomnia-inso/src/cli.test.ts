@@ -179,6 +179,10 @@ describe('cli', () => {
       expect(() => inso('run test -r')).toThrowError();
     });
 
+    it('should throw error if reporterOptions argument is missing', () => {
+      expect(() => inso('run test -ro')).toThrowError();
+    });
+
     it('should call runInsomniaTests with expected options', () => {
       inso('run test uts_123 -e env_123 -t name -r min -b --keepFile');
       expect(runInsomniaTests).toHaveBeenCalledWith('uts_123', {

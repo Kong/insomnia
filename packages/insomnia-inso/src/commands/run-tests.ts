@@ -80,7 +80,17 @@ async function getTestFileContent(db, suites) {
 function getReporterOptions(data: Array<string> = []): Object {
   const obj = {};
   data.forEach(arg => {
-    const [key, value] = arg.split('=', 2);
+    // Extract option key-value
+    const key = arg.substring(0, arg.indexOf('='));
+    let value = arg.substring(arg.indexOf('=') + 1);
+
+    // Everything is treated as a string, except:
+    if (value === 'true' || value === 'false') value = value === 'true';
+    else if (value === 'null') value = null;
+    else if (value === 'undefined') value = undefined;
+    else if (!isNaN(value)) value = Number(value);
+
+    // Assign
     obj[key] = value;
   });
   return obj;
