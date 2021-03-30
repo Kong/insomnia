@@ -73,6 +73,19 @@ async function getTestFileContent(db, suites) {
   );
 }
 
+/**
+ * Extract an object from string given a key=value format
+ * @param data An array of 'equal'(=) separated key value pairs
+ */
+function getReporterOptions(data: Array<string> = []): Object {
+  const obj = {};
+  data.forEach(arg => {
+    const [key, value] = arg.split('=', 2);
+    obj[key] = value;
+  });
+  return obj;
+}
+
 // Identifier can be the id or name of a workspace, apiSpec, or unit test suite
 export async function runInsomniaTests(
   identifier?: string,
@@ -84,6 +97,8 @@ export async function runInsomniaTests(
 
   // Check if any provider has been provided (Yeah, comedy king)
   const isExternal = isExternalReporter(options);
+  // Extracting data key=value as an object
+  const reporterOptionsObj = getReporterOptions(reporterOptions);
 
   // Find suites
   const suites = identifier ? loadTestSuites(db, identifier) : await promptTestSuites(db, !!ci);
@@ -110,7 +125,7 @@ export async function runInsomniaTests(
 
   const config = {
     reporter,
-    reporterOptions,
+    reporterOptionsObj,
     bail,
     keepFile,
     sendRequest,
