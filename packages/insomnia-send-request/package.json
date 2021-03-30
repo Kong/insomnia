@@ -1,7 +1,7 @@
 {
   "name": "insomnia-send-request",
   "license": "MIT",
-  "version": "2.2.32",
+  "version": "2.2.33",
   "main": "dist/index.js",
   "dependencies": {
     "@stoplight/spectral": "^5.4.0",
@@ -32,7 +32,7 @@
     "node-libcurl": "2.3.2",
     "nunjucks": "^3.2.1",
     "oauth-1.0a": "^2.2.6",
-    "openapi-2-kong": "^2.2.29",
+    "openapi-2-kong": "^2.2.33",
     "tough-cookie": "^4.0.0",
     "url-join": "^4.0.1",
     "uuid": "^8.2.0",
