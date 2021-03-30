@@ -1032,7 +1032,7 @@ class App extends PureComponent {
         `version-control/git/${activeGitRepository._id}`,
       );
 
-      /** All app data is stored within the a namespaced directory at the root of the repository and is read/written from the local NeDB database */
+      /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
       const neDbClient = NeDBClient.createClient(activeWorkspace._id);
 
       /** All git metadata is stored in a git/ directory on the filesystem */
