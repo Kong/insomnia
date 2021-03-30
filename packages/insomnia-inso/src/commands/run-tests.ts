@@ -9,15 +9,24 @@ import { loadEnvironment, promptEnvironment } from '../db/models/environment';
 
 export const TestReporterEnum = {
   dot: 'dot',
+  doc: 'doc',
+  tap: 'tap',
+  json: 'json',
+  html: 'html',
   list: 'list',
-  spec: 'spec',
   min: 'min',
+  spec: 'spec',
+  nyan: 'nyan',
+  xunit: 'xunit',
+  markdown: 'markdown',
   progress: 'progress',
+  landing: 'landing',
+  'json-stream': 'json-stream',
 };
 
 export type RunTestsOptions = GlobalOptions & {
   env?: string,
-  reporter: $Keys<typeof TestReporterEnum>,
+  reporter: string,
   reporterOptions?: Array<string>,
   bail?: boolean,
   keepFile?: boolean,
@@ -26,11 +35,10 @@ export type RunTestsOptions = GlobalOptions & {
 
 export function isReporterFailure(reporter: string, err: string): void {
   if (err.includes('invalid reporter')) {
-    logger.fatal(`The following reporter \`${reporter}\` was not found!`);
+    logger.fatal(`Reporter "${reporter}" not found: ${err}`);
   } else {
-    logger.fatal(`An unknown error occurred: ${err}`);
+    logger.fatal(err);
   }
-  return false;
 }
 
 function isExternalReporter({ reporter }: RunTestsOptions): boolean {
