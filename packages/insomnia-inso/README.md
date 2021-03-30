@@ -190,7 +190,7 @@ Scope by document name or id using an external reporter
 
 ``` sh
 inso run test spc_ff27a1 --reporter my-custom-reporter
-inso run test spc_ff27a1 --reporter my-custom-reporter --reporter-options key1=value1 key2=value2
+inso run test spc_ff27a1 --reporter my-custom-reporter --reporterOptions key1=value1 key2=value2
 ```
 **Important**:
 Mocha and the external reporter must be installed as global in order to work
