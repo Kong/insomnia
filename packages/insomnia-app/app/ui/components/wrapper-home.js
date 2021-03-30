@@ -28,7 +28,7 @@ import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { showAlert, showError, showModal, showPrompt } from './modals';
+import { showAlert, showModal, showPrompt } from './modals';
 import * as models from '../../models';
 import { trackEvent, trackSegmentEvent } from '../../common/analytics';
 import YAML from 'yaml';
@@ -186,7 +186,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           await git.clone(cloneParams);
         } catch (originalUrlError) {
           if (cloneParams.url.endsWith('.git')) {
-            showError({ title: 'Error Cloning Repository', message: originalUrlError.message });
+            showAlert({ title: 'Error Cloning Repository', message: originalUrlError.message });
             return;
           }
 
@@ -202,7 +202,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
             // by this point the clone was successful, so update with this syntax
             repoSettingsPatch.uri = dotGitUrl;
           } catch (dotGitError) {
-            showError({
+            showAlert({
               title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
               message: `failed to clone with original url (${originalUrl}): ${originalUrlError.message};\n\nalso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
             });
