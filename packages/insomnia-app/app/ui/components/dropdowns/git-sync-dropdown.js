@@ -20,7 +20,13 @@ import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
 import { MemPlugin } from '../../../sync/git/mem-plugin';
-import { connectOrUpdateGitRepository } from '../../../sync/git/connect-or-update-git-repository';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import * as gitActions from '../../redux/modules/git';
+import type {
+  SetupGitRepositoryCallback,
+  UpdateGitRepositoryCallback,
+} from '../../redux/modules/git';
 
 type Props = {|
   handleInitializeEntities: () => Promise<void>,
@@ -28,6 +34,8 @@ type Props = {|
   workspace: Workspace,
   vcs: GitVCS,
   gitRepository: GitRepository | null,
+  setupGitRepository: SetupGitRepositoryCallback,
+  updateGitRepository: UpdateGitRepositoryCallback,
 
   // Optional
   className?: string,
@@ -186,12 +194,12 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleConfig() {
-    const { gitRepository, workspace } = this.props;
-    connectOrUpdateGitRepository({
-      createFsPlugin: MemPlugin.createPlugin,
-      gitRepository,
-      workspace,
-    });
+    const { gitRepository, workspace, updateGitRepository, setupGitRepository } = this.props;
+    if (gitRepository) {
+      updateGitRepository({ gitRepository });
+    } else {
+      setupGitRepository({ workspace, createFsPlugin: MemPlugin.createPlugin });
+    }
   }
 
   _handleLog() {
@@ -351,4 +359,11 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 }
 
-export default GitSyncDropdown;
+function mapDispatchToProps(dispatch) {
+  const boundGitActions = bindActionCreators(gitActions, dispatch);
+  return {
+    setupGitRepository: boundGitActions.setupGitRepository,
+    updateGitRepository: boundGitActions.updateGitRepository,
+  };
+}
+export default connect(null, mapDispatchToProps)(GitSyncDropdown);

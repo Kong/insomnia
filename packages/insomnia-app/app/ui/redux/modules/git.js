@@ -1,0 +1,241 @@
+// @flow
+
+import * as React from 'react';
+import type { GitRepository } from '../../../models/git-repository';
+import { showAlert, showError, showModal } from '../../components/modals';
+import GitRepositorySettingsModal from '../../components/modals/git-repository-settings-modal';
+import * as models from '../../../models';
+import type { Workspace } from '../../../models/workspace';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
+import path from 'path';
+import { loadStart, loadStop, setActiveWorkspace } from './global';
+import { shallowClone } from '../../../sync/git/shallow-clone';
+import { createGitRepoSettings } from '../../../sync/git/createGitRepoSettings';
+import { strings } from '../../../common/strings';
+import { trackEvent } from '../../../common/analytics';
+import YAML from 'yaml';
+import * as db from '../../../common/database';
+import { createWorkspace } from './workspace';
+
+export type UpdateGitRepositoryCallback = ({
+  gitRepository: GitRepository,
+}) => void;
+
+/**
+ * Update git repository settings
+ * */
+export const updateGitRepository: UpdateGitRepositoryCallback = ({ gitRepository }) => {
+  return () => {
+    showModal(GitRepositorySettingsModal, {
+      gitRepository,
+      onSubmitEdits: async gitRepoPatch => {
+        await models.gitRepository.update(gitRepository, gitRepoPatch);
+      },
+    });
+  };
+};
+
+export type SetupGitRepositoryCallback = ({
+  createFsPlugin: () => Object,
+  workspace: Workspace,
+}) => void;
+
+/**
+ * Setup a git repository against a document
+ * */
+export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsPlugin, workspace }) => {
+  return dispatch => {
+    showModal(GitRepositorySettingsModal, {
+      gitRepository: null,
+      onSubmitEdits: async gitRepoPatch => {
+        dispatch(loadStart());
+        try {
+          gitRepoPatch.needsFullClone = true;
+
+          const fsPlugin = createFsPlugin();
+
+          try {
+            await shallowClone({ fsPlugin, gitRepository: gitRepoPatch });
+          } catch (err) {
+            showError({ title: 'Error Cloning Repository', message: err.message, error: err });
+            return;
+          }
+
+          // If connecting a repo to a document and a workspace already exists in the repository, show an alert
+          if (await containsInsomniaWorkspaceDir(fsPlugin)) {
+            const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
+            const workspaces = await fsPlugin.promises.readdir(workspaceBase);
+
+            if (workspaces.length) {
+              showAlert({
+                title: 'Setup Problem',
+                message:
+                  'This repository already contains a workspace; create a fresh clone from the dashboard.',
+              });
+              return;
+            }
+          }
+
+          await createGitRepoSettings(workspace._id, gitRepoPatch);
+        } finally {
+          dispatch(loadStop());
+        }
+      },
+    });
+  };
+};
+
+const containsInsomniaDir = async (fsPlugin: Object): Promise<boolean> => {
+  const rootDirs: Array<string> = await fsPlugin.promises.readdir(GIT_CLONE_DIR);
+  return rootDirs.includes(GIT_INSOMNIA_DIR_NAME);
+};
+
+const containsInsomniaWorkspaceDir = async (fsPlugin: Object): Promise<boolean> => {
+  if (!(await containsInsomniaDir(fsPlugin))) {
+    return false;
+  }
+  const rootDirs: Array<string> = await fsPlugin.promises.readdir(GIT_INSOMNIA_DIR);
+  return rootDirs.includes(models.workspace.type);
+};
+
+const createWorkspaceWithGitRepo = (gitRepo: GitRepository) => {
+  return dispatch =>
+    dispatch(
+      createWorkspace({
+        scope: WorkspaceScopeKeys.design,
+        onCreate: async wrk => {
+          await createGitRepoSettings(wrk._id, gitRepo);
+        },
+      }),
+    );
+};
+
+const cloneProblem = (message: React.Node) => {
+  showAlert({
+    title: 'Clone Problem',
+    message,
+  });
+};
+
+const noDocumentFound = (gitRepo: GitRepository) => {
+  return dispatch => {
+    showAlert({
+      title: `No ${strings.document.toLowerCase()} found`,
+      okLabel: 'Yes',
+      addCancel: true,
+      message: `No ${strings.document.toLowerCase()} found in the repository for import. Would you like to create a new one?`,
+      onConfirm: async () => await dispatch(createWorkspaceWithGitRepo(gitRepo)),
+    });
+  };
+};
+
+export type CloneGitRepositoryCallback = ({ createFsPlugin: () => Object }) => void;
+
+/**
+ * Clone a git repository
+ * */
+export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsPlugin }) => {
+  return dispatch => {
+    showModal(GitRepositorySettingsModal, {
+      gitRepository: null,
+      onSubmitEdits: async repoSettingsPatch => {
+        dispatch(loadStart());
+        repoSettingsPatch.needsFullClone = true;
+
+        trackEvent('Git', 'Clone');
+
+        const fsPlugin = createFsPlugin();
+        try {
+          await shallowClone({ fsPlugin, gitRepository: repoSettingsPatch });
+        } catch (err) {
+          showError({ title: 'Error Cloning Repository', message: err.message, error: err });
+          dispatch(loadStop());
+          return;
+        }
+
+        // If no workspace exists, user should be prompted to create a document
+        if (!(await containsInsomniaWorkspaceDir(fsPlugin))) {
+          dispatch(noDocumentFound(repoSettingsPatch));
+          dispatch(loadStop());
+          return;
+        }
+
+        const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
+        const workspaces = await fsPlugin.promises.readdir(workspaceBase);
+
+        if (workspaces.length === 0) {
+          dispatch(noDocumentFound(repoSettingsPatch));
+          dispatch(loadStop());
+          return;
+        }
+
+        if (workspaces.length > 1) {
+          cloneProblem('Multiple workspaces found in repository; expected one.');
+          dispatch(loadStop());
+          return;
+        }
+
+        // Only one workspace
+        const workspacePath = path.join(workspaceBase, workspaces[0]);
+        const workspaceJson = await fsPlugin.promises.readFile(workspacePath);
+        const workspace = YAML.parse(workspaceJson.toString());
+
+        // Check if the workspace already exists
+        const existingWorkspace = await models.workspace.getById(workspace._id);
+
+        if (existingWorkspace) {
+          cloneProblem(
+            <>
+              Workspace <strong>{existingWorkspace.name}</strong> already exists. Please delete it
+              before cloning.
+            </>,
+          );
+          dispatch(loadStop());
+          return;
+        }
+
+        // Prompt user to confirm importing the workspace
+        showAlert({
+          title: 'Project Found',
+          okLabel: 'Import',
+          message: (
+            <>
+              Workspace <strong>{workspace.name}</strong> found in repository. Would you like to
+              import it?
+            </>
+          ),
+
+          // Import all docs to the DB
+          onConfirm: async () => {
+            // Stop the DB from pushing updates to the UI temporarily
+            const bufferId = await db.bufferChanges();
+
+            // Loop over all model folders in root
+            for (const modelType of await fsPlugin.promises.readdir(GIT_INSOMNIA_DIR)) {
+              const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
+
+              // Loop over all documents in model folder and save them
+              for (const docFileName of await fsPlugin.promises.readdir(modelDir)) {
+                const docPath = path.join(modelDir, docFileName);
+                const docYaml = await fsPlugin.promises.readFile(docPath);
+                const doc = YAML.parse(docYaml.toString());
+                await db.upsert(doc);
+              }
+            }
+
+            // Store GitRepository settings and set it as active
+            await createGitRepoSettings(workspace._id, repoSettingsPatch);
+
+            // Activate the workspace after importing everything
+            dispatch(setActiveWorkspace(workspace._id));
+
+            // Flush DB changes
+            await db.flushChanges(bufferId);
+            dispatch(loadStop());
+          },
+        });
+      },
+    });
+  };
+};

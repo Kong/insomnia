@@ -52,6 +52,7 @@ import { descendingNumberSort } from '../../common/sorting';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as workspaceActions from '../redux/modules/workspace';
+import * as gitActions from '../redux/modules/git';
 import { GitCloneWorkspaceCallback } from '../redux/modules/workspace';
 import { MemPlugin } from '../../sync/git/mem-plugin';
 
@@ -400,11 +401,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
 }
 
 function mapDispatchToProps(dispatch) {
-  const workspace = bindActionCreators(workspaceActions, dispatch);
-
   return {
-    handleCreateWorkspace: workspace.createWorkspace,
-    handleGitCloneWorkspace: workspace.gitCloneWorkspace,
+    handleCreateWorkspace: bindActionCreators(workspaceActions.createWorkspace, dispatch),
+    handleGitCloneWorkspace: bindActionCreators(gitActions.cloneGitRepository, dispatch),
   };
 }
 
