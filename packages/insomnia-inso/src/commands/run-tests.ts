@@ -125,7 +125,7 @@ export async function runInsomniaTests(
 
   const config = {
     reporter,
-    reporterOptionsObj,
+    reporterOptions: reporterOptionsObj,
     bail,
     keepFile,
     sendRequest,

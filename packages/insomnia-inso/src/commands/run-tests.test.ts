@@ -94,6 +94,34 @@ describe('runInsomniaTests()', () => {
     );
   });
 
+  it('should return true if reporter options are decoded properly', async () => {
+    const contents = 'generated test contents';
+    mock(insomniaTesting.generate).mockResolvedValue(contents);
+
+    const options = {
+      ...base,
+      bail: false,
+      keepFile: false,
+      reporter: 'custom-reporter',
+      reporterOptions: ['key1=value1', 'key2=value2'],
+      env: 'env_env_ca046a738f001eb3090261a537b1b78f86c2094c_sub',
+    };
+
+    await runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', options);
+
+    expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(contents, {
+      bail: false,
+      keepFile: false,
+      reporter: 'custom-reporter',
+      reporterOptions: {
+        key1: 'value1',
+        key2: 'value2',
+      },
+      sendRequest: expect.any(Function),
+      testFilter: undefined,
+    });
+  });
+
   it('should return true if test results have no failures', async function() {
     runTestsCli.mockResolvedValue(true);
     const result = await runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
