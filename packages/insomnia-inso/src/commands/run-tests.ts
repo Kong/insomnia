@@ -12,7 +12,6 @@ export const TestReporterEnum = {
   doc: 'doc',
   tap: 'tap',
   json: 'json',
-  html: 'html',
   list: 'list',
   min: 'min',
   spec: 'spec',
@@ -118,7 +117,13 @@ export async function runInsomniaTests(
     testFilter: testNamePattern,
   };
 
-  return isExternal
-    ? await runTestsCli(testFiles, config)?.catch(e => isReporterFailure(reporter, e.toString()))
-    : await noConsoleLog(() => runTestsCli(testFiles, config));
+  if (isExternal) {
+    try {
+      await runTestsCli(testFiles, config);
+    } catch (e) {
+      isReporterFailure(reporter, e.toString());
+    }
+  } else {
+    await noConsoleLog(() => runTestsCli(testFiles, config));
+  }
 }
