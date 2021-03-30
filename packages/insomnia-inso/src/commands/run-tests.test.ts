@@ -60,6 +60,7 @@ describe('runInsomniaTests()', () => {
       bail: true,
       keepFile: false,
       sendRequest: expect.any(Function),
+      reporterOptions: {},
       testFilter: 'Math',
     });
   });
@@ -139,12 +140,12 @@ describe('runInsomniaTests()', () => {
   it('should report failure with logger name', async () => {
     isReporterFailure('unknown-reporter', 'An invalid reporter has been provided');
     expect(logger.__getLogs().fatal).toEqual([
-      'The following reporter `unknown-reporter` was not found!',
+      'Reporter "unknown-reporter" not found: An invalid reporter has been provided',
     ]);
   });
 
   it('should report an unknown failure', async () => {
     isReporterFailure('unknown-reporter', 'Javascript crashed');
-    expect(logger.__getLogs().fatal).toEqual(['An unknown error occurred: Javascript crashed']);
+    expect(logger.__getLogs().fatal).toEqual(['Javascript crashed']);
   });
 });
