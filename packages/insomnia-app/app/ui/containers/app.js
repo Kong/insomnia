@@ -1035,7 +1035,7 @@ class App extends PureComponent {
       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
       const neDbClient = NeDBClient.createClient(activeWorkspace._id);
 
-      /** All git metadata is stored in a git/ directory on the filesystem */
+      /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
       const gitDataClient = fsClient(baseDir);
 
       /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
