@@ -204,7 +204,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           } catch (dotGitError) {
             showAlert({
               title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
-              message: `failed to clone with original url (${originalUrl}): ${originalUrlError.message};\n\nalso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
+              message: `Failed to clone with original url (${originalUrl}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
             });
             return;
           }
