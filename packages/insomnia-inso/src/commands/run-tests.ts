@@ -142,13 +142,17 @@ export async function runInsomniaTests(
     testFilter: testNamePattern,
   };
 
+  let result;
+
   if (isExternal) {
     try {
-      await runTestsCli(testFiles, config);
+      result = await runTestsCli(testFiles, config);
     } catch (e) {
       isReporterFailure(reporter, e.toString());
     }
   } else {
-    await noConsoleLog(() => runTestsCli(testFiles, config));
+    result = await noConsoleLog(() => runTestsCli(testFiles, config));
   }
+
+  return result;
 }
