@@ -147,7 +147,8 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 |Option|Alias|Description|
 |- |- |- |
 | `--env <identifier>` | `-e` |the environment to use - an environment name or id |
-| `--reporter <value>` | `-r` |reporter to use, options are `dot, list, min, progress, spec` (default: `spec` )|
+| `--reporter <value>` | `-r` |specify reporter to use (default: `spec` )|
+| `--reporter-options <option> [options...]` | `-ro` |reporter-specific options|
 | `--testNamePattern <regex>` | `-t` | run tests that match the regex|
 | `--bail` | `-b` | abort ("bail") after the first test failure|
 | `--keepFile` | | do not delete the generated test file (useful for debugging)|
@@ -169,7 +170,7 @@ inso run test "Sample Specification" --env "OpenAPI env"
 inso run test spc_46c5a4 --env env_env_ca046a
 ```
 
-Scope by the a test suite name or id
+Scope by test suite name or id
 
 ``` sh
 inso run test "Math Suite" --env "OpenAPI env"
@@ -184,6 +185,15 @@ inso run test spc_46c5a4 --reporter progress --bail --keepFile
 ```
 
 More examples: [#2338](https://github.com/Kong/insomnia/pull/2338).
+
+Scope by document name or id using an external reporter
+
+``` sh
+inso run test spc_ff27a1 --reporter my-custom-reporter
+inso run test spc_ff27a1 --reporter my-custom-reporter --reporter-options key1=value1 key2=value2
+```
+**Important**:
+Mocha and the external reporter must be installed as global in order to work
 
 ## `$ inso export spec [identifier]`
 
