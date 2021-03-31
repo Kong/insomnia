@@ -27,12 +27,18 @@ const onAuthSuccess = (message: string) => {
   console.log(`[git-event] Auth Success: ${message}`);
 };
 
-const onAuth = (credentials?: { username: string, password: string } = {}) => () => ({
+const onAuth = (
+  credentials?: { username: string, password?: string, token?: string } = {},
+) => () => ({
   username: credentials.username,
-  password: credentials.password,
+  password: credentials.password || credentials.token,
 });
 
-export const gitCallbacks = (credentials?: { username: string, password: string }) => ({
+export const gitCallbacks = (credentials?: {
+  username: string,
+  password?: string,
+  token?: string,
+}) => ({
   onMessage,
   onAuthFailure,
   onAuthSuccess,
