@@ -19,6 +19,7 @@ import Link from '../base/link';
 import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
+import { translateSSHtoHTTP } from '../../../sync/git/utils';
 
 type Props = {|
   handleInitializeEntities: () => Promise<void>,
@@ -162,7 +163,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.push(gitRepository.credentials, force);
     } catch (err) {
-      if (err.code === 'PushRejectedNonFastForward') {
+      if (err.code === 'PushRejectedError') {
         this._dropdown && this._dropdown.hide();
         showAlert({
           title: 'Push Rejected',
@@ -190,6 +191,8 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
       onSubmitEdits: async patch => {
         const { workspace } = this.props;
         const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+        patch.uri = translateSSHtoHTTP(patch.uri);
 
         if (gitRepository) {
           await models.gitRepository.update(gitRepository, patch);
