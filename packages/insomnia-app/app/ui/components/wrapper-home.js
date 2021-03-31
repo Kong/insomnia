@@ -163,7 +163,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
         let fsClient = MemClient.createClient();
 
-        const originalUrl = translateSSHtoHTTP(repoSettingsPatch.uri);
+        repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
 
         // Pull settings returned from dialog and shallow-clone the repo
         const cloneParams = {
@@ -176,7 +176,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           dir: GIT_CLONE_DIR,
           gitdir: GIT_INTERNAL_DIR,
           singleBranch: true,
-          url: originalUrl,
+          url: repoSettingsPatch.uri,
           depth: 1,
         };
         try {
@@ -201,7 +201,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
           } catch (dotGitError) {
             showAlert({
               title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
-              message: `Failed to clone with original url (${originalUrl}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
+              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
             });
             return;
           }
