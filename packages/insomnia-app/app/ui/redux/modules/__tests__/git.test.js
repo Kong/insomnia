@@ -13,7 +13,7 @@ import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
 import path from 'path';
 import * as React from 'react';
 import * as git from 'isomorphic-git';
-import { cloneGitRepository } from '../git';
+import { cloneGitRepository, setupGitRepository } from '../git';
 import {
   getAndClearShowAlertMockArgs,
   getAndClearShowErrorMockArgs,
@@ -28,27 +28,39 @@ const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
 describe('workspace', () => {
-  beforeEach(globalBeforeEach);
+  let store;
+  beforeEach(async () => {
+    await globalBeforeEach();
+    store = mockStore();
+  });
+
+  // Check loading events
+  afterEach(() => {
+    const actions = store.getActions();
+
+    // Should always contain one LOAD_START and one LOAD_END
+    expect(actions.filter(({ type }) => type === LOAD_START)).toHaveLength(1);
+    expect(actions.filter(({ type }) => type === LOAD_STOP)).toHaveLength(1);
+
+    // LOAD_START should never be before LOAD_STOP
+    const startActionIndex = actions.findIndex(({ type }) => type === LOAD_START);
+    const stopActionIndex = actions.findIndex(({ type }) => type === LOAD_STOP);
+    expect(stopActionIndex).toBeGreaterThan(startActionIndex);
+  });
 
   describe('cloneGitRepository', () => {
-    let store;
-    beforeEach(() => {
-      store = mockStore();
-    });
+    const dispatchCloneAndSubmitSettings = async memPlugin => {
+      // dispatch clone action
+      store.dispatch(cloneGitRepository({ createFsPlugin: () => memPlugin }));
 
-    // Check loading events
-    afterEach(() => {
-      const actions = store.getActions();
+      const { onSubmitEdits } = getAndClearShowModalMockArgs();
 
-      // Should always contain one LOAD_START and one LOAD_END
-      expect(actions.filter(({ type }) => type === LOAD_START)).toHaveLength(1);
-      expect(actions.filter(({ type }) => type === LOAD_STOP)).toHaveLength(1);
-
-      // LOAD_START should never be before LOAD_STOP
-      const startActionIndex = actions.findIndex(({ type }) => type === LOAD_START);
-      const stopActionIndex = actions.findIndex(({ type }) => type === LOAD_STOP);
-      expect(stopActionIndex).toBeGreaterThan(startActionIndex);
-    });
+      // Submit GitRepositorySettingsModal with repo settings
+      const repoSettings = models.gitRepository.init();
+      repoSettings._id = generateId(models.gitRepository.prefix);
+      await onSubmitEdits(repoSettings);
+      return repoSettings;
+    };
 
     const shouldPromptToCreateWorkspace = async memPlugin => {
       const repoSettings = await dispatchCloneAndSubmitSettings(memPlugin);
@@ -96,19 +108,6 @@ describe('workspace', () => {
         { type: SET_ACTIVE_WORKSPACE, workspaceId: workspace._id },
         { type: SET_ACTIVE_ACTIVITY, activity: ACTIVITY_SPEC },
       ]);
-    };
-
-    const dispatchCloneAndSubmitSettings = async memPlugin => {
-      // dispatch clone action
-      store.dispatch(cloneGitRepository({ createFsPlugin: () => memPlugin }));
-
-      const { onSubmitEdits } = getAndClearShowModalMockArgs();
-
-      // Submit GitRepositorySettingsModal with repo settings
-      const repoSettings = models.gitRepository.init();
-      repoSettings._id = generateId(models.gitRepository.prefix);
-      await onSubmitEdits(repoSettings);
-      return repoSettings;
     };
 
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR found', async () => {
@@ -259,6 +258,117 @@ describe('workspace', () => {
         { type: SET_ACTIVE_WORKSPACE, workspaceId: workspace._id },
         { type: LOAD_STOP },
       ]);
+    });
+  });
+
+  describe('setupGitRepository', () => {
+    const dispatchSetupAndSubmitSettings = async (memPlugin: Object, workspace: Workspace) => {
+      // dispatch clone action
+      store.dispatch(setupGitRepository({ createFsPlugin: () => memPlugin, workspace }));
+
+      const { onSubmitEdits } = getAndClearShowModalMockArgs();
+
+      // Submit GitRepositorySettingsModal with repo settings
+      const repoSettings = models.gitRepository.init();
+      repoSettings._id = generateId(models.gitRepository.prefix);
+      await onSubmitEdits(repoSettings);
+      return repoSettings;
+    };
+
+    it('should fail if exception during clone', async () => {
+      const memPlugin = MemPlugin.createPlugin();
+      const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
+
+      const err = new Error('some error');
+      (git.clone: JestMockFn).mockRejectedValue(err);
+
+      await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+      const errorArgs = getAndClearShowErrorMockArgs();
+
+      expect(errorArgs.title).toBe('Error Cloning Repository');
+      expect(errorArgs.message).toBe(err.message);
+      expect(errorArgs.error).toBe(err);
+
+      // Ensure activity is activated
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
+    });
+
+    it('should fail if workspace is found', async () => {
+      const memPlugin = MemPlugin.createPlugin();
+      const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
+
+      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+
+      const wrk1Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_1.json');
+      const wrk2Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_2.json');
+
+      await memPlugin.promises.writeFile(wrk1Json, '{}');
+      await memPlugin.promises.writeFile(wrk2Json, '{}');
+
+      await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+
+      const alertArgs = getAndClearShowAlertMockArgs();
+      expect(alertArgs.title).toBe('Setup Problem');
+      expect(alertArgs.message).toBe(
+        'This repository already contains a workspace; create a fresh clone from the dashboard.',
+      );
+
+      // Ensure activity is activated
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
+    });
+
+    it('should setup if no .insomnia directory is found', async () => {
+      const memPlugin = MemPlugin.createPlugin();
+      const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
+
+      const repo = await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+
+      const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
+      expect(wMeta.gitRepositoryId).toBe(repo._id);
+
+      const createdRepo = await models.gitRepository.getById(repo._id);
+      expect(createdRepo.needsFullClone).toBe(true);
+
+      // Ensure activity is activated
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
+    });
+
+    it('should setup if empty .insomnia directory is found', async () => {
+      const memPlugin = MemPlugin.createPlugin();
+      const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
+
+      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
+
+      const repo = await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+
+      const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
+      expect(wMeta.gitRepositoryId).toBe(repo._id);
+
+      const createdRepo = await models.gitRepository.getById(repo._id);
+      expect(createdRepo.needsFullClone).toBe(true);
+
+      // Ensure activity is activated
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
+    });
+
+    it('should setup if empty .insomnia/workspace directory is found', async () => {
+      const memPlugin = MemPlugin.createPlugin();
+      const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
+
+      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+
+      const repo = await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+
+      const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
+      expect(wMeta.gitRepositoryId).toBe(repo._id);
+
+      const createdRepo = await models.gitRepository.getById(repo._id);
+      expect(createdRepo.needsFullClone).toBe(true);
+
+      // Ensure activity is activated
+      expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
     });
   });
 });

@@ -47,6 +47,10 @@ export function create(patch: $Shape<GitRepository> = {}): Promise<GitRepository
   });
 }
 
+export async function getById(id: string): Promise<GitRepository | null> {
+  return db.getWhere(type, { _id: id });
+}
+
 export function update(repo: GitRepository, patch: $Shape<GitRepository>): Promise<GitRepository> {
   return db.docUpdate(repo, patch);
 }
