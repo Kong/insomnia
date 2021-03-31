@@ -10,7 +10,7 @@ import ModalFooter from '../base/modal-footer';
 import HelpTooltip from '../help-tooltip';
 import { docsGitAccessToken, docsGitSync } from '../../../common/documentation';
 import Link from '../base/link';
-import { disconnectGitRepository } from '../../../sync/git/disconnect-git-repository';
+import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 
 type Props = {||};
 
@@ -63,7 +63,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    await disconnectGitRepository({ gitRepository });
+    await deleteGitRepository(gitRepository);
 
     this.hide();
   }

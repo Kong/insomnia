@@ -11,7 +11,7 @@ import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../..
 import path from 'path';
 import { loadStart, loadStop, setActiveWorkspace } from './global';
 import { shallowClone } from '../../../sync/git/shallow-clone';
-import { createGitRepoSettings } from '../../../sync/git/createGitRepoSettings';
+import { createGitRepository } from '../../../models/helpers/git-repository-operations';
 import { strings } from '../../../common/strings';
 import { trackEvent } from '../../../common/analytics';
 import YAML from 'yaml';
@@ -77,7 +77,7 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsPlugin,
             }
           }
 
-          await createGitRepoSettings(workspace._id, gitRepoPatch);
+          await createGitRepository(workspace._id, gitRepoPatch);
         } finally {
           dispatch(loadStop());
         }
@@ -105,7 +105,7 @@ const createWorkspaceWithGitRepo = (gitRepo: GitRepository) => {
       createWorkspace({
         scope: WorkspaceScopeKeys.design,
         onCreate: async wrk => {
-          await createGitRepoSettings(wrk._id, gitRepo);
+          await createGitRepository(wrk._id, gitRepo);
         },
       }),
     );
@@ -225,7 +225,7 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsPlugin 
             }
 
             // Store GitRepository settings and set it as active
-            await createGitRepoSettings(workspace._id, repoSettingsPatch);
+            await createGitRepository(workspace._id, repoSettingsPatch);
 
             // Activate the workspace after importing everything
             dispatch(setActiveWorkspace(workspace._id));
