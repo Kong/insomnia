@@ -75,7 +75,7 @@ import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
 import type { ApiSpec } from '../../models/api-spec';
-import GitVCS from '../../sync/git/git-vcs';
+import { GitVCS } from '../../sync/git/git-vcs';
 import { trackPageView } from '../../common/analytics';
 import type { GitRepository } from '../../models/git-repository';
 import WrapperHome from './wrapper-home';

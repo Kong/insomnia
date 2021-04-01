@@ -31,13 +31,13 @@ type FSDir = {|
 
 type FSEntry = FSDir | FSFile | FSLink;
 
-export class MemPlugin {
+export class MemClient {
   __fs: FSEntry;
   __ino: 0;
 
-  static createPlugin() {
+  static createClient() {
     return {
-      promises: new MemPlugin(),
+      promises: new MemClient(),
     };
   }
 
