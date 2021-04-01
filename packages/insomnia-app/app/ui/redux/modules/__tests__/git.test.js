@@ -28,7 +28,7 @@ jest.mock('../../../../common/analytics');
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
-describe('workspace', () => {
+describe('git', () => {
   let store;
   beforeEach(async () => {
     await globalBeforeEach();
