@@ -149,7 +149,7 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
 
         let fsPlugin = createFsClient();
         try {
-          await shallowClone({ fsPlugin, gitRepository: repoSettingsPatch });
+          await shallowClone({ fsPlugin, gitRepository: { ...repoSettingsPatch } });
         } catch (originalUriError) {
           if (repoSettingsPatch.uri.endsWith('.git')) {
             showAlert({
@@ -175,6 +175,7 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
               title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
               message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUriError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUri}): ${dotGitError.message}`,
             });
+            dispatch(loadStop());
             return;
           }
         }
