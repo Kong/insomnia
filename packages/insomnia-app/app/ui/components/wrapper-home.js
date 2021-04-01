@@ -114,7 +114,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   _handleWorkspaceClone() {
-    this.props.handleGitCloneWorkspace({ createFsPlugin: MemClient.createClient });
+    this.props.handleGitCloneWorkspace({ createFsClient: MemClient.createClient });
   }
 
   _handleKeyDown(e) {

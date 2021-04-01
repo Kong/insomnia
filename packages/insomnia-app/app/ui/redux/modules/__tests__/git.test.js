@@ -7,7 +7,7 @@ import * as models from '../../../../models';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_SPEC } from '../../../../common/constants';
 import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
-import { MemPlugin } from '../../../../sync/git/mem-plugin';
+import { MemClient } from '../../../../sync/git/mem-client';
 import { generateId } from '../../../../common/misc';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
 import path from 'path';
@@ -49,9 +49,9 @@ describe('workspace', () => {
   });
 
   describe('cloneGitRepository', () => {
-    const dispatchCloneAndSubmitSettings = async memPlugin => {
+    const dispatchCloneAndSubmitSettings = async memClient => {
       // dispatch clone action
-      store.dispatch(cloneGitRepository({ createFsPlugin: () => memPlugin }));
+      store.dispatch(cloneGitRepository({ createFsClient: () => memClient }));
 
       const { onSubmitEdits } = getAndClearShowModalMockArgs();
 
@@ -62,8 +62,8 @@ describe('workspace', () => {
       return repoSettings;
     };
 
-    const shouldPromptToCreateWorkspace = async memPlugin => {
-      const repoSettings = await dispatchCloneAndSubmitSettings(memPlugin);
+    const shouldPromptToCreateWorkspace = async memClient => {
+      const repoSettings = await dispatchCloneAndSubmitSettings(memClient);
 
       expect(trackEvent).toHaveBeenCalledWith('Git', 'Clone');
 
@@ -111,39 +111,39 @@ describe('workspace', () => {
     };
 
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
 
-      await shouldPromptToCreateWorkspace(memPlugin);
+      await shouldPromptToCreateWorkspace(memClient);
     });
 
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR/workspace found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
+      const memClient = MemClient.createClient();
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
 
-      await shouldPromptToCreateWorkspace(memPlugin);
+      await shouldPromptToCreateWorkspace(memClient);
     });
 
     it('should prompt to create workspace if no GIT_INSOMNIA_DIR/workspace/wrk_*.json found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
-      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+      const memClient = MemClient.createClient();
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
 
-      await shouldPromptToCreateWorkspace(memPlugin);
+      await shouldPromptToCreateWorkspace(memClient);
     });
 
     it('should fail if multiple workspaces found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
 
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
-      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
 
       const wrk1Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_1.json');
       const wrk2Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_2.json');
 
-      await memPlugin.promises.writeFile(wrk1Json, '{}');
-      await memPlugin.promises.writeFile(wrk2Json, '{}');
+      await memClient.promises.writeFile(wrk1Json, '{}');
+      await memClient.promises.writeFile(wrk2Json, '{}');
 
-      await dispatchCloneAndSubmitSettings(memPlugin);
+      await dispatchCloneAndSubmitSettings(memClient);
 
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Clone Problem');
@@ -154,10 +154,10 @@ describe('workspace', () => {
     });
 
     it('should fail if workspace already exists', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
 
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
-      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
 
       const workspace = await models.workspace.create();
       const workspaceJson = path.join(
@@ -166,8 +166,8 @@ describe('workspace', () => {
         `${workspace._id}.json`,
       );
 
-      await memPlugin.promises.writeFile(workspaceJson, JSON.stringify(workspace));
-      await dispatchCloneAndSubmitSettings(memPlugin);
+      await memClient.promises.writeFile(workspaceJson, JSON.stringify(workspace));
+      await dispatchCloneAndSubmitSettings(memClient);
 
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Clone Problem');
@@ -182,10 +182,10 @@ describe('workspace', () => {
     });
 
     it('should fail if exception during clone', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
       const err = new Error('some error');
       (git.clone: JestMockFn).mockRejectedValue(err);
-      await dispatchCloneAndSubmitSettings(memPlugin);
+      await dispatchCloneAndSubmitSettings(memClient);
       const errorArgs = getAndClearShowErrorMockArgs();
 
       expect(errorArgs.title).toBe('Error Cloning Repository');
@@ -197,12 +197,12 @@ describe('workspace', () => {
     });
 
     it('should import workspace and apiSpec', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
 
       // Create workspace and apiSpec dirs
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
-      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
-      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.apiSpec.type));
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+      await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.apiSpec.type));
 
       // Write workspace file
       const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
@@ -212,16 +212,16 @@ describe('workspace', () => {
         `${workspace._id}.json`,
       );
       await models.workspace.remove(workspace);
-      await memPlugin.promises.writeFile(workspaceJson, JSON.stringify(workspace));
+      await memClient.promises.writeFile(workspaceJson, JSON.stringify(workspace));
 
       // Write ApiSpec file
       const apiSpec = await models.apiSpec.getOrCreateForParentId(workspace._id);
       const apiSpecJson = path.join(GIT_INSOMNIA_DIR, models.apiSpec.type, `${apiSpec._id}.json`);
       await models.apiSpec.removeWhere(workspace._id);
-      await memPlugin.promises.writeFile(apiSpecJson, JSON.stringify(apiSpec));
+      await memClient.promises.writeFile(apiSpecJson, JSON.stringify(apiSpec));
 
       // Clone
-      const repoSettings = await dispatchCloneAndSubmitSettings(memPlugin);
+      const repoSettings = await dispatchCloneAndSubmitSettings(memClient);
 
       // Show confirmation
       const alertArgs = getAndClearShowAlertMockArgs();
@@ -262,9 +262,9 @@ describe('workspace', () => {
   });
 
   describe('setupGitRepository', () => {
-    const dispatchSetupAndSubmitSettings = async (memPlugin: Object, workspace: Workspace) => {
+    const dispatchSetupAndSubmitSettings = async (memClient: Object, workspace: Workspace) => {
       // dispatch clone action
-      store.dispatch(setupGitRepository({ createFsPlugin: () => memPlugin, workspace }));
+      store.dispatch(setupGitRepository({ createFsClient: () => memClient, workspace }));
 
       const { onSubmitEdits } = getAndClearShowModalMockArgs();
 
@@ -276,13 +276,13 @@ describe('workspace', () => {
     };
 
     it('should fail if exception during clone', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
       const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
 
       const err = new Error('some error');
       (git.clone: JestMockFn).mockRejectedValue(err);
 
-      await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+      await dispatchSetupAndSubmitSettings(memClient, workspace);
       const errorArgs = getAndClearShowErrorMockArgs();
 
       expect(errorArgs.title).toBe('Error Cloning Repository');
@@ -294,19 +294,19 @@ describe('workspace', () => {
     });
 
     it('should fail if workspace is found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
       const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
 
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
-      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
 
       const wrk1Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_1.json');
       const wrk2Json = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_2.json');
 
-      await memPlugin.promises.writeFile(wrk1Json, '{}');
-      await memPlugin.promises.writeFile(wrk2Json, '{}');
+      await memClient.promises.writeFile(wrk1Json, '{}');
+      await memClient.promises.writeFile(wrk2Json, '{}');
 
-      await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+      await dispatchSetupAndSubmitSettings(memClient, workspace);
 
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Setup Problem');
@@ -319,10 +319,10 @@ describe('workspace', () => {
     });
 
     it('should setup if no .insomnia directory is found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
       const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
 
-      const repo = await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+      const repo = await dispatchSetupAndSubmitSettings(memClient, workspace);
 
       const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(wMeta.gitRepositoryId).toBe(repo._id);
@@ -335,12 +335,12 @@ describe('workspace', () => {
     });
 
     it('should setup if empty .insomnia directory is found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
       const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
 
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
 
-      const repo = await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+      const repo = await dispatchSetupAndSubmitSettings(memClient, workspace);
 
       const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(wMeta.gitRepositoryId).toBe(repo._id);
@@ -353,13 +353,13 @@ describe('workspace', () => {
     });
 
     it('should setup if empty .insomnia/workspace directory is found', async () => {
-      const memPlugin = MemPlugin.createPlugin();
+      const memClient = MemClient.createClient();
       const workspace = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
 
-      await memPlugin.promises.mkdir(GIT_INSOMNIA_DIR);
-      await memPlugin.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
+      await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
 
-      const repo = await dispatchSetupAndSubmitSettings(memPlugin, workspace);
+      const repo = await dispatchSetupAndSubmitSettings(memClient, workspace);
 
       const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(wMeta.gitRepositoryId).toBe(repo._id);

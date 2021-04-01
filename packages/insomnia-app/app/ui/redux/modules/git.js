@@ -38,14 +38,14 @@ export const updateGitRepository: UpdateGitRepositoryCallback = ({ gitRepository
 };
 
 export type SetupGitRepositoryCallback = ({
-  createFsPlugin: () => Object,
+  createFsClient: () => Object,
   workspace: Workspace,
 }) => void;
 
 /**
  * Setup a git repository against a document
  * */
-export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsPlugin, workspace }) => {
+export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient, workspace }) => {
   return dispatch => {
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
@@ -54,7 +54,7 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsPlugin,
         try {
           gitRepoPatch.needsFullClone = true;
 
-          const fsPlugin = createFsPlugin();
+          const fsPlugin = createFsClient();
 
           try {
             await shallowClone({ fsPlugin, gitRepository: gitRepoPatch });
@@ -131,12 +131,12 @@ const noDocumentFound = (gitRepo: GitRepository) => {
   };
 };
 
-export type CloneGitRepositoryCallback = ({ createFsPlugin: () => Object }) => void;
+export type CloneGitRepositoryCallback = ({ createFsClient: () => Object }) => void;
 
 /**
  * Clone a git repository
  * */
-export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsPlugin }) => {
+export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient }) => {
   return dispatch => {
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
@@ -147,7 +147,7 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsPlugin 
 
         trackEvent('Git', 'Clone');
 
-        let fsPlugin = createFsPlugin();
+        let fsPlugin = createFsClient();
         try {
           await shallowClone({ fsPlugin, gitRepository: repoSettingsPatch });
         } catch (originalUrlError) {
@@ -162,7 +162,7 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsPlugin 
 
           const dotGitUrl = addDotGit(repoSettingsPatch);
           try {
-            fsPlugin = createFsPlugin();
+            fsPlugin = createFsClient();
             await shallowClone({
               fsPlugin,
               gitRepository: { ...repoSettingsPatch, url: dotGitUrl },

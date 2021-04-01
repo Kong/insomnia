@@ -18,7 +18,7 @@ import Link from '../base/link';
 import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
-import { MemPlugin } from '../../../sync/git/mem-plugin';
+import { MemClient } from '../../../sync/git/mem-client';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import * as gitActions from '../../redux/modules/git';
@@ -197,7 +197,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     if (gitRepository) {
       updateGitRepository({ gitRepository });
     } else {
-      setupGitRepository({ workspace, createFsPlugin: MemPlugin.createPlugin });
+      setupGitRepository({ workspace, createFsClient: MemClient.createClient });
     }
   }
 
