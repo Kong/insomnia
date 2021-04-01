@@ -28,7 +28,7 @@ import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { showAlert, showError, showModal, showPrompt } from './modals';
+import { showAlert, showModal, showPrompt } from './modals';
 import * as models from '../../models';
 import { trackEvent, trackSegmentEvent } from '../../common/analytics';
 import YAML from 'yaml';
@@ -48,7 +48,7 @@ import GitRepositorySettingsModal from '../components/modals/git-repository-sett
 import PageLayout from './page-layout';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { MemPlugin } from '../../sync/git/mem-plugin';
+import { MemClient } from '../../sync/git/mem-client';
 import {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
@@ -62,6 +62,8 @@ import AccountDropdown from './dropdowns/account-dropdown';
 import { strings } from '../../common/strings';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import { descendingNumberSort } from '../../common/sorting';
+import { addDotGit, translateSSHtoHTTP, gitCallbacks } from '../../sync/git/utils';
+import { httpClient } from '../../sync/git/http-client';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -159,34 +161,54 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onSubmitEdits: async repoSettingsPatch => {
         trackEvent('Git', 'Clone');
 
-        const core = Math.random() + '';
+        let fsClient = MemClient.createClient();
 
-        // Create in-memory filesystem to perform clone
-        const plugins = git.cores.create(core);
-        const fsPlugin = MemPlugin.createPlugin();
-        plugins.set('fs', fsPlugin);
+        repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
 
         // Pull settings returned from dialog and shallow-clone the repo
-        const { credentials, uri: url } = repoSettingsPatch;
+        const cloneParams = {
+          ...gitCallbacks({
+            username: repoSettingsPatch.credentials.username,
+            password: repoSettingsPatch.credentials.token,
+          }),
+          fs: fsClient,
+          http: httpClient,
+          dir: GIT_CLONE_DIR,
+          gitdir: GIT_INTERNAL_DIR,
+          singleBranch: true,
+          url: repoSettingsPatch.uri,
+          depth: 1,
+        };
         try {
-          await git.clone({
-            core,
-            dir: GIT_CLONE_DIR,
-            gitdir: GIT_INTERNAL_DIR,
-            singleBranch: true,
-            url,
-            ...credentials,
-            depth: 1,
-            noGitSuffix: true,
-          });
-        } catch (err) {
-          showError({ title: 'Error Cloning Repository', message: err.message, error: err });
-          return false;
+          await git.clone(cloneParams);
+        } catch (originalUrlError) {
+          if (cloneParams.url.endsWith('.git')) {
+            showAlert({ title: 'Error Cloning Repository', message: originalUrlError.message });
+            return;
+          }
+
+          const dotGitUrl = addDotGit(cloneParams);
+          try {
+            fsClient = MemClient.createClient();
+            await git.clone({
+              ...cloneParams,
+              fs: fsClient,
+              url: dotGitUrl,
+            });
+
+            // by this point the clone was successful, so update with this syntax
+            repoSettingsPatch.uri = dotGitUrl;
+          } catch (dotGitError) {
+            showAlert({
+              title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
+              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
+            });
+            return;
+          }
         }
 
-        const f = fsPlugin.promises;
         const ensureDir = async (base: string, name: string): Promise<boolean> => {
-          const rootDirs = await f.readdir(base);
+          const rootDirs = await fsClient.promises.readdir(base);
           if (rootDirs.includes(name)) {
             return true;
           }
@@ -216,31 +238,33 @@ class WrapperHome extends React.PureComponent<Props, State> {
         }
 
         const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-        const workspaceDirs = await f.readdir(workspaceBase);
+        const workspaceDirs = await fsClient.promises.readdir(workspaceBase);
 
         if (workspaceDirs.length > 1) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             message: 'Multiple workspaces found in repository',
           });
+          return;
         }
 
         if (workspaceDirs.length === 0) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             message: 'No workspaces found in repository',
           });
+          return;
         }
 
         const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
-        const workspaceJson = await f.readFile(workspacePath);
+        const workspaceJson = await fsClient.promises.readFile(workspacePath);
         const workspace = YAML.parse(workspaceJson.toString());
 
         // Check if the workspace already exists
         const existingWorkspace = await models.workspace.getById(workspace._id);
 
         if (existingWorkspace) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             okLabel: 'Done',
             message: (
@@ -250,6 +274,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
               </React.Fragment>
             ),
           });
+          return;
         }
 
         // Prompt user to confirm importing the workspace
@@ -273,13 +298,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
             const bufferId = await db.bufferChanges();
 
             // Loop over all model folders in root
-            for (const modelType of await f.readdir(GIT_INSOMNIA_DIR)) {
+            for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
               const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
 
               // Loop over all documents in model folder and save them
-              for (const docFileName of await f.readdir(modelDir)) {
+              for (const docFileName of await fsClient.promises.readdir(modelDir)) {
                 const docPath = path.join(modelDir, docFileName);
-                const docYaml = await f.readFile(docPath);
+                const docYaml = await fsClient.promises.readFile(docPath);
                 const doc = YAML.parse(docYaml.toString());
                 await db.upsert(doc);
               }

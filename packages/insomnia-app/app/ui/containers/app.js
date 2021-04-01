@@ -90,10 +90,10 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
-import NeDBPlugin from '../../sync/git/ne-db-plugin';
-import FSPlugin from '../../sync/git/fs-plugin';
-import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
+import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
+import { NeDBClient } from '../../sync/git/ne-db-client';
+import { fsClient } from '../../sync/git/fs-client';
+import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import {
   isCollection,
@@ -1017,7 +1017,6 @@ class App extends PureComponent {
 
   async _updateGitVCS() {
     const { activeGitRepository, activeWorkspace } = this.props;
-
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
     this.setState({ gitVCS: null });
@@ -1027,37 +1026,44 @@ class App extends PureComponent {
     }
 
     if (activeGitRepository) {
-      // Create FS plugin
+      // Create FS client
       const baseDir = path.join(
         getDataDirectory(),
         `version-control/git/${activeGitRepository._id}`,
       );
-      const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
-      const pGitData = FSPlugin.createPlugin(baseDir);
-      const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
 
-      const fsPlugin = routableFSPlugin(
-        // All data outside the directories listed below will be stored in an 'other'
-        // directory. This is so we can support files that exist outside the ones
-        // the app is specifically in charge of.
-        pOtherData,
-        {
-          // All app data is stored within the a namespaced directory at the root of the
-          // repository and is read/written from the local NeDB database
-          [GIT_INSOMNIA_DIR]: pNeDb,
+      /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id);
 
-          // All git metadata is stored in a git/ directory on the filesystem
-          [GIT_INTERNAL_DIR]: pGitData,
-        },
-      );
+      /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
+      const gitDataClient = fsClient(baseDir);
+
+      /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
+      const otherDatClient = fsClient(path.join(baseDir, 'other'));
+
+      /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
+      const routableFS = routableFSClient(otherDatClient, {
+        [GIT_INSOMNIA_DIR]: neDbClient,
+        [GIT_INTERNAL_DIR]: gitDataClient,
+      });
 
       // Init VCS
+      const { credentials, uri } = activeGitRepository;
       if (activeGitRepository.needsFullClone) {
         await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
-        const { credentials, uri } = activeGitRepository;
-        await gitVCS.initFromClone(uri, credentials, GIT_CLONE_DIR, fsPlugin, GIT_INTERNAL_DIR);
+        await gitVCS.initFromClone({
+          url: uri,
+          gitCredentials: credentials,
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
       } else {
-        await gitVCS.init(GIT_CLONE_DIR, fsPlugin, GIT_INTERNAL_DIR);
+        await gitVCS.init({
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
       }
 
       // Configure basic info

@@ -4,11 +4,11 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 import * as db from '../../../common/database';
 import { assertAsyncError, setupDateMocks } from './util';
-import NeDBPlugin from '../ne-db-plugin';
+import { NeDBClient } from '../ne-db-client';
 import path from 'path';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 
-describe('NeDBPlugin', () => {
+describe('NeDBClient', () => {
   afterAll(() => jest.restoreAllMocks());
 
   beforeEach(async () => {
@@ -27,12 +27,12 @@ describe('NeDBPlugin', () => {
 
   describe('readdir()', () => {
     it('reads model IDs from model type folders', async () => {
-      const pNeDB = new NeDBPlugin('wrk_1');
+      const neDbClient = new NeDBClient('wrk_1');
       const reqDir = path.join(GIT_INSOMNIA_DIR, models.request.type);
       const wrkDir = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
 
-      expect(await pNeDB.readdir(GIT_CLONE_DIR)).toEqual([GIT_INSOMNIA_DIR_NAME]);
-      expect(await pNeDB.readdir(GIT_INSOMNIA_DIR)).toEqual([
+      expect(await neDbClient.readdir(GIT_CLONE_DIR)).toEqual([GIT_INSOMNIA_DIR_NAME]);
+      expect(await neDbClient.readdir(GIT_INSOMNIA_DIR)).toEqual([
         models.apiSpec.type,
         models.environment.type,
         models.grpcRequest.type,
@@ -45,8 +45,8 @@ describe('NeDBPlugin', () => {
         models.workspace.type,
       ]);
 
-      expect(await pNeDB.readdir(reqDir)).toEqual(['req_1.yml', 'req_2.yml']);
-      expect(await pNeDB.readdir(wrkDir)).toEqual(['wrk_1.yml']);
+      expect(await neDbClient.readdir(reqDir)).toEqual(['req_1.yml', 'req_2.yml']);
+      expect(await neDbClient.readdir(wrkDir)).toEqual(['wrk_1.yml']);
     });
   });
 
@@ -56,7 +56,7 @@ describe('NeDBPlugin', () => {
       const req1Yml = path.join(GIT_INSOMNIA_DIR, models.request.type, 'req_1.yml');
       const reqXYml = path.join(GIT_INSOMNIA_DIR, models.request.type, 'req_x.yml');
 
-      const pNeDB = new NeDBPlugin('wrk_1');
+      const pNeDB = new NeDBClient('wrk_1');
 
       expect(YAML.parse(await pNeDB.readFile(wrk1Yml, 'utf8'))).toEqual(
         expect.objectContaining({ _id: 'wrk_1', parentId: null }),
@@ -80,15 +80,15 @@ describe('NeDBPlugin', () => {
       const fileType = expect.objectContaining({ type: 'file' });
 
       // Act
-      const pNeDB = new NeDBPlugin('wrk_1');
+      const neDbClient = new NeDBClient('wrk_1');
 
       // Assert
-      expect(await pNeDB.stat(GIT_CLONE_DIR)).toEqual(dirType);
-      expect(await pNeDB.stat(GIT_INSOMNIA_DIR)).toEqual(dirType);
-      expect(await pNeDB.stat(reqDir)).toEqual(dirType);
+      expect(await neDbClient.stat(GIT_CLONE_DIR)).toEqual(dirType);
+      expect(await neDbClient.stat(GIT_INSOMNIA_DIR)).toEqual(dirType);
+      expect(await neDbClient.stat(reqDir)).toEqual(dirType);
 
-      expect(await pNeDB.stat(path.join(wrkDir, 'wrk_1.yml'))).toEqual(fileType);
-      expect(await pNeDB.stat(path.join(reqDir, 'req_2.yml'))).toEqual(fileType);
+      expect(await neDbClient.stat(path.join(wrkDir, 'wrk_1.yml'))).toEqual(fileType);
+      expect(await neDbClient.stat(path.join(reqDir, 'req_2.yml'))).toEqual(fileType);
     });
   });
 
@@ -97,13 +97,13 @@ describe('NeDBPlugin', () => {
       // Assemble
       const upsertSpy = jest.spyOn(db, 'upsert');
       const workspaceId = 'wrk_1';
-      const pNeDB = new NeDBPlugin(workspaceId);
+      const neDbClient = new NeDBClient(workspaceId);
 
       const env = { _id: 'env_1', type: models.environment.type, parentId: workspaceId };
       const filePath = path.join('anotherDir', env.type, `${env._id}.yml`);
 
       // Act
-      await pNeDB.writeFile(filePath, YAML.stringify(env));
+      await neDbClient.writeFile(filePath, YAML.stringify(env));
 
       // Assert
       expect(upsertSpy).not.toBeCalled();
@@ -115,14 +115,14 @@ describe('NeDBPlugin', () => {
     it('should write files in GIT_INSOMNIA_DIR directory to db', async () => {
       // Assemble
       const workspaceId = 'wrk_1';
-      const pNeDB = new NeDBPlugin(workspaceId);
+      const neDbClient = new NeDBClient(workspaceId);
       const upsertSpy = jest.spyOn(db, 'upsert');
 
       const env = { _id: 'env_1', type: models.environment.type, parentId: workspaceId };
       const filePath = path.join(GIT_INSOMNIA_DIR, env.type, `${env._id}.yml`);
 
       // Act
-      await pNeDB.writeFile(filePath, YAML.stringify(env));
+      await neDbClient.writeFile(filePath, YAML.stringify(env));
 
       // Assert
       expect(upsertSpy).toHaveBeenCalledTimes(1);
@@ -135,13 +135,13 @@ describe('NeDBPlugin', () => {
     it('should throw error if id does not match', async () => {
       // Assemble
       const workspaceId = 'wrk_1';
-      const pNeDB = new NeDBPlugin(workspaceId);
+      const neDbClient = new NeDBClient(workspaceId);
 
       const env = { _id: 'env_1', type: models.environment.type, parentId: workspaceId };
       const filePath = path.join(GIT_INSOMNIA_DIR, env.type, `env_2.yml`);
 
       // Act
-      const promiseResult = pNeDB.writeFile(filePath, YAML.stringify(env));
+      const promiseResult = neDbClient.writeFile(filePath, YAML.stringify(env));
 
       // Assert
       await expect(promiseResult).rejects.toThrowError(
@@ -152,13 +152,13 @@ describe('NeDBPlugin', () => {
     it('should throw error if type does not match', async () => {
       // Assemble
       const workspaceId = 'wrk_1';
-      const pNeDB = new NeDBPlugin(workspaceId);
+      const neDbClient = new NeDBClient(workspaceId);
 
       const env = { _id: 'env_1', type: models.environment.type, parentId: workspaceId };
       const filePath = path.join(GIT_INSOMNIA_DIR, models.request.type, `${env._id}.yml`);
 
       // Act
-      const promiseResult = pNeDB.writeFile(filePath, YAML.stringify(env));
+      const promiseResult = neDbClient.writeFile(filePath, YAML.stringify(env));
 
       // Assert
       await expect(promiseResult).rejects.toThrowError(
@@ -170,11 +170,11 @@ describe('NeDBPlugin', () => {
   describe('mkdir()', () => {
     it('should throw error', async () => {
       const workspaceId = 'wrk_1';
-      const pNeDB = new NeDBPlugin(workspaceId);
+      const neDbClient = new NeDBClient(workspaceId);
 
-      const promiseResult = pNeDB.mkdir('', '');
+      const promiseResult = neDbClient.mkdir('', '');
 
-      await expect(promiseResult).rejects.toThrowError('NeDBPlugin is not writable');
+      await expect(promiseResult).rejects.toThrowError('NeDBClient is not writable');
     });
   });
 });
