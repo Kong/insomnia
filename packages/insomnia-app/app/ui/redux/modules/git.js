@@ -17,6 +17,7 @@ import { trackEvent } from '../../../common/analytics';
 import YAML from 'yaml';
 import * as db from '../../../common/database';
 import { createWorkspace } from './workspace';
+import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
 
 export type UpdateGitRepositoryCallback = ({
   gitRepository: GitRepository,
@@ -142,16 +143,40 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsPlugin 
       onSubmitEdits: async repoSettingsPatch => {
         dispatch(loadStart());
         repoSettingsPatch.needsFullClone = true;
+        repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
 
         trackEvent('Git', 'Clone');
 
-        const fsPlugin = createFsPlugin();
+        let fsPlugin = createFsPlugin();
         try {
           await shallowClone({ fsPlugin, gitRepository: repoSettingsPatch });
-        } catch (err) {
-          showError({ title: 'Error Cloning Repository', message: err.message, error: err });
-          dispatch(loadStop());
-          return;
+        } catch (originalUrlError) {
+          if (repoSettingsPatch.url.endsWith('.git')) {
+            showAlert({
+              title: 'Error Cloning Repository',
+              message: originalUrlError.message,
+            });
+            dispatch(loadStop());
+            return;
+          }
+
+          const dotGitUrl = addDotGit(repoSettingsPatch);
+          try {
+            fsPlugin = createFsPlugin();
+            await shallowClone({
+              fsPlugin,
+              gitRepository: { ...repoSettingsPatch, url: dotGitUrl },
+            });
+
+            // by this point the clone was successful, so update with this syntax
+            repoSettingsPatch.uri = dotGitUrl;
+          } catch (dotGitError) {
+            showAlert({
+              title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
+              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
+            });
+            return;
+          }
         }
 
         // If no workspace exists, user should be prompted to create a document

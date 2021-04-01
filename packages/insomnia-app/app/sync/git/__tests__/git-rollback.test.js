@@ -1,8 +1,8 @@
 // @flow
 import path from 'path';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
+import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR } from '../git-vcs';
 import { setupDateMocks } from './util';
-import { MemPlugin } from '../mem-plugin';
+import { MemClient } from '../mem-client';
 import type { FileWithStatus } from '../git-rollback';
 import { gitRollback } from '../git-rollback';
 
@@ -107,14 +107,14 @@ describe('git rollback', () => {
     it('should rollback files as expected', async () => {
       const originalContent = 'original';
 
-      const fs = MemPlugin.createPlugin();
-      await fs.promises.mkdir(GIT_INSOMNIA_DIR);
-      await fs.promises.writeFile(fooTxt, 'foo');
-      await fs.promises.writeFile(barTxt, 'bar');
-      await fs.promises.writeFile(bazTxt, originalContent);
+      const fsClient = MemClient.createClient();
+      await fsClient.promises.mkdir(GIT_INSOMNIA_DIR);
+      await fsClient.promises.writeFile(fooTxt, 'foo');
+      await fsClient.promises.writeFile(barTxt, 'bar');
+      await fsClient.promises.writeFile(bazTxt, originalContent);
 
       const vcs = new GitVCS();
-      await vcs.init(GIT_CLONE_DIR, fs);
+      await vcs.init({ directory: GIT_CLONE_DIR, fs: fsClient });
 
       // Commit
       await vcs.setAuthor('Karen Brown', 'karen@example.com');
@@ -122,7 +122,7 @@ describe('git rollback', () => {
       await vcs.commit('First commit!');
 
       // Edit file
-      await fs.promises.writeFile(bazTxt, 'changedContent');
+      await fsClient.promises.writeFile(bazTxt, 'changedContent');
 
       // foo is staged, bar is unstaged, but both are untracked (thus, new to git)
       await vcs.add(`${GIT_INSOMNIA_DIR}/bar.txt`);
@@ -148,15 +148,15 @@ describe('git rollback', () => {
       expect(await vcs.status(barTxt)).toBe('absent');
       expect(await vcs.status(bazTxt)).toBe('unmodified');
 
-      // Ensure the two files have been removed from the fs (memplugin)
-      await expect(fs.promises.readFile(fooTxt)).rejects.toThrowError(
+      // Ensure the two files have been removed from the fs (memClient)
+      await expect(fsClient.promises.readFile(fooTxt)).rejects.toThrowError(
         `ENOENT: no such file or directory, scandir '${fooTxt}'`,
       );
-      await expect(fs.promises.readFile(barTxt)).rejects.toThrowError(
+      await expect(fsClient.promises.readFile(barTxt)).rejects.toThrowError(
         `ENOENT: no such file or directory, scandir '${barTxt}'`,
       );
 
-      expect((await fs.promises.readFile(bazTxt)).toString()).toBe(originalContent);
+      expect((await fsClient.promises.readFile(bazTxt)).toString()).toBe(originalContent);
     });
   });
 });

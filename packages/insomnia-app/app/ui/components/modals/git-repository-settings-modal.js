@@ -149,7 +149,6 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
                 <input
                   required
                   ref={this._setInputRef}
-                  type="url"
                   name="uri"
                   defaultValue={inputs.uri}
                   disabled={!!gitRepository}

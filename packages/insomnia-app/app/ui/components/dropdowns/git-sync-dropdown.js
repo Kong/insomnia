@@ -5,8 +5,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
-import type { GitLogEntry } from '../../../sync/git/git-vcs';
-import GitVCS from '../../../sync/git/git-vcs';
+import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
 import { showAlert, showError, showModal } from '../modals';
 import GitStagingModal from '../modals/git-staging-modal';
 import * as db from '../../../common/database';
@@ -100,7 +99,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     const log = (await vcs.log()) || [];
     this.setState({ ...(otherState || {}), log, branch, branches });
 
-    const author = log[0] ? log[0].author : null;
+    const author = log[0] ? log[0].commit.author : null;
     const cachedGitRepositoryBranch = branch;
     const cachedGitLastAuthor = author ? author.name : null;
 
@@ -172,7 +171,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     try {
       await vcs.push(gitRepository.credentials, force);
     } catch (err) {
-      if (err.code === 'PushRejectedNonFastForward') {
+      if (err.code === 'PushRejectedError') {
         this._dropdown && this._dropdown.hide();
         showAlert({
           title: 'Push Rejected',
