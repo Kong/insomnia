@@ -54,19 +54,19 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
         try {
           gitRepoPatch.needsFullClone = true;
 
-          const fsPlugin = createFsClient();
+          const fsClient = createFsClient();
 
           try {
-            await shallowClone({ fsPlugin, gitRepository: gitRepoPatch });
+            await shallowClone({ fsClient, gitRepository: gitRepoPatch });
           } catch (err) {
             showError({ title: 'Error Cloning Repository', message: err.message, error: err });
             return;
           }
 
           // If connecting a repo to a document and a workspace already exists in the repository, show an alert
-          if (await containsInsomniaWorkspaceDir(fsPlugin)) {
+          if (await containsInsomniaWorkspaceDir(fsClient)) {
             const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-            const workspaces = await fsPlugin.promises.readdir(workspaceBase);
+            const workspaces = await fsClient.promises.readdir(workspaceBase);
 
             if (workspaces.length) {
               showAlert({
@@ -87,16 +87,16 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
   };
 };
 
-const containsInsomniaDir = async (fsPlugin: Object): Promise<boolean> => {
-  const rootDirs: Array<string> = await fsPlugin.promises.readdir(GIT_CLONE_DIR);
+const containsInsomniaDir = async (fsClient: Object): Promise<boolean> => {
+  const rootDirs: Array<string> = await fsClient.promises.readdir(GIT_CLONE_DIR);
   return rootDirs.includes(GIT_INSOMNIA_DIR_NAME);
 };
 
-const containsInsomniaWorkspaceDir = async (fsPlugin: Object): Promise<boolean> => {
-  if (!(await containsInsomniaDir(fsPlugin))) {
+const containsInsomniaWorkspaceDir = async (fsClient: Object): Promise<boolean> => {
+  if (!(await containsInsomniaDir(fsClient))) {
     return false;
   }
-  const rootDirs: Array<string> = await fsPlugin.promises.readdir(GIT_INSOMNIA_DIR);
+  const rootDirs: Array<string> = await fsClient.promises.readdir(GIT_INSOMNIA_DIR);
   return rootDirs.includes(models.workspace.type);
 };
 
@@ -147,9 +147,9 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
 
         trackEvent('Git', 'Clone');
 
-        let fsPlugin = createFsClient();
+        let fsClient = createFsClient();
         try {
-          await shallowClone({ fsPlugin, gitRepository: { ...repoSettingsPatch } });
+          await shallowClone({ fsClient, gitRepository: { ...repoSettingsPatch } });
         } catch (originalUriError) {
           if (repoSettingsPatch.uri.endsWith('.git')) {
             showAlert({
@@ -162,9 +162,9 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
 
           const dotGitUri = addDotGit(repoSettingsPatch.uri);
           try {
-            fsPlugin = createFsClient();
+            fsClient = createFsClient();
             await shallowClone({
-              fsPlugin,
+              fsClient,
               gitRepository: { ...repoSettingsPatch, uri: dotGitUri },
             });
 
@@ -181,14 +181,14 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
         }
 
         // If no workspace exists, user should be prompted to create a document
-        if (!(await containsInsomniaWorkspaceDir(fsPlugin))) {
+        if (!(await containsInsomniaWorkspaceDir(fsClient))) {
           dispatch(noDocumentFound(repoSettingsPatch));
           dispatch(loadStop());
           return;
         }
 
         const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-        const workspaces = await fsPlugin.promises.readdir(workspaceBase);
+        const workspaces = await fsClient.promises.readdir(workspaceBase);
 
         if (workspaces.length === 0) {
           dispatch(noDocumentFound(repoSettingsPatch));
@@ -204,7 +204,7 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
 
         // Only one workspace
         const workspacePath = path.join(workspaceBase, workspaces[0]);
-        const workspaceJson = await fsPlugin.promises.readFile(workspacePath);
+        const workspaceJson = await fsClient.promises.readFile(workspacePath);
         const workspace = YAML.parse(workspaceJson.toString());
 
         // Check if the workspace already exists
@@ -238,13 +238,13 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
             const bufferId = await db.bufferChanges();
 
             // Loop over all model folders in root
-            for (const modelType of await fsPlugin.promises.readdir(GIT_INSOMNIA_DIR)) {
+            for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
               const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
 
               // Loop over all documents in model folder and save them
-              for (const docFileName of await fsPlugin.promises.readdir(modelDir)) {
+              for (const docFileName of await fsClient.promises.readdir(modelDir)) {
                 const docPath = path.join(modelDir, docFileName);
-                const docYaml = await fsPlugin.promises.readFile(docPath);
+                const docYaml = await fsClient.promises.readFile(docPath);
                 const doc = YAML.parse(docYaml.toString());
                 await db.upsert(doc);
               }

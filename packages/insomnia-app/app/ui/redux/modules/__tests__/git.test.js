@@ -290,7 +290,7 @@ describe('workspace', () => {
       expect(shallowClone).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
-          fsPlugin: memClient,
+          fsClient: memClient,
           gitRepository: expect.objectContaining({
             uri,
           }),
@@ -299,7 +299,7 @@ describe('workspace', () => {
       expect(shallowClone).toHaveBeenNthCalledWith(
         2,
         expect.objectContaining({
-          fsPlugin: memClient,
+          fsClient: memClient,
           gitRepository: expect.objectContaining({
             uri: `${uri}.git`,
           }),

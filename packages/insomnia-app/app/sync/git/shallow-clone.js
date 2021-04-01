@@ -7,17 +7,17 @@ import { gitCallbacks } from './utils';
 import { httpClient } from './http-client';
 
 type Options = {
-  fsPlugin: Object,
+  fsClient: Object,
   gitRepository: GitRepository,
 };
 
 /**
  * Create a shallow clone into the provided FS plugin.
  * */
-export const shallowClone = async ({ fsPlugin, gitRepository }: Options) => {
+export const shallowClone = async ({ fsClient, gitRepository }: Options) => {
   const cloneParams = {
     ...gitCallbacks(gitRepository.credentials),
-    fs: fsPlugin,
+    fs: fsClient,
     http: httpClient,
     dir: GIT_CLONE_DIR,
     gitdir: GIT_INTERNAL_DIR,
