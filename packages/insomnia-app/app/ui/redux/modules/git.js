@@ -150,30 +150,30 @@ export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient 
         let fsPlugin = createFsClient();
         try {
           await shallowClone({ fsPlugin, gitRepository: repoSettingsPatch });
-        } catch (originalUrlError) {
-          if (repoSettingsPatch.url.endsWith('.git')) {
+        } catch (originalUriError) {
+          if (repoSettingsPatch.uri.endsWith('.git')) {
             showAlert({
               title: 'Error Cloning Repository',
-              message: originalUrlError.message,
+              message: originalUriError.message,
             });
             dispatch(loadStop());
             return;
           }
 
-          const dotGitUrl = addDotGit(repoSettingsPatch);
+          const dotGitUri = addDotGit(repoSettingsPatch.uri);
           try {
             fsPlugin = createFsClient();
             await shallowClone({
               fsPlugin,
-              gitRepository: { ...repoSettingsPatch, url: dotGitUrl },
+              gitRepository: { ...repoSettingsPatch, uri: dotGitUri },
             });
 
             // by this point the clone was successful, so update with this syntax
-            repoSettingsPatch.uri = dotGitUrl;
+            repoSettingsPatch.uri = dotGitUri;
           } catch (dotGitError) {
             showAlert({
               title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
-              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
+              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUriError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUri}): ${dotGitError.message}`,
             });
             return;
           }

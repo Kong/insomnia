@@ -58,6 +58,8 @@ describe('workspace', () => {
       // Submit GitRepositorySettingsModal with repo settings
       const repoSettings = models.gitRepository.init();
       repoSettings._id = generateId(models.gitRepository.prefix);
+      repoSettings.uri = 'https://someUrl.git';
+
       await onSubmitEdits(repoSettings);
       return repoSettings;
     };
@@ -186,11 +188,10 @@ describe('workspace', () => {
       const err = new Error('some error');
       (git.clone: JestMockFn).mockRejectedValue(err);
       await dispatchCloneAndSubmitSettings(memClient);
-      const errorArgs = getAndClearShowErrorMockArgs();
+      const alertArgs = getAndClearShowAlertMockArgs();
 
-      expect(errorArgs.title).toBe('Error Cloning Repository');
-      expect(errorArgs.message).toBe(err.message);
-      expect(errorArgs.error).toBe(err);
+      expect(alertArgs.title).toBe('Error Cloning Repository');
+      expect(alertArgs.message).toBe(err.message);
 
       // Ensure activity is activated
       expect(store.getActions()).toEqual([{ type: LOAD_START }, { type: LOAD_STOP }]);
