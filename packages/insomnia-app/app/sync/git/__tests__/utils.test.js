@@ -43,16 +43,16 @@ describe('translateSSHtoHTTP', () => {
 
 describe('addDotGit', () => {
   it('adds the .git to bare links', () => {
-    expect(addDotGit({ url: links.scp.bare })).toEqual(links.scp.dotGit);
-    expect(addDotGit({ url: links.ssh.bare })).toEqual(links.ssh.dotGit);
-    expect(addDotGit({ url: links.http.bare })).toEqual(links.http.dotGit);
-    expect(addDotGit({ url: links.https.bare })).toEqual(links.https.dotGit);
+    expect(addDotGit(links.scp.bare)).toEqual(links.scp.dotGit);
+    expect(addDotGit(links.ssh.bare)).toEqual(links.ssh.dotGit);
+    expect(addDotGit(links.http.bare)).toEqual(links.http.dotGit);
+    expect(addDotGit(links.https.bare)).toEqual(links.https.dotGit);
   });
 
   it('leaves links that already have .git alone', () => {
-    expect(addDotGit({ url: links.scp.dotGit })).toEqual(links.scp.dotGit);
-    expect(addDotGit({ url: links.ssh.dotGit })).toEqual(links.ssh.dotGit);
-    expect(addDotGit({ url: links.http.dotGit })).toEqual(links.http.dotGit);
-    expect(addDotGit({ url: links.https.dotGit })).toEqual(links.https.dotGit);
+    expect(addDotGit(links.scp.dotGit)).toEqual(links.scp.dotGit);
+    expect(addDotGit(links.ssh.dotGit)).toEqual(links.ssh.dotGit);
+    expect(addDotGit(links.http.dotGit)).toEqual(links.http.dotGit);
+    expect(addDotGit(links.https.dotGit)).toEqual(links.https.dotGit);
   });
 });
