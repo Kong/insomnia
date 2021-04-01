@@ -7,19 +7,19 @@ import Stat from './stat';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 
-export default class NeDBPlugin {
+export class NeDBClient {
   _workspaceId: string;
 
   constructor(workspaceId: string) {
     if (!workspaceId) {
-      throw new Error('Cannot use NeDBPlugin without workspace ID');
+      throw new Error('Cannot use NeDBClient without workspace ID');
     }
     this._workspaceId = workspaceId;
   }
 
-  static createPlugin(workspaceId: string) {
+  static createClient(workspaceId: string) {
     return {
-      promises: new NeDBPlugin(workspaceId),
+      promises: new NeDBClient(workspaceId),
     };
   }
 
@@ -141,7 +141,7 @@ export default class NeDBPlugin {
   }
 
   async mkdir(filePath: string, ...x: Array<any>) {
-    throw new Error('NeDBPlugin is not writable');
+    throw new Error('NeDBClient is not writable');
   }
 
   async stat(filePath: string, ...x: Array<any>): Promise<Stat> {
@@ -201,7 +201,7 @@ export default class NeDBPlugin {
   }
 
   async symlink(targetPath: string, filePath: string, ...x: Array<any>): Promise<void> {
-    throw new Error('NeDBPlugin symlink not supported');
+    throw new Error('NeDBClient symlink not supported');
   }
 
   _errMissing(filePath: string): Error {

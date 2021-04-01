@@ -1,5 +1,5 @@
 // @flow
-import GitVCS from './git-vcs';
+import { GitVCS } from './git-vcs';
 
 export type FileWithStatus = { filePath: string, status: string };
 
