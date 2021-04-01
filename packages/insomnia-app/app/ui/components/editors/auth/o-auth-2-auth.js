@@ -497,13 +497,18 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     return { basic: basicFields, advanced: advancedFields };
   }
 
-  static renderExpiryFromJWT(token: string): React.Element<*> | string | null {
-    if (!token) {
+  static renderIdentityTokenExpiry(token: ?OAuth2Token): React.Element<*> | string | null {
+    if (!token || !token.identityToken) {
       return null;
     }
-
-    const base64Url = token.split('.')[1];
-    let { exp } = JSON.parse(window.atob(base64Url));
+    const base64Url = token.identityToken.split('.')[1];
+    let decodedString = '';
+    try {
+      decodedString = window.atob(base64Url);
+    } catch (error) {
+      return null;
+    }
+    let { exp } = JSON.parse(decodedString);
     if (!exp) {
       return '(never expires)';
     }
@@ -523,7 +528,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  static renderExpireAt(token: ?OAuth2Token): React.Element<*> | string | null {
+  static renderAccessTokenExpiry(token: ?OAuth2Token): React.Element<*> | string | null {
     if (!token || !token.accessToken) {
       return null;
     }
@@ -580,8 +585,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     const { request, oAuth2Token: tok } = this.props;
     const { loading, error, showAdvanced } = this.state;
 
-    const accessExpireLabel = OAuth2Auth.renderExpireAt(tok);
-    const identityExpireLabel = OAuth2Auth.renderExpiryFromJWT(tok.identityToken);
+    const accessExpireLabel = OAuth2Auth.renderAccessTokenExpiry(tok);
+    const identityExpireLabel = OAuth2Auth.renderIdentityTokenExpiry(tok);
     const fields = this.renderGrantTypeFields(request.authentication.grantType);
 
     return (
