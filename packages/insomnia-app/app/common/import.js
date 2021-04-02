@@ -9,7 +9,7 @@ import { CONTENT_TYPE_GRAPHQL, getAppVersion } from './constants';
 import { showError, showModal } from '../ui/components/modals/index';
 import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
-import { fnOrString, generateId } from './misc';
+import { fnOrString, generateId, diffPatchObj } from './misc';
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
 import {
@@ -20,6 +20,8 @@ import {
   isRequestGroup,
   isWorkspace,
 } from '../models/helpers/is-model';
+import type { Workspace, WorkspaceScope } from '../models/workspace';
+import type { ApiSpec } from '../models/api-spec';
 
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
@@ -61,10 +63,30 @@ export type ImportResult = {
   summary: { [string]: Array<BaseModel> },
 };
 
-export async function importUri(
+type ConvertResultType = {
+  id: string,
+  name: string,
+  description: string,
+};
+
+type ConvertResult = {
+  type: ConvertResultType,
+  data: {
+    resources: Array<Object>,
+  },
+};
+
+export type ImportRawConfig = {
   getWorkspaceId: () => Promise<string | null>,
-  uri: string,
-): Promise<ImportResult> {
+  getWorkspaceScope?: string => Promise<WorkspaceScope>,
+  enableDiffBasedPatching?: boolean,
+  enableDiffDeep?: boolean,
+  bypassDiffProps?: {
+    url: string,
+  },
+};
+
+export async function importUri(uri: string, importConfig: ImportRawConfig): Promise<ImportResult> {
   let rawText;
 
   // If GH preview, force raw
@@ -86,7 +108,7 @@ export async function importUri(
     rawText = decodeURIComponent(uri);
   }
 
-  const result = await importRaw(getWorkspaceId, rawText);
+  const result = await importRaw(rawText, importConfig);
   const { summary, error } = result;
 
   if (error) {
@@ -118,10 +140,16 @@ export async function importUri(
 }
 
 export async function importRaw(
-  getWorkspaceId: () => Promise<string | null>,
   rawContent: string,
+  {
+    getWorkspaceId,
+    getWorkspaceScope,
+    enableDiffBasedPatching,
+    enableDiffDeep,
+    bypassDiffProps,
+  }: ImportRawConfig,
 ): Promise<ImportResult> {
-  let results;
+  let results: ConvertResult;
   try {
     results = await convert(rawContent);
   } catch (err) {
@@ -132,7 +160,7 @@ export async function importRaw(
     };
   }
 
-  const { data } = results;
+  const { data, type: resultsType } = results;
 
   // Generate all the ids we may need
   const generatedIds: { [string]: string | Function } = {};
@@ -147,17 +175,14 @@ export async function importRaw(
     const workspaceId = await getWorkspaceId();
 
     // First try getting the workspace to overwrite
-    let workspace = await models.workspace.getById(workspaceId || 'n/a');
-
-    // If none provided, create a new workspace
-    if (workspace === null) {
-      workspace = await models.workspace.create({ name: 'Imported Workspace' });
-    }
+    const workspace = await models.workspace.getById(workspaceId || 'n/a');
 
     // Update this fn so it doesn't run again
-    generatedIds[WORKSPACE_ID_KEY] = workspace._id;
+    const idToUse = workspace?._id || generateId(models.workspace.prefix);
 
-    return workspace._id;
+    generatedIds[WORKSPACE_ID_KEY] = idToUse;
+
+    return idToUse;
   };
 
   // Contains the ID of the base environment to be used with the import
@@ -240,8 +265,28 @@ export async function importRaw(
     const existingDoc = await db.get(model.type, resource._id);
     let newDoc: BaseModel;
     if (existingDoc) {
-      newDoc = await db.docUpdate(existingDoc, resource);
+      let updateDoc = resource;
+
+      // Do differential patching when enabled
+      if (enableDiffBasedPatching) {
+        updateDoc = diffPatchObj(resource, existingDoc, enableDiffDeep);
+      }
+
+      // Bypass differential update for urls when enabled
+      if (bypassDiffProps?.url && updateDoc.url) {
+        updateDoc.url = resource.url;
+      }
+
+      // If workspace, don't overwrite the existing scope
+      if (isWorkspace(model)) {
+        (updateDoc: Workspace).scope = (existingDoc: Workspace).scope;
+      }
+
+      newDoc = await db.docUpdate(existingDoc, updateDoc);
     } else {
+      if (isWorkspace(model)) {
+        await updateWorkspaceScope(resource, resultsType, getWorkspaceScope);
+      }
       newDoc = await db.docCreate(model.type, resource);
 
       // Mark as not seen if we created a new workspace from sync
@@ -256,7 +301,7 @@ export async function importRaw(
 
   // Store spec under workspace if it's OpenAPI
   for (const workspace of importedDocs[models.workspace.type]) {
-    if (isApiSpec(results.type.id)) {
+    if (isApiSpecImport(resultsType)) {
       const spec = await models.apiSpec.updateOrCreateForParentId(workspace._id, {
         contents: rawContent,
         contentType: 'yaml',
@@ -265,26 +310,57 @@ export async function importRaw(
       importedDocs[spec.type].push(spec);
     }
 
-    // Set default environment if there is one
+    // Set active environment when none is currently selected and one exists
     const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
     const envs = importedDocs[models.environment.type];
-    meta.activeEnvironmentId = envs.length > 0 ? envs[0]._id : null;
-    await models.workspaceMeta.update(meta);
+    if (!meta.activeEnvironmentId && envs.length > 0) {
+      meta.activeEnvironmentId = envs[0]._id;
+      await models.workspaceMeta.update(meta);
+    }
   }
 
   await db.flushChanges();
 
-  trackEvent('Data', 'Import', results.type.id);
+  trackEvent('Data', 'Import', resultsType.id);
 
   return {
-    source: results.type && typeof results.type.id === 'string' ? results.type.id : 'unknown',
+    source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
     summary: importedDocs,
     error: null,
   };
 }
 
-export function isApiSpec(content: string): boolean {
-  return content === 'openapi3' || content === 'swagger2';
+async function updateWorkspaceScope(
+  resource: Workspace,
+  resultType: ConvertResultType,
+  getWorkspaceScope?: string => Promise<WorkspaceScope>,
+) {
+  // Set the workspace scope if creating a new workspace
+  //  IF is creating a new workspace
+  //  AND imported resource has no preset scope property OR scope is null
+  //  AND we have a function to get scope
+  if ((!resource.hasOwnProperty('scope') || resource.scope === null) && getWorkspaceScope) {
+    const workspaceName = resource.name;
+    let specName;
+    // If is from insomnia v4 and the spec has contents, add to the name when prompting
+    if (isInsomniaV4Import(resultType)) {
+      const spec: ApiSpec | null = await models.apiSpec.getByParentId(resource._id);
+
+      if (spec && spec.contents.trim()) {
+        specName = spec.fileName;
+      }
+    }
+    const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
+    (resource: Workspace).scope = await getWorkspaceScope(nameToPrompt);
+  }
+}
+
+export function isApiSpecImport({ id }: ConvertResultType): boolean {
+  return id === 'openapi3' || id === 'swagger2';
+}
+
+export function isInsomniaV4Import({ id }: ConvertResultType): boolean {
+  return id === 'insomnia-4';
 }
 
 export async function exportWorkspacesHAR(

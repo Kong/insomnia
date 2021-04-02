@@ -6,6 +6,7 @@ import * as models from '../../../models/index';
 import * as db from '../../../common/database';
 import fs from 'fs';
 import { getAppVersion } from '../../../common/constants';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
 
 const PLUGIN = {
   name: 'my-plugin',
@@ -54,7 +55,7 @@ describe('app.import.*', () => {
         name: 'New',
         parentId: null,
         type: 'Workspace',
-        scope: 'collection',
+        scope: WorkspaceScopeKeys.collection,
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -105,7 +106,7 @@ describe('app.import.*', () => {
         name: 'New',
         parentId: null,
         type: 'Workspace',
-        scope: 'collection',
+        scope: WorkspaceScopeKeys.collection,
       },
     ]);
     expect(await db.all(models.request.type)).toEqual([
@@ -180,9 +181,9 @@ describe('app.export.*', () => {
           created: 111,
           description: '',
           modified: 222,
-          name: 'New Workspace',
+          name: 'New Collection',
           parentId: null,
-          scope: 'collection',
+          scope: WorkspaceScopeKeys.collection,
         },
         {
           _id: 'req_1',

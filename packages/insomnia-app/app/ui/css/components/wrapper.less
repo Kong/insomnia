@@ -93,28 +93,25 @@
     }
   }
 
-  .pane-one {
+  .pane-one, .pane-two {
     min-width: 0;
-    grid-column-start: 4;
-    grid-row-start: 2;
-    grid-row-end: span 3;
+    max-height:100%;
     background: inherit;
-
     border-left: 1px solid var(--hl-md);
     background: var(--color-bg);
     color: var(--color-font);
   }
 
+  .pane-one {
+    grid-column-start: 4;
+    grid-row-start: 2;
+    grid-row-end: span 3;
+  }
+
   .pane-two {
-    min-width: 0;
     grid-column-start: 6;
     grid-row-start: 2;
     grid-row-end: span 3;
-    background: inherit;
-
-    border-left: 1px solid var(--hl-md);
-    background: var(--color-bg);
-    color: var(--color-font);
   }
 
   .app-header {
@@ -122,6 +119,7 @@
     grid-column-end: span 6;
     grid-row-start: 1;
     grid-row-end: span 1;
+    background: var(--color-bg);
   }
 
   .layout-body {

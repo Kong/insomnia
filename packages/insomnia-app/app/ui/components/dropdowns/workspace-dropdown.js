@@ -25,6 +25,8 @@ import * as pluginContexts from '../../../plugins/context';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { isDesign } from '../../../models/helpers/is-model';
 
 type Props = {
   displayName: string,
@@ -126,8 +128,6 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
 
     const { actionPlugins, loadingActions, configGeneratorPlugins } = this.state;
 
-    const isDesigner = activeWorkspace.scope === 'designer';
-
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
@@ -148,7 +148,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
             {getAppName()} v{getAppVersion()}
           </DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
-            <i className="fa fa-wrench" /> Workspace Settings
+            <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace)} Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
 
@@ -170,7 +170,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
               {p.label}
             </DropdownItem>
           ))}
-          {isDesigner && (
+          {isDesign(activeWorkspace) && (
             <>
               {configGeneratorPlugins.length > 0 && (
                 <DropdownDivider>Config Generators</DropdownDivider>

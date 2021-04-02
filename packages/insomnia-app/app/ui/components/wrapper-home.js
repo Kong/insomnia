@@ -28,7 +28,7 @@ import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { showAlert, showError, showModal, showPrompt } from './modals';
+import { showAlert, showModal, showPrompt } from './modals';
 import * as models from '../../models';
 import { trackEvent, trackSegmentEvent } from '../../common/analytics';
 import YAML from 'yaml';
@@ -36,15 +36,19 @@ import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import type { GlobalActivity } from '../../common/constants';
 
-import { fuzzyMatchAll } from '../../common/misc';
-import type { WrapperProps } from './wrapper';
+import { fuzzyMatchAll, isNotNullOrUndefined, pluralize } from '../../common/misc';
+import type {
+  HandleImportClipboardCallback,
+  HandleImportFileCallback,
+  HandleImportUriCallback,
+  WrapperProps,
+} from './wrapper';
 import Notice from './notice';
 import GitRepositorySettingsModal from '../components/modals/git-repository-settings-modal';
 import PageLayout from './page-layout';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { MemPlugin } from '../../sync/git/mem-plugin';
+import { MemClient } from '../../sync/git/mem-client';
 import {
   GIT_CLONE_DIR,
   GIT_INSOMNIA_DIR,
@@ -55,12 +59,17 @@ import { parseApiSpec } from '../../common/api-specs';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
+import { strings } from '../../common/strings';
+import { WorkspaceScopeKeys } from '../../models/workspace';
+import { descendingNumberSort } from '../../common/sorting';
+import { addDotGit, translateSSHtoHTTP, gitCallbacks } from '../../sync/git/utils';
+import { httpClient } from '../../sync/git/http-client';
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleImportFile: (forceToWorkspace: ForceToWorkspace) => void,
-  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => void,
-  handleImportClipboard: (forceToWorkspace: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
+  handleImportUri: HandleImportUriCallback,
+  handleImportClipboard: HandleImportClipboardCallback,
 |};
 
 type State = {|
@@ -85,20 +94,24 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   async __actuallyCreate(patch: $Shape<Workspace>) {
     const workspace = await models.workspace.create(patch);
+    const { handleSetActiveActivity } = this.props.wrapperProps;
     this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
-
     trackEvent('Workspace', 'Create');
+
+    workspace.scope === WorkspaceScopeKeys.design
+      ? handleSetActiveActivity(ACTIVITY_SPEC)
+      : handleSetActiveActivity(ACTIVITY_DEBUG);
   }
 
   _handleDocumentCreate() {
     showPrompt({
-      title: 'New Document',
+      title: 'Create New Design Document',
       submitName: 'Create',
       placeholder: 'spec-name.yaml',
       onComplete: async name => {
         await this.__actuallyCreate({
           name,
-          scope: 'designer',
+          scope: WorkspaceScopeKeys.design,
         });
         trackSegmentEvent('Document Created');
       },
@@ -107,13 +120,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
   _handleCollectionCreate() {
     showPrompt({
-      title: 'Create New Collection',
+      title: 'Create New Request Collection',
       placeholder: 'My Collection',
       submitName: 'Create',
       onComplete: async name => {
         await this.__actuallyCreate({
           name,
-          scope: 'collection',
+          scope: WorkspaceScopeKeys.collection,
         });
         trackSegmentEvent('Collection Created');
       },
@@ -121,11 +134,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   _handleImportFile() {
-    this.props.handleImportFile(ForceToWorkspaceKeys.new);
+    this.props.handleImportFile({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportClipBoard() {
-    this.props.handleImportClipboard(ForceToWorkspaceKeys.new);
+    this.props.handleImportClipboard({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportUri() {
@@ -135,7 +148,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
+        this.props.handleImportUri(uri, { forceToWorkspace: ForceToWorkspaceKeys.new });
       },
     });
   }
@@ -148,34 +161,54 @@ class WrapperHome extends React.PureComponent<Props, State> {
       onSubmitEdits: async repoSettingsPatch => {
         trackEvent('Git', 'Clone');
 
-        const core = Math.random() + '';
+        let fsClient = MemClient.createClient();
 
-        // Create in-memory filesystem to perform clone
-        const plugins = git.cores.create(core);
-        const fsPlugin = MemPlugin.createPlugin();
-        plugins.set('fs', fsPlugin);
+        repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
 
         // Pull settings returned from dialog and shallow-clone the repo
-        const { credentials, uri: url } = repoSettingsPatch;
+        const cloneParams = {
+          ...gitCallbacks({
+            username: repoSettingsPatch.credentials.username,
+            password: repoSettingsPatch.credentials.token,
+          }),
+          fs: fsClient,
+          http: httpClient,
+          dir: GIT_CLONE_DIR,
+          gitdir: GIT_INTERNAL_DIR,
+          singleBranch: true,
+          url: repoSettingsPatch.uri,
+          depth: 1,
+        };
         try {
-          await git.clone({
-            core,
-            dir: GIT_CLONE_DIR,
-            gitdir: GIT_INTERNAL_DIR,
-            singleBranch: true,
-            url,
-            ...credentials,
-            depth: 1,
-            noGitSuffix: true,
-          });
-        } catch (err) {
-          showError({ title: 'Error Cloning Repository', message: err.message, error: err });
-          return false;
+          await git.clone(cloneParams);
+        } catch (originalUrlError) {
+          if (cloneParams.url.endsWith('.git')) {
+            showAlert({ title: 'Error Cloning Repository', message: originalUrlError.message });
+            return;
+          }
+
+          const dotGitUrl = addDotGit(cloneParams);
+          try {
+            fsClient = MemClient.createClient();
+            await git.clone({
+              ...cloneParams,
+              fs: fsClient,
+              url: dotGitUrl,
+            });
+
+            // by this point the clone was successful, so update with this syntax
+            repoSettingsPatch.uri = dotGitUrl;
+          } catch (dotGitError) {
+            showAlert({
+              title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
+              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
+            });
+            return;
+          }
         }
 
-        const f = fsPlugin.promises;
         const ensureDir = async (base: string, name: string): Promise<boolean> => {
-          const rootDirs = await f.readdir(base);
+          const rootDirs = await fsClient.promises.readdir(base);
           if (rootDirs.includes(name)) {
             return true;
           }
@@ -205,31 +238,33 @@ class WrapperHome extends React.PureComponent<Props, State> {
         }
 
         const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-        const workspaceDirs = await f.readdir(workspaceBase);
+        const workspaceDirs = await fsClient.promises.readdir(workspaceBase);
 
         if (workspaceDirs.length > 1) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             message: 'Multiple workspaces found in repository',
           });
+          return;
         }
 
         if (workspaceDirs.length === 0) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             message: 'No workspaces found in repository',
           });
+          return;
         }
 
         const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
-        const workspaceJson = await f.readFile(workspacePath);
+        const workspaceJson = await fsClient.promises.readFile(workspacePath);
         const workspace = YAML.parse(workspaceJson.toString());
 
         // Check if the workspace already exists
         const existingWorkspace = await models.workspace.getById(workspace._id);
 
         if (existingWorkspace) {
-          return showAlert({
+          showAlert({
             title: 'Clone Problem',
             okLabel: 'Done',
             message: (
@@ -239,6 +274,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
               </React.Fragment>
             ),
           });
+          return;
         }
 
         // Prompt user to confirm importing the workspace
@@ -262,13 +298,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
             const bufferId = await db.bufferChanges();
 
             // Loop over all model folders in root
-            for (const modelType of await f.readdir(GIT_INSOMNIA_DIR)) {
+            for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
               const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
 
               // Loop over all documents in model folder and save them
-              for (const docFileName of await f.readdir(modelDir)) {
+              for (const docFileName of await fsClient.promises.readdir(modelDir)) {
                 const docPath = path.join(modelDir, docFileName);
-                const docYaml = await f.readFile(docPath);
+                const docYaml = await fsClient.promises.readFile(docPath);
                 const doc = YAML.parse(docYaml.toString());
                 await db.upsert(doc);
               }
@@ -307,7 +343,6 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
     if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
-      // or migration or onboarding
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);
@@ -315,7 +350,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     handleSetActiveWorkspace(id);
   }
 
-  renderCard(w: Workspace) {
+  renderCard(workspace: Workspace): { card: React.Node, lastModifiedTimestamp: number } {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -325,7 +360,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { filter } = this.state;
 
-    const apiSpec = apiSpecs.find(s => s.parentId === w._id);
+    const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
 
     let spec = null;
     let specFormat = null;
@@ -341,18 +376,36 @@ class WrapperHome extends React.PureComponent<Props, State> {
     }
 
     // Get cached branch from WorkspaceMeta
-    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === w._id);
+    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
     const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
     const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
     const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
 
     // WorkspaceMeta is a good proxy for last modified time
-    const workspaceModified = workspaceMeta ? workspaceMeta.modified : w.modified;
-    const modifiedLocally = apiSpec ? apiSpec.modified : workspaceModified;
+    const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
+    const modifiedLocally =
+      apiSpec && workspace.scope === WorkspaceScopeKeys.design
+        ? apiSpec.modified
+        : workspaceModified;
 
-    let log = <TimeFromNow timestamp={modifiedLocally} />;
+    // Span spec, workspace and sync related timestamps for card last modified label and sort order
+    const lastModifiedFrom = [
+      workspace?.modified,
+      workspaceMeta?.modified,
+      apiSpec?.modified,
+      workspaceMeta?.cachedGitLastCommitTime,
+    ];
+    const lastModifiedTimestamp = lastModifiedFrom
+      .filter(isNotNullOrUndefined)
+      .sort(descendingNumberSort)[0];
+
+    let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
     let branch = lastActiveBranch;
-    if (w.scope === 'designer' && lastCommitTime && apiSpec?.modified > lastCommitTime) {
+    if (
+      workspace.scope === WorkspaceScopeKeys.design &&
+      lastCommitTime &&
+      apiSpec?.modified > lastCommitTime
+    ) {
       // Show locally unsaved changes for spec
       // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
@@ -374,21 +427,21 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const docMenu = (
       <DocumentCardDropdown
         apiSpec={apiSpec}
-        workspace={w}
+        workspace={workspace}
         handleSetActiveWorkspace={handleSetActiveWorkspace}
         isLastWorkspace={workspaces.length === 1}>
         <SvgIcon icon="ellipsis" />
       </DocumentCardDropdown>
     );
     const version = spec?.info?.version || '';
-    let label: string = 'Collection';
+    let label: string = strings.collection;
     let format: string = '';
     let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
-    let title = w.name;
+    let title = workspace.name;
 
-    if (w.scope === 'designer') {
-      label = 'Document';
+    if (workspace.scope === WorkspaceScopeKeys.design) {
+      label = strings.document;
       labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
         format = `OpenAPI ${specFormatVersion}`;
@@ -412,7 +465,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       return null;
     }
 
-    return (
+    const card = (
       <Card
         key={apiSpec._id}
         docBranch={branch && <Highlight search={filter} text={branch} />}
@@ -429,9 +482,14 @@ class WrapperHome extends React.PureComponent<Props, State> {
         docLog={log}
         docMenu={docMenu}
         docFormat={format}
-        onClick={() => this._handleClickCard(w._id, defaultActivity)}
+        onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
       />
     );
+
+    return {
+      card,
+      lastModifiedTimestamp,
+    };
   }
 
   renderCreateMenu() {
@@ -446,7 +504,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
         <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
-          Blank Document
+          Design Document
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
           Request Collection
@@ -495,22 +553,29 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces } = this.props.wrapperProps;
+    const { workspaces, isLoading } = this.props.wrapperProps;
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces.map(this.renderCard).filter(c => c !== null);
+    const cards = workspaces
+      .map(this.renderCard)
+      .filter(isNotNullOrUndefined)
+      .sort((a, b) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
+      .map(c => c.card);
+
+    const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
           <Header
-            className="app-header"
+            className="app-header theme--app-header"
             gridLeft={
               <React.Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
                 <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
+                {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </React.Fragment>
             }
             gridRight={
@@ -536,7 +601,9 @@ class WrapperHome extends React.PureComponent<Props, State> {
               )}
             </div>
             <div className="document-listing__footer vertically-center">
-              <span>{cards.length} Documents</span>
+              <span>
+                {cards.length} {countLabel}
+              </span>
             </div>
           </div>
         )}

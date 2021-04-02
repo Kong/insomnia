@@ -11,6 +11,8 @@ import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import fsx from 'fs-extra';
 import * as electron from 'electron';
+import { trackEvent } from './analytics';
+import { WorkspaceScopeKeys } from '../models/workspace';
 
 async function loadDesignerDb(types: Array<string>, designerDataDir: string): Promise<Object> {
   const designerDb = {};
@@ -115,7 +117,7 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
 }
 
 async function readDirs(srcDir: string): Array<string> {
-  if (fs.existsSync(srcDir)) {
+  if (existsAndIsDirectory(srcDir)) {
     return await fs.promises.readdir(srcDir);
   } else {
     return [];
@@ -128,7 +130,7 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
     const dest = fsPath.join(destDir, dir);
 
     // If source exists, ensure the destination exists, and copy into it
-    if (fs.existsSync(src)) {
+    if (existsAndIsDirectory(src)) {
       await fsx.ensureDir(dest);
       await fsx.copy(src, dest);
     }
@@ -138,10 +140,14 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
 async function removeDirs(dirs: Array<string>, srcDir: string) {
   for (const dir of dirs.filter(c => c)) {
     const dirToRemove = fsPath.join(srcDir, dir);
-    if (fs.existsSync(dirToRemove)) {
+    if (existsAndIsDirectory(dirToRemove)) {
       await fsx.remove(dirToRemove);
     }
   }
+}
+
+export function existsAndIsDirectory(name: string): boolean {
+  return fs.existsSync(name) && fs.statSync(name).isDirectory();
 }
 
 export default async function migrateFromDesigner({
@@ -166,6 +172,7 @@ export default async function migrateFromDesigner({
   const modelTypesToMerge = [];
 
   if (useDesignerSettings) {
+    trackEvent('Data', 'Migration', 'Settings');
     modelTypesToMerge.push(models.settings.type);
     console.log(`[db-merge] keeping settings from Insomnia Designer`);
   } else {
@@ -173,6 +180,7 @@ export default async function migrateFromDesigner({
   }
 
   if (copyWorkspaces) {
+    trackEvent('Data', 'Migration', 'Workspaces');
     modelTypesToMerge.push(...workspaceModels);
   }
 
@@ -204,10 +212,10 @@ export default async function migrateFromDesigner({
         });
       }
 
-      // For each workspace coming from Designer, mark workspace.scope as 'designer'
+      // For each workspace coming from Designer, mark workspace.scope as 'design'
       if (modelType === models.workspace.type) {
         for (const workspace of entries) {
-          (workspace: Workspace).scope = 'designer';
+          (workspace: Workspace).scope = WorkspaceScopeKeys.design;
         }
       }
 
@@ -228,15 +236,18 @@ export default async function migrateFromDesigner({
 
     if (copyPlugins) {
       console.log(`[db-merge] migrating plugins from designer to core`);
+      trackEvent('Data', 'Migration', 'Plugins');
       await migratePlugins(designerDataDir, coreDataDir);
     }
 
     console.log('[db-merge] done!');
 
+    trackEvent('Data', 'Migration', 'Success');
     return {};
   } catch (error) {
     console.log('[db-merge] an error occurred while migrating');
     console.error(error);
+    trackEvent('Data', 'Migration', 'Failure');
     await restoreCoreBackup(backupDir, coreDataDir);
     return { error };
   }
@@ -248,7 +259,7 @@ export async function restoreCoreBackup(backupDir: string, coreDataDir: string) 
     return;
   }
 
-  if (!fs.existsSync(backupDir)) {
+  if (!existsAndIsDirectory(backupDir)) {
     console.log(`[db-merge] nothing to restore: backup directory doesn't exist at ${backupDir}`);
     return;
   }

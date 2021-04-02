@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import PageLayout from './page-layout';
-import type { WrapperProps } from './wrapper';
+import type { HandleImportFileCallback, WrapperProps } from './wrapper';
 import RequestPane from './panes/request-pane';
 import ErrorBoundary from './error-boundary';
 import ResponsePane from './panes/response-pane';
@@ -10,8 +10,7 @@ import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import { AUTOBIND_CFG } from '../../common/constants';
-import { isGrpcRequest } from '../../models/helpers/is-model';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
+import { isCollection, isDesign, isGrpcRequest } from '../../models/helpers/is-model';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
@@ -31,7 +30,7 @@ type Props = {
   handleForceUpdateRequest: Function,
   handleForceUpdateRequestHeaders: Function,
   handleImport: Function,
-  handleImportFile: (forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
   handleRequestCreate: Function,
   handleRequestGroupCreate: Function,
   handleSendAndDownloadRequestWithActiveEnvironment: Function,
@@ -59,8 +58,8 @@ class WrapperDebug extends React.PureComponent<Props> {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
     const { vcs, activeWorkspace, syncItems } = this.props.wrapperProps;
 
-    const collection = activeWorkspace.scope === 'collection';
-    const designer = !collection;
+    const collection = isCollection(activeWorkspace);
+    const design = isDesign(activeWorkspace);
 
     const share = session.isLoggedIn() && collection && (
       <Button variant="contained" onClick={showSyncShareModal}>
@@ -72,7 +71,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       <SyncDropdown workspace={activeWorkspace} vcs={vcs} syncItems={syncItems} />
     );
 
-    const gitSync = designer && gitSyncDropdown;
+    const gitSync = design && gitSyncDropdown;
     const sync = betaSync || gitSync;
 
     return (

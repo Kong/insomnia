@@ -32,6 +32,8 @@ import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { bindActionCreators } from 'redux';
 import * as globalActions from '../../redux/modules/global';
 import { connect } from 'react-redux';
+import { stringsPlural } from '../../../common/strings';
+import { snapNumberToLimits } from '../../../common/misc';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -85,18 +87,11 @@ class General extends React.PureComponent<Props, State> {
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
     if (el.type === 'number') {
-      value = parseInt(value, 10) || 0;
-      const min = parseInt(el.min, 10);
-      const max = parseInt(el.max, 10);
-
-      const moreThanMax = Number.isNaN(max) || value > max;
-      const lessThanMin = Number.isNaN(min) || value < min;
-
-      if (moreThanMax) {
-        value = max;
-      } else if (lessThanMin) {
-        value = min;
-      }
+      value = snapNumberToLimits(
+        parseInt(value, 10) || 0,
+        parseInt(el.min, 10),
+        parseInt(el.max, 10),
+      );
     }
 
     if (el.value === '__NULL__') {
@@ -539,8 +534,8 @@ class General extends React.PureComponent<Props, State> {
           </label>
           <p className="txt-sm faint">
             Help Kong improve its products by sending anonymous data about features and plugins
-            used, hardware and software configuration, statistics on number of requests, workspaces,
-            etc.
+            used, hardware and software configuration, statistics on number of requests,{' '}
+            {stringsPlural.collection.toLowerCase()}, {stringsPlural.document.toLowerCase()}, etc.
           </p>
           <p className="txt-sm faint">
             Please note that this will not include personal data or any sensitive information, such

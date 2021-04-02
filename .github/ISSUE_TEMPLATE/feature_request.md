@@ -1,8 +1,7 @@
 ---
-name: Feature request
+name: Feature Request
 about: Suggest an idea for this project
-title: Short issue title
-labels: "Feature \U0001F381"
+labels: C-feature-request
 
 ---
 

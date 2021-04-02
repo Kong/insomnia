@@ -82,7 +82,8 @@ class MethodDropdown extends PureComponent {
     return (
       <Dropdown ref={this._setDropdownRef} className="method-dropdown" right={right}>
         <DropdownButton type="button" {...extraProps}>
-          {buttonLabel} <i className="fa fa-caret-down" />
+          <span className={`http-method-${method}`}>{buttonLabel}</span>{' '}
+          <i className="fa fa-caret-down space-left" />
         </DropdownButton>
         {constants.HTTP_METHODS.map(method => (
           <DropdownItem

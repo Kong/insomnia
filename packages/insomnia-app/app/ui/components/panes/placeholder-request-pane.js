@@ -4,12 +4,12 @@ import Hotkey from '../hotkey';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import type { Request } from '../../../models/request';
-import type { ForceToWorkspace } from '../../redux/modules/helpers';
 import { Pane, PaneBody, PaneHeader } from './pane';
+import type { HandleImportFileCallback } from '../wrapper';
 
 type Props = {
   hotKeyRegistry: hotkeys.HotKeyRegistry,
-  handleImportFile: (forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
   handleCreateRequest: () => Promise<Request>,
 };
 

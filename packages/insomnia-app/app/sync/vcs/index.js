@@ -36,6 +36,7 @@ import { chunkArray, generateId } from '../../common/misc';
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
+import { strings } from '../../common/strings';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -1157,7 +1158,7 @@ export default class VCS {
     );
 
     if (!project) {
-      throw new Error('Please push the workspace to be able to share it');
+      throw new Error(`Please push the ${strings.collection.toLowerCase()} to be able to share it`);
     }
 
     return project.teams;

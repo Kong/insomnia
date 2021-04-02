@@ -29,7 +29,11 @@ export const importFromClipboard = async (app, newWorkspace = false) => {
 
   await dropdown.clickOpenDropdownItemByText(app, 'From Clipboard');
 
-  await modal.clickModalFooterByText(app, 'AskModal', newWorkspace ? 'New Workspace' : 'Current');
+  await modal.clickModalFooterByText(app, newWorkspace ? 'New Workspace' : 'Current');
+
+  if (newWorkspace) {
+    await modal.clickModalFooterByText(app, 'Request Collection');
+  }
 };
 
 export const installPlugin = async (app, pluginName) => {

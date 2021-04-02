@@ -97,6 +97,14 @@ export const metaSortKeySort: SortFunction = (a, b) => {
   return a.metaSortKey < b.metaSortKey ? -1 : 1;
 };
 
+export const ascendingNumberSort = (a: number, b: number): number => {
+  return a < b ? -1 : 1;
+};
+
+export const descendingNumberSort = (a: number, b: number): number => {
+  return ascendingNumberSort(b, a);
+};
+
 export const sortMethodMap: { [SortOrder]: SortFunction } = {
   [SORT_NAME_ASC]: ascendingNameSort,
   [SORT_NAME_DESC]: descendingNameSort,
