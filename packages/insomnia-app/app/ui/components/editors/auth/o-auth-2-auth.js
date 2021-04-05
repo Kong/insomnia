@@ -29,6 +29,7 @@ import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import type { Settings } from '../../../../models/settings';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
+import { convertEpochToMilliseconds } from '../../../../common/misc';
 
 type Props = {
   handleRender: Function,
@@ -82,6 +83,20 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     } else {
       await models.oAuth2Token.create({
         accessToken,
+        parentId: this.props.request._id,
+      });
+    }
+  }
+
+  async _handleUpdateIdentityToken(e: SyntheticEvent<HTMLInputElement>): Promise<void> {
+    const { oAuth2Token } = this.props;
+    const identityToken = e.currentTarget.value;
+
+    if (oAuth2Token) {
+      await models.oAuth2Token.update(oAuth2Token, { identityToken });
+    } else {
+      await models.oAuth2Token.create({
+        identityToken,
         parentId: this.props.request._id,
       });
     }
@@ -483,7 +498,31 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     return { basic: basicFields, advanced: advancedFields };
   }
 
-  static renderExpireAt(token: ?OAuth2Token): React.Element<*> | string | null {
+  static renderIdentityTokenExpiry(token: ?OAuth2Token): React.Element<*> | string | null {
+    if (!token || !token.identityToken) {
+      return null;
+    }
+    const base64Url = token.identityToken.split('.')[1];
+    let decodedString = '';
+    try {
+      decodedString = window.atob(base64Url);
+    } catch (error) {
+      return null;
+    }
+    const { exp } = JSON.parse(decodedString);
+    if (!exp) {
+      return '(never expires)';
+    }
+    const convertedExp = convertEpochToMilliseconds(exp);
+    return (
+      <span>
+        &#x28;expires <TimeFromNow timestamp={convertedExp} />
+        &#x29;
+      </span>
+    );
+  }
+
+  static renderAccessTokenExpiry(token: ?OAuth2Token): React.Element<*> | string | null {
     if (!token || !token.accessToken) {
       return null;
     }
@@ -491,7 +530,6 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     if (!token.expiresAt) {
       return '(never expires)';
     }
-
     return (
       <span>
         &#x28;expires <TimeFromNow timestamp={token.expiresAt} />
@@ -541,7 +579,8 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     const { request, oAuth2Token: tok } = this.props;
     const { loading, error, showAdvanced } = this.state;
 
-    const expireLabel = OAuth2Auth.renderExpireAt(tok);
+    const accessExpireLabel = OAuth2Auth.renderAccessTokenExpiry(tok);
+    const identityExpireLabel = OAuth2Auth.renderIdentityTokenExpiry(tok);
     const fields = this.renderGrantTypeFields(request.authentication.grantType);
 
     return (
@@ -608,7 +647,17 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
           </div>
           <div className="form-control form-control--outlined">
             <label>
-              <small>Access Token {tok ? <em>{expireLabel}</em> : null}</small>
+              <small>Identity Token {tok ? <em>{identityExpireLabel}</em> : null}</small>
+              <input
+                value={(tok && tok.identityToken) || ''}
+                placeholder="n/a"
+                onChange={this._handleUpdateIdentityToken}
+              />
+            </label>
+          </div>
+          <div className="form-control form-control--outlined">
+            <label>
+              <small>Access Token {tok ? <em>{accessExpireLabel}</em> : null}</small>
               <input
                 value={(tok && tok.accessToken) || ''}
                 placeholder="n/a"
