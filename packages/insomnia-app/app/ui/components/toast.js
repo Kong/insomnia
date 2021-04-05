@@ -112,25 +112,32 @@ class Toast extends React.PureComponent<Props, State> {
 
     // Try fetching user notification
     try {
-      const data = {
+      // Telemetry data
+      const trackingData = {
         firstLaunch: stats.created,
         launches: stats.launches,
-        platform: getAppPlatform(),
-        app: getAppId(),
-        version: getAppVersion(),
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
         workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: !updatesSupported(),
-        autoUpdatesDisabled: !settings.updateAutomatically,
-        disableUpdateNotification: settings.disableUpdateNotification,
-        updateChannel: settings.updateChannel,
         deviceId: await getDeviceId(),
         createdRequests: stats.createdRequests,
         deletedRequests: stats.deletedRequests,
         executedRequests: stats.executedRequests,
       };
+
+      // Non-telemetry data
+      const commonData = {
+        platform: getAppPlatform(),
+        app: getAppId(),
+        version: getAppVersion(),
+        updatesNotSupported: !updatesSupported(),
+        autoUpdatesDisabled: !settings.updateAutomatically,
+        disableUpdateNotification: settings.disableUpdateNotification,
+        updateChannel: settings.updateChannel,
+      };
+
+      const data = settings.enableAnalytics ? { ...trackingData, ...commonData } : commonData;
 
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
     } catch (err) {
