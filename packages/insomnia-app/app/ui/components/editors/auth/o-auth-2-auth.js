@@ -29,6 +29,7 @@ import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import type { Settings } from '../../../../models/settings';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
+import { convertEpochToMilliseconds } from '../../../../common/misc';
 
 type Props = {
   handleRender: Function,
@@ -508,21 +509,14 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     } catch (error) {
       return null;
     }
-    let { exp } = JSON.parse(decodedString);
+    const { exp } = JSON.parse(decodedString);
     if (!exp) {
       return '(never expires)';
     }
-    /* 
-      Need to find exp's digit count and then remove digits or pad it with 0s to 
-      make it exactly 13 digits. As the 'TimeFromNow' component only seems to 
-      render 13 digit epochs correctly.
-    */
-    const expDigitCount = exp.toString().length;
-    exp = exp * 10 ** (13 - expDigitCount);
-
+    const convertedExp = convertEpochToMilliseconds(exp);
     return (
       <span>
-        &#x28;expires <TimeFromNow timestamp={exp} />
+        &#x28;expires <TimeFromNow timestamp={convertedExp} />
         &#x29;
       </span>
     );
