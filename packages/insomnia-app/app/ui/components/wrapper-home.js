@@ -1,17 +1,16 @@
 // @flow
 import * as React from 'react';
-import * as git from 'isomorphic-git';
-import path from 'path';
-import * as db from '../../common/database';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import type { GlobalActivity } from '../../common/constants';
 import {
-  AUTOBIND_CFG,
-  ACTIVITY_SPEC,
   ACTIVITY_DEBUG,
+  ACTIVITY_SPEC,
+  AUTOBIND_CFG,
   getAppName,
   isWorkspaceActivity,
 } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
+import { WorkspaceScopeKeys } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
   Breadcrumb,
@@ -28,13 +27,10 @@ import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { showAlert, showModal, showPrompt } from './modals';
+import { showPrompt } from './modals';
 import * as models from '../../models';
-import { trackEvent, trackSegmentEvent } from '../../common/analytics';
-import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
-import type { GlobalActivity } from '../../common/constants';
 
 import { fuzzyMatchAll, isNotNullOrUndefined, pluralize } from '../../common/misc';
 import type {
@@ -44,32 +40,29 @@ import type {
   WrapperProps,
 } from './wrapper';
 import Notice from './notice';
-import GitRepositorySettingsModal from '../components/modals/git-repository-settings-modal';
 import PageLayout from './page-layout';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { MemClient } from '../../sync/git/mem-client';
-import {
-  GIT_CLONE_DIR,
-  GIT_INSOMNIA_DIR,
-  GIT_INSOMNIA_DIR_NAME,
-  GIT_INTERNAL_DIR,
-} from '../../sync/git/git-vcs';
 import { parseApiSpec } from '../../common/api-specs';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
 import { strings } from '../../common/strings';
-import { WorkspaceScopeKeys } from '../../models/workspace';
 import { descendingNumberSort } from '../../common/sorting';
-import { addDotGit, translateSSHtoHTTP, gitCallbacks } from '../../sync/git/utils';
-import { httpClient } from '../../sync/git/http-client';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as workspaceActions from '../redux/modules/workspace';
+import * as gitActions from '../redux/modules/git';
+import { GitCloneWorkspaceCallback } from '../redux/modules/workspace';
+import { MemClient } from '../../sync/git/mem-client';
 
 type Props = {|
   wrapperProps: WrapperProps,
   handleImportFile: HandleImportFileCallback,
   handleImportUri: HandleImportUriCallback,
   handleImportClipboard: HandleImportClipboardCallback,
+  handleCreateWorkspace: CreateWorkspaceCallback,
+  handleGitCloneWorkspace: GitCloneWorkspaceCallback,
 |};
 
 type State = {|
@@ -92,45 +85,12 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.setState({ filter: e.currentTarget.value });
   }
 
-  async __actuallyCreate(patch: $Shape<Workspace>) {
-    const workspace = await models.workspace.create(patch);
-    const { handleSetActiveActivity } = this.props.wrapperProps;
-    this.props.wrapperProps.handleSetActiveWorkspace(workspace._id);
-    trackEvent('Workspace', 'Create');
-
-    workspace.scope === WorkspaceScopeKeys.design
-      ? handleSetActiveActivity(ACTIVITY_SPEC)
-      : handleSetActiveActivity(ACTIVITY_DEBUG);
-  }
-
   _handleDocumentCreate() {
-    showPrompt({
-      title: 'Create New Design Document',
-      submitName: 'Create',
-      placeholder: 'spec-name.yaml',
-      onComplete: async name => {
-        await this.__actuallyCreate({
-          name,
-          scope: WorkspaceScopeKeys.design,
-        });
-        trackSegmentEvent('Document Created');
-      },
-    });
+    this.props.handleCreateWorkspace({ scope: WorkspaceScopeKeys.design });
   }
 
   _handleCollectionCreate() {
-    showPrompt({
-      title: 'Create New Request Collection',
-      placeholder: 'My Collection',
-      submitName: 'Create',
-      onComplete: async name => {
-        await this.__actuallyCreate({
-          name,
-          scope: WorkspaceScopeKeys.collection,
-        });
-        trackSegmentEvent('Collection Created');
-      },
-    });
+    this.props.handleCreateWorkspace({ scope: WorkspaceScopeKeys.collection });
   }
 
   _handleImportFile() {
@@ -153,180 +113,8 @@ class WrapperHome extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleWorkspaceClone() {
-    // This is a huge flow and we don't really have anywhere to put something like this. I guess
-    // it's fine here for now (?)
-    showModal(GitRepositorySettingsModal, {
-      gitRepository: null,
-      onSubmitEdits: async repoSettingsPatch => {
-        trackEvent('Git', 'Clone');
-
-        let fsClient = MemClient.createClient();
-
-        repoSettingsPatch.uri = translateSSHtoHTTP(repoSettingsPatch.uri);
-
-        // Pull settings returned from dialog and shallow-clone the repo
-        const cloneParams = {
-          ...gitCallbacks({
-            username: repoSettingsPatch.credentials.username,
-            password: repoSettingsPatch.credentials.token,
-          }),
-          fs: fsClient,
-          http: httpClient,
-          dir: GIT_CLONE_DIR,
-          gitdir: GIT_INTERNAL_DIR,
-          singleBranch: true,
-          url: repoSettingsPatch.uri,
-          depth: 1,
-        };
-        try {
-          await git.clone(cloneParams);
-        } catch (originalUrlError) {
-          if (cloneParams.url.endsWith('.git')) {
-            showAlert({ title: 'Error Cloning Repository', message: originalUrlError.message });
-            return;
-          }
-
-          const dotGitUrl = addDotGit(cloneParams);
-          try {
-            fsClient = MemClient.createClient();
-            await git.clone({
-              ...cloneParams,
-              fs: fsClient,
-              url: dotGitUrl,
-            });
-
-            // by this point the clone was successful, so update with this syntax
-            repoSettingsPatch.uri = dotGitUrl;
-          } catch (dotGitError) {
-            showAlert({
-              title: 'Error Cloning Repository: failed to clone with and without `.git` suffix',
-              message: `Failed to clone with original url (${repoSettingsPatch.uri}): ${originalUrlError.message};\n\nAlso failed to clone with \`.git\` suffix added (${dotGitUrl}): ${dotGitError.message}`,
-            });
-            return;
-          }
-        }
-
-        const ensureDir = async (base: string, name: string): Promise<boolean> => {
-          const rootDirs = await fsClient.promises.readdir(base);
-          if (rootDirs.includes(name)) {
-            return true;
-          }
-
-          showAlert({
-            title: 'Clone Problem',
-            message: (
-              <React.Fragment>
-                Could not locate{' '}
-                <code>
-                  {base}/{name}
-                </code>{' '}
-                directory in repository.
-              </React.Fragment>
-            ),
-          });
-
-          return false;
-        };
-
-        if (!(await ensureDir(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME))) {
-          return;
-        }
-
-        if (!(await ensureDir(GIT_INSOMNIA_DIR, models.workspace.type))) {
-          return;
-        }
-
-        const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-        const workspaceDirs = await fsClient.promises.readdir(workspaceBase);
-
-        if (workspaceDirs.length > 1) {
-          showAlert({
-            title: 'Clone Problem',
-            message: 'Multiple workspaces found in repository',
-          });
-          return;
-        }
-
-        if (workspaceDirs.length === 0) {
-          showAlert({
-            title: 'Clone Problem',
-            message: 'No workspaces found in repository',
-          });
-          return;
-        }
-
-        const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
-        const workspaceJson = await fsClient.promises.readFile(workspacePath);
-        const workspace = YAML.parse(workspaceJson.toString());
-
-        // Check if the workspace already exists
-        const existingWorkspace = await models.workspace.getById(workspace._id);
-
-        if (existingWorkspace) {
-          showAlert({
-            title: 'Clone Problem',
-            okLabel: 'Done',
-            message: (
-              <React.Fragment>
-                Workspace <strong>{existingWorkspace.name}</strong> already exists. Please delete it
-                before cloning.
-              </React.Fragment>
-            ),
-          });
-          return;
-        }
-
-        // Prompt user to confirm importing the workspace
-        showAlert({
-          title: 'Project Found',
-          okLabel: 'Import',
-          message: (
-            <React.Fragment>
-              Workspace <strong>{workspace.name}</strong> found in repository. Would you like to
-              import it?
-            </React.Fragment>
-          ),
-
-          // Import all docs to the DB
-          onConfirm: async () => {
-            const {
-              wrapperProps: { handleSetActiveWorkspace },
-            } = this.props;
-
-            // Stop the DB from pushing updates to the UI temporarily
-            const bufferId = await db.bufferChanges();
-
-            // Loop over all model folders in root
-            for (const modelType of await fsClient.promises.readdir(GIT_INSOMNIA_DIR)) {
-              const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
-
-              // Loop over all documents in model folder and save them
-              for (const docFileName of await fsClient.promises.readdir(modelDir)) {
-                const docPath = path.join(modelDir, docFileName);
-                const docYaml = await fsClient.promises.readFile(docPath);
-                const doc = YAML.parse(docYaml.toString());
-                await db.upsert(doc);
-              }
-            }
-
-            // Store GitRepository settings and set it as active
-            const newRepo = await models.gitRepository.create({
-              ...repoSettingsPatch,
-              needsFullClone: true,
-            });
-            const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-            await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });
-
-            // Activate the workspace after importing everything
-            await handleSetActiveWorkspace(workspace._id);
-
-            // Flush DB changes
-            await db.flushChanges(bufferId);
-          },
-        });
-      },
-    });
+  _handleWorkspaceClone() {
+    this.props.handleGitCloneWorkspace({ createFsClient: MemClient.createClient });
   }
 
   _handleKeyDown(e) {
@@ -612,4 +400,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 }
 
-export default WrapperHome;
+function mapDispatchToProps(dispatch) {
+  return {
+    handleCreateWorkspace: bindActionCreators(workspaceActions.createWorkspace, dispatch),
+    handleGitCloneWorkspace: bindActionCreators(gitActions.cloneGitRepository, dispatch),
+  };
+}
+
+export default connect(null, mapDispatchToProps)(WrapperHome);
