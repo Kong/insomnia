@@ -114,8 +114,6 @@ class Toast extends React.PureComponent<Props, State> {
     try {
       // Telemetry data
       const trackingData = {
-        firstLaunch: stats.created,
-        launches: stats.launches,
         requests: await db.count(models.request.type),
         requestGroups: await db.count(models.requestGroup.type),
         environments: await db.count(models.environment.type),
@@ -128,6 +126,8 @@ class Toast extends React.PureComponent<Props, State> {
 
       // Non-telemetry data
       const commonData = {
+        firstLaunch: stats.created, // Used for account verification notifications
+        launches: stats.launches, // Used for CTAs / Informational notifications
         platform: getAppPlatform(),
         app: getAppId(),
         version: getAppVersion(),
