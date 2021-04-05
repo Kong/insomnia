@@ -1,2 +1,3 @@
 const trackEvent = jest.fn();
-module.exports = { trackEvent };
+const trackSegmentEvent = jest.fn();
+module.exports = { trackEvent, trackSegmentEvent };
