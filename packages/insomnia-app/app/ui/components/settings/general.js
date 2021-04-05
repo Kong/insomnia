@@ -90,7 +90,7 @@ class General extends React.PureComponent<Props, State> {
     // NOTE: Also include some others:
     //  - https://github.com/Kong/insomnia/issues/1835
     const fontsMono = allFonts
-      .filter(i => i.monospace || i.family.match(FORCED_MONO_FONT_REGEX && !i.italic))
+      .filter(i => (!i.italic && i.monospace) || i.family.match(FORCED_MONO_FONT_REGEX))
       .reduce(REMOVE_DUPLICATES, [])
       .sort((a, b) => (a.family > b.family ? 1 : -1));
 
@@ -379,8 +379,8 @@ class General extends React.PureComponent<Props, State> {
                   name="fontMonospaceWeight"
                   value={settings.fontMonospaceWeight}
                   onChange={this._handleFontChange}>
-                  {editorFontWeights.map((item, index) => (
-                    <option key={index} value={item}>
+                  {editorFontWeights.map(item => (
+                    <option key={item} value={item}>
                       {Object.keys(EDITOR_FONT_WEITGHTS).find(
                         key => EDITOR_FONT_WEITGHTS[key] === item,
                       )}
