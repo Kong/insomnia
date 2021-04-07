@@ -14,11 +14,9 @@ import {
   getAppVersion,
   updatesSupported,
 } from '../../common/constants';
-import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
 import imgSrcCore from '../images/insomnia-core-logo.png';
-import { getDeviceId } from '../../common/analytics';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -112,20 +110,7 @@ class Toast extends React.PureComponent<Props, State> {
 
     // Try fetching user notification
     try {
-      // Telemetry data
-      const trackingData = {
-        requests: await db.count(models.request.type),
-        requestGroups: await db.count(models.requestGroup.type),
-        environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type),
-        deviceId: await getDeviceId(),
-        createdRequests: stats.createdRequests,
-        deletedRequests: stats.deletedRequests,
-        executedRequests: stats.executedRequests,
-      };
-
-      // Non-telemetry data
-      const commonData = {
+      const data = {
         firstLaunch: stats.created, // Used for account verification notifications
         launches: stats.launches, // Used for CTAs / Informational notifications
         platform: getAppPlatform(),
@@ -136,8 +121,6 @@ class Toast extends React.PureComponent<Props, State> {
         disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: settings.updateChannel,
       };
-
-      const data = settings.enableAnalytics ? { ...trackingData, ...commonData } : commonData;
 
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
     } catch (err) {
