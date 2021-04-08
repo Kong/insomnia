@@ -67,6 +67,7 @@ export default async function(
 
   const results = responseToObject(bodyBuffer.toString('utf8'), [
     c.P_ACCESS_TOKEN,
+    c.P_ID_TOKEN,
     c.P_TOKEN_TYPE,
     c.P_EXPIRES_IN,
     c.P_SCOPE,

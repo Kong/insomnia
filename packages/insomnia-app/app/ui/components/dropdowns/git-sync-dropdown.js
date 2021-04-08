@@ -11,7 +11,6 @@ import GitStagingModal from '../modals/git-staging-modal';
 import * as db from '../../../common/database';
 import * as models from '../../../models';
 import type { GitRepository } from '../../../models/git-repository';
-import GitRepositorySettingsModal from '../modals/git-repository-settings-modal';
 import GitLogModal from '../modals/git-log-modal';
 import GitBranchesModal from '../modals/git-branches-modal';
 import HelpTooltip from '../help-tooltip';
@@ -19,7 +18,14 @@ import Link from '../base/link';
 import { trackEvent } from '../../../common/analytics';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
-import { translateSSHtoHTTP } from '../../../sync/git/utils';
+import { MemClient } from '../../../sync/git/mem-client';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import * as gitActions from '../../redux/modules/git';
+import type {
+  SetupGitRepositoryCallback,
+  UpdateGitRepositoryCallback,
+} from '../../redux/modules/git';
 
 type Props = {|
   handleInitializeEntities: () => Promise<void>,
@@ -27,6 +33,8 @@ type Props = {|
   workspace: Workspace,
   vcs: GitVCS,
   gitRepository: GitRepository | null,
+  setupGitRepository: SetupGitRepositoryCallback,
+  updateGitRepository: UpdateGitRepositoryCallback,
 
   // Optional
   className?: string,
@@ -185,23 +193,12 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 
   _handleConfig() {
-    const { gitRepository } = this.props;
-    showModal(GitRepositorySettingsModal, {
-      gitRepository,
-      onSubmitEdits: async patch => {
-        const { workspace } = this.props;
-        const workspaceMeta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-
-        patch.uri = translateSSHtoHTTP(patch.uri);
-
-        if (gitRepository) {
-          await models.gitRepository.update(gitRepository, patch);
-        } else {
-          const repo = await models.gitRepository.create(patch);
-          await models.workspaceMeta.update(workspaceMeta, { gitRepositoryId: repo._id });
-        }
-      },
-    });
+    const { gitRepository, workspace, updateGitRepository, setupGitRepository } = this.props;
+    if (gitRepository) {
+      updateGitRepository({ gitRepository });
+    } else {
+      setupGitRepository({ workspace, createFsClient: MemClient.createClient });
+    }
   }
 
   _handleLog() {
@@ -361,4 +358,11 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
   }
 }
 
-export default GitSyncDropdown;
+function mapDispatchToProps(dispatch) {
+  const boundGitActions = bindActionCreators(gitActions, dispatch);
+  return {
+    setupGitRepository: boundGitActions.setupGitRepository,
+    updateGitRepository: boundGitActions.updateGitRepository,
+  };
+}
+export default connect(null, mapDispatchToProps)(GitSyncDropdown);

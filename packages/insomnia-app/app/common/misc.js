@@ -441,6 +441,16 @@ export function isObject(obj: any) {
   return obj !== null && typeof obj === 'object';
 }
 
+export function convertEpochToMilliseconds(epoch: number) {
+  /* 
+    Finds epoch's digit count and converts it to make it exactly 13 digits. 
+    Which is the epoch millisecond represntation.
+  */
+  const expDigitCount = epoch.toString().length;
+  const convertedEpoch = parseInt(epoch * 10 ** (13 - expDigitCount));
+  return convertedEpoch;
+}
+
 export function snapNumberToLimits(value: number, min?: number, max?: number): number {
   const moreThanMax = max && !Number.isNaN(max) && value > max;
   const lessThanMin = min && !Number.isNaN(min) && value < min;

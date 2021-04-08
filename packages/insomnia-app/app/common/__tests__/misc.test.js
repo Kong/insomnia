@@ -1,6 +1,12 @@
 import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { diffPatchObj, isNotNullOrUndefined, pluralize, snapNumberToLimits } from '../misc';
+import {
+  diffPatchObj,
+  isNotNullOrUndefined,
+  pluralize,
+  snapNumberToLimits,
+  convertEpochToMilliseconds,
+} from '../misc';
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -245,6 +251,20 @@ describe('diffPatchObj()', () => {
     expect(diffPatchObj(a, c, true)).toEqual({ x: 2, y: 3 });
 
     expect(diffPatchObj(c, a, true)).toEqual({ x: 1, y: { z: 5 } });
+  });
+});
+
+describe('convertEpochToMilliseconds()', () => {
+  it('should convert microseconds to milliseconds', () => {
+    expect(convertEpochToMilliseconds(1617616858412123)).toBe(1617616858412);
+  });
+
+  it('should convert seconds to milliseconds', () => {
+    expect(convertEpochToMilliseconds(1617617010)).toBe(1617617010000);
+  });
+
+  it('should output same if value already in milliseconds', () => {
+    expect(convertEpochToMilliseconds(1617617141412)).toBe(1617617141412);
   });
 });
 
