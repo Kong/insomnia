@@ -56,7 +56,6 @@ export default async function(
       c.P_ERROR_URI,
     ]);
     results[c.P_ACCESS_TOKEN] = results[c.P_ACCESS_TOKEN] || results[c.P_ID_TOKEN];
-    delete results[c.P_ID_TOKEN];
     return results;
   } else {
     // Bad redirect

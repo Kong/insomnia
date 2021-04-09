@@ -95,6 +95,7 @@ describe('authorization_code', () => {
     // Check the expected value
     expect(result).toEqual({
       access_token: 'token_123',
+      id_token: null,
       refresh_token: null,
       expires_in: null,
       token_type: 'token_type',
@@ -182,6 +183,7 @@ describe('authorization_code', () => {
     // Check the expected value
     expect(result).toEqual({
       access_token: 'token_123',
+      id_token: null,
       refresh_token: null,
       expires_in: null,
       token_type: 'token_type',
@@ -241,6 +243,7 @@ describe('authorization_code', () => {
     // Check the expected value
     expect(result).toEqual({
       access_token: 'token_123',
+      id_token: null,
       refresh_token: null,
       expires_in: null,
       token_type: 'token_type',

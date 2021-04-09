@@ -6,6 +6,7 @@ import * as db from '../common/database';
 type BaseOAuth2Token = {
   refreshToken: string,
   accessToken: string,
+  identityToken: string,
   expiresAt: number | null, // Should be Date.now() if valid
 
   // Debug
@@ -30,6 +31,7 @@ export function init(): BaseOAuth2Token {
   return {
     refreshToken: '',
     accessToken: '',
+    identityToken: '',
     expiresAt: null, // Should be Date.now() if valid
 
     // Debug

@@ -111,6 +111,11 @@ export async function getDeviceId(): Promise<string> {
 let segmentClient = null;
 
 export async function trackSegmentEvent(event: String, properties?: Object) {
+  const settings = await models.settings.getOrCreate();
+  if (!settings.enableAnalytics) {
+    return;
+  }
+
   try {
     if (!segmentClient) {
       segmentClient = new Analytics(getSegmentWriteKey(), {
