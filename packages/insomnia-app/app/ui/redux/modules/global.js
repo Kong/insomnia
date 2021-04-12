@@ -35,6 +35,7 @@ import {
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
   ACTIVITY_ONBOARDING,
+  ACTIVITY_ANALYTICS,
   DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
@@ -277,6 +278,9 @@ export function setActiveActivity(activity: GlobalActivity) {
       break;
     case ACTIVITY_ONBOARDING:
       models.settings.patch({ hasPromptedOnboarding: true });
+      break;
+    case ACTIVITY_ANALYTICS:
+      models.settings.patch({ hasPromptedAnalytics: true });
       break;
     default:
       break;
@@ -728,6 +732,8 @@ export function initActiveActivity() {
           overrideActivity = ACTIVITY_MIGRATION;
         } else if (!settings.hasPromptedOnboarding) {
           overrideActivity = ACTIVITY_ONBOARDING;
+        } else if (!settings.hasPromptedAnalytics) {
+          overrideActivity = ACTIVITY_ANALYTICS;
         }
         break;
     }
