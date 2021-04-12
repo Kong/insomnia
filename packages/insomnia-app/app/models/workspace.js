@@ -3,6 +3,7 @@ import type { BaseModel } from './index';
 import * as models from './index';
 import * as db from '../common/database';
 import { getAppName } from '../common/constants';
+import { strings } from '../common/strings';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -10,19 +11,26 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
+export const WorkspaceScopeKeys = {
+  design: 'design',
+  collection: 'collection',
+};
+
+export type WorkspaceScope = $Keys<typeof WorkspaceScopeKeys>;
+
 type BaseWorkspace = {
   name: string,
   description: string,
-  scope: 'designer' | 'collection',
+  scope: WorkspaceScope,
 };
 
 export type Workspace = BaseModel & BaseWorkspace;
 
 export function init() {
   return {
-    name: 'New Workspace',
+    name: `New ${strings.collection}`,
     description: '',
-    scope: 'collection',
+    scope: WorkspaceScopeKeys.collection,
   };
 }
 
@@ -47,7 +55,7 @@ export async function all(): Promise<Array<Workspace>> {
 
   if (workspaces.length === 0) {
     // Create default workspace
-    await create({ name: getAppName(), scope: 'collection' });
+    await create({ name: getAppName(), scope: WorkspaceScopeKeys.collection });
     return all();
   } else {
     return workspaces;
@@ -111,21 +119,28 @@ async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
  * Ensure workspace scope is set to a valid entry
  */
 function _migrateScope(workspace: Workspace): Workspace {
-  if (workspace.scope === 'designer' || workspace.scope === 'collection') {
+  if (
+    workspace.scope === WorkspaceScopeKeys.design ||
+    workspace.scope === WorkspaceScopeKeys.collection
+  ) {
     return workspace;
   }
 
   // Translate the old value
-  type OldScopeTypes = 'spec' | 'debug' | null;
+  type OldScopeTypes = 'spec' | 'debug' | 'designer' | null;
   switch ((workspace.scope: OldScopeTypes)) {
     case 'spec': {
-      workspace.scope = 'designer';
+      workspace.scope = WorkspaceScopeKeys.design;
+      break;
+    }
+    case 'designer': {
+      workspace.scope = WorkspaceScopeKeys.design;
       break;
     }
     case 'debug':
     case null:
     default:
-      workspace.scope = 'collection';
+      workspace.scope = WorkspaceScopeKeys.collection;
       break;
   }
 

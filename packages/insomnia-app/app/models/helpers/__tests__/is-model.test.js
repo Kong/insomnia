@@ -1,6 +1,7 @@
 import * as models from '../../index';
 import { difference } from 'lodash';
 import {
+  isDesign,
   isGrpcRequest,
   isGrpcRequestId,
   isProtoDirectory,
@@ -10,6 +11,7 @@ import {
   isWorkspace,
 } from '../is-model';
 import { generateId } from '../../../common/misc';
+import { WorkspaceScopeKeys } from '../../workspace';
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);
@@ -115,5 +117,19 @@ describe('isWorkspace', () => {
 
   it.each(unsupported)('should return false: "%s"', type => {
     expect(isWorkspace({ type })).toBe(false);
+  });
+});
+
+describe('isDesign', () => {
+  it('should be true', () => {
+    const w = models.workspace.init();
+    w.scope = WorkspaceScopeKeys.design;
+    expect(isDesign(w)).toBe(true);
+  });
+
+  it('should be false', () => {
+    const w = models.workspace.init();
+    w.scope = WorkspaceScopeKeys.collection;
+    expect(isDesign(w)).toBe(false);
   });
 });

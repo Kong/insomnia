@@ -361,7 +361,7 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
 
 export function getDesignerDataDir(): string {
   const { app } = electron.remote || electron;
-  return pathJoin(app.getPath('appData'), 'Insomnia Designer');
+  return process.env.DESIGNER_DATA_PATH || pathJoin(app.getPath('appData'), 'Insomnia Designer');
 }
 
 export function getDataDirectory(): string {
@@ -396,4 +396,74 @@ export function pluralize(text: string): string {
 
   // Add the trailer for pluralization
   return `${text.slice(0, text.length - chop)}${trailer}`;
+}
+
+export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectComparison {
+  const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
+
+  for (const prop in baseObj) {
+    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
+      continue;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(patchObj, prop)) {
+      const left = baseObj[prop];
+      const right = patchObj[prop];
+
+      if (right !== left) {
+        if (deep && isObject(left) && isObject(right)) {
+          clonedBaseObj[prop] = diffPatchObj(left, right, deep);
+        } else if (isObject(left) && !isObject(right)) {
+          // when right is empty but left isn't, prefer left to avoid a sparse array
+          clonedBaseObj[prop] = left;
+        } else {
+          // otherwise prefer right when both elements aren't objects to ensure values don't get overwritten
+          clonedBaseObj[prop] = right;
+        }
+      }
+    }
+  }
+
+  for (const prop in patchObj) {
+    if (!Object.prototype.hasOwnProperty.call(patchObj, prop)) {
+      continue;
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(baseObj, prop)) {
+      clonedBaseObj[prop] = patchObj[prop];
+    }
+  }
+
+  return clonedBaseObj;
+}
+
+export function isObject(obj: any) {
+  return obj !== null && typeof obj === 'object';
+}
+
+export function convertEpochToMilliseconds(epoch: number) {
+  /* 
+    Finds epoch's digit count and converts it to make it exactly 13 digits. 
+    Which is the epoch millisecond represntation.
+  */
+  const expDigitCount = epoch.toString().length;
+  const convertedEpoch = parseInt(epoch * 10 ** (13 - expDigitCount));
+  return convertedEpoch;
+}
+
+export function snapNumberToLimits(value: number, min?: number, max?: number): number {
+  const moreThanMax = max && !Number.isNaN(max) && value > max;
+  const lessThanMin = min && !Number.isNaN(min) && value < min;
+
+  if (moreThanMax) {
+    return max;
+  } else if (lessThanMin) {
+    return min;
+  }
+
+  return value;
+}
+
+export function isNotNullOrUndefined(obj: any): boolean {
+  return obj !== null && obj !== undefined;
 }

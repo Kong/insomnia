@@ -1,7 +1,7 @@
 // @flow
 import { keyboardKeys } from './keyboard-keys';
 import { ALT_SYM, CTRL_SYM, isMac, META_SYM, SHIFT_SYM } from './constants';
-import AppContext from './strings';
+import { strings } from './strings';
 
 /**
  * The readable definition of a hotkey.
@@ -88,7 +88,7 @@ function keyBinds(
 export const hotKeyRefs: { [string]: HotKeyDefinition } = {
   WORKSPACE_SHOW_SETTINGS: defineHotKey(
     'workspace_showSettings',
-    `Show ${AppContext.workspace} Settings`,
+    `Show ${strings.document} / ${strings.collection} Settings`,
   ),
 
   REQUEST_SHOW_SETTINGS: defineHotKey('request_showSettings', 'Show Request Settings'),

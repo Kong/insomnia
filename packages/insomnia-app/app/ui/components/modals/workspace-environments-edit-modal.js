@@ -21,6 +21,7 @@ import type { Environment } from '../../../models/environment';
 import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
+import { docsTemplateTags } from '../../../common/documentation';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
@@ -535,10 +536,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         <ModalFooter>
           <div className="margin-left italic txt-sm tall">
             * Environment data can be used for&nbsp;
-            <Link href="https://support.insomnia.rest/article/40-template-tags">
-              Nunjucks Templating
-            </Link>{' '}
-            in your requests
+            <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
           </div>
           <button className="btn" disabled={!isValid} onClick={this.hide}>
             Done

@@ -42,7 +42,7 @@ class ResponseError extends PureComponent {
           <Link
             button
             className="btn btn--clicky margin-top-sm"
-            href="https://insomnia.rest/support/">
+            href="https://insomnia.rest/support">
             Contact Support
           </Link>
         </div>

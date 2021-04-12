@@ -22,6 +22,7 @@ import type { PluginConfig, Settings } from '../../../models/settings';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import { createPlugin } from '../../../plugins/create';
 import { showAlert, showPrompt } from '../modals';
+import { docsPlugins } from '../../../common/documentation';
 
 type State = {
   plugins: Array<Plugin>,
@@ -137,7 +138,7 @@ class Plugins extends React.PureComponent<Props, State> {
             '0.0.1',
             [
               '// For help writing plugins, visit the documentation to get started:',
-              '//   https://support.insomnia.rest/article/26-plugins',
+              `//   ${docsPlugins}`,
               '',
               '// TODO: Add plugin code here...',
             ].join('\n'),
@@ -225,8 +226,7 @@ class Plugins extends React.PureComponent<Props, State> {
       <div>
         <p className="notice info no-margin-top">
           Plugins is still an experimental feature. See{' '}
-          <Link href="https://support.insomnia.rest/article/26-plugins">Documentation</Link> for
-          more info.
+          <Link href={docsPlugins}>Documentation</Link> for more info.
         </p>
         {plugins.length === 0 ? (
           <div className="text-center faint italic pad">No Plugins Added</div>
@@ -287,7 +287,7 @@ class Plugins extends React.PureComponent<Props, State> {
             <div className="selectable force-pre-wrap">
               <b>{installPluginErrMsg}</b>
               {`\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the `}
-              <a href="https://insomnia.rest/plugins/">Plugin Hub.</a>
+              <a href="https://insomnia.rest/plugins">Plugin Hub.</a>
               <details>
                 <summary>Additionl Information</summary>
                 <pre className="pad-top-sm force-wrap selectable">

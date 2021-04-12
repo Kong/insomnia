@@ -90,16 +90,24 @@ import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
-import GitVCS, { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
-import NeDBPlugin from '../../sync/git/ne-db-plugin';
-import FSPlugin from '../../sync/git/fs-plugin';
-import { routableFSPlugin } from '../../sync/git/routable-fs-plugin';
-import AppContext from '../../common/strings';
-import { isGrpcRequest, isGrpcRequestId, isRequestGroup } from '../../models/helpers/is-model';
+import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
+import { NeDBClient } from '../../sync/git/ne-db-client';
+import { fsClient } from '../../sync/git/fs-client';
+import { routableFSClient } from '../../sync/git/routable-fs-client';
+import { getWorkspaceLabel } from '../../common/get-workspace-label';
+import {
+  isCollection,
+  isGrpcRequest,
+  isGrpcRequestId,
+  isRequestGroup,
+} from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
 import withDragDropContext from '../context/app/drag-drop-context';
+import { trackSegmentEvent } from '../../common/analytics';
+import getWorkspaceName from '../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../models/helpers/workspace-operations';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class App extends PureComponent {
@@ -211,6 +219,7 @@ class App extends PureComponent {
           const request = await models.request.create({ parentId, name: 'New Request' });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
+          trackSegmentEvent('Request Created');
         },
       ],
       [
@@ -342,6 +351,7 @@ class App extends PureComponent {
       onComplete: requestId => {
         this._handleSetActiveRequest(requestId);
         models.stats.incrementCreatedRequests();
+        trackSegmentEvent('Request Created');
       },
     });
   }
@@ -414,56 +424,21 @@ class App extends PureComponent {
     });
   }
 
-  _workspaceRename(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    console.dir(AppContext);
-    showPrompt({
-      title: `Rename ${AppContext.workspace}`,
-      defaultValue: workspace.name,
-      submitName: 'Rename',
-      selectText: true,
-      label: 'Name',
-      onComplete: async name => {
-        await models.workspace.update(workspace, { name: name });
-        callback();
-      },
-    });
-  }
-
-  _workspaceDeleteById(callback, workspaceId) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    showModal(AskModal, {
-      title: `Delete ${AppContext.workspace}`,
-      message: `Do you really want to delete ${workspace.name}?`,
-      yesText: 'Yes',
-      noText: 'Cancel',
-      onDone: async isYes => {
-        if (!isYes) {
-          return;
-        }
-
-        await models.stats.incrementDeletedRequestsForDescendents(workspace);
-
-        await models.workspace.remove(workspace);
-      },
-    });
-  }
-
   _workspaceDuplicateById(callback, workspaceId) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
+    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
 
     showPrompt({
-      title: `Duplicate ${AppContext.workspace}`,
-      defaultValue: workspace.name,
+      title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
-        const newWorkspace = await db.duplicate(workspace, { name });
+        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
+
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
-
-        models.stats.incrementCreatedRequestsForDescendents(newWorkspace);
       },
     });
   }
@@ -694,6 +669,7 @@ class App extends PureComponent {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     // Start loading
     handleStartLoading(requestId);
@@ -778,6 +754,7 @@ class App extends PureComponent {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
+    trackSegmentEvent('Request Executed');
 
     handleStartLoading(requestId);
 
@@ -975,7 +952,7 @@ class App extends PureComponent {
   async _handleReloadPlugins() {
     const { settings } = this.props;
     await plugins.reloadPlugins();
-    await themes.setTheme(settings.theme);
+    await themes.applyColorScheme(settings);
     templating.reload();
     console.log('[plugins] reloaded');
   }
@@ -998,8 +975,7 @@ class App extends PureComponent {
     if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else {
-      title =
-        activeWorkspace.scope === 'collection' ? activeWorkspace.name : activeApiSpec.fileName;
+      title = isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
       }
@@ -1041,7 +1017,6 @@ class App extends PureComponent {
 
   async _updateGitVCS() {
     const { activeGitRepository, activeWorkspace } = this.props;
-
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
     this.setState({ gitVCS: null });
@@ -1051,37 +1026,44 @@ class App extends PureComponent {
     }
 
     if (activeGitRepository) {
-      // Create FS plugin
+      // Create FS client
       const baseDir = path.join(
         getDataDirectory(),
         `version-control/git/${activeGitRepository._id}`,
       );
-      const pNeDb = NeDBPlugin.createPlugin(activeWorkspace._id);
-      const pGitData = FSPlugin.createPlugin(baseDir);
-      const pOtherData = FSPlugin.createPlugin(path.join(baseDir, 'other'));
 
-      const fsPlugin = routableFSPlugin(
-        // All data outside the directories listed below will be stored in an 'other'
-        // directory. This is so we can support files that exist outside the ones
-        // the app is specifically in charge of.
-        pOtherData,
-        {
-          // All app data is stored within the a namespaced directory at the root of the
-          // repository and is read/written from the local NeDB database
-          [GIT_INSOMNIA_DIR]: pNeDb,
+      /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id);
 
-          // All git metadata is stored in a git/ directory on the filesystem
-          [GIT_INTERNAL_DIR]: pGitData,
-        },
-      );
+      /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
+      const gitDataClient = fsClient(baseDir);
+
+      /** All data outside the directories listed below will be stored in an 'other' directory. This is so we can support files that exist outside the ones the app is specifically in charge of. */
+      const otherDatClient = fsClient(path.join(baseDir, 'other'));
+
+      /** The routable FS client directs isomorphic-git to read/write from the database or from the correct directory on the file system while performing git operations. */
+      const routableFS = routableFSClient(otherDatClient, {
+        [GIT_INSOMNIA_DIR]: neDbClient,
+        [GIT_INTERNAL_DIR]: gitDataClient,
+      });
 
       // Init VCS
+      const { credentials, uri } = activeGitRepository;
       if (activeGitRepository.needsFullClone) {
         await models.gitRepository.update(activeGitRepository, { needsFullClone: false });
-        const { credentials, uri } = activeGitRepository;
-        await gitVCS.initFromClone(uri, credentials, GIT_CLONE_DIR, fsPlugin, GIT_INTERNAL_DIR);
+        await gitVCS.initFromClone({
+          url: uri,
+          gitCredentials: credentials,
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
       } else {
-        await gitVCS.init(GIT_CLONE_DIR, fsPlugin, GIT_INTERNAL_DIR);
+        await gitVCS.init({
+          directory: GIT_CLONE_DIR,
+          fs: routableFS,
+          gitDirectory: GIT_INTERNAL_DIR,
+        });
       }
 
       // Configure basic info
@@ -1127,6 +1109,41 @@ class App extends PureComponent {
     }
   }
 
+  async _handleDbChange(changes) {
+    let needsRefresh = false;
+
+    for (const change of changes) {
+      const [type, doc, fromSync] = change;
+
+      const { vcs } = this.state;
+      const { activeRequest } = this.props;
+
+      // Force refresh if environment changes
+      // TODO: Only do this for environments in this workspace (not easy because they're nested)
+      if (doc.type === models.environment.type) {
+        console.log('[App] Forcing update from environment change', change);
+        needsRefresh = true;
+      }
+
+      // Force refresh if sync changes the active request
+      if (fromSync && activeRequest && doc._id === activeRequest._id) {
+        needsRefresh = true;
+        console.log('[App] Forcing update from request change', change);
+      }
+
+      // Delete VCS project if workspace deleted
+      if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
+        await vcs.removeProjectsForRoot(doc._id);
+      }
+    }
+
+    if (needsRefresh) {
+      setTimeout(() => {
+        this._wrapper && this._wrapper._forceRequestPaneRefresh();
+      }, 300);
+    }
+  }
+
   async componentDidMount() {
     // Bind mouse and key handlers
     document.addEventListener('mouseup', this._handleMouseUp);
@@ -1140,40 +1157,7 @@ class App extends PureComponent {
     await this._updateVCS();
     await this._updateGitVCS(this.props.activeWorkspace);
 
-    db.onChange(async changes => {
-      let needsRefresh = false;
-
-      for (const change of changes) {
-        const [type, doc, fromSync] = change;
-
-        const { vcs } = this.state;
-        const { activeRequest } = this.props;
-
-        // Force refresh if environment changes
-        // TODO: Only do this for environments in this workspace (not easy because they're nested)
-        if (doc.type === models.environment.type) {
-          console.log('[App] Forcing update from environment change', change);
-          needsRefresh = true;
-        }
-
-        // Force refresh if sync changes the active request
-        if (fromSync && activeRequest && doc._id === activeRequest._id) {
-          needsRefresh = true;
-          console.log('[App] Forcing update from request change', change);
-        }
-
-        // Delete VCS project if workspace deleted
-        if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
-          await vcs.removeProjectsForRoot(doc._id);
-        }
-      }
-
-      if (needsRefresh) {
-        setTimeout(() => {
-          this._wrapper && this._wrapper._forceRequestPaneRefresh();
-        }, 300);
-      }
-    });
+    db.onChange(this._handleDbChange);
 
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
@@ -1244,12 +1228,17 @@ class App extends PureComponent {
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
+
+    window
+      .matchMedia('(prefers-color-scheme: dark)')
+      .addListener(async () => themes.applyColorScheme(this.props.settings));
   }
 
   componentWillUnmount() {
     // Remove mouse and key handlers
     document.removeEventListener('mouseup', this._handleMouseUp);
     document.removeEventListener('mousemove', this._handleMouseMove);
+    db.offChange(this._handleDbChange);
   }
 
   async _ensureWorkspaceChildren() {
@@ -1346,9 +1335,6 @@ class App extends PureComponent {
                 handleDuplicateRequestGroup={App._requestGroupDuplicate}
                 handleMoveRequestGroup={App._requestGroupMove}
                 handleDuplicateWorkspace={this._workspaceDuplicate}
-                handleDuplicateWorkspaceById={this._workspaceDuplicateById}
-                handleRenameWorkspaceById={this._workspaceRename}
-                handleDeleteWorkspaceById={this._workspaceDeleteById}
                 handleCreateRequestGroup={this._requestGroupCreate}
                 handleGenerateCode={App._handleGenerateCode}
                 handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
@@ -1401,6 +1387,7 @@ App.propTypes = {
     _id: PropTypes.string.isRequired,
   }).isRequired,
   handleSetActiveActivity: PropTypes.func.isRequired,
+  handleGoToNextActivity: PropTypes.func.isRequired,
   handleSetActiveWorkspace: PropTypes.func.isRequired,
 
   // Optional
@@ -1539,6 +1526,7 @@ function mapDispatchToProps(dispatch) {
     handleStopLoading: global.loadRequestStop,
 
     handleSetActiveActivity: global.setActiveActivity,
+    handleGoToNextActivity: global.goToNextActivity,
     handleSetActiveWorkspace: global.setActiveWorkspace,
     handleImportFileToWorkspace: global.importFile,
     handleImportClipBoardToWorkspace: global.importClipBoard,

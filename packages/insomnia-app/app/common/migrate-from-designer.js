@@ -11,6 +11,8 @@ import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import fsx from 'fs-extra';
 import * as electron from 'electron';
+import { trackEvent } from './analytics';
+import { WorkspaceScopeKeys } from '../models/workspace';
 
 async function loadDesignerDb(types: Array<string>, designerDataDir: string): Promise<Object> {
   const designerDb = {};
@@ -58,7 +60,7 @@ type DBType = { [string]: Array<BaseModel> };
 export type MigrationOptions = {
   useDesignerSettings: boolean,
   copyPlugins: boolean,
-  copyResponses: boolean,
+  copyWorkspaces: boolean,
   designerDataDir: string,
   coreDataDir: string,
 };
@@ -99,10 +101,27 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   const corePluginDir = fsPath.join(coreDataDir, 'plugins');
 
   // get list of plugins in Designer
-  const designerPlugins = await fs.promises.readdir(designerPluginDir);
+  const designerPlugins = await readDirs(designerPluginDir);
 
   await removeDirs(designerPlugins, corePluginDir);
   await copyDirs(designerPlugins, designerPluginDir, corePluginDir);
+
+  // Remove plugin bundle from installed plugins because it's included with the app now
+  const pluginsToDelete = [
+    'insomnia-plugin-kong-bundle',
+    'insomnia-plugin-kong-declarative-config',
+    'insomnia-plugin-kong-kubernetes-config',
+    'insomnia-plugin-kong-portal',
+  ];
+  await removeDirs(pluginsToDelete, corePluginDir);
+}
+
+async function readDirs(srcDir: string): Array<string> {
+  if (existsAndIsDirectory(srcDir)) {
+    return await fs.promises.readdir(srcDir);
+  } else {
+    return [];
+  }
 }
 
 async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
@@ -110,15 +129,25 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
     const src = fsPath.join(srcDir, dir);
     const dest = fsPath.join(destDir, dir);
 
-    await fsx.ensureDir(dest);
-    await fsx.copy(src, dest);
+    // If source exists, ensure the destination exists, and copy into it
+    if (existsAndIsDirectory(src)) {
+      await fsx.ensureDir(dest);
+      await fsx.copy(src, dest);
+    }
   }
 }
 
 async function removeDirs(dirs: Array<string>, srcDir: string) {
   for (const dir of dirs.filter(c => c)) {
-    await fsx.remove(fsPath.join(srcDir, dir));
+    const dirToRemove = fsPath.join(srcDir, dir);
+    if (existsAndIsDirectory(dirToRemove)) {
+      await fsx.remove(dirToRemove);
+    }
   }
+}
+
+export function existsAndIsDirectory(name: string): boolean {
+  return fs.existsSync(name) && fs.statSync(name).isDirectory();
 }
 
 export default async function migrateFromDesigner({
@@ -126,13 +155,34 @@ export default async function migrateFromDesigner({
   designerDataDir,
   coreDataDir,
   copyPlugins,
-  copyResponses,
+  copyWorkspaces,
 }: MigrationOptions): Promise<MigrationResult> {
-  const modelTypesToIgnore = [
+  console.log(
+    `[db-merge] starting process for migrating from ${designerDataDir} to ${coreDataDir}`,
+  );
+
+  const nonWorkspaceModels = [
     models.stats.type, // TODO: investigate further any implications that may invalidate collected stats
+    models.settings.type,
   ];
 
-  const modelTypesToMerge = difference(models.types(), modelTypesToIgnore);
+  // Every model except those to ignore and settings is a "workspace" model
+  const workspaceModels = difference(models.types(), nonWorkspaceModels);
+
+  const modelTypesToMerge = [];
+
+  if (useDesignerSettings) {
+    trackEvent('Data', 'Migration', 'Settings');
+    modelTypesToMerge.push(models.settings.type);
+    console.log(`[db-merge] keeping settings from Insomnia Designer`);
+  } else {
+    console.log(`[db-merge] keeping settings from Insomnia Core`);
+  }
+
+  if (copyWorkspaces) {
+    trackEvent('Data', 'Migration', 'Workspaces');
+    modelTypesToMerge.push(...workspaceModels);
+  }
 
   let backupDir = '';
 
@@ -143,34 +193,29 @@ export default async function migrateFromDesigner({
     // Load designer database
     const designerDb: DBType = await loadDesignerDb(modelTypesToMerge, designerDataDir);
 
-    // Ensure user is not migrating an existing Insomnia Core repo
-    const designerSettings: Settings = designerDb[models.settings.type][0];
-    if (designerSettings.hasOwnProperty('hasPromptedToMigrateFromDesigner')) {
-      console.log('[db-merge] cannot merge database');
-      return;
-    }
-
     // For each model, batch upsert entries into the Core database
     for (const modelType of modelTypesToMerge) {
       const entries = designerDb[modelType];
 
-      // Decide how to merge settings
+      // Persist some settings from core
       if (modelType === models.settings.type) {
-        if (useDesignerSettings) {
-          console.log(`[db-merge] keeping settings from Insomnia Designer`);
-          const coreSettings = await models.settings.getOrCreate();
-          (entries[0]: Settings)._id = coreSettings._id;
-          (entries[0]: Settings).hasPromptedToMigrateFromDesigner = true;
-        } else {
-          console.log(`[db-merge] keeping settings from Insomnia Core`);
-          continue;
-        }
+        const coreSettings = await models.settings.getOrCreate();
+        const propertiesToPersist = [
+          '_id',
+          'hasPromptedOnboarding',
+          'hasPromptedToMigrateFromDesigner',
+        ];
+        propertiesToPersist.forEach(s => {
+          if (coreSettings.hasOwnProperty(s)) {
+            (entries[0]: Settings)[s] = coreSettings[s];
+          }
+        });
       }
 
-      // For each workspace coming from Designer, mark workspace.scope as 'designer'
+      // For each workspace coming from Designer, mark workspace.scope as 'design'
       if (modelType === models.workspace.type) {
         for (const workspace of entries) {
-          (workspace: Workspace).scope = 'designer';
+          (workspace: Workspace).scope = WorkspaceScopeKeys.design;
         }
       }
 
@@ -181,29 +226,28 @@ export default async function migrateFromDesigner({
       await db.batchModifyDocs({ upsert: entries, remove: [] });
     }
 
-    console.log(`[db-merge] migrating version control data from designer to core`);
-    await copyDirs(['version-control'], designerDataDir, coreDataDir);
+    if (copyWorkspaces) {
+      console.log(`[db-merge] migrating version control data from designer to core`);
+      await copyDirs(['version-control'], designerDataDir, coreDataDir);
 
-    if (copyResponses) {
       console.log(`[db-merge] migrating response cache from designer to core`);
       await copyDirs(['responses'], designerDataDir, coreDataDir);
-    } else {
-      console.log(`[db-merge] not migrating response cache`);
     }
 
     if (copyPlugins) {
       console.log(`[db-merge] migrating plugins from designer to core`);
+      trackEvent('Data', 'Migration', 'Plugins');
       await migratePlugins(designerDataDir, coreDataDir);
-    } else {
-      console.log(`[db-merge] not migrating plugins`);
     }
 
     console.log('[db-merge] done!');
 
+    trackEvent('Data', 'Migration', 'Success');
     return {};
   } catch (error) {
     console.log('[db-merge] an error occurred while migrating');
     console.error(error);
+    trackEvent('Data', 'Migration', 'Failure');
     await restoreCoreBackup(backupDir, coreDataDir);
     return { error };
   }
@@ -215,7 +259,7 @@ export async function restoreCoreBackup(backupDir: string, coreDataDir: string) 
     return;
   }
 
-  if (!fs.existsSync(backupDir)) {
+  if (!existsAndIsDirectory(backupDir)) {
     console.log(`[db-merge] nothing to restore: backup directory doesn't exist at ${backupDir}`);
     return;
   }

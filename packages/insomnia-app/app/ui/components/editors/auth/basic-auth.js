@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import OneLineEditor from '../../codemirror/one-line-editor';
+import PasswordEditor from '../password-editor';
 import Button from '../../base/button';
 import type { Settings } from '../../../../models/settings';
 import type { Request, RequestAuthentication } from '../../../../models/request';
@@ -95,22 +96,17 @@ class BasicAuth extends React.PureComponent<Props> {
                   Password
                 </label>
               </td>
-              <td className="wide">
-                <div
-                  className={classnames('form-control form-control--underlined no-margin', {
-                    'form-control--inactive': authentication.disabled,
-                  })}>
-                  <OneLineEditor
-                    type={showPasswords ? 'text' : 'password'}
-                    id="password"
-                    onChange={this._handleChangePassword}
-                    defaultValue={authentication.password || ''}
-                    nunjucksPowerUserMode={nunjucksPowerUserMode}
-                    render={handleRender}
-                    getRenderContext={handleGetRenderContext}
-                    isVariableUncovered={isVariableUncovered}
-                  />
-                </div>
+              <td className="flex wide">
+                <PasswordEditor
+                  showAllPasswords={showPasswords}
+                  disabled={authentication.disabled}
+                  password={authentication.password}
+                  onChange={this._handleChangePassword}
+                  nunjucksPowerUserMode={nunjucksPowerUserMode}
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  isVariableUncovered={isVariableUncovered}
+                />
               </td>
             </tr>
             <tr>

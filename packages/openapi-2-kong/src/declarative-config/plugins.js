@@ -52,7 +52,7 @@ export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operat
         required: !!(p: Object).required,
         name: (p: Object).name,
         schema: JSON.stringify((p: Object).schema),
-        style: 'simple',
+        style: (p: Object).style ?? 'form',
       });
     }
   }

@@ -2,15 +2,18 @@
 
 import * as React from 'react';
 import type { WrapperProps } from './wrapper';
-import { ACTIVITY_HOME } from '../../common/constants';
-import { ToggleSwitch } from 'insomnia-components';
+import { ToggleSwitch, Button } from 'insomnia-components';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
-import migrateFromDesigner, { restartApp } from '../../common/migrate-from-designer';
+import migrateFromDesigner, {
+  existsAndIsDirectory,
+  restartApp,
+} from '../../common/migrate-from-designer';
 import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
-import { bindActionCreators } from 'redux';
-import * as globalActions from '../redux/modules/global';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
+import { goToNextActivity } from '../redux/modules/global';
+import HelpTooltip from './help-tooltip';
+import { trackEvent } from '../../common/analytics';
 
 type Step = 'options' | 'migrating' | 'results';
 
@@ -19,19 +22,30 @@ type SettingProps = {
   name: $Keys<MigrationOptions>,
   options: MigrationOptions,
 };
+
 type TextSettingProps = SettingProps & {
   handleChange: (SyntheticEvent<HTMLInputElement>) => void,
+  errorMessage?: string,
 };
-const TextSetting = ({ handleChange, label, name, options }: TextSettingProps) => {
+const TextSetting = ({ handleChange, label, name, options, errorMessage }: TextSettingProps) => {
   if (!options.hasOwnProperty(name)) {
     throw new Error(`Invalid text setting name ${name}`);
   }
+
+  const hasError = !!errorMessage;
 
   return (
     <div className="form-control form-control--outlined margin-bottom">
       <label>
         {label}
-        <input type="text" name={name} defaultValue={options[name]} onChange={handleChange} />
+        <input
+          className={hasError && 'input--error'}
+          type="text"
+          name={name}
+          defaultValue={options[name]}
+          onBlur={handleChange}
+        />
+        {hasError && <div className="font-error space-top">{errorMessage}</div>}
       </label>
     </div>
   );
@@ -39,18 +53,29 @@ const TextSetting = ({ handleChange, label, name, options }: TextSettingProps) =
 
 type BooleanSettingProps = SettingProps & {
   handleChange: (boolean, Object, string) => void,
+  help?: string,
 };
-const BooleanSetting = ({ handleChange, label, name, options }: BooleanSettingProps) => {
+const BooleanSetting = ({ handleChange, label, name, options, help }: BooleanSettingProps) => {
   if (!options.hasOwnProperty(name)) {
     throw new Error(`Invalid text setting name ${name}`);
   }
+
+  const labelNode = React.useMemo(
+    () => (
+      <>
+        {label}
+        {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+      </>
+    ),
+    [help, label],
+  );
 
   return (
     <ToggleSwitch
       labelClassName="row margin-bottom wide"
       checked={options[name]}
       id={name}
-      label={label}
+      label={labelNode}
       onChange={handleChange}
     />
   );
@@ -60,47 +85,69 @@ type OptionsProps = { start: MigrationOptions => void, cancel: () => void };
 const Options = ({ start, cancel }: OptionsProps) => {
   const [options, setOptions] = React.useState<MigrationOptions>(() => ({
     useDesignerSettings: false,
-    copyResponses: true,
-    copyPlugins: true,
+    copyWorkspaces: false,
+    copyPlugins: false,
     designerDataDir: getDesignerDataDir(),
     coreDataDir: getDataDirectory(),
   }));
 
   const handleInputChange = React.useCallback((e: SyntheticEvent<HTMLInputElement>) => {
-    setOptions(prevOpts => ({ ...prevOpts, [e.currentTarget.name]: e.currentTarget.value }));
+    const { name, value } = e.currentTarget;
+    setOptions(prevOpts => ({ ...prevOpts, [name]: value }));
   }, []);
 
   const handleSwitchChange = React.useCallback((checked: boolean, event: Object, id: string) => {
     setOptions(prevOpts => ({ ...prevOpts, [id]: checked }));
   }, []);
 
+  const {
+    coreDataDir,
+    designerDataDir,
+    useDesignerSettings,
+    copyWorkspaces,
+    copyPlugins,
+  } = options;
+
+  const coreExists = React.useMemo(() => existsAndIsDirectory(coreDataDir), [coreDataDir]);
+
+  const designerExists = React.useMemo(() => existsAndIsDirectory(designerDataDir), [
+    designerDataDir,
+  ]);
+
+  const hasSomethingToMigrate = useDesignerSettings || copyWorkspaces || copyPlugins;
+  const dirsExist = coreExists && designerExists;
+  const canStart = hasSomethingToMigrate && dirsExist;
+
   return (
     <>
       <p>
-        <strong>Migrate from Insomnia Designer</strong>
+        From the list below, select the individual items you would like to migrate from Designer.
       </p>
-      <p>
-        Insomnia Designer and Core are now Insomnia! Select the items below you'd like to migrate
-        from Designer.
-      </p>
-      <div className="text-left margin-top">
+      <div className="text-left">
         <BooleanSetting
-          label="Copy Designer Application Settings"
-          name="useDesignerSettings"
+          label="Copy Workspaces"
+          name="copyWorkspaces"
           options={options}
           handleChange={handleSwitchChange}
+          help={
+            'This includes all resources linked to a workspace (eg. requests, proto files, api specs, environments, etc)'
+          }
         />
         <BooleanSetting
           label="Copy Plugins"
           name="copyPlugins"
           options={options}
           handleChange={handleSwitchChange}
+          help={
+            'Merge plugins between Designer and Insomnia, keeping the Designer version where a duplicate exists'
+          }
         />
         <BooleanSetting
-          label="Copy Responses"
-          name="copyResponses"
+          label="Copy Designer Application Settings"
+          name="useDesignerSettings"
           options={options}
           handleChange={handleSwitchChange}
+          help={'Keep user preferences from Designer'}
         />
         <details>
           <summary className="margin-bottom">Advanced options</summary>
@@ -109,20 +156,29 @@ const Options = ({ start, cancel }: OptionsProps) => {
             name="designerDataDir"
             options={options}
             handleChange={handleInputChange}
+            errorMessage={!designerExists && 'Directory does not exist'}
           />
           <TextSetting
             label="Insomnia Data Directory"
             name="coreDataDir"
             options={options}
             handleChange={handleInputChange}
+            errorMessage={!coreExists && 'Directory does not exist'}
           />
         </details>
       </div>
 
       <div className="margin-top">
-        <button key="start" className="btn btn--clicky" onClick={() => start(options)}>
+        <Button
+          key="start"
+          bg="surprise"
+          radius="3px"
+          size="medium"
+          variant="contained"
+          onClick={() => start(options)}
+          disabled={!canStart}>
           Start Migration
-        </button>
+        </Button>
         <button key="cancel" className="btn btn--super-compact" onClick={cancel}>
           Skip for now
         </button>
@@ -199,14 +255,12 @@ const Fail = ({ error }: FailProps) => (
   </>
 );
 
-type MigrationBodyProps = {
-  handleSetActiveActivity: (activity?: GlobalActivity) => void,
-};
-const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
+const MigrationBody = () => {
+  // The migration step does not need to be in redux, but a loading state does need to exist there.
   const [step, setStep] = React.useState<Step>('options');
   const [error, setError] = React.useState<Error>(null);
 
-  const doMigration = React.useCallback(async (options: MigrationOptions) => {
+  const start = React.useCallback(async (options: MigrationOptions) => {
     setStep('migrating');
     const { error } = await migrateFromDesigner(options);
     if (error) {
@@ -215,13 +269,15 @@ const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
     setStep('results');
   }, []);
 
+  const reduxDispatch = useDispatch();
   const cancel = React.useCallback(() => {
-    handleSetActiveActivity(ACTIVITY_HOME);
-  }, [handleSetActiveActivity]);
+    trackEvent('Data', 'Migration', 'Skip');
+    reduxDispatch(goToNextActivity());
+  }, [reduxDispatch]);
 
   switch (step) {
     case 'options':
-      return <Options start={doMigration} cancel={cancel} />;
+      return <Options start={start} cancel={cancel} />;
     case 'migrating':
       return <Migrating />;
     case 'results':
@@ -233,20 +289,15 @@ const MigrationBody = ({ handleSetActiveActivity }: MigrationBodyProps) => {
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleSetActiveActivity: (activity?: GlobalActivity) => void,
 |};
 
-const WrapperMigration = ({ wrapperProps, handleSetActiveActivity }: Props) => (
-  <OnboardingContainer wrapperProps={wrapperProps}>
-    <MigrationBody handleSetActiveActivity={handleSetActiveActivity} />
+const WrapperMigration = ({ wrapperProps }: Props) => (
+  <OnboardingContainer
+    wrapperProps={wrapperProps}
+    header="Migrate from Insomnia Designer"
+    subHeader="Insomnia Designer and Core are now Insomnia!">
+    <MigrationBody />
   </OnboardingContainer>
 );
 
-function mapDispatchToProps(dispatch) {
-  const global = bindActionCreators(globalActions, dispatch);
-  return {
-    handleSetActiveActivity: global.setActiveActivity,
-  };
-}
-
-export default connect(null, mapDispatchToProps)(WrapperMigration);
+export default WrapperMigration;

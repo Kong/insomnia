@@ -12,13 +12,11 @@ import {
   getAppPlatform,
   getAppId,
   getAppVersion,
-  isLinux,
+  updatesSupported,
 } from '../../common/constants';
-import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
 import imgSrcCore from '../images/insomnia-core-logo.png';
-import { getDeviceId } from '../../common/analytics';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -113,23 +111,15 @@ class Toast extends React.PureComponent<Props, State> {
     // Try fetching user notification
     try {
       const data = {
-        firstLaunch: stats.created,
-        launches: stats.launches,
+        firstLaunch: stats.created, // Used for account verification notifications
+        launches: stats.launches, // Used for CTAs / Informational notifications
         platform: getAppPlatform(),
         app: getAppId(),
         version: getAppVersion(),
-        requests: await db.count(models.request.type),
-        requestGroups: await db.count(models.requestGroup.type),
-        environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: isLinux(),
+        updatesNotSupported: !updatesSupported(),
         autoUpdatesDisabled: !settings.updateAutomatically,
         disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: settings.updateChannel,
-        deviceId: await getDeviceId(),
-        createdRequests: stats.createdRequests,
-        deletedRequests: stats.deletedRequests,
-        executedRequests: stats.executedRequests,
       };
 
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());

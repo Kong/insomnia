@@ -14,6 +14,7 @@ import { ResponseCallbacks } from './response-callbacks';
 import { getMethodType, GrpcMethodTypeEnum } from './method';
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { GrpcMethodDefinition } from './method';
+import { trackSegmentEvent } from '../../common/analytics';
 
 const _createClient = (req: GrpcRequest, respond: ResponseCallbacks): Object | undefined => {
   const { url, enableTls } = parseGrpcUrl(req.url);
@@ -170,6 +171,7 @@ export const start = async (
 
   // Update request stats
   models.stats.incrementExecutedRequests();
+  trackSegmentEvent('Request Executed');
 
   _setupStatusListener(call, requestId, respond);
   respond.sendStart(requestId);

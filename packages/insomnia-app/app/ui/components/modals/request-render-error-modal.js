@@ -8,6 +8,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import { showModal } from './index';
 import Link from '../base/link';
+import { docsTemplateTags } from '../../../common/documentation';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestRenderErrorModal extends PureComponent {
@@ -58,10 +59,7 @@ class RequestRenderErrorModal extends PureComponent {
                 Adjust Render Settings
               </button>
             )}
-            <Link
-              button
-              href="https://support.insomnia.rest/article/40-template-tags"
-              className="btn btn--clicky">
+            <Link button href={docsTemplateTags} className="btn btn--clicky">
               Templating Documentation <i className="fa fa-external-link" />
             </Link>
           </div>

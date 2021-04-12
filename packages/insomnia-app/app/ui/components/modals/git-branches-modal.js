@@ -5,7 +5,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import GitVCS from '../../../sync/git/git-vcs';
+import { GitVCS } from '../../../sync/git/git-vcs';
 import classnames from 'classnames';
 import PromptButton from '../base/prompt-button';
 import * as db from '../../../common/database';

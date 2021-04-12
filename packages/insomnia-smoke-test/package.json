@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "insomnia-smoke-test",
-  "version": "2.2.27",
+  "version": "2.2.31",
   "type": "module",
   "scripts": {
     "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
@@ -13,6 +13,11 @@
     "test:build": "npm run with-mock \"npm run spectron:build\"",
     "test:package": "npm run with-mock \"npm run spectron:package\""
   },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "./__jest__/setup.js"
+    ]
+  },
   "devDependencies": {
     "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
@@ -22,6 +27,7 @@
     "faker": "^5.1.0",
     "get-bin-path": "^5.1.0",
     "jest": "^26.4.2",
+    "mkdirp": "^1.0.4",
     "spectron": "^11.1.0",
     "spectron-keys": "0.0.1",
     "xvfb-maybe": "^0.2.1"

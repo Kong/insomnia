@@ -3,13 +3,12 @@ import React from 'react';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { getAppLongName, getAppSynopsis } from '../../common/constants';
 
 type Props = {
   wrapperProps: WrapperProps,
 };
 
-const OnboardingContainer = ({ wrapperProps, children }: Props) => (
+const OnboardingContainer = ({ wrapperProps, children, header, subHeader }: Props) => (
   <PageLayout
     wrapperProps={wrapperProps}
     renderPageBody={() => (
@@ -20,8 +19,8 @@ const OnboardingContainer = ({ wrapperProps, children }: Props) => (
             <img src={coreLogo} alt="Kong" />
           </div>
           <header className="onboarding__content__header">
-            <h1>Welcome to {getAppLongName()}</h1>
-            <h2>{getAppSynopsis()}</h2>
+            <h1>{header}</h1>
+            <h2>{subHeader}</h2>
           </header>
           <div className="onboarding__content__body">{children}</div>
         </div>

@@ -60,6 +60,7 @@ module.exports.convert = async function(rawData) {
     parentId: null,
     name: `${api.info.title} ${api.info.version}`,
     description: api.info.description || '',
+    // scope is not set because it could be imported for design OR to generate requests
   };
 
   const baseEnv = {

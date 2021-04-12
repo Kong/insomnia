@@ -5,6 +5,9 @@ import * as dropdown from '../modules/dropdown';
 import * as settings from '../modules/settings';
 import fs from 'fs';
 import { basicAuthCreds } from '../fixtures/constants';
+import * as onboarding from '../modules/onboarding';
+import * as home from '../modules/home';
+import * as modal from '../modules/modal';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -20,13 +23,20 @@ describe('Application launch', function() {
 
   it('shows an initial window', async () => {
     await client.correctlyLaunched(app);
-    await debug.workspaceDropdownExists(app);
+    await onboarding.skipOnboardingFlow(app);
+    await home.documentListingShown(app);
   });
 
   it('sends JSON request', async () => {
     const url = 'http://127.0.0.1:4010/pets/1';
 
-    await debug.workspaceDropdownExists(app);
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    await home.documentListingShown(app);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
+
     await debug.createNewRequest(app, 'json');
     await debug.typeInUrlBar(app, url);
     await debug.clickSendRequest(app);
@@ -37,7 +47,8 @@ describe('Application launch', function() {
   it.each([true, false])(
     'imports swagger 2 and sends request: new workspace=%s ',
     async newWorkspace => {
-      await debug.workspaceDropdownExists(app);
+      await client.correctlyLaunched(app);
+      await onboarding.skipOnboardingFlow(app);
 
       // Copy text to clipboard
       const buffer = await fs.promises.readFile(`${__dirname}/../fixtures/swagger2.yaml`);
@@ -45,11 +56,21 @@ describe('Application launch', function() {
       await app.electron.clipboard.writeText(swagger2Text);
 
       // Click dropdown and open import modal
+      await home.documentListingShown(app);
+      await home.expectTotalDocuments(app, 1);
+      await home.openDocumentWithTitle(app, 'Insomnia');
       const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
       await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
 
       // Import from clipboard into new/current workspace
       await settings.importFromClipboard(app, newWorkspace);
+
+      if (newWorkspace) {
+        // Go to dashboard
+        await debug.goToDashboard(app);
+        await home.expectTotalDocuments(app, 2);
+        await home.openDocumentWithTitle(app, 'E2E testing specification - swagger 2 1.0.0');
+      }
 
       // Click imported folder and request
       await debug.clickFolderByName(app, 'custom-tag');
@@ -66,7 +87,13 @@ describe('Application launch', function() {
   it('sends CSV request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.csv';
 
-    await debug.workspaceDropdownExists(app);
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    await home.documentListingShown(app);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
+
     await debug.createNewRequest(app, 'csv');
     await debug.typeInUrlBar(app, url);
     await debug.clickSendRequest(app);
@@ -79,7 +106,13 @@ describe('Application launch', function() {
   it('sends PDF request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.pdf';
 
-    await debug.workspaceDropdownExists(app);
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    await home.documentListingShown(app);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
+
     await debug.createNewRequest(app, 'pdf');
     await debug.typeInUrlBar(app, url);
     await debug.clickSendRequest(app);
@@ -90,17 +123,85 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
+  it('shows deploy to portal for design documents', async () => {
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    await home.documentListingShown(app);
+    const docName = await home.createNewDocument(app);
+    await debug.goToDashboard(app);
+
+    // Open card dropdown for the document
+    const card = await home.findCardWithTitle(app, docName);
+    await home.openDocumentMenuDropdown(card);
+
+    // Click the "Deploy to Portal" button, installed from that plugin
+    await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Portal');
+
+    // Ensure a modal opens, then close it - the rest is plugin behavior
+    await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
+    await modal.close(app);
+  });
+
+  it('should prompt and import swagger from clipboard from home', async () => {
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    // Copy text to clipboard
+    const buffer = await fs.promises.readFile(`${__dirname}/../fixtures/swagger2.yaml`);
+    const swagger2Text = buffer.toString();
+    await app.electron.clipboard.writeText(swagger2Text);
+
+    // Expect one document at home
+    await home.documentListingShown(app);
+    await home.expectTotalDocuments(app, 1);
+    await home.expectDocumentWithTitle(app, 'Insomnia');
+    const name = 'E2E testing specification - swagger 2 1.0.0';
+
+    // Import from clipboard as collection
+    await home.importFromClipboard(app);
+    await modal.waitUntilOpened(app, { title: 'Import As' });
+    await modal.clickModalFooterByText(app, 'Request Collection');
+    await home.expectTotalDocuments(app, 2);
+
+    // Ensure is collection
+    const collCard = await home.findCardWithTitle(app, name);
+    await home.cardHasBadge(collCard, 'Collection');
+
+    // Delete the collection
+    await home.openDocumentMenuDropdown(collCard);
+    await dropdown.clickDropdownItemByText(collCard, 'Delete');
+    await modal.waitUntilOpened(app, { title: 'Delete Collection' });
+    await modal.clickModalFooterByText(app, 'Yes');
+    await home.expectTotalDocuments(app, 1);
+
+    // Import from clipboard as document
+    await home.importFromClipboard(app);
+    await modal.waitUntilOpened(app, { title: 'Import As' });
+    await modal.clickModalFooterByText(app, 'Design Document');
+    await home.expectTotalDocuments(app, 2);
+
+    // Ensure is document
+    const docCard = await home.findCardWithTitle(app, name);
+    await home.cardHasBadge(docCard, 'Document');
+  });
+
   // This test will ensure that for an endpoint which expects basic auth:
   //  1. sending no basic auth will fail
   //  2. sending basic auth will succeed
   //  3. sending basic auth with special characters encoded with IS0-8859-1 will succeed
   //  4. sending while basic auth is disabled within insomnnia will fail
-
   it('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';
     const { latin1, utf8 } = basicAuthCreds;
 
-    await debug.workspaceDropdownExists(app);
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    await home.documentListingShown(app);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
+
     await debug.createNewRequest(app, 'basic-auth');
     await debug.typeInUrlBar(app, url);
 

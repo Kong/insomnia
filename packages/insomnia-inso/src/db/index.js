@@ -7,10 +7,10 @@ import type {
   UnitTestSuite,
   Workspace,
 } from './models/types';
-import envPaths from 'env-paths';
 import gitAdapter from './adapters/git-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
-import { getDefaultAppDataDir } from '../util';
+import { getDefaultAppName } from '../util';
+import { getAppDataDir } from '../data-directory';
 import logger from '../logger';
 import path from 'path';
 
@@ -61,9 +61,21 @@ export const loadDb = async ({
 
   // try load from nedb
   if (!db) {
-    const dir = appDataDir || envPaths(getDefaultAppDataDir(), { suffix: '' }).data;
+    const dir = appDataDir || getAppDataDir(getDefaultAppName());
     db = await neDbAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``);
+
+    // Try to load from the Designer data dir, if the Core data directory does not exist
+    if (!db && !appDataDir) {
+      const designerDir = getAppDataDir('Insomnia Designer');
+      db = await neDbAdapter(designerDir);
+      db &&
+        logger.debug(
+          `Data store configured from Insomnia Designer app data directory at \`${path.resolve(
+            designerDir,
+          )}\``,
+        );
+    }
   }
 
   // return empty db
