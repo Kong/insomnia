@@ -277,7 +277,7 @@ export function setActiveActivity(activity: GlobalActivity) {
       models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
       break;
     case ACTIVITY_ONBOARDING:
-      models.settings.patch({ hasPromptedOnboarding: true });
+      models.settings.patch({ hasPromptedOnboarding: true, hasPromptedAnalytics: true });
       break;
     case ACTIVITY_ANALYTICS:
       models.settings.patch({ hasPromptedAnalytics: true });
