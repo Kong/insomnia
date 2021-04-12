@@ -28,13 +28,13 @@ class Editor extends PureComponent {
     this._focusedPairId = null;
     this._focusedField = NAME;
     this._rows = [];
-    this._ensureID();
     this.state = {
       pairs: [],
 
       // If any pair has a description, display description field
       displayDescription: props.pairs.some(p => p.description),
     };
+    this._ensureID();
   }
 
   _setRowRef(n) {
