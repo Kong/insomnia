@@ -42,6 +42,7 @@ export function generateService(
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
 
+    // TODO: Add path plugins to route
     for (const method of Object.keys(pathItem)) {
       if (
         method !== 'get' &&
