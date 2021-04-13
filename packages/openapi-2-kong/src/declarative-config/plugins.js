@@ -34,19 +34,15 @@ export function generatePlugin(key: string, value: Object): DCPlugin {
   return plugin;
 }
 
-export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operation): DCPlugin {
-  const config: { [string]: Object } = {
-    version: 'draft4', // Fixed version
-  };
-
-  config.parameter_schema = [];
+export function generateParameterSchema(operation: OA3Operation): Array<Object> {
+  const parameterSchema = [];
 
   if (operation.parameters) {
     for (const p of operation.parameters) {
       if (!(p: Object).schema) {
         throw new Error("Parameter using 'content' type validation is not supported");
       }
-      config.parameter_schema.push({
+      parameterSchema.push({
         in: (p: Object).in,
         explode: !!(p: Object).explode,
         required: !!(p: Object).required,
@@ -57,29 +53,58 @@ export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operat
     }
   }
 
+  return parameterSchema;
+}
+
+function generateBodySchema(operation: OA3Operation): string | typeof undefined {
+  let bodySchema;
+
   if (operation.requestBody) {
     const content = (operation.requestBody: Object).content;
     if (!content) {
       throw new Error('content property is missing for request-validator!');
     }
 
-    let bodySchema;
+    // TODO: This should probably just filter for the supported media types instead of
+    //  throwing an error on the first non-JSON one. The loop is redundant...
     for (const mediatype of Object.keys(content)) {
       if (mediatype !== 'application/json') {
         throw new Error(`Body validation supports only 'application/json', not ${mediatype}`);
       }
       const item = content[mediatype];
       bodySchema = JSON.stringify(item.schema);
+      break;
     }
+  }
 
-    if (bodySchema) {
-      config.body_schema = bodySchema;
-    }
+  return bodySchema;
+}
+
+export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Operation): DCPlugin {
+  const config: { [string]: Object } = {
+    version: 'draft4', // Fixed version
+  };
+
+  const pluginConfig = plugin.config ?? {};
+
+  config.parameter_schema = pluginConfig.parameter_schema ?? generateParameterSchema(operation);
+  const bodySchema = pluginConfig.body_schema ?? generateBodySchema(operation);
+
+  if (bodySchema) {
+    config.body_schema = bodySchema;
+  }
+
+  if (pluginConfig.verbose_response !== undefined) {
+    config.verbose_response = Boolean(pluginConfig.verbose_response);
+  }
+
+  if (pluginConfig.allowed_content_types !== undefined) {
+    config.allowed_content_types = pluginConfig.allowed_content_types;
   }
 
   return {
     config,
-    enabled: true,
+    enabled: Boolean(plugin.enabled ?? true),
     name: 'request-validator',
   };
 }
