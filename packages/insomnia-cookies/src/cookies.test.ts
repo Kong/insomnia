@@ -1,5 +1,5 @@
-const { CookieJar } = require('tough-cookie');
-const { jarFromCookies, cookiesFromJar } = require('..');
+import { CookieJar, Cookie, CookieSerialized } from 'tough-cookie';
+import { jarFromCookies, cookiesFromJar } from './cookies';
 
 describe('jarFromCookies()', () => {
   it('returns valid cookies', done => {
@@ -8,7 +8,7 @@ describe('jarFromCookies()', () => {
         key: 'foo',
         value: 'bar',
         domain: 'google.com',
-      },
+      } as Cookie,
     ]);
 
     jar.store.getAllCookies((err, cookies) => {
@@ -23,6 +23,7 @@ describe('jarFromCookies()', () => {
   });
 
   it('handles malformed JSON', () => {
+    // @ts-expect-error this test is verifying that an invalid input is handled appropriately
     const jar = jarFromCookies('not a jar');
     expect(jar.constructor.name).toBe('CookieJar');
   });
@@ -31,7 +32,7 @@ describe('jarFromCookies()', () => {
 describe('cookiesFromJar()', () => {
   it('returns valid jar', async () => {
     const d = new Date();
-    const initialCookies = [
+    const initialCookies: CookieSerialized[] = [
       {
         key: 'bar',
         value: 'baz',
@@ -41,7 +42,7 @@ describe('cookiesFromJar()', () => {
       {
         // This one will fail to parse, and be skipped
         bad: 'cookie',
-      },
+      } as CookieSerialized,
     ];
 
     const jar = CookieJar.fromJSON({ cookies: initialCookies });
@@ -58,12 +59,12 @@ describe('cookiesFromJar()', () => {
   it('handles bad jar', async () => {
     const jar = CookieJar.fromJSON({ cookies: [] });
 
-    // MemoryStore never actually throws errors, so lets mock the
-    // function to force it to this time.
+    // MemoryStore never actually throws errors, so lets mock the function to force it to this time.
+    // @ts-expect-error intentionally invalid value
     jar.store.getAllCookies = cb => cb(new Error('Dummy Error'));
     const cookies = await cookiesFromJar(jar);
 
-    // Cookies failed to p
+    // Cookies failed to parse
     expect(cookies.length).toBe(0);
   });
 });
