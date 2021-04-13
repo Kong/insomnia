@@ -4,9 +4,20 @@
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Cookie utilities",
   "license": "MIT",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "package.json",
+    "READEM.md"
+  ],
   "scripts": {
-    "test": "jest --silent"
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
+    "build": "tsc --build tsconfig.build.json",
+    "test": "jest"
   },
   "dependencies": {
     "tough-cookie": "^2.3.3"
