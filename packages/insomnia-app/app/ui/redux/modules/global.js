@@ -236,8 +236,18 @@ export function loadRequestStop(requestId) {
 function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
   switch (currentActivity) {
     case ACTIVITY_MIGRATION:
-      // Has seen the onboarding step? Go to home, otherwise go to onboarding
-      return settings.hasPromptedOnboarding ? ACTIVITY_HOME : ACTIVITY_ONBOARDING;
+      // Has not seen the onboarding step? Go to onboarding
+      if (!settings.hasPromptedOnboarding) {
+        return ACTIVITY_ONBOARDING;
+      }
+
+      // Has not seen the analytics prompt? Go to it
+      if (!settings.hasPromptedAnalytics) {
+        return ACTIVITY_ANALYTICS;
+      }
+
+      // Otherwise, go to home
+      return ACTIVITY_HOME;
     case ACTIVITY_ONBOARDING:
       // Always go to home after onboarding
       return ACTIVITY_HOME;
