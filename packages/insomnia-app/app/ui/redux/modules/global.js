@@ -277,7 +277,11 @@ export function setActiveActivity(activity: GlobalActivity) {
       models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
       break;
     case ACTIVITY_ONBOARDING:
-      models.settings.patch({ hasPromptedOnboarding: true, hasPromptedAnalytics: true });
+      models.settings.patch({
+        hasPromptedOnboarding: true,
+        // Don't show the analytics preferences prompt as it is part of the onboarding flow
+        hasPromptedAnalytics: true,
+      });
       break;
     case ACTIVITY_ANALYTICS:
       models.settings.patch({ hasPromptedAnalytics: true });
