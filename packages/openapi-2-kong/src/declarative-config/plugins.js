@@ -35,7 +35,7 @@ export function generatePlugin(key: string, value: Object): DCPlugin {
 }
 
 export function generateParameterSchema(operation: OA3Operation): Array<Object> {
-  const parameterSchema = [];
+  const parameterSchema = []; // TODO: should this default to [] or undefined? undefined
 
   if (operation.parameters) {
     for (const p of operation.parameters) {
