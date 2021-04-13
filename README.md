@@ -75,7 +75,9 @@ Also on Linux, if Electron is failing during the bootstrap process, run the foll
 rm -rf ~/.cache/electron
 ```
 
-If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
+If you are on Windows and have problems, you may need to install:
+* [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
+* [nasm](https://www.nasm.us/), and add it to your `PATH` (it should be `C:\Program Files\NASM`)
 
 </details>
 
