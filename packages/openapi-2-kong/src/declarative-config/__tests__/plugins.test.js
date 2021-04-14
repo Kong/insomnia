@@ -133,9 +133,11 @@ describe('plugins', () => {
 
         expect(generated1.config).toStrictEqual({
           version: 'draft4',
+          body_schema: '{}',
         });
         expect(generated2.config).toStrictEqual({
           version: 'draft4',
+          body_schema: '{}',
         });
       });
 
@@ -206,6 +208,7 @@ describe('plugins', () => {
 
         expect(generated.config).toStrictEqual({
           version: 'draft4',
+          body_schema: '{}',
         });
       });
 
@@ -237,6 +240,7 @@ describe('plugins', () => {
 
         expect(generated.config).toStrictEqual({
           version: 'draft4',
+          body_schema: '{}',
           allowed_content_types: ['application/xml', 'text/yaml'],
         });
       });
@@ -283,6 +287,18 @@ describe('plugins', () => {
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
           allowed_content_types: ['application/xml', 'application/json'],
+        });
+      });
+
+      it('should default body_schema if no schema is defined or generated', () => {
+        const plugin = {};
+        const operation = {};
+
+        const generated = generateRequestValidatorPlugin(plugin, operation);
+
+        expect(generated.config).toStrictEqual({
+          version: 'draft4',
+          body_schema: '{}',
         });
       });
     });

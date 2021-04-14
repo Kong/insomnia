@@ -93,14 +93,22 @@ export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Ope
 
   // Use original or generated parameter_schema
   const parameterSchema = pluginConfig.parameter_schema ?? generateParameterSchema(operation);
-  if (parameterSchema !== undefined) {
-    config.parameter_schema = parameterSchema;
-  }
 
   const generated = generateBodyOptions(operation);
 
   // Use original or generated body_schema
-  const bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
+  let bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
+
+  // If no schema is defined or generated, default to allow all content to pass
+  if (parameterSchema === undefined && bodySchema === undefined) {
+    bodySchema = '{}'; // valid config to allow all content to pass
+  }
+
+  // Apply parameter_schema and body_schema to the config object
+  if (parameterSchema !== undefined) {
+    config.parameter_schema = parameterSchema;
+  }
+
   if (bodySchema !== undefined) {
     config.body_schema = bodySchema;
   }
