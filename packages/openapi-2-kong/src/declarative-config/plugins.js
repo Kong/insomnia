@@ -6,6 +6,10 @@ export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
 }
 
+export function isNotRequestValidatorPluginKey(key: string): boolean {
+  return !isRequestValidatorPluginKey(key);
+}
+
 type GeneratorFn = (key: string, value: Object, iterable: Object | Array<Object>) => DCPlugin;
 
 export function generatePlugins(item: Object, generator: GeneratorFn): Array<DCPlugin> {
@@ -145,31 +149,43 @@ export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Ope
 export function generateServerPlugins(server: OA3Server): Array<DCPlugin> {
   const plugins: Array<DCPlugin> = [];
 
-  for (const key of Object.keys(server)) {
-    if (!isPluginKey(key)) {
-      continue;
-    }
-
+  for (const key of Object.keys(server).filter(isPluginKey)) {
     plugins.push(generatePlugin(key, server[key]));
   }
 
   return plugins;
 }
 
-export function generateOperationPlugins(operation: OA3Operation): Array<DCPlugin> {
+export function generateOperationPlugins(
+  operation: OA3Operation,
+  parentValidatorPlugin?: Object,
+): Array<DCPlugin> {
   const plugins: Array<DCPlugin> = [];
 
-  for (const key of Object.keys(operation)) {
-    if (!isPluginKey(key)) {
-      continue;
-    }
+  const pluginKeys = Object.keys(operation).filter(isPluginKey);
 
-    if (isRequestValidatorPluginKey(key)) {
-      plugins.push(generateRequestValidatorPlugin(operation[key], operation));
-    } else {
-      plugins.push(generatePlugin(key, operation[key]));
-    }
+  // Add regular plugins excluding request validator
+  for (const key of pluginKeys.filter(isNotRequestValidatorPluginKey)) {
+    plugins.push(generatePlugin(key, operation[key]));
+  }
+
+  // Check if validator plugin exists on the operation
+  const validatorPluginKey = pluginKeys.find(isRequestValidatorPluginKey);
+  const operationValidatorPlugin = validatorPluginKey && operation[validatorPluginKey];
+
+  // Use the operation or parent validator plugin, or skip if neither exist
+  const validatorPluginToUse = operationValidatorPlugin || parentValidatorPlugin;
+  if (validatorPluginToUse) {
+    plugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation));
   }
 
   return plugins;
+}
+
+export function getRequestValidatorPluginDirective(obj: Object): Object | null {
+  const key = Object.keys(obj)
+    .filter(isPluginKey)
+    .find(isRequestValidatorPluginKey);
+
+  return key ? obj[key] : null;
 }
