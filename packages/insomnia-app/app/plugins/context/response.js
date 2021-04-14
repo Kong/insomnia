@@ -68,6 +68,12 @@ export function init(response: MaybeResponse): { response: Object } {
           return null;
         }
       },
+      getHeaders(): Array<{ name: string, value: string }> {
+        return response.headers.map(h => ({
+          name: h.name,
+          value: h.value,
+        }));
+      },
       hasHeader(name: string): boolean {
         return this.getHeader(name) !== null;
       },
