@@ -83,7 +83,7 @@ describe('plugins', () => {
           parameter_schema: [parameterSchema],
           body_schema: '[{"name":{"type": "string", "required": true}}]',
           verbose_response: true,
-          allowed_content_types: 'application/json',
+          allowed_content_types: ['application/json'],
         },
       };
 
@@ -106,7 +106,7 @@ describe('plugins', () => {
           body_schema: '[{"name":{"type": "string", "required": true}}]',
           // The following properties are missing
           // verbose_response: true,
-          // allowed_content_types: 'application/json',
+          // allowed_content_types: ['application/json'],
         },
       };
 
@@ -122,20 +122,20 @@ describe('plugins', () => {
     });
 
     describe('parameter_schema', () => {
-      it('should return empty array for parameter schema if no parameters exist in operation', () => {
+      it('should not add parameter_schema if no parameters present', () => {
         const plugin = {
           enabled: true,
           config: {},
         };
 
-        const operation = {};
+        const generated1 = generateRequestValidatorPlugin(plugin, {});
+        const generated2 = generateRequestValidatorPlugin(plugin, { parameters: [] });
 
-        const generated = generateRequestValidatorPlugin(plugin, operation);
-
-        expect(generated).toStrictEqual({
-          name: 'request-validator',
-          enabled: plugin.enabled,
-          config: { version: 'draft4', parameter_schema: [] },
+        expect(generated1.config).toStrictEqual({
+          version: 'draft4',
+        });
+        expect(generated2.config).toStrictEqual({
+          version: 'draft4',
         });
       });
 
@@ -194,8 +194,8 @@ describe('plugins', () => {
       });
     });
 
-    describe('body_schema', () => {
-      it('should not add body_schema if no body present', () => {
+    describe('body_schema and allowed_content_types', () => {
+      it('should not add body_schema or allowed_content_types if no body present', () => {
         const plugin = {
           config: {},
         };
@@ -206,7 +206,6 @@ describe('plugins', () => {
 
         expect(generated.config).toStrictEqual({
           version: 'draft4',
-          parameter_schema: [],
         });
       });
 
@@ -222,7 +221,7 @@ describe('plugins', () => {
         );
       });
 
-      it('should throw error if operation request body content is not json', () => {
+      it('should add non-json media types to allowed content types and not add body schema', () => {
         const plugin = {};
 
         const operation: OA3Operation = {
@@ -234,46 +233,15 @@ describe('plugins', () => {
           },
         };
 
-        // just fails on the first one
-        expect(() => generateRequestValidatorPlugin(plugin, operation)).toThrowError(
-          `Body validation supports only 'application/json', not application/xml`,
-        );
-      });
-
-      it('should add body_schema', () => {
-        const plugin = {};
-
-        const schema = {
-          type: 'Object',
-          properties: {
-            id: {
-              type: 'integer',
-              format: 'int64',
-            },
-          },
-        };
-
-        const operation: OA3Operation = {
-          requestBody: {
-            content: {
-              'application/json': {
-                schema,
-              },
-            },
-          },
-        };
-
         const generated = generateRequestValidatorPlugin(plugin, operation);
 
         expect(generated.config).toStrictEqual({
           version: 'draft4',
-          body_schema: JSON.stringify(schema),
-          parameter_schema: [],
+          allowed_content_types: ['application/xml', 'text/yaml'],
         });
       });
 
-      // This currently throws an error but it should pass
-      it.skip('should add body_schema for JSON only', () => {
+      it('should add body_schema and allowed content types', () => {
         const plugin = {};
 
         const schemaXml = {
@@ -300,10 +268,10 @@ describe('plugins', () => {
           requestBody: {
             content: {
               'application/xml': {
-                schemaXml,
+                schema: schemaXml,
               },
               'application/json': {
-                schemaJson,
+                schema: schemaJson,
               },
             },
           },
@@ -314,7 +282,7 @@ describe('plugins', () => {
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
-          parameter_schema: [],
+          allowed_content_types: ['application/xml', 'application/json'],
         });
       });
     });
