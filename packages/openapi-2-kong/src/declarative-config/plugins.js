@@ -34,10 +34,11 @@ export function generatePlugin(key: string, value: Object): DCPlugin {
   return plugin;
 }
 
-export function generateParameterSchema(operation: OA3Operation): Array<Object> {
-  const parameterSchema = []; // TODO: should this default to [] or undefined? undefined
+function generateParameterSchema(operation: OA3Operation): Array<Object> | typeof undefined {
+  let parameterSchema;
 
-  if (operation.parameters) {
+  if (operation.parameters?.length) {
+    parameterSchema = [];
     for (const p of operation.parameters) {
       if (!(p: Object).schema) {
         throw new Error("Parameter using 'content' type validation is not supported");
@@ -56,8 +57,14 @@ export function generateParameterSchema(operation: OA3Operation): Array<Object> 
   return parameterSchema;
 }
 
-function generateBodySchema(operation: OA3Operation): string | typeof undefined {
+function generateBodyOptions(
+  operation: OA3Operation,
+): {
+  bodySchema: string | typeof undefined,
+  allowedContentTypes: Array<string> | typeof undefined,
+} {
   let bodySchema;
+  let allowedContentTypes;
 
   if (operation.requestBody) {
     const content = (operation.requestBody: Object).content;
@@ -65,19 +72,16 @@ function generateBodySchema(operation: OA3Operation): string | typeof undefined 
       throw new Error('content property is missing for request-validator!');
     }
 
-    // TODO: This should probably just filter for the supported media types instead of
-    //  throwing an error on the first non-JSON one. The loop is redundant...
-    for (const mediatype of Object.keys(content)) {
-      if (mediatype !== 'application/json') {
-        throw new Error(`Body validation supports only 'application/json', not ${mediatype}`);
-      }
-      const item = content[mediatype];
+    const jsonContentType = 'application/json';
+
+    allowedContentTypes = Object.keys(content);
+    if (allowedContentTypes.includes(jsonContentType)) {
+      const item = content[jsonContentType];
       bodySchema = JSON.stringify(item.schema);
-      break;
     }
   }
 
-  return bodySchema;
+  return { bodySchema, allowedContentTypes };
 }
 
 export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Operation): DCPlugin {
@@ -87,19 +91,29 @@ export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Ope
 
   const pluginConfig = plugin.config ?? {};
 
-  config.parameter_schema = pluginConfig.parameter_schema ?? generateParameterSchema(operation);
-  const bodySchema = pluginConfig.body_schema ?? generateBodySchema(operation);
+  // Use original or generated parameter_schema
+  const parameterSchema = pluginConfig.parameter_schema ?? generateParameterSchema(operation);
+  if (parameterSchema !== undefined) {
+    config.parameter_schema = parameterSchema;
+  }
 
-  if (bodySchema) {
+  const generated = generateBodyOptions(operation);
+
+  // Use original or generated body_schema
+  const bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
+  if (bodySchema !== undefined) {
     config.body_schema = bodySchema;
   }
 
-  if (pluginConfig.verbose_response !== undefined) {
-    config.verbose_response = Boolean(pluginConfig.verbose_response);
+  // Use original or generated allowed_content_types
+  const allowedContentTypes = pluginConfig.allowed_content_types ?? generated.allowedContentTypes;
+  if (allowedContentTypes !== undefined) {
+    config.allowed_content_types = allowedContentTypes;
   }
 
-  if (pluginConfig.allowed_content_types !== undefined) {
-    config.allowed_content_types = pluginConfig.allowed_content_types;
+  // Use original verbose_response if defined
+  if (pluginConfig.verbose_response !== undefined) {
+    config.verbose_response = Boolean(pluginConfig.verbose_response);
   }
 
   return {
