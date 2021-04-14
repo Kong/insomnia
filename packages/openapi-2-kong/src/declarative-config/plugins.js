@@ -99,9 +99,11 @@ export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Ope
   // Use original or generated body_schema
   let bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
 
-  // If no schema is defined or generated, default to allow all content to pass
+  // If no schema is defined or generated, all content to pass
+  // The following is valid config to allow all content to pass
+  // See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
   if (parameterSchema === undefined && bodySchema === undefined) {
-    bodySchema = '{}'; // valid config to allow all content to pass
+    bodySchema = '{}';
   }
 
   // Apply parameter_schema and body_schema to the config object
