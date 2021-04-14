@@ -142,6 +142,18 @@ describe('global', () => {
       ]);
     });
 
+    it('should go from migration to analytics', async () => {
+      const settings = createSettings(false, true, false);
+
+      const activeActivity = ACTIVITY_MIGRATION;
+      const store = mockStore({ global: { activeActivity }, entities: { settings: [settings] } });
+
+      await store.dispatch(goToNextActivity());
+      expect(store.getActions()).toEqual([
+        { type: SET_ACTIVE_ACTIVITY, activity: ACTIVITY_ANALYTICS },
+      ]);
+    });
+
     it('should go from migration to home', async () => {
       const settings = createSettings(true, true, true);
 
