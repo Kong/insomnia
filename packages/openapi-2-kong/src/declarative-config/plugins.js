@@ -1,6 +1,6 @@
 // @flow
 
-import { getPluginNameFromKey, isPluginKey } from '../common';
+import { getPluginNameFromKey, isPluginKey, defaultTags } from '../common';
 
 export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
@@ -25,11 +25,11 @@ export function generatePlugins(item: Object, generator: GeneratorFn): Array<DCP
 export function generatePlugin(key: string, value: Object): DCPlugin {
   const plugin: DCPlugin = {
     name: value.name || getPluginNameFromKey(key),
+    config: value.config ? value.config : { tags: [''] },
   };
 
-  if (value.config) {
-    plugin.config = value.config;
-  }
+  // Add tags to plugins while appending defaults tags
+  plugin.config.tags ? plugin.config.tags.push(...defaultTags) : (plugin.config.tags = defaultTags);
 
   return plugin;
 }

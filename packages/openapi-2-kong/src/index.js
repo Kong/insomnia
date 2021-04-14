@@ -1,6 +1,7 @@
 // @flow
 import fs from 'fs';
 import path from 'path';
+import { defaultTags } from './common';
 import { generateDeclarativeConfigFromSpec } from './declarative-config';
 import { generateKongForKubernetesConfigFromSpec } from './kubernetes';
 import SwaggerParser from 'swagger-parser';
@@ -30,7 +31,7 @@ export async function generateFromString(
   tags: Array<string> = [],
 ): Promise<ConversionResult> {
   const api: OpenApi3Spec = await parseSpec(specStr);
-  return generateFromSpec(api, type, ['OAS3_import', ...tags]);
+  return generateFromSpec(api, type, [defaultTags.join(), ...tags]);
 }
 
 export function generateFromSpec(
