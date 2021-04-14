@@ -10,7 +10,11 @@ import {
 } from '../common';
 
 import { generateSecurityPlugins } from './security-plugins';
-import { generateOperationPlugins, generateServerPlugins } from './plugins';
+import {
+  generateOperationPlugins,
+  generateServerPlugins,
+  getRequestValidatorPluginDirective,
+} from './plugins';
 
 export function generateServices(api: OpenApi3Spec, tags: Array<string>): Array<DCService> {
   const servers = getAllServers(api);
@@ -38,6 +42,8 @@ export function generateService(
     routes: [],
     tags,
   };
+
+  const rootValidatorPlugin = getRequestValidatorPluginDirective(api);
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
@@ -76,7 +82,7 @@ export function generateService(
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api);
-      const regularPlugins = generateOperationPlugins(operation);
+      const regularPlugins = generateOperationPlugins(operation, rootValidatorPlugin);
       const plugins = [...regularPlugins, ...securityPlugins];
 
       // Add plugins if there are any
