@@ -67,6 +67,77 @@ describe('services', () => {
       ]);
     });
 
+    it('generates routes with request validator plugin respecting hierarchy', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        openapi: '3.0',
+        info: { version: '1.0', title: 'My API' },
+        servers: [{ url: 'https://server1.com/path' }],
+        'x-kong-plugin-request-validator': { config: { parameter_schema: 'global' } }, // global req validator plugin
+        paths: {
+          '/dogs': {
+            summary: 'Dog stuff',
+            get: {
+              'x-kong-plugin-key-auth': {
+                // operation key-auth plugin
+                config: { key_names: ['x-api-key'] },
+              },
+            },
+            post: {
+              summary: 'Ignored summary',
+              'x-kong-plugin-request-validator': {
+                // operation req validator plugin
+                config: { parameter_schema: 'operation' },
+              },
+            },
+          },
+        },
+      });
+
+      const result = generateServices(api, ['Tag']);
+      expect(result).toEqual([
+        {
+          name: 'My_API',
+          url: 'https://server1.com/path',
+          plugins: [],
+          tags: ['Tag'],
+          routes: [
+            {
+              name: 'My_API-dogs-get',
+              strip_path: false,
+              methods: ['GET'],
+              paths: ['/dogs$'],
+              tags: ['Tag'],
+              plugins: [
+                // should have key auth and global req validator plugin
+                { name: 'key-auth', config: { key_names: ['x-api-key'] } },
+                {
+                  name: 'request-validator',
+                  // should apply global plugin
+                  config: { parameter_schema: 'global', version: 'draft4' },
+                  enabled: true,
+                },
+              ],
+            },
+            {
+              name: 'My_API-dogs-post',
+              strip_path: false,
+              methods: ['POST'],
+              paths: ['/dogs$'],
+              tags: ['Tag'],
+              plugins: [
+                {
+                  // should have operation plugin
+                  config: { parameter_schema: 'operation', version: 'draft4' },
+                  enabled: true,
+                  name: 'request-validator',
+                },
+              ],
+            },
+          ],
+        },
+      ]);
+    });
+
     it('fails with no servers', async () => {
       const api: OpenApi3Spec = await parseSpec({
         openapi: '3.0',
