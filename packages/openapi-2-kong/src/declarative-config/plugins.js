@@ -145,7 +145,7 @@ export function generateServerPlugins(server: OA3Server, api: OpenApi3Spec): Arr
   const globalPlugins = generatePlugins(api);
   const serverPlugins = generatePlugins(server);
 
-  // Server plugins are more specific than global plugins
+  // Server plugins take precedence over global plugins
   return distinctByProperty<DCPlugin>([...serverPlugins, ...globalPlugins], plugin => plugin.name);
 }
 
@@ -169,7 +169,7 @@ export function generateOperationPlugins(
     operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation));
   }
 
-  // Operation plugins are more specific than path plugins
+  // Operation plugins take precedence over path plugins
   return distinctByProperty<DCPlugin>([...operationPlugins, ...pathPlugins], plugin => plugin.name);
 }
 

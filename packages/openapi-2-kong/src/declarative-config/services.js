@@ -44,8 +44,9 @@ export function generateService(
     tags,
   };
 
+  // Server plugin takes precedence over spec
   const serverValidatorPlugin =
-    getRequestValidatorPluginDirective(api) || getRequestValidatorPluginDirective(server);
+    getRequestValidatorPluginDirective(server) || getRequestValidatorPluginDirective(api);
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
@@ -89,7 +90,7 @@ export function generateService(
       const regularPlugins = generateOperationPlugins(
         operation,
         pathPlugins,
-        pathValidatorPlugin || serverValidatorPlugin,
+        pathValidatorPlugin || serverValidatorPlugin, // Path plugin takes precedence over server
       );
       const plugins = [...regularPlugins, ...securityPlugins];
 
