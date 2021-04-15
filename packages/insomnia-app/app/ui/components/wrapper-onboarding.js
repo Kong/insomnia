@@ -2,17 +2,16 @@
 import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
-import { Button } from 'insomnia-components';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 import type { HandleImportFileCallback, HandleImportUriCallback, WrapperProps } from './wrapper';
 import * as db from '../../common/database';
-import chartSrc from '../images/chart.svg';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import OnboardingContainer from './onboarding-container';
 import { WorkspaceScopeKeys } from '../../models/workspace';
+import Analytics from './analytics';
 
 type Props = {|
   wrapperProps: WrapperProps,
@@ -61,21 +60,8 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     this.setState(state => ({ step: state.step - 1 }));
   }
 
-  async _handleCompleteAnalyticsStep(enableAnalytics: boolean) {
-    const { settings } = this.props.wrapperProps;
-
-    // Update settings with analytics preferences
-    await models.settings.update(settings, { enableAnalytics });
-
+  async _handleCompleteAnalyticsStep() {
     this.setState(state => ({ step: state.step + 1 }));
-  }
-
-  async _handleClickEnableAnalytics(e: SyntheticEvent<HTMLButtonElement>) {
-    this._handleCompleteAnalyticsStep(true);
-  }
-
-  async _handleClickDisableAnalytics(e: SyntheticEvent<HTMLButtonElement>) {
-    this._handleCompleteAnalyticsStep(false);
   }
 
   _handleImportFile() {
@@ -120,31 +106,10 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
 
   renderStep1() {
     return (
-      <React.Fragment>
-        <p>
-          <strong>Share Usage Analytics with Kong Inc</strong>
-        </p>
-        <img src={chartSrc} alt="Demonstration chart" />
-        <p>
-          Help us understand how <strong>you</strong> use {getAppLongName()} so we can make it
-          better.
-        </p>
-        <Button
-          key="enable"
-          bg="surprise"
-          radius="3px"
-          size="medium"
-          variant="contained"
-          onClick={this._handleClickEnableAnalytics}>
-          Share Usage Analytics
-        </Button>
-        <button
-          key="disable"
-          className="btn btn--super-compact"
-          onClick={this._handleClickDisableAnalytics}>
-          Don't share usage analytics
-        </button>
-      </React.Fragment>
+      <Analytics
+        wrapperProps={this.props.wrapperProps}
+        handleDone={this._handleCompleteAnalyticsStep}
+      />
     );
   }
 

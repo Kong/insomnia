@@ -24,6 +24,7 @@ import {
   SortOrder,
   ACTIVITY_MIGRATION,
   ACTIVITY_ONBOARDING,
+  ACTIVITY_ANALYTICS,
 } from '../../common/constants';
 import { registerModal, showModal } from './modals/index';
 import AlertModal from './modals/alert-modal';
@@ -95,6 +96,7 @@ import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
 import WrapperMigration from './wrapper-migration';
 import type { ImportOptions } from '../redux/modules/global';
+import WrapperAnalytics from './wrapper-analytics';
 
 const spectral = new Spectral();
 
@@ -867,6 +869,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
           )}
 
           {activity === ACTIVITY_MIGRATION && <WrapperMigration wrapperProps={this.props} />}
+
+          {activity === ACTIVITY_ANALYTICS && <WrapperAnalytics wrapperProps={this.props} />}
 
           {(activity === ACTIVITY_ONBOARDING || activity === null) && (
             <WrapperOnboarding
