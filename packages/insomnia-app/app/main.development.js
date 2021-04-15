@@ -150,7 +150,11 @@ async function _createModelInstances() {
 async function _updateFlags({ launches }: Stats) {
   const firstLaunch = launches === 1;
   if (firstLaunch) {
-    await models.settings.patch({ hasPromptedOnboarding: false });
+    await models.settings.patch({
+      hasPromptedOnboarding: false,
+      // Don't show the analytics preferences prompt as it is part of the onboarding flow
+      hasPromptedAnalytics: true,
+    });
   }
 }
 
