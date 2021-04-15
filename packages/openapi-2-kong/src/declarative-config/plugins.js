@@ -6,14 +6,10 @@ export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
 }
 
-export function isNotRequestValidatorPluginKey(key: string): boolean {
-  return !isRequestValidatorPluginKey(key);
-}
-
 export function generatePlugins(item: Object): Array<DCPlugin> {
   // When generating plugins, ignore the request validator plugin
   // because it is handled at the operation level
-  const pluginFilter = ([key, _]) => isPluginKey(key) && isNotRequestValidatorPluginKey(key);
+  const pluginFilter = ([key, _]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
 
   // Server plugins should load from the api spec root and from the server
   return Object.entries(item)
