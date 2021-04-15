@@ -43,7 +43,8 @@ export function generateService(
     tags,
   };
 
-  const rootValidatorPlugin = getRequestValidatorPluginDirective(api);
+  const serverValidatorPlugin =
+    getRequestValidatorPluginDirective(api) || getRequestValidatorPluginDirective(server);
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
@@ -82,7 +83,7 @@ export function generateService(
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api);
-      const regularPlugins = generateOperationPlugins(operation, rootValidatorPlugin);
+      const regularPlugins = generateOperationPlugins(operation, serverValidatorPlugin);
       const plugins = [...regularPlugins, ...securityPlugins];
 
       // Add plugins if there are any
