@@ -1,6 +1,6 @@
 // @flow
 
-import { generateServerPlugins, generatePlugin, generateRequestValidatorPlugin } from '../plugins';
+import { generateServerPlugins, generateRequestValidatorPlugin } from '../plugins';
 
 describe('plugins', () => {
   describe('generateServerPlugins()', () => {
@@ -15,7 +15,21 @@ describe('plugins', () => {
         },
       };
 
-      const result = generateServerPlugins(server);
+      const api: OpenApi3Spec = {
+        openapi: '3.0.2',
+        info: {
+          title: 'something',
+          version: '12',
+        },
+        paths: {},
+        'x-kong-plugin-abcd': {
+          config: {
+            some_config: ['something'],
+          },
+        },
+      };
+
+      const result = generateServerPlugins(server, api);
       expect(result).toEqual([
         {
           name: 'key-auth',
@@ -23,44 +37,13 @@ describe('plugins', () => {
             key_names: ['x-api-key'],
           },
         },
+        {
+          name: 'abcd', // name from plugin tag
+          config: {
+            some_config: ['something'],
+          },
+        },
       ]);
-    });
-  });
-
-  describe('generatePlugin()', () => {
-    it('generates plugin given a plugin key, and value', async () => {
-      const pluginKey = 'x-kong-plugin-key-auth';
-      const pluginValue = {
-        name: 'key-auth',
-        config: {
-          key_names: ['x-api-key'],
-        },
-      };
-
-      const result = generatePlugin(pluginKey, pluginValue);
-      expect(result).toEqual({
-        name: 'key-auth',
-        config: {
-          key_names: ['x-api-key'],
-        },
-      });
-    });
-
-    it('generates name from key when missing `name` from value', async () => {
-      const pluginKey = 'x-kong-plugin-key-auth';
-      const pluginValue = {
-        config: {
-          key_names: ['x-api-key'],
-        },
-      };
-
-      const result = generatePlugin(pluginKey, pluginValue);
-      expect(result).toEqual({
-        name: 'key-auth',
-        config: {
-          key_names: ['x-api-key'],
-        },
-      });
     });
   });
 
