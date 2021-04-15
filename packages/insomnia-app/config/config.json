@@ -20,7 +20,7 @@
   "gaLocation": "https://core.lytics.insomnia.rest",
   "segmentWriteKeys": {
     "development": "rTOCSvGV23cHGJyb3HI9EUQDNA6ar7ay",
-    "production": "ChQgQr57USBL4VqO2x7flSFhU4gBuR9e"
+    "production": "4l7QUfACrIcqvC913hiIwAA2BDYP2OJ1"
   },
   "plugins": [
     "insomnia-plugin-base64",
