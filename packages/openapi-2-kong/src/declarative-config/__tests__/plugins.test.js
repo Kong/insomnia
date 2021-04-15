@@ -20,6 +20,7 @@ describe('plugins', () => {
         {
           name: 'key-auth',
           config: {
+            tags: ['OAS3_import'],
             key_names: ['x-api-key'],
           },
         },
@@ -41,6 +42,7 @@ describe('plugins', () => {
       expect(result).toEqual({
         name: 'key-auth',
         config: {
+          tags: ['OAS3_import'],
           key_names: ['x-api-key'],
         },
       });
@@ -58,6 +60,7 @@ describe('plugins', () => {
       expect(result).toEqual({
         name: 'key-auth',
         config: {
+          tags: ['OAS3_import'],
           key_names: ['x-api-key'],
         },
       });
