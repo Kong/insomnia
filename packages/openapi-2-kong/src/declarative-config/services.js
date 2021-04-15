@@ -12,6 +12,7 @@ import {
 import { generateSecurityPlugins } from './security-plugins';
 import {
   generateOperationPlugins,
+  generatePathPlugins,
   generateServerPlugins,
   getRequestValidatorPluginDirective,
 } from './plugins';
@@ -38,7 +39,7 @@ export function generateService(
   const service: DCService = {
     name,
     url: serverUrl,
-    plugins: generateServerPlugins(server),
+    plugins: generateServerPlugins(server, api),
     routes: [],
     tags,
   };
@@ -49,7 +50,9 @@ export function generateService(
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
 
-    // TODO: Add path plugins to route
+    const pathValidatorPlugin = getRequestValidatorPluginDirective(pathItem);
+    const pathPlugins = generatePathPlugins(pathItem);
+
     for (const method of Object.keys(pathItem)) {
       if (
         method !== 'get' &&
@@ -83,7 +86,11 @@ export function generateService(
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api);
-      const regularPlugins = generateOperationPlugins(operation, serverValidatorPlugin);
+      const regularPlugins = generateOperationPlugins(
+        operation,
+        pathPlugins,
+        pathValidatorPlugin || serverValidatorPlugin,
+      );
       const plugins = [...regularPlugins, ...securityPlugins];
 
       // Add plugins if there are any

@@ -1,6 +1,6 @@
 // @flow
 
-import { getPluginNameFromKey, isPluginKey } from '../common';
+import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 
 export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
@@ -10,23 +10,18 @@ export function isNotRequestValidatorPluginKey(key: string): boolean {
   return !isRequestValidatorPluginKey(key);
 }
 
-type GeneratorFn = (key: string, value: Object, iterable: Object | Array<Object>) => DCPlugin;
+export function generatePlugins(item: Object): Array<DCPlugin> {
+  // When generating plugins, ignore the request validator plugin
+  // because it is handled at the operation level
+  const pluginFilter = ([key, _]) => isPluginKey(key) && isNotRequestValidatorPluginKey(key);
 
-export function generatePlugins(item: Object, generator: GeneratorFn): Array<DCPlugin> {
-  const plugins: Array<DCPlugin> = [];
-
-  for (const key of Object.keys(item)) {
-    if (!isPluginKey(key)) {
-      continue;
-    }
-
-    plugins.push(generator(key, item[key], item));
-  }
-
-  return plugins;
+  // Server plugins should load from the api spec root and from the server
+  return Object.entries(item)
+    .filter(pluginFilter)
+    .map(generatePlugin);
 }
 
-export function generatePlugin(key: string, value: Object): DCPlugin {
+function generatePlugin([key, value]: [string, Object]): DCPlugin {
   const plugin: DCPlugin = {
     name: value.name || getPluginNameFromKey(key),
   };
@@ -146,40 +141,36 @@ export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Ope
   };
 }
 
-export function generateServerPlugins(server: OA3Server): Array<DCPlugin> {
-  const plugins: Array<DCPlugin> = [];
+export function generateServerPlugins(server: OA3Server, api: OpenApi3Spec): Array<DCPlugin> {
+  const globalPlugins = generatePlugins(api);
+  const serverPlugins = generatePlugins(server);
 
-  for (const key of Object.keys(server).filter(isPluginKey)) {
-    plugins.push(generatePlugin(key, server[key]));
-  }
+  // Server plugins are more specific than global plugins
+  return distinctByProperty<DCPlugin>([...serverPlugins, ...globalPlugins], plugin => plugin.name);
+}
 
-  return plugins;
+export function generatePathPlugins(pathItem: OA3PathItem): Array<DCPlugin> {
+  return generatePlugins(pathItem);
 }
 
 export function generateOperationPlugins(
   operation: OA3Operation,
+  pathPlugins: Array<DCPlugin>,
   parentValidatorPlugin?: Object,
 ): Array<DCPlugin> {
-  const plugins: Array<DCPlugin> = [];
-
-  const pluginKeys = Object.keys(operation).filter(isPluginKey);
-
-  // Add regular plugins excluding request validator
-  for (const key of pluginKeys.filter(isNotRequestValidatorPluginKey)) {
-    plugins.push(generatePlugin(key, operation[key]));
-  }
+  const operationPlugins: Array<DCPlugin> = generatePlugins(operation);
 
   // Check if validator plugin exists on the operation
-  const validatorPluginKey = pluginKeys.find(isRequestValidatorPluginKey);
-  const operationValidatorPlugin = validatorPluginKey && operation[validatorPluginKey];
+  const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
 
   // Use the operation or parent validator plugin, or skip if neither exist
   const validatorPluginToUse = operationValidatorPlugin || parentValidatorPlugin;
   if (validatorPluginToUse) {
-    plugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation));
+    operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation));
   }
 
-  return plugins;
+  // Operation plugins are more specific than path plugins
+  return distinctByProperty<DCPlugin>([...operationPlugins, ...pathPlugins], plugin => plugin.name);
 }
 
 export function getRequestValidatorPluginDirective(obj: Object): Object | null {
