@@ -24,7 +24,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
           "name": "showPetById",
-          "paths": ["\/pets\/(?<petId>\\S+)$"]
+          "paths": ["\/pets\/(?<petId>[^\\\/\\s]+)$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_petstore.yaml"]
