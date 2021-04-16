@@ -178,7 +178,7 @@ describe('plugins', () => {
         });
       });
 
-      it('should throw error if no operation parameter schema defined', () => {
+      it('should return default if operation parameter schema not defined on any parameters', () => {
         const plugin = {};
 
         const operation: OA3Operation = {
@@ -190,9 +190,49 @@ describe('plugins', () => {
           ],
         };
 
-        expect(() => generateRequestValidatorPlugin(plugin, operation)).toThrowError(
-          "Parameter using 'content' type validation is not supported",
-        );
+        const generated = generateRequestValidatorPlugin(plugin, operation);
+
+        expect(generated.config).toStrictEqual({
+          version: 'draft4',
+          body_schema: '{}',
+        });
+      });
+
+      it('should ignore parameters without schema', () => {
+        const plugin = {};
+        const paramWithSchema = {
+          in: 'query',
+          explode: true,
+          required: false,
+          name: 'some_name',
+          schema: {
+            anyOf: [{ type: 'string' }],
+          },
+          style: 'form',
+        };
+        const paramWithoutSchema = {
+          in: 'query',
+          name: 'some_name',
+        };
+        const operation: OA3Operation = {
+          parameters: [paramWithSchema, paramWithoutSchema],
+        };
+
+        const generated = generateRequestValidatorPlugin(plugin, operation);
+
+        expect(generated.config).toStrictEqual({
+          version: 'draft4',
+          parameter_schema: [
+            {
+              schema: '{"anyOf":[{"type":"string"}]}',
+              style: paramWithSchema.style,
+              in: paramWithSchema.in,
+              name: paramWithSchema.name,
+              explode: paramWithSchema.explode,
+              required: paramWithSchema.required,
+            },
+          ],
+        });
       });
     });
 
@@ -212,16 +252,21 @@ describe('plugins', () => {
         });
       });
 
-      it('should throw error if no operation request body content defined', () => {
+      it('should return default if no operation request body content defined', () => {
         const plugin = {};
 
-        const operation: OA3Operation = {
-          requestBody: {},
+        const defaultReqVal = {
+          version: 'draft4',
+          body_schema: '{}',
         };
 
-        expect(() => generateRequestValidatorPlugin(plugin, operation)).toThrowError(
-          'content property is missing for request-validator!',
-        );
+        const op1 = { requestBody: {} };
+        const op2 = { requestBody: { $ref: 'non-existent' } };
+        const op3 = {};
+
+        expect(generateRequestValidatorPlugin(plugin, op1).config).toStrictEqual(defaultReqVal);
+        expect(generateRequestValidatorPlugin(plugin, op2).config).toStrictEqual(defaultReqVal);
+        expect(generateRequestValidatorPlugin(plugin, op3).config).toStrictEqual(defaultReqVal);
       });
 
       it('should add non-json media types to allowed content types and not add body schema', () => {

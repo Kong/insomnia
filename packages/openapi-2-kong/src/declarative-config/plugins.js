@@ -37,11 +37,13 @@ export function generatePlugin(key: string, value: Object): DCPlugin {
 function generateParameterSchema(operation: OA3Operation): Array<Object> | typeof undefined {
   let parameterSchema;
 
-  if (operation.parameters?.length) {
+  const parametersWithSchema = operation.parameters?.filter(p => (p: Object).schema);
+
+  if (parametersWithSchema?.length) {
     parameterSchema = [];
-    for (const p of operation.parameters) {
+    for (const p of parametersWithSchema) {
       if (!(p: Object).schema) {
-        throw new Error("Parameter using 'content' type validation is not supported");
+        continue;
       }
       parameterSchema.push({
         in: (p: Object).in,
@@ -66,17 +68,13 @@ function generateBodyOptions(
   let bodySchema;
   let allowedContentTypes;
 
-  if (operation.requestBody) {
-    const content = (operation.requestBody: Object).content;
-    if (!content) {
-      throw new Error('content property is missing for request-validator!');
-    }
-
+  const bodyContent = (operation.requestBody: Object)?.content;
+  if (bodyContent) {
     const jsonContentType = 'application/json';
 
-    allowedContentTypes = Object.keys(content);
+    allowedContentTypes = Object.keys(bodyContent);
     if (allowedContentTypes.includes(jsonContentType)) {
-      const item = content[jsonContentType];
+      const item = bodyContent[jsonContentType];
       bodySchema = JSON.stringify(item.schema);
     }
   }
