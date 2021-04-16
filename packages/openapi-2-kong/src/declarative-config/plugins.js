@@ -35,10 +35,10 @@ function generatePlugin([key, value]: [string, Object]): DCPlugin {
  */
 const ALLOW_ALL_SCHEMA = '{}';
 
-function generateParameterSchema(operation: OA3Operation): Array<Object> | typeof undefined {
+function generateParameterSchema(operation?: OA3Operation): Array<Object> | typeof undefined {
   let parameterSchema;
 
-  if (operation.parameters?.length) {
+  if (operation?.parameters?.length) {
     parameterSchema = [];
     for (const p of operation.parameters) {
       // The following is valid config to allow all content to pass, in the case where schema is not defined
@@ -68,7 +68,7 @@ function generateParameterSchema(operation: OA3Operation): Array<Object> | typeo
 }
 
 function generateBodyOptions(
-  operation: OA3Operation,
+  operation?: OA3Operation,
 ): {
   bodySchema: string | typeof undefined,
   allowedContentTypes: Array<string> | typeof undefined,
@@ -76,7 +76,7 @@ function generateBodyOptions(
   let bodySchema;
   let allowedContentTypes;
 
-  const bodyContent = (operation.requestBody: Object)?.content;
+  const bodyContent = (operation?.requestBody: Object)?.content;
   if (bodyContent) {
     const jsonContentType = 'application/json';
 
@@ -90,7 +90,7 @@ function generateBodyOptions(
   return { bodySchema, allowedContentTypes };
 }
 
-export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Operation): DCPlugin {
+export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Operation): DCPlugin {
   const config: { [string]: Object } = {
     version: 'draft4', // Fixed version
   };
@@ -137,12 +137,24 @@ export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Ope
   };
 }
 
-export function generateServerPlugins(server: OA3Server, api: OpenApi3Spec): Array<DCPlugin> {
+export function generateServerPlugins(
+  server: OA3Server,
+  api: OpenApi3Spec,
+): { plugins: Array<DCPlugin>, requestValidatorPlugin?: Object } {
   const globalPlugins = generatePlugins(api);
   const serverPlugins = generatePlugins(server);
+  const allPlugins = [...serverPlugins, ...globalPlugins];
 
-  // Server plugins take precedence over global plugins
-  return distinctByProperty<DCPlugin>([...serverPlugins, ...globalPlugins], plugin => plugin.name);
+  const requestValidatorPlugin =
+    getRequestValidatorPluginDirective(server) || getRequestValidatorPluginDirective(api);
+  if (requestValidatorPlugin) {
+    allPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin));
+  }
+  return {
+    // Server plugins take precedence over global plugins
+    plugins: distinctByProperty<DCPlugin>(allPlugins, plugin => plugin.name),
+    requestValidatorPlugin,
+  };
 }
 
 export function generatePathPlugins(pathItem: OA3PathItem): Array<DCPlugin> {
@@ -174,5 +186,6 @@ export function getRequestValidatorPluginDirective(obj: Object): Object | null {
     .filter(isPluginKey)
     .find(isRequestValidatorPluginKey);
 
-  return key ? obj[key] : null;
+  // If the key is defined but is blank (therefore should be fully generated) then default to {}
+  return key ? obj[key] || {} : null;
 }

@@ -36,17 +36,17 @@ export function generateService(
 ): DCService {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
+
+  // Server plugin takes precedence over spec
+  const serverPlugins = generateServerPlugins(server, api);
+
   const service: DCService = {
     name,
     url: serverUrl,
-    plugins: generateServerPlugins(server, api),
+    plugins: serverPlugins.plugins,
     routes: [],
     tags,
   };
-
-  // Server plugin takes precedence over spec
-  const serverValidatorPlugin =
-    getRequestValidatorPluginDirective(server) || getRequestValidatorPluginDirective(api);
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
@@ -90,7 +90,7 @@ export function generateService(
       const regularPlugins = generateOperationPlugins(
         operation,
         pathPlugins,
-        pathValidatorPlugin || serverValidatorPlugin, // Path plugin takes precedence over server
+        pathValidatorPlugin || serverPlugins.requestValidatorPlugin, // Path plugin takes precedence over server
       );
       const plugins = [...regularPlugins, ...securityPlugins];
 

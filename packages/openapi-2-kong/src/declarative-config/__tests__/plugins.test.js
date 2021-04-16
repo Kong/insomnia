@@ -22,6 +22,10 @@ describe('plugins', () => {
           version: '12',
         },
         paths: {},
+        'x-kong-plugin-request-validator': {
+          enabled: false,
+          config: { verbose_response: true },
+        },
         'x-kong-plugin-abcd': {
           config: {
             some_config: ['something'],
@@ -30,7 +34,7 @@ describe('plugins', () => {
       };
 
       const result = generateServerPlugins(server, api);
-      expect(result).toEqual([
+      expect(result.plugins).toEqual([
         {
           name: 'key-auth',
           config: {
@@ -43,7 +47,23 @@ describe('plugins', () => {
             some_config: ['something'],
           },
         },
+        {
+          config: {
+            body_schema: '{}',
+            verbose_response: true,
+            version: 'draft4',
+          },
+          enabled: false,
+          name: 'request-validator',
+        },
       ]);
+
+      expect(result.requestValidatorPlugin).toEqual({
+        config: {
+          verbose_response: true,
+        },
+        enabled: false,
+      });
     });
   });
 

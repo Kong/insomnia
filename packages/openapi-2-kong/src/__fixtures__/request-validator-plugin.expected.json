@@ -3,7 +3,16 @@
   "services": [
     {
       "name": "Example",
-      "plugins": [],
+      "plugins": [
+        {
+          "config": {
+            "body_schema": "{}",
+            "version": "draft4"
+          },
+          "enabled": true,
+          "name": "request-validator"
+        }
+      ],
       "routes": [
         {
           "methods": [
@@ -21,7 +30,33 @@
                   "application/xml"
                 ],
                 "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
-                "verbose_response": true,
+                "version": "draft4"
+              },
+              "enabled": true,
+              "name": "request-validator"
+            }
+          ],
+          "strip_path": false,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_request-validator-plugin.yaml"
+          ]
+        },
+        {
+          "methods": [
+            "GET"
+          ],
+          "name": "Example-global-get",
+          "paths": [
+            "/global$"
+          ],
+          "plugins": [
+            {
+              "config": {
+                "allowed_content_types": [
+                  "application/json"
+                ],
+                "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
                 "version": "draft4"
               },
               "enabled": true,
@@ -55,7 +90,6 @@
                     "style": "form"
                   }
                 ],
-                "verbose_response": true,
                 "version": "draft4"
               },
               "enabled": true,

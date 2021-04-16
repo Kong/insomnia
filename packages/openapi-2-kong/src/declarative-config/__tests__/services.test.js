@@ -107,7 +107,16 @@ describe('services', () => {
         {
           name: 'My_API',
           url: 'https://server1.com/path',
-          plugins: [],
+          plugins: [
+            {
+              config: {
+                parameter_schema: 'global',
+                version: 'draft4',
+              },
+              enabled: true,
+              name: 'request-validator',
+            },
+          ],
           tags: ['Tag'],
           routes: [
             {
@@ -199,7 +208,16 @@ describe('services', () => {
         {
           name: 'My_API',
           url: 'https://server1.com/path',
-          plugins: [],
+          plugins: [
+            {
+              config: {
+                parameter_schema: 'server',
+                version: 'draft4',
+              },
+              enabled: true,
+              name: 'request-validator',
+            },
+          ],
           tags: ['Tag'],
           routes: [
             {
