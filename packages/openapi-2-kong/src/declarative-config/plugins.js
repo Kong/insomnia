@@ -44,7 +44,12 @@ export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operat
   if (operation.parameters) {
     for (const p of operation.parameters) {
       if (!(p: Object).schema) {
-        throw new Error("Parameter using 'content' type validation is not supported");
+        if ((p: Object).content) {
+          throw new Error("Parameter validation of type 'content' is not supported");
+        }
+        throw new Error(
+          "Parameter validation requires either 'schema' or 'content' (only 'schema' is supported)",
+        );
       }
       config.parameter_schema.push({
         in: (p: Object).in,
