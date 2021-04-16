@@ -25,7 +25,7 @@ export function generatePlugins(item: Object, generator: GeneratorFn): Array<DCP
 export function generatePlugin(key: string, value: Object): DCPlugin {
   const plugin: DCPlugin = {
     name: value.name || getPluginNameFromKey(key),
-    config: value.config ? value.config : {},
+    config: value.config,
   };
   // Add tags to plugins while appending defaults tags
   // make flow happy
