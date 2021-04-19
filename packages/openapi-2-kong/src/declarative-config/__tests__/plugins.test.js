@@ -194,7 +194,16 @@ describe('plugins', () => {
 
         expect(generated.config).toStrictEqual({
           version: 'draft4',
-          body_schema: '{}',
+          parameter_schema: [
+            {
+              explode: false,
+              in: 'query',
+              name: 'some_name',
+              required: false,
+              schema: '{}',
+              style: 'form',
+            },
+          ],
         });
       });
 
@@ -230,6 +239,14 @@ describe('plugins', () => {
               name: paramWithSchema.name,
               explode: paramWithSchema.explode,
               required: paramWithSchema.required,
+            },
+            {
+              schema: '{}',
+              style: 'form',
+              in: paramWithoutSchema.in,
+              name: paramWithoutSchema.name,
+              explode: false,
+              required: false,
             },
           ],
         });

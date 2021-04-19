@@ -34,23 +34,36 @@ export function generatePlugin(key: string, value: Object): DCPlugin {
   return plugin;
 }
 
+/*
+  This is valid config to allow all content to pass
+  See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
+ */
+const ALLOW_ALL_SCHEMA = '{}';
+
 function generateParameterSchema(operation: OA3Operation): Array<Object> | typeof undefined {
   let parameterSchema;
 
-  const parametersWithSchema = operation.parameters?.filter(p => (p: Object).schema);
-
-  if (parametersWithSchema?.length) {
+  if (operation.parameters?.length) {
     parameterSchema = [];
-    for (const p of parametersWithSchema) {
-      if (!(p: Object).schema) {
-        continue;
+    for (const p of operation.parameters) {
+      // The following is valid config to allow all content to pass, in the case where schema is not defined
+      let schema;
+      if ((p: Object).schema) {
+        schema = JSON.stringify((p: Object).schema);
+      } else if ((p: Object).content) {
+        // only parameters defined with a schema (not content) are supported
+        schema = ALLOW_ALL_SCHEMA;
+      } else {
+        // no schema or content property on a parameter is in violation with the OpenAPI spec
+        schema = ALLOW_ALL_SCHEMA;
       }
+
       parameterSchema.push({
         in: (p: Object).in,
         explode: !!(p: Object).explode,
         required: !!(p: Object).required,
         name: (p: Object).name,
-        schema: JSON.stringify((p: Object).schema),
+        schema,
         style: (p: Object).style ?? 'form',
       });
     }
@@ -97,11 +110,9 @@ export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Ope
   // Use original or generated body_schema
   let bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
 
-  // If no schema is defined or generated, all content to pass
-  // The following is valid config to allow all content to pass
-  // See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
+  // If no parameter_schema or body_schema is defined or generated, allow all content to pass
   if (parameterSchema === undefined && bodySchema === undefined) {
-    bodySchema = '{}';
+    bodySchema = ALLOW_ALL_SCHEMA;
   }
 
   // Apply parameter_schema and body_schema to the config object
