@@ -1,20 +1,10 @@
 // @flow
 
-import { generateServerPlugins, generateRequestValidatorPlugin } from '../plugins';
+import { generateGlobalPlugins, generateRequestValidatorPlugin } from '../plugins';
 
 describe('plugins', () => {
-  describe('generateServerPlugins()', () => {
-    it('generates plugin given a server with a plugin attached', async () => {
-      const server = {
-        url: 'https://insomnia.rest',
-        'x-kong-plugin-key-auth': {
-          name: 'key-auth',
-          config: {
-            key_names: ['x-api-key'],
-          },
-        },
-      };
-
+  describe('generateGlobalPlugins()', () => {
+    it('generates plugin given a spec with a plugin attached', async () => {
       const api: OpenApi3Spec = {
         openapi: '3.0.2',
         info: {
@@ -31,20 +21,26 @@ describe('plugins', () => {
             some_config: ['something'],
           },
         },
-      };
-
-      const result = generateServerPlugins(server, api);
-      expect(result.plugins).toEqual([
-        {
+        'x-kong-plugin-key-auth': {
           name: 'key-auth',
           config: {
             key_names: ['x-api-key'],
           },
         },
+      };
+
+      const result = generateGlobalPlugins(api);
+      expect(result.plugins).toEqual([
         {
           name: 'abcd', // name from plugin tag
           config: {
             some_config: ['something'],
+          },
+        },
+        {
+          name: 'key-auth',
+          config: {
+            key_names: ['x-api-key'],
           },
         },
         {

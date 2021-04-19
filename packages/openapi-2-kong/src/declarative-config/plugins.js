@@ -137,22 +137,18 @@ export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Op
   };
 }
 
-export function generateServerPlugins(
-  server: OA3Server,
+export function generateGlobalPlugins(
   api: OpenApi3Spec,
 ): { plugins: Array<DCPlugin>, requestValidatorPlugin?: Object } {
   const globalPlugins = generatePlugins(api);
-  const serverPlugins = generatePlugins(server);
-  const allPlugins = [...serverPlugins, ...globalPlugins];
 
-  const requestValidatorPlugin =
-    getRequestValidatorPluginDirective(server) || getRequestValidatorPluginDirective(api);
+  const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
   if (requestValidatorPlugin) {
-    allPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin));
+    globalPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin));
   }
   return {
     // Server plugins take precedence over global plugins
-    plugins: distinctByProperty<DCPlugin>(allPlugins, plugin => plugin.name),
+    plugins: distinctByProperty<DCPlugin>(globalPlugins, plugin => plugin.name),
     requestValidatorPlugin,
   };
 }

@@ -13,7 +13,7 @@ import { generateSecurityPlugins } from './security-plugins';
 import {
   generateOperationPlugins,
   generatePathPlugins,
-  generateServerPlugins,
+  generateGlobalPlugins,
   getRequestValidatorPluginDirective,
 } from './plugins';
 
@@ -37,13 +37,13 @@ export function generateService(
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
 
-  // Server plugin takes precedence over spec
-  const serverPlugins = generateServerPlugins(server, api);
+  // Service plugins
+  const globalPlugins = generateGlobalPlugins(api);
 
   const service: DCService = {
     name,
     url: serverUrl,
-    plugins: serverPlugins.plugins,
+    plugins: globalPlugins.plugins,
     routes: [],
     tags,
   };
@@ -90,7 +90,7 @@ export function generateService(
       const regularPlugins = generateOperationPlugins(
         operation,
         pathPlugins,
-        pathValidatorPlugin || serverPlugins.requestValidatorPlugin, // Path plugin takes precedence over server
+        pathValidatorPlugin || globalPlugins.requestValidatorPlugin, // Path plugin takes precedence over global
       );
       const plugins = [...regularPlugins, ...securityPlugins];
 
