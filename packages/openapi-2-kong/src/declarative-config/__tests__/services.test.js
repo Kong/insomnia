@@ -59,7 +59,7 @@ describe('services', () => {
               name: 'My_API-birds_id-get',
               strip_path: false,
               methods: ['GET'],
-              paths: ['/birds/(?<id>\\S+)$'],
+              paths: ['/birds/(?<id>[^\\/\\s]+)$'],
               tags: ['Tag'],
             },
           ],

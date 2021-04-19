@@ -68,7 +68,8 @@ export function generateSlug(str: string, options: SlugifyOptions = {}): string 
 const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
 export function pathVariablesToRegex(p: string): string {
-  const result = p.replace(pathVariableSearchValue, '(?<$1>\\S+)');
+  // match anything except whitespace and '/'
+  const result = p.replace(pathVariableSearchValue, '(?<$1>[^\\/\\s]+)');
   // add a line ending because it is a regex
   return result + '$';
 }
