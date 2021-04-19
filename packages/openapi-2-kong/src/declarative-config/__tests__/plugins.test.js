@@ -19,8 +19,8 @@ describe('plugins', () => {
       expect(result).toEqual([
         {
           name: 'key-auth',
+          tags: ['OAS3_import'],
           config: {
-            tags: ['OAS3_import'],
             key_names: ['x-api-key'],
           },
         },
@@ -41,8 +41,8 @@ describe('plugins', () => {
       const result = generatePlugin(pluginKey, pluginValue);
       expect(result).toEqual({
         name: 'key-auth',
+        tags: ['OAS3_import'],
         config: {
-          tags: ['OAS3_import'],
           key_names: ['x-api-key'],
         },
       });
@@ -59,8 +59,8 @@ describe('plugins', () => {
       const result = generatePlugin(pluginKey, pluginValue);
       expect(result).toEqual({
         name: 'key-auth',
+        tags: ['OAS3_import'],
         config: {
-          tags: ['OAS3_import'],
           key_names: ['x-api-key'],
         },
       });

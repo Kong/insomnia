@@ -25,15 +25,12 @@ export function generatePlugins(item: Object, generator: GeneratorFn): Array<DCP
 export function generatePlugin(key: string, value: Object): DCPlugin {
   const plugin: DCPlugin = {
     name: value.name || getPluginNameFromKey(key),
+    tags: value.tags,
     config: value.config,
   };
-  // Add tags to plugins while appending defaults tags
-  // make flow happy
-  if (!plugin.config) {
-    plugin.config = {};
-  }
 
-  plugin.config.tags = plugin.config.tags ? defaultTags.concat(plugin.config.tags) : defaultTags;
+  // Add tags to plugins while appending defaults tags
+  plugin.tags = plugin.tags ? defaultTags.concat(plugin.tags) : defaultTags;
 
   return plugin;
 }
