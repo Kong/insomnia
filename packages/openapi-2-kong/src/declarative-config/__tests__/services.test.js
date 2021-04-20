@@ -230,6 +230,7 @@ describe('services', () => {
               plugins: [
                 {
                   name: 'key-auth',
+                  tags: ['OAS3_import'],
                   // should apply path plugin
                   config: { key_names: ['path'] },
                 },
@@ -244,6 +245,7 @@ describe('services', () => {
               plugins: [
                 {
                   name: 'key-auth',
+                  tags: ['OAS3_import'],
                   // should apply path plugin
                   config: { key_names: ['operation'] },
                 },

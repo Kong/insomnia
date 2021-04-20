@@ -33,6 +33,7 @@ describe('plugins', () => {
       expect(result.plugins).toEqual([
         {
           name: 'abcd', // name from plugin tag
+          tags: ['OAS3_import'],
           config: {
             some_config: ['something'],
           },
@@ -93,7 +94,6 @@ describe('plugins', () => {
 
       expect(generated).toStrictEqual({
         name: 'request-validator',
-        tags: ['OAS3_import'],
         enabled: plugin.enabled,
         config: { version: 'draft4', ...plugin.config },
       });
@@ -117,7 +117,6 @@ describe('plugins', () => {
 
       expect(generated).toStrictEqual({
         name: 'request-validator',
-        tags: ['OAS3_import'],
         enabled: plugin.enabled,
         config: { version: 'draft4', ...plugin.config },
       });
