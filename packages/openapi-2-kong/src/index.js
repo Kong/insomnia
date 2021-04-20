@@ -31,7 +31,7 @@ export async function generateFromString(
   tags: Array<string> = [],
 ): Promise<ConversionResult> {
   const api: OpenApi3Spec = await parseSpec(specStr);
-  return generateFromSpec(api, type, [defaultTags.join(), ...tags]);
+  return generateFromSpec(api, type, [...defaultTags, ...tags]);
 }
 
 export function generateFromSpec(
