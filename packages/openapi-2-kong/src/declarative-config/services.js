@@ -10,7 +10,12 @@ import {
 } from '../common';
 
 import { generateSecurityPlugins } from './security-plugins';
-import { generateOperationPlugins, generateServerPlugins } from './plugins';
+import {
+  generateOperationPlugins,
+  generatePathPlugins,
+  generateGlobalPlugins,
+  getRequestValidatorPluginDirective,
+} from './plugins';
 
 export function generateServices(api: OpenApi3Spec, tags: Array<string>): Array<DCService> {
   const servers = getAllServers(api);
@@ -31,16 +36,23 @@ export function generateService(
 ): DCService {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
+
+  // Service plugins
+  const globalPlugins = generateGlobalPlugins(api);
+
   const service: DCService = {
     name,
     url: serverUrl,
-    plugins: generateServerPlugins(server),
+    plugins: globalPlugins.plugins,
     routes: [],
     tags,
   };
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
+
+    const pathValidatorPlugin = getRequestValidatorPluginDirective(pathItem);
+    const pathPlugins = generatePathPlugins(pathItem);
 
     for (const method of Object.keys(pathItem)) {
       if (
@@ -75,7 +87,11 @@ export function generateService(
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api);
-      const regularPlugins = generateOperationPlugins(operation);
+      const regularPlugins = generateOperationPlugins(
+        operation,
+        pathPlugins,
+        pathValidatorPlugin || globalPlugins.requestValidatorPlugin, // Path plugin takes precedence over global
+      );
       const plugins = [...regularPlugins, ...securityPlugins];
 
       // Add plugins if there are any

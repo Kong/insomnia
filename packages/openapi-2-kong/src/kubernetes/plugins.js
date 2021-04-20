@@ -1,6 +1,7 @@
 // @flow
 
 import {
+  distinctByProperty,
   getPaths,
   getPluginNameFromKey,
   getServers,
@@ -212,20 +213,4 @@ export function prioritizePlugins(
 
   // Select first of each type of plugin
   return distinctByProperty(plugins, p => p.plugin);
-}
-
-export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
-  const result: Array<T> = [];
-  const set = new Set();
-
-  for (const item of arr.filter(i => i)) {
-    const selector = propertySelector(item);
-    if (set.has(selector)) {
-      continue;
-    }
-
-    set.add(selector);
-    result.push(item);
-  }
-  return result;
 }

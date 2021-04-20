@@ -1,28 +1,23 @@
 // @flow
 
-import { getPluginNameFromKey, isPluginKey, defaultTags } from '../common';
+import { distinctByProperty, getPluginNameFromKey, isPluginKey, defaultTags } from '../common';
 
 export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
 }
 
-type GeneratorFn = (key: string, value: Object, iterable: Object | Array<Object>) => DCPlugin;
+export function generatePlugins(item: Object): Array<DCPlugin> {
+  // When generating plugins, ignore the request validator plugin
+  // because it is handled at the operation level
+  const pluginFilter = ([key, _]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
 
-export function generatePlugins(item: Object, generator: GeneratorFn): Array<DCPlugin> {
-  const plugins: Array<DCPlugin> = [];
-
-  for (const key of Object.keys(item)) {
-    if (!isPluginKey(key)) {
-      continue;
-    }
-
-    plugins.push(generator(key, item[key], item));
-  }
-
-  return plugins;
+  // Server plugins should load from the api spec root and from the server
+  return Object.entries(item)
+    .filter(pluginFilter)
+    .map(generatePlugin);
 }
 
-export function generatePlugin(key: string, value: Object): DCPlugin {
+function generatePlugin([key, value]: [string, Object]): DCPlugin {
   const plugin: DCPlugin = {
     name: value.name || getPluginNameFromKey(key),
   };
@@ -37,84 +32,159 @@ export function generatePlugin(key: string, value: Object): DCPlugin {
   return plugin;
 }
 
-export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operation): DCPlugin {
-  const config: { [string]: Object } = {
-    version: 'draft4', // Fixed version
-  };
+/*
+  This is valid config to allow all content to pass
+  See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
+ */
+const ALLOW_ALL_SCHEMA = '{}';
 
-  config.parameter_schema = [];
+function generateParameterSchema(operation?: OA3Operation): Array<Object> | typeof undefined {
+  let parameterSchema;
 
-  if (operation.parameters) {
+  if (operation?.parameters?.length) {
+    parameterSchema = [];
     for (const p of operation.parameters) {
-      if (!(p: Object).schema) {
-        throw new Error("Parameter using 'content' type validation is not supported");
+      // The following is valid config to allow all content to pass, in the case where schema is not defined
+      let schema;
+      if ((p: Object).schema) {
+        schema = JSON.stringify((p: Object).schema);
+      } else if ((p: Object).content) {
+        // only parameters defined with a schema (not content) are supported
+        schema = ALLOW_ALL_SCHEMA;
+      } else {
+        // no schema or content property on a parameter is in violation with the OpenAPI spec
+        schema = ALLOW_ALL_SCHEMA;
       }
-      config.parameter_schema.push({
+
+      parameterSchema.push({
         in: (p: Object).in,
         explode: !!(p: Object).explode,
         required: !!(p: Object).required,
         name: (p: Object).name,
-        schema: JSON.stringify((p: Object).schema),
+        schema,
         style: (p: Object).style ?? 'form',
       });
     }
   }
 
-  if (operation.requestBody) {
-    const content = (operation.requestBody: Object).content;
-    if (!content) {
-      throw new Error('content property is missing for request-validator!');
-    }
+  return parameterSchema;
+}
 
-    let bodySchema;
-    for (const mediatype of Object.keys(content)) {
-      if (mediatype !== 'application/json') {
-        throw new Error(`Body validation supports only 'application/json', not ${mediatype}`);
-      }
-      const item = content[mediatype];
+function generateBodyOptions(
+  operation?: OA3Operation,
+): {
+  bodySchema: string | typeof undefined,
+  allowedContentTypes: Array<string> | typeof undefined,
+} {
+  let bodySchema;
+  let allowedContentTypes;
+
+  const bodyContent = (operation?.requestBody: Object)?.content;
+  if (bodyContent) {
+    const jsonContentType = 'application/json';
+
+    allowedContentTypes = Object.keys(bodyContent);
+    if (allowedContentTypes.includes(jsonContentType)) {
+      const item = bodyContent[jsonContentType];
       bodySchema = JSON.stringify(item.schema);
     }
+  }
 
-    if (bodySchema) {
-      config.body_schema = bodySchema;
-    }
+  return { bodySchema, allowedContentTypes };
+}
+
+export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Operation): DCPlugin {
+  const config: { [string]: Object } = {
+    version: 'draft4', // Fixed version
+  };
+
+  const pluginConfig = plugin.config ?? {};
+
+  // Use original or generated parameter_schema
+  const parameterSchema = pluginConfig.parameter_schema ?? generateParameterSchema(operation);
+
+  const generated = generateBodyOptions(operation);
+
+  // Use original or generated body_schema
+  let bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
+
+  // If no parameter_schema or body_schema is defined or generated, allow all content to pass
+  if (parameterSchema === undefined && bodySchema === undefined) {
+    bodySchema = ALLOW_ALL_SCHEMA;
+  }
+
+  // Apply parameter_schema and body_schema to the config object
+  if (parameterSchema !== undefined) {
+    config.parameter_schema = parameterSchema;
+  }
+
+  if (bodySchema !== undefined) {
+    config.body_schema = bodySchema;
+  }
+
+  // Use original or generated allowed_content_types
+  const allowedContentTypes = pluginConfig.allowed_content_types ?? generated.allowedContentTypes;
+  if (allowedContentTypes !== undefined) {
+    config.allowed_content_types = allowedContentTypes;
+  }
+
+  // Use original verbose_response if defined
+  if (pluginConfig.verbose_response !== undefined) {
+    config.verbose_response = Boolean(pluginConfig.verbose_response);
   }
 
   return {
     config,
-    enabled: true,
+    enabled: Boolean(plugin.enabled ?? true),
     name: 'request-validator',
   };
 }
 
-export function generateServerPlugins(server: OA3Server): Array<DCPlugin> {
-  const plugins: Array<DCPlugin> = [];
+export function generateGlobalPlugins(
+  api: OpenApi3Spec,
+): { plugins: Array<DCPlugin>, requestValidatorPlugin?: Object } {
+  const globalPlugins = generatePlugins(api);
 
-  for (const key of Object.keys(server)) {
-    if (!isPluginKey(key)) {
-      continue;
-    }
-
-    plugins.push(generatePlugin(key, server[key]));
+  const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
+  if (requestValidatorPlugin) {
+    globalPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin));
   }
-
-  return plugins;
+  return {
+    // Server plugins take precedence over global plugins
+    plugins: distinctByProperty<DCPlugin>(globalPlugins, plugin => plugin.name),
+    requestValidatorPlugin,
+  };
 }
 
-export function generateOperationPlugins(operation: OA3Operation): Array<DCPlugin> {
-  const plugins: Array<DCPlugin> = [];
+export function generatePathPlugins(pathItem: OA3PathItem): Array<DCPlugin> {
+  return generatePlugins(pathItem);
+}
 
-  for (const key of Object.keys(operation)) {
-    if (!isPluginKey(key)) {
-      continue;
-    }
+export function generateOperationPlugins(
+  operation: OA3Operation,
+  pathPlugins: Array<DCPlugin>,
+  parentValidatorPlugin?: Object,
+): Array<DCPlugin> {
+  const operationPlugins: Array<DCPlugin> = generatePlugins(operation);
 
-    if (isRequestValidatorPluginKey(key)) {
-      plugins.push(generateRequestValidatorPlugin(operation[key], operation));
-    } else {
-      plugins.push(generatePlugin(key, operation[key]));
-    }
+  // Check if validator plugin exists on the operation
+  const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
+
+  // Use the operation or parent validator plugin, or skip if neither exist
+  const validatorPluginToUse = operationValidatorPlugin || parentValidatorPlugin;
+  if (validatorPluginToUse) {
+    operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation));
   }
 
-  return plugins;
+  // Operation plugins take precedence over path plugins
+  return distinctByProperty<DCPlugin>([...operationPlugins, ...pathPlugins], plugin => plugin.name);
+}
+
+export function getRequestValidatorPluginDirective(obj: Object): Object | null {
+  const key = Object.keys(obj)
+    .filter(isPluginKey)
+    .find(isRequestValidatorPluginKey);
+
+  // If the key is defined but is blank (therefore should be fully generated) then default to {}
+  return key ? obj[key] || {} : null;
 }
