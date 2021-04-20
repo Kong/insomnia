@@ -148,3 +148,20 @@ export function joinPath(p1: string, p2: string): string {
 
   return `${p1}/${p2}`;
 }
+
+// Select first unique instance of an array item depending on the property selector
+export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
+  const result: Array<T> = [];
+  const set = new Set();
+
+  for (const item of arr.filter(i => i)) {
+    const selector = propertySelector(item);
+    if (set.has(selector)) {
+      continue;
+    }
+
+    set.add(selector);
+    result.push(item);
+  }
+  return result;
+}

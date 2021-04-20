@@ -7,13 +7,22 @@ info:
 servers:
   - url: http://backend.com/path
 
+x-kong-plugin-request-validator:
+
 paths:
+  /global:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonSchema'
   /params:
     get:
       x-kong-plugin-request-validator:
         enabled: true
         config:
-          verbose_response: true
+          body_scheme: '{}'
       parameters:
         - in: path
           name: userId
@@ -22,10 +31,6 @@ paths:
           required: true
   /body:
     post:
-      x-kong-plugin-request-validator:
-        enabled: true
-        config:
-          verbose_response: true
       requestBody:
         content:
           application/json:

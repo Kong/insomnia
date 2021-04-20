@@ -1,12 +1,26 @@
 // @flow
 
-import { generateServerPlugins, generatePlugin, generateRequestValidatorPlugin } from '../plugins';
+import { generateGlobalPlugins, generateRequestValidatorPlugin } from '../plugins';
 
 describe('plugins', () => {
-  describe('generateServerPlugins()', () => {
-    it('generates plugin given a server with a plugin attached', async () => {
-      const server = {
-        url: 'https://insomnia.rest',
+  describe('generateGlobalPlugins()', () => {
+    it('generates plugin given a spec with a plugin attached', async () => {
+      const api: OpenApi3Spec = {
+        openapi: '3.0.2',
+        info: {
+          title: 'something',
+          version: '12',
+        },
+        paths: {},
+        'x-kong-plugin-request-validator': {
+          enabled: false,
+          config: { verbose_response: true },
+        },
+        'x-kong-plugin-abcd': {
+          config: {
+            some_config: ['something'],
+          },
+        },
         'x-kong-plugin-key-auth': {
           name: 'key-auth',
           config: {
@@ -15,51 +29,36 @@ describe('plugins', () => {
         },
       };
 
-      const result = generateServerPlugins(server);
-      expect(result).toEqual([
+      const result = generateGlobalPlugins(api);
+      expect(result.plugins).toEqual([
+        {
+          name: 'abcd', // name from plugin tag
+          config: {
+            some_config: ['something'],
+          },
+        },
         {
           name: 'key-auth',
           config: {
             key_names: ['x-api-key'],
           },
         },
+        {
+          config: {
+            body_schema: '{}',
+            verbose_response: true,
+            version: 'draft4',
+          },
+          enabled: false,
+          name: 'request-validator',
+        },
       ]);
-    });
-  });
 
-  describe('generatePlugin()', () => {
-    it('generates plugin given a plugin key, and value', async () => {
-      const pluginKey = 'x-kong-plugin-key-auth';
-      const pluginValue = {
-        name: 'key-auth',
+      expect(result.requestValidatorPlugin).toEqual({
         config: {
-          key_names: ['x-api-key'],
+          verbose_response: true,
         },
-      };
-
-      const result = generatePlugin(pluginKey, pluginValue);
-      expect(result).toEqual({
-        name: 'key-auth',
-        config: {
-          key_names: ['x-api-key'],
-        },
-      });
-    });
-
-    it('generates name from key when missing `name` from value', async () => {
-      const pluginKey = 'x-kong-plugin-key-auth';
-      const pluginValue = {
-        config: {
-          key_names: ['x-api-key'],
-        },
-      };
-
-      const result = generatePlugin(pluginKey, pluginValue);
-      expect(result).toEqual({
-        name: 'key-auth',
-        config: {
-          key_names: ['x-api-key'],
-        },
+        enabled: false,
       });
     });
   });
