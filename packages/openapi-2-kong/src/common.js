@@ -68,7 +68,8 @@ export function generateSlug(str: string, options: SlugifyOptions = {}): string 
 const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
 export function pathVariablesToRegex(p: string): string {
-  const result = p.replace(pathVariableSearchValue, '(?<$1>\\S+)');
+  // match anything except whitespace and '/'
+  const result = p.replace(pathVariableSearchValue, '(?<$1>[^\\/\\s]+)');
   // add a line ending because it is a regex
   return result + '$';
 }
@@ -146,4 +147,21 @@ export function joinPath(p1: string, p2: string): string {
   p2 = p2.replace(/^\//, '');
 
   return `${p1}/${p2}`;
+}
+
+// Select first unique instance of an array item depending on the property selector
+export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
+  const result: Array<T> = [];
+  const set = new Set();
+
+  for (const item of arr.filter(i => i)) {
+    const selector = propertySelector(item);
+    if (set.has(selector)) {
+      continue;
+    }
+
+    set.add(selector);
+    result.push(item);
+  }
+  return result;
 }

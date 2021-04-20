@@ -17,14 +17,14 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
           "name": "list-searchable-fields",
-          "paths": ["\/(?<dataset>\\S+)\/(?<version>\\S+)\/fields$"]
+          "paths": ["\/(?<dataset>[^\\\/\\s]+)\/(?<version>[^\\\/\\s]+)\/fields$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
           "name": "perform-search",
-          "paths": ["\/(?<dataset>\\S+)\/(?<version>\\S+)\/records$"]
+          "paths": ["\/(?<dataset>[^\\\/\\s]+)\/(?<version>[^\\\/\\s]+)\/records$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_uspto.yaml"]

@@ -37,9 +37,13 @@ declare type OA3Parameter = {|
   deprecated?: boolean,
   allowEmptyValue?: boolean,
   style?: 'form' | 'spaceDelimited' | 'pipeDelimited' | 'deepObject',
+  schema?: Object,
+  content?: Object,
+  explode?: boolean,
 |};
 
 declare type OA3RequestBody = {|
+  content?: Object,
   // TODO
 |};
 

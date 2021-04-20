@@ -1,0 +1,56 @@
+openapi: 3.0.2
+
+info:
+  title: Example
+  version: 1.0.0
+
+servers:
+  - url: http://backend.com/path
+
+x-kong-plugin-request-validator:
+
+paths:
+  /global:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonSchema'
+  /params:
+    get:
+      x-kong-plugin-request-validator:
+        enabled: true
+        config:
+          body_scheme: '{}'
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: integer
+          required: true
+  /body:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/jsonSchema'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/xmlSchema'
+
+components:
+  schemas:
+    jsonSchema:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    xmlSchema:
+      type: object
+      properties:
+        prop:
+          type: integer
