@@ -34,52 +34,110 @@ export function generatePlugin(key: string, value: Object): DCPlugin {
   return plugin;
 }
 
-export function generateRequestValidatorPlugin(obj: Object, operation: OA3Operation): DCPlugin {
-  const config: { [string]: Object } = {
-    version: 'draft4', // Fixed version
-  };
+/*
+  This is valid config to allow all content to pass
+  See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
+ */
+const ALLOW_ALL_SCHEMA = '{}';
 
-  config.parameter_schema = [];
+function generateParameterSchema(operation: OA3Operation): Array<Object> | typeof undefined {
+  let parameterSchema;
 
-  if (operation.parameters) {
+  if (operation.parameters?.length) {
+    parameterSchema = [];
     for (const p of operation.parameters) {
-      if (!(p: Object).schema) {
-        throw new Error("Parameter using 'content' type validation is not supported");
+      // The following is valid config to allow all content to pass, in the case where schema is not defined
+      let schema;
+      if ((p: Object).schema) {
+        schema = JSON.stringify((p: Object).schema);
+      } else if ((p: Object).content) {
+        // only parameters defined with a schema (not content) are supported
+        schema = ALLOW_ALL_SCHEMA;
+      } else {
+        // no schema or content property on a parameter is in violation with the OpenAPI spec
+        schema = ALLOW_ALL_SCHEMA;
       }
-      config.parameter_schema.push({
+
+      parameterSchema.push({
         in: (p: Object).in,
         explode: !!(p: Object).explode,
         required: !!(p: Object).required,
         name: (p: Object).name,
-        schema: JSON.stringify((p: Object).schema),
+        schema,
         style: (p: Object).style ?? 'form',
       });
     }
   }
 
-  if (operation.requestBody) {
-    const content = (operation.requestBody: Object).content;
-    if (!content) {
-      throw new Error('content property is missing for request-validator!');
-    }
+  return parameterSchema;
+}
 
-    let bodySchema;
-    for (const mediatype of Object.keys(content)) {
-      if (mediatype !== 'application/json') {
-        throw new Error(`Body validation supports only 'application/json', not ${mediatype}`);
-      }
-      const item = content[mediatype];
+function generateBodyOptions(
+  operation: OA3Operation,
+): {
+  bodySchema: string | typeof undefined,
+  allowedContentTypes: Array<string> | typeof undefined,
+} {
+  let bodySchema;
+  let allowedContentTypes;
+
+  const bodyContent = (operation.requestBody: Object)?.content;
+  if (bodyContent) {
+    const jsonContentType = 'application/json';
+
+    allowedContentTypes = Object.keys(bodyContent);
+    if (allowedContentTypes.includes(jsonContentType)) {
+      const item = bodyContent[jsonContentType];
       bodySchema = JSON.stringify(item.schema);
     }
+  }
 
-    if (bodySchema) {
-      config.body_schema = bodySchema;
-    }
+  return { bodySchema, allowedContentTypes };
+}
+
+export function generateRequestValidatorPlugin(plugin: Object, operation: OA3Operation): DCPlugin {
+  const config: { [string]: Object } = {
+    version: 'draft4', // Fixed version
+  };
+
+  const pluginConfig = plugin.config ?? {};
+
+  // Use original or generated parameter_schema
+  const parameterSchema = pluginConfig.parameter_schema ?? generateParameterSchema(operation);
+
+  const generated = generateBodyOptions(operation);
+
+  // Use original or generated body_schema
+  let bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
+
+  // If no parameter_schema or body_schema is defined or generated, allow all content to pass
+  if (parameterSchema === undefined && bodySchema === undefined) {
+    bodySchema = ALLOW_ALL_SCHEMA;
+  }
+
+  // Apply parameter_schema and body_schema to the config object
+  if (parameterSchema !== undefined) {
+    config.parameter_schema = parameterSchema;
+  }
+
+  if (bodySchema !== undefined) {
+    config.body_schema = bodySchema;
+  }
+
+  // Use original or generated allowed_content_types
+  const allowedContentTypes = pluginConfig.allowed_content_types ?? generated.allowedContentTypes;
+  if (allowedContentTypes !== undefined) {
+    config.allowed_content_types = allowedContentTypes;
+  }
+
+  // Use original verbose_response if defined
+  if (pluginConfig.verbose_response !== undefined) {
+    config.verbose_response = Boolean(pluginConfig.verbose_response);
   }
 
   return {
     config,
-    enabled: true,
+    enabled: Boolean(plugin.enabled ?? true),
     name: 'request-validator',
   };
 }
