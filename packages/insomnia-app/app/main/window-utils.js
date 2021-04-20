@@ -64,6 +64,7 @@ export function createWindow() {
     y: isVisibleOnAnyDisplay ? y : undefined,
 
     // Other options
+    backgroundColor: '#2C2C2C',
     fullscreen: fullscreen,
     fullscreenable: true,
     title: getAppName(),
