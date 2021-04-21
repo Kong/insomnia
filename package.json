@@ -12,7 +12,7 @@
     "lint": "eslint . --ext .js,.json",
     "lint:fix": "npm run lint -- --fix",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
-    "version": "lerna version --exact --no-private --preid beta --no-push",
+    "version": "lerna version --exact --no-private --preid beta",
     "publish": "lerna publish from-package --pre-dist-tag beta",
     "clean": "lerna clean --yes && rimraf node_modules",
     "typecheck": "lerna run --parallel --stream typecheck",
