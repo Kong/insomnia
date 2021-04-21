@@ -3,6 +3,7 @@
 declare type DCPlugin = {|
   name: string,
   enabled?: boolean,
+  tags?: Array<string>,
   config?: {
     [string]: Object,
   },

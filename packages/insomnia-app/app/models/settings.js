@@ -66,6 +66,7 @@ type BaseSettings = {
   validateSSL: boolean,
   hasPromptedToMigrateFromDesigner: boolean,
   hasPromptedOnboarding: boolean,
+  hasPromptedAnalytics: boolean,
 };
 
 export type Settings = BaseModel & BaseSettings;
@@ -129,6 +130,11 @@ export function init(): BaseSettings {
     // older version should not see it, so by default this flag is set to true, and is toggled
     // to false during initialization
     hasPromptedOnboarding: true,
+
+    // Only existing users updating from an older version should see the analytics prompt
+    // So by default this flag is set to false, and is toggled to true during initialization
+    // for new users
+    hasPromptedAnalytics: false,
   };
 }
 

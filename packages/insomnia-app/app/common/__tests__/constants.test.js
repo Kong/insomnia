@@ -1,4 +1,5 @@
 import {
+  ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
@@ -46,6 +47,7 @@ describe('isWorkspaceActivity', () => {
     expect(isWorkspaceActivity(ACTIVITY_HOME)).toBe(false);
     expect(isWorkspaceActivity(ACTIVITY_ONBOARDING)).toBe(false);
     expect(isWorkspaceActivity(ACTIVITY_MIGRATION)).toBe(false);
+    expect(isWorkspaceActivity(ACTIVITY_ANALYTICS)).toBe(false);
   });
 });
 
@@ -57,6 +59,7 @@ describe('isValidActivity', () => {
     expect(isValidActivity(ACTIVITY_HOME)).toBe(true);
     expect(isValidActivity(ACTIVITY_ONBOARDING)).toBe(true);
     expect(isValidActivity(ACTIVITY_MIGRATION)).toBe(true);
+    expect(isValidActivity(ACTIVITY_ANALYTICS)).toBe(true);
   });
 
   it('should return false', () => {

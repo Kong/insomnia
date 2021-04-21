@@ -35,6 +35,7 @@ import {
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
   ACTIVITY_ONBOARDING,
+  ACTIVITY_ANALYTICS,
   DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
@@ -235,8 +236,18 @@ export function loadRequestStop(requestId) {
 function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
   switch (currentActivity) {
     case ACTIVITY_MIGRATION:
-      // Has seen the onboarding step? Go to home, otherwise go to onboarding
-      return settings.hasPromptedOnboarding ? ACTIVITY_HOME : ACTIVITY_ONBOARDING;
+      // Has not seen the onboarding step? Go to onboarding
+      if (!settings.hasPromptedOnboarding) {
+        return ACTIVITY_ONBOARDING;
+      }
+
+      // Has not seen the analytics prompt? Go to it
+      if (!settings.hasPromptedAnalytics) {
+        return ACTIVITY_ANALYTICS;
+      }
+
+      // Otherwise, go to home
+      return ACTIVITY_HOME;
     case ACTIVITY_ONBOARDING:
       // Always go to home after onboarding
       return ACTIVITY_HOME;
@@ -276,7 +287,14 @@ export function setActiveActivity(activity: GlobalActivity) {
       models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
       break;
     case ACTIVITY_ONBOARDING:
-      models.settings.patch({ hasPromptedOnboarding: true });
+      models.settings.patch({
+        hasPromptedOnboarding: true,
+        // Don't show the analytics preferences prompt as it is part of the onboarding flow
+        hasPromptedAnalytics: true,
+      });
+      break;
+    case ACTIVITY_ANALYTICS:
+      models.settings.patch({ hasPromptedAnalytics: true });
       break;
     default:
       break;
@@ -728,6 +746,8 @@ export function initActiveActivity() {
           overrideActivity = ACTIVITY_MIGRATION;
         } else if (!settings.hasPromptedOnboarding) {
           overrideActivity = ACTIVITY_ONBOARDING;
+        } else if (!settings.hasPromptedAnalytics) {
+          overrideActivity = ACTIVITY_ANALYTICS;
         }
         break;
     }

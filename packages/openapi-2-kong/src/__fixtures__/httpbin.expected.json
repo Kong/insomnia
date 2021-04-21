@@ -18,21 +18,21 @@
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-basic_auth_user_password-get",
           "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
-          "paths": ["\/basic-auth\/(?<user>\\S+)\/(?<password>\\S+)$"]
+          "paths": ["\/basic-auth\/(?<user>[^\\\/\\s]+)\/(?<password>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-image_format-get",
-          "paths": ["\/image\/(?<format>\\S+)$"]
+          "paths": ["\/image\/(?<format>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-delay_n-get",
-          "paths": ["\/delay\/(?<n>\\S+)$"]
+          "paths": ["\/delay\/(?<n>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
@@ -46,35 +46,35 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status_statusCode-delete",
-          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+          "paths": ["\/status\/(?<statusCode>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["PUT"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status_statusCode-put",
-          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+          "paths": ["\/status\/(?<statusCode>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["PATCH"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status_statusCode-patch",
-          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+          "paths": ["\/status\/(?<statusCode>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status_statusCode-post",
-          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+          "paths": ["\/status\/(?<statusCode>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-status_statusCode-get",
-          "paths": ["\/status\/(?<statusCode>\\S+)$"]
+          "paths": ["\/status\/(?<statusCode>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
@@ -89,7 +89,7 @@
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-hidden_basic_auth_user_password-get",
           "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
-          "paths": ["\/hidden-basic-auth\/(?<user>\\S+)\/(?<password>\\S+)$"]
+          "paths": ["\/hidden-basic-auth\/(?<user>[^\\\/\\s]+)\/(?<password>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
@@ -101,9 +101,9 @@
         {
           "methods": ["GET"],
           "strip_path": false,
-          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-cookies-get",
-          "plugins": [{"name": "correlation-id"}],
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
+          "plugins": [{"name": "correlation-id", "tags": ["OAS3_import"]}],
           "paths": ["/cookies$"]
         },
         {
@@ -139,7 +139,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-parse_machine_timestamp-get",
-          "paths": ["\/parse\/(?<machine_timestamp>\\S+)$"]
+          "paths": ["\/parse\/(?<machine_timestamp>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["POST"],
@@ -186,7 +186,7 @@
               "enabled": true
             }
           ],
-          "paths": ["\/when\/(?<human_timestamp>\\S+)$"]
+          "paths": ["\/when\/(?<human_timestamp>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],

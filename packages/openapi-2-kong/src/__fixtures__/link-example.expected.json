@@ -10,28 +10,28 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "getUserByName",
-          "paths": ["\/2.0\/users\/(?<username>\\S+)$"]
+          "paths": ["\/2.0\/users\/(?<username>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "getRepositoriesByOwner",
-          "paths": ["\/2.0\/repositories\/(?<username>\\S+)$"]
+          "paths": ["\/2.0\/repositories\/(?<username>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "getRepository",
-          "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)$"]
+          "paths": ["\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "getPullRequestsByRepository",
-          "paths": ["\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests$"]
+          "paths": ["\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)\/pullrequests$"]
         },
         {
           "methods": ["GET"],
@@ -39,7 +39,7 @@
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "getPullRequestsById",
           "paths": [
-            "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)$"
+            "\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)\/pullrequests\/(?<pid>[^\\\/\\s]+)$"
           ]
         },
         {
@@ -48,7 +48,7 @@
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
           "name": "mergePullRequest",
           "paths": [
-            "\/2.0\/repositories\/(?<username>\\S+)\/(?<slug>\\S+)\/pullrequests\/(?<pid>\\S+)\/merge$"
+            "\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)\/pullrequests\/(?<pid>[^\\\/\\s]+)\/merge$"
           ]
         }
       ],

@@ -565,6 +565,9 @@ class General extends React.PureComponent<Props, State> {
             <div className="form-row pad-top-sm">
               {this.renderBooleanSetting('Has seen onboarding experience', 'hasPromptedOnboarding')}
             </div>
+            <div className="form-row pad-top-sm">
+              {this.renderBooleanSetting('Has seen analytics prompt', 'hasPromptedAnalytics')}
+            </div>
           </>
         )}
       </div>

@@ -24,14 +24,14 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
           "name": "find pet by id",
-          "paths": ["\/pets\/(?<id>\\S+)$"]
+          "paths": ["\/pets\/(?<id>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["DELETE"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
           "name": "deletePet",
-          "paths": ["\/pets\/(?<id>\\S+)$"]
+          "paths": ["\/pets\/(?<id>[^\\\/\\s]+)$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"]
