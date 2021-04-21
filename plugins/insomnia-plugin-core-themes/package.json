@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-core-themes",
-  "version": "2.2.29",
+  "version": "2.2.34-beta.0",
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Insomnia core themes",
   "license": "MIT",
