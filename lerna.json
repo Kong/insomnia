@@ -2,6 +2,11 @@
   "tagVersionPrefix": "lib@",
   "version": "2.2.33",
   "includeMergedTags": true,
+  "command": {
+    "version": {
+      "message": "publish npm packages %s"
+    }
+  },
   "packages": [
     "packages/*",
     "plugins/*"
