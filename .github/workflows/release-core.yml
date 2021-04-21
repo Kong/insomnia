@@ -14,7 +14,22 @@ env:
   NPM_CONFIG_RUNTIME: electron
 
 jobs:
+  npm:
+    name: npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+      - run: npm run bootstrap
+      - run: npm run test
+      - run: npm run publish
   Windows:
+    needs: [ npm ]
     name: Windows
     runs-on: windows-2016
     steps:
@@ -26,12 +41,12 @@ jobs:
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
-      - run: npm run test:pre-release
       - run: npm run app-release
         env:
           CSC_LINK: ${{ secrets.CORE_WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CORE_WINDOWS_CSC_KEY_PASSWORD }}
   Mac:
+    needs: [ npm ]
     name: Mac
     runs-on: macos-latest
     steps:
@@ -43,7 +58,6 @@ jobs:
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
-      - run: npm run test:pre-release
       - run: npm run app-release
         env:
           APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
@@ -51,6 +65,7 @@ jobs:
           CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
   Linux:
+    needs: [ npm ]
     name: Linux
     runs-on: ubuntu-latest
     steps:
@@ -65,7 +80,6 @@ jobs:
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
-      - run: npm run test:pre-release
       - run: npm run app-release
         env:
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
