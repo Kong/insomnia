@@ -33,12 +33,14 @@ describe('plugins', () => {
       expect(result.plugins).toEqual([
         {
           name: 'abcd', // name from plugin tag
+          tags: ['OAS3_import'],
           config: {
             some_config: ['something'],
           },
         },
         {
           name: 'key-auth',
+          tags: ['OAS3_import'],
           config: {
             key_names: ['x-api-key'],
           },
