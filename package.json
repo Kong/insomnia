@@ -13,7 +13,7 @@
     "lint:fix": "npm run lint -- --fix",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "version": "lerna version --exact --no-private --preid beta",
-    "version:dry": "npm run version -- --no-push",
+    "version:dry": "npm run version -- --no-git-tag-version",
     "publish": "lerna publish from-git --pre-dist-tag beta",
     "clean": "lerna clean --yes && rimraf node_modules",
     "typecheck": "lerna run --parallel --stream typecheck",
