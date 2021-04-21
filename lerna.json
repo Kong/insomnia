@@ -1,6 +1,6 @@
 {
   "tagVersionPrefix": "lib@",
-  "version": "2.2.35-beta.2",
+  "version": "2.2.35-beta.3",
   "includeMergedTags": true,
   "command": {
     "version": {

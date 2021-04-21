@@ -1,13 +1,13 @@
 {
   "name": "insomnia-plugin-kong-kubernetes-config",
-  "version": "2.2.35-beta.2",
+  "version": "2.2.35-beta.3",
   "main": "index.js",
   "insomnia": {
     "name": "kong-kubernetes-config",
     "description": "Generate Kong For Kubernetes configuration"
   },
   "dependencies": {
-    "openapi-2-kong": "2.2.35-beta.2",
+    "openapi-2-kong": "2.2.35-beta.3",
     "yaml": "^1.8.3"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
