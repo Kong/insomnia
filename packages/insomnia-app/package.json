@@ -5,6 +5,7 @@
   "homepage": "https://konghq.com",
   "description": "The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
+  "license": "MIT",
   "main": "app/main.min.js",
   "scripts": {
     "typecheck": "flow check",
