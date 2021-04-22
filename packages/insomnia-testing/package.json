@@ -1,7 +1,7 @@
 {
   "name": "insomnia-testing",
-  "version": "2.2.29",
   "license": "Apache-2.0",
+  "version": "2.2.35-beta.3",
   "main": "dist/index.js",
   "scripts": {
     "typecheck": "flow check",
