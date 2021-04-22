@@ -29,3 +29,5 @@ graphql.config.json
 .graphqlconfig
 schema.graphql
 packages/insomnia-smoke-test/screenshots
+*.tsbuildinfo
+dist
