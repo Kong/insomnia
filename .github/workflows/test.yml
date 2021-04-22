@@ -28,6 +28,10 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck # TODO(TSCONVERSION) remove when flow goes away since bootstrap does the TypeScript build which in turn will error if there are type errors
+        run: npm run typecheck
       - name: Run tests
         run: npm test
       - name: Build for smoke tests
