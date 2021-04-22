@@ -7,6 +7,7 @@ import {
   getName,
   pathVariablesToRegex,
   HttpMethod,
+  parseUrl,
 } from '../common';
 
 import { generateSecurityPlugins } from './security-plugins';
@@ -36,13 +37,17 @@ export function generateService(
 ): DCService {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
+  const parsedUrl = parseUrl(serverUrl);
 
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api);
 
   const service: DCService = {
     name,
-    url: serverUrl,
+    protocol: parsedUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
+    host: name, // not a hostname, but the Upstream name
+    port: Number(parsedUrl.port || '80'),
+    path: parsedUrl.pathname,
     plugins: globalPlugins.plugins,
     routes: [],
     tags,

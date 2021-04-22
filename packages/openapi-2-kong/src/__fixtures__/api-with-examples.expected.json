@@ -1,7 +1,10 @@
 {
   "services": [
     {
-      "url":"http://backend.com/path",
+      "protocol": "http",
+      "host": "Simple_API_overview",
+      "port": 80,
+      "path": "/path",
       "name": "Simple_API_overview",
       "plugins": [],
       "routes": [

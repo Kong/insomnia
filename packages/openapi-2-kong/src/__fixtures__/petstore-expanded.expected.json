@@ -1,7 +1,10 @@
 {
   "services": [
     {
-      "url": "http://petstore.swagger.io/api",
+      "protocol": "http",
+      "host": "Swagger_Petstore",
+      "port": 80,
+      "path": "/api",
       "name": "Swagger_Petstore",
       "plugins": [],
       "routes": [
