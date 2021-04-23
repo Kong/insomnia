@@ -11,6 +11,7 @@ const getSpecResult = () =>
       targets: [
         {
           target: 'server1.com:443',
+          tags: ['Tag'],
         },
       ],
       tags: ['Tag'],
