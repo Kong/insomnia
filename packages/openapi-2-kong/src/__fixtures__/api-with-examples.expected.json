@@ -6,6 +6,10 @@
       "port": 80,
       "path": "/path",
       "name": "Simple_API_overview",
+      "retries": 10,
+      "connect_timeout": 30000,
+      "write_timeout": 30000,
+      "read_timeout": 30000,
       "plugins": [],
       "routes": [
         {

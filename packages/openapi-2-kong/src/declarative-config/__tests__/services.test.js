@@ -312,5 +312,41 @@ describe('services', () => {
         },
       ]);
     });
+
+    it('adds x-kong-service-defaults (with lower precedence)', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        openapi: '3.0',
+        info: { version: '1.0', title: 'My API' },
+        servers: [
+          {
+            url: 'https://{customerId}.saas-app.com:{port}/v2',
+            variables: {
+              customerId: { default: 'demo' },
+              port: { enum: ['443', '8443'], default: '8443' },
+            },
+          },
+        ],
+        'x-kong-service-defaults': {
+          retries: 10,
+          name: 'this_has_lower_precedence_and_will_be_overwritten',
+        },
+        paths: {},
+      });
+
+      const result = await generateServices(api, []);
+      expect(result).toEqual([
+        {
+          name: 'My_API',
+          protocol: 'https',
+          host: 'My_API',
+          port: 8443,
+          path: '/v2',
+          plugins: [],
+          routes: [],
+          tags: [],
+          retries: 10,
+        },
+      ]);
+    });
   });
 });

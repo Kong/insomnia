@@ -42,7 +42,17 @@ export function generateService(
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api);
 
+  // x-kong-service-defaults is free format so we do not want type checking.
+  // If added, it would tightly couple these objects to Kong, and that would
+  // make future maintenance a lot harder.
+  // $FlowFixMe
+  const serviceDefaults = api['x-kong-service-defaults'] || {};
+  if (typeof serviceDefaults !== 'object') {
+    throw new Error(`expected 'x-kong-service-defaults' to be an object`);
+  }
+
   const service: DCService = {
+    ...serviceDefaults,
     name,
     // remove semicolon ie. convert https: to https
     protocol: parsedUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
