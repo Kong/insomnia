@@ -6,6 +6,10 @@
       "port": 80,
       "path": "/path",
       "name": "Simple_API_overview",
+      "retries": 10,
+      "connect_timeout": 30000,
+      "write_timeout": 30000,
+      "read_timeout": 30000,
       "plugins": [],
       "routes": [
         {
@@ -30,6 +34,16 @@
     {
       "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
       "name": "Simple_API_overview",
+      "hash_on": "ip",
+      "healthchecks": {
+        "passive": {
+          "unhealthy": {
+            "http_failures": 3,
+            "tcp_failures": 3,
+            "timeouts": 3
+          }
+        }
+      },
       "targets": [{"target": "backend.com:80"}]
     }
   ],

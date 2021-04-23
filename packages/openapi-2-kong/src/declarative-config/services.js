@@ -42,9 +42,18 @@ export function generateService(
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api);
 
+  // x-kong-service-defaults is free format so we do not want type checking.
+  // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
+  // $FlowFixMe
+  const serviceDefaults = api['x-kong-service-defaults'] || {};
+  if (typeof serviceDefaults !== 'object') {
+    throw new Error(`expected 'x-kong-service-defaults' to be an object`);
+  }
+
   const service: DCService = {
+    ...serviceDefaults,
     name,
-    // remove semicolon ie. convert https: to https
+    // remove semicolon i.e. convert `https` to `https`
     protocol: parsedUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
     host: name, // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
@@ -54,8 +63,21 @@ export function generateService(
     tags,
   };
 
+  // x-kong-route-defaults is free format so we do not want type checking.
+  // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
+  // $FlowFixMe
+  const routeDefaultsRoot = api['x-kong-route-defaults'] || {};
+  if (typeof routeDefaultsRoot !== 'object') {
+    throw new Error(`expected root-level 'x-kong-route-defaults' to be an object`);
+  }
+
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
+    // $FlowFixMe
+    const routeDefaultsPath = api.paths[routePath]['x-kong-route-defaults'] || routeDefaultsRoot;
+    if (typeof routeDefaultsPath !== 'object') {
+      throw new Error(`expected 'x-kong-route-defaults' to be an object (at path '${routePath}')`);
+    }
 
     const pathValidatorPlugin = getRequestValidatorPluginDirective(pathItem);
     const pathPlugins = generatePathPlugins(pathItem);
@@ -75,6 +97,13 @@ export function generateService(
       }
 
       const operation: ?OA3Operation = pathItem[method];
+      // $FlowFixMe
+      const routeDefaultsOperation = pathItem[method]['x-kong-route-defaults'] || routeDefaultsPath;
+      if (typeof routeDefaultsOperation !== 'object') {
+        throw new Error(
+          `expected 'x-kong-route-defaults' to be an object (at operation '${method}' of path '${routePath}')`,
+        );
+      }
 
       // This check is here to make Flow happy
       if (!operation) {
@@ -83,13 +112,20 @@ export function generateService(
 
       // Create the base route object
       const fullPathRegex = pathVariablesToRegex(routePath);
+
+      // $FlowFixMe
       const route: DCRoute = {
+        ...routeDefaultsOperation,
         tags,
         name: generateRouteName(api, routePath, method),
         methods: [method.toUpperCase()],
         paths: [fullPathRegex],
-        strip_path: false,
       };
+
+      if (route.strip_path === undefined) {
+        // must override the Kong default of 'true' since we match based on full path regexes, which would lead Kong to always strip the full path down to a single '/' if it used that default.
+        route.strip_path = false;
+      }
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api);
