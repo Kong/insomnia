@@ -11,26 +11,26 @@
         {
           "methods": ["GET"],
           "strip_path": false,
-          "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
+          "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"],
           "name": "x_kong_name_override_at_method",
           "paths": ["/$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
-          "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
+          "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"],
           "name": "getVersionDetailsv2",
           "paths": ["/v2$"]
         }
       ],
-      "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"]
+      "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"]
     }
   ],
   "upstreams": [
     {
-      "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
+      "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"],
       "name": "Simple_API_overview",
-      "targets": [{"target": "backend.com:80"}]
+      "targets": []
     }
   ],
   "_format_version": "1.1"

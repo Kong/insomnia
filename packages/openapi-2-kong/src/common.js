@@ -74,6 +74,8 @@ export function pathVariablesToRegex(p: string): string {
   return result + '$';
 }
 
+export const defaultTags = ['OAS3_import'];
+
 export function getPluginNameFromKey(key: string): string {
   return key.replace(/^x-kong-plugin-/, '');
 }
@@ -120,7 +122,12 @@ export function parseUrl(
   }
 
   parsed.protocol = parsed.protocol || 'http:';
-  parsed.host = `${parsed.hostname}:${parsed.port}`;
+
+  if (parsed.hostname && parsed.port) {
+    parsed.host = `${parsed.hostname}:${parsed.port}`;
+  } else if (parsed.hostname) {
+    parsed.host = parsed.hostname;
+  }
 
   return parsed;
 }
@@ -147,4 +154,21 @@ export function joinPath(p1: string, p2: string): string {
   p2 = p2.replace(/^\//, '');
 
   return `${p1}/${p2}`;
+}
+
+// Select first unique instance of an array item depending on the property selector
+export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
+  const result: Array<T> = [];
+  const set = new Set();
+
+  for (const item of arr.filter(i => i)) {
+    const selector = propertySelector(item);
+    if (set.has(selector)) {
+      continue;
+    }
+
+    set.add(selector);
+    result.push(item);
+  }
+  return result;
 }

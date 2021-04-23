@@ -1,7 +1,10 @@
 {
   "services": [
     {
-      "url": "https://developer.uspto.gov/ds-api",
+      "protocol": "https",
+      "host": "USPTO_Data_Set_API",
+      "port": 443,
+      "path": "/ds-api",
       "name": "USPTO_Data_Set_API",
       "plugins": [],
       "routes": [

@@ -289,7 +289,7 @@ class Plugins extends React.PureComponent<Props, State> {
               {`\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the `}
               <a href="https://insomnia.rest/plugins">Plugin Hub.</a>
               <details>
-                <summary>Additionl Information</summary>
+                <summary>Additional Information</summary>
                 <pre className="pad-top-sm force-wrap selectable">
                   <code>{error.stack || error}</code>
                 </pre>

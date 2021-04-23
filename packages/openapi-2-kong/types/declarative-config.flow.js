@@ -3,6 +3,7 @@
 declare type DCPlugin = {|
   name: string,
   enabled?: boolean,
+  tags?: Array<string>,
   config?: {
     [string]: Object,
   },
@@ -18,8 +19,11 @@ declare type DCRoute = {|
 |};
 
 declare type DCService = {|
-  url: string,
   name: string,
+  protocol: string,
+  host: string,
+  port: number,
+  path: string,
   routes: Array<DCRoute>,
   tags: Array<string>,
   plugins?: Array<DCPlugin>,
