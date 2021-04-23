@@ -9,6 +9,14 @@ x-kong-service-defaults:
   connect_timeout: 30000
   write_timeout: 30000
   read_timeout: 30000
+x-kong-upstream-defaults:
+  hash_on: ip
+  healthchecks:
+    passive:
+      unhealthy:
+        http_failures: 3
+        tcp_failures: 3
+        timeouts: 3
 paths:
   /:
     x-kong-name: x-kong-name-override-at-path-item
