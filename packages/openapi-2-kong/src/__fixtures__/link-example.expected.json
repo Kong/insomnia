@@ -12,35 +12,35 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "getUserByName",
+          "name": "Link_Example-getUserByName",
           "paths": ["\/2.0\/users\/(?<username>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "getRepositoriesByOwner",
+          "name": "Link_Example-getRepositoriesByOwner",
           "paths": ["\/2.0\/repositories\/(?<username>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "getRepository",
+          "name": "Link_Example-getRepository",
           "paths": ["\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "getPullRequestsByRepository",
+          "name": "Link_Example-getPullRequestsByRepository",
           "paths": ["\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)\/pullrequests$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "getPullRequestsById",
+          "name": "Link_Example-getPullRequestsById",
           "paths": [
             "\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)\/pullrequests\/(?<pid>[^\\\/\\s]+)$"
           ]
@@ -49,7 +49,7 @@
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-          "name": "mergePullRequest",
+          "name": "Link_Example-mergePullRequest",
           "paths": [
             "\/2.0\/repositories\/(?<username>[^\\\/\\s]+)\/(?<slug>[^\\\/\\s]+)\/pullrequests\/(?<pid>[^\\\/\\s]+)\/merge$"
           ]
