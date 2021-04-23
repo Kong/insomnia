@@ -1,7 +1,10 @@
 {
   "services": [
     {
-      "url":"http://backend.com/path",
+      "protocol": "http",
+      "host": "Link_Example",
+      "port": 80,
+      "path": "/path",
       "name": "Link_Example",
       "plugins": [],
       "routes": [

@@ -235,6 +235,21 @@ describe('common', () => {
       expect(result.pathname).toBe('/');
     });
 
+    it('returns no host if not given', () => {
+      const result = parseUrl('/just/a/path');
+      expect(result.host).toBe(null);
+    });
+
+    it('returns no port in host if neither port nor recognized protocol given', () => {
+      const result = parseUrl('tcp://api.insomnia.rest/just/a/path');
+      expect(result.host).toBe('api.insomnia.rest');
+    });
+
+    it('returns default port in host if protocol given', () => {
+      const result = parseUrl('https://api.insomnia.rest/just/a/path');
+      expect(result.host).toBe('api.insomnia.rest:443');
+    });
+
     it('returns pathname if defined in url', () => {
       const result = parseUrl('http://api.insomnia.rest/api/v1');
       expect(result.pathname).toBe('/api/v1');

@@ -1,7 +1,10 @@
 {
   "services": [
     {
-      "url":"http://backend.com/path",
+      "protocol": "http",
+      "host": "Callback_Example",
+      "port": 80,
+      "path": "/path",
       "name": "Callback_Example",
       "plugins": [],
       "routes": [

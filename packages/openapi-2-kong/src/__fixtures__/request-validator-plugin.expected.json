@@ -2,6 +2,10 @@
   "_format_version": "1.1",
   "services": [
     {
+      "protocol": "http",
+      "host": "Example",
+      "port": 80,
+      "path": "/path",
       "name": "Example",
       "plugins": [
         {
@@ -106,8 +110,7 @@
       "tags": [
         "OAS3_import",
         "OAS3file_request-validator-plugin.yaml"
-      ],
-      "url": "http://backend.com/path"
+      ]
     }
   ],
   "upstreams": [

@@ -30,7 +30,10 @@ describe('services', () => {
       expect(result).toEqual([
         {
           name: 'My_API',
-          url: 'https://server1.com/path',
+          protocol: 'https',
+          host: 'My_API',
+          port: 443,
+          path: '/path',
           plugins: [],
           tags: ['Tag'],
           routes: [
@@ -106,7 +109,10 @@ describe('services', () => {
       expect(result).toEqual([
         {
           name: 'My_API',
-          url: 'https://server1.com/path',
+          protocol: 'https',
+          host: 'My_API',
+          port: 443,
+          path: '/path',
           plugins: [
             {
               config: {
@@ -217,7 +223,10 @@ describe('services', () => {
       expect(result).toEqual([
         {
           name: 'My_API',
-          url: 'https://server1.com/path',
+          protocol: 'https',
+          host: 'My_API',
+          port: 443,
+          path: '/path',
           plugins: [],
           tags: ['Tag'],
           routes: [
@@ -293,7 +302,10 @@ describe('services', () => {
       expect(result).toEqual([
         {
           name: 'My_API',
-          url: 'https://demo.saas-app.com:8443/v2',
+          protocol: 'https',
+          host: 'My_API',
+          port: 8443,
+          path: '/v2',
           plugins: [],
           routes: [],
           tags: [],

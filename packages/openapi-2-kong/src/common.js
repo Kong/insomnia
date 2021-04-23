@@ -122,7 +122,12 @@ export function parseUrl(
   }
 
   parsed.protocol = parsed.protocol || 'http:';
-  parsed.host = `${parsed.hostname}:${parsed.port}`;
+
+  if (parsed.hostname && parsed.port) {
+    parsed.host = `${parsed.hostname}:${parsed.port}`;
+  } else if (parsed.hostname) {
+    parsed.host = parsed.hostname;
+  }
 
   return parsed;
 }
