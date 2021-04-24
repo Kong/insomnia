@@ -348,5 +348,123 @@ describe('services', () => {
         },
       ]);
     });
+
+    it('adds x-kong-route-defaults on root/path/operation levels', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        openapi: '3.0',
+        info: { version: '1.0', title: 'My API' },
+        servers: [{ url: 'https://server1.com/path' }],
+        'x-kong-route-defaults': { test_prop: 'root' },
+        paths: {
+          '/cats': {
+            'x-kong-route-defaults': { test_prop: 'path' },
+            post: {}, // this operation should get the path-level defaults
+            get: {
+              // the operation gets its own defaults
+              'x-kong-route-defaults': { test_prop: 'operation' },
+            },
+          },
+          '/dogs': {
+            get: {}, // this operation should get the root-level defaults
+          },
+        },
+      });
+
+      const result = await generateServices(api, []);
+      expect(result).toEqual([
+        {
+          name: 'My_API',
+          protocol: 'https',
+          host: 'My_API',
+          port: 443,
+          path: '/path',
+          plugins: [],
+          tags: [],
+          routes: [
+            {
+              name: 'My_API-cats-post',
+              methods: ['POST'],
+              paths: ['/cats$'],
+              strip_path: false,
+              tags: [],
+              test_prop: 'path',
+            },
+            {
+              name: 'My_API-cats-get',
+              methods: ['GET'],
+              paths: ['/cats$'],
+              strip_path: false,
+              tags: [],
+              test_prop: 'operation',
+            },
+            {
+              name: 'My_API-dogs-get',
+              methods: ['GET'],
+              paths: ['/dogs$'],
+              strip_path: false,
+              tags: [],
+              test_prop: 'root',
+            },
+          ],
+        },
+      ]);
+    });
+
+    it('adds x-kong-route-defaults sets strip_path to default/true/false', async () => {
+      const api: OpenApi3Spec = await parseSpec({
+        openapi: '3.0',
+        info: { version: '1.0', title: 'My API' },
+        servers: [{ url: 'https://server1.com/path' }],
+        'x-kong-route-defaults': {}, // strip_path undefined
+        paths: {
+          '/cats': {
+            'x-kong-route-defaults': { strip_path: true },
+            post: {},
+            get: {
+              'x-kong-route-defaults': { strip_path: false },
+            },
+          },
+          '/dogs': {
+            get: {},
+          },
+        },
+      });
+
+      const result = await generateServices(api, []);
+      expect(result).toEqual([
+        {
+          name: 'My_API',
+          protocol: 'https',
+          host: 'My_API',
+          port: 443,
+          path: '/path',
+          plugins: [],
+          tags: [],
+          routes: [
+            {
+              name: 'My_API-cats-post',
+              methods: ['POST'],
+              paths: ['/cats$'],
+              strip_path: true,
+              tags: [],
+            },
+            {
+              name: 'My_API-cats-get',
+              methods: ['GET'],
+              paths: ['/cats$'],
+              strip_path: false,
+              tags: [],
+            },
+            {
+              name: 'My_API-dogs-get',
+              methods: ['GET'],
+              paths: ['/dogs$'],
+              strip_path: false,
+              tags: [],
+            },
+          ],
+        },
+      ]);
+    });
   });
 });
