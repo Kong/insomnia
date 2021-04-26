@@ -38,6 +38,13 @@ function generatePlugin([key, value]: [string, Object]): DCPlugin {
  */
 const ALLOW_ALL_SCHEMA = '{}';
 
+const DEFAULT_PARAM_STYLE = {
+  header: 'simple',
+  cookie: 'form',
+  query: 'form',
+  path: 'simple',
+};
+
 function generateParameterSchema(operation?: OA3Operation): Array<Object> | typeof undefined {
   let parameterSchema;
 
@@ -56,13 +63,19 @@ function generateParameterSchema(operation?: OA3Operation): Array<Object> | type
         schema = ALLOW_ALL_SCHEMA;
       }
 
+      const paramStyle = (p: Object).style ?? DEFAULT_PARAM_STYLE[(p: Object).in];
+      if (typeof paramStyle === 'undefined') {
+        const name = (p: Object).name;
+        throw new Error(`invalid 'in' property (parameter '${name}')`);
+      }
+
       parameterSchema.push({
         in: (p: Object).in,
         explode: !!(p: Object).explode,
         required: !!(p: Object).required,
         name: (p: Object).name,
         schema,
-        style: (p: Object).style ?? 'form',
+        style: paramStyle,
       });
     }
   }

@@ -177,7 +177,7 @@
                 "parameter_schema": [
                   {
                     "schema": "{\"anyOf\":[{\"type\":\"string\"}]}",
-                    "style": "form",
+                    "style": "simple",
                     "in": "path",
                     "name": "human_timestamp",
                     "required": true,

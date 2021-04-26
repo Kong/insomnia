@@ -77,9 +77,9 @@
           "methods": [
             "GET"
           ],
-          "name": "Example-params-get",
+          "name": "Example-params_pathid-get",
           "paths": [
-            "/params$"
+            "/params/(?<pathid>[^\\/\\s]+)/$"
           ],
           "plugins": [
             {
@@ -87,11 +87,35 @@
                 "parameter_schema": [
                   {
                     "explode": false,
-                    "in": "path",
-                    "name": "userId",
+                    "in": "query",
+                    "name": "queryid",
                     "required": true,
                     "schema": "{\"type\":\"integer\"}",
                     "style": "form"
+                  },
+                  {
+                    "explode": false,
+                    "in": "header",
+                    "name": "User-Id",
+                    "required": true,
+                    "schema": "{\"type\":\"integer\"}",
+                    "style": "simple"
+                  },
+                  {
+                    "explode": false,
+                    "in": "cookie",
+                    "name": "cookieid",
+                    "required": true,
+                    "schema": "{\"type\":\"integer\"}",
+                    "style": "form"
+                  },
+                  {
+                    "explode": false,
+                    "in": "path",
+                    "name": "pathid",
+                    "required": true,
+                    "schema": "{\"type\":\"integer\"}",
+                    "style": "simple"
                   }
                 ],
                 "version": "draft4"
