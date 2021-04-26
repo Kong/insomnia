@@ -128,7 +128,8 @@ declare type OA3PathItem = {
 
 declare type OA3Paths = {
   [string]: OA3PathItem,
-} & StripPath & XKongRouteDefaults;
+} & StripPath &
+  XKongRouteDefaults;
 
 declare type OA3SecuritySchemeApiKey = {|
   type: 'apiKey',

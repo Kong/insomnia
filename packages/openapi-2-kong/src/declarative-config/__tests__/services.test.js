@@ -7,45 +7,48 @@ const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
 const xKongRouteDefaults = 'x-kong-route-defaults';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
-const getSpecResult = () => JSON.parse(JSON.stringify({
-  host: 'My_API',
-  name: 'My_API',
-  plugins: [],
-  path: '/path',
-  port: 443,
-  protocol: 'https',
-  tags: ['Tag'],
-  routes: [
-    {
-      name: 'My_API-Cat_stuff-post',
-      strip_path: false,
-      methods: ['POST'],
-      paths: ['/cats$'],
+const getSpecResult = () =>
+  JSON.parse(
+    JSON.stringify({
+      host: 'My_API',
+      name: 'My_API',
+      plugins: [],
+      path: '/path',
+      port: 443,
+      protocol: 'https',
       tags: ['Tag'],
-    },
-    {
-      name: 'My_API-dogs-get',
-      strip_path: false,
-      methods: ['GET'],
-      paths: ['/dogs$'],
-      tags: ['Tag'],
-    },
-    {
-      name: 'My_API-dogs-post',
-      strip_path: false,
-      methods: ['POST'],
-      paths: ['/dogs$'],
-      tags: ['Tag'],
-    },
-    {
-      name: 'My_API-birds_id-get',
-      strip_path: false,
-      methods: ['GET'],
-      paths: ['/birds/(?<id>[^\\/\\s]+)$'],
-      tags: ['Tag'],
-    },
-  ],
-}));
+      routes: [
+        {
+          name: 'My_API-Cat_stuff-post',
+          strip_path: false,
+          methods: ['POST'],
+          paths: ['/cats$'],
+          tags: ['Tag'],
+        },
+        {
+          name: 'My_API-dogs-get',
+          strip_path: false,
+          methods: ['GET'],
+          paths: ['/dogs$'],
+          tags: ['Tag'],
+        },
+        {
+          name: 'My_API-dogs-post',
+          strip_path: false,
+          methods: ['POST'],
+          paths: ['/dogs$'],
+          tags: ['Tag'],
+        },
+        {
+          name: 'My_API-birds_id-get',
+          strip_path: false,
+          methods: ['GET'],
+          paths: ['/birds/(?<id>[^\\/\\s]+)$'],
+          tags: ['Tag'],
+        },
+      ],
+    }),
+  );
 
 describe('services', () => {
   describe('error states and validation', () => {
@@ -61,60 +64,62 @@ describe('services', () => {
     it('throws for a root level x-kong-route-default', async () => {
       const spec = getSpec();
       spec[xKongRouteDefaults] = 'foo';
-      
+
       const api = await parseSpec(spec);
-      const fn = () => generateServices(api, ['Tag'])
-      expect(fn).toThrowError(`expected root-level 'x-kong-route-defaults' to be an object`)
-    })
+      const fn = () => generateServices(api, ['Tag']);
+      expect(fn).toThrowError(`expected root-level 'x-kong-route-defaults' to be an object`);
+    });
 
     it('ignores null for a root level x-kong-route-default', async () => {
       const spec = getSpec();
       spec[xKongRouteDefaults] = null;
 
       const specResult = getSpecResult();
-      
+
       const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult])
-    })
+      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+    });
 
     it('throws for a paths level x-kong-route-default', async () => {
       const spec = getSpec();
       spec.paths['/cats'][xKongRouteDefaults] = 'foo';
-      
+
       const api = await parseSpec(spec);
-      const fn = () => generateServices(api, ['Tag'])
-      expect(fn).toThrowError(`expected 'x-kong-route-defaults' to be an object (at path '/cats')`)
-    })
+      const fn = () => generateServices(api, ['Tag']);
+      expect(fn).toThrowError(`expected 'x-kong-route-defaults' to be an object (at path '/cats')`);
+    });
 
     it('ignores null for a paths level x-kong-route-default', async () => {
       const spec = getSpec();
       spec.paths['/cats'][xKongRouteDefaults] = null;
 
       const specResult = getSpecResult();
-      
+
       const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult])
-    })
+      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+    });
 
     it('throws for an operation level x-kong-route-default', async () => {
       const spec = getSpec();
       spec.paths['/cats'].post[xKongRouteDefaults] = 'foo';
-      
+
       const api = await parseSpec(spec);
-      const fn = () => generateServices(api, ['Tag'])
-      expect(fn).toThrowError(`expected 'x-kong-route-defaults' to be an object (at operation 'post' of path '/cats')`)
-    })
+      const fn = () => generateServices(api, ['Tag']);
+      expect(fn).toThrowError(
+        `expected 'x-kong-route-defaults' to be an object (at operation 'post' of path '/cats')`,
+      );
+    });
 
     it('ignores null for an operation level x-kong-route-default', async () => {
       const spec = getSpec();
       spec.paths['/cats'].post[xKongRouteDefaults] = null;
 
       const specResult = getSpecResult();
-      
+
       const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult])
-    })
-  })
+      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+    });
+  });
 
   describe('generateServices()', () => {
     it('generates generic service with paths', async () => {
@@ -130,17 +135,21 @@ describe('services', () => {
       const spec = getSpec();
 
       // global req validator plugin
-      spec[xKongPluginRequestValidator] = { config: { parameter_schema: 'global' }};
+      spec[xKongPluginRequestValidator] = { config: { parameter_schema: 'global' } };
 
       // path req validator plugin
-      spec.paths['/cats'][xKongPluginRequestValidator] = { config: { parameter_schema: 'path' }};
-      spec.paths['/cats'].get = {}
+      spec.paths['/cats'][xKongPluginRequestValidator] = { config: { parameter_schema: 'path' } };
+      spec.paths['/cats'].get = {};
 
       // operation req validator plugin
-      spec.paths['/cats'].post[xKongPluginRequestValidator] = { config: { parameter_schema: 'operation' }};
+      spec.paths['/cats'].post[xKongPluginRequestValidator] = {
+        config: { parameter_schema: 'operation' },
+      };
 
       // operation req validator plugin
-      spec.paths['/dogs'].post[xKongPluginRequestValidator] = { config: { parameter_schema: 'operation' }};
+      spec.paths['/dogs'].post[xKongPluginRequestValidator] = {
+        config: { parameter_schema: 'operation' },
+      };
 
       const specResult = getSpecResult();
       specResult.plugins = [
@@ -251,7 +260,7 @@ describe('services', () => {
             },
           },
         },
-      }
+      };
 
       const specResult = getSpecResult();
       specResult.routes = [
@@ -301,7 +310,7 @@ describe('services', () => {
             port: { enum: ['443', '8443'], default: '8443' },
           },
         },
-      ]
+      ];
 
       const specResult = getSpecResult();
       specResult.port = 8443;
@@ -329,13 +338,13 @@ describe('services', () => {
 
       it('root level', async () => {
         const spec = getSpec();
-        spec[xKongRouteDefaults] = rootLevel
+        spec[xKongRouteDefaults] = rootLevel;
 
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({
           ...route,
           ...rootLevel,
-        }))
+        }));
 
         const api = await parseSpec(spec);
         expect(generateServices(api, ['Tag'])).toEqual([specResult]);
@@ -343,7 +352,7 @@ describe('services', () => {
 
       it('path level', async () => {
         const spec = getSpec();
-        spec.paths['/dogs'][xKongRouteDefaults] = pathLevel
+        spec.paths['/dogs'][xKongRouteDefaults] = pathLevel;
 
         const specResult = getSpecResult();
         specResult.routes[1] = {
@@ -362,12 +371,12 @@ describe('services', () => {
       it('operation level', async () => {
         const spec = getSpec();
         spec.paths['/dogs'].get[xKongRouteDefaults] = operationLevel;
-        
+
         const specResult = getSpecResult();
         specResult.routes[1] = {
           ...specResult.routes[1],
           ...operationLevel,
-        }
+        };
 
         const api = await parseSpec(spec);
         expect(generateServices(api, ['Tag'])).toEqual([specResult]);
@@ -384,7 +393,7 @@ describe('services', () => {
           ...route,
           // $FlowFixMe
           ...(route.paths[0] === '/cats$' ? operationLevel : rootLevel),
-        }))
+        }));
 
         const api = await parseSpec(spec);
         expect(generateServices(api, ['Tag'])).toEqual([specResult]);
@@ -399,12 +408,12 @@ describe('services', () => {
         const specResult = getSpecResult();
         specResult.routes[1] = {
           ...specResult.routes[1],
-          ...pathLevel
-        }
+          ...pathLevel,
+        };
         specResult.routes[2] = {
           ...specResult.routes[2],
           ...operationLevel,
-        }
+        };
 
         const api = await parseSpec(spec);
         expect(generateServices(api, ['Tag'])).toEqual([specResult]);
@@ -420,7 +429,7 @@ describe('services', () => {
           ...route,
           // $FlowFixMe
           ...(route.paths[0] === '/cats$' ? pathLevel : rootLevel),
-        }))
+        }));
 
         const api = await parseSpec(spec);
         expect(generateServices(api, ['Tag'])).toEqual([specResult]);
@@ -428,7 +437,7 @@ describe('services', () => {
 
       it('allows overriding strip_path at the path level', async () => {
         const spec = getSpec();
-        spec.paths['/cats'][xKongRouteDefaults] = { strip_path: true }
+        spec.paths['/cats'][xKongRouteDefaults] = { strip_path: true };
 
         const specResult = getSpecResult();
         const cats = specResult.routes.find(route => route.paths[0] === '/cats$');
@@ -441,12 +450,12 @@ describe('services', () => {
       it('allows overriding `strip_path` from `x-kong-route-defaults` at the root', async () => {
         const spec = getSpec();
         spec[xKongRouteDefaults] = { strip_path: true };
-        
+
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({
           ...route,
           strip_path: true,
-        }))
+        }));
 
         const api = await parseSpec(spec);
         expect(generateServices(api, ['Tag'])).toEqual([specResult]);

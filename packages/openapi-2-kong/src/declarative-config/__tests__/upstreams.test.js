@@ -2,17 +2,20 @@ import { parseSpec } from '../..';
 import { generateUpstreams } from '../upstreams';
 import { getSpec } from './utils';
 
-const xKongUpstreamDefaults = 'x-kong-upstream-defaults'
+const xKongUpstreamDefaults = 'x-kong-upstream-defaults';
 
-const getSpecResult = () => JSON.parse(JSON.stringify({
-  name: 'My_API',
-  targets: [
-    {
-      target: 'server1.com:443'
-    }
-  ],
-  tags: ['Tag']
-}))
+const getSpecResult = () =>
+  JSON.parse(
+    JSON.stringify({
+      name: 'My_API',
+      targets: [
+        {
+          target: 'server1.com:443',
+        },
+      ],
+      tags: ['Tag'],
+    }),
+  );
 
 describe('upstreams', () => {
   it('generates an upstream', async () => {
@@ -21,16 +24,16 @@ describe('upstreams', () => {
     const specResult = getSpecResult();
 
     const api = await parseSpec(spec);
-    expect(generateUpstreams(api, ['Tag'])).toEqual([specResult])
-  })
+    expect(generateUpstreams(api, ['Tag'])).toEqual([specResult]);
+  });
 
   it('throws for a root level x-kong-route-default', async () => {
     const spec = getSpec();
     spec[xKongUpstreamDefaults] = 'foo';
-    
+
     const api = await parseSpec(spec);
-    const fn = () => generateUpstreams(api, ['Tag'])
-    expect(fn).toThrowError(`expected 'x-kong-upstream-defaults' to be an object`)
+    const fn = () => generateUpstreams(api, ['Tag']);
+    expect(fn).toThrowError(`expected 'x-kong-upstream-defaults' to be an object`);
   });
 
   it('ignores null for a root level x-kong-route-default', async () => {
@@ -40,6 +43,6 @@ describe('upstreams', () => {
     const specResult = getSpecResult();
 
     const api = await parseSpec(spec);
-    expect(generateUpstreams(api, ['Tag'])).toEqual([specResult])
+    expect(generateUpstreams(api, ['Tag'])).toEqual([specResult]);
   });
-})
+});
