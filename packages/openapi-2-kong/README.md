@@ -147,7 +147,7 @@ services:
   - ...
     routes:
       - name: ApiName-create-pet         # Taken from x-kong-name, summary, or generated
-        strip_path: true                 # Always `true`
+        strip_path: false                # Defaults to `false`
         methods: [ PUT ]                 # Only ever a single-entry array
         paths: [ '\/pets/(?<id>\S+)$' ]  # Kong regex-formatted path with variables
         tags: [ Tag ]                    # <documented later>

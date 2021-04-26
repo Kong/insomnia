@@ -4,6 +4,14 @@ declare type XKongName = {
   'x-kong-name'?: string,
 };
 
+declare type XKongRouteDefaults = {
+  'x-kong-route-defaults'?: DCRoute,
+};
+
+declare type StripPath = {
+  strip_path?: boolean,
+};
+
 declare type OA3Info = {|
   title: string,
   version: string,
@@ -115,11 +123,13 @@ declare type OA3PathItem = {
   head?: OA3Operation,
   patch?: OA3Operation,
   trace?: OA3Operation,
-} & XKongName;
+} & XKongName &
+  XKongRouteDefaults;
 
 declare type OA3Paths = {
   [string]: OA3PathItem,
-};
+} & StripPath &
+  XKongRouteDefaults;
 
 declare type OA3SecuritySchemeApiKey = {|
   type: 'apiKey',
@@ -213,7 +223,8 @@ declare type OpenApi3Spec = {
   security?: Array<OA3SecurityRequirement>,
   tags?: Array<string>,
   externalDocs?: OA3ExternalDocs,
-} & XKongName;
+} & XKongName &
+  XKongRouteDefaults;
 
 const HttpMethod = {
   get: 'GET',
