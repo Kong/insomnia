@@ -53,7 +53,7 @@ export function generateService(
   const service: DCService = {
     ...serviceDefaults,
     name,
-    // remove semicolon i.e. convert `https` to `https`
+    // remove semicolon i.e. convert `https:` to `https`
     protocol: parsedUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
     host: name, // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
