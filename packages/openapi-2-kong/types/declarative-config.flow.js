@@ -31,6 +31,7 @@ declare type DCService = {|
 
 declare type DCTarget = {|
   target: string,
+  tags: Array<string>,
 |};
 
 declare type DCUpstream = {|
