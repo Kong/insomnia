@@ -4,9 +4,23 @@
   "author": "Gregory Schier <greg.schier@konghq.com>",
   "description": "Query XML using XPath",
   "license": "MIT",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
   "scripts": {
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
+    "build": "tsc --build tsconfig.build.json",
     "test": "jest --silent"
+  },
+  "devDependencies": {
+    "@types/xmldom": "0.1.30"
   },
   "dependencies": {
     "insomnia-cookies": "2.2.35",
