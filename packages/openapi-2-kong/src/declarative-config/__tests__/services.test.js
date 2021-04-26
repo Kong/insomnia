@@ -1,29 +1,10 @@
 // @flow
 import { generateServices } from '../services';
 import { parseSpec } from '../../index';
+import { getSpec } from './utils';
 
-
-/** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
-const getSpec = () => JSON.parse(JSON.stringify({
-  openapi: '3.0',
-  info: { version: '1.0', title: 'My API' },
-  servers: [{ url: 'https://server1.com/path' }],
-  paths: {
-    '/cats': {
-      'x-kong-name': 'Cat stuff',
-      summary: 'summary is ignored',
-      post: {},
-    },
-    '/dogs': {
-      summary: 'Dog stuff',
-      get: {},
-      post: { summary: 'Ignored summary' },
-    },
-    '/birds/{id}': {
-      get: {},
-    },
-  },
-}));
+const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
+const xKongRouteDefaults = 'x-kong-route-defaults';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = () => JSON.parse(JSON.stringify({
@@ -66,10 +47,75 @@ const getSpecResult = () => JSON.parse(JSON.stringify({
   ],
 }));
 
-const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
-const xKongRouteDefaults = 'x-kong-route-defaults';
-
 describe('services', () => {
+  describe('error states and validation', () => {
+    it('fails with no servers', async () => {
+      const spec = getSpec();
+      delete spec.servers;
+
+      const api = await parseSpec(spec);
+      const fn = () => generateServices(api, ['Tag']);
+      expect(fn).toThrowError('no servers defined in spec');
+    });
+
+    it('throws for a root level x-kong-route-default', async () => {
+      const spec = getSpec();
+      spec[xKongRouteDefaults] = 'foo';
+      
+      const api = await parseSpec(spec);
+      const fn = () => generateServices(api, ['Tag'])
+      expect(fn).toThrowError(`expected root-level 'x-kong-route-defaults' to be an object`)
+    })
+
+    it('ignores null for a root level x-kong-route-default', async () => {
+      const spec = getSpec();
+      spec[xKongRouteDefaults] = null;
+
+      const specResult = getSpecResult();
+      
+      const api = await parseSpec(spec);
+      expect(generateServices(api, ['Tag'])).toEqual([specResult])
+    })
+
+    it('throws for a paths level x-kong-route-default', async () => {
+      const spec = getSpec();
+      spec.paths['/cats'][xKongRouteDefaults] = 'foo';
+      
+      const api = await parseSpec(spec);
+      const fn = () => generateServices(api, ['Tag'])
+      expect(fn).toThrowError(`expected 'x-kong-route-defaults' to be an object (at path '/cats')`)
+    })
+
+    it('ignores null for a paths level x-kong-route-default', async () => {
+      const spec = getSpec();
+      spec.paths['/cats'][xKongRouteDefaults] = null;
+
+      const specResult = getSpecResult();
+      
+      const api = await parseSpec(spec);
+      expect(generateServices(api, ['Tag'])).toEqual([specResult])
+    })
+
+    it('throws for an operation level x-kong-route-default', async () => {
+      const spec = getSpec();
+      spec.paths['/cats'].post[xKongRouteDefaults] = 'foo';
+      
+      const api = await parseSpec(spec);
+      const fn = () => generateServices(api, ['Tag'])
+      expect(fn).toThrowError(`expected 'x-kong-route-defaults' to be an object (at operation 'post' of path '/cats')`)
+    })
+
+    it('ignores null for an operation level x-kong-route-default', async () => {
+      const spec = getSpec();
+      spec.paths['/cats'].post[xKongRouteDefaults] = null;
+
+      const specResult = getSpecResult();
+      
+      const api = await parseSpec(spec);
+      expect(generateServices(api, ['Tag'])).toEqual([specResult])
+    })
+  })
+
   describe('generateServices()', () => {
     it('generates generic service with paths', async () => {
       const spec = getSpec();
@@ -243,15 +289,6 @@ describe('services', () => {
 
       const api: OpenApi3Spec = await parseSpec(spec);
       expect(generateServices(api, ['Tag'])).toEqual([specResult]);
-    });
-
-    it('fails with no servers', async () => {
-      const spec = getSpec();
-      delete spec.servers;
-
-      const api = await parseSpec(spec);
-      const fn = () => generateServices(api, ['Tag']);
-      expect(fn).toThrowError('no servers defined in spec');
     });
 
     it('replaces variables', async () => {
