@@ -221,7 +221,15 @@
     {
       "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
       "name": "httpbin",
-      "targets": [{"target": "httpbin.org:443"}, {"target": "eu.httpbin.org:443"}]
+      "targets": [
+        {
+          "target": "httpbin.org:443",
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]
+        }, {
+          "target": "eu.httpbin.org:443",
+          "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]
+        }
+      ]
     }
   ],
   "_format_version": "1.1"

@@ -44,7 +44,12 @@
           }
         }
       },
-      "targets": [{"target": "backend.com:80"}]
+      "targets": [
+        {
+          "target": "backend.com:80",
+          "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"]
+        }
+      ]
     }
   ],
   "_format_version": "1.1"
