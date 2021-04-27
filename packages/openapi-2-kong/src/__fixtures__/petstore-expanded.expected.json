@@ -12,28 +12,28 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
-          "name": "findPets",
+          "name": "Swagger_Petstore-findPets",
           "paths": ["/pets$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
-          "name": "addPet",
+          "name": "Swagger_Petstore-addPet",
           "paths": ["/pets$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
-          "name": "find pet by id",
+          "name": "Swagger_Petstore-find_pet_by_id",
           "paths": ["\/pets\/(?<id>[^\\\/\\s]+)$"]
         },
         {
           "methods": ["DELETE"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
-          "name": "deletePet",
+          "name": "Swagger_Petstore-deletePet",
           "paths": ["\/pets\/(?<id>[^\\\/\\s]+)$"]
         }
       ],
