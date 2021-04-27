@@ -106,7 +106,11 @@ function generateBodyOptions(
   return { bodySchema, allowedContentTypes };
 }
 
-export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Operation): DCPlugin {
+export function generateRequestValidatorPlugin(
+  plugin: Object,
+  operation: OA3Operation | typeof undefined,
+  tags: Array<string>,
+): DCPlugin {
   const config: { [string]: Object } = {
     version: 'draft4', // Fixed version
   };
@@ -148,6 +152,7 @@ export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Op
 
   return {
     config,
+    tags: [...tags, ...(plugin.tags ?? [])],
     enabled: Boolean(plugin.enabled ?? true),
     name: 'request-validator',
   };
@@ -161,7 +166,7 @@ export function generateGlobalPlugins(
 
   const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
   if (requestValidatorPlugin) {
-    globalPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin));
+    globalPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin, undefined, tags));
   }
   return {
     // Server plugins take precedence over global plugins
@@ -188,7 +193,7 @@ export function generateOperationPlugins(
   // Use the operation or parent validator plugin, or skip if neither exist
   const validatorPluginToUse = operationValidatorPlugin || parentValidatorPlugin;
   if (validatorPluginToUse) {
-    operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation));
+    operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation, tags));
   }
 
   // Operation plugins take precedence over path plugins

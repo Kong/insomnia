@@ -14,6 +14,10 @@
             "version": "draft4"
           },
           "enabled": true,
+          "tags": [
+            "OAS3_import",
+            "OAS3file_request-validator-plugin.yaml"
+          ],
           "name": "request-validator"
         }
       ],
@@ -37,6 +41,10 @@
                 "version": "draft4"
               },
               "enabled": true,
+              "tags": [
+                "OAS3_import",
+                "OAS3file_request-validator-plugin.yaml"
+              ],
               "name": "request-validator"
             }
           ],
@@ -64,6 +72,10 @@
                 "version": "draft4"
               },
               "enabled": true,
+              "tags": [
+                "OAS3_import",
+                "OAS3file_request-validator-plugin.yaml"
+              ],
               "name": "request-validator"
             }
           ],
@@ -121,6 +133,10 @@
                 "version": "draft4"
               },
               "enabled": true,
+              "tags": [
+                "OAS3_import",
+                "OAS3file_request-validator-plugin.yaml"
+              ],
               "name": "request-validator"
             }
           ],

@@ -186,6 +186,10 @@
                 ],
                 "version": "draft4"
               },
+              "tags":  [
+                "OAS3_import",
+                "OAS3file_httpbin.yaml"
+              ],
               "enabled": true
             }
           ],

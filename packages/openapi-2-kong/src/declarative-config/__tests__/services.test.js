@@ -156,6 +156,7 @@ describe('services', () => {
         {
           config: { version: 'draft4', parameter_schema: 'global' },
           enabled: true,
+          tags: ['Tag'],
           name: 'request-validator',
         },
       ];
@@ -171,6 +172,8 @@ describe('services', () => {
               // should have operation plugin
               config: { version: 'draft4', parameter_schema: 'operation' },
               enabled: true,
+              tags: ['Tag'],
+
               name: 'request-validator',
             },
           ],
@@ -186,6 +189,8 @@ describe('services', () => {
               // should apply path plugin
               config: { version: 'draft4', parameter_schema: 'path' },
               enabled: true,
+              tags: ['Tag'],
+
               name: 'request-validator',
             },
           ],
@@ -201,6 +206,8 @@ describe('services', () => {
               // should apply global plugin
               config: { version: 'draft4', parameter_schema: 'global' },
               enabled: true,
+              tags: ['Tag'],
+
               name: 'request-validator',
             },
           ],
@@ -216,6 +223,7 @@ describe('services', () => {
               // should have operation plugin
               config: { version: 'draft4', parameter_schema: 'operation' },
               enabled: true,
+              tags: ['Tag'],
               name: 'request-validator',
             },
           ],
@@ -231,6 +239,7 @@ describe('services', () => {
               // should apply global plugin
               config: { version: 'draft4', parameter_schema: 'global' },
               enabled: true,
+              tags: ['Tag'],
               name: 'request-validator',
             },
           ],
