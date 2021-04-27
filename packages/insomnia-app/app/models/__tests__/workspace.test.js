@@ -1,5 +1,6 @@
 import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { WorkspaceScopeKeys } from '../workspace';
 
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);
@@ -68,5 +69,26 @@ describe('migrate()', () => {
     const spec = await models.apiSpec.getByParentId(workspace._id);
     expect(spec).not.toBe(null);
     expect(spec.fileName).toBe(workspace.name);
+  });
+
+  it('translates the scope correctly', async () => {
+    const specW = await models.workspace.create({ scope: 'spec' });
+    const debugW = await models.workspace.create({ scope: 'debug' });
+    const nullW = await models.workspace.create({ scope: null });
+    const somethingElseW = await models.workspace.create({ scope: 'something' });
+    const designW = await models.workspace.create({ scope: WorkspaceScopeKeys.design });
+    const collectionW = await models.workspace.create({ scope: WorkspaceScopeKeys.collection });
+
+    await models.workspace.migrate(specW);
+    await models.workspace.migrate(debugW);
+    await models.workspace.migrate(nullW);
+    await models.workspace.migrate(somethingElseW);
+
+    expect(specW.scope).toBe(WorkspaceScopeKeys.design);
+    expect(debugW.scope).toBe(WorkspaceScopeKeys.collection);
+    expect(nullW.scope).toBe(WorkspaceScopeKeys.collection);
+    expect(somethingElseW.scope).toBe(WorkspaceScopeKeys.collection);
+    expect(designW.scope).toBe(WorkspaceScopeKeys.design);
+    expect(collectionW.scope).toBe(WorkspaceScopeKeys.collection);
   });
 });

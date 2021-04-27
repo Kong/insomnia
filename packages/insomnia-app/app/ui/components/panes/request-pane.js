@@ -8,11 +8,12 @@ import type {
 } from '../../../models/request';
 import type { Workspace } from '../../../models/workspace';
 import type { OAuth2Token } from '../../../models/o-auth-2-token';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
 import * as React from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { getAuthTypeName, getContentTypeName } from '../../../common/constants';
+
 import * as models from '../../../models';
 import AuthDropdown from '../dropdowns/auth-dropdown';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
@@ -27,11 +28,11 @@ import RenderedQueryString from '../rendered-query-string';
 import RequestUrlBar from '../request-url-bar.js';
 import type { Settings } from '../../../models/settings';
 import RequestParametersEditor from '../editors/request-parameters-editor';
-import type { ForceToWorkspace } from '../../redux/modules/helpers';
 import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import type { HandleImportFileCallback } from '../wrapper';
 
 type Props = {
   // Functions
@@ -55,7 +56,7 @@ type Props = {
   updateSettingsUseBulkHeaderEditor: Function,
   updateSettingsUseBulkParametersEditor: Function,
   handleImport: Function,
-  handleImportFile: (forceToWorkspace?: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
 
   // Other
   workspace: Workspace,
@@ -71,7 +72,7 @@ type Props = {
   oAuth2Token: ?OAuth2Token,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestPane extends React.PureComponent<Props> {
   _handleEditDescriptionAdd() {
     this._handleEditDescription(true);

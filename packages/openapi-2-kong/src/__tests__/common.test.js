@@ -1,5 +1,6 @@
 // @flow
 import {
+  distinctByProperty,
   fillServerVariables,
   generateSlug,
   getMethodAnnotationName,
@@ -187,11 +188,13 @@ describe('common', () => {
 
   describe('pathVariablesToRegex()', () => {
     it('converts variables to regex path', () => {
-      expect(pathVariablesToRegex('/foo/{bar}/{baz}')).toBe('/foo/(?<bar>\\S+)/(?<baz>\\S+)$');
+      expect(pathVariablesToRegex('/foo/{bar}/{baz}')).toBe(
+        '/foo/(?<bar>[^\\/\\s]+)/(?<baz>[^\\/\\s]+)$',
+      );
     });
 
     it('does not convert to regex if no variables present', () => {
-      expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz');
+      expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz$');
     });
   });
 
@@ -232,9 +235,60 @@ describe('common', () => {
       expect(result.pathname).toBe('/');
     });
 
+    it('returns no host if not given', () => {
+      const result = parseUrl('/just/a/path');
+      expect(result.host).toBe(null);
+    });
+
+    it('returns no port in host if neither port nor recognized protocol given', () => {
+      const result = parseUrl('tcp://api.insomnia.rest/just/a/path');
+      expect(result.host).toBe('api.insomnia.rest');
+    });
+
+    it('returns default port in host if protocol given', () => {
+      const result = parseUrl('https://api.insomnia.rest/just/a/path');
+      expect(result.host).toBe('api.insomnia.rest:443');
+    });
+
     it('returns pathname if defined in url', () => {
       const result = parseUrl('http://api.insomnia.rest/api/v1');
       expect(result.pathname).toBe('/api/v1');
+    });
+  });
+
+  describe('distinctByProperty()', () => {
+    it('returns empty array if no truthy items', () => {
+      expect(distinctByProperty([], i => i)).toHaveLength(0);
+      expect(distinctByProperty([undefined], i => i)).toHaveLength(0);
+      expect(distinctByProperty([null, undefined, ''], i => i)).toHaveLength(0);
+    });
+
+    it('should remove objects with the same property selector - removes 2/4', () => {
+      const item1 = { name: 'a', value: 'first' };
+      const item2 = { name: 'a', value: 'second' };
+      const item3 = { name: 'b', value: 'third' };
+      const item4 = { name: 'b', value: 'fourth' };
+      const items = [item1, item2, item3, item4];
+
+      // distinct by the name property
+      const filtered = distinctByProperty(items, i => i.name);
+
+      // Should remove item2 and item4
+      expect(filtered).toEqual([item1, item3]);
+    });
+
+    it('should remove objects with the same property selector - removes none', () => {
+      const item1 = { name: 'a', value: 'first' };
+      const item2 = { name: 'a', value: 'second' };
+      const item3 = { name: 'b', value: 'third' };
+      const item4 = { name: 'b', value: 'fourth' };
+      const items = [item1, item2, item3, item4];
+
+      // distinct by the value property
+      const filtered = distinctByProperty(items, i => i.value);
+
+      // Should remove no items
+      expect(filtered).toEqual(items);
     });
   });
 });

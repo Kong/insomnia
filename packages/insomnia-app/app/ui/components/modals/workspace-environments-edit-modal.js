@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
 import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc/dist/es6';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
@@ -14,12 +15,13 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
-import { DEBOUNCE_MILLIS } from '../../../common/constants';
+
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
 import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
+import { docsTemplateTags } from '../../../common/documentation';
 
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
@@ -98,7 +100,7 @@ const SidebarList = SortableContainer(
   ),
 );
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   environmentEditorRef: ?EnvironmentEditor;
   environmentColorInputRef: HTMLInputElement;
@@ -534,10 +536,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
         <ModalFooter>
           <div className="margin-left italic txt-sm tall">
             * Environment data can be used for&nbsp;
-            <Link href="https://support.insomnia.rest/article/40-template-tags">
-              Nunjucks Templating
-            </Link>{' '}
-            in your requests
+            <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
           </div>
           <button className="btn" disabled={!isValid} onClick={this.hide}>
             Done

@@ -15,6 +15,7 @@ describe('init()', () => {
       'getBodyStream',
       'getBytesRead',
       'getHeader',
+      'getHeaders',
       'getRequestId',
       'getStatusCode',
       'getStatusMessage',
@@ -70,6 +71,11 @@ describe('response.*', () => {
       ],
     };
     const result = plugin.init(response);
+    expect(result.response.getHeaders()).toEqual([
+      { name: 'content-type', value: 'application/json' },
+      { name: 'set-cookie', value: 'foo=bar' },
+      { name: 'set-cookie', value: 'baz=qux' },
+    ]);
     expect(result.response.getHeader('Does-Not-Exist')).toBeNull();
     expect(result.response.getHeader('CONTENT-TYPE')).toBe('application/json');
     expect(result.response.getHeader('set-cookie')).toEqual(['foo=bar', 'baz=qux']);

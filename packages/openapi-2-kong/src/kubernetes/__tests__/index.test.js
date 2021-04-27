@@ -22,7 +22,7 @@ import {
 } from './util/plugin-helpers';
 
 describe('index', () => {
-  const spec = {
+  const spec: OpenApi3Spec = {
     openapi: '3.0',
     info: { version: '1.0', title: 'My API' },
     servers: [

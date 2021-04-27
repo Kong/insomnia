@@ -1,5 +1,17 @@
 // @flow
 
+declare type XKongName = {
+  'x-kong-name'?: string,
+};
+
+declare type XKongRouteDefaults = {
+  'x-kong-route-defaults'?: DCRoute,
+};
+
+declare type StripPath = {
+  strip_path?: boolean,
+};
+
 declare type OA3Info = {|
   title: string,
   version: string,
@@ -32,9 +44,14 @@ declare type OA3Parameter = {|
   required?: boolean,
   deprecated?: boolean,
   allowEmptyValue?: boolean,
+  style?: 'form' | 'spaceDelimited' | 'pipeDelimited' | 'deepObject',
+  schema?: Object,
+  content?: Object,
+  explode?: boolean,
 |};
 
 declare type OA3RequestBody = {|
+  content?: Object,
   // TODO
 |};
 
@@ -53,7 +70,7 @@ declare type OA3Operation = {
   deprecated?: boolean,
   security?: Array<OA3SecurityRequirement>,
   servers?: Array<OA3Server>,
-};
+} & XKongName;
 
 declare type OA3Reference = {|
   $ref: string,
@@ -106,11 +123,13 @@ declare type OA3PathItem = {
   head?: OA3Operation,
   patch?: OA3Operation,
   trace?: OA3Operation,
-};
+} & XKongName &
+  XKongRouteDefaults;
 
 declare type OA3Paths = {
   [string]: OA3PathItem,
-};
+} & StripPath &
+  XKongRouteDefaults;
 
 declare type OA3SecuritySchemeApiKey = {|
   type: 'apiKey',
@@ -204,8 +223,8 @@ declare type OpenApi3Spec = {
   security?: Array<OA3SecurityRequirement>,
   tags?: Array<string>,
   externalDocs?: OA3ExternalDocs,
-  'x-kong-name'?: string,
-};
+} & XKongName &
+  XKongRouteDefaults;
 
 const HttpMethod = {
   get: 'GET',

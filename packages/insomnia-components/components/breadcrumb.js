@@ -8,7 +8,7 @@ type Props = {|
 |};
 
 const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--color-font);
   grid-area: breadcrumbs;
@@ -20,10 +20,12 @@ const StyledBreadcrumb: React.ComponentType<{}> = styled.ul`
   a::before,
   li > ::before {
     color: var(--color-font);
-    font-weight: 400 !important;
   }
 
   li {
+    display: flex;
+    flex-direction: row;
+
     a {
       cursor: pointer;
     }

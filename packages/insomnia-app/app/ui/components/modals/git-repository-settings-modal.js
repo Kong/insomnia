@@ -1,15 +1,16 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { GitRepository } from '../../../models/git-repository';
 import ModalFooter from '../base/modal-footer';
-import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import { docsGitAccessToken, docsGitSync } from '../../../common/documentation';
 import Link from '../base/link';
+import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 
 type Props = {||};
 
@@ -24,7 +25,7 @@ type State = {|
   },
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   input: ?HTMLInputElement;
@@ -62,16 +63,7 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const id = gitRepository ? gitRepository._id : 'n/a';
-    const workspaceMeta = await models.workspaceMeta.getByGitRepositoryId(id);
-
-    // Update the
-    if (workspaceMeta) {
-      await models.workspaceMeta.update(workspaceMeta, { gitRepositoryId: null });
-    }
-
-    // Remove the git repo
-    await models.gitRepository.remove(gitRepository);
+    await deleteGitRepository(gitRepository);
 
     this.hide();
   }
@@ -157,7 +149,6 @@ class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
                 <input
                   required
                   ref={this._setInputRef}
-                  type="url"
                   name="uri"
                   defaultValue={inputs.uri}
                   disabled={!!gitRepository}

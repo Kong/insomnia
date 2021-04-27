@@ -24,6 +24,11 @@ module.exports = {
       xl: 'rgba(133, 157, 176, 0.8)',
     },
     styles: {
+      appHeader: {
+        foreground: {
+          default: '#fff',
+        },
+      },
       link: {
         foreground: {
           default: '#68a9a2',

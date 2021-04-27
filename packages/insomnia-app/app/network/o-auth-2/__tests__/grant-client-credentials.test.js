@@ -85,6 +85,7 @@ describe('client_credentials', () => {
     // Check the expected value
     expect(result).toEqual({
       access_token: 'token_123',
+      id_token: null,
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,
@@ -165,6 +166,7 @@ describe('client_credentials', () => {
     // Check the expected value
     expect(result).toEqual({
       access_token: 'token_123',
+      id_token: null,
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,

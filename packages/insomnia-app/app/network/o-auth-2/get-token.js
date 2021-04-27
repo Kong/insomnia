@@ -15,6 +15,7 @@ import {
   P_ERROR,
   P_EXPIRES_IN,
   P_REFRESH_TOKEN,
+  P_ID_TOKEN,
   X_RESPONSE_ID,
   X_ERROR,
 } from './constants';
@@ -92,7 +93,6 @@ async function _getOAuth2ClientCredentialsHeader(
     authentication.audience,
     authentication.resource,
   );
-
   return _updateOAuth2Token(requestId, results);
 }
 
@@ -218,6 +218,7 @@ async function _updateOAuth2Token(requestId: string, authResults: Object): Promi
     expiresAt,
     refreshToken: authResults[P_REFRESH_TOKEN] || null,
     accessToken: authResults[P_ACCESS_TOKEN] || null,
+    identityToken: authResults[P_ID_TOKEN] || null,
     error: authResults[P_ERROR] || null,
     errorDescription: authResults[P_ERROR_DESCRIPTION] || null,
     errorUri: authResults[P_ERROR_URI] || null,

@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import jq from 'jsonpath';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import Modal from '../base/modal';
@@ -7,8 +8,9 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import { showModal } from './index';
 import Link from '../base/link';
+import { docsTemplateTags } from '../../../common/documentation';
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestRenderErrorModal extends PureComponent {
   constructor(props) {
     super(props);
@@ -57,10 +59,7 @@ class RequestRenderErrorModal extends PureComponent {
                 Adjust Render Settings
               </button>
             )}
-            <Link
-              button
-              href="https://support.insomnia.rest/article/40-template-tags"
-              className="btn btn--clicky">
+            <Link button href={docsTemplateTags} className="btn btn--clicky">
               Templating Documentation <i className="fa fa-external-link" />
             </Link>
           </div>

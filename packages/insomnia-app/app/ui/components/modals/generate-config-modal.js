@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
@@ -14,6 +15,7 @@ import ModalFooter from '../base/modal-footer';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { parseApiSpec } from '../../../common/api-specs';
+import { showModal } from './index';
 
 type Props = {|
   settings: Settings,
@@ -31,7 +33,12 @@ type State = {|
   activeTab: number,
 |};
 
-@autobind
+type ShowOptions = {
+  apiSpec: ApiSpec,
+  activeTabLabel: string,
+};
+
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class GenerateConfigModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
 
@@ -69,14 +76,16 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
     return config;
   }
 
-  async show(options: { apiSpec: ApiSpec }) {
+  async show({ activeTabLabel, apiSpec }: ShowOptions) {
     const configs = [];
 
     for (const p of await plugins.getConfigGenerators()) {
-      configs.push(await this._generate(p, options.apiSpec));
+      configs.push(await this._generate(p, apiSpec));
     }
 
-    this.setState({ configs });
+    const foundIndex = configs.findIndex(c => c.label === activeTabLabel);
+
+    this.setState({ configs, activeTab: foundIndex < 0 ? 0 : foundIndex });
 
     this.modal && this.modal.show();
   }
@@ -150,4 +159,5 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
   }
 }
 
+export const showGenerateConfigModal = (opts: ShowOptions) => showModal(GenerateConfigModal, opts);
 export default GenerateConfigModal;

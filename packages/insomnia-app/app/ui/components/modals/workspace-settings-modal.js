@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import DebouncedInput from '../base/debounced-input';
 import FileInputButton from '../base/file-input-button';
@@ -13,10 +14,15 @@ import * as models from '../../../models/index';
 import MarkdownEditor from '../markdown-editor';
 import type { Workspace } from '../../../models/workspace';
 import type { ClientCertificate } from '../../../models/client-certificate';
+import type { ApiSpec } from '../../../models/api-spec';
+import getWorkspaceName from '../../../models/helpers/get-workspace-name';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 
 type Props = {
   clientCertificates: Array<ClientCertificate>,
   workspace: Workspace,
+  apiSpec: ApiSpec,
   editorFontSize: number,
   editorIndentSize: number,
   editorKeyMap: string,
@@ -42,7 +48,7 @@ type State = {
   defaultPreviewMode: boolean,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null;
 
@@ -102,8 +108,10 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     }));
   }
 
-  _handleRename(name: string) {
-    this._workspaceUpdate({ name });
+  async _handleRename(name: string) {
+    const { workspace, apiSpec } = this.props;
+
+    await workspaceOperations.rename(workspace, apiSpec, name);
   }
 
   _handleDescriptionChange(description: string) {
@@ -188,7 +196,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     const { workspace } = this.props;
     return (
       <ModalHeader key={`header::${workspace._id}`}>
-        Workspace Settings{' '}
+        {getWorkspaceLabel(workspace)} Settings{' '}
         <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
       </ModalHeader>
     );
@@ -252,6 +260,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     const {
       clientCertificates,
       workspace,
+      apiSpec,
       editorLineWrapping,
       editorFontSize,
       editorIndentSize,
@@ -294,7 +303,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                   type="text"
                   delay={500}
                   placeholder="Awesome API"
-                  defaultValue={workspace.name}
+                  defaultValue={getWorkspaceName(workspace, apiSpec)}
                   onChange={this._handleRename}
                 />
               </label>
@@ -324,7 +333,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
                 </button>
               )}
             </div>
-            <h2>Workspace Actions</h2>
+            <h2>Actions</h2>
             <div className="form-control form-control--padded">
               <PromptButton
                 onClick={this._handleRemoveWorkspace}

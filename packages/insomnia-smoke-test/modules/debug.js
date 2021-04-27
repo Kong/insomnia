@@ -5,10 +5,18 @@ export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') =
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
+export const pageDisplayed = async app => {
+  await app.client.react$('WrapperDebug').then(e => e.waitForDisplayed());
+};
+
 export const clickWorkspaceDropdown = async app => {
   const dropdown = await app.client.react$('WorkspaceDropdown');
   await dropdown.click();
   return dropdown;
+};
+
+export const goToDashboard = async app => {
+  await app.client.$('.header_left a').then(e => e.click());
 };
 
 export const createNewRequest = async (app, name) => {

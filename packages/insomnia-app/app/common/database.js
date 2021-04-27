@@ -164,7 +164,7 @@ export function offChange(callback: Function): void {
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
-/** buffers database changes and returns false if was already buffering */
+/** buffers database changes and returns a buffer id */
 export const bufferChanges = (database.bufferChanges = async function(
   millis: number = 1000,
 ): Promise<number> {
@@ -172,6 +172,15 @@ export const bufferChanges = (database.bufferChanges = async function(
 
   bufferingChanges = true;
   setTimeout(database.flushChanges, millis);
+
+  return ++bufferChangesId;
+});
+
+/** buffers database changes and returns a buffer id */
+export const bufferChangesIndefinitely = (database.bufferChangesIndefinitely = async function(): Promise<number> {
+  if (db._empty) return _send('bufferChangesIndefinitely', ...arguments);
+
+  bufferingChanges = true;
 
   return ++bufferChangesId;
 });
@@ -687,6 +696,10 @@ export async function _repairDatabase() {
     await _fixMultipleCookieJars(workspace);
     await _applyApiSpecName(workspace);
   }
+
+  for (const gitRepository of await find(models.gitRepository.type)) {
+    await _fixOldGitURIs(gitRepository);
+  }
 }
 
 /**
@@ -779,4 +792,21 @@ async function _fixMultipleCookieJars(workspace) {
   await update(chosenJar);
 
   console.log(`[fix] Merged ${cookieJars.length} cookie jars under ${workspace.name}`);
+}
+
+// Append .git to old git URIs to mimic previous isomorphic-git behaviour
+async function _fixOldGitURIs(doc: GitRepository) {
+  if (!doc.uriNeedsMigration) {
+    return;
+  }
+
+  if (!doc.uri.endsWith('.git')) {
+    doc.uri += '.git';
+  }
+
+  doc.uriNeedsMigration = false;
+
+  await update(doc);
+
+  console.log(`[fix] Fixed git URI for ${doc._id}`);
 }

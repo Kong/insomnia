@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import KeydownBinder from '../keydown-binder';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -10,7 +11,7 @@ import { pressedHotKey } from '../../../common/hotkeys-listener';
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Modal extends PureComponent {
   constructor(props) {
     super(props);

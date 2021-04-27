@@ -19,6 +19,7 @@ describe('implicit', () => {
 
     expect(result).toEqual({
       access_token: 'token_123',
+      id_token: null,
       token_type: null,
       expires_in: null,
       scope: null,

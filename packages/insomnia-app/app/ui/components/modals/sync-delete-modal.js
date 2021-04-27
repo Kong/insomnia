@@ -1,13 +1,15 @@
 // @flow
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
 import { Button } from 'insomnia-components';
+import { strings } from '../../../common/strings';
 
 type Props = {
   workspace: Workspace,
@@ -24,7 +26,7 @@ const INITIAL_STATE: State = {
   workspaceName: '',
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncDeleteModal extends React.PureComponent<Props, State> {
   modal: ?Modal;
   input: ?HTMLInputElement;
@@ -87,11 +89,12 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
 
     return (
       <Modal ref={this._setModalRef} skinny>
-        <ModalHeader>Delete Workspace</ModalHeader>
+        <ModalHeader>Delete {strings.collection}</ModalHeader>
         <ModalBody className="wide pad-left pad-right text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p className="selectable">
-            This will permanently delete the {workspaceNameElement} workspace remotely.
+            This will permanently delete the {workspaceNameElement}{' '}
+            {strings.collection.toLowerCase()} remotely.
           </p>
           <p className="selectable">Please type {workspaceNameElement} to confirm.</p>
 
@@ -104,7 +107,7 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
                 value={workspaceName}
               />
               <Button bg="danger" disabled={workspaceName !== workspace.name}>
-                Delete Workspace
+                Delete {strings.collection}
               </Button>
             </div>
           </form>

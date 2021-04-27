@@ -1,4 +1,9 @@
-import { metaSortKeySort, sortMethodMap } from '../sorting';
+import {
+  ascendingNumberSort,
+  descendingNumberSort,
+  metaSortKeySort,
+  sortMethodMap,
+} from '../sorting';
 import { request, requestGroup, grpcRequest } from '../../models';
 import {
   METHOD_DELETE,
@@ -339,5 +344,17 @@ describe('Sorting methods', () => {
     expect(metaSortKeySort({ metaSortKey: 1 }, { metaSortKey: -2 })).toBe(1);
     expect(metaSortKeySort({ metaSortKey: 1, _id: 2 }, { metaSortKey: 1, _id: 1 })).toBe(-1);
     expect(metaSortKeySort({ metaSortKey: 1, _id: 1 }, { metaSortKey: 1, _id: 2 })).toBe(1);
+  });
+
+  it('sorts by number', () => {
+    expect(ascendingNumberSort(1, 2)).toBe(-1);
+    expect(ascendingNumberSort(-2, 1)).toBe(-1);
+    expect(ascendingNumberSort(2, 1)).toBe(1);
+    expect(ascendingNumberSort(1, -2)).toBe(1);
+
+    expect(descendingNumberSort(1, 2)).toBe(1);
+    expect(descendingNumberSort(-2, 1)).toBe(1);
+    expect(descendingNumberSort(2, 1)).toBe(-1);
+    expect(descendingNumberSort(1, -2)).toBe(-1);
   });
 });

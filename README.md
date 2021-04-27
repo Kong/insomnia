@@ -1,8 +1,7 @@
 # Insomnia REST Client
 
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
-[![CodeFund](https://img.shields.io/badge/codefund-advertiser-success.svg)](https://codefund.io)
+[![license](https://img.shields.io/github/license/Kong/insomnia.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 
 Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
 
@@ -73,7 +72,7 @@ sudo apt-get install build-essential
 Also on Linux, if Electron is failing during the bootstrap process, run the following
 ```bash
 # Clear Electron install conflicts
-rm -rf ~/cache/electron
+rm -rf ~/.cache/electron
 ```
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)

@@ -116,6 +116,8 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
     css += wrapStyles(n, '.theme--pane', getThemeBlockCSS(styles.pane));
     css += wrapStyles(n, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
 
+    css += wrapStyles(n, '.theme--app-header', getThemeBlockCSS(styles.appHeader));
+
     // Sidebar Styles
     css += wrapStyles(n, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));
     css += wrapStyles(n, '.theme--sidebar__list', getThemeBlockCSS(styles.sidebarList));
@@ -228,6 +230,33 @@ function wrapStyles(theme: string, selector: string, styles: string) {
     '',
     '',
   ].join('\n');
+}
+
+export function getColorScheme(settings: Settings): ColorScheme {
+  if (!settings.autoDetectColorScheme) {
+    return 'default';
+  }
+
+  if (window.matchMedia(`(prefers-color-scheme: light)`).matches) {
+    return 'light';
+  }
+
+  if (window.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+    return 'dark';
+  }
+
+  return 'default';
+}
+
+export async function applyColorScheme(settings: Settings): Promise<void> {
+  const scheme = getColorScheme(settings);
+  if (scheme === 'light') {
+    await setTheme(settings.lightTheme);
+  } else if (scheme === 'dark') {
+    await setTheme(settings.darkTheme);
+  } else {
+    await setTheme(settings.theme);
+  }
 }
 
 export async function setTheme(themeName: string) {

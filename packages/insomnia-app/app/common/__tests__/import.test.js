@@ -196,9 +196,13 @@ describe('export', () => {
       parentId: w._id,
       protoFileId: pf1._id,
     });
+    const pd = await models.protoDirectory.create({
+      name: 'ProtoDirectory 1',
+      parentId: w._id,
+    });
     const pf2 = await models.protoFile.create({
       name: 'ProtoFile 2',
-      parentId: w._id,
+      parentId: pd._id,
     });
     const gr2 = await models.grpcRequest.create({
       name: 'Grpc Request 2',
@@ -248,12 +252,13 @@ describe('export', () => {
         expect.objectContaining({ _id: r2._id }),
         expect.objectContaining({ _id: ePub._id }),
         expect.objectContaining({ _id: gr1._id }),
+        expect.objectContaining({ _id: pd._id }),
         expect.objectContaining({ _id: pf1._id }),
         expect.objectContaining({ _id: gr2._id }),
         expect.objectContaining({ _id: pf2._id }),
       ]),
     });
-    expect(exportWorkspacesDataJson.resources.length).toBe(12);
+    expect(exportWorkspacesDataJson.resources.length).toBe(13);
 
     // Test export some requests only.
     const exportRequestsJson = await importUtil.exportRequestsData([r1, gr1], false, 'json');
@@ -278,8 +283,8 @@ describe('export', () => {
       ]),
     });
 
-    expect(exportRequestsDataJSON.resources.length).toBe(9);
-    expect(exportRequestsDataYAML.resources.length).toBe(9);
+    expect(exportRequestsDataJSON.resources.length).toBe(10);
+    expect(exportRequestsDataYAML.resources.length).toBe(10);
 
     // Ensure JSON and YAML are the same
     expect(exportRequestsDataJSON.resources).toEqual(exportRequestsDataYAML.resources);
@@ -291,9 +296,17 @@ describe('export', () => {
       contents: 'openapi: "3.0.0"',
     });
     const jar = await models.cookieJar.getOrCreateForParentId(w._id);
+    const pd = await models.protoDirectory.create({
+      name: 'ProtoDirectory 1',
+      parentId: w._id,
+    });
     const pf1 = await models.protoFile.create({
       name: 'ProtoFile 1',
       parentId: w._id,
+    });
+    const pf2 = await models.protoFile.create({
+      name: 'ProtoFile 2',
+      parentId: pd._id,
     });
     const r1 = await models.request.create({
       name: 'Request 1',
@@ -315,7 +328,7 @@ describe('export', () => {
     const gr2 = await models.grpcRequest.create({
       name: 'Grpc Request 2',
       parentId: f2._id,
-      protoFileId: pf1._id,
+      protoFileId: pf2._id,
     });
     const uts1 = await models.unitTestSuite.create({
       name: 'Unit Test Suite One',
@@ -347,7 +360,9 @@ describe('export', () => {
         expect.objectContaining({ _id: w._id }),
         expect.objectContaining({ _id: eBase._id }),
         expect.objectContaining({ _id: jar._id }),
+        expect.objectContaining({ _id: pd._id }),
         expect.objectContaining({ _id: pf1._id }),
+        expect.objectContaining({ _id: pf2._id }),
         expect.objectContaining({ _id: r1._id }),
         expect.objectContaining({ _id: r2._id }),
         expect.objectContaining({ _id: gr1._id }),
@@ -361,14 +376,26 @@ describe('export', () => {
   });
 });
 
-describe('isApiSpec()', () => {
+describe('isApiSpecImport()', () => {
   it.each(['swagger2', 'openapi3'])('should return true if spec id is %o', (id: string) => {
-    expect(importUtil.isApiSpec(id)).toBe(true);
+    expect(importUtil.isApiSpecImport({ id })).toBe(true);
   });
 
   it('should return false if spec id is not valid', () => {
     const id = 'invalid-id';
 
-    expect(importUtil.isApiSpec(id)).toBe(false);
+    expect(importUtil.isApiSpecImport({ id })).toBe(false);
+  });
+});
+
+describe('isInsomniaV4Import()', () => {
+  it.each(['insomnia-4'])('should return true if spec id is %o', (id: string) => {
+    expect(importUtil.isInsomniaV4Import({ id })).toBe(true);
+  });
+
+  it('should return false if spec id is not valid', () => {
+    const id = 'invalid-id';
+
+    expect(importUtil.isInsomniaV4Import({ id })).toBe(false);
   });
 });

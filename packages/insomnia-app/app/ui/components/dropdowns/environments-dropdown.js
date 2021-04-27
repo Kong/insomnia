@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {
   Dropdown,
@@ -30,7 +31,7 @@ type Props = {
   activeEnvironment: Environment | null,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class EnvironmentsDropdown extends React.PureComponent<Props> {
   _dropdown: ?Dropdown;
 

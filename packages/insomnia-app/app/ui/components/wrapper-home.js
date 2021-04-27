@@ -1,10 +1,16 @@
 // @flow
 import * as React from 'react';
-import * as git from 'isomorphic-git';
-import path from 'path';
-import * as db from '../../common/database';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import type { GlobalActivity } from '../../common/constants';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_SPEC,
+  AUTOBIND_CFG,
+  getAppName,
+  isWorkspaceActivity,
+} from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
+import { WorkspaceScopeKeys } from '../../models/workspace';
 import 'swagger-ui-react/swagger-ui.css';
 import {
   Breadcrumb,
@@ -21,43 +27,49 @@ import DocumentCardDropdown from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
-import { showAlert, showError, showModal, showPrompt } from './modals';
+import { showPrompt } from './modals';
 import * as models from '../../models';
-import { trackEvent } from '../../common/analytics';
-import YAML from 'yaml';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
-import type { GlobalActivity } from '../../common/constants';
-import { ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_SPEC } from '../../common/constants';
-import { fuzzyMatchAll } from '../../common/misc';
-import type { WrapperProps } from './wrapper';
+
+import { fuzzyMatchAll, isNotNullOrUndefined, pluralize } from '../../common/misc';
+import type {
+  HandleImportClipboardCallback,
+  HandleImportFileCallback,
+  HandleImportUriCallback,
+  WrapperProps,
+} from './wrapper';
 import Notice from './notice';
-import GitRepositorySettingsModal from '../components/modals/git-repository-settings-modal';
 import PageLayout from './page-layout';
-import type { ForceToWorkspace } from '../redux/modules/helpers';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
-import designerLogo from '../images/insomnia-designer-logo.svg';
-import { MemPlugin } from '../../sync/git/mem-plugin';
-import {
-  GIT_CLONE_DIR,
-  GIT_INSOMNIA_DIR,
-  GIT_INSOMNIA_DIR_NAME,
-  GIT_INTERNAL_DIR,
-} from '../../sync/git/git-vcs';
+import coreLogo from '../images/insomnia-core-logo.png';
 import { parseApiSpec } from '../../common/api-specs';
+import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
+import SettingsButton from './buttons/settings-button';
+import AccountDropdown from './dropdowns/account-dropdown';
+import { strings } from '../../common/strings';
+import { descendingNumberSort } from '../../common/sorting';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as workspaceActions from '../redux/modules/workspace';
+import * as gitActions from '../redux/modules/git';
+import { GitCloneWorkspaceCallback } from '../redux/modules/workspace';
+import { MemClient } from '../../sync/git/mem-client';
 
 type Props = {|
   wrapperProps: WrapperProps,
-  handleImportFile: (forceToWorkspace: ForceToWorkspace) => void,
-  handleImportUri: (uri: string, forceToWorkspace: ForceToWorkspace) => void,
-  handleImportClipboard: (forceToWorkspace: ForceToWorkspace) => void,
+  handleImportFile: HandleImportFileCallback,
+  handleImportUri: HandleImportUriCallback,
+  handleImportClipboard: HandleImportClipboardCallback,
+  handleCreateWorkspace: CreateWorkspaceCallback,
+  handleGitCloneWorkspace: GitCloneWorkspaceCallback,
 |};
 
 type State = {|
   filter: string,
 |};
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperHome extends React.PureComponent<Props, State> {
   state = {
     filter: '',
@@ -73,29 +85,20 @@ class WrapperHome extends React.PureComponent<Props, State> {
     this.setState({ filter: e.currentTarget.value });
   }
 
-  _handleWorkspaceCreate() {
-    showPrompt({
-      title: 'New Document',
-      submitName: 'Create',
-      placeholder: 'spec-name.yaml',
-      selectText: true,
-      onComplete: async name => {
-        await models.workspace.create({
-          name,
-          scope: 'spec',
-        });
+  _handleDocumentCreate() {
+    this.props.handleCreateWorkspace({ scope: WorkspaceScopeKeys.design });
+  }
 
-        trackEvent('Workspace', 'Create');
-      },
-    });
+  _handleCollectionCreate() {
+    this.props.handleCreateWorkspace({ scope: WorkspaceScopeKeys.collection });
   }
 
   _handleImportFile() {
-    this.props.handleImportFile(ForceToWorkspaceKeys.new);
+    this.props.handleImportFile({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportClipBoard() {
-    this.props.handleImportClipboard(ForceToWorkspaceKeys.new);
+    this.props.handleImportClipboard({ forceToWorkspace: ForceToWorkspaceKeys.new });
   }
 
   _handleImportUri() {
@@ -105,161 +108,13 @@ class WrapperHome extends React.PureComponent<Props, State> {
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
-        this.props.handleImportUri(uri, ForceToWorkspaceKeys.new);
+        this.props.handleImportUri(uri, { forceToWorkspace: ForceToWorkspaceKeys.new });
       },
     });
   }
 
-  async _handleWorkspaceClone() {
-    // This is a huge flow and we don't really have anywhere to put something like this. I guess
-    // it's fine here for now (?)
-    showModal(GitRepositorySettingsModal, {
-      gitRepository: null,
-      onSubmitEdits: async repoSettingsPatch => {
-        trackEvent('Git', 'Clone');
-
-        const core = Math.random() + '';
-
-        // Create in-memory filesystem to perform clone
-        const plugins = git.cores.create(core);
-        const fsPlugin = MemPlugin.createPlugin();
-        plugins.set('fs', fsPlugin);
-
-        // Pull settings returned from dialog and shallow-clone the repo
-        const { credentials, uri: url } = repoSettingsPatch;
-        try {
-          await git.clone({
-            core,
-            dir: GIT_CLONE_DIR,
-            gitdir: GIT_INTERNAL_DIR,
-            singleBranch: true,
-            url,
-            ...credentials,
-            depth: 1,
-          });
-        } catch (err) {
-          showError({ title: 'Error Cloning Repository', message: err.message, error: err });
-          return false;
-        }
-
-        const f = fsPlugin.promises;
-        const ensureDir = async (base: string, name: string): Promise<boolean> => {
-          const rootDirs = await f.readdir(base);
-          if (rootDirs.includes(name)) {
-            return true;
-          }
-
-          showAlert({
-            title: 'Clone Problem',
-            message: (
-              <React.Fragment>
-                Could not locate{' '}
-                <code>
-                  {base}/{name}
-                </code>{' '}
-                directory in repository.
-              </React.Fragment>
-            ),
-          });
-
-          return false;
-        };
-
-        if (!(await ensureDir(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME))) {
-          return;
-        }
-
-        if (!(await ensureDir(GIT_INSOMNIA_DIR, models.workspace.type))) {
-          return;
-        }
-
-        const workspaceBase = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
-        const workspaceDirs = await f.readdir(workspaceBase);
-
-        if (workspaceDirs.length > 1) {
-          return showAlert({
-            title: 'Clone Problem',
-            message: 'Multiple workspaces found in repository',
-          });
-        }
-
-        if (workspaceDirs.length === 0) {
-          return showAlert({
-            title: 'Clone Problem',
-            message: 'No workspaces found in repository',
-          });
-        }
-
-        const workspacePath = path.join(workspaceBase, workspaceDirs[0]);
-        const workspaceJson = await f.readFile(workspacePath);
-        const workspace = YAML.parse(workspaceJson.toString());
-
-        // Check if the workspace already exists
-        const existingWorkspace = await models.workspace.getById(workspace._id);
-
-        if (existingWorkspace) {
-          return showAlert({
-            title: 'Clone Problem',
-            okLabel: 'Done',
-            message: (
-              <React.Fragment>
-                Workspace <strong>{existingWorkspace.name}</strong> already exists. Please delete it
-                before cloning.
-              </React.Fragment>
-            ),
-          });
-        }
-
-        // Prompt user to confirm importing the workspace
-        showAlert({
-          title: 'Project Found',
-          okLabel: 'Import',
-          message: (
-            <React.Fragment>
-              Workspace <strong>{workspace.name}</strong> found in repository. Would you like to
-              import it?
-            </React.Fragment>
-          ),
-
-          // Import all docs to the DB
-          onConfirm: async () => {
-            const {
-              wrapperProps: { handleSetActiveWorkspace },
-            } = this.props;
-
-            // Stop the DB from pushing updates to the UI temporarily
-            const bufferId = await db.bufferChanges();
-
-            // Loop over all model folders in root
-            for (const modelType of await f.readdir(GIT_INSOMNIA_DIR)) {
-              const modelDir = path.join(GIT_INSOMNIA_DIR, modelType);
-
-              // Loop over all documents in model folder and save them
-              for (const docFileName of await f.readdir(modelDir)) {
-                const docPath = path.join(modelDir, docFileName);
-                const docYaml = await f.readFile(docPath);
-                const doc = YAML.parse(docYaml.toString());
-                await db.upsert(doc);
-              }
-            }
-
-            // Store GitRepository settings and set it as active
-            const newRepo = await models.gitRepository.create({
-              ...repoSettingsPatch,
-              needsFullClone: true,
-            });
-            const meta = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-            await models.workspaceMeta.update(meta, { gitRepositoryId: newRepo._id });
-
-            // Activate the workspace after importing everything
-            await handleSetActiveWorkspace(workspace._id);
-
-            // Flush DB changes
-            await db.flushChanges(bufferId);
-          },
-        });
-      },
-    });
+  _handleWorkspaceClone() {
+    this.props.handleGitCloneWorkspace({ createFsClient: MemClient.createClient });
   }
 
   _handleKeyDown(e) {
@@ -270,21 +125,20 @@ class WrapperHome extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleSetActiveWorkspace(id: string, defaultActivity: GlobalActivity) {
+  async _handleClickCard(id: string, defaultActivity: GlobalActivity) {
     const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
 
     const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
 
-    if (!activeActivity || activeActivity === ACTIVITY_HOME) {
+    if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
       handleSetActiveActivity(defaultActivity);
     } else {
       handleSetActiveActivity(activeActivity);
     }
-
     handleSetActiveWorkspace(id);
   }
 
-  renderCard(w: Workspace) {
+  renderCard(workspace: Workspace): { card: React.Node, lastModifiedTimestamp: number } {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -294,7 +148,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
 
     const { filter } = this.state;
 
-    const apiSpec = apiSpecs.find(s => s.parentId === w._id);
+    const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
 
     let spec = null;
     let specFormat = null;
@@ -310,18 +164,36 @@ class WrapperHome extends React.PureComponent<Props, State> {
     }
 
     // Get cached branch from WorkspaceMeta
-    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === w._id);
+    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
     const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
     const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
     const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
 
     // WorkspaceMeta is a good proxy for last modified time
-    const workspaceModified = workspaceMeta ? workspaceMeta.modified : w.modified;
-    const modifiedLocally = apiSpec ? apiSpec.modified : workspaceModified;
+    const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
+    const modifiedLocally =
+      apiSpec && workspace.scope === WorkspaceScopeKeys.design
+        ? apiSpec.modified
+        : workspaceModified;
 
-    let log = <TimeFromNow timestamp={modifiedLocally} />;
+    // Span spec, workspace and sync related timestamps for card last modified label and sort order
+    const lastModifiedFrom = [
+      workspace?.modified,
+      workspaceMeta?.modified,
+      apiSpec?.modified,
+      workspaceMeta?.cachedGitLastCommitTime,
+    ];
+    const lastModifiedTimestamp = lastModifiedFrom
+      .filter(isNotNullOrUndefined)
+      .sort(descendingNumberSort)[0];
+
+    let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
     let branch = lastActiveBranch;
-    if (apiSpec && lastCommitTime && apiSpec.modified > lastCommitTime) {
+    if (
+      workspace.scope === WorkspaceScopeKeys.design &&
+      lastCommitTime &&
+      apiSpec?.modified > lastCommitTime
+    ) {
       // Show locally unsaved changes for spec
       // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
@@ -335,7 +207,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
       branch = lastActiveBranch;
       log = (
         <React.Fragment>
-          <TimeFromNow timestamp={lastCommitTime} /> by {lastCommitAuthor}
+          <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
         </React.Fragment>
       );
     }
@@ -343,30 +215,35 @@ class WrapperHome extends React.PureComponent<Props, State> {
     const docMenu = (
       <DocumentCardDropdown
         apiSpec={apiSpec}
-        workspace={w}
+        workspace={workspace}
         handleSetActiveWorkspace={handleSetActiveWorkspace}
         isLastWorkspace={workspaces.length === 1}>
         <SvgIcon icon="ellipsis" />
       </DocumentCardDropdown>
     );
     const version = spec?.info?.version || '';
-    let label: string = 'Insomnia';
+    let label: string = strings.collection;
+    let format: string = '';
+    let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
+    let title = workspace.name;
 
-    if (spec || w.scope === 'spec') {
-      label = '';
+    if (workspace.scope === WorkspaceScopeKeys.design) {
+      label = strings.document;
+      labelIcon = <i className="fa fa-file-o" />;
       if (specFormat === 'openapi') {
-        label = `OpenAPI ${specFormatVersion}`;
+        format = `OpenAPI ${specFormatVersion}`;
       } else if (specFormat === 'swagger') {
         // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
-        label = `OpenAPI ${specFormatVersion}`;
+        format = `OpenAPI ${specFormatVersion}`;
       }
 
       defaultActivity = ACTIVITY_SPEC;
+      title = apiSpec.fileName || title;
     }
 
     // Filter the card by multiple different properties
-    const matchResults = fuzzyMatchAll(filter, [apiSpec.fileName, label, branch, version], {
+    const matchResults = fuzzyMatchAll(filter, [title, label, branch, version], {
       splitSpace: true,
       loose: true,
     });
@@ -376,34 +253,52 @@ class WrapperHome extends React.PureComponent<Props, State> {
       return null;
     }
 
-    return (
+    const card = (
       <Card
         key={apiSpec._id}
         docBranch={branch && <Highlight search={filter} text={branch} />}
-        docTitle={apiSpec.fileName && <Highlight search={filter} text={apiSpec.fileName} />}
-        docVersion={version && <Highlight search={filter} text={version} />}
-        tagLabel={label && <Highlight search={filter} text={label} />}
+        docTitle={title && <Highlight search={filter} text={title} />}
+        docVersion={version && <Highlight search={filter} text={`v${version}`} />}
+        tagLabel={
+          label && (
+            <>
+              <span className="margin-right-xs">{labelIcon}</span>
+              <Highlight search={filter} text={label} />
+            </>
+          )
+        }
         docLog={log}
         docMenu={docMenu}
-        onClick={() => this._handleSetActiveWorkspace(w._id, defaultActivity)}
+        docFormat={format}
+        onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
       />
     );
+
+    return {
+      card,
+      lastModifiedTimestamp,
+    };
   }
 
-  renderMenu() {
+  renderCreateMenu() {
+    const button = (
+      <Button variant="contained" bg="surprise" className="margin-left">
+        Create
+        <i className="fa fa-caret-down pad-left-sm" />
+      </Button>
+    );
+
     return (
-      <Dropdown
-        renderButton={() => (
-          <Button variant="contained" bg="surprise" className="margin-left">
-            Create <i className="fa fa-caret-down" />
-          </Button>
-        )}>
+      <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-pencil" />} onClick={this._handleWorkspaceCreate}>
-          Blank Document
+        <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
+          Design Document
+        </DropdownItem>
+        <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
+          Request Collection
         </DropdownItem>
         <DropdownDivider>Import From</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-file" />} onClick={this._handleImportFile}>
+        <DropdownItem icon={<i className="fa fa-plus" />} onClick={this._handleImportFile}>
           File
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-link" />} onClick={this._handleImportUri}>
@@ -421,51 +316,82 @@ class WrapperHome extends React.PureComponent<Props, State> {
     );
   }
 
+  renderDashboardMenu() {
+    const { vcs, workspaces } = this.props.wrapperProps;
+    return (
+      <div className="row row--right pad-left wide">
+        <div
+          className="form-control form-control--outlined no-margin"
+          style={{ maxWidth: '400px' }}>
+          <KeydownBinder onKeydown={this._handleKeyDown}>
+            <input
+              ref={this._setFilterInputRef}
+              type="text"
+              placeholder="Filter..."
+              onChange={this._handleFilterChange}
+              className="no-margin"
+            />
+            <span className="fa fa-search filter-icon" />
+          </KeydownBinder>
+        </div>
+        <RemoteWorkspacesDropdown vcs={vcs} workspaces={workspaces} className="margin-left" />
+        {this.renderCreateMenu()}
+      </div>
+    );
+  }
+
   render() {
-    const { workspaces } = this.props.wrapperProps;
+    const { workspaces, isLoading } = this.props.wrapperProps;
     const { filter } = this.state;
 
     // Render each card, removing all the ones that don't match the filter
-    const cards = workspaces.map(this.renderCard).filter(c => c !== null);
+    const cards = workspaces
+      .map(this.renderCard)
+      .filter(isNotNullOrUndefined)
+      .sort((a, b) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
+      .map(c => c.card);
+
+    const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
 
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
           <Header
-            className="app-header"
+            className="app-header theme--app-header"
             gridLeft={
               <React.Fragment>
-                <img src={designerLogo} alt="Insomnia" width="32" height="32" />
-                <Breadcrumb className="breadcrumb" crumbs={['Documents']} />
+                <img src={coreLogo} alt="Insomnia" width="24" height="24" />
+                <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
+                {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </React.Fragment>
             }
-            gridCenter={
-              <div className="form-control form-control--outlined no-margin">
-                <KeydownBinder onKeydown={this._handleKeyDown}>
-                  <input
-                    ref={this._setFilterInputRef}
-                    type="text"
-                    placeholder="Filter..."
-                    onChange={this._handleFilterChange}
-                    className="no-margin"
-                  />
-                  <span className="fa fa-search filter-icon" />
-                </KeydownBinder>
-              </div>
+            gridRight={
+              <>
+                <SettingsButton className="margin-left" />
+                <AccountDropdown className="margin-left" />
+              </>
             }
-            gridRight={this.renderMenu()}
           />
         )}
         renderPageBody={() => (
-          <div className="document-listing theme--pane layout-body pad-top">
-            <div className="document-listing__body">
+          <div className="document-listing theme--pane layout-body">
+            <div className="document-listing__body pad-bottom">
+              <div className="row-spaced margin-top margin-bottom-sm">
+                <h2 className="no-margin">Dashboard</h2>
+                {this.renderDashboardMenu()}
+              </div>
               <CardContainer>{cards}</CardContainer>
               {filter && cards.length === 0 && (
                 <Notice color="subtle">
                   No documents found for <strong>{filter}</strong>
                 </Notice>
               )}
+            </div>
+            <div className="document-listing__footer vertically-center">
+              <span>
+                {cards.length} {countLabel}
+              </span>
             </div>
           </div>
         )}
@@ -474,4 +400,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
   }
 }
 
-export default WrapperHome;
+function mapDispatchToProps(dispatch) {
+  return {
+    handleCreateWorkspace: bindActionCreators(workspaceActions.createWorkspace, dispatch),
+    handleGitCloneWorkspace: bindActionCreators(gitActions.cloneGitRepository, dispatch),
+  };
+}
+
+export default connect(null, mapDispatchToProps)(WrapperHome);

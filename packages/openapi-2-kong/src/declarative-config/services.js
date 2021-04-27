@@ -6,10 +6,17 @@ import {
   getAllServers,
   getName,
   pathVariablesToRegex,
+  HttpMethod,
+  parseUrl,
 } from '../common';
 
 import { generateSecurityPlugins } from './security-plugins';
-import { generateOperationPlugins, generateServerPlugins } from './plugins';
+import {
+  generateOperationPlugins,
+  generatePathPlugins,
+  generateGlobalPlugins,
+  getRequestValidatorPluginDirective,
+} from './plugins';
 
 export function generateServices(api: OpenApi3Spec, tags: Array<string>): Array<DCService> {
   const servers = getAllServers(api);
@@ -30,16 +37,50 @@ export function generateService(
 ): DCService {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
+  const parsedUrl = parseUrl(serverUrl);
+
+  // Service plugins
+  const globalPlugins = generateGlobalPlugins(api);
+
+  // x-kong-service-defaults is free format so we do not want type checking.
+  // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
+  // $FlowFixMe
+  const serviceDefaults = api['x-kong-service-defaults'] || {};
+  if (typeof serviceDefaults !== 'object') {
+    throw new Error(`expected 'x-kong-service-defaults' to be an object`);
+  }
+
   const service: DCService = {
+    ...serviceDefaults,
     name,
-    url: serverUrl,
-    plugins: generateServerPlugins(server),
+    // remove semicolon i.e. convert `https:` to `https`
+    protocol: parsedUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
+    host: name, // not a hostname, but the Upstream name
+    port: Number(parsedUrl.port || '80'),
+    path: parsedUrl.pathname,
+    plugins: globalPlugins.plugins,
     routes: [],
     tags,
   };
 
+  // x-kong-route-defaults is free format so we do not want type checking.
+  // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
+  // $FlowFixMe
+  const routeDefaultsRoot = api['x-kong-route-defaults'] || {};
+  if (typeof routeDefaultsRoot !== 'object') {
+    throw new Error(`expected root-level 'x-kong-route-defaults' to be an object`);
+  }
+
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
+    // $FlowFixMe
+    const routeDefaultsPath = api.paths[routePath]['x-kong-route-defaults'] || routeDefaultsRoot;
+    if (typeof routeDefaultsPath !== 'object') {
+      throw new Error(`expected 'x-kong-route-defaults' to be an object (at path '${routePath}')`);
+    }
+
+    const pathValidatorPlugin = getRequestValidatorPluginDirective(pathItem);
+    const pathPlugins = generatePathPlugins(pathItem);
 
     for (const method of Object.keys(pathItem)) {
       if (
@@ -56,6 +97,13 @@ export function generateService(
       }
 
       const operation: ?OA3Operation = pathItem[method];
+      // $FlowFixMe
+      const routeDefaultsOperation = pathItem[method]['x-kong-route-defaults'] || routeDefaultsPath;
+      if (typeof routeDefaultsOperation !== 'object') {
+        throw new Error(
+          `expected 'x-kong-route-defaults' to be an object (at operation '${method}' of path '${routePath}')`,
+        );
+      }
 
       // This check is here to make Flow happy
       if (!operation) {
@@ -64,17 +112,28 @@ export function generateService(
 
       // Create the base route object
       const fullPathRegex = pathVariablesToRegex(routePath);
+
+      // $FlowFixMe
       const route: DCRoute = {
+        ...routeDefaultsOperation,
         tags,
-        name: generateRouteName(api, pathItem, method, service.routes.length),
+        name: generateRouteName(api, routePath, method),
         methods: [method.toUpperCase()],
         paths: [fullPathRegex],
-        strip_path: false,
       };
+
+      if (route.strip_path === undefined) {
+        // must override the Kong default of 'true' since we match based on full path regexes, which would lead Kong to always strip the full path down to a single '/' if it used that default.
+        route.strip_path = false;
+      }
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api);
-      const regularPlugins = generateOperationPlugins(operation);
+      const regularPlugins = generateOperationPlugins(
+        operation,
+        pathPlugins,
+        pathValidatorPlugin || globalPlugins.requestValidatorPlugin, // Path plugin takes precedence over global
+      );
       const plugins = [...regularPlugins, ...securityPlugins];
 
       // Add plugins if there are any
@@ -91,24 +150,24 @@ export function generateService(
 
 export function generateRouteName(
   api: OpenApi3Spec,
-  pathItem: OA3PathItem,
-  method: string,
-  numRoutes: number,
+  routePath: string,
+  method: $Keys<typeof HttpMethod>,
 ): string {
-  const n = numRoutes;
   const name = getName(api);
+  const pathItem = api.paths[routePath];
 
-  if (typeof (pathItem: Object)['x-kong-name'] === 'string') {
-    const pathSlug = generateSlug((pathItem: Object)['x-kong-name']);
-    return `${name}-${pathSlug}-${method}`;
+  if (pathItem[method] && typeof pathItem[method]['x-kong-name'] === 'string') {
+    const opsName = generateSlug(pathItem[method]['x-kong-name']);
+    return `${name}-${opsName}`;
   }
 
-  // If a summary key exists, use that to generate the name
-  if (typeof pathItem.summary === 'string') {
-    const pathSlug = generateSlug(pathItem.summary);
-    return `${name}-${pathSlug}-${method}`;
+  if (pathItem[method] && pathItem[method].operationId) {
+    const opsName = generateSlug(pathItem[method].operationId);
+    return `${name}-${opsName}`;
   }
 
-  // otherwise, use a unique integer to prevent collisions
-  return `${generateSlug(name)}-path${n ? '_' + n : ''}-${method}`;
+  // replace all `/` with `-` except the ones at the beginng or end of a string
+  const replacedRoute = routePath.replace(/(?!^)\/(?!$)/g, '-');
+  const pathSlug = generateSlug(pathItem['x-kong-name'] || replacedRoute);
+  return `${name}${pathSlug ? `-${pathSlug}` : ''}-${method}`;
 }

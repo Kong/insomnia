@@ -2,7 +2,8 @@ import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
 import electronPath from '../../insomnia-app/node_modules/electron';
-import { APP_ID_INSOMNIA, APP_ID_DESIGNER } from '../../insomnia-app/config';
+import mkdirp from 'mkdirp';
+import fs from 'fs';
 
 const getAppPlatform = () => process.platform;
 const isMac = () => getAppPlatform() === 'darwin';
@@ -12,30 +13,32 @@ const isWindows = () => getAppPlatform() === 'win32';
 export const isBuild = () => process.env.BUNDLE === 'build';
 export const isPackage = () => process.env.BUNDLE === 'package';
 
-const spectronConfig = (appId, appName) => {
+const spectronConfig = (
+  designerDataPath = path.join(__dirname, '..', 'fixtures', 'doesnt-exist'),
+) => {
   let packagePathSuffix = '';
   if (isWindows()) {
-    packagePathSuffix = path.join('win-unpacked', `${appName}.exe`);
+    packagePathSuffix = path.join('win-unpacked', 'Insomnia.exe');
   } else if (isMac()) {
-    packagePathSuffix = path.join('mac', `${appName}.app`, 'Contents', 'MacOS', appName);
+    packagePathSuffix = path.join('mac', 'Insomnia.app', 'Contents', 'MacOS', 'Insomnia');
   } else if (isLinux()) {
     packagePathSuffix = ''; // TODO: find out what this is
   }
 
-  const buildPath = path.join(__dirname, '../../insomnia-app/build', appId);
-  const packagePath = path.join(__dirname, '../../insomnia-app/dist', appId, packagePathSuffix);
-  const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', appId, `${Math.random()}`);
+  const buildPath = path.join(__dirname, '../../insomnia-app/build');
+  const packagePath = path.join(__dirname, '../../insomnia-app/dist', packagePathSuffix);
+  const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Date.now()}`);
+  const env = { INSOMNIA_DATA_PATH: dataPath };
 
-  return { buildPath, packagePath, dataPath };
+  if (designerDataPath) {
+    env.DESIGNER_DATA_PATH = designerDataPath;
+  }
+
+  return { buildPath, packagePath, env };
 };
 
-export const launchCore = async () => {
-  const config = spectronConfig(APP_ID_INSOMNIA, 'Insomnia');
-  return await launch(config);
-};
-
-export const launchDesigner = async () => {
-  const config = spectronConfig(APP_ID_DESIGNER, 'Insomnia Designer');
+export const launchApp = async designerDataPath => {
+  const config = spectronConfig(designerDataPath);
   return await launch(config);
 };
 
@@ -59,9 +62,7 @@ const launch = async config => {
     // https://github.com/electron-userland/spectron/issues/353#issuecomment-522846725
     chromeDriverArgs: ['remote-debugging-port=9222'],
 
-    env: {
-      INSOMNIA_DATA_PATH: config.dataPath,
-    },
+    env: config.env,
   });
 
   await app.start().then(async () => {
@@ -76,13 +77,29 @@ const launch = async config => {
     // Spectron overrides it to an unreasonable value, as per the issue
     //  https://github.com/electron-userland/spectron/issues/763
     await app.client.setTimeout({ implicit: 0 });
-  });
 
+    // Set bounds to default size
+    await app.browserWindow.setSize(1280, 700);
+  });
   return app;
 };
 
 export const stop = async app => {
+  await takeScreenshotOnFailure(app);
+
   if (app && app.isRunning()) {
     await app.stop();
   }
+};
+
+const takeScreenshotOnFailure = async app => {
+  if (jasmine.currentTest.failedExpectations.length) {
+    await takeScreenshot(app, jasmine.currentTest.fullName.replace(/ /g, '_'));
+  }
+};
+
+export const takeScreenshot = async (app, name) => {
+  mkdirp.sync('screenshots');
+  const buffer = await app.browserWindow.capturePage();
+  await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
 };

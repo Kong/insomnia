@@ -7,7 +7,7 @@ import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import * as moment from 'moment';
 
-import type { ImportResult } from '../../../common/import';
+import type { ImportRawConfig, ImportResult } from '../../../common/import';
 import * as importUtils from '../../../common/import';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
@@ -24,24 +24,33 @@ import SettingsModal, {
 } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
 import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace, ensureActivityIsForApp } from './helpers';
+import { askToImportIntoWorkspace, askToSetWorkspaceScope } from './helpers';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
-import { setActivityAttribute } from '../../../common/misc';
-import { isDevelopment } from '../../../common/constants';
-import type { Workspace } from '../../../models/workspace';
 import type { GlobalActivity } from '../../../common/constants';
+import type { Workspace, WorkspaceScope } from '../../../models/workspace';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+  ACTIVITY_ANALYTICS,
+  DEPRECATED_ACTIVITY_INSOMNIA,
+  isValidActivity,
+} from '../../../common/constants';
+import { selectSettings } from '../selectors';
+import { getDesignerDataDir } from '../../../common/misc';
 
-const LOCALSTORAGE_PREFIX = 'insomnia::meta';
+export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
-const LOAD_START = 'global/load-start';
-const LOAD_STOP = 'global/load-stop';
+export const LOAD_START = 'global/load-start';
+export const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
-const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
-const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
+export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
+export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
 const COMMAND_LOGIN = 'app/auth/login';
 const COMMAND_TRIAL_END = 'app/billing/trial-end';
@@ -224,18 +233,76 @@ export function loadRequestStop(requestId) {
   return { type: LOAD_REQUEST_STOP, requestId };
 }
 
-export function setActiveActivity(activity: GlobalActivity) {
-  let goToActivity = activity;
+function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
+  switch (currentActivity) {
+    case ACTIVITY_MIGRATION:
+      // Has not seen the onboarding step? Go to onboarding
+      if (!settings.hasPromptedOnboarding) {
+        return ACTIVITY_ONBOARDING;
+      }
 
-  // If development, skip logic (to allow for real-time switching)
-  if (!isDevelopment()) {
-    goToActivity = ensureActivityIsForApp(activity);
+      // Has not seen the analytics prompt? Go to it
+      if (!settings.hasPromptedAnalytics) {
+        return ACTIVITY_ANALYTICS;
+      }
+
+      // Otherwise, go to home
+      return ACTIVITY_HOME;
+    case ACTIVITY_ONBOARDING:
+      // Always go to home after onboarding
+      return ACTIVITY_HOME;
+    default:
+      return currentActivity;
+  }
+}
+
+/*
+  Go to the next activity in a sequential activity flow, depending on different conditions
+ */
+export function goToNextActivity() {
+  return function(dispatch, getState) {
+    const state = getState();
+    const { activeActivity } = state.global;
+
+    const settings = selectSettings(state);
+
+    const nextActivity = _getNextActivity(settings, activeActivity);
+
+    if (nextActivity !== activeActivity) {
+      dispatch(setActiveActivity(nextActivity));
+    }
+  };
+}
+
+/*
+  Go to an explicit activity
+ */
+export function setActiveActivity(activity: GlobalActivity) {
+  activity = _normalizeActivity(activity);
+
+  // Don't need to await settings update
+  switch (activity) {
+    case ACTIVITY_MIGRATION:
+      trackEvent('Data', 'Migration', 'Manual');
+      models.settings.patch({ hasPromptedToMigrateFromDesigner: true });
+      break;
+    case ACTIVITY_ONBOARDING:
+      models.settings.patch({
+        hasPromptedOnboarding: true,
+        // Don't show the analytics preferences prompt as it is part of the onboarding flow
+        hasPromptedAnalytics: true,
+      });
+      break;
+    case ACTIVITY_ANALYTICS:
+      models.settings.patch({ hasPromptedAnalytics: true });
+      break;
+    default:
+      break;
   }
 
-  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(goToActivity));
-  setActivityAttribute(goToActivity);
-  trackEvent('Activity', 'Change', goToActivity);
-  return { type: SET_ACTIVE_ACTIVITY, activity: goToActivity };
+  window.localStorage.setItem(`${LOCALSTORAGE_PREFIX}::activity`, JSON.stringify(activity));
+  trackEvent('Activity', 'Change', activity);
+  return { type: SET_ACTIVE_ACTIVITY, activity };
 }
 
 export function setActiveWorkspace(workspaceId: string) {
@@ -244,7 +311,15 @@ export function setActiveWorkspace(workspaceId: string) {
   return { type: SET_ACTIVE_WORKSPACE, workspaceId };
 }
 
-export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
+export type ImportOptions = {
+  forceToWorkspace?: ForceToWorkspace,
+  forceToScope?: WorkspaceScope,
+};
+
+export function importFile(
+  workspaceId: string,
+  { forceToScope, forceToWorkspace }: ImportOptions = {},
+) {
   return async dispatch => {
     dispatch(loadStart());
 
@@ -280,27 +355,21 @@ export function importFile(workspaceId: string, forceToWorkspace?: ForceToWorksp
     }
 
     // Let's import all the paths!
-    let importedWorkspaces = [];
     for (const p of paths) {
       try {
         const uri = `file://${p}`;
-        const result = await importUtils.importUri(
-          askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-          uri,
-        );
-        importedWorkspaces = handleImportResult(
-          result,
-          'The file does not contain a valid specification.',
-        );
+
+        const options: ImportRawConfig = {
+          getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+          getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        };
+        const result = await importUtils.importUri(uri, options);
+        handleImportResult(result, 'The file does not contain a valid specification.');
       } catch (err) {
         showModal(AlertModal, { title: 'Import Failed', message: err + '' });
       } finally {
         dispatch(loadStop());
       }
-    }
-
-    if (importedWorkspaces.length === 1) {
-      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
     }
   };
 }
@@ -320,7 +389,10 @@ function handleImportResult(result: ImportResult, errorMessage: string): Array<W
   return summary[models.workspace.type] || [];
 }
 
-export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
+export function importClipBoard(
+  workspaceId: string,
+  { forceToScope, forceToWorkspace }: ImportOptions = {},
+) {
   return async dispatch => {
     dispatch(loadStart());
     const schema = electron.clipboard.readText();
@@ -332,16 +404,13 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
       return;
     }
     // Let's import all the paths!
-    let importedWorkspaces = [];
     try {
-      const result = await importUtils.importRaw(
-        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-        schema,
-      );
-      importedWorkspaces = handleImportResult(
-        result,
-        'Your clipboard does not contain a valid specification.',
-      );
+      const options: ImportRawConfig = {
+        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+      };
+      const result = await importUtils.importRaw(schema, options);
+      handleImportResult(result, 'Your clipboard does not contain a valid specification.');
     } catch (err) {
       showModal(AlertModal, {
         title: 'Import Failed',
@@ -350,34 +419,28 @@ export function importClipBoard(workspaceId: string, forceToWorkspace?: ForceToW
     } finally {
       dispatch(loadStop());
     }
-    if (importedWorkspaces.length === 1) {
-      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
-    }
   };
 }
 
-export function importUri(workspaceId: string, uri: string, forceToWorkspace?: ForceToWorkspace) {
+export function importUri(
+  workspaceId: string,
+  uri: string,
+  { forceToScope, forceToWorkspace }: ImportOptions = {},
+) {
   return async dispatch => {
     dispatch(loadStart());
 
-    let importedWorkspaces = [];
     try {
-      const result = await importUtils.importUri(
-        askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-        uri,
-      );
-      importedWorkspaces = handleImportResult(
-        result,
-        'The URI does not contain a valid specification.',
-      );
+      const options: ImportRawConfig = {
+        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+      };
+      const result = await importUtils.importUri(uri, options);
+      handleImportResult(result, 'The URI does not contain a valid specification.');
     } catch (err) {
       showModal(AlertModal, { title: 'Import Failed', message: err + '' });
     } finally {
       dispatch(loadStop());
-    }
-
-    if (importedWorkspaces.length === 1) {
-      dispatch(setActiveWorkspace(importedWorkspaces[0]._id));
     }
   };
 }
@@ -618,10 +681,8 @@ export function exportRequestsToFile(requestIds) {
   };
 }
 
-export function init() {
+export function initActiveWorkspace() {
   let workspaceId = null;
-  let activity = null;
-
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
     const item = window.localStorage.getItem(key);
@@ -630,16 +691,72 @@ export function init() {
     // Nothing here...
   }
 
-  try {
-    const key = `${LOCALSTORAGE_PREFIX}::activity`;
-    const item = window.localStorage.getItem(key);
-    activity = JSON.parse(item);
-  } catch (e) {
-    // Nothing here...
+  return setActiveWorkspace(workspaceId);
+}
+
+function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
+  return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
+}
+
+function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
+  activity = _migrateDeprecatedActivity(activity);
+
+  if (isValidActivity(activity)) {
+    return activity;
+  } else {
+    const fallbackActivity = ACTIVITY_HOME;
+    console.log(`[app] invalid activity "${activity}"; navigating to ${fallbackActivity}`);
+    return fallbackActivity;
   }
+}
 
-  // If the default app id is insomnia, then default to the insomnia view at initialization
-  activity = ensureActivityIsForApp(activity);
+/*
+  Initialize with the cached active activity, and navigate to the next activity if necessary
+  This will also decide whether to start with the migration or onboarding activities
+ */
+export function initActiveActivity() {
+  return function(dispatch, getState) {
+    const state = getState();
+    const settings = selectSettings(state);
 
-  return [setActiveWorkspace(workspaceId), setActiveActivity(activity)];
+    // Default to home
+    let activeActivity = ACTIVITY_HOME;
+
+    try {
+      const key = `${LOCALSTORAGE_PREFIX}::activity`;
+      const item = window.localStorage.getItem(key);
+      activeActivity = JSON.parse(item);
+    } catch (e) {
+      // Nothing here...
+    }
+
+    activeActivity = _normalizeActivity(activeActivity);
+
+    let overrideActivity = null;
+    switch (activeActivity) {
+      // If relaunched after a migration, go to the next activity
+      // Don't need to do this for onboarding because that doesn't require a restart
+      case ACTIVITY_MIGRATION:
+        overrideActivity = _getNextActivity(settings, activeActivity);
+        break;
+      // Always check if user has been prompted to migrate or onboard
+      default:
+        if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+          trackEvent('Data', 'Migration', 'Auto');
+          overrideActivity = ACTIVITY_MIGRATION;
+        } else if (!settings.hasPromptedOnboarding) {
+          overrideActivity = ACTIVITY_ONBOARDING;
+        } else if (!settings.hasPromptedAnalytics) {
+          overrideActivity = ACTIVITY_ANALYTICS;
+        }
+        break;
+    }
+
+    const initializeToActivity = overrideActivity || activeActivity;
+    dispatch(setActiveActivity(initializeToActivity));
+  };
+}
+
+export function init() {
+  return [initActiveWorkspace(), initActiveActivity()];
 }

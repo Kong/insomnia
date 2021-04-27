@@ -1,13 +1,17 @@
 import * as models from '../../index';
 import { difference } from 'lodash';
 import {
+  isDesign,
   isGrpcRequest,
   isGrpcRequestId,
+  isProtoDirectory,
   isProtoFile,
   isRequest,
   isRequestGroup,
+  isWorkspace,
 } from '../is-model';
 import { generateId } from '../../../common/misc';
+import { WorkspaceScopeKeys } from '../../workspace';
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);
@@ -87,5 +91,45 @@ describe('isProtoFile', () => {
 
   it.each(unsupported)('should return false: "%s"', type => {
     expect(isProtoFile({ type })).toBe(false);
+  });
+});
+
+describe('isProtoDirectory', () => {
+  const supported = [models.protoDirectory.type];
+  const unsupported = difference(allTypes, supported);
+
+  it.each(supported)('should return true: "%s"', type => {
+    expect(isProtoDirectory({ type })).toBe(true);
+  });
+
+  it.each(unsupported)('should return false: "%s"', type => {
+    expect(isProtoDirectory({ type })).toBe(false);
+  });
+});
+
+describe('isWorkspace', () => {
+  const supported = [models.workspace.type];
+  const unsupported = difference(allTypes, supported);
+
+  it.each(supported)('should return true: "%s"', type => {
+    expect(isWorkspace({ type })).toBe(true);
+  });
+
+  it.each(unsupported)('should return false: "%s"', type => {
+    expect(isWorkspace({ type })).toBe(false);
+  });
+});
+
+describe('isDesign', () => {
+  it('should be true', () => {
+    const w = models.workspace.init();
+    w.scope = WorkspaceScopeKeys.design;
+    expect(isDesign(w)).toBe(true);
+  });
+
+  it('should be false', () => {
+    const w = models.workspace.init();
+    w.scope = WorkspaceScopeKeys.collection;
+    expect(isDesign(w)).toBe(false);
   });
 });

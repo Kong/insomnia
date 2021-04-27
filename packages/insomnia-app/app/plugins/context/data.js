@@ -5,17 +5,20 @@ import {
   importRaw,
   importUri,
 } from '../../common/import';
-import type { Workspace } from '../../models/workspace';
+import type { Workspace, WorkspaceScope } from '../../models/workspace';
+import type { ImportRawConfig } from '../../common/import';
+
+type PluginImportOptions = { workspaceId?: string, scope?: WorkspaceScope };
 
 export function init(): { data: { import: Object, export: Object } } {
   return {
     data: {
       import: {
-        async uri(uri: string, options: { workspaceId?: string } = {}): Promise<void> {
-          await importUri(() => Promise.resolve(options.workspaceId || null), uri);
+        async uri(uri: string, options: PluginImportOptions = {}): Promise<void> {
+          await importUri(uri, buildImportRawConfig(options));
         },
-        async raw(text: string, options: { workspaceId?: string } = {}): Promise<void> {
-          await importRaw(() => Promise.resolve(options.workspaceId || null), text);
+        async raw(text: string, options: PluginImportOptions = {}): Promise<void> {
+          await importRaw(text, buildImportRawConfig(options));
         },
       },
       export: {
@@ -41,4 +44,10 @@ export function init(): { data: { import: Object, export: Object } } {
       },
     },
   };
+}
+
+function buildImportRawConfig(options: PluginImportOptions): ImportRawConfig {
+  const getWorkspaceId = () => Promise.resolve(options.workspaceId || null);
+  const getWorkspaceScope = options.scope && (() => Promise.resolve(options.scope));
+  return { getWorkspaceId, getWorkspaceScope };
 }

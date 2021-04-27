@@ -36,6 +36,7 @@ import { chunkArray, generateId } from '../../common/misc';
 import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
+import { strings } from '../../common/strings';
 
 const EMPTY_HASH = crypto
   .createHash('sha1')
@@ -379,10 +380,14 @@ export default class VCS {
     return branch.snapshots.length;
   }
 
-  async getHistory(): Promise<Array<Snapshot>> {
+  async getHistory(count: number = 0): Promise<Array<Snapshot>> {
     const branch = await this._getCurrentBranch();
     const snapshots = [];
-    for (const id of branch.snapshots) {
+
+    const total = branch.snapshots.length;
+    const slice = count <= 0 || count > total ? 0 : total - count;
+
+    for (const id of branch.snapshots.slice(slice)) {
       const snapshot = await this._getSnapshot(id);
       if (snapshot === null) {
         throw new Error(`Failed to get snapshot id=${id}`);
@@ -1153,7 +1158,7 @@ export default class VCS {
     );
 
     if (!project) {
-      throw new Error('Please push the workspace to be able to share it');
+      throw new Error(`Please push the ${strings.collection.toLowerCase()} to be able to share it`);
     }
 
     return project.teams;

@@ -1,26 +1,22 @@
 // @flow
 import * as React from 'react';
 import * as electron from 'electron';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import styled from 'styled-components';
 import classnames from 'classnames';
 import Link from './base/link';
 import * as models from '../../models/index';
 import {
+  AUTOBIND_CFG,
   getAppName,
   getAppPlatform,
   getAppId,
   getAppVersion,
-  getDefaultAppId,
-  isLinux,
+  updatesSupported,
 } from '../../common/constants';
-import * as db from '../../common/database';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
-import imgSrcDesigner from '../images/insomnia-designer-logo.png';
 import imgSrcCore from '../images/insomnia-core-logo.png';
-import { APP_ID_INSOMNIA } from '../../../config';
-import { getDeviceId } from '../../common/analytics';
 
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
@@ -65,7 +61,7 @@ const StyledFooter: React.ComponentType<{}> = styled.footer`
   width: 100%;
 `;
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class Toast extends React.PureComponent<Props, State> {
   _interval: any;
 
@@ -115,23 +111,15 @@ class Toast extends React.PureComponent<Props, State> {
     // Try fetching user notification
     try {
       const data = {
-        firstLaunch: stats.created,
-        launches: stats.launches,
+        firstLaunch: stats.created, // Used for account verification notifications
+        launches: stats.launches, // Used for CTAs / Informational notifications
         platform: getAppPlatform(),
         app: getAppId(),
         version: getAppVersion(),
-        requests: await db.count(models.request.type),
-        requestGroups: await db.count(models.requestGroup.type),
-        environments: await db.count(models.environment.type),
-        workspaces: await db.count(models.workspace.type),
-        updatesNotSupported: isLinux(),
+        updatesNotSupported: !updatesSupported(),
         autoUpdatesDisabled: !settings.updateAutomatically,
         disableUpdateNotification: settings.disableUpdateNotification,
         updateChannel: settings.updateChannel,
-        deviceId: await getDeviceId(),
-        createdRequests: stats.createdRequests,
-        deletedRequests: stats.deletedRequests,
-        executedRequests: stats.executedRequests,
       };
 
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
@@ -215,10 +203,7 @@ class Toast extends React.PureComponent<Props, State> {
           'toast--show': visible,
         })}>
         <StyledLogo>
-          <img
-            src={getDefaultAppId() === APP_ID_INSOMNIA ? imgSrcCore : imgSrcDesigner}
-            alt={appName}
-          />
+          <img src={imgSrcCore} alt={appName} />
         </StyledLogo>
         <StyledContent>
           <p>{notification ? notification.message : 'Unknown'}</p>

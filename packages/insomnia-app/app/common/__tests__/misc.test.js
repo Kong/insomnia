@@ -1,5 +1,12 @@
 import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import {
+  diffPatchObj,
+  isNotNullOrUndefined,
+  pluralize,
+  snapNumberToLimits,
+  convertEpochToMilliseconds,
+} from '../misc';
 
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
@@ -200,5 +207,98 @@ describe('chunkArray()', () => {
   it('works with less than one chunk', () => {
     const chunks = misc.chunkArray([1, 2], 4);
     expect(chunks).toEqual([[1, 2]]);
+  });
+});
+
+describe('pluralize()', () => {
+  it('should not change pluralization', () => {
+    expect(pluralize('Requests')).toBe('Requests');
+  });
+
+  it('should end with s', () => {
+    expect(pluralize('Request')).toBe('Requests');
+  });
+
+  it('should end with ies', () => {
+    expect(pluralize('Directory')).toBe('Directories');
+  });
+});
+
+describe('diffPatchObj()', () => {
+  const a = { x: 1 };
+  const b = { x: 2, y: 3 };
+  const c = { x: 4, y: { z: 5 } };
+
+  it('does a basic merge', () => {
+    expect(diffPatchObj(a, b)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(b, a)).toEqual({ x: 1, y: 3 });
+  });
+
+  it.skip('does a basic merge, deep', () => {
+    expect(diffPatchObj(a, c, true)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(c, a, true)).toEqual({ x: 1 });
+  });
+
+  it.skip('does a basic nested merge', () => {
+    expect(diffPatchObj(a, b)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(b, a)).toEqual({ x: 1, y: { z: 5 } });
+  });
+
+  it.skip('does a basic nested merge, deep', () => {
+    expect(diffPatchObj(a, c, true)).toEqual({ x: 2, y: 3 });
+
+    expect(diffPatchObj(c, a, true)).toEqual({ x: 1, y: { z: 5 } });
+  });
+});
+
+describe('convertEpochToMilliseconds()', () => {
+  it('should convert microseconds to milliseconds', () => {
+    expect(convertEpochToMilliseconds(1617616858412123)).toBe(1617616858412);
+  });
+
+  it('should convert seconds to milliseconds', () => {
+    expect(convertEpochToMilliseconds(1617617010)).toBe(1617617010000);
+  });
+
+  it('should output same if value already in milliseconds', () => {
+    expect(convertEpochToMilliseconds(1617617141412)).toBe(1617617141412);
+  });
+});
+
+describe('snapNumberToLimits()', () => {
+  it('should return value', () => {
+    expect(snapNumberToLimits(2)).toBe(2);
+    expect(snapNumberToLimits(2, 0)).toBe(2);
+    expect(snapNumberToLimits(2, 0, 3)).toBe(2);
+    expect(snapNumberToLimits(2, 2, 2)).toBe(2);
+    expect(snapNumberToLimits(2, null, null)).toBe(2);
+    expect(snapNumberToLimits(2, NaN, NaN)).toBe(2);
+  });
+
+  it('should snap to min', () => {
+    expect(snapNumberToLimits(2, 3)).toBe(3);
+    expect(snapNumberToLimits(2, 3, 5)).toBe(3);
+    expect(snapNumberToLimits(2, 3, null)).toBe(3);
+    expect(snapNumberToLimits(2, 3, NaN)).toBe(3);
+  });
+
+  it('should snap to max', () => {
+    expect(snapNumberToLimits(5, 0, 3)).toBe(3);
+    expect(snapNumberToLimits(5, null, 3)).toBe(3);
+    expect(snapNumberToLimits(5, NaN, 3)).toBe(3);
+  });
+});
+
+describe('isNotNullOrUndefined', () => {
+  it('should return correctly', () => {
+    expect(isNotNullOrUndefined(0)).toBe(true);
+    expect(isNotNullOrUndefined('')).toBe(true);
+    expect(isNotNullOrUndefined(false)).toBe(true);
+
+    expect(isNotNullOrUndefined(null)).toBe(false);
+    expect(isNotNullOrUndefined(undefined)).toBe(false);
   });
 });

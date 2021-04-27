@@ -3,7 +3,8 @@ import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
 
 import * as React from 'react';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import fs from 'fs';
 import mime from 'mime-types';
 import { remote } from 'electron';
@@ -20,7 +21,7 @@ import ResponseTimelineViewer from '../viewers/response-timeline-viewer';
 import ResponseHeadersViewer from '../viewers/response-headers-viewer';
 import ResponseCookiesViewer from '../viewers/response-cookies-viewer';
 import * as models from '../../../models';
-import { PREVIEW_MODE_SOURCE } from '../../../common/constants';
+
 import { getSetCookieHeaders } from '../../../common/misc';
 import { cancelRequestById } from '../../../network/network';
 import ErrorBoundary from '../error-boundary';
@@ -67,7 +68,7 @@ type Props = {
   unitTestResult: ?UnitTestResult,
 };
 
-@autobind
+@autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponsePane extends React.PureComponent<Props> {
   _responseViewer: any;
 
@@ -128,6 +129,7 @@ class ResponsePane extends React.PureComponent<Props> {
         } else {
           to.write(finalBuffer);
         }
+        to.end();
       });
     }
   }

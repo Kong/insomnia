@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import fuzzySort from 'fuzzysort';
 import PropTypes from 'prop-types';
-import autobind from 'autobind-decorator';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import DropdownItem from './dropdown-item';
 import DropdownDivider from './dropdown-divider';
@@ -109,7 +109,7 @@ const StyledMenu = styled.div`
   }
 `;
 
-@autobind
+@autoBindMethodsForReact
 class Dropdown extends PureComponent {
   constructor(props) {
     super(props);
@@ -474,6 +474,8 @@ class Dropdown extends PureComponent {
     }
 
     const noResults = filter && filterItems && filterItems.length === 0;
+
+    const button = typeof renderButton === 'function' ? renderButton({ open }) : renderButton;
     return (
       <StyledDropdown
         style={style}
@@ -483,7 +485,7 @@ class Dropdown extends PureComponent {
         onKeyDown={this._handleKeyDown}
         tabIndex="-1"
         onMouseDown={Dropdown._handleMouseDown}>
-        <React.Fragment key="button">{renderButton({ open })}</React.Fragment>
+        <React.Fragment key="button">{button}</React.Fragment>
         {ReactDOM.createPortal(
           <div
             key="item"
@@ -517,7 +519,7 @@ class Dropdown extends PureComponent {
 Dropdown.propTypes = {
   // Required
   children: PropTypes.node.isRequired,
-  renderButton: PropTypes.func.isRequired,
+  renderButton: PropTypes.oneOfType([PropTypes.node, PropTypes.func]).isRequired,
 
   // Optional
   right: PropTypes.bool,

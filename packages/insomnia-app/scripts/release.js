@@ -27,13 +27,12 @@ if (require.main === module) {
 
 async function start(app, version) {
   console.log(`[release] Creating release for ${app} ${version}`);
-  const appId = appConfig().appId;
 
   // globs should only use forward slash, so force use of path.posix
-  const distGlob = ext => path.posix.join('dist', appId, '**', `*${ext}`);
+  const distGlob = ext => path.posix.join('dist', '**', `*${ext}`);
   const assetGlobs = {
     darwin: [distGlob('.zip'), distGlob('.dmg')],
-    win32: [path.posix.join('dist', appId, 'squirrel-windows', '*')],
+    win32: [path.posix.join('dist', 'squirrel-windows', '*'), path.posix.join('dist', '*.exe')],
     linux: [
       distGlob('.snap'),
       distGlob('.rpm'),
@@ -71,7 +70,6 @@ async function start(app, version) {
 async function getOrCreateRelease(app, version) {
   const tag = `${app}@${version}`;
   const releaseName = `${appConfig().productName} ${version} 📦`;
-  const changelogUrl = `https://insomnia.rest/changelog/${app}/${version}`;
 
   try {
     return await octokit.repos.getReleaseByTag({
@@ -88,7 +86,7 @@ async function getOrCreateRelease(app, version) {
     repo: appConfig().githubRepo,
     tag_name: tag,
     name: releaseName,
-    body: `Full changelog ⇒ ${changelogUrl}`,
+    body: `Full changelog ⇒ ${appConfig().changelogUrl}`,
     draft: false,
     prerelease: true,
   });
