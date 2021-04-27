@@ -1,10 +1,11 @@
 // @flow
 import fs from 'fs';
 import path from 'path';
-import { defaultTags } from './common';
 import { generateDeclarativeConfigFromSpec } from './declarative-config';
 import { generateKongForKubernetesConfigFromSpec } from './kubernetes';
 import SwaggerParser from 'swagger-parser';
+
+const defaultTags = ['OAS3_import'];
 
 export async function generate(
   specPath: string,
@@ -31,7 +32,7 @@ export async function generateFromString(
   tags: Array<string> = [],
 ): Promise<ConversionResult> {
   const api: OpenApi3Spec = await parseSpec(specStr);
-  return generateFromSpec(api, type, [...defaultTags, ...tags]);
+  return generateFromSpec(api, type, tags);
 }
 
 export function generateFromSpec(
@@ -39,11 +40,13 @@ export function generateFromSpec(
   type: ConversionResultType,
   tags: Array<string> = [],
 ): ConversionResult {
+  const allTags = [...defaultTags, ...tags];
+
   switch (type) {
     case 'kong-declarative-config':
-      return generateDeclarativeConfigFromSpec(api, tags);
+      return generateDeclarativeConfigFromSpec(api, allTags);
     case 'kong-for-kubernetes':
-      return generateKongForKubernetesConfigFromSpec(api, tags);
+      return generateKongForKubernetesConfigFromSpec(api, allTags);
     default:
       throw new Error(`Unsupported output type "${type}"`);
   }

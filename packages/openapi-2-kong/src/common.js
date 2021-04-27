@@ -74,8 +74,6 @@ export function pathVariablesToRegex(p: string): string {
   return result + '$';
 }
 
-export const defaultTags = ['OAS3_import'];
-
 export function getPluginNameFromKey(key: string): string {
   return key.replace(/^x-kong-plugin-/, '');
 }

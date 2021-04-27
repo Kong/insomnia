@@ -106,7 +106,7 @@
           "strip_path": false,
           "name": "httpbin-cookies-get",
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-          "plugins": [{"name": "correlation-id", "tags": ["OAS3_import"]}],
+          "plugins": [{"name": "correlation-id", "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]}],
           "paths": ["/cookies$"]
         },
         {

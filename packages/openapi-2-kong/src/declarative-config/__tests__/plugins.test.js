@@ -29,18 +29,18 @@ describe('plugins', () => {
         },
       };
 
-      const result = generateGlobalPlugins(api);
+      const result = generateGlobalPlugins(api, ['Tag']);
       expect(result.plugins).toEqual([
         {
           name: 'abcd', // name from plugin tag
-          tags: ['OAS3_import'],
+          tags: ['Tag'],
           config: {
             some_config: ['something'],
           },
         },
         {
           name: 'key-auth',
-          tags: ['OAS3_import'],
+          tags: ['Tag'],
           config: {
             key_names: ['x-api-key'],
           },
