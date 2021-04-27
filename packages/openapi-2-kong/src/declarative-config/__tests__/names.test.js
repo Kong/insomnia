@@ -27,7 +27,7 @@ const compare = (expected: string, pathItem: OA3PathItem) => {
 
 describe('names', () => {
   it(`api.paths[path][method]['x-kong-name'] is highest priority`, () => {
-    compare('method_smash', {
+    compare('Nebulo_9-method_smash', {
       'x-kong-name': 'pathItem-smash',
       post: {
         'x-kong-name': 'method-smash',
@@ -37,7 +37,7 @@ describe('names', () => {
   });
 
   it('api.paths[path][method].operationId is second priority (and not slugified)', () => {
-    compare('operationId-smash', {
+    compare('Nebulo_9-operationId_smash', {
       'x-kong-name': 'pathItem-smash',
       post: {
         operationId: 'operationId-smash',

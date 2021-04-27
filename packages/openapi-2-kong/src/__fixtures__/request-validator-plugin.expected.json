@@ -146,7 +146,11 @@
       ],
       "targets": [
         {
-          "target": "backend.com:80"
+          "target": "backend.com:80",
+          "tags": [
+            "OAS3_import",
+            "OAS3file_request-validator-plugin.yaml"
+          ]
         }
       ]
     }

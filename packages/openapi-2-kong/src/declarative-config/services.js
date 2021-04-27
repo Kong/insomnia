@@ -157,11 +157,13 @@ export function generateRouteName(
   const pathItem = api.paths[routePath];
 
   if (pathItem[method] && typeof pathItem[method]['x-kong-name'] === 'string') {
-    return generateSlug(pathItem[method]['x-kong-name']);
+    const opsName = generateSlug(pathItem[method]['x-kong-name']);
+    return `${name}-${opsName}`;
   }
 
   if (pathItem[method] && pathItem[method].operationId) {
-    return pathItem[method].operationId;
+    const opsName = generateSlug(pathItem[method].operationId);
+    return `${name}-${opsName}`;
   }
 
   // replace all `/` with `-` except the ones at the beginng or end of a string

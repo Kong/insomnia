@@ -12,21 +12,21 @@
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
-          "name": "list-data-sets",
+          "name": "USPTO_Data_Set_API-list_data_sets",
           "paths": ["/$"]
         },
         {
           "methods": ["GET"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
-          "name": "list-searchable-fields",
+          "name": "USPTO_Data_Set_API-list_searchable_fields",
           "paths": ["\/(?<dataset>[^\\\/\\s]+)\/(?<version>[^\\\/\\s]+)\/fields$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
-          "name": "perform-search",
+          "name": "USPTO_Data_Set_API-perform_search",
           "paths": ["\/(?<dataset>[^\\\/\\s]+)\/(?<version>[^\\\/\\s]+)\/records$"]
         }
       ],
@@ -37,7 +37,12 @@
     {
       "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
       "name": "USPTO_Data_Set_API",
-      "targets": [{"target": "developer.uspto.gov:443"}]
+      "targets": [
+        {
+          "target": "developer.uspto.gov:443",
+          "tags": ["OAS3_import", "OAS3file_uspto.yaml"]
+        }
+      ]
     }
   ],
   "_format_version": "1.1"

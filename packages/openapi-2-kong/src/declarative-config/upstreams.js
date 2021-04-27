@@ -32,6 +32,7 @@ export function generateUpstreams(api: OpenApi3Spec, tags: Array<string>) {
     if (hostWithPort) {
       upstream.targets.push({
         target: hostWithPort,
+        tags,
       });
     }
   }
