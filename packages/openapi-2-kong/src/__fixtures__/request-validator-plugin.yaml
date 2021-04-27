@@ -17,15 +17,30 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/jsonSchema'
-  /params:
+  /params/{pathid}/:
     get:
       x-kong-plugin-request-validator:
         enabled: true
         config:
           body_scheme: '{}'
       parameters:
+        - in: query
+          name: queryid
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: User-Id
+          schema:
+            type: integer
+          required: true
+        - in: cookie
+          name: cookieid
+          schema:
+            type: integer
+          required: true
         - in: path
-          name: userId
+          name: pathid
           schema:
             type: integer
           required: true
