@@ -83,7 +83,7 @@ export function getGlobalPlugins(
   const pluginNameSuffix = PluginNameSuffix.global;
   const globalK8Plugins = generateK8PluginConfig(api, pluginNameSuffix, increment);
   const securityPlugins = mapDcPluginsToK8Plugins(
-    generateSecurityPlugins(null, api),
+    generateSecurityPlugins(null, api, []),
     pluginNameSuffix,
     increment,
   );
@@ -133,7 +133,7 @@ export function getOperationPlugins(
       const pluginNameSuffix = PluginNameSuffix.operation;
       const opPlugins = generateK8PluginConfig(operation, pluginNameSuffix, increment);
       const securityPlugins = mapDcPluginsToK8Plugins(
-        generateSecurityPlugins(operation, api),
+        generateSecurityPlugins(operation, api, []),
         pluginNameSuffix,
         increment,
       );

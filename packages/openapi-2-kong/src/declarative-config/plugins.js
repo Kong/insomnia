@@ -1,12 +1,12 @@
 // @flow
 
-import { distinctByProperty, getPluginNameFromKey, isPluginKey, defaultTags } from '../common';
+import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 
 export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
 }
 
-export function generatePlugins(item: Object): Array<DCPlugin> {
+export function generatePlugins(item: Object, tags: Array<string>): Array<DCPlugin> {
   // When generating plugins, ignore the request validator plugin
   // because it is handled at the operation level
   const pluginFilter = ([key, _]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
@@ -14,10 +14,10 @@ export function generatePlugins(item: Object): Array<DCPlugin> {
   // Server plugins should load from the api spec root and from the server
   return Object.entries(item)
     .filter(pluginFilter)
-    .map(generatePlugin);
+    .map(e => generatePlugin(e, tags));
 }
 
-function generatePlugin([key, value]: [string, Object]): DCPlugin {
+function generatePlugin([key, value]: [string, Object], tags: Array<string>): DCPlugin {
   const plugin: DCPlugin = {
     name: value.name || getPluginNameFromKey(key),
   };
@@ -27,7 +27,7 @@ function generatePlugin([key, value]: [string, Object]): DCPlugin {
   }
 
   // Add tags to plugins while appending defaults tags
-  plugin.tags = [...defaultTags, ...(value.tags ?? [])];
+  plugin.tags = [...tags, ...(value.tags ?? [])];
 
   return plugin;
 }
@@ -106,7 +106,11 @@ function generateBodyOptions(
   return { bodySchema, allowedContentTypes };
 }
 
-export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Operation): DCPlugin {
+export function generateRequestValidatorPlugin(
+  plugin: Object,
+  operation: OA3Operation | typeof undefined,
+  tags: Array<string>,
+): DCPlugin {
   const config: { [string]: Object } = {
     version: 'draft4', // Fixed version
   };
@@ -148,6 +152,7 @@ export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Op
 
   return {
     config,
+    tags: [...tags, ...(plugin.tags ?? [])],
     enabled: Boolean(plugin.enabled ?? true),
     name: 'request-validator',
   };
@@ -155,12 +160,13 @@ export function generateRequestValidatorPlugin(plugin: Object, operation?: OA3Op
 
 export function generateGlobalPlugins(
   api: OpenApi3Spec,
+  tags: Array<string>,
 ): { plugins: Array<DCPlugin>, requestValidatorPlugin?: Object } {
-  const globalPlugins = generatePlugins(api);
+  const globalPlugins = generatePlugins(api, tags);
 
   const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
   if (requestValidatorPlugin) {
-    globalPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin));
+    globalPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin, undefined, tags));
   }
   return {
     // Server plugins take precedence over global plugins
@@ -169,16 +175,17 @@ export function generateGlobalPlugins(
   };
 }
 
-export function generatePathPlugins(pathItem: OA3PathItem): Array<DCPlugin> {
-  return generatePlugins(pathItem);
+export function generatePathPlugins(pathItem: OA3PathItem, tags: Array<string>): Array<DCPlugin> {
+  return generatePlugins(pathItem, tags);
 }
 
 export function generateOperationPlugins(
   operation: OA3Operation,
   pathPlugins: Array<DCPlugin>,
   parentValidatorPlugin?: Object,
+  tags: Array<string>,
 ): Array<DCPlugin> {
-  const operationPlugins: Array<DCPlugin> = generatePlugins(operation);
+  const operationPlugins: Array<DCPlugin> = generatePlugins(operation, tags);
 
   // Check if validator plugin exists on the operation
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
@@ -186,7 +193,7 @@ export function generateOperationPlugins(
   // Use the operation or parent validator plugin, or skip if neither exist
   const validatorPluginToUse = operationValidatorPlugin || parentValidatorPlugin;
   if (validatorPluginToUse) {
-    operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation));
+    operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation, tags));
   }
 
   // Operation plugins take precedence over path plugins

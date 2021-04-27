@@ -5,6 +5,7 @@ import { getSecurity } from '../common';
 export function generateSecurityPlugins(
   op: OA3Operation | null,
   api: OpenApi3Spec,
+  tags: Array<string>,
 ): Array<DCPlugin> {
   const plugins = [];
   const components = api.components || {};
@@ -16,7 +17,7 @@ export function generateSecurityPlugins(
       const scheme: OA3SecurityScheme = securitySchemes[name] || {};
       const args = securityItem[name];
 
-      const p = generateSecurityPlugin(scheme, args);
+      const p = generateSecurityPlugin(scheme, args, tags);
 
       if (p) {
         plugins.push(p);
@@ -81,6 +82,7 @@ export function generateOAuth2SecurityPlugin(
 export function generateSecurityPlugin(
   scheme: OA3SecurityScheme,
   args: Array<any>,
+  tags: Array<string>,
 ): DCPlugin | null {
   let plugin: DCPlugin | null = null;
 
@@ -102,18 +104,17 @@ export function generateSecurityPlugin(
     return null;
   }
 
-  // Add additional plugin configuration from x-kong-* properties
-  for (const key of Object.keys((scheme: Object))) {
-    if (key.indexOf('x-kong-security-') !== 0) {
-      continue;
-    }
+  // Add additional plugin configuration from x-kong-security-* property
+  // Only search for the matching key
+  // i.e. OAuth2 security with x-kong-security-basic-auth should not match
+  const kongSecurity = (scheme: Object)[`x-kong-security-${plugin.name}`] ?? {};
 
-    const kongSecurity = scheme[key];
-
-    if (kongSecurity.config) {
-      plugin.config = kongSecurity.config;
-    }
+  if (kongSecurity.config) {
+    plugin.config = kongSecurity.config;
   }
+
+  // Add global tags
+  plugin.tags = [...tags, ...(kongSecurity.tags ?? [])];
 
   return plugin;
 }

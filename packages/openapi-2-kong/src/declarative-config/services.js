@@ -40,7 +40,7 @@ export function generateService(
   const parsedUrl = parseUrl(serverUrl);
 
   // Service plugins
-  const globalPlugins = generateGlobalPlugins(api);
+  const globalPlugins = generateGlobalPlugins(api, tags);
 
   // x-kong-service-defaults is free format so we do not want type checking.
   // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
@@ -80,7 +80,7 @@ export function generateService(
     }
 
     const pathValidatorPlugin = getRequestValidatorPluginDirective(pathItem);
-    const pathPlugins = generatePathPlugins(pathItem);
+    const pathPlugins = generatePathPlugins(pathItem, tags);
 
     for (const method of Object.keys(pathItem)) {
       if (
@@ -128,11 +128,12 @@ export function generateService(
       }
 
       // Generate generic and security-related plugin objects
-      const securityPlugins = generateSecurityPlugins(operation, api);
+      const securityPlugins = generateSecurityPlugins(operation, api, tags);
       const regularPlugins = generateOperationPlugins(
         operation,
         pathPlugins,
         pathValidatorPlugin || globalPlugins.requestValidatorPlugin, // Path plugin takes precedence over global
+        tags,
       );
       const plugins = [...regularPlugins, ...securityPlugins];
 
