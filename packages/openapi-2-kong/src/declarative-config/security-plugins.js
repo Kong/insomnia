@@ -104,21 +104,17 @@ export function generateSecurityPlugin(
     return null;
   }
 
-  // Add additional plugin configuration from x-kong-* properties
-  for (const key of Object.keys((scheme: Object))) {
-    if (key.indexOf('x-kong-security-') !== 0) {
-      continue;
-    }
+  // Add additional plugin configuration from x-kong-security-* property
+  // Only search for the matching key
+  // i.e. OAuth2 security with x-kong-security-basic-auth should not match
+  const kongSecurity = (scheme: Object)[`x-kong-security-${plugin.name}`] ?? {};
 
-    const kongSecurity = scheme[key];
-
-    if (kongSecurity.config) {
-      plugin.config = kongSecurity.config;
-    }
+  if (kongSecurity.config) {
+    plugin.config = kongSecurity.config;
   }
 
   // Add global tags
-  plugin.tags = tags;
+  plugin.tags = [...tags, ...(kongSecurity.tags ?? [])];
 
   return plugin;
 }
