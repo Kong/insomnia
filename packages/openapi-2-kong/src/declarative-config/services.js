@@ -128,7 +128,7 @@ export function generateService(
       }
 
       // Generate generic and security-related plugin objects
-      const securityPlugins = generateSecurityPlugins(operation, api);
+      const securityPlugins = generateSecurityPlugins(operation, api, tags);
       const regularPlugins = generateOperationPlugins(
         operation,
         pathPlugins,

@@ -20,7 +20,8 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-basic_auth_user_password-get",
-          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
+          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth",
+            "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]}],
           "paths": ["\/basic-auth\/(?<user>[^\\\/\\s]+)\/(?<password>[^\\\/\\s]+)$"]
         },
         {
@@ -91,7 +92,8 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-hidden_basic_auth_user_password-get",
-          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
+          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth",
+            "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]}],
           "paths": ["\/hidden-basic-auth\/(?<user>[^\\\/\\s]+)\/(?<password>[^\\\/\\s]+)$"]
         },
         {
@@ -200,7 +202,9 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
           "name": "httpbin-bearer-get",
-          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth"}],
+          "plugins": [{"config": {"hide_credentials": true}, "name": "basic-auth",
+            "tags": ["OAS3_import", "OAS3file_httpbin.yaml"]
+          }],
           "paths": ["/bearer$"]
         },
         {

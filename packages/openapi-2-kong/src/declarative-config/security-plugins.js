@@ -5,6 +5,7 @@ import { getSecurity } from '../common';
 export function generateSecurityPlugins(
   op: OA3Operation | null,
   api: OpenApi3Spec,
+  tags: Array<string>,
 ): Array<DCPlugin> {
   const plugins = [];
   const components = api.components || {};
@@ -16,7 +17,7 @@ export function generateSecurityPlugins(
       const scheme: OA3SecurityScheme = securitySchemes[name] || {};
       const args = securityItem[name];
 
-      const p = generateSecurityPlugin(scheme, args);
+      const p = generateSecurityPlugin(scheme, args, tags);
 
       if (p) {
         plugins.push(p);
@@ -81,6 +82,7 @@ export function generateOAuth2SecurityPlugin(
 export function generateSecurityPlugin(
   scheme: OA3SecurityScheme,
   args: Array<any>,
+  tags: Array<string>,
 ): DCPlugin | null {
   let plugin: DCPlugin | null = null;
 
@@ -114,6 +116,9 @@ export function generateSecurityPlugin(
       plugin.config = kongSecurity.config;
     }
   }
+
+  // Add global tags
+  plugin.tags = tags;
 
   return plugin;
 }
