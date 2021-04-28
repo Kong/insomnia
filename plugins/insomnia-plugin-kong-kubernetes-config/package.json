@@ -2,6 +2,7 @@
   "name": "insomnia-plugin-kong-kubernetes-config",
   "version": "2.2.35",
   "main": "index.js",
+  "author": "Kong <office@konghq.com>",
   "insomnia": {
     "name": "kong-kubernetes-config",
     "description": "Generate Kong For Kubernetes configuration"

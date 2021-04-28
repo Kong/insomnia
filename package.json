@@ -2,6 +2,7 @@
   "name": "insomnia",
   "private": true,
   "version": "1.0.0",
+  "author": "Kong <office@konghq.com>",
   "description": "Insomnia is a cross-platform REST client, built on top of Electron.",
   "license": "MIT",
   "repository": "https://github.com/kong/insomnia",

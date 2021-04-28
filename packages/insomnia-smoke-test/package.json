@@ -1,6 +1,7 @@
 {
   "private": true,
   "name": "insomnia-smoke-test",
+  "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
   "version": "2.2.35",
   "type": "module",

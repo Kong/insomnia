@@ -2,6 +2,7 @@
   "name": "insomnia-send-request",
   "license": "Apache-2.0",
   "version": "2.2.35",
+  "author": "Kong <office@konghq.com>",
   "main": "dist/index.js",
   "types": "dist/send-request/index.d.ts",
   "dependencies": {
