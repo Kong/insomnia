@@ -89,5 +89,9 @@ module.exports = /** @type { import('eslint').Linter.Config } */ {
         '?', // for Quokka
       ],
     }],
+    '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
+    '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+    quotes: 'off',
+    '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
   },
 };

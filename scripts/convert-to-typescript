@@ -1,6 +1,6 @@
 #! /bin/bash
 export INSOMNIA_ROOT="$HOME/src/github.com/Kong/insomnia"
-export CODE_LOCATION="$INSOMNIA_ROOT/packages/insomnia-app/app"
+export CODE_LOCATION="$INSOMNIA_ROOT/packages/openapi-2-kong/src"
 
 echo "
 **/bin/*
