@@ -1,4 +1,5 @@
 import { DCRoute } from './declarative-config';
+import { K8sPath } from './kubernetes-config';
 
 export interface XKongName {
   'x-kong-name'?: string;
@@ -14,8 +15,8 @@ export interface StripPath {
 }
 
 export interface OA3Info {
-  title: string;
-  version: string;
+  title?: string;
+  version?: string;
   description?: string;
   termsOfService?: string;
   contact?: {
@@ -61,11 +62,23 @@ export interface OA3Reference {
   $ref: string;
 }
 
-export interface OA3ServerKubernetesProperties {
+export interface OA3ServerKubernetesTLS {
+  'x-kubernetes-tls'?: {
+    host: K8sPath[];
+    tls: {
+      secretName: string;
+    }
+  }
+}
+
+export interface OA3ServerKubernetesBackend {
   'x-kubernetes-backend'?: {
     serviceName: string;
     servicePort: number;
-  };
+  }
+}
+
+export interface OA3ServerKubernetesService {
   'x-kubernetes-service'?: {
     spec?: {
       ports?: {
@@ -74,10 +87,14 @@ export interface OA3ServerKubernetesProperties {
     };
     metadata?: {
       name: string;
-    };
+   };
   };
-  'x-kubernetes-tls'?: Record<string, any>;
 }
+
+export type OA3ServerKubernetesProperties =
+  & OA3ServerKubernetesTLS
+  & OA3ServerKubernetesBackend
+  & OA3ServerKubernetesService;
 
 export type OA3Variables = Record<
   string,

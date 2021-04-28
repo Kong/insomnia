@@ -1,10 +1,15 @@
-// @flow
 import { generateRouteName } from '../services';
-
 const api: OpenApi3Spec = {
   openapi: '3.0',
-  info: { version: '1.0', title: 'Nebulo 9' },
-  servers: [{ url: 'https://example.com/api' }],
+  info: {
+    version: '1.0',
+    title: 'Nebulo 9',
+  },
+  servers: [
+    {
+      url: 'https://example.com/api',
+    },
+  ],
   paths: {},
 };
 

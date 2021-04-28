@@ -1,5 +1,3 @@
-// @flow
-
 import {
   flattenPluginDocuments,
   generateK8PluginConfig,
@@ -20,17 +18,26 @@ import {
   pluginDummy,
   pluginKeyAuth,
 } from './util/plugin-helpers';
-
 describe('plugins', () => {
   let _iterator = 0;
+
   const increment = () => _iterator++;
 
-  const blankOperation = { method: null, plugins: [] };
-  const blankPath = { path: '', plugins: [], operations: [blankOperation] };
-
+  const blankOperation = {
+    method: null,
+    plugins: [],
+  };
+  const blankPath = {
+    path: '',
+    plugins: [],
+    operations: [blankOperation],
+  };
   const spec: OpenApi3Spec = {
     openapi: '3.0',
-    info: { version: '1.0', title: 'My API' },
+    info: {
+      version: '1.0',
+      title: 'My API',
+    },
     servers: [
       {
         url: 'http://api.insomnia.rest',
@@ -38,7 +45,6 @@ describe('plugins', () => {
     ],
     paths: {},
   };
-
   const components = {
     securitySchemes: {
       really_basic: {
@@ -73,27 +79,23 @@ describe('plugins', () => {
       },
     },
   };
-
   beforeEach(() => {
     _iterator = 0;
   });
-
   describe('getPlugins()', () => {
     it('should return expected result if no plugins on spec', () => {
       const result = getPlugins(spec);
-
       const globalPlugins = result.global;
       expect(globalPlugins).toHaveLength(0);
-
       expect(result.servers).toEqual([
         {
           server: spec.servers?.[0],
           plugins: [],
         },
       ]);
-
       expect(result.paths).toEqual([blankPath]);
     });
+
     it('should return expected result if plugins on global, server, path, and operation', () => {
       const api: OpenApi3Spec = {
         ...spec,
@@ -105,60 +107,44 @@ describe('plugins', () => {
           },
         ],
         paths: {
-          '/path': {
-            ...pluginKeyAuth,
-            get: {
-              ...pluginKeyAuth,
-            },
-          },
+          '/path': { ...pluginKeyAuth, get: { ...pluginKeyAuth } },
         },
       };
-
       const result = getPlugins(api);
-
       const globalPlugins = result.global;
       expect(globalPlugins).toEqual([keyAuthPluginDoc('g0')]);
-
       const serverPlugins = result.servers[0].plugins;
       expect(serverPlugins).toEqual([keyAuthPluginDoc('s1')]);
-
       const pathPlugins = result.paths[0].plugins;
       expect(pathPlugins).toEqual([keyAuthPluginDoc('p2')]);
-
       const operationPlugins = result.paths[0].operations[0].plugins;
       expect(operationPlugins).toEqual([keyAuthPluginDoc('m3')]);
     });
+
     it('should throw error if no servers on api', () => {
       const action = () => getPlugins({ ...spec, servers: [] });
 
       expect(action).toThrowError('Failed to generate spec: no servers defined in spec.');
     });
   });
-
   describe('getGlobalPlugins()', () => {
     it('returns empty array if no global plugins found on spec', async () => {
       const result = getGlobalPlugins(spec, increment);
       expect(result).toHaveLength(0);
     });
-    it('returns single plugin doc', () => {
-      const api: OpenApi3Spec = {
-        ...spec,
-        ...pluginKeyAuth,
-      };
 
+    it('returns single plugin doc', () => {
+      const api: OpenApi3Spec = { ...spec, ...pluginKeyAuth };
       const result = getGlobalPlugins(api, increment);
       expect(result).toEqual([keyAuthPluginDoc('g0')]);
     });
-    it('returns multiple plugin docs', () => {
-      const api: OpenApi3Spec = {
-        ...spec,
-        ...pluginKeyAuth,
-        ...pluginDummy,
-      };
 
+    it('returns multiple plugin docs', () => {
+      const api: OpenApi3Spec = { ...spec, ...pluginKeyAuth, ...pluginDummy };
       const result = getGlobalPlugins(api, increment);
       expect(result).toEqual([keyAuthPluginDoc('g0'), dummyPluginDoc('g1')]);
     });
+
     it('returns security plugin doc', () => {
       const pluginSecurity = {
         security: [
@@ -202,36 +188,33 @@ describe('plugins', () => {
           },
         },
       };
-
       // TODO: Cannot be typed as OpenApi3Spec because the security schemes types don't align to the data in components
-      const api: Object = {
-        ...spec,
-        ...pluginDummy,
-        ...pluginSecurity,
-        components,
-      };
-
+      const api: Record<string, any> = { ...spec, ...pluginDummy, ...pluginSecurity, components };
       const result = getGlobalPlugins(api, increment);
-
       expect(result).toEqual([
         dummyPluginDoc('g0'),
         {
           apiVersion: 'configuration.konghq.com/v1',
           kind: 'KongPlugin',
           plugin: 'basic-auth',
-          metadata: { name: 'add-basic-auth-g1' },
+          metadata: {
+            name: 'add-basic-auth-g1',
+          },
         },
         {
           apiVersion: 'configuration.konghq.com/v1',
           kind: 'KongPlugin',
           plugin: 'key-auth',
-          metadata: { name: 'add-key-auth-g2' },
-          config: { key_names: ['api_key_by_you'] },
+          metadata: {
+            name: 'add-key-auth-g2',
+          },
+          config: {
+            key_names: ['api_key_by_you'],
+          },
         },
       ]);
     });
   });
-
   describe('getServerPlugins()', () => {
     const server0: OA3Server = {
       url: 'http://api-0.insomnia.rest',
@@ -243,37 +226,25 @@ describe('plugins', () => {
     it('returns no plugins for servers', () => {
       const servers = [server0, server1];
       const result = getServerPlugins(servers, increment);
-
       expect(result).toHaveLength(2);
       result.forEach(s => expect(s.plugins).toHaveLength(0));
     });
+
     it('returns plugins from each server', () => {
-      const servers = [
-        {
-          ...server0,
-        },
-        {
-          ...server1,
-          ...pluginKeyAuth,
-          ...pluginDummy,
-        },
-      ];
-
+      const servers = [{ ...server0 }, { ...server1, ...pluginKeyAuth, ...pluginDummy }];
       const result = getServerPlugins(servers, increment);
-
       expect(result).toHaveLength(2);
       expect(result[0].plugins).toEqual([]);
       expect(result[1].plugins).toEqual([keyAuthPluginDoc('s0'), dummyPluginDoc('s1')]);
     });
   });
-
   describe('getPathPlugins()', () => {
     it('should return normalized result if no paths', () => {
       const paths: OA3Paths = {};
       const result = getPathPlugins(paths, increment, spec);
-
       expect(result).toEqual([blankPath]);
     });
+
     it('should return normalized result if no path and operation plugins', () => {
       const paths: OA3Paths = {
         '/path': {
@@ -283,44 +254,35 @@ describe('plugins', () => {
           },
         },
       };
-
       const result = getPathPlugins(paths, increment, spec);
-
       expect(result).toEqual([blankPath]);
     });
+
     it('should handle plugins existing on path', () => {
       const paths: OA3Paths = {
         '/path-no-plugin': {},
-        '/path': {
-          ...pluginDummy,
-        },
+        '/path': { ...pluginDummy },
       };
-
       const result = getPathPlugins(paths, increment, spec);
-
       expect(result).toHaveLength(2);
       const first = result[0];
       expect(first.path).toBe('/path-no-plugin');
       expect(first.plugins).toHaveLength(0);
       expect(first.operations).toEqual([blankOperation]);
-
       const second = result[1];
       expect(second.path).toBe('/path');
       expect(second.plugins).toEqual([dummyPluginDoc('p0')]);
       expect(second.operations).toEqual([blankOperation]);
     });
+
     it('should handle plugins existing on operation and not on path', () => {
       const paths: OA3Paths = {
         '/path': {
-          get: {
-            ...pluginDummy,
-          },
+          get: { ...pluginDummy },
           put: {},
         },
       };
-
       const result = getPathPlugins(paths, increment, spec);
-
       expect(result).toHaveLength(1);
       expect(result[0].plugins).toHaveLength(0);
       expect(result[0].operations).toEqual([
@@ -334,24 +296,14 @@ describe('plugins', () => {
         },
       ]);
     });
+
     it('should handle plugins existing on path and operation', () => {
       const paths: OA3Paths = {
-        '/path-0': {
-          ...pluginKeyAuth,
-          get: {
-            ...pluginDummy,
-          },
-        },
-        '/path-1': {
-          ...pluginDummy,
-          put: {},
-        },
+        '/path-0': { ...pluginKeyAuth, get: { ...pluginDummy } },
+        '/path-1': { ...pluginDummy, put: {} },
       };
-
       const result = getPathPlugins(paths, increment, spec);
-
       expect(result).toHaveLength(2);
-
       const path0 = result[0];
       expect(path0.path).toBe('/path-0');
       expect(path0.plugins).toEqual([keyAuthPluginDoc('p0')]);
@@ -361,75 +313,57 @@ describe('plugins', () => {
           plugins: [dummyPluginDoc('m1')],
         },
       ]);
-
       const path1 = result[1];
       expect(path1.path).toBe('/path-1');
       expect(path1.plugins).toEqual([dummyPluginDoc('p2')]);
       expect(path1.operations).toEqual([blankOperation]);
     });
   });
-
   describe('getOperationPlugins()', () => {
     it('should return normalized result if no plugins', () => {
-      const pathItem = { description: 'test' };
+      const pathItem = {
+        description: 'test',
+      };
       const result = getOperationPlugins(pathItem, increment, spec);
-
       expect(result).toEqual([blankOperation]);
     });
+
     it('should return plugins for all operations on path', () => {
       const pathItem = {
         [HttpMethod.get]: {},
-        [HttpMethod.put]: {
-          ...pluginKeyAuth,
-          ...pluginDummy,
-        },
-        [HttpMethod.post]: {
-          ...pluginDummy,
-        },
+        [HttpMethod.put]: { ...pluginKeyAuth, ...pluginDummy },
+        [HttpMethod.post]: { ...pluginDummy },
       };
-
       const result = getOperationPlugins(pathItem, increment, spec);
-
       expect(result).toHaveLength(3);
-
       const get = result[0];
       expect(get.method).toBe(HttpMethod.get);
       expect(get.plugins).toHaveLength(0);
-
       const put = result[1];
       expect(put.method).toBe(HttpMethod.put);
       expect(put.plugins).toEqual([keyAuthPluginDoc('m0'), dummyPluginDoc('m1')]);
-
       const post = result[2];
       expect(post.method).toBe(HttpMethod.post);
       expect(post.plugins).toEqual([dummyPluginDoc('m2')]);
     });
+
     it.each(Object.values(HttpMethod))(
       'should extract method plugins for %o from path item',
       methodName => {
         const pathItem = {
-          [methodName]: {
-            ...pluginKeyAuth,
-            ...pluginDummy,
-          },
+          [methodName]: { ...pluginKeyAuth, ...pluginDummy },
         };
-
         const result = getOperationPlugins(pathItem, increment, spec);
-
         expect(result).toHaveLength(1);
-
         const first = result[0];
         expect(first.method).toBe(methodName);
         expect(first.plugins).toEqual([keyAuthPluginDoc('m0'), dummyPluginDoc('m1')]);
       },
     );
+
     it('should return security plugin from operation', () => {
       // TODO: Cannot be typed as OpenApi3Spec because the security schemes types don't align to the data in components
-      const api: Object = {
-        ...spec,
-        components,
-      };
-
+      const api: Record<string, any> = { ...spec, components };
       const pathItem: OA3PathItem = {
         [HttpMethod.get]: {
           security: [
@@ -440,44 +374,45 @@ describe('plugins', () => {
           ],
         },
       };
-
       const result = getOperationPlugins(pathItem, increment, api);
-
       expect(result[0].plugins).toEqual([
         {
           apiVersion: 'configuration.konghq.com/v1',
           kind: 'KongPlugin',
           plugin: 'basic-auth',
-          metadata: { name: 'add-basic-auth-m0' },
+          metadata: {
+            name: 'add-basic-auth-m0',
+          },
         },
         {
           apiVersion: 'configuration.konghq.com/v1',
           kind: 'KongPlugin',
           plugin: 'key-auth',
-          metadata: { name: 'add-key-auth-m1' },
-          config: { key_names: ['api_key_by_you'] },
+          metadata: {
+            name: 'add-key-auth-m1',
+          },
+          config: {
+            key_names: ['api_key_by_you'],
+          },
         },
       ]);
     });
   });
-
   describe('generateK8PluginConfig()', () => {
     it('should return empty array if no plugin keys found and not increment', () => {
       const incrementMock = jest.fn().mockReturnValue(0);
       const result = generateK8PluginConfig(spec, 's', incrementMock);
-
       expect(result).toHaveLength(0);
       expect(incrementMock).not.toHaveBeenCalled();
     });
+
     it('should attach config onto plugin if it exists and increment', () => {
       const incrementMock = jest.fn().mockReturnValue(0);
       const result = generateK8PluginConfig({ ...spec, ...pluginKeyAuth }, 'greg', incrementMock);
-
       expect(result).toEqual([keyAuthPluginDoc('greg0')]);
       expect(incrementMock).toHaveBeenCalledTimes(1);
     });
   });
-
   describe('normalizePathPlugins()', () => {
     it('should return source array if a path with plugins exists', () => {
       const source: PathPlugins = [
@@ -492,9 +427,9 @@ describe('plugins', () => {
           operations: [blankOperation],
         },
       ];
-
       expect(normalizePathPlugins(source)).toEqual(source);
     });
+
     it('should return source array if an operation with plugins exist', () => {
       const source: PathPlugins = [
         {
@@ -512,9 +447,9 @@ describe('plugins', () => {
           ],
         },
       ];
-
       expect(normalizePathPlugins(source)).toEqual(source);
     });
+
     it('should return blank path if no plugins exist on path or operations', () => {
       const source: PathPlugins = [
         {
@@ -528,11 +463,9 @@ describe('plugins', () => {
           operations: [blankOperation],
         },
       ];
-
       expect(normalizePathPlugins(source)).toEqual([blankPath]);
     });
   });
-
   describe('normalizeOperationPlugins()', () => {
     it('should return source array if operation plugins exist', () => {
       const source: OperationPlugins = [
@@ -545,9 +478,9 @@ describe('plugins', () => {
           plugins: [dummyPluginDoc('p0')],
         },
       ];
-
       expect(normalizeOperationPlugins(source)).toEqual(source);
     });
+
     it('should return blank operation if no plugins exist on operations', () => {
       const source: OperationPlugins = [
         {
@@ -559,11 +492,9 @@ describe('plugins', () => {
           plugins: [],
         },
       ];
-
       expect(normalizeOperationPlugins(source)).toEqual([blankOperation]);
     });
   });
-
   describe('flattenPluginDocuments()', () => {
     it('should return a flat array with all plugin documents', () => {
       const api: OpenApi3Spec = {
@@ -576,18 +507,11 @@ describe('plugins', () => {
           },
         ],
         paths: {
-          '/path': {
-            ...pluginKeyAuth,
-            get: {
-              ...pluginKeyAuth,
-            },
-          },
+          '/path': { ...pluginKeyAuth, get: { ...pluginKeyAuth } },
         },
       };
-
       const plugins = getPlugins(api);
       const flattened = flattenPluginDocuments(plugins);
-
       expect(flattened).toEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('s1'),
@@ -596,14 +520,12 @@ describe('plugins', () => {
       ]);
     });
   });
-
   describe('prioritizePlugins', () => {
     it('should return empty array if no plugins', () => {
       const global = [];
       const server = [];
       const path = [];
       const operation = [];
-
       const result = prioritizePlugins(global, server, path, operation);
       expect(result).toHaveLength(0);
     });
@@ -613,12 +535,10 @@ describe('plugins', () => {
       const p2 = pluginDocWithName('p2', 'custom-plugin-2');
       const p3 = pluginDocWithName('p3', 'custom-plugin-3');
       const p4 = pluginDocWithName('p4', 'custom-plugin-4');
-
       const global = [p1];
       const server = [p2];
       const path = [p3];
       const operation = [p4];
-
       const result = prioritizePlugins(global, server, path, operation);
       expect(result).toEqual([...operation, ...path, ...server, ...global]);
     });
@@ -629,12 +549,10 @@ describe('plugins', () => {
       const p2 = pluginDocWithName('p2', pluginType);
       const p3 = pluginDocWithName('p3', pluginType);
       const p4 = pluginDocWithName('p4', pluginType);
-
       const global = [p1];
       const server = [p2];
       const path = [p3];
       const operation = [p4];
-
       const result = prioritizePlugins(global, server, path, operation);
       expect(result).toEqual([...operation]);
     });
@@ -644,12 +562,10 @@ describe('plugins', () => {
       const p1 = pluginDocWithName('p1', pluginType);
       const p2 = pluginDocWithName('p2', pluginType);
       const p3 = pluginDocWithName('p3', pluginType);
-
       const global = [p1];
       const server = [p2];
       const path = [p3];
       const operation = [];
-
       const result = prioritizePlugins(global, server, path, operation);
       expect(result).toEqual([...path]);
     });
@@ -658,12 +574,10 @@ describe('plugins', () => {
       const pluginType = 'custom-plugin';
       const p1 = pluginDocWithName('p1', pluginType);
       const p2 = pluginDocWithName('p2', pluginType);
-
       const global = [p1];
       const server = [p2];
       const path = [];
       const operation = [];
-
       const result = prioritizePlugins(global, server, path, operation);
       expect(result).toEqual([...server]);
     });
@@ -673,30 +587,24 @@ describe('plugins', () => {
       const typeS = 'custom-plugin-2';
       const typeP = 'custom-plugin-3';
       const typeO = 'custom-plugin-4';
-
       // Note: the variable naming below is [applied-to][resolved-from]
       // IE: po implies it is applied to a path, but that plugin type should be resolved by the operation
       // Therefore, the result should only contain gg, ss, pp and oo. The others are duplicates
       // of the same plugin type and should be filtered out due to prioritization.
       const gg = pluginDocWithName('gg', typeG);
-
       const gs = pluginDocWithName('gs', typeS);
       const ss = pluginDocWithName('ss', typeS);
-
       const gp = pluginDocWithName('gp', typeP);
       const sp = pluginDocWithName('sp', typeP);
       const pp = pluginDocWithName('pp', typeP);
-
       const go = pluginDocWithName('go', typeO);
       const so = pluginDocWithName('so', typeO);
       const po = pluginDocWithName('po', typeO);
       const oo = pluginDocWithName('oo', typeO);
-
       const global = [gg, gs, gp, go];
       const server = [ss, sp, so];
       const path = [pp, po];
       const operation = [oo];
-
       const result = prioritizePlugins(global, server, path, operation);
       expect(result).toEqual([oo, pp, ss, gg]);
     });

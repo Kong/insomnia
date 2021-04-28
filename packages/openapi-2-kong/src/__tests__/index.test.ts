@@ -2,7 +2,6 @@ import { generate, generateFromString, parseSpec } from '../index';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
-
 describe('index', () => {
   describe('generate()', () => {
     it('generates DC from file', async () => {
@@ -25,7 +24,6 @@ describe('index', () => {
       expect(dc.services[0].tags).toEqual(['OAS3_import', 'OAS3file_uspto.yaml', 'MyTag']);
     });
   });
-
   describe('generateFromString()', () => {
     it('generates DC from string', async () => {
       const s = fs.readFileSync(path.join(__dirname, '../__fixtures__/uspto.yaml'), 'utf8');
@@ -35,7 +33,6 @@ describe('index', () => {
       expect(dc._format_version).toBe('1.1');
     });
   });
-
   describe('generateFromSpec()', () => {
     it('generates DC from spec', async () => {
       const s = YAML.parse(
@@ -47,7 +44,6 @@ describe('index', () => {
       expect(dc._format_version).toBe('1.1');
     });
   });
-
   describe('parseSpec()', () => {
     const spec = {
       openapi: '3.0',
@@ -64,11 +60,14 @@ describe('index', () => {
       },
       components: {
         schemas: {
-          dog: { name: { type: 'string' } },
+          dog: {
+            name: {
+              type: 'string',
+            },
+          },
         },
       },
     };
-
     const specResolved = {
       openapi: '3.0.0',
       components: spec.components,
@@ -78,7 +77,9 @@ describe('index', () => {
           post: {
             responses: {
               200: {
-                name: { type: 'string' },
+                name: {
+                  type: 'string',
+                },
               },
             },
           },

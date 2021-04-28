@@ -1,5 +1,4 @@
 import { generateSecurityPlugin } from '../security-plugins';
-
 describe('security-plugins', () => {
   describe('generateSecurityPlugin()', () => {
     it('generates apikey plugin', async () => {
@@ -8,7 +7,6 @@ describe('security-plugins', () => {
         in: 'header',
         name: 'x-api-key',
       };
-
       const result = generateSecurityPlugin(scheme, [], ['Tag']);
       expect(result).toEqual({
         name: 'key-auth',
@@ -18,13 +16,13 @@ describe('security-plugins', () => {
         },
       });
     });
+
     it('generates apikey plugin with funny casing', async () => {
       const scheme = {
         type: 'ApIKeY',
         in: 'header',
         name: 'x-api-key',
       };
-
       const result = generateSecurityPlugin(scheme, [], ['Tag']);
       expect(result).toEqual({
         name: 'key-auth',

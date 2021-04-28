@@ -1,7 +1,4 @@
-// @flow
-
 import { resolveUrlVariables, resolveVariables, pathVariablesToWildcard } from '../variables';
-
 describe('variables', () => {
   describe('resolveVariables()', () => {
     const str = 'hello-{var}-world';
@@ -11,13 +8,11 @@ describe('variables', () => {
     it('should return source str if no match', () => {
       const noVarSrc = 'test';
       const result = resolveVariables(noVarSrc, regExp, fallback);
-
       expect(result).toBe(noVarSrc);
     });
 
     it('should return fallback in place of variable if no default found', () => {
       const result = resolveVariables(str, regExp, fallback);
-
       expect(result).toBe('hello-fallback-world');
     });
 
@@ -27,24 +22,23 @@ describe('variables', () => {
           default: 'bar',
         },
       };
-
       const result = resolveVariables(str, regExp, fallback, variables);
-
       expect(result).toBe('hello-bar-world');
     });
 
     it('should return defaults in place of multiple variables', () => {
       const variables: OA3Variables = {
-        var1: { default: 'darkness' },
-        var2: { default: 'old' },
+        var1: {
+          default: 'darkness',
+        },
+        var2: {
+          default: 'old',
+        },
       };
-
       const result = resolveVariables('hello-{var1}-my-{var2}-friend', regExp, fallback, variables);
-
       expect(result).toBe('hello-darkness-my-old-friend');
     });
   });
-
   describe('resolveUrlVariables()', () => {
     it('should return original url if no variables', () => {
       const url = 'http://api.insomnia.rest';
@@ -88,7 +82,6 @@ describe('variables', () => {
           default: 'old',
         },
       };
-
       expect(resolveUrlVariables(url, variables)).toBe(
         'http://api.insomnia.rest/hello/.*/my/old/friend/',
       );
@@ -101,11 +94,9 @@ describe('variables', () => {
           default: 'old',
         },
       };
-
       expect(resolveUrlVariables(partial, variables)).toBe('/hello/.*/my/old/friend');
     });
   });
-
   describe('pathVariablesToWildcard()', () => {
     it('converts variables to .* wildcard', function() {
       expect(pathVariablesToWildcard('/foo/{bar}/{baz}')).toBe('/foo/.*/.*');

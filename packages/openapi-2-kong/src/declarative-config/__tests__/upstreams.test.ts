@@ -1,7 +1,6 @@
 import { parseSpec } from '../..';
 import { generateUpstreams } from '../upstreams';
 import { getSpec } from './utils';
-
 const xKongUpstreamDefaults = 'x-kong-upstream-defaults';
 
 const getSpecResult = () =>
@@ -21,9 +20,7 @@ const getSpecResult = () =>
 describe('upstreams', () => {
   it('generates an upstream', async () => {
     const spec = getSpec();
-
     const specResult = getSpecResult();
-
     const api = await parseSpec(spec);
     expect(generateUpstreams(api, ['Tag'])).toEqual([specResult]);
   });
@@ -31,18 +28,17 @@ describe('upstreams', () => {
   it('throws for a root level x-kong-route-default', async () => {
     const spec = getSpec();
     spec[xKongUpstreamDefaults] = 'foo';
-
     const api = await parseSpec(spec);
+
     const fn = () => generateUpstreams(api, ['Tag']);
+
     expect(fn).toThrowError(`expected 'x-kong-upstream-defaults' to be an object`);
   });
 
   it('ignores null for a root level x-kong-route-default', async () => {
     const spec = getSpec();
     spec[xKongUpstreamDefaults] = null;
-
     const specResult = getSpecResult();
-
     const api = await parseSpec(spec);
     expect(generateUpstreams(api, ['Tag'])).toEqual([specResult]);
   });

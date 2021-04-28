@@ -1,5 +1,4 @@
-// @flow
-
+import { $Keys } from 'utility-types';
 import {
   fillServerVariables,
   generateSlug,
@@ -9,7 +8,6 @@ import {
   HttpMethod,
   parseUrl,
 } from '../common';
-
 import { generateSecurityPlugins } from './security-plugins';
 import {
   generateOperationPlugins,
@@ -17,8 +15,9 @@ import {
   generateGlobalPlugins,
   getRequestValidatorPluginDirective,
 } from './plugins';
-
-export function generateServices(api: OpenApi3Spec, tags: Array<string>): Array<DCService> {
+import { DCService, DCRoute } from '../types/declarative-config';
+import { OpenApi3Spec, OA3Server, OA3PathItem, OA3Operation } from '../types/openapi3';
+export function generateServices(api: OpenApi3Spec, tags: string[]): DCService[] {
   const servers = getAllServers(api);
 
   if (servers.length === 0) {
@@ -29,25 +28,23 @@ export function generateServices(api: OpenApi3Spec, tags: Array<string>): Array<
   const service = generateService(servers[0], api, tags);
   return [service];
 }
-
 export function generateService(
   server: OA3Server,
   api: OpenApi3Spec,
-  tags: Array<string>,
+  tags: string[],
 ): DCService {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
-
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api, tags);
-
   // x-kong-service-defaults is free format so we do not want type checking.
   // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
   // $FlowFixMe
   const serviceDefaults = api['x-kong-service-defaults'] || {};
+
   if (typeof serviceDefaults !== 'object') {
-    throw new Error(`expected 'x-kong-service-defaults' to be an object`);
+    throw new Error('expected \'x-kong-service-defaults\' to be an object');
   }
 
   const service: DCService = {
@@ -55,26 +52,28 @@ export function generateService(
     name,
     // remove semicolon i.e. convert `https:` to `https`
     protocol: parsedUrl.protocol.substring(0, parsedUrl.protocol.length - 1),
-    host: name, // not a hostname, but the Upstream name
+    host: name,
+    // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
     path: parsedUrl.pathname,
     plugins: globalPlugins.plugins,
     routes: [],
     tags,
   };
-
   // x-kong-route-defaults is free format so we do not want type checking.
   // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
   // $FlowFixMe
   const routeDefaultsRoot = api['x-kong-route-defaults'] || {};
+
   if (typeof routeDefaultsRoot !== 'object') {
-    throw new Error(`expected root-level 'x-kong-route-defaults' to be an object`);
+    throw new Error('expected root-level \'x-kong-route-defaults\' to be an object');
   }
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
     // $FlowFixMe
     const routeDefaultsPath = api.paths[routePath]['x-kong-route-defaults'] || routeDefaultsRoot;
+
     if (typeof routeDefaultsPath !== 'object') {
       throw new Error(`expected 'x-kong-route-defaults' to be an object (at path '${routePath}')`);
     }
@@ -96,9 +95,10 @@ export function generateService(
         continue;
       }
 
-      const operation: ?OA3Operation = pathItem[method];
+      const operation: OA3Operation | null | undefined = pathItem[method];
       // $FlowFixMe
       const routeDefaultsOperation = pathItem[method]['x-kong-route-defaults'] || routeDefaultsPath;
+
       if (typeof routeDefaultsOperation !== 'object') {
         throw new Error(
           `expected 'x-kong-route-defaults' to be an object (at operation '${method}' of path '${routePath}')`,
@@ -112,7 +112,6 @@ export function generateService(
 
       // Create the base route object
       const fullPathRegex = pathVariablesToRegex(routePath);
-
       // $FlowFixMe
       const route: DCRoute = {
         ...routeDefaultsOperation,
@@ -148,7 +147,6 @@ export function generateService(
 
   return service;
 }
-
 export function generateRouteName(
   api: OpenApi3Spec,
   routePath: string,

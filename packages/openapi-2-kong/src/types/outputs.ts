@@ -1,5 +1,9 @@
 import { DeclarativeConfig } from './declarative-config';
-import { KubernetesConfig, KubernetesMethodConfig, KubernetesPluginConfig } from './kubernetes-config';
+import {
+  KubernetesConfig,
+  KubernetesMethodConfig,
+  KubernetesPluginConfig,
+} from './kubernetes-config';
 
 export type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
 

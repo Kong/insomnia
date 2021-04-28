@@ -1,8 +1,8 @@
-// @flow
 import url from 'url';
 import slugify from 'slugify';
+import { OpenApi3Spec, OA3PathItem, OA3Server, OA3Paths, OA3Operation, OA3SecurityRequirement, HttpMethodType } from './types/openapi3';
 
-export function getServers(obj: OpenApi3Spec | OA3PathItem): Array<OA3Server> {
+export function getServers(obj: OpenApi3Spec | OA3PathItem): OA3Server[] {
   return obj.servers || [];
 }
 
@@ -10,7 +10,7 @@ export function getPaths(obj: OpenApi3Spec): OA3Paths {
   return obj.paths || {};
 }
 
-export function getAllServers(api: OpenApi3Spec): Array<OA3Server> {
+export function getAllServers(api: OpenApi3Spec): OA3Server[] {
   const servers = getServers(api);
 
   for (const p of Object.keys(api.paths)) {
@@ -24,14 +24,14 @@ export function getAllServers(api: OpenApi3Spec): Array<OA3Server> {
 
 export function getSecurity(
   obj: OpenApi3Spec | OA3Operation | null,
-): Array<OA3SecurityRequirement> {
+): OA3SecurityRequirement[] {
   return obj?.security || [];
 }
 
-type SlugifyOptions = {
-  replacement?: string,
-  lower?: boolean,
-};
+interface SlugifyOptions {
+  replacement?: string;
+  lower?: boolean;
+}
 
 export function getName(
   api: OpenApi3Spec,
@@ -40,20 +40,15 @@ export function getName(
   isKubernetes?: boolean,
 ): string {
   let rawName = '';
-
   // Get $.info.x-kubernetes-ingress-metadata.name
   rawName = isKubernetes && api.info?.['x-kubernetes-ingress-metadata']?.name;
-
   // Get $.x-kong-name
   rawName = rawName || api['x-kong-name'];
-
   // Get $.info.title
   rawName = rawName || api.info?.title;
-
   // Make sure the name is a string
   const defaultName = defaultValue || 'openapi';
   const name = typeof rawName === 'string' && rawName ? rawName : defaultName;
-
   // Sluggify
   return generateSlug(name, slugifyOptions);
 }
@@ -104,14 +99,14 @@ export function getMethodAnnotationName(method: HttpMethodType): string {
 
 export function parseUrl(
   urlStr: string,
-): {|
-  host: string,
-  hostname: string,
-  port: string,
-  protocol: string,
-  pathname: string,
-|} {
-  const parsed: Object = url.parse(urlStr);
+): {
+  host: string;
+  hostname: string;
+  port: string;
+  protocol: string;
+  pathname: string;
+} {
+  const parsed = url.parse(urlStr);
 
   if (!parsed.port && parsed.protocol === 'https:') {
     parsed.port = '443';
@@ -132,11 +127,11 @@ export function parseUrl(
 
 export function fillServerVariables(server: OA3Server): string {
   let finalUrl = server.url;
-
   const variables = server.variables || {};
 
   for (const name of Object.keys(variables)) {
     const defaultValue = variables[name].default;
+
     if (!defaultValue) {
       throw new Error(`Server variable "${name}" missing default value`);
     }
@@ -150,17 +145,17 @@ export function fillServerVariables(server: OA3Server): string {
 export function joinPath(p1: string, p2: string): string {
   p1 = p1.replace(/\/$/, '');
   p2 = p2.replace(/^\//, '');
-
   return `${p1}/${p2}`;
 }
 
 // Select first unique instance of an array item depending on the property selector
-export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T) => any): Array<T> {
-  const result: Array<T> = [];
+export function distinctByProperty<T>(arr: T[], propertySelector: (item: T) => any): T[] {
+  const result: T[] = [];
   const set = new Set();
 
   for (const item of arr.filter(i => i)) {
     const selector = propertySelector(item);
+
     if (set.has(selector)) {
       continue;
     }
@@ -168,5 +163,6 @@ export function distinctByProperty<T>(arr: Array<T>, propertySelector: (item: T)
     set.add(selector);
     result.push(item);
   }
+
   return result;
 }

@@ -1,5 +1,3 @@
-// @flow
-
 export const pluginKeyAuth = {
   'x-kong-plugin-key-auth': {
     name: 'key-auth',
@@ -13,10 +11,11 @@ export const pluginKeyAuth = {
 export const pluginDummy = {
   'x-kong-plugin-dummy-thing': {
     name: 'dummy-thing',
-    config: { foo: 'bar' },
+    config: {
+      foo: 'bar',
+    },
   },
 };
-
 export const pluginDocWithName = (name: string, pluginType: string) => ({
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongPlugin',
@@ -40,7 +39,9 @@ export const keyAuthPluginDoc = (suffix: string) => ({
 });
 export const dummyPluginDoc = (suffix: string) => ({
   apiVersion: 'configuration.konghq.com/v1',
-  config: { foo: 'bar' },
+  config: {
+    foo: 'bar',
+  },
   kind: 'KongPlugin',
   metadata: {
     name: dummyName(suffix),
@@ -57,19 +58,27 @@ export const methodDoc = (method: string) => ({
     methods: [method.toUpperCase()],
   },
 });
-
 export const keyAuthName = (suffix: string) => `add-key-auth-${suffix}`;
 export const dummyName = (suffix: string) => `add-dummy-thing-${suffix}`;
-
 export const ingressDoc = (
   index: number,
-  plugins: Array<string>,
+  plugins: string[],
   host: string,
   serviceName: string,
-  path: ?string,
+  path: string | null | undefined,
 ) => {
-  const backend = { serviceName, servicePort: 80 };
-  const paths = path ? { path, backend } : { backend };
+  const backend = {
+    serviceName,
+    servicePort: 80,
+  };
+  const paths = path
+    ? {
+        path,
+        backend,
+      }
+    : {
+        backend,
+      };
   return {
     apiVersion: 'extensions/v1beta1',
     kind: 'Ingress',
@@ -92,14 +101,13 @@ export const ingressDoc = (
     },
   };
 };
-
 export const ingressDocWithOverride = (
   index: number,
-  plugins: Array<string>,
+  plugins: string[],
   override: string,
   host: string,
   serviceName: string,
-  path: ?string,
+  path: string | null | undefined,
 ) => ({
   apiVersion: 'extensions/v1beta1',
   kind: 'Ingress',
@@ -116,7 +124,15 @@ export const ingressDocWithOverride = (
       {
         host,
         http: {
-          paths: [{ backend: { serviceName, servicePort: 80 }, path }],
+          paths: [
+            {
+              backend: {
+                serviceName,
+                servicePort: 80,
+              },
+              path,
+            },
+          ],
         },
       },
     ],

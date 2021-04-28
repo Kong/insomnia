@@ -1,8 +1,20 @@
+export interface DCPluginConfig {
+  allowed_content_types?: string;
+  auth_methods?: string[];
+  body_schema?: string;
+  issuer?: string;
+  key_names?: string[];
+  parameter_schema?: string;
+  scopes_required?: string[];
+  verbose_response?: boolean;
+  version?: 'draft4',
+}
+
 export interface DCPlugin {
   name: string;
   enabled?: boolean;
   tags?: string[];
-  config?: Record<string, Record<string, any>>;
+  config?: DCPluginConfig;
 }
 
 export interface DCRoute {
@@ -28,6 +40,7 @@ export interface DCService {
 
 export interface DCTarget {
   target: string;
+  tags?: string[];
 }
 
 export interface DCUpstream {
