@@ -1,4 +1,6 @@
-import { generateRouteName } from '../services';
+import { OA3PathItem, OpenApi3Spec } from '../types/openapi3';
+import { generateRouteName } from './services';
+
 const api: OpenApi3Spec = {
   openapi: '3.0',
   info: {
@@ -31,7 +33,7 @@ const compare = (expected: string, pathItem: OA3PathItem) => {
 };
 
 describe('names', () => {
-  it(`api.paths[path][method]['x-kong-name'] is highest priority`, () => {
+  it("api.paths[path][method]['x-kong-name'] is highest priority", () => {
     compare('Nebulo_9-method_smash', {
       'x-kong-name': 'pathItem-smash',
       post: {
@@ -50,7 +52,7 @@ describe('names', () => {
     });
   });
 
-  it(`api.paths[path]['x-kong-name'] is third priority`, () => {
+  it("api.paths[path]['x-kong-name'] is third priority", () => {
     compare('Nebulo_9-pathItem_smash-post', {
       'x-kong-name': 'pathItem-smash',
       post: {},

@@ -9,15 +9,18 @@ import {
   normalizeOperationPlugins,
   normalizePathPlugins,
   prioritizePlugins,
-} from '../plugins';
-import { HttpMethod } from '../../common';
+} from './plugins';
+import { HttpMethod } from '../common';
 import {
   dummyPluginDoc,
   keyAuthPluginDoc,
   pluginDocWithName,
   pluginDummy,
   pluginKeyAuth,
-} from './util/plugin-helpers';
+} from './plugin-helpers';
+import { PathPlugins, OperationPlugins } from '../types/k8plugins';
+import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem } from '../types/openapi3';
+
 describe('plugins', () => {
   let _iterator = 0;
 
@@ -27,11 +30,13 @@ describe('plugins', () => {
     method: null,
     plugins: [],
   };
+
   const blankPath = {
     path: '',
     plugins: [],
     operations: [blankOperation],
   };
+
   const spec: OpenApi3Spec = {
     openapi: '3.0',
     info: {
@@ -45,6 +50,7 @@ describe('plugins', () => {
     ],
     paths: {},
   };
+
   const components = {
     securitySchemes: {
       really_basic: {
@@ -79,9 +85,11 @@ describe('plugins', () => {
       },
     },
   };
+
   beforeEach(() => {
     _iterator = 0;
   });
+
   describe('getPlugins()', () => {
     it('should return expected result if no plugins on spec', () => {
       const result = getPlugins(spec);

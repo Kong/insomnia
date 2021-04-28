@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { generate } from '../index';
+import { generate } from './generate';
+
 describe('fixtures', () => {
-  const root = path.join(__dirname, '../__fixtures__/');
+  const root = path.join(__dirname, './fixtures/');
   const fileBases = fs.readdirSync(root).filter(name => !name.includes('.expected'));
 
   for (const fileBase of fileBases) {

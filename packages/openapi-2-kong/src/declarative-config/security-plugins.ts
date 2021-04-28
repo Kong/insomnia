@@ -88,17 +88,17 @@ export function generateSecurityPlugin(
   let plugin: DCPlugin | null = null;
 
   // Generate base plugin
-  switch (scheme.type) {
-    case 'apiKey':
-      plugin = generateApiKeySecurityPlugin(scheme);
+  switch (scheme.type.toLowerCase()) {
+    case 'apikey':
+      plugin = generateApiKeySecurityPlugin(scheme as OA3SecuritySchemeApiKey);
       break;
 
     case 'http':
-      plugin = generateHttpSecurityPlugin(scheme);
+      plugin = generateHttpSecurityPlugin(scheme as OA3SecuritySchemeHttp);
       break;
 
-    case 'openIdConnect':
-      plugin = generateOpenIdConnectSecurityPlugin(scheme, args);
+    case 'openidconnect':
+      plugin = generateOpenIdConnectSecurityPlugin(scheme as OA3SecuritySchemeOpenIdConnect, args);
       break;
 
     case 'oauth2':
@@ -119,6 +119,9 @@ export function generateSecurityPlugin(
   }
 
   // Add global tags
-  plugin.tags = [...tags, ...(kongSecurity.tags ?? [])];
+  plugin.tags = [
+    ...tags,
+    ...(kongSecurity.tags ?? []),
+  ];
   return plugin;
 }

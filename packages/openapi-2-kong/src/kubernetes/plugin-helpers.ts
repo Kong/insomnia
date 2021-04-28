@@ -1,3 +1,4 @@
+
 export const pluginKeyAuth = {
   'x-kong-plugin-key-auth': {
     name: 'key-auth',
@@ -8,6 +9,7 @@ export const pluginKeyAuth = {
     },
   },
 };
+
 export const pluginDummy = {
   'x-kong-plugin-dummy-thing': {
     name: 'dummy-thing',
@@ -16,6 +18,7 @@ export const pluginDummy = {
     },
   },
 };
+
 export const pluginDocWithName = (name: string, pluginType: string) => ({
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongPlugin',
@@ -24,6 +27,7 @@ export const pluginDocWithName = (name: string, pluginType: string) => ({
   },
   plugin: pluginType,
 });
+
 export const keyAuthPluginDoc = (suffix: string) => ({
   apiVersion: 'configuration.konghq.com/v1',
   config: {
@@ -37,6 +41,7 @@ export const keyAuthPluginDoc = (suffix: string) => ({
   },
   plugin: 'key-auth',
 });
+
 export const dummyPluginDoc = (suffix: string) => ({
   apiVersion: 'configuration.konghq.com/v1',
   config: {
@@ -48,6 +53,7 @@ export const dummyPluginDoc = (suffix: string) => ({
   },
   plugin: 'dummy-thing',
 });
+
 export const methodDoc = (method: string) => ({
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongIngress',
@@ -58,8 +64,11 @@ export const methodDoc = (method: string) => ({
     methods: [method.toUpperCase()],
   },
 });
+
 export const keyAuthName = (suffix: string) => `add-key-auth-${suffix}`;
+
 export const dummyName = (suffix: string) => `add-dummy-thing-${suffix}`;
+
 export const ingressDoc = (
   index: number,
   plugins: string[],
@@ -101,6 +110,7 @@ export const ingressDoc = (
     },
   };
 };
+
 export const ingressDocWithOverride = (
   index: number,
   plugins: string[],

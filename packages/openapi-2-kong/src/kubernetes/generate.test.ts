@@ -1,4 +1,5 @@
-import { parseSpec } from '../../index';
+import { parseSpec } from '../generate';
+import { OA3Server, OpenApi3Spec } from '../types/openapi3';
 import {
   generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
@@ -7,7 +8,7 @@ import {
   generateServiceName,
   generateServicePath,
   generateServicePort,
-} from '../index';
+} from './generate';
 import {
   dummyName,
   dummyPluginDoc,
@@ -18,7 +19,8 @@ import {
   methodDoc,
   pluginDummy,
   pluginKeyAuth,
-} from './util/plugin-helpers';
+} from './plugin-helpers';
+
 describe('index', () => {
   const spec: OpenApi3Spec = {
     openapi: '3.0',

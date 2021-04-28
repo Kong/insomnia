@@ -1,11 +1,12 @@
-import { generate, generateFromString, parseSpec } from '../index';
+import { generate, generateFromString, parseSpec } from './generate';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
+
 describe('index', () => {
   describe('generate()', () => {
     it('generates DC from file', async () => {
-      const p = path.join(__dirname, '../__fixtures__/uspto.yaml');
+      const p = path.join(__dirname, './fixtures/uspto.yaml');
       const {
         documents: [dc],
       } = await generate(p, 'kong-declarative-config');
@@ -15,7 +16,7 @@ describe('index', () => {
     });
 
     it('generates DC from file with extra tags', async () => {
-      const p = path.join(__dirname, '../__fixtures__/uspto.yaml');
+      const p = path.join(__dirname, './fixtures/uspto.yaml');
       const {
         documents: [dc],
       } = await generate(p, 'kong-declarative-config', ['MyTag']);
@@ -26,7 +27,7 @@ describe('index', () => {
   });
   describe('generateFromString()', () => {
     it('generates DC from string', async () => {
-      const s = fs.readFileSync(path.join(__dirname, '../__fixtures__/uspto.yaml'), 'utf8');
+      const s = fs.readFileSync(path.join(__dirname, './fixtures/uspto.yaml'), 'utf8');
       const {
         documents: [dc],
       } = await generateFromString(s, 'kong-declarative-config');
@@ -36,7 +37,7 @@ describe('index', () => {
   describe('generateFromSpec()', () => {
     it('generates DC from spec', async () => {
       const s = YAML.parse(
-        fs.readFileSync(path.join(__dirname, '../__fixtures__/uspto.yaml'), 'utf8'),
+        fs.readFileSync(path.join(__dirname, './fixtures/uspto.yaml'), 'utf8'),
       );
       const {
         documents: [dc],

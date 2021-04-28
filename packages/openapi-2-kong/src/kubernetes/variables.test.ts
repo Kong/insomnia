@@ -1,4 +1,6 @@
-import { resolveUrlVariables, resolveVariables, pathVariablesToWildcard } from '../variables';
+import { OA3Variables } from '../types/openapi3';
+import { resolveUrlVariables, resolveVariables, pathVariablesToWildcard } from './variables';
+
 describe('variables', () => {
   describe('resolveVariables()', () => {
     const str = 'hello-{var}-world';

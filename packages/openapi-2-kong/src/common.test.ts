@@ -12,8 +12,10 @@ import {
   isPluginKey,
   parseUrl,
   pathVariablesToRegex,
-} from '../common';
-import { parseSpec } from '../index';
+} from './common';
+import { parseSpec } from './generate';
+import { OpenApi3Spec, OA3Operation } from './types/openapi3';
+
 describe('common', () => {
   const spec: OpenApi3Spec = {
     openapi: '3.0.0',

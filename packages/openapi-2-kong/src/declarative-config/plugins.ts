@@ -8,7 +8,7 @@ export function isRequestValidatorPluginKey(key: string): boolean {
 
 export function generatePlugins(item: Record<string, any>, tags: string[]): DCPlugin[] {
   // When generating plugins, ignore the request validator plugin because it is handled at the operation level
-  const pluginFilter = ([key, _value]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
+  const pluginFilter = ([key]: [string, any]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
 
   // Server plugins should load from the api spec root and from the server
   return Object.entries(item)

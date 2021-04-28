@@ -1,5 +1,8 @@
-import { generateGlobalPlugins, generateRequestValidatorPlugin } from '../plugins';
+import { generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
+import { OpenApi3Spec, OA3Operation } from '../types/openapi3';
+
 const tags = ['Tag'];
+
 describe('plugins', () => {
   describe('generateGlobalPlugins()', () => {
     it('generates plugin given a spec with a plugin attached', async () => {

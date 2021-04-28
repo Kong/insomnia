@@ -1,5 +1,5 @@
-import { generateServices } from '../services';
-import { parseSpec } from '../../index';
+import { generateServices } from './services';
+import { parseSpec } from '../generate';
 import { getSpec } from './utils';
 const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
 const xKongRouteDefaults = 'x-kong-route-defaults';
@@ -67,7 +67,7 @@ describe('services', () => {
 
       const fn = () => generateServices(api, ['Tag']);
 
-      expect(fn).toThrowError(`expected root-level 'x-kong-route-defaults' to be an object`);
+      expect(fn).toThrowError('expected root-level \'x-kong-route-defaults\' to be an object');
     });
 
     it('ignores null for a root level x-kong-route-default', async () => {
@@ -85,7 +85,7 @@ describe('services', () => {
 
       const fn = () => generateServices(api, ['Tag']);
 
-      expect(fn).toThrowError(`expected 'x-kong-route-defaults' to be an object (at path '/cats')`);
+      expect(fn).toThrowError('expected \'x-kong-route-defaults\' to be an object (at path \'/cats\')');
     });
 
     it('ignores null for a paths level x-kong-route-default', async () => {
@@ -104,7 +104,7 @@ describe('services', () => {
       const fn = () => generateServices(api, ['Tag']);
 
       expect(fn).toThrowError(
-        `expected 'x-kong-route-defaults' to be an object (at operation 'post' of path '/cats')`,
+        'expected \'x-kong-route-defaults\' to be an object (at operation \'post\' of path \'/cats\')',
       );
     });
 
@@ -260,7 +260,7 @@ describe('services', () => {
           ],
         },
       ];
-      const api: OpenApi3Spec = await parseSpec(spec);
+      const api = await parseSpec(spec);
       expect(generateServices(api, ['Tag'])).toEqual([specResult]);
     });
 
@@ -321,7 +321,7 @@ describe('services', () => {
           ],
         },
       ];
-      const api: OpenApi3Spec = await parseSpec(spec);
+      const api = await parseSpec(spec);
       expect(generateServices(api, ['Tag'])).toEqual([specResult]);
     });
 
