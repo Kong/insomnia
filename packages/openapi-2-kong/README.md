@@ -98,8 +98,8 @@ servers:
 services:
   - host: Simple_API_overview  # Upstream name (see below)
     port: 80                   # Port inferred from protocol if not specified
-    path: "/v1"                # Extracted from URL
-    protocol: http             # Extracted from URL or defaulted to http
+    path: "/v1"                # Extracted from URL of the first `server`
+    protocol: http             # Extracted from URL of the first `server`, or defaulted to http
     name: Simple_API_overview  # Service name (see below)
     routes: []                 # <documented later>
     tags: []                   # <documented later>
