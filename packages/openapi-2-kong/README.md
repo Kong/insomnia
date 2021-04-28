@@ -8,8 +8,8 @@ This module generates Kong Declarative Config and Kong for Kubernetes config, fr
 - [Kong Declarative Config](#kong-declarative-config)
     - [`$._format_version`](#_format_version)
     - [`$.services`](#services)
-    - [`$.services[*].routes`](#servicesroutes)
     - [`$.upstreams`](#upstreams)
+    - [`$.services[*].routes`](#servicesroutes)
     - [`$..tags`](#tags)
 - [Kong for Kubernetes](#kong-for-kubernetes)
     - [Output Structure](#output-structure)
@@ -18,6 +18,7 @@ This module generates Kong Declarative Config and Kong for Kubernetes config, fr
         - [`$.metadata.annotations`](#metadataannotations)
     - [The `KongPlugin` and `KongIngress` resources](#the-kongplugin-and-kongingress-resources)
     - [Example](#example)
+- [Defaults](#defaults)
 - [Plugins](#plugins)
     - [Security Plugins](#security-plugins)
     - [Generic Plugins](#generic-plugins)
@@ -95,11 +96,11 @@ servers:
 
 ```yaml
 services:
-  - host: swagger.io           # Subdomain stripped and added will prefix upstreams
+  - host: Simple_API_overview  # Upstream name (see below)
     port: 80                   # Port inferred from protocol if not specified
-    path: "\/"                 # The /v1 was stripped off and will prefix all routes
+    path: "/v1"                # Extracted from URL
     protocol: http             # Extracted from URL or defaulted to http
-    name: Simple_API_overview  # Taken from info.title or `x-kong-name`
+    name: Simple_API_overview  # Service name (see below)
     routes: []                 # <documented later>
     tags: []                   # <documented later>
 ```
@@ -121,8 +122,29 @@ servers:
 The service name is set to the following
 
 1. Root `x-kong-name` attribute
-1. Generated slug from `info.title`
+1. Generated slug from `$.info.title`
 1. Default to `openapi` as a last resort
+
+### `$.upstreams`
+
+Upstreams and targets are generated from the `servers` root property.
+
+One OpenAPI spec will result in one `service` and one `upstream`, and each individual `server` in the root `servers` property will become a `target` in the `upstream`.
+
+```yaml
+servers:
+  - url: http://petstore.swagger.io/v1
+  - url: https://swagger.io/v1
+```
+
+```yaml
+upstreams:
+  - name: Simple_API_overview           # Same as the service name
+    targets:
+      - target: petstore.swagger.io:80  # Derived from first server entry
+      - target: swagger.io:443          # Derived from second server entry
+    tags: []                            # <documented later>
+```
 
 ### `$.services[*].routes`
 
@@ -157,28 +179,7 @@ Route names are constructed from the template `<APIName>-<PathName>-<Method>`.
 
 - `APIName`: Name taken from the global API object, prefixed to ensure uniqueness across services
 - `Method`: Route's HTTP method
-- `PathName`: Pulled from `x-kong-name`, `summary`, or generated with `path_<n>`
-
-### `$.upstreams`
-
-Upstreams or similarly generated from the `servers` root property.
-
-```yaml
-servers:
-  - url: http://petstore.swagger.io/v1
-  - url: https://swagger.io/v1
-```
-
-```yaml
-upstreams:
-  - name: Simple_API_overview           # Name taken from info.title or `x-kong-name`
-    targets:                            #
-      - target: petstore.swagger.io:80  # Derived from first server entry
-      - target: swagger.io:443          # Derived from second server entry
-    tags: []                            # <documented later>
-```
-
-Upstream name will be the same as the service name.
+- `PathName`: Pulled from `x-kong-name`, `operationId`, or a path slug
 
 ### `$..tags`
 
@@ -482,6 +483,15 @@ spec:
 ```
 </details>
 
+# Defaults
+
+While properties for the generated entities will have properties derived from the OpenAPI spec, you may
+choose to specify defaults for certain properties. You can specify these defaults using the following keys:
+* `x-kong-service-defaults` applied to the `root` object
+* `x-kong-upstream-defaults` applied to the `root` object
+* `x-kong-route-defaults` applied to the `root`, `path` or `operation` object
+
+These defaults are only supported by the Declarative Config generator currently.
 # Plugins
 ## Security Plugins
 
@@ -538,7 +548,9 @@ use is `x-kong-plugin-<plugin-name>`. The `name` property is not required
 will get Kong defaults.
 
 Currently, plugins are supported on the following OpenAPI objects by each generator:
-- Declarative Config: `OpenAPI root`, `operation`
+- Declarative Config: `OpenAPI root`, `path` and `operation`
+  * plugins on the `root` will be configured on a Kong `service`
+  * plugins on the `path` or `operation` will be configured on a Kong `route`
 - Kong for Kubernetes: `OpenAPI root`, `server`, `path`, `operation`
 
 If the _same_ plugin exists in several sections, then the more specific section will take precedence. These sections are:
@@ -568,15 +580,16 @@ x-kong-plugin-key-auth:
   $ref: '#/components/kong/plugins/key_auth_config'
 ```
 
-## Request Validation Plugin
+## Request Validator Plugin
 
-To enable validation the `request-validation` plugin must be added to an
-`operation` object. You can either specify the full configuration, or have it
-be auto-generated based on the OpenAPI spec.
+To enable validation the `request-validator` plugin can be added to the `root`, `path` or `operation` object of the Spec and whichever is more specific will be used. You can either specify the full configuration, or have the missing properties be auto-generated based on the OpenAPI spec.
 
-To enable auto generation, add the plugin, but do not include the `config`
-property. The `config` property will then be auto-generated and added to
-the generated spec.
+The `request-validator` plugin has three [parameters](https://docs.konghq.com/hub/kong-inc/request-validator/#parameters) which can be generated. These are:
+* `config.body_schema`
+* `config.parameter_schema`
+* `config.allowed_content_types`
+
+If any of these are *not* specified in the `x-kong-plugin-request-validator.config` object in the OpenAPI spec, they will be generated if possible, otherwise will be configured to allow all body/parameter/content types.
 
 ```yaml
 paths:
