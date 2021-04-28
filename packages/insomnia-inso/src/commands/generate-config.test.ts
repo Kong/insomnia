@@ -40,13 +40,11 @@ describe('generateConfig()', () => {
   });
 
   it('should print conversion documents to console', async () => {
-    mock(o2k.generate).mockResolvedValue({
-      documents: ['a', 'b'],
-    });
-    await generateConfig(filePath, {
-      type: 'kubernetes',
-    });
-    expect(o2k.generate).toHaveBeenCalledWith(filePath, conversionTypeMap.kubernetes);
+    mock(o2k.generate).mockResolvedValue({ documents: ['a', 'b'] });
+
+    await generateConfig(filePath, { type: 'kubernetes', tags: ['tag'] });
+
+    expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap.kubernetes, ['tag']);
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
 
@@ -57,8 +55,14 @@ describe('generateConfig()', () => {
     await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
       type: 'kubernetes',
       workingDir: 'src/db/fixtures/git-repo',
+      tags: ['tag'],
     });
-    expect(o2k.generateFromString).toHaveBeenCalled();
+
+    expect(o2k.generateFromString).toHaveBeenCalledWith(
+      expect.stringMatching(/.+/),
+      ConversionTypeMap.kubernetes,
+      ['tag'],
+    );
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
 

@@ -21,6 +21,7 @@ export const conversionTypes: ConversionResultType[] = [
 export type GenerateConfigOptions = GlobalOptions & {
   type: keyof (typeof conversionTypeMap);
   output?: string;
+  tags?: Array<string>,
 };
 
 const validateOptions = (
@@ -43,7 +44,7 @@ export const generateConfig = async (
     return false;
   }
 
-  const { type, output, appDataDir, workingDir, ci } = options;
+  const { type, output, tags, appDataDir, workingDir, ci } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
@@ -55,17 +56,23 @@ export const generateConfig = async (
   // try get from db
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
+  const generationTags = tags || [];
+
   try {
     if (specFromDb?.contents) {
       logger.trace('Generating config from database contents');
-      result = await generateFromString(specFromDb.contents, conversionTypeMap[type]);
+      result = await o2k.generateFromString(
+        specFromDb.contents,
+        ConversionTypeMap[type],
+        generationTags,
+      );
     } else if (identifier) {
       // try load as a file
       const fileName = path.isAbsolute(identifier)
         ? identifier
         : path.join(workingDir || '.', identifier);
       logger.trace(`Generating config from file \`${fileName}\``);
-      result = await generate(fileName, conversionTypeMap[type]);
+      result = await o2k.generate(fileName, ConversionTypeMap[type], generationTags);
     }
   } catch (e) {
     throw new InsoError('There was an error while generating configuration', e);
