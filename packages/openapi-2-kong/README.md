@@ -127,7 +127,7 @@ The service name is set to the following
 
 ### `$.upstreams`
 
-Upstreams and targets are generated from the `servers` root property.
+Upstreams and targets are generated from the `servers` root property (note that `servers` defined on `operation` or `path` objects are ignored). 
 
 One OpenAPI spec will result in one `service` and one `upstream`, and each individual `server` in the root `servers` property will become a `target` in the `upstream`.
 
