@@ -1,0 +1,26 @@
+import * as React from 'react';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import Tooltip from './tooltip';
+import { AUTOBIND_CFG } from '../../common/constants';
+type Props = {
+  children: React.ReactNode;
+  // Optional
+  position?: string;
+  className?: string;
+  style?: Record<string, any>;
+  info?: boolean;
+};
+
+@autoBindMethodsForReact(AUTOBIND_CFG)
+class HelpTooltip extends React.PureComponent<Props> {
+  render() {
+    const { children, className, style, info } = this.props;
+    return (
+      <Tooltip position="top" className={className} message={children} style={style}>
+        <i className={'fa ' + (info ? 'fa-info-circle' : 'fa-question-circle')} />
+      </Tooltip>
+    );
+  }
+}
+
+export default HelpTooltip;
