@@ -31,7 +31,7 @@ const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
   methods: [],
   reloadMethods: true,
 };
-const CLEAR_GRPC_REQUEST_STATE: Shape<GrpcRequestState> = {
+const CLEAR_GRPC_REQUEST_STATE: Partial<GrpcRequestState> = {
   requestMessages: [],
   responseMessages: [],
   status: undefined,

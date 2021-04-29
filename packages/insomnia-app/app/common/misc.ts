@@ -89,7 +89,7 @@ export function getContentLengthHeader<T extends Header>(headers: Array<T>): T |
  * @param prefix
  * @returns {string}
  */
-export function generateId(prefix: string): string {
+export function generateId(prefix?: string): string {
   const id = uuid.v4().replace(/-/g, '');
 
   if (prefix) {

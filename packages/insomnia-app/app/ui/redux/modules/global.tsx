@@ -810,7 +810,6 @@ export function initActiveActivity() {
       // Always check if user has been prompted to migrate or onboard
       default:
         if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-          // @ts-expect-error
           trackEvent('Data', 'Migration', 'Auto');
           overrideActivity = ACTIVITY_MIGRATION;
         } else if (!settings.hasPromptedOnboarding) {

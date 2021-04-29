@@ -1584,7 +1584,8 @@ function mapStateToProps(state, props) {
 }
 
 function mapDispatchToProps(dispatch) {
-  const global = bindActionCreators(globalActions, dispatch);
+  // @ts-expect-error
+  const global: any = bindActionCreators(globalActions, dispatch);
   const entities = bindActionCreators(entitiesActions, dispatch);
   return {
     handleStartLoading: global.loadRequestStart,

@@ -7,8 +7,8 @@ type Props = {
   children: React.ReactNode;
 };
 // These should not be exported, so that they are only accessed in a controlled manner
-const GrpcStateContext = React.createContext<GrpcState | undefined>();
-const GrpcDispatchContext = React.createContext<GrpcDispatch | undefined>();
+const GrpcStateContext = React.createContext<GrpcState | undefined>(undefined);
+const GrpcDispatchContext = React.createContext<GrpcDispatch | undefined>(undefined);
 export const GrpcProvider = ({ children }: Props) => {
   const [state, dispatch] = React.useReducer(grpcReducer, {});
   // Only add listeners on mount

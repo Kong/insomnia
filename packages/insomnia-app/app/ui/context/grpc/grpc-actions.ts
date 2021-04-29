@@ -20,6 +20,7 @@ export const GrpcActionTypeEnum = {
   invalidate: 'invalidate',
   invalidateMany: 'invalidateMany',
   loadMethods: 'loadMethods',
+  status: 'status',
 };
 type GrpcActionType = $Values<typeof GrpcActionTypeEnum>;
 type Action<T extends GrpcActionType> = {
@@ -33,19 +34,19 @@ type ActionMany<T extends GrpcActionType> = {
 type Payload<T> = {
   payload: T;
 };
-type ResetAction = Action<GrpcActionTypeEnum.reset>;
-type ClearAction = Action<GrpcActionTypeEnum.clear>;
-type StartAction = Action<GrpcActionTypeEnum.start>;
-type StopAction = Action<GrpcActionTypeEnum.stop>;
-type InvalidateAction = Action<GrpcActionTypeEnum.invalidate>;
-export type RequestMessageAction = Action<GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
-export type ResponseMessageAction = Action<GrpcActionTypeEnum.responseMessage> &
+type ResetAction = Action<typeof GrpcActionTypeEnum.reset>;
+type ClearAction = Action<typeof GrpcActionTypeEnum.clear>;
+type StartAction = Action<typeof GrpcActionTypeEnum.start>;
+type StopAction = Action<typeof GrpcActionTypeEnum.stop>;
+type InvalidateAction = Action<typeof GrpcActionTypeEnum.invalidate>;
+export type RequestMessageAction = Action<typeof GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
+export type ResponseMessageAction = Action<typeof GrpcActionTypeEnum.responseMessage> &
   Payload<GrpcMessage>;
-export type ErrorAction = Action<GrpcActionTypeEnum.error> & Payload<ServiceError>;
-export type StatusAction = Action<GrpcActionTypeEnum.status> & Payload<GrpcStatusObject>;
-export type LoadMethodsAction = Action<GrpcActionTypeEnum.loadMethods> &
+export type ErrorAction = Action<typeof GrpcActionTypeEnum.error> & Payload<ServiceError>;
+export type StatusAction = Action<typeof GrpcActionTypeEnum.status> & Payload<GrpcStatusObject>;
+export type LoadMethodsAction = Action<typeof GrpcActionTypeEnum.loadMethods> &
   Payload<Array<GrpcMethodDefinition>>;
-type InvalidateManyAction = ActionMany<GrpcActionTypeEnum.invalidateMany>;
+type InvalidateManyAction = ActionMany<typeof GrpcActionTypeEnum.invalidateMany>;
 export type GrpcAction =
   | ClearAction
   | ResetAction
@@ -103,8 +104,10 @@ const error = (requestId: string, error: ServiceError): ErrorAction => ({
 });
 
 const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
+  // @ts-expect-error
   type: GrpcActionTypeEnum.status,
   requestId,
+  // @ts-expect-error
   payload: status,
 });
 
