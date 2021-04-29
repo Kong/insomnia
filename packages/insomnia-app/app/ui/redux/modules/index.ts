@@ -6,10 +6,13 @@ import * as db from '../../../common/database';
 import { API_BASE_URL, getClientString } from '../../../common/constants';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
 import * as fetch from '../../../account/fetch';
+
 export async function init() {
   const store = configureStore();
   // Do things that must happen before initial render
   const { addChanges, initializeWith: initEntities } = bindActionCreators(entities, store.dispatch);
+
+  // @ts-expect-error
   const { newCommand, loginStateChange } = bindActionCreators(global, store.dispatch);
   // Link DB changes to entities reducer/actions
   const docs = await entities.allDocs();
@@ -25,6 +28,7 @@ export async function init() {
   fetch.onCommand(newCommand);
 
   for (const action of global.init()) {
+    // @ts-expect-error
     store.dispatch(action);
   }
 

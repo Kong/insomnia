@@ -1,14 +1,15 @@
 import { $Keys } from 'utility-types';
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 export const ForceToWorkspaceKeys = {
   new: 'new',
   current: 'current',
 };
 export type ForceToWorkspace = $Keys<typeof ForceToWorkspaceKeys>;
-export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?: ForceToWorkspace) {
-  return function() {
+export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
+export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?: ForceToWorkspace): ImportToWorkspacePrompt {
+  return function () {
     switch (forceToWorkspace) {
       case ForceToWorkspaceKeys.new:
         return null;
@@ -31,8 +32,10 @@ export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?:
     }
   };
 }
-export function askToSetWorkspaceScope(scope?: WorkspaceScope) {
-  return function(name: string) {
+
+export type SetWorkspaceScopePrompt = (name: string) => WorkspaceScope | Promise<WorkspaceScope>;
+export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScopePrompt {
+  return function (name: string) {
     switch (scope) {
       case WorkspaceScopeKeys.collection:
       case WorkspaceScopeKeys.design:
@@ -46,6 +49,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope) {
             noText: 'Request Collection',
             yesText: 'Design Document',
             onDone: yes => {
+              // @ts-expect-error convert WorkspaceScope to an enum
               resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
             },
           });

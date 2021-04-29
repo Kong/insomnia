@@ -106,6 +106,7 @@ const createWorkspaceWithGitRepo = (gitRepo: GitRepository) => {
   return dispatch =>
     dispatch(
       createWorkspace({
+        // @ts-expect-error convert to enum
         scope: WorkspaceScopeKeys.design,
         onCreate: async wrk => {
           await createGitRepository(wrk._id, gitRepo);

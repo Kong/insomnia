@@ -52,6 +52,7 @@ export const selectSidebarChildren = createSelector(
           }
 
           // Don't add children of requests
+          // @ts-expect-error
           child.children = shouldIgnoreChildrenOf(c) ? [] : next(c._id, pinnedChildren);
           return child;
         });

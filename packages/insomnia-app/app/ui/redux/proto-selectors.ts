@@ -9,10 +9,12 @@ export type ExpandedProtoDirectory = {
 };
 const selectAllProtoFiles = createSelector(
   selectEntitiesLists,
+    // @ts-expect-error
   entities => entities.protoFiles || [],
 );
 const selectAllProtoDirectories = createSelector(
   selectEntitiesLists,
+    // @ts-expect-error
   entities => entities.protoDirectories || [],
 );
 export const selectExpandedActiveProtoDirectories = createSelector(

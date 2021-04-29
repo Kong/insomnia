@@ -44,10 +44,11 @@ let _currentLocationPath = '/';
 export function trackEvent(
   category: string,
   action: string,
-  label: string | null | undefined,
-  value: string | null | undefined,
+  label?: string,
+  value?: string,
 ) {
   process.nextTick(async () => {
+    // @ts-expect-error
     await _trackEvent(true, category, action, label, value);
   });
 }

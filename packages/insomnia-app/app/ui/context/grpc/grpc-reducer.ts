@@ -38,6 +38,7 @@ const CLEAR_GRPC_REQUEST_STATE: Shape<GrpcRequestState> = {
   error: undefined,
 };
 
+// @ts-expect-error
 const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestState): State => ({
   ...state,
   [requestId]: requestState,
@@ -68,6 +69,7 @@ const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcStat
 };
 
 const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState => {
+  // @ts-expect-error
   const requestId = action.requestId;
   const oldState = findGrpcRequestState(state, requestId);
 
@@ -85,6 +87,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.requestMessage: {
+      // @ts-expect-error
       const { payload }: RequestMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -93,6 +96,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.responseMessage: {
+      // @ts-expect-error
       const { payload }: ResponseMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -101,11 +105,14 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.error: {
+      // @ts-expect-error
       const { payload }: ErrorAction = action;
       return _patch(state, requestId, { ...oldState, error: payload });
     }
 
+    // @ts-expect-error
     case GrpcActionTypeEnum.status: {
+      // @ts-expect-error
       const { payload }: StatusAction = action;
       return _patch(state, requestId, { ...oldState, status: payload });
     }
@@ -115,6 +122,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.loadMethods: {
+      // @ts-expect-error
       const { payload }: LoadMethodsAction = action;
       return _patch(state, requestId, { ...oldState, methods: payload, reloadMethods: false });
     }
@@ -137,7 +145,9 @@ export const grpcReducer = (
     return state;
   }
 
+  // @ts-expect-error
   return action.requestIds
+    // @ts-expect-error
     ? multiRequestReducer(state, action)
     : singleRequestReducer(state, action);
 };

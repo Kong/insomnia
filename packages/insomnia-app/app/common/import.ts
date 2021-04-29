@@ -21,6 +21,7 @@ import {
 } from '../models/helpers/is-model';
 import type { Workspace, WorkspaceScope } from '../models/workspace';
 import type { ApiSpec } from '../models/api-spec';
+import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
 const EXPORT_FORMAT = 4;
@@ -67,8 +68,8 @@ type ConvertResult = {
   };
 };
 export type ImportRawConfig = {
-  getWorkspaceId: () => Promise<string | null>;
-  getWorkspaceScope?: (arg0: string) => Promise<WorkspaceScope>;
+  getWorkspaceId: ImportToWorkspacePrompt;
+  getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
   bypassDiffProps?: {

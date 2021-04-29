@@ -1,10 +1,10 @@
-import electron from 'electron';
+import electron, { OpenDialogOptions } from 'electron';
 import * as React from 'react';
 import { combineReducers } from 'redux';
 import fs from 'fs';
 import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
-import * as moment from 'moment';
+import moment from 'moment';
 import type { ImportRawConfig, ImportResult } from '../../../common/import';
 import * as importUtils from '../../../common/import';
 import AlertModal from '../../components/modals/alert-modal';
@@ -39,6 +39,7 @@ import {
 } from '../../../common/constants';
 import { selectSettings } from '../selectors';
 import { getDesignerDataDir } from '../../../common/misc';
+import { Settings } from '../../../models/settings';
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 export const LOAD_START = 'global/load-start';
@@ -216,7 +217,7 @@ export function newCommand(command, args) {
             await models.settings.update(settings, {
               theme: parsedTheme.name,
             });
-            await reloadPlugins(true);
+            await reloadPlugins();
             await setTheme(parsedTheme.name);
             showModal(SettingsModal, TAB_INDEX_THEMES);
           },
@@ -286,7 +287,7 @@ function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): 
   Go to the next activity in a sequential activity flow, depending on different conditions
  */
 export function goToNextActivity() {
-  return function(dispatch, getState) {
+  return function (dispatch, getState) {
     const state = getState();
     const { activeActivity } = state.global;
     const settings = selectSettings(state);
@@ -357,7 +358,7 @@ export function importFile(
 ) {
   return async dispatch => {
     dispatch(loadStart());
-    const options = {
+    const options: OpenDialogOptions = {
       title: 'Import Insomnia Data',
       buttonLabel: 'Import',
       properties: ['openFile'],
@@ -427,6 +428,7 @@ function handleImportResult(result: ImportResult, errorMessage: string): Array<W
   models.stats.incrementRequestStats({
     createdRequests: createdRequests,
   });
+  // @ts-expect-error
   return summary[models.workspace.type] || [];
 }
 
@@ -667,6 +669,7 @@ export function exportRequestsToFile(requestIds) {
           }
 
           requests.push(request);
+          // @ts-expect-error
           const ancestors = await db.withAncestors(request, [
             models.workspace.type,
             models.requestGroup.type,
@@ -680,6 +683,7 @@ export function exportRequestsToFile(requestIds) {
           workspaceLookup[workspace._id] = true;
           const descendants = await db.withDescendants(workspace);
           const privateEnvs = descendants.filter(
+            // @ts-expect-error
             descendant => descendant.type === models.environment.type && descendant.isPrivate,
           );
           privateEnvironments.push(...privateEnvs);
@@ -758,6 +762,7 @@ export function initActiveWorkspace() {
 }
 
 function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
+  // @ts-expect-error
   return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
 }
 
@@ -778,7 +783,7 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   This will also decide whether to start with the migration or onboarding activities
  */
 export function initActiveActivity() {
-  return function(dispatch, getState) {
+  return function (dispatch, getState) {
     const state = getState();
     const settings = selectSettings(state);
     // Default to home
@@ -805,6 +810,7 @@ export function initActiveActivity() {
       // Always check if user has been prompted to migrate or onboard
       default:
         if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+          // @ts-expect-error
           trackEvent('Data', 'Migration', 'Auto');
           overrideActivity = ACTIVITY_MIGRATION;
         } else if (!settings.hasPromptedOnboarding) {

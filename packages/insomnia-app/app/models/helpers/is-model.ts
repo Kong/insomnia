@@ -27,7 +27,7 @@ export function isProtoDirectory(obj: BaseModel): boolean {
 export function isWorkspace(obj: BaseModel): boolean {
   return obj.type === workspace.type;
 }
-export function isDesign({ scope }: Workspace): boolean {
+export function isDesign({ scope }: Partial<Workspace>): boolean {
   return scope === WorkspaceScopeKeys.design;
 }
 export function isCollection({ scope }: Workspace): boolean {

@@ -16,6 +16,7 @@ const actuallyCreate = (patch: $Shape<Workspace>, onCreate?: OnWorkspaceCreateCa
       await onCreate(workspace);
     }
 
+    // @ts-expect-error
     trackEvent('Workspace', 'Create');
     dispatch(setActiveWorkspace(workspace._id));
     dispatch(setActiveActivity(isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG));

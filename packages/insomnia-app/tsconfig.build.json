@@ -4,7 +4,8 @@
     "outDir": "./build",
     "rootDir": ".",
     "resolveJsonModule": true,
-    "strict": false
+    "strict": false,
+    "jsx": "preserve"
   },
   "include": [
     "app",
