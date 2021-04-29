@@ -8,7 +8,7 @@
   "license": "MIT",
   "main": "app/main.min.js",
   "scripts": {
-    "typecheck": "flow check",
+    "typecheck": "",
     "test": "npm run test:jest",
     "test:jest": "cross-env NODE_ENV=test jest --silent",
     "test-appveyor": "npm run test -- --maxWorkers 1",
@@ -20,7 +20,7 @@
     "build:sr": "webpack --config send-request/webpack.config.babel.js",
     "package": "node ./scripts/package.js",
     "release": "node ./scripts/release.js",
-    "bootstrap": "rimraf node_modules/graphql-language-service-interface/dist/*.flow && npm run build:sr"
+    "bootstrap": ""
   },
   "dev": {
     "dev-server-port": 3334

@@ -1,7 +1,6 @@
 {
   "presets": [
     "@babel/preset-react",
-    "@babel/preset-flow"
   ],
   "plugins": [
     "babel-plugin-styled-components",
@@ -30,8 +29,6 @@
             }
           }
         ],
-        // We need to add this again because it has to run before es2015
-        "@babel/preset-flow"
       ]
     }
   }
