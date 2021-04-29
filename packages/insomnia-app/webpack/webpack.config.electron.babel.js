@@ -32,7 +32,7 @@ if (process.env.NODE_ENV === 'development') {
 module.exports = {
   ...productionConfig,
   devtool: devtool,
-  entry: ['./main.development.js'],
+  entry: ['./main.development.ts'],
   output: output,
   node: {
     __dirname: false, // Use node.js __dirname

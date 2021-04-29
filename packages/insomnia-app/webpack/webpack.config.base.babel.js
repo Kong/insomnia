@@ -5,7 +5,7 @@ const pkg = require('../package.json');
 module.exports = {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
-  entry: ['./renderer.js', './renderer.html'],
+  entry: ['./renderer.ts', './renderer.html'],
   output: {
     path: path.join(__dirname, '../build'),
     filename: 'bundle.js',
@@ -14,9 +14,12 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(js)$/,
-        use: ['babel-loader'],
-        exclude: [/node_modules/, /__fixtures__/, /__tests__/],
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        exclude: [/node_modules/],
+        options: {
+          configFile: 'tsconfig.build.json',
+        },
       },
       {
         test: /\.(less|css)$/,
@@ -38,7 +41,7 @@ module.exports = {
         loader: 'url-loader',
       },
       {
-        test: require.resolve('../app/network/ca-certs.js'),
+        test: require.resolve('../app/network/ca-certs.ts'),
         use: [
           {
             loader: 'val-loader',
@@ -52,11 +55,11 @@ module.exports = {
       // Create aliases for react-hot-loader
       // https://github.com/gaearon/react-hot-loader/tree/92961be0b44260d3d3f1b8864aa699766572a67c#linking
       'react-hot-loader': path.resolve(path.join(__dirname, '../node_modules/react-hot-loader')),
-      'react': path.resolve(path.join(__dirname, '../node_modules/react')),
+      react: path.resolve(path.join(__dirname, '../node_modules/react')),
       'styled-components': path.resolve(path.join(__dirname, '../node_modules/styled-components')),
       'react-dom': path.resolve(path.join(__dirname, '../node_modules/@hot-loader/react-dom')),
     },
-    extensions: ['.js', '.json'],
+    extensions: ['.js', '.json', '.ts', '.tsx'],
     mainFields: ['webpack', 'browser', 'web', 'browserify', ['jam', 'main'], 'main'],
   },
   node: {

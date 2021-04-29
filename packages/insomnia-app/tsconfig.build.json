@@ -1,0 +1,32 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./build",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "strict": false
+  },
+  "include": [
+    "app",
+    "package.json",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "__jest__",
+    ".babelrc.js",
+    "jest.config.js",
+    "webpack",
+    "scripts",
+    "config",
+    "bin",
+    "assets",
+    "**/@types/mocha/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__snapshots__/**",
+    "**/__mocks__/*",
+    "build"
+  ]
+}
