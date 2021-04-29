@@ -6,4 +6,4 @@ import { withInfo } from '@storybook/addon-info';
 addDecorator(withContexts(contexts));
 addDecorator(withInfo({ inline: true }));
 
-configure(require.context('../components', true, /\.stories\.js$/), module);
+configure(require.context('../src', true, /\.stories\.tsx?$/), module);

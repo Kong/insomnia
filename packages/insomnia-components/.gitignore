@@ -1,4 +1,4 @@
 .cache
 storybook-static
-assets/svgr
+src/assets/svgr
 dist

@@ -93,5 +93,7 @@ module.exports = /** @type { import('eslint').Linter.Config } */ {
     '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
     quotes: 'off',
     '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
+    'no-use-before-define': 'off',
+    '@typescript-eslint/no-use-before-define': 'error',
   },
 };
