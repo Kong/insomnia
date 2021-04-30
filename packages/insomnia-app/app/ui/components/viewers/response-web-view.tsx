@@ -30,6 +30,7 @@ class ResponseWebView extends React.PureComponent<Props> {
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
 
     contextMenu({
+      // @ts-expect-error type mismatch
       window: this._webview,
     });
 

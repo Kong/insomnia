@@ -1334,7 +1334,7 @@ class App extends PureComponent<Props, State> {
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
     });
-    ipcRenderer.on('run-command', (e, commandUri) => {
+    ipcRenderer.on('run-command', (_, commandUri) => {
       const parsed = urlParse(commandUri, true);
       const command = `${parsed.hostname}${parsed.pathname}`;
       const args = JSON.parse(JSON.stringify(parsed.query));

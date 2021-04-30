@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -31,11 +30,12 @@ const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
 
 // Global object used for storing and persisting editor states
 const editorStates = {};
-const BASE_CODEMIRROR_OPTIONS = {
+const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   lineNumbers: true,
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
+  // @ts-expect-error should be autoRefresh: { delay: 2000 }
   autoRefresh: 2000,
   lineWrapping: true,
   scrollbarStyle: 'native',
@@ -56,10 +56,10 @@ const BASE_CODEMIRROR_OPTIONS = {
   // NOTE: This is px
   keyMap: 'default',
   extraKeys: CodeMirror.normalizeKeyMap({
-    'Ctrl-Q': function(cm) {
+    'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     },
-    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function(cm) {
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
@@ -78,9 +78,78 @@ const BASE_CODEMIRROR_OPTIONS = {
   gutters: ['CodeMirror-lint-markers'],
 };
 
+interface Props {
+  indentWithTabs?: boolean,
+  onChange?: Function,
+  onCursorActivity?: Function,
+  onFocus?: Function,
+  onBlur?: Function,
+  onClickLink?: Function,
+  onKeyDown?: Function,
+  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>,
+  onClick?: React.MouseEventHandler<HTMLDivElement>,
+  onPaste?: Function,
+  onCodeMirrorInit?: Function,
+  render?: Function,
+  nunjucksPowerUserMode?: boolean,
+  getRenderContext?: Function,
+  getAutocompleteConstants?: Function,
+  getAutocompleteSnippets?: Function,
+  keyMap?: string,
+  mode?: string,
+  id?: string,
+  placeholder?: string,
+  lineWrapping?: boolean,
+  hideLineNumbers?: boolean,
+  hideGutters?: boolean,
+  noMatchBrackets?: boolean,
+  hideScrollbars?: boolean,
+  fontSize?: number,
+  indentSize?: number,
+  defaultValue?: string,
+  tabIndex?: number,
+  autoPrettify?: boolean,
+  manualPrettify?: boolean,
+  noLint?: boolean,
+  noDragDrop?: boolean,
+  noStyleActiveLine?: boolean,
+  className?: string,
+  style?: Object,
+  updateFilter?: Function,
+  defaultTabBehavior?: boolean,
+  readOnly?: boolean,
+  type?: string,
+  filter?: string,
+  filterHistory?: Array<string>,
+  singleLine?: boolean,
+  debounceMillis?: number,
+  dynamicHeight?: boolean,
+  autoCloseBrackets?: boolean,
+  hintOptions?: Object,
+  lintOptions?: Object,
+  infoOptions?: Object,
+  jumpOptions?: Object,
+  uniquenessKey?: any,
+  isVariableUncovered?: boolean,
+  raw?: boolean,
+}
+
+interface State {
+  filter: string
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CodeEditor extends React.Component {
-  constructor(props) {
+class CodeEditor extends React.Component<Props, State> {
+  private _uniquenessKey: any;
+  private _previousUniquenessKey: any;
+  private _originalCode: string;
+  codeMirror?: CodeMirror.EditorFromTextArea;
+  private _filterInput: any;
+  private _autocompleteDebounce: NodeJS.Timeout;
+  private _ignoreNextChange: boolean;
+  private _filterTimeout: NodeJS.Timeout;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       filter: props.filter || '',
@@ -93,6 +162,7 @@ class CodeEditor extends React.Component {
   componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
+      // @ts-expect-error this comes from a custom extension
       this.codeMirror.closeHintDropdown();
     }
   }
@@ -187,6 +257,7 @@ class CodeEditor extends React.Component {
         },
       );
       this.codeMirror.scrollIntoView({
+        // @ts-expect-error
         line: lineStart,
         char: chStart,
       });
@@ -209,6 +280,7 @@ class CodeEditor extends React.Component {
       );
       this.codeMirror.scrollIntoView(
         {
+          // @ts-expect-error
           line: lineStart,
           char: chStart,
         }, // If sizing permits, position selection just above center
@@ -257,19 +329,23 @@ class CodeEditor extends React.Component {
   }
 
   setAttribute(name, value) {
+    // @ts-expect-error
     this.codeMirror.getTextArea().parentNode.setAttribute(name, value);
   }
 
   removeAttribute(name) {
+    // @ts-expect-error
     this.codeMirror.getTextArea().parentNode.removeAttribute(name);
   }
 
   getAttribute(name) {
+    // @ts-expect-error
     this.codeMirror.getTextArea().parentNode.getAttribute(name);
   }
 
   clearSelection() {
     // Never do this if dropdown is open
+    // @ts-expect-error this comes from a custom extension
     if (this.codeMirror.isHintDropdownActive()) {
       return;
     }
@@ -308,8 +384,10 @@ class CodeEditor extends React.Component {
 
     const marks = this.codeMirror
       .getAllMarks()
+      // @ts-expect-error
       .filter(c => c.__isFold)
       .map(mark => {
+        // @ts-expect-error
         const { from, to } = mark.find();
         return {
           from,
@@ -353,7 +431,7 @@ class CodeEditor extends React.Component {
     this._filterInput = n;
   }
 
-  _handleInitTextarea(textarea) {
+  _handleInitTextarea(textarea: HTMLTextAreaElement) {
     if (!textarea) {
       // Not mounted
       return;
@@ -388,7 +466,7 @@ class CodeEditor extends React.Component {
         try {
           const parsed = JSON.parse(toParse);
           count = Object.keys(parsed).length;
-        } catch (e) {}
+        } catch (e) { }
 
         return count ? `\u21A4 ${count} \u21A6` : '\u2194';
       },
@@ -421,6 +499,7 @@ class CodeEditor extends React.Component {
       ch: -1,
     });
     this.codeMirror.setOption('extraKeys', {
+      // @ts-expect-error
       ...BASE_CODEMIRROR_OPTIONS.extraKeys,
       Tab: cm => {
         // Indent with tabs or spaces
@@ -445,6 +524,7 @@ class CodeEditor extends React.Component {
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
+        // @ts-expect-error this comes from a custom extension
         this.codeMirror.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
@@ -454,6 +534,7 @@ class CodeEditor extends React.Component {
 
       // Make URLs clickable
       if (this.props.onClickLink) {
+        // @ts-expect-error this comes from a custom extension
         this.codeMirror.makeLinksClickable(this.props.onClickLink);
       }
 
@@ -623,7 +704,7 @@ class CodeEditor extends React.Component {
     // NOTE: YAML is not valid when indented with Tabs
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
     const actuallyIndentWithTabs = indentWithTabs && !isYaml;
-    const options = {
+    const options: any = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
       mode: mode,
@@ -708,6 +789,7 @@ class CodeEditor extends React.Component {
             }
 
             for (const option of tagDef.args[0].options) {
+              // @ts-expect-error option.name doesn't exist
               const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
               const newDef = clone(tagDef);
               newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
@@ -748,7 +830,9 @@ class CodeEditor extends React.Component {
     if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
       // Use stringify here because these could be infinitely recursive due to GraphQL
       // schemas
+      // @ts-expect-error
       shouldSetOption = JSON.stringify(value) !== JSON.stringify(cm.options[key]);
+      // @ts-expect-error
     } else if (!deepEqual(value, cm.options[key])) {
       // Don't set the option if it hasn't changed
       shouldSetOption = true;
@@ -919,6 +1003,7 @@ class CodeEditor extends React.Component {
     // Disable linting if the document reaches a maximum size or is empty
     const shouldLint =
       value.length > MAX_SIZE_FOR_LINTING || value.length === 0 ? false : !this.props.noLint;
+    // @ts-expect-error
     const existingLint = this.codeMirror.options.lint || false;
 
     if (shouldLint !== existingLint) {
@@ -1041,11 +1126,14 @@ class CodeEditor extends React.Component {
 
       if (filterHistory && filterHistory.length) {
         toolbarChildren.push(
+          // @ts-expect-error
           <Dropdown key="history" className="tall" right>
+            {/* @ts-expect-error */}
             <DropdownButton className="btn btn--compact">
               <i className="fa fa-clock-o" />
             </DropdownButton>
             {filterHistory.reverse().map(filter => (
+              // @ts-expect-error
               <DropdownItem key={filter} value={filter} onClick={this._handleFilterHistorySelect}>
                 {filter}
               </DropdownItem>
@@ -1093,7 +1181,7 @@ class CodeEditor extends React.Component {
       );
     }
 
-    const styles = {};
+    const styles: React.CSSProperties = {};
 
     if (fontSize) {
       styles.fontSize = `${fontSize}px`;
@@ -1125,58 +1213,4 @@ class CodeEditor extends React.Component {
   }
 }
 
-CodeEditor.propTypes = {
-  onChange: PropTypes.func,
-  onCursorActivity: PropTypes.func,
-  onFocus: PropTypes.func,
-  onBlur: PropTypes.func,
-  onClickLink: PropTypes.func,
-  onKeyDown: PropTypes.func,
-  onMouseLeave: PropTypes.func,
-  onClick: PropTypes.func,
-  onPaste: PropTypes.func,
-  onCodeMirrorInit: PropTypes.func,
-  render: PropTypes.func,
-  nunjucksPowerUserMode: PropTypes.bool,
-  getRenderContext: PropTypes.func,
-  getAutocompleteConstants: PropTypes.func,
-  getAutocompleteSnippets: PropTypes.func,
-  keyMap: PropTypes.string,
-  mode: PropTypes.string,
-  id: PropTypes.string,
-  placeholder: PropTypes.string,
-  lineWrapping: PropTypes.bool,
-  hideLineNumbers: PropTypes.bool,
-  hideGutters: PropTypes.bool,
-  noMatchBrackets: PropTypes.bool,
-  hideScrollbars: PropTypes.bool,
-  fontSize: PropTypes.number,
-  indentSize: PropTypes.number,
-  defaultValue: PropTypes.string,
-  tabIndex: PropTypes.number,
-  autoPrettify: PropTypes.bool,
-  manualPrettify: PropTypes.bool,
-  noLint: PropTypes.bool,
-  noDragDrop: PropTypes.bool,
-  noStyleActiveLine: PropTypes.bool,
-  className: PropTypes.any,
-  style: PropTypes.object,
-  updateFilter: PropTypes.func,
-  defaultTabBehavior: PropTypes.bool,
-  readOnly: PropTypes.bool,
-  type: PropTypes.string,
-  filter: PropTypes.string,
-  filterHistory: PropTypes.arrayOf(PropTypes.string.isRequired),
-  singleLine: PropTypes.bool,
-  debounceMillis: PropTypes.number,
-  dynamicHeight: PropTypes.bool,
-  autoCloseBrackets: PropTypes.bool,
-  hintOptions: PropTypes.object,
-  lintOptions: PropTypes.object,
-  infoOptions: PropTypes.object,
-  jumpOptions: PropTypes.object,
-  uniquenessKey: PropTypes.any,
-  isVariableUncovered: PropTypes.bool,
-  raw: PropTypes.bool,
-};
 export default CodeEditor;
