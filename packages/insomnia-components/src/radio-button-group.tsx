@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useCallback } from 'react';
 import styled from 'styled-components';
 
-export interface Props {
+export interface RadioButtonGroupProps {
   name: string;
   onChange: (value: string) => any;
   choices: {
@@ -46,7 +46,7 @@ const StyledRadioButtonBtn = styled.label`
   }
 `;
 
-export const RadioButtonGroup: FunctionComponent<Props> = ({
+export const RadioButtonGroup: FunctionComponent<RadioButtonGroupProps> = ({
   name,
   choices,
   onChange,

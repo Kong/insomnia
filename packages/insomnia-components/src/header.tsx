@@ -1,7 +1,7 @@
 import React, { PureComponent, ReactNode } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface HeaderProps {
   className?: string;
   gridLeft?: ReactNode;
   gridCenter?: ReactNode;
@@ -36,7 +36,7 @@ const StyledHeader = styled.div`
   }
 `;
 
-export class Header extends PureComponent<Props> {
+export class Header extends PureComponent<HeaderProps> {
   render() {
     const { className, gridLeft, gridCenter, gridRight } = this.props;
     return (

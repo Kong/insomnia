@@ -1,9 +1,9 @@
-import React, { FunctionComponent, useLayoutEffect } from 'react';
+import React, { createRef, FunctionComponent, useLayoutEffect } from 'react';
 
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 
-interface Props {
+export interface SidebarFilterProps {
   filter: boolean;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }
@@ -35,8 +35,8 @@ const StyledFilter = styled(motion.div)`
   }
 `;
 
-export const SidebarFilter: FunctionComponent<Props> = ({ filter, onChange }) => {
-  const filterField = React.createRef<HTMLInputElement>();
+export const SidebarFilter: FunctionComponent<SidebarFilterProps> = ({ filter, onChange }) => {
+  const filterField = createRef<HTMLInputElement>();
 
   useLayoutEffect(() => {
     if (filterField.current && !filter) {

@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface UnitTestResultBadgeProps {
   failed?: boolean;
 }
 
@@ -28,7 +28,7 @@ const StyledPassedBadge = styled(StyledBadge)`
   color: var(--color-success);
 `;
 
-export const UnitTestResultBadge: FunctionComponent<Props> = ({ failed }) => failed ? (
+export const UnitTestResultBadge: FunctionComponent<UnitTestResultBadgeProps> = ({ failed }) => failed ? (
   <StyledFailedBadge>Failed</StyledFailedBadge>
 ) : (
   <StyledPassedBadge>Passed</StyledPassedBadge>

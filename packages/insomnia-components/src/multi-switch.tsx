@@ -1,6 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
-import type { Props as RadioButtonGroupProps } from './radio-button-group';
+import type { RadioButtonGroupProps } from './radio-button-group';
 import { RadioButtonGroup } from './radio-button-group';
 
 const ThemedButtonGroup = styled(RadioButtonGroup)<RadioButtonGroupProps>`

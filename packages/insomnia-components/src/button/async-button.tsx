@@ -12,7 +12,7 @@ function isPromise(obj: unknown) {
   );
 }
 
-interface Props<T> extends ButtonProps {
+export interface AsyncButtonProps<T> extends ButtonProps {
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => Promise<T>;
   loadingNode?: ReactNode;
 }
@@ -23,7 +23,7 @@ export const AsyncButton = <T extends unknown>({
   loadingNode,
   children,
   ...props
-}: Props<T>) => {
+}: AsyncButtonProps<T>) => {
   const [loading, setLoading] = useState(false);
   const asyncHandler = useCallback(async event => {
     const result = onClick(event);

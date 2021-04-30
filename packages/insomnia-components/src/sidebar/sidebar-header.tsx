@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { SvgIcon, IconEnum } from '../svg-icon';
 
-interface Props {
+export interface SidebarHeaderProps {
   headerTitle: string;
   toggleSection: React.MouseEventHandler<HTMLLIElement>;
   toggleFilter?: () => void;
@@ -55,7 +55,7 @@ const StyledHeader = styled.li`
   }
 `;
 
-export const SidebarHeader: FunctionComponent<Props> = ({
+export const SidebarHeader: FunctionComponent<SidebarHeaderProps> = ({
   headerTitle,
   toggleSection,
   toggleFilter,

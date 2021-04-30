@@ -7,11 +7,11 @@ import { Button } from '../button';
 import { ListGroupItem } from './list-group-item';
 import { UnitTestRequestSelector } from './unit-test-request-selector';
 
-interface TestItem {
+export interface TestItem {
   _id: string;
 }
 
-interface Props {
+export interface UnitTestItemProps {
   item: TestItem;
   children?: ReactNode;
   onDeleteTest?: () => void;
@@ -59,7 +59,7 @@ const StyledUnitTestContent = styled(motion.div)`
   overflow: hidden;
 `;
 
-export const UnitTestItem: FunctionComponent<Props> = ({
+export const UnitTestItem: FunctionComponent<UnitTestItemProps> = ({
   item,
   children,
   onDeleteTest,

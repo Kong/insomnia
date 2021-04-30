@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 import { SvgIcon } from '../svg-icon';
 
-interface Props {
+export interface UnitTestResultTimestampProps {
   timeMs: String;
 }
 
@@ -21,7 +21,7 @@ const StyledTimestamp = styled.div`
   }
 `;
 
-export const UnitTestResultTimestamp: FunctionComponent<Props> = ({ timeMs }) => {
+export const UnitTestResultTimestamp: FunctionComponent<UnitTestResultTimestampProps> = ({ timeMs }) => {
   return (
     <StyledTimestamp>
       {' '}

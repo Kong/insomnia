@@ -1,7 +1,7 @@
 import React, { FunctionComponent, ReactNode } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface SidebarItemProps {
   children: ReactNode;
   gridLayout?: boolean;
   onClick?: () => void;
@@ -75,7 +75,7 @@ const StyledGridItem = styled.li`
   }
 `;
 
-export const SidebarItem: FunctionComponent<Props> = ({ children, gridLayout, onClick }) => {
+export const SidebarItem: FunctionComponent<SidebarItemProps> = ({ children, gridLayout, onClick }) => {
   if (gridLayout) {
     return <StyledGridItem onClick={onClick}>{children}</StyledGridItem>;
   } else {

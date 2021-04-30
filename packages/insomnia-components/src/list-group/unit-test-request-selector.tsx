@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface UnitTestRequestSelectorProps {
   onSetActiveRequest: () => void;
   selectedRequestId?: string;
   selectableRequests: {
@@ -35,7 +35,7 @@ const StyledUnitTestRequestSelector = styled.div`
   }
 `;
 
-export const UnitTestRequestSelector: FunctionComponent<Props> = ({
+export const UnitTestRequestSelector: FunctionComponent<UnitTestRequestSelectorProps> = ({
   onSetActiveRequest,
   selectedRequestId,
   selectableRequests,

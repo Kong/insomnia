@@ -3,12 +3,12 @@ import styled, { css } from 'styled-components';
 import { Button } from './button';
 import type { ButtonProps } from './button';
 
-interface Props extends ButtonProps {
+export interface CircleButtonProps extends ButtonProps {
   height?: string;
   width?: string;
 }
 
-const StyledCircleButton = styled(Button)<Props>`
+const StyledCircleButton = styled(Button)<CircleButtonProps>`
   padding: unset;
   font-size: var(--font-size-xl);
   border-radius: 50%;
@@ -26,4 +26,4 @@ const StyledCircleButton = styled(Button)<Props>`
   }
 `;
 
-export const CircleButton: FunctionComponent<Props> = props => <StyledCircleButton {...props} />;
+export const CircleButton: FunctionComponent<CircleButtonProps> = props => <StyledCircleButton {...props} />;

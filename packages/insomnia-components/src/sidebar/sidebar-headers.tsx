@@ -5,14 +5,14 @@ import { SvgIcon, IconEnum } from '../svg-icon';
 import { SidebarSection } from './sidebar-section';
 import { SidebarInvalidSection } from './sidebar-invalid-section';
 
-interface Props {
+export interface SidebarHeadersProps {
   headers: Record<string, any>;
   onClick: (section: string, ...args: any) => void;
 }
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
-export class SidebarHeaders extends Component<Props> {
+export class SidebarHeaders extends Component<SidebarHeadersProps> {
   renderBody = (filter: string): null | ReactNode => {
     const { headers, onClick } = this.props;
 

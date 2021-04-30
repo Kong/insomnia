@@ -8,14 +8,14 @@ export interface SidebarServer {
   url: string;
 }
 
-interface Props {
+export interface SidebarServersProps {
   servers: SidebarServer[];
   onClick: (section: string, path: string | number) => void;
 }
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
-export class SidebarServers extends Component<Props> {
+export class SidebarServers extends Component<SidebarServersProps> {
   renderBody = (filter: string): null | ReactNode => {
     const { servers, onClick } = this.props;
 

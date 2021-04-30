@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface SidebarInvalidSectionProps {
   name: string;
 }
 
@@ -10,6 +10,6 @@ const StyledInvalidSection = styled.div`
   color: var(--color-warning);
 `;
 
-export const SidebarInvalidSection: FunctionComponent<Props> = ({ name }) => (
+export const SidebarInvalidSection: FunctionComponent<SidebarInvalidSectionProps> = ({ name }) => (
   <StyledInvalidSection>Error: Invalid {name} specification.</StyledInvalidSection>
 );

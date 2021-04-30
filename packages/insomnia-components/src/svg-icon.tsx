@@ -113,7 +113,7 @@ export const IconEnum = {
 
 export type IconId = ValueOf<typeof IconEnum>;
 
-interface Props {
+export interface SvgIconProps {
   icon: IconId;
   label?: ReactNode;
 }
@@ -151,7 +151,7 @@ const SvgIconStyled = styled.div<{
   }
 `;
 
-export class SvgIcon extends Component<Props> {
+export class SvgIcon extends Component<SvgIconProps> {
   static icons: Record<IconId, [ThemeKeys, NamedExoticComponent<SVGProps<SVGSVGElement>>]> = {
     [IconEnum.arrowRight]: [ThemeEnum.highlight, SvgIcnArrowRight],
     [IconEnum.chevronDown]: [ThemeEnum.default, SvgIcnChevronDown],

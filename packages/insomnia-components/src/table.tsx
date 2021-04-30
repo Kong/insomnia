@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 /***********/
 /* <table> *
 /***********/
-interface TableProps {
+export interface TableProps {
   children: ReactNode;
   striped?: boolean;
   outlined?: boolean;
@@ -72,7 +72,7 @@ export const TableRow = styled.tr``;
 /********/
 /* <td> */
 /********/
-interface TableDataProps {
+export interface TableDataProps {
   compact?: boolean;
   align?: 'center' | 'left';
 }
@@ -88,7 +88,7 @@ export const TableData = styled.td<TableDataProps>`
 /* <th> */
 
 /********/
-interface TableHeaderProps {
+export interface TableHeaderProps {
   compact?: boolean;
   align?: 'center' | 'left';
 }

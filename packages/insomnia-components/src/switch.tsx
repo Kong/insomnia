@@ -1,15 +1,15 @@
 import React, { Fragment, FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-interface Item {
+export interface SwitchItem {
   label: string;
   selected: boolean;
 }
 
-interface Props {
+export interface SwitchProps {
   className?: string;
   onClick?: (e: React.SyntheticEvent<HTMLInputElement>) => any;
-  optionItems?: Item[];
+  optionItems?: SwitchItem[];
 }
 
 const StyledSwitch = styled.div`
@@ -64,7 +64,7 @@ const StyledSwitch = styled.div`
   }
 `;
 
-export const Switch: FunctionComponent<Props> = ({ className, onClick, optionItems }) => (
+export const Switch: FunctionComponent<SwitchProps> = ({ className, onClick, optionItems }) => (
   <StyledSwitch className={className}>
     <div className="switch">
       {optionItems?.map((item, i) => {

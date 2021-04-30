@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 
-interface Props {
+export interface TooltipProps {
   children: ReactNode;
   message: ReactNode;
   position?: 'bottom' | 'top' | 'right' | 'left';
@@ -58,7 +58,7 @@ const StyledTooltipBubble = styled.div`
 `;
 
 @autoBindMethodsForReact
-export class Tooltip extends PureComponent<Props, State> {
+export class Tooltip extends PureComponent<TooltipProps, State> {
   _showTimeout: NodeJS.Timeout | null = null;
   _hideTimeout: NodeJS.Timeout | null = null;
 

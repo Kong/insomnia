@@ -10,7 +10,7 @@ export interface Notice {
   message: string;
 }
 
-interface Props {
+export interface NoticeTableProps {
   notices: Notice[];
   onClick?: (n: Notice, e: React.SyntheticEvent<HTMLElement>) => any;
   onVisibilityToggle?: (expanded: boolean) => any;
@@ -93,7 +93,7 @@ const Header = styled.header`
   padding-left: var(--padding-md);
 `;
 
-export class NoticeTable extends PureComponent<Props, State> {
+export class NoticeTable extends PureComponent<NoticeTableProps, State> {
   state: State = {
     collapsed: false,
   };

@@ -2,7 +2,7 @@ import React, { FunctionComponent, ReactNode, useCallback, useEffect, useState }
 import Switch from 'react-switch';
 import styled from 'styled-components';
 
-interface Props {
+export interface ToggleSwitchProps {
   labelClassName?: string;
   switchClassName?: string;
   checked?: boolean;
@@ -29,7 +29,7 @@ const StyledLabel = styled.label`
   }
 `;
 
-export const ToggleSwitch: FunctionComponent<Props> = ({
+export const ToggleSwitch: FunctionComponent<ToggleSwitchProps> = ({
   labelClassName,
   switchClassName = '',
   checked: checkedProp,

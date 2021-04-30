@@ -17,7 +17,7 @@ import { DropdownDivider } from '../dropdown/dropdown-divider';
 import { SvgIcon, IconEnum } from '../svg-icon';
 import { useToggle } from 'react-use';
 
-interface Props {
+export interface SidebarProps {
   className?: string;
   onClick: (section: string, path: any) => void;
   jsonData?: {
@@ -63,7 +63,7 @@ const StyledSection = styled(motion.ul)`
 const DropdownEllipsis = () => <SvgIcon icon={IconEnum.ellipsesCircle} />;
 
 // Section Expansion & Filtering
-export const Sidebar: FunctionComponent<Props> = ({ jsonData, onClick }) => {
+export const Sidebar: FunctionComponent<SidebarProps> = ({ jsonData, onClick }) => {
   // Section Visibility
   const [infoSec, setInfoSec] = useToggle(false);
   const [pathsVisible, setPathsVisible] = useToggle(true);

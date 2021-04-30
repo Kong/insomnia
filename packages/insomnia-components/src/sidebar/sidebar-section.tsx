@@ -7,7 +7,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useToggle } from 'react-use';
 
-interface Props {
+export interface SidebarSectionProps {
   title: string;
   renderBody: (filterValue: string) => ReactNode;
 }
@@ -23,7 +23,7 @@ const StyledNoResults = styled.div`
   color: var(--color-warning);
 `;
 
-export const SidebarSection: FunctionComponent<Props> = ({ title, renderBody }) => {
+export const SidebarSection: FunctionComponent<SidebarSectionProps> = ({ title, renderBody }) => {
   const [bodyVisible, toggleBodyVisible] = useToggle(false);
   const [filterVisible, toggleFilterVisible] = useToggle(false);
   const [filterValue, setFilterValue] = useState('');

@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface SidebarBadgeProps {
   label?: string;
   onClick?: () => void;
   method?: 'get' | 'post' | 'delete' | 'parameters' | 'patch' | 'put' | 'options-head' | string;
@@ -73,7 +73,7 @@ const StyledBadge = styled.span`
   }
 `;
 
-export const SidebarBadge: FunctionComponent<Props> = ({
+export const SidebarBadge: FunctionComponent<SidebarBadgeProps> = ({
   onClick = () => {},
   method = 'post',
   label = method,

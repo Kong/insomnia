@@ -2,7 +2,7 @@ import React, { PureComponent, ReactNode } from 'react';
 import styled from 'styled-components';
 import { SvgIcon, IconEnum } from './svg-icon';
 
-interface Props {
+export interface CardProps {
   docBranch: string;
   docLog: string;
   docMenu: ReactNode;
@@ -222,7 +222,7 @@ const CardFooter = styled.div`
   }
 `;
 
-export class Card extends PureComponent<Props, State> {
+export class Card extends PureComponent<CardProps, State> {
   state: State = {
     selected: false,
     selectable: false,

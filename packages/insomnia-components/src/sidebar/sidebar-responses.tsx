@@ -5,14 +5,14 @@ import { SidebarInvalidSection } from './sidebar-invalid-section';
 import { SidebarItem } from './sidebar-item';
 import { Tooltip } from '../tooltip';
 
-interface Props {
+export interface SidebarResponsesProps {
   responses: Record<string, any>;
   onClick: (section: string, ...args: any) => void;
 }
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
-export class SidebarResponses extends Component<Props> {
+export class SidebarResponses extends Component<SidebarResponsesProps> {
   renderBody = (filter: string): null | ReactNode => {
     const { responses, onClick } = this.props;
 

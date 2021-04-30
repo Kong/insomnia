@@ -16,7 +16,7 @@ import { DropdownDivider } from './dropdown-divider';
 import styled, { css } from 'styled-components';
 import { SvgIcon } from '../svg-icon';
 
-interface Props {
+export interface DropdownProps {
   children: ReactNode;
   renderButton: ReactNode | ((props: { open: boolean }) => void);
   right?: boolean;
@@ -144,7 +144,7 @@ interface State {
 }
 
 @autoBindMethodsForReact
-export class Dropdown extends PureComponent<Props, State> {
+export class Dropdown extends PureComponent<DropdownProps, State> {
   // Save body overflow so we can revert it when needed
   defaultBodyOverflow = document.body.style.overflow;
   dropdownsContainer: HTMLElement | null = null;
@@ -167,7 +167,7 @@ export class Dropdown extends PureComponent<Props, State> {
     uniquenessKey: 0,
   }
 
-  constructor(props: Props) {
+  constructor(props: DropdownProps) {
     super(props);
     this.dropdownsContainer = document.querySelector('#dropdowns-container');
 

@@ -1,12 +1,12 @@
 import styled, { css } from 'styled-components';
 
-interface Props {
+export interface ListGroupItemProps {
   isSelected?: boolean;
   selectable?: boolean;
   indentLevel?: number;
 }
 
-export const ListGroupItem = styled.li<Props>`
+export const ListGroupItem = styled.li<ListGroupItemProps>`
   border-bottom: 1px solid var(--hl-xs);
   padding: var(--padding-sm) var(--padding-sm);
 

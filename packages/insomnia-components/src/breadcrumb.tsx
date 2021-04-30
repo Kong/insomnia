@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface BreadcrumbProps {
   crumbs: string[];
   className: string;
   onClick?: React.MouseEventHandler<HTMLAnchorElement>;
@@ -41,7 +41,7 @@ const StyledBreadcrumb = styled.ul`
   }
 `;
 
-export class Breadcrumb extends PureComponent<Props> {
+export class Breadcrumb extends PureComponent<BreadcrumbProps> {
   render() {
     const { className, crumbs, onClick } = this.props;
     return (

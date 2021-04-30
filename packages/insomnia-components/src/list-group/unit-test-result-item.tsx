@@ -4,7 +4,7 @@ import { ListGroupItem } from './list-group-item';
 import { UnitTestResultTimestamp } from './unit-test-result-timestamp';
 import { UnitTestResultBadge } from './unit-test-result-badge';
 
-interface Props {
+export interface UnitTestResultItemProps {
   item: {
     duration: string;
     err?: {
@@ -42,7 +42,7 @@ const StyledResultListItem = styled(ListGroupItem)`
   }
 `;
 
-export const UnitTestResultItem: FunctionComponent<Props> = ({
+export const UnitTestResultItem: FunctionComponent<UnitTestResultItemProps> = ({
   item: {
     err = {},
     title,

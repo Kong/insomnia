@@ -1,12 +1,12 @@
 import React, { FunctionComponent, ReactNode } from 'react';
 import styled from 'styled-components';
 
-interface Props {
+export interface ListGroupProps {
   children?: ReactNode;
   bordered?: boolean;
 }
 
-const StyledListGroup = styled.ul<Props>`
+const StyledListGroup = styled.ul<ListGroupProps>`
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -19,6 +19,6 @@ const StyledListGroup = styled.ul<Props>`
     `}
 `;
 
-export const ListGroup: FunctionComponent<Props> = ({ children, bordered }) => {
+export const ListGroup: FunctionComponent<ListGroupProps> = ({ children, bordered }) => {
   return <StyledListGroup bordered={bordered}>{children}</StyledListGroup>;
 };

@@ -12,13 +12,13 @@ export interface SidebarInfoType {
   };
 }
 
-interface Props {
+export interface SidebarInfoProps {
   info: SidebarInfoType;
   childrenVisible: boolean;
   onClick: (section: string, ...args: string[]) => void;
 }
 
-export const SidebarInfo: FunctionComponent<Props> = ({
+export const SidebarInfo: FunctionComponent<SidebarInfoProps> = ({
   info: {
     title,
     description,

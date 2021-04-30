@@ -7,7 +7,7 @@ import { SidebarSection } from './sidebar-section';
 import { SidebarInvalidSection } from './sidebar-invalid-section';
 import { Tooltip } from '../tooltip';
 
-interface Props {
+export interface SidebarRequestsProps {
   requests: Record<string, any>;
   onClick: (section: string, ...args: any) => void;
 }
@@ -18,7 +18,7 @@ const StyledRequestFormat = styled.span`
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
-export class SidebarRequests extends Component<Props> {
+export class SidebarRequests extends Component<SidebarRequestsProps> {
   renderBody = (filter: string): null | ReactNode => {
     const { requests, onClick } = this.props;
 

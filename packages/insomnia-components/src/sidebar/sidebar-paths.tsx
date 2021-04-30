@@ -7,7 +7,7 @@ import { SidebarInvalidSection } from './sidebar-invalid-section';
 
 export type SidebarPathsType = Record<string, any> | string;
 
-interface Props {
+export interface SidebarPathsProps {
   paths: SidebarPathsType;
   onClick: (section: string, ...args: any) => void;
 }
@@ -16,7 +16,7 @@ const isNotXDashKey = (key: string) => key.indexOf('x-') !== 0;
 
 // Implemented as a class component because of a caveat with render props
 // https://reactjs.org/docs/render-props.html#be-careful-when-using-render-props-with-reactpurecomponent
-export class SidebarPaths extends Component<Props> {
+export class SidebarPaths extends Component<SidebarPathsProps> {
   renderBody = (filter: string): null | ReactNode => {
     const { paths, onClick } = this.props;
     let pathItems = {};
