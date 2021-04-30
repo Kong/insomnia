@@ -1,26 +1,25 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
 import { AUTOBIND_CFG } from '../../common/constants';
-type Props = {
-  children: React.ReactNode;
-  className: string | null | undefined;
-};
-type State = {
+
+interface Props {
+  children: ReactNode;
+  className?: string | null;
+}
+
+interface State {
   status: string;
   checking: boolean;
   updateAvailable: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CheckForUpdatesButton extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      status: '',
-      checking: false,
-      updateAvailable: false,
-    };
+class CheckForUpdatesButton extends PureComponent<Props, State> {
+  state: State = {
+    status: '',
+    checking: false,
+    updateAvailable: false,
   }
 
   _listenerCheckComplete(e: any, updateAvailable: true, status: string) {
@@ -40,9 +39,7 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
 
   _handleCheckForUpdates() {
     electron.ipcRenderer.send('updater.check');
-    this.setState({
-      checking: true,
-    });
+    this.setState({ checking: true });
   }
 
   componentDidMount() {
@@ -59,7 +56,11 @@ class CheckForUpdatesButton extends React.PureComponent<Props, State> {
     const { children, className } = this.props;
     const { status, checking } = this.state;
     return (
-      <button className={className} disabled={checking} onClick={this._handleCheckForUpdates}>
+      <button
+        className={className ?? ''}
+        disabled={checking}
+        onClick={this._handleCheckForUpdates}
+      >
         {status || children}
       </button>
     );

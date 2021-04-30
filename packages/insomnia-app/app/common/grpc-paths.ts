@@ -2,11 +2,13 @@ import type { GrpcMethodDefinition, GrpcMethodType } from '../network/grpc/metho
 import { groupBy } from 'lodash';
 import { getMethodType } from '../network/grpc/method';
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
-type GrpcPathSegments = {
+
+interface GrpcPathSegments {
   packageName?: string;
   serviceName?: string;
   methodName?: string;
-};
+}
+
 // Split a full gRPC path into it's segments
 export const getGrpcPathSegments = (path: string): GrpcPathSegments => {
   const result = PROTO_PATH_REGEX.exec(path);
@@ -19,6 +21,7 @@ export const getGrpcPathSegments = (path: string): GrpcPathSegments => {
     methodName,
   };
 };
+
 // If all segments are found, return a shorter path, otherwise the original path
 export const getShortGrpcPath = (
   { packageName, serviceName, methodName }: GrpcPathSegments,
@@ -26,12 +29,13 @@ export const getShortGrpcPath = (
 ): string => {
   return packageName && serviceName && methodName ? `/${serviceName}/${methodName}` : fullPath;
 };
-export type GrpcMethodInfo = {
+
+export interface GrpcMethodInfo {
   segments: GrpcPathSegments;
   type: GrpcMethodType;
   fullPath: string;
-};
-type GroupedGrpcMethodInfo = Record<string, Array<GrpcMethodInfo>>;
+}
+type GroupedGrpcMethodInfo = Record<string, GrpcMethodInfo[]>;
 export const NO_PACKAGE_KEY = 'no-package';
 
 const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
@@ -41,6 +45,6 @@ const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
 });
 
 export const groupGrpcMethodsByPackage = (
-  methods: Array<GrpcMethodDefinition>,
+  methods: GrpcMethodDefinition[],
 ): GroupedGrpcMethodInfo =>
   groupBy(methods.map(getMethodInfo), m => m.segments.packageName || NO_PACKAGE_KEY);

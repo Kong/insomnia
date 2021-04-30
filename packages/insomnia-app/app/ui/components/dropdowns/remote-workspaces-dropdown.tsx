@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Component } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as session from '../../../account/session';
@@ -11,28 +11,27 @@ import * as models from '../../../models';
 import * as db from '../../../common/database';
 import { showAlert } from '../modals';
 import { stringsPlural } from '../../../common/strings';
-type Props = {
+
+interface Props {
   className?: string;
   vcs?: VCS;
-  workspaces: Array<Workspace>;
-};
-type State = {
+  workspaces: Workspace[];
+}
+
+interface State {
   loading: boolean;
-  localProjects: Array<Project>;
+  localProjects: Project[];
   pullingProjects: Record<string, boolean>;
-  remoteProjects: Array<Project>;
-};
+  remoteProjects: Project[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RemoteWorkspacesDropdown extends React.Component<Props, State> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loading: false,
-      localProjects: [],
-      pullingProjects: {},
-      remoteProjects: [],
-    };
+class RemoteWorkspacesDropdown extends Component<Props, State> {
+  state: State = {
+    loading: false,
+    localProjects: [],
+    pullingProjects: {},
+    remoteProjects: [],
   }
 
   async _refreshRemoteWorkspaces() {

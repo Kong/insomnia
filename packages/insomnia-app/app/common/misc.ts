@@ -6,80 +6,97 @@ import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
-type Header = {
+
+interface Header {
   name: string;
   value: string;
-};
-type Parameter = {
+}
+
+interface Parameter {
   name: string;
   value: string;
-};
+}
+
 export function filterParameters<T extends Parameter>(
-  parameters: Array<T>,
+  parameters: T[],
   name: string,
-): Array<T> {
+): T[] {
   if (!Array.isArray(parameters) || !name) {
     return [];
   }
 
   return parameters.filter(h => (!h || !h.name ? false : h.name === name));
 }
-export function filterHeaders<T extends Header>(headers: Array<T>, name: string): Array<T> {
-  if (!Array.isArray(headers) || !name || !(typeof name === 'string')) {
+
+export function filterHeaders<T extends Header>(headers: T[], name?: string): T[] {
+  if (!Array.isArray(headers) || !name || typeof name !== 'string') {
     return [];
   }
 
-  return headers.filter(h => {
+  return headers.filter(header => {
     // Never match against invalid headers
-    if (!h || !h.name || typeof h.name !== 'string') {
+    if (!header || !header.name || typeof header.name !== 'string') {
       return false;
     }
 
-    return h.name.toLowerCase() === name.toLowerCase();
+    return header.name.toLowerCase() === name.toLowerCase();
   });
 }
-export function hasContentTypeHeader<T extends Header>(headers: Array<T>): boolean {
+
+export function hasContentTypeHeader<T extends Header>(headers: T[]): boolean {
   return filterHeaders(headers, 'content-type').length > 0;
 }
-export function hasContentLengthHeader<T extends Header>(headers: Array<T>): boolean {
+
+export function hasContentLengthHeader<T extends Header>(headers: T[]): boolean {
   return filterHeaders(headers, 'content-length').length > 0;
 }
-export function hasAuthHeader<T extends Header>(headers: Array<T>): boolean {
+
+export function hasAuthHeader<T extends Header>(headers: T[]): boolean {
   return filterHeaders(headers, 'authorization').length > 0;
 }
-export function hasAcceptHeader<T extends Header>(headers: Array<T>): boolean {
+
+export function hasAcceptHeader<T extends Header>(headers: T[]): boolean {
   return filterHeaders(headers, 'accept').length > 0;
 }
-export function hasUserAgentHeader<T extends Header>(headers: Array<T>): boolean {
+
+export function hasUserAgentHeader<T extends Header>(headers: T[]): boolean {
   return filterHeaders(headers, 'user-agent').length > 0;
 }
-export function hasAcceptEncodingHeader<T extends Header>(headers: Array<T>): boolean {
+
+export function hasAcceptEncodingHeader<T extends Header>(headers: T[]): boolean {
   return filterHeaders(headers, 'accept-encoding').length > 0;
 }
-export function getSetCookieHeaders<T extends Header>(headers: Array<T>): Array<T> {
+
+export function getSetCookieHeaders<T extends Header>(headers: T[]): T[] {
   return filterHeaders(headers, 'set-cookie');
 }
-export function getLocationHeader<T extends Header>(headers: Array<T>): T | null {
+
+export function getLocationHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'location');
   return matches.length ? matches[0] : null;
 }
-export function getContentTypeHeader<T extends Header>(headers: Array<T>): T | null {
+
+export function getContentTypeHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'content-type');
   return matches.length ? matches[0] : null;
 }
-export function getMethodOverrideHeader<T extends Header>(headers: Array<T>): T | null {
+
+export function getMethodOverrideHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'x-http-method-override');
   return matches.length ? matches[0] : null;
 }
-export function getHostHeader<T extends Header>(headers: Array<T>): T | null {
+
+export function getHostHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'host');
   return matches.length ? matches[0] : null;
 }
-export function getContentDispositionHeader<T extends Header>(headers: Array<T>): T | null {
+
+export function getContentDispositionHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'content-disposition');
   return matches.length ? matches[0] : null;
 }
-export function getContentLengthHeader<T extends Header>(headers: Array<T>): T | null {
+
+export function getContentLengthHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'content-length');
   return matches.length ? matches[0] : null;
 }
@@ -98,12 +115,15 @@ export function generateId(prefix?: string): string {
     return id;
   }
 }
+
 export function delay(milliseconds: number = DEBOUNCE_MILLIS): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, milliseconds));
 }
+
 export function removeVowels(str: string): string {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
+
 export function formatMethodName(method: string): string {
   let methodName = method || '';
 
@@ -115,13 +135,12 @@ export function formatMethodName(method: string): string {
 
   return methodName;
 }
-export function keyedDebounce(
-  callback: (...args: Array<any>) => any,
-  millis: number = DEBOUNCE_MILLIS,
-): (...args: Array<any>) => any {
+
+export function keyedDebounce<T extends Function>(callback: T, millis: number = DEBOUNCE_MILLIS): T {
   let timeout;
   let results = {};
-  return function(key, ...args) {
+  // @ts-expect-error -- TSCONVERSION
+  const t: T = function(key, ...args) {
     results[key] = args;
     clearTimeout(timeout);
     timeout = setTimeout(() => {
@@ -133,17 +152,20 @@ export function keyedDebounce(
       results = {};
     }, millis);
   };
+  return t;
 }
-export function debounce(
-  callback: (...args: Array<any>) => any,
-  millis: number = DEBOUNCE_MILLIS,
-): (...args: Array<any>) => any {
+
+export function debounce<T extends Function>(
+  callback: T,
+  milliseconds: number = DEBOUNCE_MILLIS,
+): T {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
     callback.apply(null, results.__key__);
-  }, millis).bind(null, '__key__');
+  }, milliseconds).bind(null, '__key__');
 }
-export function describeByteSize(bytes: number, long: boolean = false): string {
+
+export function describeByteSize(bytes: number, long = false): string {
   bytes = Math.round(bytes * 10) / 10;
   let size;
   // NOTE: We multiply these by 2 so we don't end up with
@@ -167,26 +189,32 @@ export function describeByteSize(bytes: number, long: boolean = false): string {
   const rounded = Math.round(size * 10) / 10;
   return `${rounded} ${unit}`;
 }
+
 export function nullFn(): void {
   // Do nothing
 }
+
 export function preventDefault(e: Event): void {
   e.preventDefault();
 }
+
 export function clickLink(href: string): void {
   electron.shell.openExternal(href);
 }
-export function fnOrString(v: string | ((...args: Array<any>) => any), ...args: Array<any>) {
+
+export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
   } else {
     return v(...args);
   }
 }
+
 export function compressObject(obj: any): string {
   const compressed = zlib.gzipSync(JSON.stringify(obj));
   return compressed.toString('base64');
 }
+
 export function decompressObject(input: string | null): any {
   if (typeof input !== 'string') {
     return null;
@@ -195,6 +223,7 @@ export function decompressObject(input: string | null): any {
   const jsonBuffer = zlib.gunzipSync(Buffer.from(input, 'base64'));
   return JSON.parse(jsonBuffer.toString('utf8'));
 }
+
 export function resolveHomePath(p: string): string {
   if (p.indexOf('~/') === 0) {
     return pathJoin(process.env.HOME || '/', p.slice(1));
@@ -202,6 +231,7 @@ export function resolveHomePath(p: string): string {
     return p;
   }
 }
+
 export function jsonParseOr(str: string, fallback: any): any {
   try {
     return JSON.parse(str);
@@ -209,6 +239,7 @@ export function jsonParseOr(str: string, fallback: any): any {
     return fallback;
   }
 }
+
 export function escapeHTML(unsafeText: string): string {
   const div = document.createElement('div');
   div.innerText = unsafeText;
@@ -223,6 +254,7 @@ export function escapeHTML(unsafeText: string): string {
 export function escapeRegex(str: string): string {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
+
 export function fuzzyMatch(
   searchString: string,
   text: string,
@@ -232,29 +264,27 @@ export function fuzzyMatch(
   } = {},
 ): null | {
   score: number;
-  indexes: Array<number>;
+  indexes: number[];
 } {
   return fuzzyMatchAll(searchString, [text], options);
 }
+
 export function fuzzyMatchAll(
   searchString: string,
-  allText: Array<string>,
+  allText: string[],
   options: {
     splitSpace?: boolean;
     loose?: boolean;
   } = {},
-): null | {
-  score: number;
-  indexes: Array<number>;
-} {
+) {
   if (!searchString || !searchString.trim()) {
     return null;
   }
 
   const words = searchString.split(' ').filter(w => w.trim());
   const terms = options.splitSpace ? [...words, searchString] : [searchString];
-  let maxScore = null;
-  let indexes = [];
+  let maxScore: number | null = null;
+  let indexes: number[] = [];
   let termsMatched = 0;
 
   for (const term of terms) {
@@ -300,6 +330,7 @@ export function fuzzyMatchAll(
     target: allText.join(' '),
   };
 }
+
 export function getViewportSize(): string | null {
   const { BrowserWindow } = electron.remote || electron;
   const w = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
@@ -312,11 +343,13 @@ export function getViewportSize(): string | null {
     return null;
   }
 }
+
 export function getScreenResolution(): string {
   const { screen } = electron.remote || electron;
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   return `${width}x${height}`;
 }
+
 export function getUserLanguage(): string {
   const { app } = electron.remote || electron;
   return app.getLocale();
@@ -339,16 +372,19 @@ export async function waitForStreamToFinish(s: Readable | Writable): Promise<voi
     });
   });
 }
+
 export function getDesignerDataDir(): string {
   const { app } = electron.remote || electron;
   return process.env.DESIGNER_DATA_PATH || pathJoin(app.getPath('appData'), 'Insomnia Designer');
 }
+
 export function getDataDirectory(): string {
   const { app } = electron.remote || electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
 }
-export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>> {
-  const chunks = [];
+
+export function chunkArray<T>(arr: T[], chunkSize: number) {
+  const chunks: T[][] = [];
 
   for (let i = 0, j = arr.length; i < j; i += chunkSize) {
     chunks.push(arr.slice(i, i + chunkSize));
@@ -356,6 +392,7 @@ export function chunkArray<T>(arr: Array<T>, chunkSize: number): Array<Array<T>>
 
   return chunks;
 }
+
 export function pluralize(text: string): string {
   let trailer = 's';
   let chop = 0;
@@ -375,7 +412,8 @@ export function pluralize(text: string): string {
   // Add the trailer for pluralization
   return `${text.slice(0, text.length - chop)}${trailer}`;
 }
-export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectComparison {
+
+export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false) {
   const clonedBaseObj = JSON.parse(JSON.stringify(baseObj));
 
   for (const prop in baseObj) {
@@ -413,19 +451,21 @@ export function diffPatchObj(baseObj: {}, patchObj: {}, deep = false): ObjectCom
 
   return clonedBaseObj;
 }
-export function isObject(obj: any) {
+
+export function isObject(obj: unknown) {
   return obj !== null && typeof obj === 'object';
 }
+
+/**
+  Finds epoch's digit count and converts it to make it exactly 13 digits.
+  Which is the epoch millisecond represntation.
+*/
 export function convertEpochToMilliseconds(epoch: number) {
-  /* 
-    Finds epoch's digit count and converts it to make it exactly 13 digits. 
-    Which is the epoch millisecond represntation.
-  */
   const expDigitCount = epoch.toString().length;
-  const convertedEpoch = parseInt(epoch * 10 ** (13 - expDigitCount));
-  return convertedEpoch;
+  return epoch * 10 ** (13 - expDigitCount);
 }
-export function snapNumberToLimits(value: number, min?: number, max?: number): number {
+
+export function snapNumberToLimits(value: number, min?: number, max?: number) {
   const moreThanMax = max && !Number.isNaN(max) && value > max;
   const lessThanMin = min && !Number.isNaN(min) && value < min;
 
@@ -437,6 +477,7 @@ export function snapNumberToLimits(value: number, min?: number, max?: number): n
 
   return value;
 }
-export function isNotNullOrUndefined(obj: any): boolean {
+
+export function isNotNullOrUndefined(obj: unknown) {
   return obj !== null && obj !== undefined;
 }

@@ -1,17 +1,18 @@
-import * as React from 'react';
+import React, { FunctionComponent, useCallback } from 'react';
 import type { WrapperProps } from './wrapper';
 import OnboardingContainer from './onboarding-container';
 import Analytics from './analytics';
 import { useDispatch } from 'react-redux';
 import { setActiveActivity } from '../redux/modules/global';
 import { getAppLongName, getAppSynopsis, ACTIVITY_HOME } from '../../common/constants';
-type Props = {
-  wrapperProps: WrapperProps;
-};
 
-const WrapperAnalytics = ({ wrapperProps }: Props) => {
+interface Props {
+  wrapperProps: WrapperProps;
+}
+
+const WrapperAnalytics: FunctionComponent<Props> = ({ wrapperProps }) => {
   const reduxDispatch = useDispatch();
-  const navigateHome = React.useCallback(() => {
+  const navigateHome = useCallback(() => {
     reduxDispatch(setActiveActivity(ACTIVITY_HOME));
   }, [reduxDispatch]);
   return (

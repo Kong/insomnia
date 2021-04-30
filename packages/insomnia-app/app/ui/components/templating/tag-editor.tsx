@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -25,45 +25,44 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import FileInputButton from '../base/file-input-button';
 import { getTemplateTags } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   defaultValue: string;
-  onChange: (...args: Array<any>) => any;
+  onChange: (...args: any[]) => any;
   workspace: Workspace;
-};
-type State = {
+}
+
+interface State {
   activeTagData: NunjucksParsedTag | null;
   activeTagDefinition: NunjucksParsedTag | null;
-  tagDefinitions: Array<Record<string, any>>;
+  tagDefinitions: Record<string, any>[];
   loadingDocs: boolean;
-  allDocs: Record<string, Array<BaseModel>>;
+  allDocs: Record<string, BaseModel[]>;
   rendering: boolean;
   preview: string;
   error: string;
-  variables: Array<{
+  variables: {
     name: string;
     value: string;
-  }>;
-};
+  }[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class TagEditor extends React.PureComponent<Props, State> {
-  _select: HTMLSelectElement | null | undefined;
+class TagEditor extends PureComponent<Props, State> {
+  _select: HTMLSelectElement | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      activeTagData: null,
-      activeTagDefinition: null,
-      tagDefinitions: [],
-      loadingDocs: false,
-      allDocs: {},
-      rendering: true,
-      preview: '',
-      error: '',
-      variables: [],
-    };
+  state: State = {
+    activeTagData: null,
+    activeTagDefinition: null,
+    tagDefinitions: [],
+    loadingDocs: false,
+    allDocs: {},
+    rendering: true,
+    preview: '',
+    error: '',
+    variables: [],
   }
 
   async load() {
@@ -114,7 +113,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  _sortRequests(_models: Array<Request | RequestGroup>, parentId: string) {
+  _sortRequests(_models: (Request | RequestGroup)[], parentId: string) {
     let sortedModels = [];
 
     _models
@@ -122,8 +121,7 @@ class TagEditor extends React.PureComponent<Props, State> {
       .sort(metaSortKeySort)
       .forEach(model => {
         if (isRequest(model)) sortedModels.push(model);
-        if (isRequestGroup(model))
-          sortedModels = sortedModels.concat(this._sortRequests(_models, model._id));
+        if (isRequestGroup(model)) { sortedModels = sortedModels.concat(this._sortRequests(_models, model._id)); }
       });
 
     return sortedModels;
@@ -313,7 +311,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     return this._handleRefresh();
   }
 
-  _setSelectRef(n: HTMLSelectElement | null | undefined) {
+  _setSelectRef(n: HTMLSelectElement) {
     this._select = n;
     // Let it render, then focus the input
     setTimeout(() => {
@@ -332,10 +330,10 @@ class TagEditor extends React.PureComponent<Props, State> {
   }
 
   async _update(
-    tagDefinitions: Array<NunjucksParsedTag>,
+    tagDefinitions: NunjucksParsedTag[],
     tagDefinition: NunjucksParsedTag | null,
     tagData: NunjucksParsedTag | null,
-    noCallback: boolean = false,
+    noCallback = false,
   ) {
     const { handleRender } = this.props;
     this.setState({
@@ -450,8 +448,8 @@ class TagEditor extends React.PureComponent<Props, State> {
   renderArgFile(
     value: string,
     argIndex: number,
-    itemTypes?: Array<string>,
-    extensions?: Array<string>,
+    itemTypes?: string[],
+    extensions?: string[],
   ) {
     return (
       <FileInputButton
@@ -466,7 +464,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  renderArgEnum(value: string, options: Array<PluginArgumentEnumOption>) {
+  renderArgEnum(value: string, options: PluginArgumentEnumOption[]) {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
     let unsetOption = null;
 
@@ -497,7 +495,7 @@ class TagEditor extends React.PureComponent<Props, State> {
     );
   }
 
-  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: Array<any>): string {
+  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]): string {
     let prefix = '';
     let reqGroup: any;
 
@@ -561,7 +559,7 @@ class TagEditor extends React.PureComponent<Props, State> {
 
   renderArg(
     argDefinition: NunjucksParsedTagArg,
-    argDatas: Array<NunjucksParsedTagArg>,
+    argDatas: NunjucksParsedTagArg[],
     argIndex: number,
   ) {
     // Decide whether or not to show it

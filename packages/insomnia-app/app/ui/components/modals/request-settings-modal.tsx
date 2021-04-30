@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -14,55 +14,56 @@ import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest } from '../../../models/helpers/is-model';
 import * as requestOperations from '../../../models/helpers/request-operations';
-type Props = {
+
+interface Props {
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  workspaces: Array<Workspace>;
-};
-type State = {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
+  workspaces: Workspace[];
+}
+
+interface State {
   request: Request | GrpcRequest | null;
   showDescription: boolean;
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
   workspace: Workspace | null;
+  workspaces: Workspace[];
   justCopied: boolean;
   justMoved: boolean;
-};
-type RequestSettingsModalOptions = {
+}
+
+interface RequestSettingsModalOptions {
   request: Request | GrpcRequest;
   forceEditMode: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestSettingsModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  _editor: MarkdownEditor | null | undefined;
+class RequestSettingsModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
+  _editor: MarkdownEditor | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      request: null,
-      showDescription: false,
-      defaultPreviewMode: false,
-      activeWorkspaceIdToCopyTo: null,
-      workspace: null,
-      workspaces: [],
-      justCopied: false,
-      justMoved: false,
-    };
+  state: State = {
+    request: null,
+    showDescription: false,
+    defaultPreviewMode: false,
+    activeWorkspaceIdToCopyTo: null,
+    workspace: null,
+    workspaces: [],
+    justCopied: false,
+    justMoved: false,
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setEditorRef(n: MarkdownEditor | null | undefined) {
+  _setEditorRef(n: MarkdownEditor) {
     this._editor = n;
   }
 
@@ -77,9 +78,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     const request = await models.request.update(this.state.request, {
       [setting]: value,
     });
-    this.setState({
-      request,
-    });
+    this.setState({ request });
   }
 
   async _updateRequestSettingString(e: React.SyntheticEvent<HTMLInputElement>) {
@@ -93,9 +92,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     const request = await models.request.update(this.state.request, {
       [setting]: value,
     });
-    this.setState({
-      request,
-    });
+    this.setState({ request });
   }
 
   async _handleNameChange(name: string) {
@@ -111,9 +108,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     const updatedRequest = isGrpcRequest(originalRequest)
       ? await models.grpcRequest.update(originalRequest, patch)
       : await models.request.update(originalRequest, patch);
-    this.setState({
-      request: updatedRequest,
-    });
+    this.setState({ request: updatedRequest });
   }
 
   async _handleDescriptionChange(description: string) {
@@ -131,17 +126,13 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
   }
 
   _handleAddDescription() {
-    this.setState({
-      showDescription: true,
-    });
+    this.setState({ showDescription: true });
   }
 
   _handleUpdateMoveCopyWorkspace(e: React.SyntheticEvent<HTMLSelectElement>) {
     const { value } = e.currentTarget;
     const workspaceId = value === '__NULL__' ? null : value;
-    this.setState({
-      activeWorkspaceIdToCopyTo: workspaceId,
-    });
+    this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
   }
 
   async _handleMoveToWorkspace() {
@@ -168,9 +159,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
       justMoved: true,
     });
     setTimeout(() => {
-      this.setState({
-        justMoved: false,
-      });
+      this.setState({ justMoved: false });
     }, 2000);
   }
 
@@ -256,7 +245,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  _renderRequestSettings(): React.ReactNode {
+  _renderRequestSettings() {
     const { request } = this.state;
 
     // GrpcRequests do not have any request settings (yet)
@@ -328,7 +317,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  _renderDescription(): React.ReactNode {
+  _renderDescription() {
     const {
       editorLineWrapping,
       editorFontSize,
@@ -372,7 +361,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  _renderFeatureRequestPrompt(): React.ReactNode {
+  _renderFeatureRequestPrompt() {
     const { request } = this.state;
 
     // Don't show move/copy items if it doesn't exist, or if it is a gRPC request
@@ -388,7 +377,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     return null;
   }
 
-  _renderMoveCopy(): React.ReactNode {
+  _renderMoveCopy() {
     const { workspaces } = this.props;
     const { activeWorkspaceIdToCopyTo, justMoved, justCopied, workspace, request } = this.state;
 
@@ -444,7 +433,7 @@ class RequestSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody(): React.ReactNode {
+  renderModalBody() {
     const { request } = this.state;
 
     if (!request) {

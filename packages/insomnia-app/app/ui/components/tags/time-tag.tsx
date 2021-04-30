@@ -1,15 +1,15 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import Tooltip from '../tooltip';
-type Props = {
+
+interface Props {
   milliseconds: number;
-  // Optional
   small?: boolean;
   className?: string;
   tooltipDelay?: number;
-};
+}
 
-class TimeTag extends React.PureComponent<Props> {
+class TimeTag extends PureComponent<Props> {
   render() {
     const { milliseconds, small, className, tooltipDelay } = this.props;
     let unit = 'ms';

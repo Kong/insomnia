@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import VariableEditor from '../templating/variable-editor';
@@ -9,22 +8,32 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
+interface Props {
+  uniqueKey: string;
+  handleRender: Function;
+  handleGetRenderContext: Function;
+  workspace: any;
+}
+
+interface State {
+  defaultTemplate: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class NunjucksModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      defaultTemplate: '',
-    };
-    this._onDone = null;
-    this._currentTemplate = null;
+class NunjucksModal extends PureComponent<Props, State> {
+  state: State = {
+    defaultTemplate: '',
   }
 
-  _setModalRef(n) {
+  _onDone: Function | null = null;
+  _currentTemplate: string | null = null;
+  modal: Modal | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _handleTemplateChange(template) {
+  _handleTemplateChange(template: string | null) {
     this._currentTemplate = template;
   }
 
@@ -49,11 +58,11 @@ class NunjucksModal extends PureComponent {
     this.setState({
       defaultTemplate: template,
     });
-    this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -101,10 +110,4 @@ class NunjucksModal extends PureComponent {
   }
 }
 
-NunjucksModal.propTypes = {
-  uniqueKey: PropTypes.string.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  workspace: PropTypes.object.isRequired,
-};
 export default NunjucksModal;

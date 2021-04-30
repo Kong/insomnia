@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
@@ -10,17 +10,18 @@ import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
 import Button from '../../base/button';
 import type { Request, RequestAuthentication } from '../../../../models/request';
-type Props = {
+
+interface Props {
   request: Request;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class HawkAuth extends React.PureComponent<Props> {
+class HawkAuth extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
@@ -53,7 +54,7 @@ class HawkAuth extends React.PureComponent<Props> {
     this._handleChangeProperty('validatePayload', !request.authentication.validatePayload);
   }
 
-  renderHawkAuthenticationFields(): React.ReactNode {
+  renderHawkAuthenticationFields() {
     const hawkAuthId = this.renderInputRow('Auth ID', 'id', this._handleChangeHawkAuthId);
     const hawkAuthKey = this.renderInputRow('Auth Key', 'key', this._handleChangeHawkAuthKey);
     const algorithm = this.renderSelectRow(
@@ -83,13 +84,13 @@ class HawkAuth extends React.PureComponent<Props> {
   renderSelectRow(
     label: string,
     property: string,
-    options: Array<{
+    options: {
       name: string;
       value: string;
-    }>,
-    onChange: (...args: Array<any>) => any,
+    }[],
+    onChange: (...args: any[]) => any,
     help: string | null = null,
-  ): React.ReactElement<any> {
+  ) {
     const { authentication } = this.props.request;
     const id = label.replace(/ /g, '-');
     const value = authentication.hasOwnProperty(property) ? authentication[property] : options[0];
@@ -122,8 +123,8 @@ class HawkAuth extends React.PureComponent<Props> {
   renderInputRow(
     label: string,
     property: string,
-    onChange: (...args: Array<any>) => any,
-  ): React.ReactElement<any> {
+    onChange: (...args: any[]) => any,
+  ) {
     const {
       handleRender,
       handleGetRenderContext,
@@ -161,11 +162,7 @@ class HawkAuth extends React.PureComponent<Props> {
     );
   }
 
-  renderButtonRow(
-    label: string,
-    property: string,
-    onChange: (...args: Array<any>) => any,
-  ): React.ReactElement<any> {
+  renderButtonRow(label: string) {
     const { request } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');

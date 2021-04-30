@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import ReactDOM from 'react-dom';
 import { DragSource, DropTarget } from 'react-dnd';
@@ -16,27 +15,57 @@ import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import GrpcSpinner from '../grpc-spinner';
+import { Environment } from '../../../models/environment';
+
+interface Props {
+  activeEnvironment: Environment | null;
+  handleActivateRequest: Function;
+  handleSetRequestPinned: Function;
+  handleDuplicateRequest: Function;
+  handleGenerateCode: Function;
+  handleCopyAsCurl: Function;
+  handleRender: Function;
+  requestCreate: Function;
+  moveDoc: Function;
+  filter: string;
+  isActive: boolean;
+  isPinned: boolean;
+  hotKeyRegistry: object;
+  isDragging?: boolean;
+  isDraggingOver?: boolean;
+  connectDragSource?: Function;
+  connectDropTarget?: Function;
+  requestGroup?: object;
+  request?: object;
+  /** can be Request or GrpcRequest */
+  disableDragAndDrop?: boolean;
+}
+
+interface State {
+  dragDirection: number;
+  isEditing: boolean;
+  renderedUrl: string;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarRequestRow extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      dragDirection: 0,
-      isEditing: false,
-      renderedUrl: '',
-    };
-    this._urlUpdateInterval = null;
+class SidebarRequestRow extends PureComponent<Props, State> {
+  state: State = {
+    dragDirection: 0,
+    isEditing: false,
+    renderedUrl: '',
   }
 
-  _setRequestActionsDropdownRef(n) {
+  _urlUpdateInterval: NodeJS.Timeout | null = null;
+  _requestActionsDropdown: RequestActionsDropdown | null = null;
+
+  _setRequestActionsDropdownRef(n: RequestActionsDropdown) {
     this._requestActionsDropdown = n;
   }
 
   _handleShowRequestActions(e) {
     e.preventDefault();
 
-    this._requestActionsDropdown.show();
+    this._requestActionsDropdown?.show();
   }
 
   _handleEditStart() {
@@ -93,14 +122,16 @@ class SidebarRequestRow extends PureComponent {
     return null;
   }
 
-  async _debouncedUpdateRenderedUrl(props) {
-    clearTimeout(this._urlUpdateInterval);
+  async _debouncedUpdateRenderedUrl(props: Props) {
+    if (this._urlUpdateInterval !== null) {
+      clearTimeout(this._urlUpdateInterval);
+    }
     this._urlUpdateInterval = setTimeout(() => {
       this._updateRenderedUrl(props);
     }, 300);
   }
 
-  async _updateRenderedUrl(props) {
+  async _updateRenderedUrl(props: Props) {
     let renderedUrl;
 
     try {
@@ -147,27 +178,29 @@ class SidebarRequestRow extends PureComponent {
   }
 
   componentWillUnmount() {
-    clearTimeout(this._urlUpdateInterval);
+    if (this._urlUpdateInterval !== null) {
+      clearTimeout(this._urlUpdateInterval);
+    }
   }
 
   render() {
     const {
-      filter,
-      handleDuplicateRequest,
-      handleSetRequestPinned,
-      handleGenerateCode,
-      handleCopyAsCurl,
+      activeEnvironment,
       connectDragSource,
       connectDropTarget,
+      disableDragAndDrop,
+      filter,
+      handleCopyAsCurl,
+      handleDuplicateRequest,
+      handleGenerateCode,
+      handleSetRequestPinned,
+      hotKeyRegistry,
+      isActive,
       isDragging,
       isDraggingOver,
+      isPinned,
       request,
       requestGroup,
-      isActive,
-      isPinned,
-      disableDragAndDrop,
-      hotKeyRegistry,
-      activeEnvironment,
     } = this.props;
     const { dragDirection } = this.state;
     let node;
@@ -261,34 +294,8 @@ class SidebarRequestRow extends PureComponent {
   }
 }
 
-SidebarRequestRow.propTypes = {
-  // Functions
-  handleActivateRequest: PropTypes.func.isRequired,
-  handleSetRequestPinned: PropTypes.func.isRequired,
-  handleDuplicateRequest: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  handleCopyAsCurl: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  requestCreate: PropTypes.func.isRequired,
-  moveDoc: PropTypes.func.isRequired,
-  // Other
-  filter: PropTypes.string.isRequired,
-  isActive: PropTypes.bool.isRequired,
-  isPinned: PropTypes.bool.isRequired,
-  hotKeyRegistry: PropTypes.object.isRequired,
-  // React DnD
-  isDragging: PropTypes.bool,
-  isDraggingOver: PropTypes.bool,
-  connectDragSource: PropTypes.func,
-  connectDropTarget: PropTypes.func,
-  // Optional
-  requestGroup: PropTypes.object,
-  request: PropTypes.object,
-  // can be Request or GrpcRequest
-  disableDragAndDrop: PropTypes.bool,
-};
 const dragSource = {
-  beginDrag(props) {
+  beginDrag(props: Props) {
     return {
       request: props.request,
     };

@@ -1,19 +1,36 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { createRef, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 
+interface Props {
+  handleRender: Function;
+  handleGetRenderContext: Function;
+  defaultValue: string;
+  onChange: Function;
+}
+
+interface State {
+  variables: any[];
+  value: string;
+  preview: string;
+  error: string;
+  variableSource: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class VariableEditor extends PureComponent {
-  constructor(props) {
+class VariableEditor extends PureComponent<Props, State> {
+  textAreaRef = createRef<HTMLTextAreaElement>();
+  _select: HTMLSelectElement | null = null;
+
+  constructor(props: Props) {
     super(props);
-    this.textAreaRef = React.createRef();
     const inner = props.defaultValue.replace(/\s*}}$/, '').replace(/^{{\s*/, '');
     this.state = {
       variables: [],
       value: `{{ ${inner} }}`,
       preview: '',
       error: '',
+      variableSource: '',
     };
   }
 
@@ -41,11 +58,11 @@ class VariableEditor extends PureComponent {
     }, 200);
   }
 
-  _setSelectRef(n) {
+  _setSelectRef(n: HTMLSelectElement) {
     this._select = n;
     // Let it render, then focus the input
     setTimeout(() => {
-      this._select && this._select.focus();
+      this._select?.focus();
     }, 100);
   }
 
@@ -125,10 +142,4 @@ class VariableEditor extends PureComponent {
   }
 }
 
-VariableEditor.propTypes = {
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  defaultValue: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-};
 export default VariableEditor;

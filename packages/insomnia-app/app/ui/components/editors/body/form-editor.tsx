@@ -1,11 +1,19 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import KeyValueEditor from '../../key-value-editor/editor';
 
+interface Props {
+  onChange: Function,
+  parameters: any[],
+  nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
+  handleRender?: Function,
+  handleGetRenderContext?: Function,
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FormEditor extends PureComponent {
+class FormEditor extends PureComponent<Props> {
   render() {
     const {
       parameters,
@@ -38,14 +46,4 @@ class FormEditor extends PureComponent {
   }
 }
 
-FormEditor.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  parameters: PropTypes.arrayOf(PropTypes.object).isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-  // Optional
-  handleRender: PropTypes.func,
-  handleGetRenderContext: PropTypes.func,
-};
 export default FormEditor;

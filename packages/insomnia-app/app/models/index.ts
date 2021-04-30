@@ -23,13 +23,15 @@ import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 import { generateId, pluralize } from '../common/misc';
-export type BaseModel = {
+
+export interface BaseModel {
   _id: string;
   type: string;
   parentId: string;
   modified: number;
   created: number;
-};
+}
+
 // Reference to each model
 export const apiSpec = _apiSpec;
 export const clientCertificate = _clientCertificate;
@@ -86,7 +88,7 @@ export function all() {
     grpcRequestMeta,
   ];
 }
-export function types(): Array<any> {
+export function types(): any[] {
   return all().map(model => model.type);
 }
 export function canSync(d: BaseModel): boolean {
@@ -118,7 +120,7 @@ export function canDuplicate(type: string) {
   const model = getModel(type);
   return model ? model.canDuplicate : false;
 }
-export function getModelName(type: string, count: number = 1) {
+export function getModelName(type: string, count = 1) {
   const model = getModel(type);
 
   if (!model) {
@@ -131,7 +133,7 @@ export function getModelName(type: string, count: number = 1) {
 }
 export async function initModel<T extends BaseModel>(
   type: string,
-  ...sources: Array<Record<string, any>>
+  ...sources: Record<string, any>[]
 ): Promise<T> {
   const model = getModel(type);
 

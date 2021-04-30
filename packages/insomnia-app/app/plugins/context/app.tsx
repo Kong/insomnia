@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 import * as electron from 'electron';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import type { RenderPurpose } from '../../common/render';

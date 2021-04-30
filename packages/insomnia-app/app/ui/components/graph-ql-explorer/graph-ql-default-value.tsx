@@ -1,11 +1,12 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import type { GraphQLField } from 'graphql';
 import { astFromValue, print } from 'graphql';
-type Props = {
-  field: GraphQLField<any, any>;
-};
 
-class GraphQLDefaultValue extends React.PureComponent<Props> {
+interface Props {
+  field: GraphQLField<any, any>;
+}
+
+class GraphQLDefaultValue extends PureComponent<Props> {
   render() {
     const { field } = this.props;
     // Make Flow happy :/

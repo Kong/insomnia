@@ -11,35 +11,34 @@ import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
 import { fuzzyMatch } from '../../../common/misc';
-type Props = {
-  handleShowModifyCookieModal: (...args: Array<any>) => any;
+
+interface Props {
+  handleShowModifyCookieModal: (...args: any[]) => any;
   handleRender: (arg0: string | Record<string, any>) => Promise<string | Record<string, any>>;
   cookieJar: CookieJar;
   workspace: Workspace;
-};
-type State = {
+}
+
+interface State {
   filter: string;
-  visibleCookieIndexes: Array<number> | null;
-};
+  visibleCookieIndexes: number[] | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class CookiesModal extends PureComponent<Props, State> {
-  modal: Modal | null;
-  filterInput: HTMLInputElement | null;
+  modal: Modal | null = null;
+  filterInput: HTMLInputElement | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      filter: '',
-      visibleCookieIndexes: null,
-    };
+  state: State = {
+    filter: '',
+    visibleCookieIndexes: null,
   }
 
-  _setModalRef(n: React.Component<any> | null) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setFilterInputRef(n: HTMLInputElement | null) {
+  _setFilterInputRef(n: HTMLInputElement) {
     this.filterInput = n;
   }
 
@@ -90,7 +89,7 @@ class CookiesModal extends PureComponent<Props, State> {
     }
   }
 
-  async _applyFilter(filter: string, cookies: Array<Cookie>) {
+  async _applyFilter(filter: string, cookies: Cookie[]) {
     const renderedCookies = [];
 
     for (const cookie of cookies) {
@@ -128,7 +127,7 @@ class CookiesModal extends PureComponent<Props, State> {
     });
   }
 
-  _getVisibleCookies(): Array<Cookie> {
+  _getVisibleCookies(): Cookie[] {
     const { cookieJar } = this.props;
     const { visibleCookieIndexes } = this.state;
 

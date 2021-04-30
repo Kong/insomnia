@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -18,18 +18,18 @@ import { showModal } from '../modals/index';
 import AlertModal from '../modals/alert-modal';
 import type { Request, RequestBody } from '../../../models/request';
 import { trackEvent } from '../../../common/analytics';
-type Props = {
-  onChange: (...args: Array<any>) => any;
-  contentType: string | null | undefined;
-  children: React.ReactNode | null | undefined;
-  // Optional
+
+interface Props {
+  onChange: (...args: any[]) => any;
+  contentType?: string | null;
+  children?: ReactNode | null;
   className?: string;
   request?: Request;
-};
+}
 const EMPTY_MIME_TYPE = null;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ContentTypeDropdown extends React.PureComponent<Props> {
+class ContentTypeDropdown extends PureComponent<Props> {
   async _checkMimeTypeChange(body: RequestBody, mimeType: string | null) {
     // Nothing to do
     if (body.mimeType === mimeType) {
@@ -71,7 +71,7 @@ class ContentTypeDropdown extends React.PureComponent<Props> {
     trackEvent('Request', 'Change MimeType', mimeType);
   }
 
-  _renderDropdownItem(mimeType: string | null, forcedName: string = '') {
+  _renderDropdownItem(mimeType: string | null, forcedName = '') {
     const contentType =
       typeof this.props.contentType === 'string' ? this.props.contentType : EMPTY_MIME_TYPE;
     const iconClass = mimeType === contentType ? 'fa-check' : 'fa-empty';

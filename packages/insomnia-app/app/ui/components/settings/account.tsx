@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Link from '../base/link';
@@ -7,8 +7,8 @@ import { hideAllModals, showModal } from '../modals/index';
 import PromptButton from '../base/prompt-button';
 import * as session from '../../../account/session';
 import HelpTooltip from '../help-tooltip';
-type Props = {};
-type State = {
+
+interface State {
   code: string;
   password: string;
   password2: string;
@@ -16,11 +16,11 @@ type State = {
   codeSent: boolean;
   error: string;
   finishedResetting: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Account extends React.PureComponent<Props, State> {
-  state = {
+class Account extends PureComponent<{}, State> {
+  state: State = {
     code: '',
     password: '',
     password2: '',
@@ -125,7 +125,7 @@ class Account extends React.PureComponent<Props, State> {
 
   static renderUpgrade() {
     return (
-      <React.Fragment>
+      <Fragment>
         <div className="notice pad surprise">
           <h1 className="no-margin-top">Try Insomnia Plus!</h1>
           <p>
@@ -155,7 +155,7 @@ class Account extends React.PureComponent<Props, State> {
             Log In
           </a>
         </p>
-      </React.Fragment>
+      </Fragment>
     );
   }
 
@@ -170,7 +170,7 @@ class Account extends React.PureComponent<Props, State> {
       finishedResetting,
     } = this.state;
     return (
-      <React.Fragment>
+      <Fragment>
         <div>
           <h2 className="no-margin-top">Welcome {session.getFirstName()}!</h2>
           <p>
@@ -249,7 +249,7 @@ class Account extends React.PureComponent<Props, State> {
             </div>
           </form>
         )}
-      </React.Fragment>
+      </Fragment>
     );
   }
 

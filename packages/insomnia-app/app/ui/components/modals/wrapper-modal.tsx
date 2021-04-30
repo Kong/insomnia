@@ -1,36 +1,33 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-type Props = {};
-type State = {
+
+interface State {
   title: string;
-  body: React.ReactNode;
-  bodyHTML: string | null | undefined;
-  tall: boolean | null | undefined;
-  skinny: boolean | null | undefined;
-  wide: boolean | null | undefined;
-};
+  body: ReactNode;
+  bodyHTML?: string | null;
+  tall?: boolean | null;
+  skinny?: boolean | null;
+  wide?: boolean | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class WrapperModal extends PureComponent<{}, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      title: '',
-      body: null,
-      bodyHTML: null,
-      tall: false,
-      skinny: false,
-      wide: false,
-    };
+  state: State = {
+    title: '',
+    body: null,
+    bodyHTML: null,
+    tall: false,
+    skinny: false,
+    wide: false,
   }
 
-  _setModalRef(m: Modal | null | undefined) {
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 

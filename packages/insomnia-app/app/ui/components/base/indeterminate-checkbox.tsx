@@ -1,16 +1,17 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-type Props = {
+
+interface Props {
   indeterminate: boolean;
   checked: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class IndeterminateCheckbox extends React.PureComponent<Props> {
-  input: HTMLInputElement | null | undefined;
+class IndeterminateCheckbox extends PureComponent<Props> {
+  input: HTMLInputElement | null = null;
 
-  _setRef(n: HTMLInputElement | null | undefined) {
+  _setRef(n: HTMLInputElement) {
     this.input = n;
   }
 

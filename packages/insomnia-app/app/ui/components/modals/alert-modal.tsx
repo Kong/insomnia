@@ -6,19 +6,27 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
+interface State {
+  title: string;
+  message: string;
+  addCancel: boolean;
+  okLabel: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AlertModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      title: '',
-      message: '',
-      addCancel: false,
-      okLabel: '',
-    };
+class AlertModal extends PureComponent<{}, State> {
+  state: State = {
+    title: '',
+    message: '',
+    addCancel: false,
+    okLabel: '',
   }
 
-  _setModalRef(m) {
+  modal: Modal | null = null;
+  _cancel: HTMLButtonElement | null = null;
+  _ok: HTMLButtonElement | null = null;
+
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 
@@ -33,14 +41,14 @@ class AlertModal extends PureComponent {
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
-  setCancelRef(n) {
+  setCancelRef(n: HTMLButtonElement) {
     this._cancel = n;
   }
 
-  setOkRef(n) {
+  setOkRef(n: HTMLButtonElement) {
     this._ok = n;
   }
 

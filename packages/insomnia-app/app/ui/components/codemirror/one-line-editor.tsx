@@ -1,5 +1,4 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
@@ -11,9 +10,37 @@ const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
+interface Props {
+  defaultValue: string;
+  id?: string;
+  type?: string;
+  mode?: string;
+  onBlur?: Function;
+  onKeyDown?: Function;
+  onFocus?: Function;
+  onChange?: Function;
+  onPaste?: Function;
+  render?: Function;
+  getRenderContext?: Function;
+  nunjucksPowerUserMode?: boolean;
+  getAutocompleteConstants?: Function;
+  placeholder?: string;
+  className?: string;
+  forceEditor?: boolean;
+  forceInput?: boolean;
+  isVariableUncovered?: boolean;
+}
+
+interface State {
+  mode: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class OneLineEditor extends PureComponent {
-  constructor(props) {
+class OneLineEditor extends PureComponent<Props, State> {
+  _editor: typeof CodeEditor | null = null;
+  _input: typeof Input | null = null;
+
+  constructor(props: Props) {
     super(props);
     let mode;
 
@@ -34,12 +61,12 @@ class OneLineEditor extends PureComponent {
 
   focus(setToEnd = false) {
     if (this.state.mode === MODE_EDITOR) {
-      if (this._editor && !this._editor.hasFocus()) {
-        setToEnd ? this._editor.focusEnd() : this._editor.focus();
+      if (this._editor && !this._editor?.hasFocus()) {
+        setToEnd ? this._editor?.focusEnd() : this._editor?.focus();
       }
     } else {
-      if (this._input && !this._input.hasFocus()) {
-        setToEnd ? this._input.focusEnd() : this._input.focus();
+      if (this._input && !this._input?.hasFocus()) {
+        setToEnd ? this._input?.focusEnd() : this._input?.focus();
       }
     }
   }
@@ -50,35 +77,35 @@ class OneLineEditor extends PureComponent {
 
   selectAll() {
     if (this.state.mode === MODE_EDITOR) {
-      this._editor.selectAll();
+      this._editor?.selectAll();
     } else {
-      this._input.select();
+      this._input?.select();
     }
   }
 
   getValue() {
     if (this.state.mode === MODE_EDITOR) {
-      return this._editor.getValue();
+      return this._editor?.getValue();
     } else {
-      return this._input.getValue();
+      return this._input?.getValue();
     }
   }
 
   getSelectionStart() {
     if (this._editor) {
-      return this._editor.getSelectionStart();
+      return this._editor?.getSelectionStart();
     } else {
       console.warn('Tried to get selection start of one-line-editor when <input>');
-      return this._input.value.length;
+      return this._input?.value.length;
     }
   }
 
   getSelectionEnd() {
     if (this._editor) {
-      return this._editor.getSelectionEnd();
+      return this._editor?.getSelectionEnd();
     } else {
       console.warn('Tried to get selection end of one-line-editor when <input>');
-      return this._input.value.length;
+      return this._input?.value.length;
     }
   }
 
@@ -102,7 +129,7 @@ class OneLineEditor extends PureComponent {
     const clickWasOutsideOfComponent = !node.contains(e.target);
 
     if (clickWasOutsideOfComponent) {
-      this._editor.clearSelection();
+      this._editor?.clearSelection();
     }
   }
 
@@ -132,7 +159,7 @@ class OneLineEditor extends PureComponent {
     const focusedFromTabEvent = !!e.sourceCapabilities;
 
     if (focusedFromTabEvent) {
-      this._editor.focusEnd();
+      this._editor?.focusEnd();
     }
 
     if (!this._editor) {
@@ -141,7 +168,7 @@ class OneLineEditor extends PureComponent {
     }
 
     // Set focused state
-    this._editor.setAttribute('data-focused', 'on');
+    this._editor?.setAttribute('data-focused', 'on');
 
     this.props.onFocus && this.props.onFocus(e);
   }
@@ -149,14 +176,14 @@ class OneLineEditor extends PureComponent {
   _handleInputFocus(e) {
     // If we're focusing the whole thing, blur the input. This happens when
     // the user tabs to the field.
-    const start = this._input.getSelectionStart();
+    const start = this._input?.getSelectionStart();
 
-    const end = this._input.getSelectionEnd();
+    const end = this._input?.getSelectionEnd();
 
     const focusedFromTabEvent = start === 0 && end === e.target.value.length;
 
     if (focusedFromTabEvent) {
-      this._input.focusEnd();
+      this._input?.focusEnd();
 
       // Also convert to editor if we tabbed to it. Just in case the user
       // needs an editor
@@ -164,7 +191,7 @@ class OneLineEditor extends PureComponent {
     }
 
     // Set focused state
-    this._input.setAttribute('data-focused', 'on');
+    this._input?.setAttribute('data-focused', 'on');
 
     // Also call the regular callback
     this.props.onFocus && this.props.onFocus(e);
@@ -184,7 +211,7 @@ class OneLineEditor extends PureComponent {
 
   _handleInputBlur() {
     // Set focused state
-    this._input.removeAttribute('data-focused');
+    this._input?.removeAttribute('data-focused');
 
     this.props.onBlur && this.props.onBlur();
   }
@@ -196,7 +223,7 @@ class OneLineEditor extends PureComponent {
     }
 
     // Set focused state
-    this._editor.removeAttribute('data-focused');
+    this._editor?.removeAttribute('data-focused');
 
     if (!this.props.forceEditor) {
       // Convert back to input sometime in the future.
@@ -240,17 +267,17 @@ class OneLineEditor extends PureComponent {
       return;
     }
 
-    if (this._input.hasFocus()) {
-      const start = this._input.getSelectionStart();
+    if (this._input?.hasFocus()) {
+      const start = this._input?.getSelectionStart();
 
-      const end = this._input.getSelectionEnd();
+      const end = this._input?.getSelectionEnd();
 
       // Wait for the editor to swap and restore cursor position
       const check = () => {
         if (this._editor) {
-          this._editor.focus();
+          this._editor?.focus();
 
-          this._editor.setSelection(start, end, 0, 0);
+          this._editor?.setSelection(start, end, 0, 0);
         } else {
           setTimeout(check, 40);
         }
@@ -270,7 +297,7 @@ class OneLineEditor extends PureComponent {
       return;
     }
 
-    if (!this._editor || this._editor.hasFocus()) {
+    if (!this._editor || this._editor?.hasFocus()) {
       return;
     }
 
@@ -283,11 +310,11 @@ class OneLineEditor extends PureComponent {
     });
   }
 
-  _setEditorRef(n) {
+  _setEditorRef(n: typeof CodeEditor) {
     this._editor = n;
   }
 
-  _setInputRef(n) {
+  _setInputRef(n: typeof Input) {
     this._input = n;
   }
 
@@ -323,7 +350,7 @@ class OneLineEditor extends PureComponent {
 
     if (showEditor) {
       return (
-        <React.Fragment>
+        <Fragment>
           <CodeEditor
             ref={this._setEditorRef}
             defaultTabBehavior
@@ -353,7 +380,7 @@ class OneLineEditor extends PureComponent {
             defaultValue={defaultValue}
             isVariableUncovered={isVariableUncovered}
           />
-        </React.Fragment>
+        </Fragment>
       );
     } else {
       return (
@@ -382,25 +409,4 @@ class OneLineEditor extends PureComponent {
   }
 }
 
-OneLineEditor.propTypes = {
-  defaultValue: PropTypes.string.isRequired,
-  // Optional
-  id: PropTypes.string,
-  type: PropTypes.string,
-  mode: PropTypes.string,
-  onBlur: PropTypes.func,
-  onKeyDown: PropTypes.func,
-  onFocus: PropTypes.func,
-  onChange: PropTypes.func,
-  onPaste: PropTypes.func,
-  render: PropTypes.func,
-  getRenderContext: PropTypes.func,
-  nunjucksPowerUserMode: PropTypes.bool,
-  getAutocompleteConstants: PropTypes.func,
-  placeholder: PropTypes.string,
-  className: PropTypes.string,
-  forceEditor: PropTypes.bool,
-  forceInput: PropTypes.bool,
-  isVariableUncovered: PropTypes.bool,
-};
 export default OneLineEditor;

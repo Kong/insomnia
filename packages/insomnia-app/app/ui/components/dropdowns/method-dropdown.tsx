@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import * as constants from '../../../common/constants';
@@ -8,9 +7,18 @@ import { METHOD_GRPC, AUTOBIND_CFG } from '../../../common/constants';
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
+interface Props {
+  onChange: Function,
+  method: string,
+  right?: boolean,
+  showGrpc?: boolean,
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MethodDropdown extends PureComponent {
-  _setDropdownRef(n) {
+class MethodDropdown extends PureComponent<Props> {
+  _dropdown: typeof Dropdown | null = null;
+
+  _setDropdownRef(n: typeof Dropdown) {
     this._dropdown = n;
   }
 
@@ -65,7 +73,7 @@ class MethodDropdown extends PureComponent {
   }
 
   toggle() {
-    this._dropdown && this._dropdown.toggle(true);
+    this._dropdown?.toggle(true);
   }
 
   render() {
@@ -113,12 +121,4 @@ class MethodDropdown extends PureComponent {
   }
 }
 
-MethodDropdown.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  method: PropTypes.string.isRequired,
-  // Optional
-  right: PropTypes.bool,
-  showGrpc: PropTypes.bool,
-};
 export default MethodDropdown;

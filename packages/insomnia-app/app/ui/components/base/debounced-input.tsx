@@ -1,12 +1,23 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { debounce } from '../../../common/misc';
 
+interface Props {
+  onChange: (value: string) => void;
+  onFocus?: Function;
+  onBlur?: Function;
+  textarea?: boolean;
+  delay?: number;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class DebouncedInput extends PureComponent {
-  constructor(props) {
+class DebouncedInput extends PureComponent<Props> {
+  _hasFocus = false;
+  _input: HTMLTextAreaElement | HTMLInputElement | null = null;
+  _handleValueChange: Props['onChange'] | null = null;
+
+  constructor(props: Props) {
     super(props);
 
     if (!props.delay) {
@@ -14,38 +25,36 @@ class DebouncedInput extends PureComponent {
     } else {
       this._handleValueChange = debounce(props.onChange, props.delay || 500);
     }
-
-    this._hasFocus = false;
   }
 
-  _handleChange(e) {
-    this._handleValueChange(e.target.value);
+  _handleChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    this._handleValueChange?.(e.target.value);
   }
 
-  _handleFocus(e) {
+  _handleFocus(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = true;
     this.props.onFocus && this.props.onFocus(e);
   }
 
-  _handleBlur(e) {
+  _handleBlur(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
     this._hasFocus = false;
     this.props.onBlur && this.props.onBlur(e);
   }
 
-  _setRef(n) {
+  _setRef(n: HTMLTextAreaElement | HTMLInputElement) {
     this._input = n;
   }
 
-  setAttribute(name, value) {
-    this._input.setAttribute(name, value);
+  setAttribute(name: string, value: string) {
+    this._input?.setAttribute(name, value);
   }
 
-  removeAttribute(name) {
-    this._input.removeAttribute(name);
+  removeAttribute(name: string) {
+    this._input?.removeAttribute(name);
   }
 
-  getAttribute(name) {
-    this._input.getAttribute(name);
+  getAttribute(name: string) {
+    this._input?.getAttribute(name);
   }
 
   hasFocus() {
@@ -120,7 +129,7 @@ class DebouncedInput extends PureComponent {
     if (textarea) {
       return (
         <textarea
-          ref={this._setRef}
+          ref={ref => { this._input = ref; }}
           {...props}
           onChange={this._handleChange}
           onFocus={this._handleFocus}
@@ -130,7 +139,7 @@ class DebouncedInput extends PureComponent {
     } else {
       return (
         <input
-          ref={this._setRef}
+          ref={ref => { this._input = ref; }}
           {...props}
           onChange={this._handleChange}
           onFocus={this._handleFocus}
@@ -141,13 +150,4 @@ class DebouncedInput extends PureComponent {
   }
 }
 
-DebouncedInput.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  // Optional
-  onFocus: PropTypes.func,
-  onBlur: PropTypes.func,
-  textarea: PropTypes.bool,
-  delay: PropTypes.number,
-};
 export default DebouncedInput;

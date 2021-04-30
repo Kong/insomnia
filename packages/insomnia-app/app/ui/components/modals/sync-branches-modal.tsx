@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -11,35 +11,34 @@ import { batchModifyDocs } from '../../../common/database';
 import type { StatusCandidate } from '../../../sync/types';
 import PromptButton from '../base/prompt-button';
 import SyncPullButton from '../sync-pull-button';
-type Props = {
+
+interface Props {
   workspace: Workspace;
-  syncItems: Array<StatusCandidate>;
+  syncItems: StatusCandidate[];
   vcs: VCS;
-};
-type State = {
+}
+
+interface State {
   error: string;
   newBranchName: string;
   currentBranch: string;
-  branches: Array<string>;
-  remoteBranches: Array<string>;
-};
+  branches: string[];
+  remoteBranches: string[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncBranchesModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class SyncBranchesModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      error: '',
-      newBranchName: '',
-      branches: [],
-      remoteBranches: [],
-      currentBranch: '',
-    };
+  state: State = {
+    error: '',
+    newBranchName: '',
+    branches: [],
+    remoteBranches: [],
+    currentBranch: '',
   }
 
-  _setModalRef(m: Modal | null | undefined) {
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 
@@ -166,7 +165,7 @@ class SyncBranchesModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { onHide: (...args: Array<any>) => any }) {
+  async show(options: { onHide: (...args: any[]) => any }) {
     this.modal &&
       this.modal.show({
         onHide: options.onHide,

@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import EnvironmentEditor from '../editors/environment-editor';
@@ -8,26 +7,43 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
+interface Props {
+  onChange: Function;
+  editorFontSize: number;
+  editorIndentSize: number;
+  editorKeyMap: string;
+  render: Function;
+  getRenderContext: Function;
+  nunjucksPowerUserMode: boolean;
+  isVariableUncovered: boolean;
+  lineWrapping: boolean;
+}
+
+interface State {
+  requestGroup: unknown | null;
+  isValid: boolean;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class EnvironmentEditModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      requestGroup: null,
-      isValid: true,
-    };
+class EnvironmentEditModal extends PureComponent<Props, State> {
+  state: State = {
+    requestGroup: null,
+    isValid: true,
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+  _envEditor: EnvironmentEditor | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setEditorRef(n) {
+  _setEditorRef(n: EnvironmentEditor) {
     this._envEditor = n;
   }
 
   _saveChanges() {
-    if (!this._envEditor.isValid()) {
+    if (!this._envEditor?.isValid()) {
       return;
     }
 
@@ -52,24 +68,20 @@ class EnvironmentEditModal extends PureComponent {
   _didChange() {
     this._saveChanges();
 
-    const isValid = this._envEditor.isValid();
+    const isValid = Boolean(this._envEditor?.isValid());
 
     if (this.state.isValid !== isValid) {
-      this.setState({
-        isValid,
-      });
+      this.setState({ isValid });
     }
   }
 
   show(requestGroup) {
-    this.setState({
-      requestGroup,
-    });
-    this.modal.show();
+    this.setState({ requestGroup });
+    this.modal?.show();
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -121,15 +133,4 @@ class EnvironmentEditModal extends PureComponent {
   }
 }
 
-EnvironmentEditModal.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  render: PropTypes.func.isRequired,
-  getRenderContext: PropTypes.func.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-  lineWrapping: PropTypes.bool.isRequired,
-};
 export default EnvironmentEditModal;

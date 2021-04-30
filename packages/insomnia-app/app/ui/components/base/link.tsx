@@ -1,21 +1,22 @@
 import classnames from 'classnames';
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as misc from '../../../common/misc';
-type Props = {
+
+interface Props {
   href: string;
   title?: string;
   button?: boolean;
-  onClick?: (...args: Array<any>) => any;
+  onClick?: (...args: any[]) => any;
   className?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
   disabled?: boolean;
   noTheme?: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Link extends React.PureComponent<Props> {
+class Link extends PureComponent<Props> {
   _handleClick(e: React.SyntheticEvent<HTMLAnchorElement>) {
     e && e.preventDefault();
     const { href, onClick } = this.props;

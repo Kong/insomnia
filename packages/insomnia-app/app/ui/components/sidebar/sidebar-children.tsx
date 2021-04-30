@@ -1,5 +1,5 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import React, { Fragment, PureComponent } from 'react';
+import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import SidebarRequestRow from './sidebar-request-row';
@@ -12,43 +12,42 @@ import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
 import { Dropdown } from '../base/dropdown';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
-type Child = {
+
+interface Child {
   doc: Request | GrpcRequest | RequestGroup;
-  children: Array<Child>;
+  children: Child[];
   collapsed: boolean;
   hidden: boolean;
   pinned: boolean;
-};
-export type SidebarChildObjects = {
-  pinned: Array<Child>;
-  all: Array<Child>;
-};
-type Props = {
-  // Required
-  handleActivateRequest: (...args: Array<any>) => any;
-  handleCreateRequest: (...args: Array<any>) => any;
-  handleCreateRequestGroup: (...args: Array<any>) => any;
-  handleSetRequestPinned: (...args: Array<any>) => any;
-  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
-  handleDuplicateRequest: (...args: Array<any>) => any;
-  handleDuplicateRequestGroup: (...args: Array<any>) => any;
-  handleMoveRequestGroup: (...args: Array<any>) => any;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleCopyAsCurl: (...args: Array<any>) => any;
-  handleRender: (...args: Array<any>) => any;
-  moveDoc: (...args: Array<any>) => any;
+}
+export interface SidebarChildObjects {
+  pinned: Child[];
+  all: Child[];
+}
+interface Props {
+  handleActivateRequest: (...args: any[]) => any;
+  handleCreateRequest: (...args: any[]) => any;
+  handleCreateRequestGroup: (...args: any[]) => any;
+  handleSetRequestPinned: (...args: any[]) => any;
+  handleSetRequestGroupCollapsed: (...args: any[]) => any;
+  handleDuplicateRequest: (...args: any[]) => any;
+  handleDuplicateRequestGroup: (...args: any[]) => any;
+  handleMoveRequestGroup: (...args: any[]) => any;
+  handleGenerateCode: (...args: any[]) => any;
+  handleCopyAsCurl: (...args: any[]) => any;
+  handleRender: (...args: any[]) => any;
+  moveDoc: (...args: any[]) => any;
   childObjects: SidebarChildObjects;
   workspace: Workspace;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
   activeEnvironment: Environment | null;
-  // Optional
-  activeRequest: Request | null | undefined;
-};
+  activeRequest?: Request | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarChildren extends React.PureComponent<Props> {
-  _contextMenu: SidebarCreateDropdown | null | undefined;
+class SidebarChildren extends PureComponent<Props> {
+  _contextMenu: SidebarCreateDropdown | null = null;
 
   _handleContextMenu(e: MouseEvent) {
     const { target, currentTarget, clientX, clientY } = e;
@@ -70,11 +69,11 @@ class SidebarChildren extends React.PureComponent<Props> {
     }
   }
 
-  _setContextMenuRef(n: Dropdown | null | undefined) {
+  _setContextMenuRef(n: Dropdown) {
     this._contextMenu = n;
   }
 
-  _renderChildren(children: Array<Child>, isInPinnedList: boolean): React.ReactNode {
+  _renderChildren(children: Child[], isInPinnedList: boolean) {
     const {
       filter,
       handleCreateRequest,
@@ -169,7 +168,7 @@ class SidebarChildren extends React.PureComponent<Props> {
     });
   }
 
-  _renderList(children: Array<Child>, pinnedList: boolean): React.ReactNode {
+  _renderList(children: Child[], pinnedList: boolean) {
     return (
       <ul
         className="sidebar__list sidebar__list-root theme--sidebar__list"
@@ -204,12 +203,12 @@ class SidebarChildren extends React.PureComponent<Props> {
       document.querySelector('#dropdowns-container') as any,
     );
     return (
-      <React.Fragment>
+      <Fragment>
         {this._renderList(childObjects.pinned, true)}
         <div className={`sidebar__list-separator${showSeparator ? '' : '--invisible'}`} />
         {this._renderList(childObjects.all, false)}
         {contextMenuPortal}
-      </React.Fragment>
+      </Fragment>
     );
   }
 }

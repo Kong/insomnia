@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -8,27 +8,26 @@ import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
 import ModalFooter from '../base/modal-footer';
 import Tooltip from '../tooltip';
 import TimeFromNow from '../time-from-now';
-type Props = {
+
+interface Props {
   vcs: GitVCS;
-};
-type State = {
-  logs: Array<GitLogEntry>;
+}
+
+interface State {
+  logs: GitLogEntry[];
   branch: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitLogModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class GitLogModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      logs: [],
-      branch: '??',
-    };
+  state: State = {
+    logs: [],
+    branch: '??',
   }
 
-  _setModalRef(ref: Modal | null | undefined) {
+  _setModalRef(ref: Modal) {
     this.modal = ref;
   }
 

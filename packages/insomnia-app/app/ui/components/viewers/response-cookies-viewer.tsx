@@ -1,11 +1,18 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Cookie } from 'tough-cookie';
 
+interface Props {
+  showCookiesModal: Function;
+  cookiesSent: boolean;
+  cookiesStored: boolean;
+  headers: any[];
+  handleShowRequestSettings: Function;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseCookiesViewer extends PureComponent {
+class ResponseCookiesViewer extends PureComponent<Props> {
   renderRow(h, i) {
     let cookie = null;
 
@@ -27,7 +34,7 @@ class ResponseCookiesViewer extends PureComponent {
   render() {
     const { headers, showCookiesModal, cookiesSent, cookiesStored } = this.props;
     const notifyNotStored = !cookiesStored && headers.length;
-    let noticeMessage = null;
+    let noticeMessage: string | null = null;
 
     if (!cookiesSent && notifyNotStored) {
       noticeMessage = 'sending and storing';
@@ -57,7 +64,7 @@ class ResponseCookiesViewer extends PureComponent {
           <tbody>{!headers.length ? this.renderRow(null, -1) : headers.map(this.renderRow)}</tbody>
         </table>
         <p className="pad-top">
-          <button className="pull-right btn btn--clicky" onClick={e => showCookiesModal()}>
+          <button className="pull-right btn btn--clicky" onClick={() => showCookiesModal()}>
             Manage Cookies
           </button>
         </p>
@@ -66,11 +73,4 @@ class ResponseCookiesViewer extends PureComponent {
   }
 }
 
-ResponseCookiesViewer.propTypes = {
-  showCookiesModal: PropTypes.func.isRequired,
-  cookiesSent: PropTypes.bool.isRequired,
-  cookiesStored: PropTypes.bool.isRequired,
-  headers: PropTypes.array.isRequired,
-  handleShowRequestSettings: PropTypes.func.isRequired,
-};
 export default ResponseCookiesViewer;

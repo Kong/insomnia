@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import Hotkey from '../hotkey';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import { Pane, PaneBody, PaneHeader } from './pane';
-type Props = {
-  hotKeyRegistry: hotkeys.HotKeyRegistry;
-};
 
-const PlaceholderResponsePane = ({ hotKeyRegistry, children }: Props) => (
+interface Props {
+  hotKeyRegistry: hotkeys.HotKeyRegistry;
+}
+
+const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
   <Pane type="response">
     <PaneHeader />
     <PaneBody placeholder>

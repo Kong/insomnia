@@ -1,21 +1,23 @@
-import * as React from 'react';
+import React, { CSSProperties, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as PDF from 'pdfjs-dist/webpack';
-type Props = {
+
+interface Props {
   body: Buffer;
   uniqueKey: string;
-};
-type State = {
+}
+
+interface State {
   numPages: number | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponsePDFViewer extends React.PureComponent<Props, State> {
-  container: HTMLDivElement | null | undefined;
+class ResponsePDFViewer extends PureComponent<Props, State> {
+  container: HTMLDivElement | null = null;
   debounceTimeout: any;
 
-  setRef(n: HTMLDivElement | null | undefined) {
+  setRef(n: HTMLDivElement) {
     this.container = n;
   }
 
@@ -89,7 +91,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const styles: React.CSSProperties = {
+    const styles: CSSProperties = {
       width: '100%',
       height: '100%',
       overflowX: 'hidden',

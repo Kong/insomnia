@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
@@ -8,6 +7,7 @@ import KeyValueEditorRow from './row';
 import { generateId, nullFn } from '../../../common/misc';
 import { Dropdown, DropdownItem, DropdownButton } from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
+
 const NAME = 'name';
 const VALUE = 'value';
 const DESCRIPTION = 'description';
@@ -18,13 +18,45 @@ const DOWN = 40;
 const LEFT = 37;
 const RIGHT = 39;
 
+interface Props {
+  onChange: Function;
+  pairs: any[];
+  handleRender?: Function;
+  handleGetRenderContext?: Function;
+  nunjucksPowerUserMode?: boolean;
+  isVariableUncovered?: boolean;
+  handleGetAutocompleteNameConstants?: Function;
+  handleGetAutocompleteValueConstants?: Function;
+  allowFile?: boolean;
+  allowMultiline?: boolean;
+  sortable?: boolean;
+  maxPairs?: number;
+  namePlaceholder?: string;
+  valuePlaceholder?: string;
+  descriptionPlaceholder?: string;
+  valueInputType?: string;
+  disableDelete?: boolean;
+  onToggleDisable?: Function;
+  onChangeType?: Function;
+  onChooseFile?: Function;
+  onDelete?: Function;
+  onCreate?: Function;
+  className?: string;
+}
+
+interface State {
+  pairs: Props['pairs'];
+  displayDescription: boolean;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Editor extends PureComponent {
-  constructor(props) {
+class Editor extends PureComponent<Props, State> {
+  _focusedPairId: string | null = null;
+  _focusedField: string | null = NAME;
+  _rows: (typeof KeyValueEditorRow)[] = [];
+
+  constructor(props: Props) {
     super(props);
-    this._focusedPairId = null;
-    this._focusedField = NAME;
-    this._rows = [];
     // Migrate and add IDs to all pairs (pairs didn't used to have IDs)
     const pairs = [...props.pairs];
 
@@ -35,13 +67,13 @@ class Editor extends PureComponent {
     }
 
     this.state = {
-      pairs: pairs,
+      pairs,
       // If any pair has a description, display description field
       displayDescription: props.pairs.some(p => p.description),
     };
   }
 
-  _setRowRef(n) {
+  _setRowRef(n?: typeof KeyValueEditorRow) {
     // NOTE: We're not handling unmounting (may lead to a bug)
     if (n) {
       this._rows[n.props.pair.id] = n;
@@ -188,7 +220,7 @@ class Editor extends PureComponent {
     );
   }
 
-  _addPair(position) {
+  _addPair(position: number) {
     const numPairs = this.state.pairs.length;
     const { maxPairs } = this.props;
 
@@ -484,30 +516,4 @@ class Editor extends PureComponent {
   }
 }
 
-Editor.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  pairs: PropTypes.arrayOf(PropTypes.object).isRequired,
-  // Optional
-  handleRender: PropTypes.func,
-  handleGetRenderContext: PropTypes.func,
-  nunjucksPowerUserMode: PropTypes.bool,
-  isVariableUncovered: PropTypes.bool,
-  handleGetAutocompleteNameConstants: PropTypes.func,
-  handleGetAutocompleteValueConstants: PropTypes.func,
-  allowFile: PropTypes.bool,
-  allowMultiline: PropTypes.bool,
-  sortable: PropTypes.bool,
-  maxPairs: PropTypes.number,
-  namePlaceholder: PropTypes.string,
-  valuePlaceholder: PropTypes.string,
-  descriptionPlaceholder: PropTypes.string,
-  valueInputType: PropTypes.string,
-  disableDelete: PropTypes.bool,
-  onToggleDisable: PropTypes.func,
-  onChangeType: PropTypes.func,
-  onChooseFile: PropTypes.func,
-  onDelete: PropTypes.func,
-  onCreate: PropTypes.func,
-  className: PropTypes.string,
-};
 export default Editor;

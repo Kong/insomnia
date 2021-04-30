@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages';
 import type { Settings } from '../../../models/settings';
@@ -6,13 +6,14 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import GrpcStatusTag from '../tags/grpc-status-tag';
 import GrpcSpinner from '../grpc-spinner';
 import { useGrpcRequestState } from '../../context/grpc';
-type Props = {
+
+interface Props {
   forceRefreshKey: string;
   activeRequest: GrpcRequest;
   settings: Settings;
-};
+}
 
-const GrpcResponsePane = ({ settings, activeRequest, forceRefreshKey }: Props) => {
+const GrpcResponsePane: FunctionComponent<Props> = ({ settings, activeRequest, forceRefreshKey }) => {
   // Used to refresh input fields to their default value when switching between requests.
   // This is a common pattern in this codebase.
   const uniquenessKey = `${forceRefreshKey}::${activeRequest._id}`;

@@ -6,30 +6,30 @@ import { strings } from './strings';
  * The readable definition of a hotkey.
  * The {@code id} the hotkey's reference id.
  */
-export type HotKeyDefinition = {
+export interface HotKeyDefinition {
   id: string;
   description: string;
-};
+}
 
 /**
  * The combination of key presses that will activate a hotkey if pressed.
  */
-export type KeyCombination = {
+export interface KeyCombination {
   ctrl: boolean;
   alt: boolean;
   shift: boolean;
   meta: boolean;
   keyCode: number;
-};
+}
 
 /**
  * The collection of a hotkey's key combinations for each platforms.
  */
-export type KeyBindings = {
-  macKeys: Array<KeyCombination>;
+export interface KeyBindings {
+  macKeys: KeyCombination[];
   // The key combinations for both Windows and Linux.
-  winLinuxKeys: Array<KeyCombination>;
-};
+  winLinuxKeys: KeyCombination[];
+}
 
 /**
  * The collection of defined hotkeys.
@@ -61,8 +61,8 @@ function keyComb(
 }
 
 function keyBinds(
-  mac: KeyCombination | Array<KeyCombination>,
-  winLinux: KeyCombination | Array<KeyCombination>,
+  mac: KeyCombination | KeyCombination[],
+  winLinux: KeyCombination | KeyCombination[],
 ): KeyBindings {
   if (!Array.isArray(mac)) {
     mac = [mac];
@@ -295,8 +295,8 @@ const defaultRegistry: HotKeyRegistry = {
   ),
 };
 
-function copyKeyCombs(sources: Array<KeyCombination>): Array<KeyCombination> {
-  const targets: Array<KeyCombination> = [];
+function copyKeyCombs(sources: KeyCombination[]): KeyCombination[] {
+  const targets: KeyCombination[] = [];
   sources.forEach(keyComb => {
     targets.push(Object.assign({}, keyComb));
   });
@@ -339,7 +339,7 @@ export function newDefaultRegistry(): HotKeyRegistry {
  * @param bindings
  * @returns {Array<KeyCombination>}
  */
-export function getPlatformKeyCombinations(bindings: KeyBindings): Array<KeyCombination> {
+export function getPlatformKeyCombinations(bindings: KeyBindings): KeyCombination[] {
   if (isMac()) {
     return bindings.macKeys;
   }
@@ -414,7 +414,7 @@ export function getChar(keyCode: number): string {
   return char || 'unknown';
 }
 
-function joinHotKeys(mustUsePlus: boolean, keys: Array<string>): string {
+function joinHotKeys(mustUsePlus: boolean, keys: string[]): string {
   if (!mustUsePlus && isMac()) {
     return keys.join('');
   }
@@ -453,7 +453,7 @@ export function constructKeyCombinationDisplay(
   mustUsePlus: boolean,
 ): string {
   const { ctrl, alt, shift, meta, keyCode } = keyComb;
-  const chars = [];
+  const chars: string[] = [];
   alt && chars.push(ALT_SYM);
   shift && chars.push(SHIFT_SYM);
   ctrl && chars.push(CTRL_SYM);
@@ -491,7 +491,7 @@ export function getHotKeyDisplay(
     return '';
   }
 
-  const keyCombs: Array<KeyCombination> = getPlatformKeyCombinations(hotKey);
+  const keyCombs: KeyCombination[] = getPlatformKeyCombinations(hotKey);
 
   if (keyCombs.length === 0) {
     return '';

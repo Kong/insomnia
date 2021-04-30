@@ -8,20 +8,20 @@ import * as uuid from 'uuid';
 import { generateId, getDataDirectory } from './misc';
 import { mustGetModel } from '../models';
 import type { Workspace } from '../models/workspace';
+
 export const CHANGE_INSERT = 'insert';
 export const CHANGE_UPDATE = 'update';
 export const CHANGE_REMOVE = 'remove';
+
 const database = {};
 const db = {
   _empty: true,
-} as Record<string, any>;
+};
 
 // ~~~~~~~ //
 // HELPERS //
 // ~~~~~~~ //
-function allTypes() {
-  return Object.keys(db);
-}
+const allTypes = () => Object.keys(db);
 
 function getDBFilePath(modelType) {
   // NOTE: Do not EVER change this. EVER!
@@ -37,9 +37,9 @@ export async function initClient() {
   console.log('[db] Initialized DB client');
 }
 export async function init(
-  types: Array<string>,
+  types: string[],
   config: Record<string, any> = {},
-  forceReset: boolean = false,
+  forceReset = false,
   consoleLog: () => void = console.log,
 ) {
   if (forceReset) {
@@ -149,16 +149,16 @@ let bufferingChanges = false;
 let bufferChangesId = 1;
 let changeBuffer = [];
 let changeListeners = [];
-export function onChange(callback: (...args: Array<any>) => any): void {
+export function onChange(callback: (...args: any[]) => any): void {
   changeListeners.push(callback);
 }
-export function offChange(callback: (...args: Array<any>) => any): void {
+export function offChange(callback: (...args: any[]) => any): void {
   changeListeners = changeListeners.filter(l => l !== callback);
 }
 
 /** buffers database changes and returns a buffer id */
 export const bufferChanges = (database.bufferChanges = async function(
-  millis: number = 1000,
+  millis = 1000,
 ): Promise<number> {
   if (db._empty) return _send('bufferChanges', ...arguments);
   bufferingChanges = true;
@@ -173,15 +173,15 @@ export const bufferChangesIndefinitely = (database.bufferChangesIndefinitely = a
   return ++bufferChangesId;
 });
 export const flushChangesAsync = (database.flushChangesAsync = async function(
-  fake: boolean = false,
+  fake = false,
 ) {
   process.nextTick(async () => {
     await flushChanges(0, fake);
   });
 });
 export const flushChanges = (database.flushChanges = async function(
-  id: number = 0,
-  fake: boolean = false,
+  id = 0,
+  fake = false,
 ) {
   if (db._empty) return _send('flushChanges', ...arguments);
 
@@ -241,7 +241,7 @@ export const findMostRecentlyModified = (database.findMostRecentlyModified = asy
   type: string,
   query: Record<string, any> = {},
   limit: number | null = null,
-): Promise<Array<T>> {
+): Promise<T[]> {
   if (db._empty) return _send('findMostRecentlyModified', ...arguments);
   return new Promise(resolve => {
     db[type]
@@ -273,7 +273,7 @@ export const find = (database.find = async function <T extends BaseModel>(
   sort: Record<string, any> = {
     created: 1,
   },
-): Promise<Array<T>> {
+): Promise<T[]> {
   if (db._empty) return _send('find', ...arguments);
   return new Promise((resolve, reject) => {
     db[type]
@@ -296,7 +296,7 @@ export const find = (database.find = async function <T extends BaseModel>(
 });
 export const all = (database.all = async function <T extends BaseModel>(
   type: string,
-): Promise<Array<T>> {
+): Promise<T[]> {
   if (db._empty) return _send('all', ...arguments);
   return database.find(type);
 });
@@ -340,7 +340,7 @@ export const count = (database.count = async function(
 });
 export const upsert = (database.upsert = async function(
   doc: BaseModel,
-  fromSync: boolean = false,
+  fromSync = false,
 ): Promise<BaseModel> {
   if (db._empty) return _send('upsert', ...arguments);
   const existingDoc = await database.get(doc.type, doc._id);
@@ -353,8 +353,8 @@ export const upsert = (database.upsert = async function(
 });
 export const insert = (database.insert = async function <T extends BaseModel>(
   doc: T,
-  fromSync: boolean = false,
-  initializeModel: boolean = true,
+  fromSync = false,
+  initializeModel = true,
 ): Promise<T> {
   if (db._empty) return _send('insert', ...arguments);
   return new Promise(async (resolve, reject) => {
@@ -383,7 +383,7 @@ export const insert = (database.insert = async function <T extends BaseModel>(
 });
 export const update = (database.update = async function <T extends BaseModel>(
   doc: T,
-  fromSync: boolean = false,
+  fromSync = false,
 ): Promise<T> {
   if (db._empty) return _send('update', ...arguments);
   return new Promise(async (resolve, reject) => {
@@ -414,7 +414,7 @@ export const update = (database.update = async function <T extends BaseModel>(
 });
 export const remove = (database.remove = async function <T extends BaseModel>(
   doc: T,
-  fromSync: boolean = false,
+  fromSync = false,
 ): Promise<void> {
   if (db._empty) return _send('remove', ...arguments);
   const flushId = await database.bufferChanges();
@@ -441,7 +441,7 @@ export const remove = (database.remove = async function <T extends BaseModel>(
 /** Removes entries without removing their children */
 export const unsafeRemove = (database.unsafeRemove = async function <T extends BaseModel>(
   doc: T,
-  fromSync: boolean = false,
+  fromSync = false,
 ): Promise<void> {
   if (db._empty) return _send('unsafeRemove', ...arguments);
   db[doc.type].remove({
@@ -479,8 +479,8 @@ export const removeWhere = (database.removeWhere = async function(
   await database.flushChanges(flushId);
 });
 export const batchModifyDocs = (database.batchModifyDocs = async function(operations: {
-  upsert: Array<Record<string, any>>;
-  remove: Array<Record<string, any>>;
+  upsert: Record<string, any>[];
+  remove: Record<string, any>[];
 }): Promise<void> {
   if (db._empty) return _send('batchModifyDocs', ...arguments);
   const flushId = await bufferChanges();
@@ -505,7 +505,7 @@ export const batchModifyDocs = (database.batchModifyDocs = async function(operat
 // ~~~~~~~~~~~~~~~~~~~ //
 export async function docUpdate<T extends BaseModel>(
   originalDoc: T,
-  ...patches: Array<Record<string, any>>
+  ...patches: Record<string, any>[]
 ): Promise<T> {
   // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
   const doc = await models.initModel(
@@ -520,7 +520,7 @@ export async function docUpdate<T extends BaseModel>(
 }
 export async function docCreate<T extends BaseModel>(
   type: string,
-  ...patches: Array<Record<string, any>>
+  ...patches: Record<string, any>[]
 ): Promise<T> {
   const doc = await models.initModel(
     type,
@@ -537,11 +537,11 @@ export async function docCreate<T extends BaseModel>(
 export const withDescendants = (database.withDescendants = async function(
   doc: BaseModel | null,
   stopType: string | null = null,
-): Promise<Array<BaseModel>> {
+): Promise<BaseModel[]> {
   if (db._empty) return _send('withDescendants', ...arguments);
   let docsToReturn = doc ? [doc] : [];
 
-  async function next(docs: Array<BaseModel | null>): Promise<Array<BaseModel>> {
+  async function next(docs: (BaseModel | null)[]): Promise<BaseModel[]> {
     let foundDocs = [];
 
     for (const d of docs) {
@@ -580,8 +580,8 @@ export const withDescendants = (database.withDescendants = async function(
 });
 export const withAncestors = (database.withAncestors = async function(
   doc: BaseModel | null,
-  types: Array<string> = allTypes(),
-): Promise<Array<BaseModel>> {
+  types: string[] = allTypes(),
+): Promise<BaseModel[]> {
   if (db._empty) return _send('withAncestors', ...arguments);
 
   if (!doc) {
@@ -590,7 +590,7 @@ export const withAncestors = (database.withAncestors = async function(
 
   let docsToReturn = doc ? [doc] : [];
 
-  async function next(docs: Array<BaseModel>): Promise<Array<BaseModel>> {
+  async function next(docs: BaseModel[]): Promise<BaseModel[]> {
     const foundDocs = [];
 
     for (const d: BaseModel of docs) {
@@ -663,7 +663,7 @@ export const duplicate = (database.duplicate = async function <T extends BaseMod
 // ~~~~~~~ //
 // Helpers //
 // ~~~~~~~ //
-async function _send<T>(fnName: string, ...args: Array<any>): Promise<T> {
+async function _send<T>(fnName: string, ...args: any[]): Promise<T> {
   return new Promise((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuid.v4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);

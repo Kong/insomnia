@@ -22,6 +22,7 @@ import {
 import type { Workspace, WorkspaceScope } from '../models/workspace';
 import type { ApiSpec } from '../models/api-spec';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
+
 const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
 const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
 const EXPORT_FORMAT = 4;
@@ -51,23 +52,27 @@ const MODELS = {
   [EXPORT_TYPE_PROTO_FILE]: models.protoFile,
   [EXPORT_TYPE_PROTO_DIRECTORY]: models.protoDirectory,
 };
-export type ImportResult = {
+
+export interface ImportResult {
   source: string;
   error: Error | null;
-  summary: Record<string, Array<BaseModel>>;
-};
-type ConvertResultType = {
+  summary: Record<string, BaseModel[]>;
+}
+
+interface ConvertResultType {
   id: string;
   name: string;
   description: string;
-};
-type ConvertResult = {
+}
+
+interface ConvertResult {
   type: ConvertResultType;
   data: {
-    resources: Array<Record<string, any>>;
+    resources: Record<string, any>[];
   };
-};
-export type ImportRawConfig = {
+}
+
+export interface ImportRawConfig {
   getWorkspaceId: ImportToWorkspacePrompt;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
@@ -75,7 +80,8 @@ export type ImportRawConfig = {
   bypassDiffProps?: {
     url: string;
   };
-};
+}
+
 export async function importUri(uri: string, importConfig: ImportRawConfig): Promise<ImportResult> {
   let rawText;
   // If GH preview, force raw
@@ -131,6 +137,7 @@ export async function importUri(uri: string, importConfig: ImportRawConfig): Pro
   });
   return result;
 }
+
 export async function importRaw(
   rawContent: string,
   {
@@ -155,7 +162,7 @@ export async function importRaw(
 
   const { data, type: resultsType } = results;
   // Generate all the ids we may need
-  const generatedIds: Record<string, string | ((...args: Array<any>) => any)> = {};
+  const generatedIds: Record<string, string | ((...args: any[]) => any)> = {};
 
   for (const r of data.resources) {
     for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
@@ -214,7 +221,7 @@ export async function importRaw(
       }
     }
 
-    const model: Record<string, any> = MODELS[resource._type];
+    const model = MODELS[resource._type];
 
     if (!model) {
       console.warn('Unknown doc type for import', resource._type);
@@ -353,27 +360,30 @@ async function updateWorkspaceScope(
 export function isApiSpecImport({ id }: ConvertResultType): boolean {
   return id === 'openapi3' || id === 'swagger2';
 }
+
 export function isInsomniaV4Import({ id }: ConvertResultType): boolean {
   return id === 'insomnia-4';
 }
+
 export async function exportWorkspacesHAR(
   parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false,
+  includePrivateDocs = false,
 ): Promise<string> {
-  const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: Array<BaseModel> = docs.filter(isRequest);
+  const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  const requests: BaseModel[] = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
+
 export async function exportRequestsHAR(
-  requests: Array<BaseModel>,
-  includePrivateDocs: boolean = false,
+  requests: BaseModel[],
+  includePrivateDocs = false,
 ): Promise<string> {
-  const workspaces: Array<BaseModel> = [];
+  const workspaces: BaseModel[] = [];
   const mapRequestIdToWorkspace: Record<string, any> = {};
   const workspaceLookup: Record<string, any> = {};
 
   for (const request of requests) {
-    const ancestors: Array<BaseModel> = await db.withAncestors(request, [
+    const ancestors: BaseModel[] = await db.withAncestors(request, [
       models.workspace.type,
       models.requestGroup.type,
     ]);
@@ -405,7 +415,7 @@ export async function exportRequestsHAR(
   requests = requests.sort((a: Record<string, any>, b: Record<string, any>) =>
     a.metaSortKey < b.metaSortKey ? -1 : 1,
   );
-  const harRequests: Array<Record<string, any>> = [];
+  const harRequests: Record<string, any>[] = [];
 
   for (const request of requests) {
     const workspace = mapRequestIdToWorkspace[request._id];
@@ -426,17 +436,19 @@ export async function exportRequestsHAR(
   trackEvent('Data', 'Export', 'HAR');
   return JSON.stringify(data, null, '\t');
 }
+
 export async function exportWorkspacesData(
   parentDoc: BaseModel | null,
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ): Promise<string> {
-  const docs: Array<BaseModel> = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: Array<BaseModel> = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  const requests: BaseModel[] = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
+
 export async function exportRequestsData(
-  requests: Array<BaseModel>,
+  requests: BaseModel[],
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ): Promise<string> {
@@ -447,12 +459,12 @@ export async function exportRequestsData(
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
     resources: [],
   };
-  const docs: Array<BaseModel> = [];
-  const workspaces: Array<BaseModel> = [];
+  const docs: BaseModel[] = [];
+  const workspaces: BaseModel[] = [];
   const mapTypeAndIdToDoc: Record<string, any> = {};
 
   for (const req of requests) {
-    const ancestors: Array<BaseModel> = clone(await db.withAncestors(req));
+    const ancestors: BaseModel[] = clone(await db.withAncestors(req));
 
     for (const ancestor of ancestors) {
       const key = ancestor.type + '___' + ancestor._id;
@@ -471,7 +483,7 @@ export async function exportRequestsData(
   }
 
   for (const workspace of workspaces) {
-    const descendants: Array<BaseModel> = (await db.withDescendants(workspace)).filter(d => {
+    const descendants: BaseModel[] = (await db.withDescendants(workspace)).filter(d => {
       // Only interested in these additional model types.
       return (
         d.type === models.cookieJar.type ||
@@ -508,9 +520,9 @@ export async function exportRequestsData(
       }
 
       // BaseModel doesn't have isPrivate, so cast it first.
-      return !(d as Record<string, any>).isPrivate || includePrivateDocs;
+      return !d.isPrivate || includePrivateDocs;
     })
-    .map((d: Record<string, any>) => {
+    .map(d => {
       if (isWorkspace(d)) {
         d._type = EXPORT_TYPE_WORKSPACE;
       } else if (d.type === models.cookieJar.type) {
@@ -552,8 +564,8 @@ export async function exportRequestsData(
 
 async function getDocWithDescendants(
   parentDoc: BaseModel | null = null,
-  includePrivateDocs: boolean = false,
-): Promise<Array<BaseModel>> {
+  includePrivateDocs = false,
+): Promise<BaseModel[]> {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(
     (

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Component } from 'react';
 import styled from 'styled-components';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -7,26 +7,27 @@ import YAMLSourceMap from 'yaml-source-map';
 import { Sidebar } from 'insomnia-components';
 import type { ApiSpec } from '../../../models/api-spec';
 import { trackEvent } from '../../../common/analytics';
-type Props = {
+
+interface Props {
   apiSpec: ApiSpec;
   handleSetSelection: (chStart: number, chEnd: number, lineStart: number, lineEnd: number) => void;
-};
-type State = {
+}
+
+interface State {
   error: string;
-};
-const StyledSpecEditorSidebar: React.ComponentType<{}> = styled.div`
+  specContentJSON: boolean;
+}
+
+const StyledSpecEditorSidebar = styled.div`
   overflow: hidden;
   overflow-y: auto;
 `;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SpecEditorSidebar extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      error: '',
-      specContentJSON: false,
-    };
+class SpecEditorSidebar extends Component<Props, State> {
+  state: State = {
+    error: '',
+    specContentJSON: false,
   }
 
   _handleScrollEditor(pos: {
@@ -46,7 +47,7 @@ class SpecEditorSidebar extends React.Component<Props, State> {
     handleSetSelection(pos.start.col - 1, pos.end.col - 1, pos.start.line - 1, pos.end.line - 1);
   }
 
-  _mapPosition(itemPath: Array<any>) {
+  _mapPosition(itemPath: any[]) {
     const sourceMap = new YAMLSourceMap();
     const { contents } = this.props.apiSpec;
     const scrollPosition = {

@@ -1,8 +1,8 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { FormEventHandler, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
+
 export const shouldSave = (oldValue, newValue, preventBlank) => {
   // Should not save if length = 0 and we want to prevent blank
   if (preventBlank && !newValue.length) {
@@ -18,16 +18,31 @@ export const shouldSave = (oldValue, newValue, preventBlank) => {
   return true;
 };
 
+interface Props {
+  onSubmit: FormEventHandler<HTMLInputElement>,
+  value: string,
+  fallbackValue?: string,
+  blankValue?: string,
+  renderReadView?: Function,
+  singleClick?: boolean,
+  onEditStart?: Function,
+  className?: string,
+  preventBlank?: boolean,
+}
+
+interface State {
+  editing: boolean;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Editable extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      editing: false,
-    };
+class Editable extends PureComponent<Props, State> {
+  state: State = {
+    editing: false,
   }
 
-  _handleSetInputRef(n) {
+  _input: HTMLInputElement | null = null;
+
+  _handleSetInputRef(n: HTMLInputElement) {
     this._input = n;
   }
 
@@ -54,7 +69,7 @@ class Editable extends PureComponent {
   _handleEditEnd() {
     const originalValue = this.props.value;
 
-    const newValue = this._input.value.trim();
+    const newValue = this._input?.value.trim();
 
     if (shouldSave(originalValue, newValue, this.props.preventBlank)) {
       // Don't run onSubmit for values that haven't been changed
@@ -140,16 +155,4 @@ class Editable extends PureComponent {
   }
 }
 
-Editable.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-  value: PropTypes.string.isRequired,
-  // Optional
-  fallbackValue: PropTypes.string,
-  blankValue: PropTypes.string,
-  renderReadView: PropTypes.func,
-  singleClick: PropTypes.bool,
-  onEditStart: PropTypes.func,
-  className: PropTypes.string,
-  preventBlank: PropTypes.bool,
-};
 export default Editable;

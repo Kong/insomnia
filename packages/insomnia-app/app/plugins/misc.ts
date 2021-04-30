@@ -3,7 +3,7 @@ import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
 import { getAppDefaultTheme } from '../common/constants';
-type ThemeBlock = {
+interface ThemeBlock {
   background?: {
     default: string;
     success?: string;
@@ -31,10 +31,10 @@ type ThemeBlock = {
     lg?: string;
     xl?: string;
   };
-};
+}
 type ThemeInner = ThemeBlock & {
   rawCss?: string;
-  styles:
+  styles?:
     | {
         dialog?: ThemeBlock;
         dialogFooter?: ThemeBlock;
@@ -51,14 +51,13 @@ type ThemeInner = ThemeBlock & {
         tooltip?: ThemeBlock;
         transparentOverlay?: ThemeBlock;
       }
-    | null
-    | undefined;
+    | null;
 };
-export type PluginTheme = {
+export interface PluginTheme {
   name: string;
   displayName: string;
   theme: ThemeInner;
-};
+}
 export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
   const renderedTheme: ThemeInner = await render(
     theme.theme,
@@ -222,11 +221,11 @@ export function getColorScheme(settings: Settings): ColorScheme {
     return 'default';
   }
 
-  if (window.matchMedia(`(prefers-color-scheme: light)`).matches) {
+  if (window.matchMedia('(prefers-color-scheme: light)').matches) {
     return 'light';
   }
 
-  if (window.matchMedia(`(prefers-color-scheme: dark)`).matches) {
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
     return 'dark';
   }
 
@@ -255,7 +254,7 @@ export async function setTheme(themeName: string) {
     return;
   }
 
-  const themes: Array<Theme> = await getThemes();
+  const themes: Theme[] = await getThemes();
 
   // If theme isn't installed for some reason, set to the default
   if (!themes.find(t => t.theme.name === themeName)) {

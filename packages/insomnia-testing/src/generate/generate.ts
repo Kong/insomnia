@@ -1,13 +1,13 @@
 import { escapeJsStr, indent } from './util';
 import { writeFile } from 'fs';
 
-export type Test = {
+export interface Test {
   name: string
   code: string
   defaultRequestId: string | null
 }
 
-export type TestSuite = {
+export interface TestSuite {
   name: string
   suites: TestSuite[]
   tests?: Test[]
@@ -82,7 +82,7 @@ const generateSuiteLines = (
   return lines;
 };
 
-const generateTestLines = (n: number, test: Test | null | undefined) => {
+const generateTestLines = (n: number, test?: Test | null) => {
   if (!test) {
     return [];
   }

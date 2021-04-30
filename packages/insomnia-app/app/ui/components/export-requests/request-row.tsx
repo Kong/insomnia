@@ -6,11 +6,12 @@ import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest } from '../../../models/helpers/is-model';
 import GrpcTag from '../tags/grpc-tag';
-type Props = {
-  handleSetItemSelected: (...args: Array<any>) => any;
+
+interface Props {
+  handleSetItemSelected: (...args: any[]) => any;
   isSelected: boolean;
   request: Request | GrpcRequest;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestRow extends PureComponent<Props> {

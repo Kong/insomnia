@@ -1,13 +1,12 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import CopyButton from '../base/copy-button';
 import type { ResponseHeader } from '../../../models/response';
 import Link from '../base/link';
+import { URL } from 'url';
 
-const { URL } = require('url');
-
-type Props = {
-  headers: Array<ResponseHeader>;
-};
+interface Props {
+  headers: ResponseHeader[];
+}
 
 function validateURL(urlString) {
   try {
@@ -19,12 +18,12 @@ function validateURL(urlString) {
   }
 }
 
-class ResponseHeadersViewer extends React.PureComponent<Props> {
+class ResponseHeadersViewer extends PureComponent<Props> {
   render() {
     const { headers } = this.props;
     const headersString = headers.map(h => `${h.name}: ${h.value}`).join('\n');
     return (
-      <React.Fragment>
+      <Fragment>
         <table className="table--fancy table--striped table--compact">
           <thead>
             <tr>
@@ -56,7 +55,7 @@ class ResponseHeadersViewer extends React.PureComponent<Props> {
         <p key="copy" className="pad-top">
           <CopyButton className="pull-right" content={headersString} />
         </p>
-      </React.Fragment>
+      </Fragment>
     );
   }
 }

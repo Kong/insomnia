@@ -11,45 +11,45 @@ import type { RequestGroup } from '../../../models/request-group';
 import * as models from '../../../models';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest, isRequest, isRequestGroup } from '../../../models/helpers/is-model';
-export type Node = {
+
+export interface Node {
   doc: Request | GrpcRequest | RequestGroup;
-  children: Array<Node>;
+  children: Node[];
   collapsed: boolean;
   totalRequests: number;
   selectedRequests: number;
-};
-type Props = {
-  childObjects: Array<Record<string, any>>;
-  handleExportRequestsToFile: (...args: Array<any>) => any;
-};
-type State = {
-  treeRoot: Node | null | undefined;
-};
+}
+
+interface Props {
+  childObjects: Record<string, any>[];
+  handleExportRequestsToFile: (...args: any[]) => any;
+}
+
+interface State {
+  treeRoot: Node | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ExportRequestsModal extends PureComponent<Props, State> {
-  modal: Modal;
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      treeRoot: null,
-    };
+  state: State = {
+    treeRoot: null,
   }
 
-  setModalRef(modal: Modal | null | undefined) {
+  setModalRef(modal: Modal) {
     if (modal != null) {
       this.modal = modal;
     }
   }
 
   show() {
-    this.modal.show();
+    this.modal?.show();
     this.createTree();
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   handleExport() {
@@ -64,14 +64,14 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     this.hide();
   }
 
-  getSelectedRequestIds(node: Node): Array<string> {
+  getSelectedRequestIds(node: Node): string[] {
     const docIsRequest = isRequest(node.doc) || isGrpcRequest(node.doc);
 
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }
 
-    const requestIds: Array<string> = [];
+    const requestIds: string[] = [];
 
     for (const child of node.children) {
       const reqIds = this.getSelectedRequestIds(child);
@@ -83,7 +83,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
 
   createTree() {
     const { childObjects } = this.props;
-    const children: Array<Node> = childObjects.map(child => this.createNode(child));
+    const children: Node[] = childObjects.map(child => this.createNode(child));
     const totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
@@ -107,7 +107,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
   }
 
   createNode(item: Record<string, any>): Node {
-    const children: Array<Node> = item.children.map(child => this.createNode(child));
+    const children: Node[] = item.children.map(child => this.createNode(child));
     let totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);

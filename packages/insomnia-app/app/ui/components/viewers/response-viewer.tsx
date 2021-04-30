@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Component, Fragment } from 'react';
 import iconv from 'iconv-lite';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
@@ -19,44 +19,43 @@ import ResponseError from './response-error';
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
+
 let alwaysShowLargeResponses = false;
-type Props = {
+
+interface Props {
   bytes: number;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
-  download: (...args: Array<any>) => any;
+  download: (...args: any[]) => any;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   filter: string;
-  filterHistory: Array<string>;
-  getBody: (...args: Array<any>) => any;
+  filterHistory: string[];
+  getBody: (...args: any[]) => any;
   previewMode: string;
   responseId: string;
   url: string;
-  // Optional
-  updateFilter: ((...args: Array<any>) => any) | null;
-  error: string | null;
-};
-type State = {
+  updateFilter?: ((...args: any[]) => any) | null;
+  error?: string | null;
+}
+
+interface State {
   blockingBecauseTooLarge: boolean;
   bodyBuffer: Buffer | null;
   error: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseViewer extends React.Component<Props, State> {
-  _selectableView: any;
+class ResponseViewer extends Component<Props, State> {
+  _selectableView: ResponseRaw | CodeEditor | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      blockingBecauseTooLarge: false,
-      bodyBuffer: null,
-      error: '',
-    };
+  state: State = {
+    blockingBecauseTooLarge: false,
+    bodyBuffer: null,
+    error: '',
   }
 
   refresh() {
@@ -171,7 +170,7 @@ class ResponseViewer extends React.Component<Props, State> {
     return false;
   }
 
-  _setSelectableViewRef(n: any) {
+  _setSelectableViewRef(n: ResponseRaw | CodeEditor) {
     this._selectableView = n;
   }
 
@@ -193,9 +192,9 @@ class ResponseViewer extends React.Component<Props, State> {
         return;
       }
 
-      this._selectableView.focus();
+      this._selectableView?.focus();
 
-      this._selectableView.selectAll();
+      this._selectableView?.selectAll();
     });
   }
 
@@ -236,14 +235,14 @@ class ResponseViewer extends React.Component<Props, State> {
       return (
         <div className="response-pane__notify">
           {wayTooLarge ? (
-            <React.Fragment>
+            <Fragment>
               <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
               <button onClick={download} className="inline-block btn btn--clicky">
                 Save Response To File
               </button>
-            </React.Fragment>
+            </Fragment>
           ) : (
-            <React.Fragment>
+            <Fragment>
               <p className="pad faint">
                 Response over {LARGE_RESPONSE_MB}MB hidden for performance reasons
               </p>
@@ -265,7 +264,7 @@ class ResponseViewer extends React.Component<Props, State> {
                   Always Show
                 </button>
               </div>
-            </React.Fragment>
+            </Fragment>
           )}
         </div>
       );

@@ -1,18 +1,19 @@
-import * as React from 'react';
+import { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { isMac, AUTOBIND_CFG } from '../../common/constants';
-type Props = {
-  children: React.ReactNode;
-  onKeydown?: (...args: Array<any>) => any;
-  onKeyup?: (...args: Array<any>) => any;
+
+interface Props {
+  children: ReactNode;
+  onKeydown?: (...args: any[]) => any;
+  onKeyup?: (...args: any[]) => any;
   disabled?: boolean;
   scoped?: boolean;
   stopMetaPropagation?: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class KeydownBinder extends React.PureComponent<Props> {
+class KeydownBinder extends PureComponent<Props> {
   _handleKeydown(e: KeyboardEvent) {
     const { stopMetaPropagation, onKeydown, disabled } = this.props;
 

@@ -2,7 +2,7 @@ import { $Shape } from 'utility-types';
 import * as path from 'path';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -22,39 +22,36 @@ import { Button, ToggleSwitch } from 'insomnia-components';
 import { createPlugin } from '../../../plugins/create';
 import { showAlert, showPrompt } from '../modals';
 import { docsPlugins } from '../../../common/documentation';
-type State = {
-  plugins: Array<Plugin>;
+
+interface Props {
+  settings: Settings;
+  updateSetting: (...args: any[]) => any;
+}
+
+interface State {
+  plugins: Plugin[];
   npmPluginValue: string;
-  error: Record<string, any>;
+  error: Error | null;
   installPluginErrMsg: string;
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
-};
-type Props = {
-  settings: Settings;
-  updateSetting: (...args: Array<any>) => any;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Plugins extends React.PureComponent<Props, State> {
+class Plugins extends PureComponent<Props, State> {
   _isMounted: boolean;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      plugins: [],
-      npmPluginValue: '',
-      error: null,
-      installPluginErrMsg: '',
-      isInstallingFromNpm: false,
-      isRefreshingPlugins: false,
-    };
+  state: State = {
+    plugins: [],
+    npmPluginValue: '',
+    error: null,
+    installPluginErrMsg: '',
+    isInstallingFromNpm: false,
+    isRefreshingPlugins: false,
   }
 
   _handleClearError() {
-    this.setState({
-      error: null,
-    });
+    this.setState({ error: null });
   }
 
   _handleAddNpmPluginChange(e: Event) {
@@ -291,7 +288,7 @@ class Plugins extends React.PureComponent<Props, State> {
             </button>
             <div className="selectable force-pre-wrap">
               <b>{installPluginErrMsg}</b>
-              {`\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the `}
+              {'\n\nThere may be an issue with the plugin itself, as a note you can discover and install plugins from the '}
               <a href="https://insomnia.rest/plugins">Plugin Hub.</a>
               <details>
                 <summary>Additional Information</summary>

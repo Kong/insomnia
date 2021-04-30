@@ -1,28 +1,37 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
 import CopyButton from './base/copy-button';
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class RenderedQueryString extends PureComponent {
-  constructor(props) {
-    super(props);
-    this._interval = null;
-    this.state = {
-      string: '',
-    };
-  }
+interface Props {
+  request: any,
+  handleRender: Function,
+}
 
-  async _debouncedUpdate(props) {
+interface State {
+  string: string;
+}
+
+@autoBindMethodsForReact(AUTOBIND_CFG)
+class RenderedQueryString extends PureComponent<Props, State> {
+  state: State = {
+    string: '',
+  };
+
+  _interval: NodeJS.Timeout | null = null;
+
+  async _debouncedUpdate(props: Props) {
+    if (this._interval === null) {
+      return;
+    }
     clearTimeout(this._interval);
     this._interval = setTimeout(() => {
       this._update(props);
     }, 300);
   }
 
-  async _update(props) {
+  async _update(props: Props) {
     const { request } = props;
     const enabledParameters = request.parameters.filter(p => !p.disabled);
     let result;
@@ -51,11 +60,14 @@ class RenderedQueryString extends PureComponent {
   }
 
   componentWillUnmount() {
+    if (this._interval === null) {
+      return;
+    }
     clearTimeout(this._interval);
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (nextProps.request._id !== this.props.request._id) {
       this._update(nextProps);
     } else {
@@ -64,13 +76,13 @@ class RenderedQueryString extends PureComponent {
   }
 
   render() {
-    let inner;
+    const { string } = this.state;
 
-    if (this.state.string) {
-      inner = <span className="selectable force-wrap">{this.state.string}</span>;
-    } else {
-      inner = <span className="super-duper-faint italic">...</span>;
-    }
+    const inner = string ? (
+      <span className="selectable force-wrap">{this.state.string}</span>
+    ) : (
+      <span className="super-duper-faint italic">...</span>
+    );
 
     return (
       <div className="wide scrollable">
@@ -88,8 +100,4 @@ class RenderedQueryString extends PureComponent {
   }
 }
 
-RenderedQueryString.propTypes = {
-  request: PropTypes.object.isRequired,
-  handleRender: PropTypes.func.isRequired,
-};
 export default RenderedQueryString;

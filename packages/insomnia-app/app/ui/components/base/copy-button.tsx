@@ -1,18 +1,27 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { clipboard } from 'electron';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Button } from 'insomnia-components';
+import { Button, ButtonProps } from 'insomnia-components';
+
+interface Props extends ButtonProps {
+  content: string | Function,
+  children?: ReactNode,
+  title?: string,
+  confirmMessage?: string,
+}
+
+interface State {
+  showConfirmation: boolean;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CopyButton extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      showConfirmation: false,
-    };
+class CopyButton extends PureComponent<Props, State> {
+  state: State = {
+    showConfirmation: false,
   }
+
+  _triggerTimeout: NodeJS.Timeout | null = null;
 
   async _handleClick(e) {
     e.preventDefault();
@@ -35,6 +44,9 @@ class CopyButton extends PureComponent {
   }
 
   componentWillUnmount() {
+    if (this._triggerTimeout === null) {
+      return;
+    }
     clearTimeout(this._triggerTimeout);
   }
 
@@ -63,12 +75,4 @@ class CopyButton extends PureComponent {
   }
 }
 
-CopyButton.propTypes = {
-  // Required
-  content: PropTypes.oneOfType([PropTypes.string.isRequired, PropTypes.func.isRequired]).isRequired,
-  // Optional
-  children: PropTypes.node,
-  title: PropTypes.string,
-  confirmMessage: PropTypes.string,
-};
 export default CopyButton;

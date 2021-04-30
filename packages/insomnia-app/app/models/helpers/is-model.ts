@@ -1,35 +1,55 @@
 import type { BaseModel } from '../index';
-import { grpcRequest, request, requestGroup, protoFile, protoDirectory, workspace } from '../index';
+import {
+  grpcRequest,
+  request,
+  requestGroup,
+  protoFile,
+  protoDirectory,
+  workspace,
+} from '../index';
 import type { Workspace } from '../workspace';
 import { WorkspaceScopeKeys } from '../../models/workspace';
-export function isGrpcRequest(obj: BaseModel): boolean {
-  return obj.type === grpcRequest.type;
-}
-export function isGrpcRequestId(id: string): boolean {
-  return id.startsWith(`${grpcRequest.prefix}_`);
-}
-export function isRequest(obj: BaseModel): boolean {
-  return obj.type === request.type;
-}
+import { ProtoDirectory } from '../proto-directory';
+import { ProtoFile } from '../proto-file';
+import { RequestGroup } from '../request-group';
+import { Request } from '../request';
+import { GrpcRequest } from '../grpc-request';
+
+export const isGrpcRequestId = (id: string) => (
+  id.startsWith(`${grpcRequest.prefix}_`)
+);
+
 // TODO: Invalid until we can ensure all requests are prefixed by the id correctly INS-341
-// export function isRequestId(id: string): boolean {
-//   return id.startsWith(`${request.prefix}_`);
-// }
-export function isRequestGroup(obj: BaseModel): boolean {
-  return obj.type === requestGroup.type;
-}
-export function isProtoFile(obj: BaseModel): boolean {
-  return obj.type === protoFile.type;
-}
-export function isProtoDirectory(obj: BaseModel): boolean {
-  return obj.type === protoDirectory.type;
-}
-export function isWorkspace(obj: BaseModel): boolean {
-  return obj.type === workspace.type;
-}
-export function isDesign({ scope }: Partial<Workspace>): boolean {
-  return scope === WorkspaceScopeKeys.design;
-}
-export function isCollection({ scope }: Workspace): boolean {
-  return scope === WorkspaceScopeKeys.collection;
-}
+// export const isRequestId = (id: string) => id.startsWith(`${request.prefix}_`);
+
+export const isGrpcRequest = (obj: Pick<BaseModel, 'type'>): obj is GrpcRequest => (
+  obj.type === grpcRequest.type
+);
+
+export const isRequest = (obj: Pick<BaseModel, 'type'>): obj is Request => (
+  obj.type === request.type
+);
+
+export const isRequestGroup = (obj: Pick<BaseModel, 'type'>): obj is RequestGroup => (
+  obj.type === requestGroup.type
+);
+
+export const isProtoFile = (obj: Pick<BaseModel, 'type'>): obj is ProtoFile => (
+  obj.type === protoFile.type
+);
+
+export const isProtoDirectory = (obj: Pick<BaseModel, 'type'>): obj is ProtoDirectory => (
+  obj.type === protoDirectory.type
+);
+
+export const isWorkspace = (obj: Pick<BaseModel, 'type'>): obj is Workspace => (
+  obj.type === workspace.type
+);
+
+export const isDesign = (obj: Partial<Workspace>) => (
+  obj.scope === WorkspaceScopeKeys.design
+);
+
+export const isCollection = (obj: Workspace) => (
+  obj.scope === WorkspaceScopeKeys.collection
+);

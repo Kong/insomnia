@@ -6,28 +6,29 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 
+interface State {
+  isJson: boolean;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FilterHelpModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      isJson: true,
-    };
+class FilterHelpModal extends PureComponent<{}, State> {
+  state: State = {
+    isJson: true,
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  show(isJson) {
-    this.setState({
-      isJson,
-    });
-    this.modal.show();
+  show(isJson: boolean) {
+    this.setState({ isJson });
+    this.modal?.show();
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {

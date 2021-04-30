@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -13,12 +13,14 @@ import Tooltip from '../tooltip';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import { describeChanges } from '../../../sync/vcs/util';
 import { strings } from '../../../common/strings';
-type Props = {
+
+interface Props {
   workspace: Workspace;
-  syncItems: Array<StatusCandidate>;
+  syncItems: StatusCandidate[];
   vcs: VCS;
-};
-type State = {
+}
+
+interface State {
   status: Status;
   message: string;
   error: string;
@@ -27,12 +29,13 @@ type State = {
     string,
     {
       entry: StageEntry;
-      changes: null | Array<string>;
+      changes: null | string[];
       type: string;
       checked: boolean;
     }
   >;
-};
+}
+
 const _initialState: State = {
   status: {
     stage: {},
@@ -46,18 +49,18 @@ const _initialState: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncStagingModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  _onSnapshot: (() => void) | null | undefined;
-  _handlePush: (() => Promise<void>) | null | undefined;
-  textarea: HTMLTextAreaElement | null | undefined;
+class SyncStagingModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
+  _onSnapshot: (() => void) | null = null;
+  _handlePush: (() => Promise<void>) | null = null;
+  textarea: HTMLTextAreaElement | null = null;
   state = _initialState;
 
-  _setModalRef(m: Modal | null | undefined) {
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 
-  _setTextAreaRef(m: HTMLTextAreaElement | null | undefined) {
+  _setTextAreaRef(m: HTMLTextAreaElement) {
     this.textarea = m;
   }
 
@@ -84,13 +87,13 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     await this.refreshMainAttributes({}, newStage);
   }
 
-  async _handleAllToggle(keys: Array<DocumentKey>, doStage: boolean) {
+  async _handleAllToggle(keys: DocumentKey[], doStage: boolean) {
     const { vcs } = this.props;
     const { status } = this.state;
     let stage;
 
     if (doStage) {
-      const entries: Array<StageEntry> = [];
+      const entries: StageEntry[] = [];
 
       for (const k of Object.keys(status.unstaged)) {
         if (keys.includes(k)) {
@@ -100,7 +103,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
 
       stage = await vcs.stage(status.stage, entries);
     } else {
-      const entries: Array<StageEntry> = [];
+      const entries: StageEntry[] = [];
 
       for (const k of Object.keys(status.stage)) {
         if (keys.includes(k)) {
@@ -147,7 +150,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     return true;
   }
 
-  async refreshMainAttributes(newState?: Record<string, any> = {}, newStage?: Stage = {}) {
+  async refreshMainAttributes(newState: Partial<State> = {}, newStage: Stage = {}) {
     const { vcs, syncItems } = this.props;
     const branch = await vcs.getBranch();
     const status = await vcs.status(syncItems, newStage);
@@ -216,7 +219,7 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     this.textarea && this.textarea.focus();
   }
 
-  static renderOperation(entry: StageEntry, type: string, changes: Array<string>) {
+  static renderOperation(entry: StageEntry, type: string, changes: string[]) {
     let child = null;
     let message = '';
 
@@ -239,15 +242,15 @@ class SyncStagingModal extends React.PureComponent<Props, State> {
     }
 
     return (
-      <React.Fragment>
+      <Fragment>
         <Tooltip message={message}>
           {child} {type}
         </Tooltip>
-      </React.Fragment>
+      </Fragment>
     );
   }
 
-  renderTable(keys: Array<DocumentKey>, title: React.ReactNode) {
+  renderTable(keys: DocumentKey[], title: ReactNode) {
     const { status, lookupMap } = this.state;
 
     if (keys.length === 0) {

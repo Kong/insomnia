@@ -1,8 +1,13 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import * as util from '../../../common/misc';
 
-class MethodTag extends PureComponent {
+interface Props {
+  method: string;
+  override?: string;
+  fullNames?: boolean;
+}
+
+class MethodTag extends PureComponent<Props> {
   render() {
     const { method, override, fullNames } = this.props;
     let methodName = method;
@@ -32,10 +37,4 @@ class MethodTag extends PureComponent {
   }
 }
 
-MethodTag.propTypes = {
-  method: PropTypes.string.isRequired,
-  // Optional
-  override: PropTypes.string,
-  fullNames: PropTypes.bool,
-};
 export default MethodTag;

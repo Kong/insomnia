@@ -22,7 +22,9 @@ class PaymentNotificationModal extends PureComponent {
     this.hide();
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -33,11 +35,11 @@ class PaymentNotificationModal extends PureComponent {
     }
 
     hidePaymentNotificationUntilNextLaunch = true;
-    this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {

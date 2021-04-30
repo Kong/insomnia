@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment, FunctionComponent, useMemo } from 'react';
 import { Dropdown, DropdownItem, DropdownDivider, Tooltip } from 'insomnia-components';
 import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import styled from 'styled-components';
@@ -10,29 +10,31 @@ import {
 } from '../../../../common/grpc-paths';
 import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
-type Props = {
+
+interface Props {
   disabled?: boolean;
-  methods: Array<GrpcMethodDefinition>;
+  methods: GrpcMethodDefinition[];
   selectedMethod?: GrpcMethodDefinition;
   handleChange: (arg0: string) => Promise<void>;
   handleChangeProtoFile: (arg0: string) => Promise<void>;
-};
+}
+
 const NormalCase = styled.span`
   text-transform: initial;
 `;
 
-const GrpcMethodDropdown = ({
+const GrpcMethodDropdown: FunctionComponent<Props> = ({
   disabled,
   methods,
   selectedMethod,
   handleChange,
   handleChangeProtoFile,
-}: Props) => {
-  const dropdownButton = React.useMemo(
+}) => {
+  const dropdownButton = useMemo(
     () => () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
     [selectedMethod?.path],
   );
-  const groupedByPkg = React.useMemo(() => groupGrpcMethodsByPackage(methods), [methods]);
+  const groupedByPkg = useMemo(() => groupGrpcMethodsByPackage(methods), [methods]);
   return (
     <Dropdown className="tall wide" renderButton={dropdownButton}>
       <DropdownItem onClick={handleChangeProtoFile}>
@@ -45,7 +47,7 @@ const GrpcMethodDropdown = ({
         </>
       )}
       {Object.keys(groupedByPkg).map(pkgName => (
-        <React.Fragment key={pkgName}>
+        <Fragment key={pkgName}>
           <DropdownDivider
             children={pkgName !== NO_PACKAGE_KEY && <NormalCase>pkg: {pkgName}</NormalCase>}
           />
@@ -62,7 +64,7 @@ const GrpcMethodDropdown = ({
               </Tooltip>
             </DropdownItem>
           ))}
-        </React.Fragment>
+        </Fragment>
       ))}
     </Dropdown>
   );

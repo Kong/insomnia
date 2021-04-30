@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
@@ -16,25 +16,27 @@ import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
 const spectral = new Spectral();
-type Props = {
-  gitSyncDropdown: React.ReactNode;
+
+interface Props {
+  gitSyncDropdown: ReactNode;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
   handleUpdateApiSpec: (s: ApiSpec) => Promise<void>;
   wrapperProps: WrapperProps;
-};
-type State = {
+}
+
+interface State {
   previewHidden: boolean;
-  lintMessages: Array<{
+  lintMessages: {
     message: string;
     line: number;
     type: 'error' | 'warning';
-  }>;
-};
+  }[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperDesign extends React.PureComponent<Props, State> {
-  editor: CodeEditor | null | undefined;
-  debounceTimeout: IntervalID;
+class WrapperDesign extends PureComponent<Props, State> {
+  editor: CodeEditor | null = null;
+  debounceTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -50,7 +52,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     delay: 1000,
   };
 
-  _setEditorRef(n: CodeEditor | null | undefined) {
+  _setEditorRef(n: CodeEditor) {
     this.editor = n;
   }
 
@@ -75,7 +77,10 @@ class WrapperDesign extends React.PureComponent<Props, State> {
       handleUpdateApiSpec,
     } = this.props;
     // Debounce the update because these specs can get pretty large
-    clearTimeout(this.debounceTimeout);
+    if (this.debounceTimeout !== null) {
+      clearTimeout(this.debounceTimeout);
+    }
+
     this.debounceTimeout = setTimeout(async () => {
       await handleUpdateApiSpec({ ...activeApiSpec, contents: v });
     }, 500);
@@ -137,7 +142,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     }
   }
 
-  _renderEditor(): React.ReactNode {
+  _renderEditor() {
     const { activeApiSpec, settings } = this.props.wrapperProps;
     const { lintMessages } = this.state;
     return (
@@ -164,7 +169,7 @@ class WrapperDesign extends React.PureComponent<Props, State> {
     );
   }
 
-  _renderPreview(): React.ReactNode {
+  _renderPreview() {
     const { activeApiSpec } = this.props.wrapperProps;
     const { previewHidden } = this.state;
 
@@ -221,13 +226,13 @@ class WrapperDesign extends React.PureComponent<Props, State> {
         wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
         gridRight={
-          <React.Fragment>
+          <Fragment>
             <Button variant="contained" onClick={this._handleTogglePreview}>
               <img src={previewIcon} alt="Preview" width="15" />
               &nbsp; {previewHidden ? 'Preview: Off' : 'Preview: On'}
             </Button>
             {gitSyncDropdown}
-          </React.Fragment>
+          </Fragment>
         }
       />
     );

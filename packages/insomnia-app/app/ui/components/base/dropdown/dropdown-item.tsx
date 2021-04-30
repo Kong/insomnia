@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { createElement, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -9,10 +9,10 @@ interface Props {
   value?: any,
   disabled?: boolean,
   onClick: Function,
-  children: React.ReactNode,
+  children: ReactNode,
   className?: string,
   color?: string,
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class DropdownItem extends PureComponent<Props> {
@@ -63,7 +63,7 @@ class DropdownItem extends PureComponent<Props> {
       onClick: this._handleClick,
       ...props,
     };
-    return React.createElement(buttonClass || 'button', buttonProps, inner);
+    return createElement(buttonClass || 'button', buttonProps, inner);
   }
 }
 

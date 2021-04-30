@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { CSSProperties, Fragment, PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -13,14 +13,14 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
 interface Props {
-  children: React.ReactNode,
+  children: ReactNode,
   right?: boolean,
   outline?: boolean,
   wide?: boolean,
   onOpen?: Function,
   onHide?: Function,
   className?: string,
-  style?: React.CSSProperties,
+  style?: CSSProperties,
   beside?: boolean,
 }
 
@@ -29,33 +29,30 @@ interface State {
   dropUp: boolean,
   filter: string,
   filterVisible: boolean,
-  filterItems?: Array<number>,
+  filterItems?: number[] | null,
   filterActiveIndex: number,
-  forcedPosition?: {x: number, y: number},
-  uniquenessKey: number, 
+  forcedPosition?: {x: number, y: number} | null,
+  uniquenessKey: number,
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class Dropdown extends PureComponent<Props, State> {
-  private _node: HTMLDivElement;
-  private _dropdownList: HTMLDivElement;
-  private _filter: any;
+  private _node: HTMLDivElement | null = null;
+  private _dropdownList: HTMLDivElement | null = null;
+  private _filter: HTMLDivElement | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      open: false,
-      dropUp: false,
-      // Filter Stuff
-      filter: '',
-      filterVisible: false,
-      filterItems: null,
-      filterActiveIndex: 0,
-      // Position
-      forcedPosition: null,
-      // Use this to force new menu every time dropdown opens
-      uniquenessKey: 0,
-    };
+  state: State = {
+    open: false,
+    dropUp: false,
+    // Filter Stuff
+    filter: '',
+    filterVisible: false,
+    filterItems: null,
+    filterActiveIndex: 0,
+    // Position
+    forcedPosition: null,
+    // Use this to force new menu every time dropdown opens
+    uniquenessKey: 0,
   }
 
   _setRef(n: HTMLDivElement) {
@@ -248,18 +245,13 @@ class Dropdown extends PureComponent<Props, State> {
     this._dropdownList = n;
   }
 
-  _addFilterRef(n) {
+  _addFilterRef(n: HTMLDivElement) {
     this._filter = n;
 
     // Automatically focus the filter element when mounted so we can start typing
     if (this._filter) {
       this._filter.focus();
     }
-  }
-
-  _addDropdownMenuRef(n) {
-    // @ts-expect-error _dropdownMenu isn't used, this can be removed
-    this._dropdownMenu = n;
   }
 
   _getFlattenedChildren(children) {
@@ -273,7 +265,7 @@ class Dropdown extends PureComponent<Props, State> {
         continue;
       }
 
-      if (child.type === React.Fragment) {
+      if (child.type === Fragment) {
         newChildren = [...newChildren, ...this._getFlattenedChildren(child.props.children)];
       } else if (Array.isArray(child)) {
         newChildren = [...newChildren, ...this._getFlattenedChildren(child)];

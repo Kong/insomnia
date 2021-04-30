@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import CodeEditor from '../codemirror/code-editor';
@@ -18,37 +18,37 @@ export const ensureKeyIsValid = (key: string): string | null => {
 
   return null;
 };
-export type EnvironmentInfo = {
+
+export interface EnvironmentInfo {
   object: Record<string, any>;
   propertyOrder: Record<string, any> | null;
-};
-type Props = {
+}
+
+interface Props {
   environmentInfo: EnvironmentInfo;
-  didChange: (...args: Array<any>) => any;
+  didChange: (...args: any[]) => any;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
-  render: (...args: Array<any>) => any;
-  getRenderContext: (...args: Array<any>) => any;
+  render: (...args: any[]) => any;
+  getRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   lineWrapping: boolean;
-};
+}
+
 // There was existing logic to also handle warnings, but it was removed in PR#2601 as there were no more warnings
 // to show. If warnings need to be added again, review git history to revert that particular change.
-type State = {
+interface State {
   error: string | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class EnvironmentEditor extends React.PureComponent<Props, State> {
-  _editor: CodeEditor | null;
+class EnvironmentEditor extends PureComponent<Props, State> {
+  _editor: CodeEditor | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      error: null,
-    };
+  state: State = {
+    error: null,
   }
 
   _handleChange() {
@@ -89,7 +89,7 @@ class EnvironmentEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _setEditorRef(n: CodeEditor | null | undefined) {
+  _setEditorRef(n: CodeEditor) {
     this._editor = n;
   }
 

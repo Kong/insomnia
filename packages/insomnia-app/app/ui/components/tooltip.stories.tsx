@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import Tooltip from './tooltip';
 import '../../../.storybook/index.less';
 export default {
@@ -34,13 +34,13 @@ export const withDelay = () => (
 );
 export const withChildren = () => {
   const message = (
-    <React.Fragment>
+    <Fragment>
       This is a{' '}
       <a href="#" onClick={e => e.preventDefault()}>
         Link
       </a>
       .
-    </React.Fragment>
+    </Fragment>
   );
   return (
     <p className="text-center">

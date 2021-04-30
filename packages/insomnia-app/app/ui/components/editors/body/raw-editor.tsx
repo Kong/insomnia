@@ -1,11 +1,27 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import CodeEditor from '../../codemirror/code-editor';
 
+interface Props {
+  onChange: Function;
+  content: string;
+  contentType: string;
+  fontSize: number;
+  indentSize: number;
+  keyMap: string;
+  lineWrapping: boolean;
+  nunjucksPowerUserMode: boolean;
+  uniquenessKey: string;
+  isVariableUncovered: boolean;
+  className?: string;
+  render?: Function;
+  getRenderContext?: Function;
+  indentWithTabs?: boolean;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RawEditor extends PureComponent {
+class RawEditor extends PureComponent<Props> {
   render() {
     const {
       className,
@@ -24,7 +40,7 @@ class RawEditor extends PureComponent {
       uniquenessKey,
     } = this.props;
     return (
-      <React.Fragment>
+      <Fragment>
         <CodeEditor
           manualPrettify
           uniquenessKey={uniquenessKey}
@@ -43,27 +59,9 @@ class RawEditor extends PureComponent {
           lineWrapping={lineWrapping}
           placeholder="..."
         />
-      </React.Fragment>
+      </Fragment>
     );
   }
 }
 
-RawEditor.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  content: PropTypes.string.isRequired,
-  contentType: PropTypes.string.isRequired,
-  fontSize: PropTypes.number.isRequired,
-  indentSize: PropTypes.number.isRequired,
-  keyMap: PropTypes.string.isRequired,
-  lineWrapping: PropTypes.bool.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  uniquenessKey: PropTypes.string.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-  // Optional
-  className: PropTypes.string,
-  render: PropTypes.func,
-  getRenderContext: PropTypes.func,
-  indentWithTabs: PropTypes.bool,
-};
 export default RawEditor;

@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import classnames from 'classnames';
 import GRPCEditor from '../editors/grpc-editor';
 import Button from '../base/button';
-type Message = {
+
+interface Message {
   id: string;
   created: number;
   text: string;
-};
-type Props = {
+}
+
+interface Props {
   settings: Settings;
-  messages: Array<Message> | null | undefined;
+  messages?: Message[] | null;
   tabNamePrefix: 'Stream' | 'Response';
   bodyText: string;
   uniquenessKey: string;
@@ -20,10 +22,10 @@ type Props = {
   showActions?: boolean;
   handleRender: (arg0: string) => Promise<string>;
   isVariableUncovered: boolean;
-  handleGetRenderContext: (...args: Array<any>) => any;
-};
+  handleGetRenderContext: (...args: any[]) => any;
+}
 
-const GrpcTabbedMessages = ({
+const GrpcTabbedMessages: FunctionComponent<Props> = ({
   settings,
   showActions,
   bodyText,
@@ -36,7 +38,7 @@ const GrpcTabbedMessages = ({
   handleRender,
   isVariableUncovered,
   handleGetRenderContext,
-}: Props) => {
+}) => {
   const shouldShowBody = !!handleBodyChange;
   const orderedMessages = messages?.sort((a, b) => a.created - b.created) || [];
   return (

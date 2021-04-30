@@ -1,8 +1,12 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { PureComponent, ReactNode } from 'react';
 import classnames from 'classnames';
 
-class ModalFooter extends PureComponent {
+interface Props {
+  className?: string;
+  children: ReactNode;
+}
+
+class ModalFooter extends PureComponent<Props> {
   render() {
     const { children, className } = this.props;
     return (
@@ -11,10 +15,4 @@ class ModalFooter extends PureComponent {
   }
 }
 
-ModalFooter.propTypes = {
-  // Required
-  children: PropTypes.node.isRequired,
-  // Optional
-  className: PropTypes.string,
-};
 export default ModalFooter;

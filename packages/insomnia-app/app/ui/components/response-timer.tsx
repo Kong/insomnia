@@ -1,19 +1,28 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { DOMAttributes, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { REQUEST_TIME_TO_SHOW_COUNTER, AUTOBIND_CFG } from '../../common/constants';
 
+interface Props {
+  handleCancel: DOMAttributes<HTMLButtonElement>['onClick'],
+  loadStartTime: number,
+}
+
+interface State {
+  elapsedTime: number;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseTimer extends PureComponent {
-  constructor(props) {
-    super(props);
-    this._interval = null;
-    this.state = {
-      elapsedTime: 0,
-    };
-  }
+class ResponseTimer extends PureComponent<Props, State> {
+  _interval: NodeJS.Timeout | null = null;
+
+  state: State = {
+    elapsedTime: 0,
+  };
 
   componentWillUnmount() {
+    if (this._interval === null) {
+      return;
+    }
     clearInterval(this._interval);
   }
 
@@ -30,12 +39,17 @@ class ResponseTimer extends PureComponent {
     const { loadStartTime } = this.props;
 
     if (loadStartTime <= 0) {
-      clearInterval(this._interval);
+      if (this._interval !== null) {
+        clearInterval(this._interval);
+      }
       return;
     }
 
-    clearInterval(this._interval); // Just to be sure
+    if (this._interval !== null) {
+      clearInterval(this._interval);
+    }
 
+    // Just to be sure
     this._interval = setInterval(this._handleUpdateElapsedTime, 100);
 
     this._handleUpdateElapsedTime();
@@ -70,8 +84,4 @@ class ResponseTimer extends PureComponent {
   }
 }
 
-ResponseTimer.propTypes = {
-  handleCancel: PropTypes.func.isRequired,
-  loadStartTime: PropTypes.number.isRequired,
-};
 export default ResponseTimer;

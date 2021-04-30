@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import type { GrpcMethodType } from '../../../network/grpc/method';
-import { Button } from 'insomnia-components';
+import { Button, ButtonProps } from 'insomnia-components';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
-type Props = {
+
+interface Props {
   running: boolean;
   methodType?: GrpcMethodType;
   handleStart: () => Promise<void>;
   handleCancel: () => void;
-};
-const buttonProps = {
+}
+
+const buttonProps: ButtonProps = {
   className: 'tall',
   size: 'medium',
   variant: 'text',
   radius: '0',
 };
 
-const GrpcSendButton = ({ running, methodType, handleStart, handleCancel }: Props) => {
+const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
   if (running) {
     return (
       <Button {...buttonProps} onClick={handleCancel}>

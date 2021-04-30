@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -12,29 +12,28 @@ import HelpTooltip from '../help-tooltip';
 import type { Snapshot } from '../../../sync/types';
 import VCS from '../../../sync/vcs';
 import * as session from '../../../account/session';
-type Props = {
+
+interface Props {
   workspace: Workspace;
   vcs: VCS;
-};
-type State = {
+}
+
+interface State {
   branch: string;
-  history: Array<Snapshot>;
-};
+  history: Snapshot[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncHistoryModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class SyncHistoryModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
   handleRollback: (arg0: Snapshot) => Promise<void>;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      branch: '',
-      history: [],
-    };
+  state: State = {
+    branch: '',
+    history: [],
   }
 
-  _setModalRef(m: Modal | null | undefined) {
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 
@@ -80,12 +79,12 @@ class SyncHistoryModal extends React.PureComponent<Props, State> {
 
     if (name) {
       return (
-        <React.Fragment>
+        <Fragment>
           {name}{' '}
           <HelpTooltip info delay={500}>
             {email}
           </HelpTooltip>
-        </React.Fragment>
+        </Fragment>
       );
     } else {
       return '--';

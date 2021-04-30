@@ -10,8 +10,14 @@ interface Props {
   editorIndentSize: number,
   editorLineWrapping: boolean,
 }
-class ResponseTimelineViewer extends PureComponent<Props> {
-  state = {
+
+interface State {
+  timeline: any[];
+  timelineKey: string;
+}
+
+class ResponseTimelineViewer extends PureComponent<Props, State> {
+  state: State = {
     timeline: [],
     timelineKey: '',
   };
@@ -44,7 +50,7 @@ class ResponseTimelineViewer extends PureComponent<Props> {
   renderRow(row, i, all) {
     const { name, value } = row;
     const previousName = i > 0 ? all[i - 1].name : '';
-    let prefix = null;
+    let prefix: string | null = null;
 
     switch (name) {
       case 'HEADER_IN':

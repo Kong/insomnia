@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { FunctionComponent, useCallback } from 'react';
 import type { ProtoFile } from '../../../models/proto-file';
 import type {
   DeleteProtoFileHandler,
@@ -9,7 +9,8 @@ import type {
 import { Button, AsyncButton } from 'insomnia-components';
 import Editable from '../base/editable';
 import ProtoListItem from './proto-list-item';
-type Props = {
+
+interface Props {
   protoFile: ProtoFile;
   isSelected?: boolean;
   handleSelect: SelectProtoFileHandler;
@@ -17,10 +18,11 @@ type Props = {
   handleDelete: DeleteProtoFileHandler;
   handleRename: RenameProtoFileHandler;
   handleUpdate: UpdateProtoFileHandler;
-};
+}
+
 const spinner = <i className="fa fa-spin fa-refresh" />;
 
-const ProtoFileListItem = ({
+const ProtoFileListItem: FunctionComponent<Props> = ({
   protoFile,
   isSelected,
   handleSelect,
@@ -28,24 +30,24 @@ const ProtoFileListItem = ({
   handleRename,
   handleUpdate,
   indentLevel,
-}: Props) => {
+}) => {
   const { name, _id } = protoFile;
   // Don't re-instantiate the callbacks if the dependencies have not changed
-  const handleSelectCallback = React.useCallback(() => handleSelect(_id), [handleSelect, _id]);
-  const handleDeleteCallback = React.useCallback(
+  const handleSelectCallback = useCallback(() => handleSelect(_id), [handleSelect, _id]);
+  const handleDeleteCallback = useCallback(
     async (e: React.SyntheticEvent<HTMLButtonElement>) => {
       e.stopPropagation();
       await handleDelete(protoFile);
     },
     [handleDelete, protoFile],
   );
-  const handleRenameCallback = React.useCallback(
+  const handleRenameCallback = useCallback(
     async (newName: string) => {
       await handleRename(protoFile, newName);
     },
     [handleRename, protoFile],
   );
-  const handleUpdateCallback = React.useCallback(
+  const handleUpdateCallback = useCallback(
     async (e: React.SyntheticEvent<HTMLButtonElement>) => {
       e.stopPropagation();
       await handleUpdate(protoFile);

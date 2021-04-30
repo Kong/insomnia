@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { remote } from 'electron';
 import { DEBOUNCE_MILLIS, AUTOBIND_CFG, isMac } from '../../common/constants';
@@ -18,15 +18,16 @@ import type { Request } from '../../models/request';
 import type { HotKeyRegistry } from '../../common/hotkeys';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
-type Props = {
-  handleAutocompleteUrls: (...args: Array<any>) => any;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  handleImport: (...args: Array<any>) => any;
+
+interface Props {
+  handleAutocompleteUrls: (...args: any[]) => any;
+  handleGenerateCode: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
+  handleImport: (...args: any[]) => any;
   handleRender: (arg0: string) => Promise<string>;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleUpdateDownloadPath: (...args: Array<any>) => any;
+  handleUpdateDownloadPath: (...args: any[]) => any;
   isVariableUncovered: boolean;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
@@ -35,40 +36,37 @@ type Props = {
   uniquenessKey: string;
   hotKeyRegistry: HotKeyRegistry;
   downloadPath: string | null;
-};
-type State = {
+}
+
+interface State {
   currentInterval: number | null;
   currentTimeout: number | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestUrlBar extends React.PureComponent<Props, State> {
-  _urlChangeDebounceTimeout: TimeoutID;
-  _sendTimeout: TimeoutID;
-  _sendInterval: IntervalID;
-  _lastPastedText: string | null;
-  _dropdown: Dropdown | null | undefined;
-  _methodDropdown: Dropdown | null | undefined;
-  _input: OneLineEditor | null | undefined;
-
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      currentInterval: null,
-      currentTimeout: null,
-    };
-    this._lastPastedText = null;
+class RequestUrlBar extends PureComponent<Props, State> {
+  _urlChangeDebounceTimeout: NodeJS.Timeout | null = null;
+  _sendTimeout: NodeJS.Timeout | null = null;
+  _sendInterval: NodeJS.Timeout | null = null;
+  _dropdown: Dropdown | null = null;
+  _methodDropdown: Dropdown | null = null;
+  _input: OneLineEditor | null = null;
+  state: State = {
+    currentInterval: null,
+    currentTimeout: null,
   }
 
-  _setDropdownRef(n: Dropdown | null) {
+  _lastPastedText: string | null = null;
+
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 
-  _setMethodDropdownRef(n: Dropdown | null) {
+  _setMethodDropdownRef(n: Dropdown) {
     this._methodDropdown = n;
   }
 
-  _setInputRef(n: HTMLInputElement | null) {
+  _setInputRef(n: HTMLInputElement) {
     this._input = n;
   }
 

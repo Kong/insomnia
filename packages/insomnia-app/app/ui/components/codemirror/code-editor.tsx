@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Component, CSSProperties } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -56,10 +56,10 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   // NOTE: This is px
   keyMap: 'default',
   extraKeys: CodeMirror.normalizeKeyMap({
-    'Ctrl-Q': function (cm) {
+    'Ctrl-Q': function(cm) {
       cm.foldCode(cm.getCursor());
     },
-    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function(cm) {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
@@ -120,7 +120,7 @@ interface Props {
   readOnly?: boolean,
   type?: string,
   filter?: string,
-  filterHistory?: Array<string>,
+  filterHistory?: string[],
   singleLine?: boolean,
   debounceMillis?: number,
   dynamicHeight?: boolean,
@@ -129,7 +129,7 @@ interface Props {
   lintOptions?: Object,
   infoOptions?: Object,
   jumpOptions?: Object,
-  uniquenessKey?: any,
+  uniquenessKey?: string | null,
   isVariableUncovered?: boolean,
   raw?: boolean,
 }
@@ -139,12 +139,12 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CodeEditor extends React.Component<Props, State> {
-  private _uniquenessKey: any;
-  private _previousUniquenessKey: any;
+class CodeEditor extends Component<Props, State> {
+  private _uniquenessKey?: string | null = null;
+  private _previousUniquenessKey?: string | null = null;
   private _originalCode: string;
   codeMirror?: CodeMirror.EditorFromTextArea;
-  private _filterInput: any;
+  private _filterInput: HTMLInputElement | null = null;
   private _autocompleteDebounce: NodeJS.Timeout;
   private _ignoreNextChange: boolean;
   private _filterTimeout: NodeJS.Timeout;
@@ -155,7 +155,7 @@ class CodeEditor extends React.Component<Props, State> {
       filter: props.filter || '',
     };
     this._originalCode = '';
-    this._uniquenessKey = this.props.uniquenessKey;
+    this._uniquenessKey = this.props.uniquenessKey || null;
     this._previousUniquenessKey = 'n/a';
   }
 
@@ -168,7 +168,7 @@ class CodeEditor extends React.Component<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     this._uniquenessKey = nextProps.uniquenessKey;
     this._previousUniquenessKey = this.props.uniquenessKey;
     // Sync the filter too
@@ -427,7 +427,7 @@ class CodeEditor extends React.Component<Props, State> {
     }
   }
 
-  _setFilterInputRef(n) {
+  _setFilterInputRef(n: HTMLInputElement) {
     this._filterInput = n;
   }
 
@@ -1003,7 +1003,7 @@ class CodeEditor extends React.Component<Props, State> {
     // Disable linting if the document reaches a maximum size or is empty
     const shouldLint =
       value.length > MAX_SIZE_FOR_LINTING || value.length === 0 ? false : !this.props.noLint;
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const existingLint = this.codeMirror.options.lint || false;
 
     if (shouldLint !== existingLint) {
@@ -1181,7 +1181,7 @@ class CodeEditor extends React.Component<Props, State> {
       );
     }
 
-    const styles: React.CSSProperties = {};
+    const styles: CSSProperties = {};
 
     if (fontSize) {
       styles.fontSize = `${fontSize}px`;

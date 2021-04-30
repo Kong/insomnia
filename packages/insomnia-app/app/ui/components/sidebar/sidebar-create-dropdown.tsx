@@ -1,19 +1,20 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
-type Props = {
-  handleCreateRequest: (...args: Array<any>) => any;
-  handleCreateRequestGroup: (...args: Array<any>) => any;
+
+interface Props {
+  handleCreateRequest: (...args: any[]) => any;
+  handleCreateRequestGroup: (...args: any[]) => any;
   hotKeyRegistry: HotKeyRegistry;
   right?: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarCreateDropdown extends React.PureComponent<Props> {
-  _dropdown: Dropdown | null | undefined;
+class SidebarCreateDropdown extends PureComponent<Props> {
+  _dropdown: Dropdown | null = null;
 
   show(position: { x: number; y: number }) {
     if (this._dropdown) {
@@ -21,7 +22,7 @@ class SidebarCreateDropdown extends React.PureComponent<Props> {
     }
   }
 
-  _setDropdownRef(n: Dropdown | null | undefined) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 

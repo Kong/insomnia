@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -8,34 +8,37 @@ import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
 import { Button } from 'insomnia-components';
 import { strings } from '../../../common/strings';
-type Props = {
+
+interface Props {
   workspace: Workspace;
   vcs: VCS;
-};
-type State = {
+}
+
+interface State {
   error: string;
   workspaceName: string;
-};
+}
+
 const INITIAL_STATE: State = {
   error: '',
   workspaceName: '',
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncDeleteModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  input: HTMLInputElement | null | undefined;
+class SyncDeleteModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
+  input: HTMLInputElement | null = null;
 
   constructor(props: Props) {
     super(props);
     this.state = INITIAL_STATE;
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setInputRef(m: HTMLInputElement | null | undefined) {
+  _setInputRef(m: HTMLInputElement) {
     this.input = m;
   }
 
@@ -59,7 +62,7 @@ class SyncDeleteModal extends React.PureComponent<Props, State> {
     }
   }
 
-  async show(options: { onHide: (...args: Array<any>) => any }) {
+  async show(options: { onHide: (...args: any[]) => any }) {
     this.modal &&
       this.modal.show({
         onHide: options.onHide,

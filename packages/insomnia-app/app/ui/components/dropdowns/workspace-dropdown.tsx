@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import classnames from 'classnames';
@@ -25,7 +25,8 @@ import type { Environment } from '../../../models/environment';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { isDesign } from '../../../models/helpers/is-model';
-type Props = {
+
+interface Props {
   displayName: string;
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
@@ -33,17 +34,18 @@ type Props = {
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
   className?: string;
-};
-type State = {
-  actionPlugins: Array<WorkspaceAction>;
-  configGeneratorPlugins: Array<ConfigGenerator>;
+}
+
+interface State {
+  actionPlugins: WorkspaceAction[];
+  configGeneratorPlugins: ConfigGenerator[];
   loadingActions: Record<string, boolean>;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceDropdown extends React.PureComponent<Props, State> {
-  _dropdown: Dropdown | null | undefined;
-  state = {
+class WorkspaceDropdown extends PureComponent<Props, State> {
+  _dropdown: Dropdown | null = null;
+  state: State = {
     actionPlugins: [],
     configGeneratorPlugins: [],
     loadingActions: {},
@@ -95,7 +97,7 @@ class WorkspaceDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  _setDropdownRef(n: Dropdown | null | undefined) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 

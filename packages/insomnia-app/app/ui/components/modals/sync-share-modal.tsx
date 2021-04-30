@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
@@ -11,36 +11,36 @@ import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
 import { showModal } from './index';
 import { strings } from '../../../common/strings';
-type Props = {
+
+interface Props {
   workspace: Workspace;
   vcs: VCS;
-};
-type Team = {
+}
+
+interface Team {
   id: string;
   name: string;
-};
-type State = {
+}
+
+interface State {
   loading: boolean;
   selectedTeam: null | Team;
-  teams: Array<Team>;
+  teams: Team[];
   error: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncShareModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class SyncShareModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      selectedTeam: null,
-      teams: [],
-      error: '',
-      loading: false,
-    };
+  state: State = {
+    selectedTeam: null,
+    teams: [],
+    error: '',
+    loading: false,
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -25,7 +25,8 @@ import type {
   SetupGitRepositoryCallback,
   UpdateGitRepositoryCallback,
 } from '../../redux/modules/git';
-type Props = {
+
+interface Props {
   handleInitializeEntities: () => Promise<void>;
   handleGitBranchChanged: (branch: string) => void;
   workspace: Workspace;
@@ -33,36 +34,33 @@ type Props = {
   gitRepository: GitRepository | null;
   setupGitRepository: SetupGitRepositoryCallback;
   updateGitRepository: UpdateGitRepositoryCallback;
-  // Optional
   className?: string;
-  renderDropdownButton?: (children: React.ReactNode) => React.ReactNode;
-};
-type State = {
+  renderDropdownButton?: (children: ReactNode) => ReactNode;
+}
+
+interface State {
   initializing: boolean;
   loadingPush: boolean;
   loadingPull: boolean;
-  log: Array<GitLogEntry>;
+  log: GitLogEntry[];
   branch: string;
-  branches: Array<string>;
-};
+  branches: string[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitSyncDropdown extends React.PureComponent<Props, State> {
-  _dropdown: Dropdown | null | undefined;
+class GitSyncDropdown extends PureComponent<Props, State> {
+  _dropdown: Dropdown | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      initializing: false,
-      loadingPush: false,
-      loadingPull: false,
-      log: [],
-      branch: '',
-      branches: [],
-    };
+  state: State = {
+    initializing: false,
+    loadingPush: false,
+    loadingPull: false,
+    log: [],
+    branch: '',
+    branches: [],
   }
 
-  _setDropdownRef(n: Dropdown | null | undefined) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 
@@ -140,7 +138,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handlePush(e: any, force: boolean = false) {
+  async _handlePush(e: any, force = false) {
     this.setState({
       loadingPush: true,
     });
@@ -276,19 +274,19 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
 
     if (!vcs.isInitialized()) {
       return renderBtn(
-        <React.Fragment>
+        <Fragment>
           <i className="fa fa-code-fork space-right" />
           Setup Git Sync
-        </React.Fragment>,
+        </Fragment>,
       );
     }
 
     const initializing = false;
     return renderBtn(
-      <React.Fragment>
+      <Fragment>
         <div className="ellipsis">{initializing ? 'Initializing...' : branch}</div>
         <i className="fa fa-code-fork space-left" />
-      </React.Fragment>,
+      </Fragment>,
     );
   }
 
@@ -337,15 +335,15 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
           </DropdownItem>
 
           {vcs.isInitialized() && (
-            <React.Fragment>
+            <Fragment>
               <DropdownItem onClick={this._handleManageBranches}>
                 <i className="fa fa-code-fork" /> Branches
               </DropdownItem>
-            </React.Fragment>
+            </Fragment>
           )}
 
           {vcs.isInitialized() && (
-            <React.Fragment>
+            <Fragment>
               <DropdownDivider>Branches</DropdownDivider>
               {branches.map(this.renderBranch)}
 
@@ -379,7 +377,7 @@ class GitSyncDropdown extends React.PureComponent<Props, State> {
               <DropdownItem onClick={this._handleLog} disabled={log.length === 0}>
                 <i className="fa fa-clock-o" /> History ({log.length})
               </DropdownItem>
-            </React.Fragment>
+            </Fragment>
           )}
         </Dropdown>
       </div>

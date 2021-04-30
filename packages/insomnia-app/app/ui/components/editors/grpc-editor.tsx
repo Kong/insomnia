@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import CodeEditor from '../codemirror/code-editor';
 import type { Settings } from '../../../models/settings';
-type Props = {
+
+interface Props {
   content: string;
   handleChange: (arg0: string) => Promise<void>;
   settings: Settings;
   readOnly: boolean;
   handleRender?: (arg0: string) => Promise<string>;
   isVariableUncovered?: boolean;
-  handleGetRenderContext?: (...args: Array<any>) => any;
-};
+  handleGetRenderContext?: (...args: any[]) => any;
+}
 
-const GRPCEditor = ({
+const GRPCEditor: FunctionComponent<Props> = ({
   content,
   handleChange,
   readOnly,
@@ -19,7 +20,7 @@ const GRPCEditor = ({
   handleGetRenderContext,
   handleRender,
   isVariableUncovered,
-}: Props) => (
+}) => (
   <CodeEditor
     fontSize={settings.editorFontSize}
     indentSize={settings.editorIndentSize}

@@ -1,36 +1,32 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import Papa from 'papaparse';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-type Props = {
+
+interface Props {
   body: Buffer;
-};
-type State = {
+}
+
+interface State {
   result: null | {
-    data: Array<Array<string>>;
+    data: string[][];
   };
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseCSVViewer extends React.PureComponent<Props, State> {
-  currentHash: string;
-
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      result: null,
-    };
-    this.currentHash = '';
+class ResponseCSVViewer extends PureComponent<Props, State> {
+  state: State = {
+    result: null,
   }
+
+  currentHash = '';
 
   update(body: Buffer) {
     const csv = body.toString('utf8');
     Papa.parse(csv, {
       skipEmptyLines: true,
       complete: result => {
-        this.setState({
-          result,
-        });
+        this.setState({ result });
       },
     });
   }
@@ -40,7 +36,7 @@ class ResponseCSVViewer extends React.PureComponent<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillUpdate(nextProps: Props, nextState: State) {
+  UNSAFE_componentWillUpdate(nextProps: Props) {
     if (this.props.body === nextProps.body) {
       return;
     }

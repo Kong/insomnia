@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -8,51 +8,48 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import Button from '../base/button';
 import PromptButton from '../base/prompt-button';
-type Props = {};
-type State = {
+
+interface State {
   title: string;
-  hints: Array<string>;
-  defaultValue: string | null | undefined;
-  submitName: string | null | undefined;
-  selectText: boolean | null | undefined;
-  upperCase: boolean | null | undefined;
-  validate: ((arg0: string) => string) | null | undefined;
-  hint: string | null | undefined;
-  label: string | null | undefined;
-  placeholder: string | null | undefined;
-  inputType: string | null | undefined;
-  cancelable: boolean | null | undefined;
-  onComplete: ((arg0: string) => void) | null | undefined;
-  onCancel: (() => void) | null | undefined;
-  onDeleteHint: ((arg0: string) => void) | null | undefined;
+  hints: string[];
+  defaultValue?: string | null;
+  submitName?: string | null;
+  selectText?: boolean | null;
+  upperCase?: boolean | null;
+  validate?: ((arg0: string) => string) | null;
+  hint?: string | null;
+  label?: string | null;
+  placeholder?: string | null;
+  inputType?: string | null;
+  cancelable?: boolean | null;
+  onComplete?: ((arg0: string) => void) | null;
+  onCancel?: (() => void) | null;
+  onDeleteHint?: ((arg0: string) => void) | null;
   currentValue: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PromptModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  _input: HTMLInputElement | null | undefined;
+class PromptModal extends PureComponent<{}, State> {
+  modal: Modal | null = null;
+  _input: HTMLInputElement | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      title: 'Not Set',
-      hints: [],
-      defaultValue: '',
-      submitName: '',
-      selectText: false,
-      upperCase: false,
-      validate: null,
-      hint: '',
-      label: '',
-      placeholder: '',
-      inputType: '',
-      cancelable: false,
-      onComplete: undefined,
-      onCancel: undefined,
-      onDeleteHint: undefined,
-      currentValue: '',
-    };
+  state: State = {
+    title: 'Not Set',
+    hints: [],
+    defaultValue: '',
+    submitName: '',
+    selectText: false,
+    upperCase: false,
+    validate: null,
+    hint: '',
+    label: '',
+    placeholder: '',
+    inputType: '',
+    cancelable: false,
+    onComplete: undefined,
+    onCancel: undefined,
+    onDeleteHint: undefined,
+    currentValue: '',
   }
 
   _done(rawValue: string) {
@@ -62,11 +59,11 @@ class PromptModal extends React.PureComponent<Props, State> {
     this.hide();
   }
 
-  _setInputRef(n: HTMLInputElement | null | undefined) {
+  _setInputRef(n: HTMLInputElement) {
     this._input = n;
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -119,7 +116,7 @@ class PromptModal extends React.PureComponent<Props, State> {
     placeholder?: string;
     validate?: (arg0: string) => string;
     label?: string;
-    hints?: Array<string>;
+    hints?: string[];
     onComplete?: (arg0: string) => void;
     onDeleteHint?: (arg0: string) => void;
     onCancel?: () => void;

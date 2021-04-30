@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from '../base/button';
@@ -6,25 +6,24 @@ import type { Theme as ThemeType, ColorScheme } from '../../../plugins';
 import { getThemes } from '../../../plugins';
 import HelpTooltip from '../help-tooltip';
 const THEMES_PER_ROW = 5;
-type Props = {
+
+interface Props {
   handleChangeTheme: (arg0: string, arg1: ColorScheme) => void;
   activeTheme: string;
   handleAutoDetectColorSchemeChange: (arg0: boolean) => void;
   autoDetectColorScheme: boolean;
   activeLightTheme: string;
   activeDarkTheme: string;
-};
-type State = {
-  themes: Array<ThemeType>;
-};
+}
+
+interface State {
+  themes: ThemeType[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Theme extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      themes: [],
-    };
+class Theme extends PureComponent<Props, State> {
+  state: State = {
+    themes: [],
   }
 
   componentDidMount() {
@@ -105,7 +104,7 @@ class Theme extends React.PureComponent<Props, State> {
     );
   }
 
-  renderThemeRows(): React.ReactNode {
+  renderThemeRows() {
     const { themes } = this.state;
     const rows = [];
     let row = [];

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import ResponseTimelineViewer from '../../components/viewers/response-timeline-viewer';
@@ -8,32 +8,31 @@ import ModalHeader from '../base/modal-header';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
 import type { Settings } from '../../../models/settings';
-type Props = {
+
+interface Props {
   settings: Settings;
-};
-type State = {
+}
+
+interface State {
   response: Response | null;
   title: string | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseDebugModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class ResponseDebugModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      response: null,
-      title: '',
-    };
+  state: State = {
+    response: null,
+    title: '',
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { responseId?: string; response?: Response; title?: string }) {

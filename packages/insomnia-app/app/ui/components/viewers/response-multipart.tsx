@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import * as electron from 'electron';
 import mimes from 'mime-types';
 import fs from 'fs';
@@ -18,43 +18,43 @@ import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
 import WrapperModal from '../modals/wrapper-modal';
 import { showModal } from '../modals/index';
 import ResponseHeadersViewer from './response-headers-viewer';
-type Part = {
+
+interface Part {
   name: string;
   bytes: number;
   value: Buffer;
   filename: string | null;
-  headers: Array<ResponseHeader>;
-};
-type Props = {
-  download: (...args: Array<any>) => any;
+  headers: ResponseHeader[];
+}
+
+interface Props {
+  download: (...args: any[]) => any;
   responseId: string;
   bodyBuffer: Buffer | null;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   filter: string;
-  filterHistory: Array<string>;
+  filterHistory: string[];
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   url: string;
-};
-type State = {
+}
+
+interface State {
   activePart: number;
-  parts: Array<Part>;
+  parts: Part[];
   error: string | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseMultipart extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      activePart: -1,
-      parts: [],
-      error: null,
-    };
+class ResponseMultipart extends PureComponent<Props, State> {
+  state: State = {
+    activePart: -1,
+    parts: [],
+    error: null,
   }
 
   componentDidMount() {
@@ -163,7 +163,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
     }
   }
 
-  _getParts(): Promise<Array<Part>> {
+  _getParts(): Promise<Part[]> {
     return new Promise((resolve, reject) => {
       const { bodyBuffer, contentType } = this.props;
       const parts = [];

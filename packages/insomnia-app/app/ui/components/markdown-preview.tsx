@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
@@ -8,21 +7,36 @@ import highlight from 'highlight.js';
 import * as misc from '../../common/misc';
 import { markdownToHTML } from '../../common/markdown-to-html';
 
+interface Props {
+  markdown: string,
+  handleRender?: Function,
+  className?: string,
+  debounceMillis?: number,
+  heading?: string,
+}
+
+interface State {
+  compiled: string;
+  renderError: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MarkdownPreview extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      compiled: '',
-      renderError: '',
-    };
+class MarkdownPreview extends PureComponent<Props, State> {
+  state: State = {
+    compiled: '',
+    renderError: '',
   }
+
+  _compileTimeout: NodeJS.Timeout | null = null;
+  _preview: HTMLDivElement | null = null;
 
   /**
    * Debounce and compile the markdown (won't debounce first render)
    */
   _compileMarkdown(markdown) {
+    // @ts-expect-error -- TSCONVERSION
     clearTimeout(this._compileTimeout);
+    // @ts-expect-error -- TSCONVERSION
     this._compileTimeout = setTimeout(
       async () => {
         try {
@@ -44,7 +58,7 @@ class MarkdownPreview extends PureComponent {
     );
   }
 
-  _setPreviewRef(n) {
+  _setPreviewRef(n: HTMLDivElement) {
     this._preview = n;
   }
 
@@ -72,6 +86,7 @@ class MarkdownPreview extends PureComponent {
   }
 
   componentWillUnmount() {
+    // @ts-expect-error -- TSCONVERSION
     clearTimeout(this._compileTimeout);
   }
 
@@ -81,7 +96,7 @@ class MarkdownPreview extends PureComponent {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     this._compileMarkdown(nextProps.markdown);
   }
 
@@ -112,13 +127,4 @@ class MarkdownPreview extends PureComponent {
   }
 }
 
-MarkdownPreview.propTypes = {
-  // Required
-  markdown: PropTypes.string.isRequired,
-  // Optional
-  handleRender: PropTypes.func,
-  className: PropTypes.string,
-  debounceMillis: PropTypes.number,
-  heading: PropTypes.string,
-};
 export default MarkdownPreview;

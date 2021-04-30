@@ -10,7 +10,7 @@ import type { OAuth2Token } from '../../../models/o-auth-2-token';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
 import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as models from '../../../models';
 import AuthDropdown from '../dropdowns/auth-dropdown';
@@ -31,44 +31,43 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { HandleImportFileCallback } from '../wrapper';
-type Props = {
+
+interface Props {
   // Functions
   forceUpdateRequest: (r: Request, patch: Record<string, any>) => Promise<Request>;
-  forceUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleCreateRequest: () => Promise<Request>;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  handleUpdateDownloadPath: (...args: Array<any>) => any;
+  handleGenerateCode: (...args: any[]) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
+  handleUpdateDownloadPath: (...args: any[]) => any;
   updateRequestUrl: (r: Request, url: string) => Promise<Request>;
   updateRequestMethod: (r: Request, method: string) => Promise<Request>;
   updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  updateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>;
+  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  updateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   updateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>;
-  updateSettingsShowPasswords: (...args: Array<any>) => any;
-  updateSettingsUseBulkHeaderEditor: (...args: Array<any>) => any;
-  updateSettingsUseBulkParametersEditor: (...args: Array<any>) => any;
-  handleImport: (...args: Array<any>) => any;
+  updateSettingsShowPasswords: (...args: any[]) => any;
+  updateSettingsUseBulkHeaderEditor: (...args: any[]) => any;
+  updateSettingsUseBulkParametersEditor: (...args: any[]) => any;
+  handleImport: (...args: any[]) => any;
   handleImportFile: HandleImportFileCallback;
-  // Other
   workspace: Workspace;
   settings: Settings;
   isVariableUncovered: boolean;
   environmentId: string;
   forceRefreshCounter: number;
   headerEditorKey: string;
-  // Optional
-  request: Request | null | undefined;
+  request?: Request | null;
   downloadPath: string | null;
-  oAuth2Token: OAuth2Token | null | undefined;
-};
+  oAuth2Token?: OAuth2Token | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestPane extends React.PureComponent<Props> {
+class RequestPane extends PureComponent<Props> {
   _handleEditDescriptionAdd() {
     this._handleEditDescription(true);
   }
@@ -80,7 +79,7 @@ class RequestPane extends React.PureComponent<Props> {
     });
   }
 
-  _autocompleteUrls(): Promise<Array<string>> {
+  _autocompleteUrls(): Promise<string[]> {
     const { workspace, request } = this.props;
     return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
   }
@@ -203,7 +202,7 @@ class RequestPane extends React.PureComponent<Props> {
         </PaneHeader>
         <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
           <TabList>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <ContentTypeDropdown
                 onChange={updateRequestMimeType}
                 contentType={request.body.mimeType}
@@ -216,7 +215,7 @@ class RequestPane extends React.PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <AuthDropdown
                 onChange={updateRequestAuthentication}
                 request={request}
@@ -225,19 +224,19 @@ class RequestPane extends React.PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>
                 Query
                 {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>
                 Header
                 {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>
                 Docs
                 {request.description && (

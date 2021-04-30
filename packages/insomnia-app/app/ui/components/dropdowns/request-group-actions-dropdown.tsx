@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -22,7 +22,8 @@ import type { Workspace } from '../../../models/workspace';
 import * as pluginContexts from '../../../plugins/context/index';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
-type Props = {
+
+interface Props {
   workspace: Workspace;
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
@@ -31,21 +32,22 @@ type Props = {
   handleDuplicateRequestGroup: (rg: RequestGroup) => any;
   handleMoveRequestGroup: (rg: RequestGroup) => any;
   handleCreateRequestGroup: (id: string) => any;
-};
-type State = {
-  actionPlugins: Array<RequestGroupAction>;
+}
+
+interface State {
+  actionPlugins: RequestGroupAction[];
   loadingActions: Record<string, boolean>;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
-  _dropdown: Dropdown | null | undefined;
-  state = {
+class RequestGroupActionsDropdown extends PureComponent<Props, State> {
+  _dropdown: Dropdown | null = null;
+  state: State = {
     actionPlugins: [],
     loadingActions: {},
   };
 
-  _setDropdownRef(n: Dropdown | null | undefined) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 

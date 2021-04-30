@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import RequestRow from './request-row';
 import RequestGroupRow from './request-group-row';
 import type { Node } from '../modals/export-requests-modal';
@@ -6,14 +6,15 @@ import type { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
 import type { GrpcRequest } from '../../../models/grpc-request';
-type Props = {
-  root: Node | null | undefined;
-  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
-  handleSetItemSelected: (...args: Array<any>) => any;
-};
 
-class Tree extends React.PureComponent<Props> {
-  renderChildren(node: Node | null | undefined) {
+interface Props {
+  root?: Node | null;
+  handleSetRequestGroupCollapsed: (...args: any[]) => any;
+  handleSetItemSelected: (...args: any[]) => any;
+}
+
+class Tree extends PureComponent<Props> {
+  renderChildren(node?: Node | null) {
     if (node == null) {
       return null;
     }

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
@@ -21,25 +21,28 @@ import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
 import { docsTemplateTags } from '../../../common/documentation';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
-type Props = {
+
+interface Props {
   handleChangeEnvironment: (id: string | null) => Promise<void>;
   activeEnvironmentId: string | null;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   lineWrapping: boolean;
-  render: (...args: Array<any>) => any;
-  getRenderContext: (...args: Array<any>) => any;
+  render: (...args: any[]) => any;
+  getRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-};
-type State = {
+}
+
+interface State {
   workspace: Workspace | null;
   isValid: boolean;
-  subEnvironments: Array<Environment>;
+  subEnvironments: Environment[];
   rootEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
-};
+}
+
 const SidebarListItem = SortableElement(
   ({ environment, activeEnvironment, showEnvironment, changeEnvironmentName }) => {
     const classes = classnames({
@@ -79,6 +82,7 @@ const SidebarListItem = SortableElement(
     );
   },
 );
+
 const SidebarList = SortableContainer(
   ({ environments, activeEnvironment, showEnvironment, changeEnvironmentName }) => (
     <ul>
@@ -97,40 +101,36 @@ const SidebarList = SortableContainer(
 );
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
-  environmentEditorRef: EnvironmentEditor | null | undefined;
+class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
+  environmentEditorRef: EnvironmentEditor | null = null;
   environmentColorInputRef: HTMLInputElement;
-  colorChangeTimeout: any;
-  saveTimeout: any;
-  modal: Modal;
+  saveTimeout: NodeJS.Timeout | null = null;
+  modal: Modal | null = null;
   editorKey: number;
-
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      workspace: null,
-      isValid: true,
-      subEnvironments: [],
-      rootEnvironment: null,
-      selectedEnvironmentId: null,
-    };
-    this.colorChangeTimeout = null;
-    this.editorKey = 0;
+  state: State = {
+    workspace: null,
+    isValid: true,
+    subEnvironments: [],
+    rootEnvironment: null,
+    selectedEnvironmentId: null,
   }
+
+  colorChangeTimeout: NodeJS.Timeout | null = null;
+  editorKey = 0;
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
-  _setEditorRef(n: EnvironmentEditor | null | undefined) {
+  _setEditorRef(n: EnvironmentEditor) {
     this.environmentEditorRef = n;
   }
 
-  _setInputColorRef(ref: HTMLInputElement | null) {
+  _setInputColorRef(ref: HTMLInputElement) {
     this.environmentColorInputRef = ref;
   }
 
-  _setModalRef(n: Modal | null) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -177,7 +177,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
     });
   }
 
-  async _handleAddEnvironment(isPrivate: boolean = false) {
+  async _handleAddEnvironment(isPrivate = false) {
     const { rootEnvironment, workspace } = this.state;
 
     if (!rootEnvironment) {
@@ -235,7 +235,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   async _updateEnvironment(
     environment: Environment,
     patch: Record<string, any>,
-    refresh: boolean = true,
+    refresh = true,
   ) {
     const { workspace } = this.state;
     // NOTE: Fetch the environment first because it might not be up to date.
@@ -318,7 +318,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
   async _handleSortEnd(results: {
     oldIndex: number;
     newIndex: number;
-    collection: Array<Environment>;
+    collection: Environment[];
   }) {
     const { oldIndex, newIndex } = results;
 
@@ -478,7 +478,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
               </h1>
 
               {activeEnvironment && rootEnvironment !== activeEnvironment ? (
-                <React.Fragment>
+                <Fragment>
                   <input
                     className="hidden"
                     type="color"
@@ -532,7 +532,7 @@ class WorkspaceEnvironmentsEditModal extends React.PureComponent<Props, State> {
                     className="btn btn--clicky">
                     <i className="fa fa-trash-o" />
                   </PromptButton>
-                </React.Fragment>
+                </Fragment>
               ) : null}
             </div>
             <div className="env-modal__editor">

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import PageLayout from './page-layout';
 import type { HandleImportFileCallback, WrapperProps } from './wrapper';
@@ -18,40 +18,41 @@ import SyncDropdown from './dropdowns/sync-dropdown';
 import { Button } from 'insomnia-components';
 import { showSyncShareModal } from './modals/sync-share-modal';
 import * as session from '../../account/session';
-type Props = {
+
+interface Props {
   forceRefreshKey: string;
-  gitSyncDropdown: React.ReactNode;
+  gitSyncDropdown: ReactNode;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
-  handleChangeEnvironment: (...args: Array<any>) => any;
-  handleDeleteResponse: (...args: Array<any>) => any;
-  handleDeleteResponses: (...args: Array<any>) => any;
-  handleForceUpdateRequest: (...args: Array<any>) => any;
-  handleForceUpdateRequestHeaders: (...args: Array<any>) => any;
-  handleImport: (...args: Array<any>) => any;
+  handleChangeEnvironment: (...args: any[]) => any;
+  handleDeleteResponse: (...args: any[]) => any;
+  handleDeleteResponses: (...args: any[]) => any;
+  handleForceUpdateRequest: (...args: any[]) => any;
+  handleForceUpdateRequestHeaders: (...args: any[]) => any;
+  handleImport: (...args: any[]) => any;
   handleImportFile: HandleImportFileCallback;
-  handleRequestCreate: (...args: Array<any>) => any;
-  handleRequestGroupCreate: (...args: Array<any>) => any;
-  handleSendAndDownloadRequestWithActiveEnvironment: (...args: Array<any>) => any;
-  handleSendRequestWithActiveEnvironment: (...args: Array<any>) => any;
-  handleSetActiveResponse: (...args: Array<any>) => any;
-  handleSetPreviewMode: (...args: Array<any>) => any;
-  handleSetResponseFilter: (...args: Array<any>) => any;
-  handleShowCookiesModal: (...args: Array<any>) => any;
-  handleShowRequestSettingsModal: (...args: Array<any>) => any;
+  handleRequestCreate: (...args: any[]) => any;
+  handleRequestGroupCreate: (...args: any[]) => any;
+  handleSendAndDownloadRequestWithActiveEnvironment: (...args: any[]) => any;
+  handleSendRequestWithActiveEnvironment: (...args: any[]) => any;
+  handleSetActiveResponse: (...args: any[]) => any;
+  handleSetPreviewMode: (...args: any[]) => any;
+  handleSetResponseFilter: (...args: any[]) => any;
+  handleShowCookiesModal: (...args: any[]) => any;
+  handleShowRequestSettingsModal: (...args: any[]) => any;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleUpdateRequestAuthentication: (...args: Array<any>) => any;
-  handleUpdateRequestBody: (...args: Array<any>) => any;
-  handleUpdateRequestHeaders: (...args: Array<any>) => any;
-  handleUpdateRequestMethod: (...args: Array<any>) => any;
-  handleUpdateRequestParameters: (...args: Array<any>) => any;
-  handleUpdateRequestUrl: (...args: Array<any>) => any;
-  handleUpdateSettingsShowPasswords: (...args: Array<any>) => any;
-  handleUpdateSettingsUseBulkHeaderEditor: (...args: Array<any>) => any;
+  handleUpdateRequestAuthentication: (...args: any[]) => any;
+  handleUpdateRequestBody: (...args: any[]) => any;
+  handleUpdateRequestHeaders: (...args: any[]) => any;
+  handleUpdateRequestMethod: (...args: any[]) => any;
+  handleUpdateRequestParameters: (...args: any[]) => any;
+  handleUpdateRequestUrl: (...args: any[]) => any;
+  handleUpdateSettingsShowPasswords: (...args: any[]) => any;
+  handleUpdateSettingsUseBulkHeaderEditor: (...args: any[]) => any;
   wrapperProps: WrapperProps;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperDebug extends React.PureComponent<Props> {
+class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
     const { vcs, activeWorkspace, syncItems } = this.props.wrapperProps;
@@ -114,7 +115,7 @@ class WrapperDebug extends React.PureComponent<Props> {
       sidebarWidth,
     } = this.props.wrapperProps;
     return (
-      <React.Fragment>
+      <Fragment>
         <div className="sidebar__menu">
           <EnvironmentsDropdown
             handleChangeEnvironment={handleChangeEnvironment}
@@ -163,7 +164,7 @@ class WrapperDebug extends React.PureComponent<Props> {
           hotKeyRegistry={settings.hotKeyRegistry}
           activeEnvironment={activeEnvironment}
         />
-      </React.Fragment>
+      </Fragment>
     );
   }
 

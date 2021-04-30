@@ -1,16 +1,16 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS } from '../../../common/constants';
 import Tooltip from '../tooltip';
-type Props = {
+
+interface Props {
   statusCode: number;
-  // Optional
   small?: boolean;
   statusMessage?: string;
   tooltipDelay?: number;
-};
+}
 
-class StatusTag extends React.PureComponent<Props> {
+class StatusTag extends PureComponent<Props> {
   render() {
     const { statusMessage, statusCode, small, tooltipDelay } = this.props;
     let colorClass;

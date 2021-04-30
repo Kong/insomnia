@@ -10,16 +10,20 @@ import { showModal } from './index';
 import Link from '../base/link';
 import { docsTemplateTags } from '../../../common/documentation';
 
+interface State {
+  error: Error | null;
+  request: any;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestRenderErrorModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      error: null,
-    };
+class RequestRenderErrorModal extends PureComponent<{}, State> {
+  state: State = {
+    error: null,
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -31,15 +35,12 @@ class RequestRenderErrorModal extends PureComponent {
   }
 
   show({ request, error }) {
-    this.setState({
-      request,
-      error,
-    });
-    this.modal.show();
+    this.setState({ request, error });
+    this.modal?.show();
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   renderModalBody(request, error) {

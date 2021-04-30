@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
@@ -7,21 +7,22 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 import SidebarSortDropdown from './sidebar-sort-dropdown';
-type Props = {
+
+interface Props {
   onChange: (arg0: string) => void;
   requestCreate: () => void;
   requestGroupCreate: () => void;
   sidebarSort: (sortOrder: SortOrder) => void;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarFilter extends React.PureComponent<Props> {
-  _input: HTMLInputElement | null | undefined;
-  _triggerTimeout: TimeoutID;
+class SidebarFilter extends PureComponent<Props> {
+  _input: HTMLInputElement | null = null;
+  _triggerTimeout: NodeJS.Timeout | null = null;
 
-  _setInputRef(n: HTMLInputElement | null | undefined) {
+  _setInputRef(n: HTMLInputElement) {
     this._input = n;
   }
 
@@ -37,7 +38,9 @@ class SidebarFilter extends React.PureComponent<Props> {
 
   _handleOnChange(e: React.SyntheticEvent<HTMLInputElement>) {
     const value = e.currentTarget.value;
-    clearTimeout(this._triggerTimeout);
+    if (this._triggerTimeout) {
+      clearTimeout(this._triggerTimeout);
+    }
     this._triggerTimeout = setTimeout(() => {
       this.props.onChange(value);
     }, DEBOUNCE_MILLIS);

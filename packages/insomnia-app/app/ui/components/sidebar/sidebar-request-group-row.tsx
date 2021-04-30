@@ -1,5 +1,4 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import ReactDOM from 'react-dom';
@@ -10,20 +9,47 @@ import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-drop
 import SidebarRequestRow from './sidebar-request-row';
 import * as misc from '../../../common/misc';
 
+interface Props {
+  handleSetRequestGroupCollapsed: Function;
+  handleDuplicateRequestGroup: Function;
+  handleMoveRequestGroup: Function;
+  moveDoc: Function;
+  handleActivateRequest: Function;
+  handleCreateRequest: Function;
+  handleCreateRequestGroup: Function;
+  handleRender: Function;
+  filter: string;
+  isActive: boolean;
+  isCollapsed: boolean;
+  workspace: object;
+  requestGroup: object;
+  hotKeyRegistry: object;
+  isDragging?: boolean;
+  isDraggingOver?: boolean;
+  connectDragSource?: Function;
+  connectDropTarget?: Function;
+  children?: ReactNode;
+  activeEnvironment?: object;
+}
+
+interface State {
+  dragDirection: number;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarRequestGroupRow extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      dragDirection: 0,
-    };
+class SidebarRequestGroupRow extends PureComponent<Props, State> {
+  state: State = {
+    dragDirection: 0,
   }
 
-  _setRequestGroupActionsDropdownRef(n) {
+  _requestGroupActionsDropdown: RequestGroupActionsDropdown | null = null;
+  _expandTag: HTMLDivElement | null = null;
+
+  _setRequestGroupActionsDropdownRef(n: RequestGroupActionsDropdown) {
     this._requestGroupActionsDropdown = n;
   }
 
-  _setExpandTagRef(n) {
+  _setExpandTagRef(n: HTMLDivElement) {
     this._expandTag = n;
   }
 
@@ -162,38 +188,11 @@ class SidebarRequestGroupRow extends PureComponent {
   }
 }
 
-SidebarRequestGroupRow.propTypes = {
-  // Functions
-  handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
-  handleDuplicateRequestGroup: PropTypes.func.isRequired,
-  handleMoveRequestGroup: PropTypes.func.isRequired,
-  moveDoc: PropTypes.func.isRequired,
-  handleActivateRequest: PropTypes.func.isRequired,
-  handleCreateRequest: PropTypes.func.isRequired,
-  handleCreateRequestGroup: PropTypes.func.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  // Other
-  filter: PropTypes.string.isRequired,
-  isActive: PropTypes.bool.isRequired,
-  isCollapsed: PropTypes.bool.isRequired,
-  workspace: PropTypes.object.isRequired,
-  requestGroup: PropTypes.object.isRequired,
-  hotKeyRegistry: PropTypes.object.isRequired,
-  // React DnD
-  isDragging: PropTypes.bool,
-  isDraggingOver: PropTypes.bool,
-  connectDragSource: PropTypes.func,
-  connectDropTarget: PropTypes.func,
-  // Optional
-  children: PropTypes.node,
-  activeEnvironment: PropTypes.object,
-};
-
 /**
  * Implements the drag source contract.
  */
 const dragSource = {
-  beginDrag(props) {
+  beginDrag(props: Props) {
     return {
       requestGroup: props.requestGroup,
     };

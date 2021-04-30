@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
@@ -8,9 +7,18 @@ import { showPrompt } from '../modals/index';
 import { docsImportExport } from '../../../common/documentation';
 import { strings, stringsPlural } from '../../../common/strings';
 
+interface Props {
+  handleImportFile: Function;
+  handleImportClipBoard: Function;
+  handleImportUri: Function;
+  handleExportAll: Function;
+  handleShowExportRequestsModal: Function;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ImportExport extends PureComponent {
+class ImportExport extends PureComponent<Props> {
   _handleImportUri() {
+    const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
     const promptOptions = {
       title: 'Import Data from URL',
       submitName: 'Fetch and Import',
@@ -20,12 +28,8 @@ class ImportExport extends PureComponent {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
         this.props.handleImportUri(uri);
       },
+      ...(lastUsedImportUri ? { defaultValue: lastUsedImportUri } : {}),
     };
-    const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
-
-    if (lastUsedImportUri) {
-      promptOptions.defaultValue = lastUsedImportUri;
-    }
 
     showPrompt(promptOptions);
   }
@@ -91,11 +95,4 @@ class ImportExport extends PureComponent {
   }
 }
 
-ImportExport.propTypes = {
-  handleImportFile: PropTypes.func.isRequired,
-  handleImportClipBoard: PropTypes.func.isRequired,
-  handleImportUri: PropTypes.func.isRequired,
-  handleExportAll: PropTypes.func.isRequired,
-  handleShowExportRequestsModal: PropTypes.func.isRequired,
-};
 export default ImportExport;

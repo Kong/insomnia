@@ -1,6 +1,6 @@
 import classnames from 'classnames';
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import React, { PureComponent } from 'react';
+import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
@@ -33,26 +33,27 @@ if (!explorerContainer) {
   throw new Error('Failed to find #graphql-explorer-container');
 }
 
-type GraphQLBody = {
+interface GraphQLBody {
   query: string;
   variables?: Record<string, any>;
   operationName?: string;
-};
-type Props = {
-  onChange: (...args: Array<any>) => any;
+}
+
+interface Props {
+  onChange: (...args: any[]) => any;
   content: string;
-  render: ((...args: Array<any>) => any) | null;
-  getRenderContext: ((...args: Array<any>) => any) | null;
+  render: ((...args: any[]) => any) | null;
+  getRenderContext: ((...args: any[]) => any) | null;
   request: Request;
   workspace: Workspace;
   settings: Settings;
   environmentId: string;
   isVariableUncovered: boolean;
-  // Optional
   className?: string;
   uniquenessKey?: string;
-};
-type State = {
+}
+
+interface State {
   body: GraphQLBody;
   schema: GraphQLSchema | null;
   schemaFetchError: {
@@ -70,26 +71,21 @@ type State = {
     argument: GraphQLArgument | null;
     field: GraphQLField<any, any> | null;
   };
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLEditor extends React.PureComponent<Props, State> {
-  _disabledOperationMarkers: Array<TextMarker>;
-  _documentAST: null | Record<string, any>;
-  _isMounted: boolean;
-  _queryEditor: null | CodeMirror;
-  _schemaFetchTimeout: TimeoutID;
+class GraphQLEditor extends PureComponent<Props, State> {
+  _disabledOperationMarkers: TextMarker[] = [];
+  _documentAST: null | Record<string, any> = null;
+  _isMounted = false;
+  _queryEditor: null | CodeMirror = null;
+  _schemaFetchTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
     super(props);
-    this._disabledOperationMarkers = [];
-    this._queryEditor = null;
-    this._isMounted = false;
 
     const body = GraphQLEditor._stringToGraphQL(props.content);
-
     this._setDocumentAST(body.query);
-
     let automaticFetch;
 
     try {
@@ -391,7 +387,7 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
     }
   }
 
-  _getOperations(): Array<any> {
+  _getOperations(): any[] {
     if (!this._documentAST) {
       return [];
     }
@@ -505,7 +501,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (this.state.automaticFetch && nextProps.request.url !== this.props.request.url) {
-      clearTimeout(this._schemaFetchTimeout);
+      if (this._schemaFetchTimeout !== null) {
+        clearTimeout(this._schemaFetchTimeout);
+      }
       this._schemaFetchTimeout = setTimeout(async () => {
         await this._fetchAndSetSchema(nextProps.request);
       }, 2000);
@@ -522,7 +520,9 @@ class GraphQLEditor extends React.PureComponent<Props, State> {
 
   componentWillUnmount() {
     this._isMounted = false;
-    clearTimeout(this._schemaFetchTimeout);
+    if (this._schemaFetchTimeout !== null) {
+      clearTimeout(this._schemaFetchTimeout);
+    }
   }
 
   renderSelectedOperationName() {

@@ -1,6 +1,6 @@
 import { logger } from './logger';
 export class InsoError extends Error {
-  cause: Error | null | undefined;
+  cause?: Error | null;
 
   constructor(message: string, cause?: Error) {
     super(message);

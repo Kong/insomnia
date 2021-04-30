@@ -1,6 +1,6 @@
 import type { Request } from '../../../models/request';
 import type { Response } from '../../../models/response';
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import fs from 'fs';
@@ -32,41 +32,39 @@ import BlankPane from './blank-pane';
 import PlaceholderResponsePane from './placeholder-response-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
-type Props = {
-  // Functions
-  handleSetFilter: (...args: Array<any>) => any;
-  showCookiesModal: (...args: Array<any>) => any;
-  handleSetPreviewMode: (...args: Array<any>) => any;
-  handleSetActiveResponse: (...args: Array<any>) => any;
-  handleDeleteResponses: (...args: Array<any>) => any;
-  handleDeleteResponse: (...args: Array<any>) => any;
-  handleShowRequestSettings: (...args: Array<any>) => any;
-  // Required
+
+interface Props {
+  handleSetFilter: (...args: any[]) => any;
+  showCookiesModal: (...args: any[]) => any;
+  handleSetPreviewMode: (...args: any[]) => any;
+  handleSetActiveResponse: (...args: any[]) => any;
+  handleDeleteResponses: (...args: any[]) => any;
+  handleDeleteResponse: (...args: any[]) => any;
+  handleShowRequestSettings: (...args: any[]) => any;
   previewMode: string;
   filter: string;
-  filterHistory: Array<string>;
+  filterHistory: string[];
   disableHtmlPreviewJs: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   loadStartTime: number;
-  responses: Array<Response>;
+  responses: Response[];
   hotKeyRegistry: HotKeyRegistry;
   disableResponsePreviewLinks: boolean;
-  // Other
-  requestVersions: Array<RequestVersion>;
-  request: Request | null | undefined;
-  response: Response | null | undefined;
-  environment: Environment | null | undefined;
-  unitTestResult: UnitTestResult | null | undefined;
-};
+  requestVersions: RequestVersion[];
+  request?: Request | null;
+  response?: Response | null;
+  environment?: Environment | null;
+  unitTestResult?: UnitTestResult | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponsePane extends React.PureComponent<Props> {
-  _responseViewer: any;
+class ResponsePane extends PureComponent<Props> {
+  _responseViewer: ResponseViewer | null = null;
 
-  _setResponseViewerRef(n: any) {
+  _setResponseViewerRef(n: ResponseViewer) {
     this._responseViewer = n;
   }
 
@@ -248,7 +246,7 @@ class ResponsePane extends React.PureComponent<Props> {
           onSelect={this._handleTabSelect}
           forceRenderTabPanel>
           <TabList>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
@@ -257,7 +255,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 showPrettifyOption={response.contentType.includes('json')}
               />
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <Button>
                 Header{' '}
                 {response.headers.length > 0 && (
@@ -265,7 +263,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 )}
               </Button>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <Button>
                 Cookie{' '}
                 {cookieHeaders.length ? (
@@ -273,7 +271,7 @@ class ResponsePane extends React.PureComponent<Props> {
                 ) : null}
               </Button>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <Button>Timeline</Button>
             </Tab>
           </TabList>

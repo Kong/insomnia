@@ -1,20 +1,21 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import Link from './link';
-type Props = {
+
+interface Props {
   email: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
   subject?: string;
   body?: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Mailto extends React.PureComponent<Props> {
+class Mailto extends PureComponent<Props> {
   render() {
     const { email, body, subject, children } = this.props;
-    const params = [];
+    const params: {name: string; value: string}[] = [];
 
     if (subject) {
       params.push({

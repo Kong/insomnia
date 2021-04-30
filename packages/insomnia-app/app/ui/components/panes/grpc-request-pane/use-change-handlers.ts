@@ -1,20 +1,21 @@
-import React from 'react';
+import { useMemo } from 'react';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { GrpcDispatch } from '../../../context/grpc';
 import * as models from '../../../../models';
 import { grpcActions } from '../../../context/grpc';
 import { showModal } from '../../modals';
 import ProtoFilesModal from '../../modals/proto-files-modal';
-type ChangeHandlers = {
+
+interface ChangeHandlers {
   url: (arg0: string) => Promise<void>;
   body: (arg0: string) => Promise<void>;
   method: (arg0: string) => Promise<void>;
   protoFile: (arg0: string) => Promise<void>;
-};
+}
 
 // This will create memoized change handlers for the url, body and method selection
 const useChangeHandlers = (request: GrpcRequest, dispatch: GrpcDispatch): ChangeHandlers => {
-  return React.useMemo(() => {
+  return useMemo(() => {
     const url = async (value: string) => {
       await models.grpcRequest.update(request, {
         url: value,

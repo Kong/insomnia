@@ -1,23 +1,22 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
 import { AUTOBIND_CFG } from '../../common/constants';
-type Props = {
+
+interface Props {
   wrapperProps: WrapperProps;
-  // Render props
-  renderPageSidebar?: () => React.ReactNode;
-  renderPageHeader?: () => React.ReactNode;
-  renderPageBody?: () => React.ReactNode;
-  renderPaneOne?: () => React.ReactNode;
-  renderPaneTwo?: () => React.ReactNode;
-};
-type State = {};
+  renderPageSidebar?: () => ReactNode;
+  renderPageHeader?: () => ReactNode;
+  renderPageBody?: () => ReactNode;
+  renderPaneOne?: () => ReactNode;
+  renderPaneTwo?: () => ReactNode;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PageLayout extends React.PureComponent<Props, State> {
+class PageLayout extends PureComponent<Props> {
   // Special request updaters
   _handleStartDragSidebar(e: Event): void {
     e.preventDefault();
@@ -62,7 +61,7 @@ class PageLayout extends React.PureComponent<Props, State> {
     const paneTwo = renderPaneTwo && renderPaneTwo();
     const gridRows = paneTwo
       ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
-      : `auto 1fr`;
+      : 'auto 1fr';
     const gridColumns =
       `auto ${realSidebarWidth}rem 0 ` +
       `${paneTwo ? `minmax(0, ${paneWidth}fr) 0 minmax(0, ${1 - paneWidth}fr)` : '1fr'}`;
@@ -176,7 +175,7 @@ class PageLayout extends React.PureComponent<Props, State> {
 
 export default PageLayout;
 
-class Pane extends React.PureComponent {
+class Pane extends PureComponent {
   render() {
     return (
       <section className={`pane-${this.props.position} theme--pane`}>{this.props.children}</section>

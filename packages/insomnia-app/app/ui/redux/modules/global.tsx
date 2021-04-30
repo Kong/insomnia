@@ -1,5 +1,5 @@
 import electron, { OpenDialogOptions } from 'electron';
-import * as React from 'react';
+import React, { Fragment } from 'react';
 import { combineReducers } from 'redux';
 import fs from 'fs';
 import path from 'path';
@@ -166,9 +166,9 @@ export function newCommand(command, args) {
         showModal(AskModal, {
           title: 'Plugin Install',
           message: (
-            <React.Fragment>
+            <Fragment>
               Do you want to install <code>{args.name}</code>?
-            </React.Fragment>
+            </Fragment>
           ),
           yesText: 'Install',
           noText: 'Cancel',
@@ -196,9 +196,9 @@ export function newCommand(command, args) {
         showModal(AskModal, {
           title: 'Install Theme',
           message: (
-            <React.Fragment>
+            <Fragment>
               Do you want to install <code>{parsedTheme.displayName}</code>?
-            </React.Fragment>
+            </Fragment>
           ),
           yesText: 'Install',
           noText: 'Cancel',
@@ -287,7 +287,7 @@ function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): 
   Go to the next activity in a sequential activity flow, depending on different conditions
  */
 export function goToNextActivity() {
-  return function (dispatch, getState) {
+  return function(dispatch, getState) {
     const state = getState();
     const { activeActivity } = state.global;
     const settings = selectSettings(state);
@@ -348,10 +348,10 @@ export function setActiveWorkspace(workspaceId: string) {
     workspaceId,
   };
 }
-export type ImportOptions = {
+export interface ImportOptions {
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
-};
+}
 export function importFile(
   workspaceId: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
@@ -411,7 +411,7 @@ export function importFile(
   };
 }
 
-function handleImportResult(result: ImportResult, errorMessage: string): Array<Workspace> {
+function handleImportResult(result: ImportResult, errorMessage: string): Workspace[] {
   const { error, summary } = result;
 
   if (error) {
@@ -783,7 +783,7 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   This will also decide whether to start with the migration or onboarding activities
  */
 export function initActiveActivity() {
-  return function (dispatch, getState) {
+  return function(dispatch, getState) {
     const state = getState();
     const settings = selectSettings(state);
     // Default to home

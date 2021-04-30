@@ -1,26 +1,50 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { HTMLAttributes, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from './button';
+
+type States =
+  | typeof STATE_DEFAULT
+  | typeof STATE_ASK
+  | typeof STATE_DONE
+  ;
+
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
+interface Props extends HTMLAttributes<HTMLButtonElement> {
+  onClick?: Function;
+  addIcon?: boolean;
+  children?: ReactNode;
+  disabled?: boolean;
+  confirmMessage?: string;
+  doneMessage?: string;
+  value?: any;
+  tabIndex?: number;
+  className?: string;
+}
+
+interface State {
+  state: States
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PromptButton extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      state: STATE_DEFAULT,
-    };
+class PromptButton extends PureComponent<Props> {
+  _doneTimeout: NodeJS.Timeout | null = null;
+  _triggerTimeout: NodeJS.Timeout | null = null;
+  state: State = {
+    state: STATE_DEFAULT,
   }
 
   _confirm(...args) {
-    // Clear existing timeouts
-    clearTimeout(this._triggerTimeout);
+    if (this._triggerTimeout !== null) {
+      // Clear existing timeouts
+      clearTimeout(this._triggerTimeout);
+    }
+
     // Fire the click handler
-    this.props.onClick(...args);
+    this.props.onClick?.(...args);
     // Set the state to done (but delay a bit to not alarm user)
     this._doneTimeout = setTimeout(() => {
       this.setState({
@@ -65,8 +89,12 @@ class PromptButton extends PureComponent {
   }
 
   componentWillUnmount() {
-    clearTimeout(this._triggerTimeout);
-    clearTimeout(this._doneTimeout);
+    if (this._triggerTimeout) {
+      clearTimeout(this._triggerTimeout);
+    }
+    if (this._doneTimeout) {
+      clearTimeout(this._doneTimeout);
+    }
   }
 
   render() {
@@ -116,14 +144,4 @@ class PromptButton extends PureComponent {
   }
 }
 
-PromptButton.propTypes = {
-  onClick: PropTypes.func,
-  addIcon: PropTypes.bool,
-  children: PropTypes.node,
-  disabled: PropTypes.bool,
-  confirmMessage: PropTypes.string,
-  doneMessage: PropTypes.string,
-  value: PropTypes.any,
-  tabIndex: PropTypes.number,
-};
 export default PromptButton;

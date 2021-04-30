@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import type { WrapperProps } from './wrapper';
 import PageLayout from './page-layout';
 import coreLogo from '../images/insomnia-core-logo.png';
-type Props = {
-  wrapperProps: WrapperProps;
-};
 
-const OnboardingContainer = ({ wrapperProps, children, header, subHeader }: Props) => (
+interface Props {
+  wrapperProps: WrapperProps;
+  header: string;
+  subHeader: string;
+}
+
+const OnboardingContainer: FunctionComponent<Props> = ({ wrapperProps, children, header, subHeader }) => (
   <PageLayout
     wrapperProps={wrapperProps}
     renderPageBody={() => (

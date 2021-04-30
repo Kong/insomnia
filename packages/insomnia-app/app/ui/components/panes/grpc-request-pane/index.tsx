@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { Pane, PaneBody, PaneHeader } from '../pane';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown';
@@ -14,7 +14,8 @@ import useProtoFileReload from './use-proto-file-reload';
 import styled from 'styled-components';
 import useActionHandlers from './use-action-handlers';
 import useExistingGrpcUrls from './use-existing-grpc-urls';
-type Props = {
+
+interface Props {
   forceRefreshKey: string;
   activeRequest: GrpcRequest;
   environmentId: string;
@@ -23,8 +24,9 @@ type Props = {
   // For variables
   handleRender: (arg0: string) => Promise<string>;
   isVariableUncovered: boolean;
-  handleGetRenderContext: (...args: Array<any>) => any;
-};
+  handleGetRenderContext: (...args: any[]) => any;
+}
+
 const StyledUrlBar = styled.div`
   width: 100%;
   height: 100%;
@@ -33,15 +35,17 @@ const StyledUrlBar = styled.div`
   justify-content: space-between;
   align-items: stretch;
 `;
+
 const StyledUrlEditor = styled.div`
   flex: 3 0 4em;
   max-width: 11em;
 `;
+
 const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
 
-const GrpcRequestPane = ({
+const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   environmentId,
   workspaceId,
@@ -50,7 +54,7 @@ const GrpcRequestPane = ({
   handleRender,
   handleGetRenderContext,
   isVariableUncovered,
-}: Props) => {
+}) => {
   const [state, dispatch] = useGrpc(activeRequest._id);
   const { requestMessages, running, methods } = state;
   useProtoFileReload(state, dispatch, activeRequest);

@@ -1,17 +1,18 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { Button } from 'insomnia-components';
 import * as models from '../../models';
 import { AUTOBIND_CFG, getAppLongName } from '../../common/constants';
 import type { WrapperProps } from './wrapper';
 import chartSrc from '../images/chart.svg';
-type Props = {
+
+interface Props {
   wrapperProps: WrapperProps;
-  handleDone: (...args: Array<any>) => any;
-};
+  handleDone: (...args: any[]) => any;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Analytics extends React.PureComponent<Props, State> {
+class Analytics extends PureComponent<Props> {
   async _handleAnalyticsSetting(enableAnalytics: boolean) {
     const { settings } = this.props.wrapperProps;
     // Update settings with analytics preferences
@@ -31,7 +32,7 @@ class Analytics extends React.PureComponent<Props, State> {
 
   render() {
     return (
-      <React.Fragment>
+      <Fragment>
         <p>
           <strong>Share Usage Analytics with Kong Inc</strong>
         </p>
@@ -55,7 +56,7 @@ class Analytics extends React.PureComponent<Props, State> {
           onClick={this._handleClickDisableAnalytics}>
           Don't share usage analytics
         </button>
-      </React.Fragment>
+      </Fragment>
     );
   }
 }

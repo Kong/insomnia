@@ -10,7 +10,7 @@ import { MemClient } from '../../../../sync/git/mem-client';
 import { generateId } from '../../../../common/misc';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
 import path from 'path';
-import * as React from 'react';
+import React, { Fragment } from 'react';
 import { cloneGitRepository, setupGitRepository } from '../git';
 import {
   getAndClearShowAlertMockArgs,
@@ -171,9 +171,9 @@ describe('git', () => {
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Clone Problem');
       expect(alertArgs.message).toStrictEqual(
-        <React.Fragment>
+        <Fragment>
           Workspace <strong>New Collection</strong> already exists. Please delete it before cloning.
-        </React.Fragment>,
+        </Fragment>,
       );
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
@@ -264,10 +264,10 @@ describe('git', () => {
       expect(alertArgs.title).toBe('Project Found');
       expect(alertArgs.okLabel).toBe('Import');
       expect(alertArgs.message).toStrictEqual(
-        <React.Fragment>
+        <Fragment>
           Workspace <strong>{workspace.name}</strong> found in repository. Would you like to import
           it?
-        </React.Fragment>,
+        </Fragment>,
       );
       await alertArgs.onConfirm();
     };

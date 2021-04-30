@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'react';
 import { ACTIVITY_HOME } from '../../common/constants';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { strings } from '../../common/strings';
@@ -9,13 +9,14 @@ import { Header, Breadcrumb } from 'insomnia-components';
 import AccountDropdown from './dropdowns/account-dropdown';
 import SettingsButton from './buttons/settings-button';
 import { isCollection, isDesign } from '../../models/helpers/is-model';
-type Props = {
+
+interface Props {
   wrapperProps: WrapperProps;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
-  gridRight: React.ReactNode;
-};
+  gridRight: ReactNode;
+}
 
-const WorkspacePageHeader = ({
+const WorkspacePageHeader: FunctionComponent<Props> = ({
   gridRight,
   handleActivityChange,
   wrapperProps: {
@@ -26,10 +27,10 @@ const WorkspacePageHeader = ({
     activity,
     isLoading,
   },
-}: Props) => {
+}) => {
   const collection = isCollection(activeWorkspace);
   const design = isDesign(activeWorkspace);
-  const homeCallback = React.useCallback(
+  const homeCallback = useCallback(
     () => handleActivityChange(activeWorkspace._id, ACTIVITY_HOME),
     [activeWorkspace._id, handleActivityChange],
   );
@@ -47,14 +48,14 @@ const WorkspacePageHeader = ({
     <Header
       className="app-header theme--app-header"
       gridLeft={
-        <React.Fragment>
+        <Fragment>
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />
           <Breadcrumb
             className="breadcrumb"
-            crumbs={[strings.home, <React.Fragment key="workspace-dd">{workspace}</React.Fragment>]}
+            crumbs={[strings.home, <Fragment key="workspace-dd">{workspace}</Fragment>]}
             onClick={homeCallback}
           />
-        </React.Fragment>
+        </Fragment>
       }
       gridCenter={
         design && (

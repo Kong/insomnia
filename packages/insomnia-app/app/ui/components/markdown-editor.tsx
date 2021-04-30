@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
@@ -8,9 +7,33 @@ import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';
 
+interface Props {
+  onChange: Function,
+  defaultValue: string,
+  fontSize: number,
+  indentSize: number,
+  keyMap: string,
+  lineWrapping: boolean,
+  handleRender: Function,
+  handleGetRenderContext: Function,
+  nunjucksPowerUserMode: boolean,
+  isVariableUncovered: boolean,
+  placeholder?: string,
+  defaultPreviewMode?: boolean,
+  className?: string,
+  mode?: string,
+  tall?: boolean,
+}
+
+interface State {
+  markdown: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MarkdownEditor extends PureComponent {
-  constructor(props) {
+class MarkdownEditor extends PureComponent<Props, State> {
+  _editor: CodeEditor | null = null;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       markdown: props.defaultValue,
@@ -24,7 +47,7 @@ class MarkdownEditor extends PureComponent {
     });
   }
 
-  _setEditorRef(n) {
+  _setEditorRef(n: CodeEditor) {
     this._editor = n;
   }
 
@@ -59,10 +82,10 @@ class MarkdownEditor extends PureComponent {
     return (
       <Tabs className={classes} defaultIndex={defaultPreviewMode ? 1 : 0}>
         <TabList>
-          <Tab tabIndex="-1">
+          <Tab tabIndex={-1}>
             <Button value="Write">Write</Button>
           </Tab>
-          <Tab tabIndex="-1">
+          <Tab tabIndex={-1}>
             <Button value="Preview">Preview</Button>
           </Tab>
         </TabList>
@@ -100,23 +123,4 @@ class MarkdownEditor extends PureComponent {
   }
 }
 
-MarkdownEditor.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  defaultValue: PropTypes.string.isRequired,
-  fontSize: PropTypes.number.isRequired,
-  indentSize: PropTypes.number.isRequired,
-  keyMap: PropTypes.string.isRequired,
-  lineWrapping: PropTypes.bool.isRequired,
-  handleRender: PropTypes.func.isRequired,
-  handleGetRenderContext: PropTypes.func.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-  // Optional
-  placeholder: PropTypes.string,
-  defaultPreviewMode: PropTypes.bool,
-  className: PropTypes.string,
-  mode: PropTypes.string,
-  tall: PropTypes.bool,
-};
 export default MarkdownEditor;

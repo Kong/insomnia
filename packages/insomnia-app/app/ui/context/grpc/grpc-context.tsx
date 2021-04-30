@@ -1,18 +1,21 @@
-import React from 'react';
+import React, { createContext, FunctionComponent, ReactNode, useContext, useEffect, useReducer } from 'react';
 import { grpcIpcRenderer } from './grpc-ipc-renderer';
 import { findGrpcRequestState, grpcReducer } from './grpc-reducer';
 import type { GrpcDispatch } from './grpc-actions';
 import type { GrpcRequestState, GrpcState } from './grpc-reducer';
-type Props = {
-  children: React.ReactNode;
-};
+
+interface Props {
+  children: ReactNode;
+}
+
 // These should not be exported, so that they are only accessed in a controlled manner
-const GrpcStateContext = React.createContext<GrpcState | undefined>(undefined);
-const GrpcDispatchContext = React.createContext<GrpcDispatch | undefined>(undefined);
-export const GrpcProvider = ({ children }: Props) => {
-  const [state, dispatch] = React.useReducer(grpcReducer, {});
+const GrpcStateContext = createContext<GrpcState | undefined>(undefined);
+const GrpcDispatchContext = createContext<GrpcDispatch | undefined>(undefined);
+
+export const GrpcProvider: FunctionComponent<Props> = ({ children }) => {
+  const [state, dispatch] = useReducer(grpcReducer, {});
   // Only add listeners on mount
-  React.useEffect(() => {
+  useEffect(() => {
     grpcIpcRenderer.init(dispatch);
     return grpcIpcRenderer.destroy;
   }, []);
@@ -22,8 +25,9 @@ export const GrpcProvider = ({ children }: Props) => {
     </GrpcStateContext.Provider>
   );
 };
+
 export const useGrpcRequestState = (requestId: string): GrpcRequestState => {
-  const context = React.useContext(GrpcStateContext);
+  const context = useContext(GrpcStateContext);
 
   if (context === undefined) {
     throw new Error('useGrpcRequestState must be used within a GrpcProvider');
@@ -35,8 +39,9 @@ export const useGrpcRequestState = (requestId: string): GrpcRequestState => {
 
   return findGrpcRequestState(context, requestId);
 };
+
 export const useGrpcDispatch = (): GrpcDispatch => {
-  const context = React.useContext(GrpcDispatchContext);
+  const context = useContext(GrpcDispatchContext);
 
   if (context === undefined) {
     throw new Error('useGrpcDispatch must be used within a GrpcProvider');
@@ -44,13 +49,16 @@ export const useGrpcDispatch = (): GrpcDispatch => {
 
   return context;
 };
+
 export const useGrpc = (requestId: string): [GrpcRequestState, GrpcDispatch] => [
   useGrpcRequestState(requestId),
   useGrpcDispatch(),
 ];
-type GrpcContextModalWrapperProps = {
-  children: (dispatch: GrpcDispatch) => React.ReactNode;
-};
+
+interface GrpcContextModalWrapperProps {
+  children: (dispatch: GrpcDispatch) => ReactNode;
+}
+
 export const GrpcDispatchModalWrapper = ({ children }: GrpcContextModalWrapperProps) => {
   const dispatch = useGrpcDispatch();
   return children(dispatch);

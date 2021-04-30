@@ -68,7 +68,7 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 import type { Environment } from '../models/environment';
-export type ResponsePatch = {
+export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
   bodyPath?: string;
   bytesContent?: number;
@@ -77,7 +77,7 @@ export type ResponsePatch = {
   elapsedTime?: number;
   environmentId?: string | null;
   error?: string;
-  headers?: Array<ResponseHeader>;
+  headers?: ResponseHeader[];
   httpVersion?: string;
   message?: string;
   parentId?: string;
@@ -87,7 +87,7 @@ export type ResponsePatch = {
   statusMessage?: string;
   timelinePath?: string;
   url?: string;
-};
+}
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
 // Special header value that will prevent the header being sent
@@ -134,7 +134,7 @@ export async function _actuallySend(
   environment: Environment | null,
 ): Promise<ResponsePatch> {
   return new Promise(async resolve => {
-    const timeline: Array<ResponseTimelineEntry> = [];
+    const timeline: ResponseTimelineEntry[] = [];
 
     function addTimeline(name, value) {
       timeline.push({
@@ -155,7 +155,7 @@ export async function _actuallySend(
     async function respond(
       patch: ResponsePatch,
       bodyPath: string | null,
-      noPlugins: boolean = false,
+      noPlugins = false,
     ): Promise<void> {
       const timelinePath = await storeTimeline(timeline);
       // Tear Down the cancellation logic
@@ -180,7 +180,7 @@ export async function _actuallySend(
         return;
       }
 
-      let responsePatch: ResponsePatch | null | undefined;
+      let responsePatch: ResponsePatch | null = null;
 
       try {
         responsePatch = await _applyResponsePluginHooks(
@@ -216,7 +216,7 @@ export async function _actuallySend(
     }
 
     /** Helper function to set Curl options */
-    function setOpt(opt: number, val: any, optional: boolean = false) {
+    function setOpt(opt: number, val: any, optional = false) {
       const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
 
       try {
@@ -761,7 +761,7 @@ export async function _actuallySend(
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
         // Update Cookie Jar
         let currentUrl = finalUrl;
-        let setCookieStrings: Array<string> = [];
+        let setCookieStrings: string[] = [];
         const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
         for (const { headers } of allCurlHeadersObjects) {
@@ -1041,12 +1041,12 @@ async function _applyResponsePluginHooks(
 
 export function _parseHeaders(
   buffer: Buffer,
-): Array<{
-  headers: Array<ResponseHeader>;
+): {
+  headers: ResponseHeader[];
   version: string;
   code: number;
   reason: string;
-}> {
+}[] {
   const results = [];
   const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
 
@@ -1088,18 +1088,18 @@ export function _getAwsAuthHeaders(
     secretAccessKey: string;
     sessionToken: string;
   },
-  headers: Array<RequestHeader>,
+  headers: RequestHeader[],
   body: string,
   url: string,
   method: string,
   region?: string,
   service?: string,
-): Array<{
+): {
   name: string;
   value: string;
   description?: string;
   disabled?: boolean;
-}> {
+}[] {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
   // AWS uses host header for signing so prioritize that if the user set it manually
@@ -1127,7 +1127,7 @@ export function _getAwsAuthHeaders(
     }));
 }
 
-function storeTimeline(timeline: Array<ResponseTimelineEntry>): Promise<string> {
+function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
   return new Promise((resolve, reject) => {
     const timelineStr = JSON.stringify(timeline, null, '\t');
     const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');

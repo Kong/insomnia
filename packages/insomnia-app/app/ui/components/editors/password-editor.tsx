@@ -1,30 +1,29 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
 import { AUTOBIND_CFG } from '../../../common/constants';
-type State = {
-  showPassword: boolean;
-};
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
-  onChange: (...args: Array<any>) => any;
+  onChange: (...args: any[]) => any;
   password: string;
   disabled: boolean;
   isVariableUncovered: boolean;
   showAllPasswords: boolean;
-};
+}
+
+interface State {
+  showPassword: boolean;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PasswordEditor extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      showPassword: false,
-    };
+class PasswordEditor extends PureComponent<Props, State> {
+  state: State = {
+    showPassword: false,
   }
 
   _handleShowPassword() {

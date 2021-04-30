@@ -2,7 +2,7 @@ import { KubernetesPluginConfig } from './kubernetes-config';
 import { HttpMethodType, OA3Server } from './openapi3';
 
 export type OperationPlugins = {
-  method: HttpMethodType | null | undefined;
+  method?: HttpMethodType | null;
   plugins: KubernetesPluginConfig[];
 }[];
 

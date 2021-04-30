@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { Pane, PaneBody, PaneHeader } from './pane';
-type Props = {
-  type: 'request' | 'response';
-};
 
-const BlankPane = ({ type }: Props) => (
+interface Props {
+  type: 'request' | 'response';
+}
+
+const BlankPane: FunctionComponent<Props> = ({ type }) => (
   <Pane type={type}>
     <PaneHeader />
     <PaneBody placeholder />

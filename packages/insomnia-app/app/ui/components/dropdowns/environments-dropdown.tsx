@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
@@ -17,20 +17,20 @@ import type { Environment } from '../../../models/environment';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-type Props = {
-  handleChangeEnvironment: (...args: Array<any>) => any;
+
+interface Props {
+  handleChangeEnvironment: (...args: any[]) => any;
   workspace: Workspace;
-  environments: Array<Environment>;
+  environments: Environment[];
   environmentHighlightColorStyle: string;
   hotKeyRegistry: HotKeyRegistry;
-  // Optional
   className?: string;
-  activeEnvironment: Environment | null;
-};
+  activeEnvironment?: Environment | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class EnvironmentsDropdown extends React.PureComponent<Props> {
-  _dropdown: Dropdown | null | undefined;
+class EnvironmentsDropdown extends PureComponent<Props> {
+  _dropdown: Dropdown | null = null;
 
   _handleActivateEnvironment(environmentId: string) {
     this.props.handleChangeEnvironment(environmentId);
@@ -40,7 +40,7 @@ class EnvironmentsDropdown extends React.PureComponent<Props> {
     showModal(EnvironmentsModal, this.props.workspace);
   }
 
-  _setDropdownRef(n: Dropdown | null | undefined) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 

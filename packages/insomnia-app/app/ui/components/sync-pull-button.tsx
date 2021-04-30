@@ -1,24 +1,27 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import VCS from '../../sync/vcs';
 import { showError } from './modals';
-type Props = {
+
+interface Props {
   vcs: VCS;
   branch: string;
-  onPull: (...args: Array<any>) => any;
+  onPull: (...args: any[]) => any;
   disabled?: boolean;
   className?: string;
-  children?: React.ReactNode;
-};
-type State = {
+  children?: ReactNode;
+}
+
+interface State {
   loading: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncPullButton extends React.PureComponent<Props, State> {
-  _timeout: TimeoutID;
-  state = {
+class SyncPullButton extends PureComponent<Props, State> {
+  _timeout: NodeJS.Timeout | null = null;
+
+  state: State = {
     loading: false,
   };
 
@@ -62,7 +65,9 @@ class SyncPullButton extends React.PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
-    clearTimeout(this._timeout);
+    if (this._timeout !== null) {
+      clearTimeout(this._timeout);
+    }
   }
 
   render() {

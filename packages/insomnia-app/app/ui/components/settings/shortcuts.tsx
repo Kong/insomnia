@@ -16,11 +16,13 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import { showModal } from '../modals';
 import AddKeyCombinationModal from '../modals/add-key-combination-modal';
 import PromptButton from '../base/prompt-button';
-type Props = {
+
+interface Props {
   hotKeyRegistry: HotKeyRegistry;
-  handleUpdateKeyBindings: (...args: Array<any>) => any;
-};
-const HOT_KEY_DEFS: Array<HotKeyDefinition> = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
+  handleUpdateKeyBindings: (...args: any[]) => any;
+}
+
+const HOT_KEY_DEFS: HotKeyDefinition[] = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class Shortcuts extends PureComponent<Props> {

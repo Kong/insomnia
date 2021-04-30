@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { FunctionComponent } from 'react';
 import { CircleButton, SvgIcon, Tooltip } from 'insomnia-components';
 import * as session from '../../../account/session';
 import { showLoginModal } from '../modals/login-modal';
@@ -8,9 +8,11 @@ import Dropdown from '../base/dropdown/dropdown';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import styled from 'styled-components';
-type Props = {
+
+interface Props {
   className?: string;
-};
+}
+
 const StyledIconContainer = styled.div`
   display: flex;
   align-items: center;
@@ -21,7 +23,7 @@ const StyledIconContainer = styled.div`
   }
 `;
 
-const AccountDropdown = ({ className }: Props) => (
+const AccountDropdown: FunctionComponent<Props> = ({ className }) => (
   <div className={className}>
     <Dropdown>
       <DropdownButton noWrap>

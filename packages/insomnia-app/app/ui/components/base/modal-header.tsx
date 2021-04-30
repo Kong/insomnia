@@ -1,11 +1,16 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { PureComponent, ReactNode } from 'react';
 import classnames from 'classnames';
 
-class ModalHeader extends PureComponent {
+interface Props {
+  children: ReactNode;
+  hideCloseButton?: boolean;
+  className?: string;
+}
+
+class ModalHeader extends PureComponent<Props> {
   render() {
     const { hideCloseButton, className, children } = this.props;
-    let closeButton = null;
+    let closeButton: null | JSX.Element = null;
 
     if (!hideCloseButton) {
       closeButton = (
@@ -24,11 +29,4 @@ class ModalHeader extends PureComponent {
   }
 }
 
-ModalHeader.propTypes = {
-  // Required
-  children: PropTypes.node.isRequired,
-  // Optional
-  hideCloseButton: PropTypes.bool,
-  className: PropTypes.string,
-};
 export default ModalHeader;

@@ -1,21 +1,19 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { isMac } from '../../common/constants';
 import type { KeyBindings, KeyCombination } from '../../common/hotkeys';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
-type Props = {
-  // One of these two must be given.
-  // If both is given, keyCombination will be used.
+
+interface Props {
+  /** One of these two must be given. If both is given, keyCombination will be used. */
   keyCombination?: KeyCombination;
   keyBindings?: KeyBindings;
-  // Optional
   className?: string;
-  // Show fallback message if keyCombination is not given,
-  // but keyBindings has no key combinations.
+  /** Show fallback message if keyCombination is not given, but keyBindings has no key combinations. */
   useFallbackMessage?: boolean;
-};
+}
 
-class Hotkey extends React.PureComponent<Props> {
+class Hotkey extends PureComponent<Props> {
   render() {
     const { keyCombination, keyBindings, className, useFallbackMessage } = this.props;
 

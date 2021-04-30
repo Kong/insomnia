@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -20,16 +20,16 @@ import { showModal } from '../modals';
 import AlertModal from '../modals/alert-modal';
 import * as models from '../../../models';
 import type { Request, RequestAuthentication } from '../../../models/request';
-type Props = {
+
+interface Props {
   onChange: (r: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
-  // Optional
-  className: string;
-  children: React.ReactNode;
-};
+  className?: string;
+  children?: ReactNode;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AuthDropdown extends React.PureComponent<Props> {
+class AuthDropdown extends PureComponent<Props> {
   async _handleTypeChange(type: string) {
     const { request, onChange } = this.props;
     const { authentication } = request;

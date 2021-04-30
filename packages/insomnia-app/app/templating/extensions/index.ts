@@ -2,47 +2,58 @@ import type { NunjucksParsedTagArg } from '../utils';
 import type { Request } from '../../models/request';
 import type { Response } from '../../models/response';
 import type { PluginStore } from '../../plugins/context';
+
 export type PluginArgumentValue = string | number | boolean;
-type DisplayName = string | ((args: Array<NunjucksParsedTagArg>) => string);
-type PluginArgumentBase = {
+
+type DisplayName = string | ((args: NunjucksParsedTagArg[]) => string);
+
+interface PluginArgumentBase {
   displayName: DisplayName;
   description?: string;
   help?: string;
-  hide?: (args: Array<NunjucksParsedTagArg>) => boolean;
-};
-export type PluginArgumentEnumOption = {
+  hide?: (args: NunjucksParsedTagArg[]) => boolean;
+}
+
+export interface PluginArgumentEnumOption {
   displayName: DisplayName;
   value: PluginArgumentValue;
   description?: string;
   placeholder?: string;
-};
+}
+
 export type PluginArgumentEnum = PluginArgumentBase & {
   type: 'enum';
-  options: Array<PluginArgumentEnumOption>;
+  options: PluginArgumentEnumOption[];
   defaultValue?: PluginArgumentValue;
 };
+
 export type PluginArgumentModel = PluginArgumentBase & {
   type: 'model';
   model: string;
   defaultValue?: string;
 };
+
 export type PluginArgumentString = PluginArgumentBase & {
   type: 'string';
   placeholder?: string;
   defaultValue?: string;
 };
+
 export type PluginArgumentBoolean = PluginArgumentBase & {
   type: 'boolean';
   defaultValue?: boolean;
 };
+
 export type PluginArgumentFile = PluginArgumentBase & {
   type: 'file';
 };
+
 export type PluginArgumentNumber = PluginArgumentBase & {
   type: 'number';
   placeholder?: string;
   defaultValue?: number;
 };
+
 export type PluginArgument =
   | PluginArgumentEnum
   | PluginArgumentModel
@@ -50,7 +61,8 @@ export type PluginArgument =
   | PluginArgumentBoolean
   | PluginArgumentFile
   | PluginArgumentNumber;
-export type PluginTemplateTagContext = {
+
+  export interface PluginTemplateTagContext {
   util: {
     models: {
       request: {
@@ -62,24 +74,27 @@ export type PluginTemplateTagContext = {
       };
     };
   };
-};
-export type PluginTemplateTagActionContext = {
+}
+
+export interface PluginTemplateTagActionContext {
   store: PluginStore;
-};
-export type PluginTemplateTagAction = {
+}
+
+export interface PluginTemplateTagAction {
   name: string;
   icon?: string;
   run: (context: PluginTemplateTagActionContext) => Promise<void>;
-};
-export type PluginTemplateTag = {
-  args: Array<PluginArgument>;
+}
+
+export interface PluginTemplateTag {
+  args: PluginArgument[];
   name: string;
   displayName: DisplayName;
   disablePreview: () => boolean;
   description: string;
-  actions: Array<PluginTemplateTagAction>;
-  run: (context: PluginTemplateTagContext, ...arg: Array<any>) => Promise<any> | any;
+  actions: PluginTemplateTagAction[];
+  run: (context: PluginTemplateTagContext, ...arg: any[]) => Promise<any> | any;
   deprecated?: boolean;
-  validate?: (value: any) => string | null | undefined;
+  validate?: (value: any) => string | null;
   priority?: number;
-};
+}

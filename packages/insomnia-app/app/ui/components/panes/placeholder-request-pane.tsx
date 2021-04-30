@@ -1,21 +1,22 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import Hotkey from '../hotkey';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import type { Request } from '../../../models/request';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import type { HandleImportFileCallback } from '../wrapper';
-type Props = {
+
+interface Props {
   hotKeyRegistry: hotkeys.HotKeyRegistry;
   handleImportFile: HandleImportFileCallback;
   handleCreateRequest: () => Promise<Request>;
-};
+}
 
-const PlaceholderRequestPane = ({
+const PlaceholderRequestPane: FunctionComponent<Props> = ({
   hotKeyRegistry,
   handleImportFile,
   handleCreateRequest,
-}: Props) => (
+}) => (
   <Pane type="request">
     <PaneHeader />
     <PaneBody placeholder>

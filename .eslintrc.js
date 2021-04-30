@@ -34,6 +34,7 @@ module.exports = /** @type { import('eslint').Linter.Config } */ {
     HTMLElement: true,
     HTMLInputElement: true,
     HTMLSelectElement: true,
+    JSX: true,
   },
   env: {
     browser: true,

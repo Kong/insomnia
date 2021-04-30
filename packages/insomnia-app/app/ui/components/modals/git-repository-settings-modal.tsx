@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -10,8 +10,8 @@ import HelpTooltip from '../help-tooltip';
 import { docsGitAccessToken, docsGitSync } from '../../../common/documentation';
 import Link from '../base/link';
 import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
-type Props = {};
-type State = {
+
+interface State {
   gitRepository: GitRepository | null;
   inputs: {
     uri?: string;
@@ -20,27 +20,24 @@ type State = {
     username?: string;
     token?: string;
   };
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitRepositorySettingsModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  input: HTMLInputElement | null | undefined;
-  _onSubmitEdits: ((arg0: GitRepository) => any) | null | undefined;
+class GitRepositorySettingsModal extends PureComponent<{}, State> {
+  modal: Modal | null = null;
+  input: HTMLInputElement | null = null;
+  _onSubmitEdits?: ((arg0: GitRepository) => any) | null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      inputs: {},
-      gitRepository: null,
-    };
+  state: State = {
+    inputs: {},
+    gitRepository: null,
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setInputRef(n: HTMLInputElement | null | undefined) {
+  _setInputRef(n: HTMLInputElement) {
     this.input = n;
   }
 

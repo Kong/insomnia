@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import type { ProtoFile } from '../../../models/proto-file';
 import ModalHeader from '../base/modal-header';
 import ModalBody from '../base/modal-body';
@@ -17,26 +17,31 @@ import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import * as protoManager from '../../../network/grpc/proto-manager';
-type Props = {
+
+interface Props {
   grpcDispatch: GrpcDispatch;
   workspace: Workspace;
-  protoDirectories: Array<ExpandedProtoDirectory>;
-};
-type State = {
+  protoDirectories: ExpandedProtoDirectory[];
+}
+
+interface State {
   selectedProtoFileId: string;
-};
-type ProtoFilesModalOptions = {
+}
+
+interface ProtoFilesModalOptions {
   preselectProtoFileId?: string;
   onSave: (arg0: string) => Promise<void>;
-};
+}
+
 const INITIAL_STATE: State = {
   selectedProtoFileId: '',
 };
+
 const spinner = <i className="fa fa-spin fa-refresh" />;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ProtoFilesModal extends React.PureComponent<Props, State> {
-  modal: Modal | null;
+class ProtoFilesModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
   onSave: ((arg0: string) => Promise<void>) | null;
 
   constructor(props: Props) {
@@ -45,7 +50,7 @@ class ProtoFilesModal extends React.PureComponent<Props, State> {
     this.onSave = null;
   }
 
-  _setModalRef(ref: Modal | null | undefined) {
+  _setModalRef(ref: Modal) {
     this.modal = ref;
   }
 

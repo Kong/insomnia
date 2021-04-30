@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import Editable from './base/editable';
-type Props = {
+
+interface Props {
   onSubmit: () => void;
   value: string;
-};
-export default function UnitTestEditable({ onSubmit, value }: Props) {
-  return <Editable singleClick onSubmit={onSubmit} value={value} />;
 }
+
+const UnitTestEditable: FunctionComponent<Props> = ({ onSubmit, value }) => {
+  return <Editable singleClick onSubmit={onSubmit} value={value} />;
+};
+
+export default UnitTestEditable;

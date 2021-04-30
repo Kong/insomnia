@@ -4,61 +4,36 @@ import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import { getDataDirectory } from './misc';
-// App Stuff
-export function getAppVersion() {
-  return appConfig().version;
-}
-export function getAppLongName() {
-  return appConfig().longName;
-}
-export function getAppName() {
-  return appConfig().productName;
-}
-export function getAppDefaultTheme() {
-  return appConfig().theme;
-}
-export function getAppDefaultLightTheme() {
-  return appConfig().lightTheme;
-}
-export function getAppDefaultDarkTheme() {
-  return appConfig().darkTheme;
-}
-export function getAppSynopsis() {
-  return appConfig().synopsis;
-}
-export function getAppId() {
-  return appConfig().appId;
-}
-export function getGoogleAnalyticsId() {
-  return appConfig().gaId;
-}
-export function getGoogleAnalyticsLocation() {
-  return appConfig().gaLocation;
-}
-export function getSegmentWriteKey() {
-  if (isDevelopment()) {
-    return appConfig().segmentWriteKeys.development;
-  }
 
-  return appConfig().segmentWriteKeys.production;
-}
-export function getAppPlatform() {
-  return process.platform;
-}
-export function getAppEnvironment() {
-  return process.env.INSOMNIA_ENV || 'production';
-}
-export function getAppReleaseDate() {
-  return new Date(process.env.RELEASE_DATE).toLocaleDateString();
-}
-export function getBrowserUserAgent() {
-  const ua = encodeURIComponent(
-    String(window.navigator.userAgent)
-      .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
-      .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
-  ).replace('%2C', ',');
-  return ua;
-}
+// App Stuff
+export const getAppVersion = () => appConfig().version;
+export const getAppLongName = () => appConfig().longName;
+export const getAppName = () => appConfig().productName;
+export const getAppDefaultTheme = () => appConfig().theme;
+export const getAppDefaultLightTheme = () => appConfig().lightTheme;
+export const getAppDefaultDarkTheme = () => appConfig().darkTheme;
+export const getAppSynopsis = () => appConfig().synopsis;
+export const getAppId = () => appConfig().appId;
+export const getGoogleAnalyticsId = () => appConfig().gaId;
+export const getGoogleAnalyticsLocation = () => appConfig().gaLocation;
+
+export const getAppPlatform = () => process.platform;
+export const isMac = () => getAppPlatform() === 'darwin';
+export const isLinux = () => getAppPlatform() === 'linux';
+export const isWindows = () => getAppPlatform() === 'win32';
+export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
+export const isDevelopment = () => getAppEnvironment() === 'development';
+
+export const getSegmentWriteKey = () => appConfig().segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
+
+export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
+
+export const getBrowserUserAgent = () => encodeURIComponent(
+  String(window.navigator.userAgent)
+    .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
+    .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
+).replace('%2C', ',');
+
 export function getTempDir() {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
   const { app } = electron.remote || electron;
@@ -66,12 +41,7 @@ export function getTempDir() {
   mkdirp.sync(dir);
   return dir;
 }
-export function isMac() {
-  return getAppPlatform() === 'darwin';
-}
-export function isLinux() {
-  return getAppPlatform() === 'linux';
-}
+
 export function updatesSupported() {
   // Updates are not supported on Linux
   if (isLinux()) {
@@ -85,18 +55,11 @@ export function updatesSupported() {
 
   return true;
 }
-export function isWindows() {
-  return getAppPlatform() === 'win32';
-}
-export function isDevelopment() {
-  return getAppEnvironment() === 'development';
-}
-export function getClientString() {
-  return `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
-}
-export function changelogUrl(): string {
-  return appConfig().changelogUrl;
-}
+
+export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
+
+export const changelogUrl = () => appConfig().changelogUrl;
+
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
 
@@ -293,9 +256,9 @@ const authTypesMap = {
 export type SortOrder =
   | 'name-asc'
   | 'name-desc'
-  | 'created-first'
-  | 'created-last'
-  | 'method'
+  | 'created-asc'
+  | 'created-desc'
+  | 'http-method'
   | 'type-desc'
   | 'type-asc';
 export const SORT_NAME_ASC: SortOrder = 'name-asc';
@@ -323,6 +286,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_DESC]: 'Folders First',
   [SORT_TYPE_ASC]: 'Requests First',
 };
+
 export function getPreviewModeName(previewMode, useLong = false) {
   if (previewModeMap.hasOwnProperty(previewMode)) {
     return useLong ? previewModeMap[previewMode][1] : previewModeMap[previewMode][0];
@@ -330,7 +294,8 @@ export function getPreviewModeName(previewMode, useLong = false) {
     return '';
   }
 }
-export function getContentTypeName(contentType, useLong = false) {
+
+export function getContentTypeName(contentType: string | undefined, useLong = false) {
   if (typeof contentType !== 'string') {
     return '';
   }
@@ -341,6 +306,7 @@ export function getContentTypeName(contentType, useLong = false) {
 
   return useLong ? contentTypesMap[CONTENT_TYPE_OTHER][1] : contentTypesMap[CONTENT_TYPE_OTHER][0];
 }
+
 export function getAuthTypeName(authType, useLong = false) {
   if (authTypesMap.hasOwnProperty(authType)) {
     return useLong ? authTypesMap[authType][1] : authTypesMap[authType][0];
@@ -348,6 +314,7 @@ export function getAuthTypeName(authType, useLong = false) {
     return '';
   }
 }
+
 export function getContentTypeFromHeaders(headers, defaultValue = null) {
   if (!Array.isArray(headers)) {
     return null;

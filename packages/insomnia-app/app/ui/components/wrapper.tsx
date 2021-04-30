@@ -11,7 +11,7 @@ import type {
   RequestParameter,
 } from '../../models/request';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -97,107 +97,109 @@ import WrapperMigration from './wrapper-migration';
 import type { ImportOptions } from '../redux/modules/global';
 import WrapperAnalytics from './wrapper-analytics';
 const spectral = new Spectral();
-export type WrapperProps = {
+
+export interface WrapperProps {
   // Helper Functions
-  handleActivateRequest: (...args: Array<any>) => any;
-  handleSetSidebarFilter: (...args: Array<any>) => any;
-  handleToggleMenuBar: (...args: Array<any>) => any;
+  handleActivateRequest: (...args: any[]) => any;
+  handleSetSidebarFilter: (...args: any[]) => any;
+  handleToggleMenuBar: (...args: any[]) => any;
   handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
   handleInitializeEntities: () => Promise<void>;
-  handleExportFile: (...args: Array<any>) => any;
-  handleShowExportRequestsModal: (...args: Array<any>) => any;
-  handleShowSettingsModal: (...args: Array<any>) => any;
-  handleExportRequestsToFile: (...args: Array<any>) => any;
+  handleExportFile: (...args: any[]) => any;
+  handleShowExportRequestsModal: (...args: any[]) => any;
+  handleShowSettingsModal: (...args: any[]) => any;
+  handleExportRequestsToFile: (...args: any[]) => any;
   handleSetActiveWorkspace: (workspaceId: string | null) => void;
-  handleSetActiveEnvironment: (...args: Array<any>) => any;
-  handleMoveDoc: (...args: Array<any>) => any;
-  handleCreateRequest: (...args: Array<any>) => any;
-  handleDuplicateRequest: (...args: Array<any>) => any;
-  handleDuplicateRequestGroup: (...args: Array<any>) => any;
-  handleMoveRequestGroup: (...args: Array<any>) => any;
-  handleDuplicateWorkspace: (...args: Array<any>) => any;
-  handleCreateRequestGroup: (...args: Array<any>) => any;
-  handleGenerateCodeForActiveRequest: (...args: Array<any>) => any;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleCopyAsCurl: (...args: Array<any>) => any;
-  handleCreateRequestForWorkspace: (...args: Array<any>) => any;
-  handleSetRequestPaneRef: (...args: Array<any>) => any;
-  handleSetResponsePaneRef: (...args: Array<any>) => any;
-  handleSetResponsePreviewMode: (...args: Array<any>) => any;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  handleSetResponseFilter: (...args: Array<any>) => any;
-  handleSetActiveResponse: (...args: Array<any>) => any;
-  handleSetSidebarRef: (...args: Array<any>) => any;
+  handleSetActiveEnvironment: (...args: any[]) => any;
+  handleMoveDoc: (...args: any[]) => any;
+  handleCreateRequest: (...args: any[]) => any;
+  handleDuplicateRequest: (...args: any[]) => any;
+  handleDuplicateRequestGroup: (...args: any[]) => any;
+  handleMoveRequestGroup: (...args: any[]) => any;
+  handleDuplicateWorkspace: (...args: any[]) => any;
+  handleCreateRequestGroup: (...args: any[]) => any;
+  handleGenerateCodeForActiveRequest: (...args: any[]) => any;
+  handleGenerateCode: (...args: any[]) => any;
+  handleCopyAsCurl: (...args: any[]) => any;
+  handleCreateRequestForWorkspace: (...args: any[]) => any;
+  handleSetRequestPaneRef: (...args: any[]) => any;
+  handleSetResponsePaneRef: (...args: any[]) => any;
+  handleSetResponsePreviewMode: (...args: any[]) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
+  handleSetResponseFilter: (...args: any[]) => any;
+  handleSetActiveResponse: (...args: any[]) => any;
+  handleSetSidebarRef: (...args: any[]) => any;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleStartDragSidebar: (...args: Array<any>) => any;
-  handleResetDragSidebar: (...args: Array<any>) => any;
-  handleStartDragPaneHorizontal: (...args: Array<any>) => any;
-  handleStartDragPaneVertical: (...args: Array<any>) => any;
-  handleResetDragPaneHorizontal: (...args: Array<any>) => any;
-  handleResetDragPaneVertical: (...args: Array<any>) => any;
-  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
-  handleSetRequestPinned: (...args: Array<any>) => any;
-  handleSendRequestWithEnvironment: (...args: Array<any>) => any;
-  handleSendAndDownloadRequestWithEnvironment: (...args: Array<any>) => any;
-  handleUpdateRequestMimeType: (...args: Array<any>) => any;
-  handleUpdateDownloadPath: (...args: Array<any>) => any;
+  handleStartDragSidebar: (...args: any[]) => any;
+  handleResetDragSidebar: (...args: any[]) => any;
+  handleStartDragPaneHorizontal: (...args: any[]) => any;
+  handleStartDragPaneVertical: (...args: any[]) => any;
+  handleResetDragPaneHorizontal: (...args: any[]) => any;
+  handleResetDragPaneVertical: (...args: any[]) => any;
+  handleSetRequestGroupCollapsed: (...args: any[]) => any;
+  handleSetRequestPinned: (...args: any[]) => any;
+  handleSendRequestWithEnvironment: (...args: any[]) => any;
+  handleSendAndDownloadRequestWithEnvironment: (...args: any[]) => any;
+  handleUpdateRequestMimeType: (...args: any[]) => any;
+  handleUpdateDownloadPath: (...args: any[]) => any;
   handleSetActiveActivity: (activity: GlobalActivity) => void;
   handleGoToNextActivity: () => void;
   // Properties
   activity: GlobalActivity;
-  apiSpecs: Array<ApiSpec>;
+  apiSpecs: ApiSpec[];
   loadStartTime: number;
   isLoading: boolean;
   paneWidth: number;
   paneHeight: number;
   responsePreviewMode: string;
   responseFilter: string;
-  responseFilterHistory: Array<string>;
+  responseFilterHistory: string[];
   responseDownloadPath: string | null;
   sidebarWidth: number;
   sidebarHidden: boolean;
   sidebarFilter: string;
   sidebarChildren: SidebarChildObjects;
   settings: Settings;
-  workspaces: Array<Workspace>;
-  requestMetas: Array<RequestMeta>;
-  requests: Array<Request>;
-  requestVersions: Array<RequestVersion>;
-  unseenWorkspaces: Array<Workspace>;
-  workspaceChildren: Array<Record<string, any>>;
+  workspaces: Workspace[];
+  requestMetas: RequestMeta[];
+  requests: Request[];
+  requestVersions: RequestVersion[];
+  unseenWorkspaces: Workspace[];
+  workspaceChildren: Record<string, any>[];
   activeWorkspaceMeta: WorkspaceMeta;
-  environments: Array<Record<string, any>>;
+  environments: Record<string, any>[];
   activeApiSpec: ApiSpec;
-  activeRequestResponses: Array<Response>;
+  activeRequestResponses: Response[];
   activeWorkspace: Workspace;
   activeCookieJar: CookieJar;
   activeEnvironment: Environment | null;
   activeGitRepository: GitRepository | null;
   activeUnitTestResult: UnitTestResult | null;
-  activeUnitTestSuites: Array<UnitTestSuite>;
-  activeUnitTests: Array<UnitTest>;
-  activeWorkspaceClientCertificates: Array<ClientCertificate>;
+  activeUnitTestSuites: UnitTestSuite[];
+  activeUnitTests: UnitTest[];
+  activeWorkspaceClientCertificates: ClientCertificate[];
   headerEditorKey: string;
   isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  gitRepositories: Array<GitRepository>;
-  syncItems: Array<StatusCandidate>;
-  // Optional
-  oAuth2Token: OAuth2Token | null;
-  activeRequest: Request | null;
-  activeResponse: Response | null;
-};
+  gitRepositories: GitRepository[];
+  syncItems: StatusCandidate[];
+  oAuth2Token?: OAuth2Token | null;
+  activeRequest?: Request | null;
+  activeResponse?: Response | null;
+}
+
 export type HandleImportFileCallback = (options?: ImportOptions) => void;
 export type HandleImportClipboardCallback = (options?: ImportOptions) => void;
 export type HandleImportUriCallback = (uri: string, options?: ImportOptions) => void;
-type State = {
+
+interface State {
   forceRefreshKey: number;
   activeGitBranch: string;
-};
+}
 
 const rUpdate = (request, ...args) => {
   if (!request) {
@@ -210,13 +212,10 @@ const rUpdate = (request, ...args) => {
 const sUpdate = models.settings.update;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Wrapper extends React.PureComponent<WrapperProps, State> {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      forceRefreshKey: Date.now(),
-      activeGitBranch: 'no-vcs',
-    };
+class Wrapper extends PureComponent<WrapperProps, State> {
+  state: State = {
+    forceRefreshKey: Date.now(),
+    activeGitBranch: 'no-vcs',
   }
 
   // Request updaters
@@ -229,7 +228,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     return newRequest;
   }
 
-  _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
+  _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]): Promise<Request> {
     return this._handleForceUpdateRequest(r, {
       headers,
     });
@@ -247,7 +246,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
 
   static _handleUpdateRequestParameters(
     r: Request,
-    parameters: Array<RequestParameter>,
+    parameters: RequestParameter[],
   ): Promise<Request> {
     return rUpdate(r, {
       parameters,
@@ -263,7 +262,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     });
   }
 
-  static _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>): Promise<Request> {
+  static _handleUpdateRequestHeaders(r: Request, headers: RequestHeader[]): Promise<Request> {
     return rUpdate(r, {
       headers,
     });
@@ -603,7 +602,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
     }
 
     return (
-      <React.Fragment>
+      <Fragment>
         <div key="modals" className="modals">
           <ErrorBoundary showAlert>
             <AlertModal ref={registerModal} />
@@ -746,7 +745,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
 
             {gitVCS && (
-              <React.Fragment>
+              <Fragment>
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
                 <GitLogModal ref={registerModal} vcs={gitVCS} />
                 <GitRepositorySettingsModal ref={registerModal} />
@@ -759,11 +758,11 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                     handleGitBranchChanged={this._handleGitBranchChanged}
                   />
                 )}
-              </React.Fragment>
+              </Fragment>
             )}
 
             {vcs && (
-              <React.Fragment>
+              <Fragment>
                 <SyncStagingModal
                   ref={registerModal}
                   workspace={activeWorkspace}
@@ -785,7 +784,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
                 <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-              </React.Fragment>
+              </Fragment>
             )}
 
             <WorkspaceEnvironmentsEditModal
@@ -820,7 +819,7 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             </GrpcDispatchModalWrapper>
           </ErrorBoundary>
         </div>
-        <React.Fragment key={`views::${this.state.activeGitBranch}`}>
+        <Fragment key={`views::${this.state.activeGitBranch}`}>
           {activity === ACTIVITY_HOME && (
             <WrapperHome
               wrapperProps={this.props}
@@ -900,8 +899,8 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleImportUri={this._handleImportUri}
             />
           )}
-        </React.Fragment>
-      </React.Fragment>
+        </Fragment>
+      </Fragment>
     );
   }
 }

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import * as electron from 'electron';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import styled from 'styled-components';
@@ -17,18 +17,21 @@ import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
 import imgSrcCore from '../images/insomnia-core-logo.png';
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
-export type ToastNotification = {
+
+export interface ToastNotification {
   key: string;
   url: string;
   cta: string;
   message: string;
-};
-type Props = {};
-type State = {
+}
+
+interface State {
   notification: ToastNotification | null;
   visible: boolean;
-};
-const StyledLogo: React.ComponentType<{}> = styled.div`
+  appName: string;
+}
+
+const StyledLogo = styled.div`
   margin: var(--padding-xs) var(--padding-sm) var(--padding-xs) var(--padding-xs);
   display: flex;
   align-items: center;
@@ -37,7 +40,7 @@ const StyledLogo: React.ComponentType<{}> = styled.div`
     max-width: 5rem;
   }
 `;
-const StyledContent: React.ComponentType<{}> = styled.div`
+const StyledContent = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,7 +48,7 @@ const StyledContent: React.ComponentType<{}> = styled.div`
   padding: 0 var(--padding-xs) 0 var(--padding-xs);
   max-width: 20rem;
 `;
-const StyledFooter: React.ComponentType<{}> = styled.footer`
+const StyledFooter = styled.footer`
   padding-top: var(--padding-sm);
   display: flex;
   flex-direction: row;
@@ -54,16 +57,13 @@ const StyledFooter: React.ComponentType<{}> = styled.footer`
 `;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Toast extends React.PureComponent<Props, State> {
-  _interval: any;
+class Toast extends PureComponent<{}, State> {
+  _interval: NodeJS.Timeout | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      notification: null,
-      visible: false,
-      appName: getAppName(),
-    };
+  state: State = {
+    notification: null,
+    visible: false,
+    appName: getAppName(),
   }
 
   _handlePostCTACleanup() {
@@ -197,7 +197,9 @@ class Toast extends React.PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
-    clearInterval(this._interval);
+    if (this._interval !== null) {
+      clearInterval(this._interval);
+    }
     electron.ipcRenderer.removeListener('show-notification', this._listenerShowNotification);
   }
 

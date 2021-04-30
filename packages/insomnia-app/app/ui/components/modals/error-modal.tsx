@@ -5,26 +5,27 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-export type ErrorModalOptions = {
+
+export interface ErrorModalOptions {
   title?: string;
-  error?: Error;
+  error?: Error | null;
   addCancel?: boolean;
   message?: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      title: '',
-      error: null,
-      message: '',
-      addCancel: false,
-    };
+  modal: Modal | null = null;
+  _okCallback: (value?: unknown) => void = () => {};
+
+  state: ErrorModalOptions = {
+    title: '',
+    error: null,
+    message: '',
+    addCancel: false,
   }
 
-  _setModalRef(m) {
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 
@@ -35,7 +36,7 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   show(options: ErrorModalOptions = {}) {
@@ -46,7 +47,9 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
       addCancel,
       message,
     });
-    this.modal.show();
+
+    this.modal?.show();
+
     console.log('[ErrorModal]', error);
     return new Promise(resolve => {
       this._okCallback = resolve;

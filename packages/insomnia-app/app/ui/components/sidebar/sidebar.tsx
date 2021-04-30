@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Workspace } from '../../../models/workspace';
@@ -9,23 +9,24 @@ import {
   SIDEBAR_SKINNY_REMS,
   AUTOBIND_CFG,
 } from '../../../common/constants';
-type Props = {
+
+interface Props {
   activeEnvironment: Environment | null;
-  children: React.ReactNode;
+  children: ReactNode;
   environmentHighlightColorStyle: string;
-  handleSetActiveEnvironment: (...args: Array<any>) => any;
-  handleSetActiveWorkspace: (...args: Array<any>) => any;
+  handleSetActiveEnvironment: (...args: any[]) => any;
+  handleSetActiveWorkspace: (...args: any[]) => any;
   hidden: boolean;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
-  showEnvironmentsModal: (...args: Array<any>) => any;
-  unseenWorkspaces: Array<Workspace>;
+  showEnvironmentsModal: (...args: any[]) => any;
+  unseenWorkspaces: Workspace[];
   width: number;
-  workspaces: Array<Workspace>;
-};
+  workspaces: Workspace[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Sidebar extends React.PureComponent<Props> {
+class Sidebar extends PureComponent<Props> {
   render() {
     const {
       activeEnvironment,

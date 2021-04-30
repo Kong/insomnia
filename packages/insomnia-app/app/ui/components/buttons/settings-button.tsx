@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { CircleButton, SvgIcon, Tooltip } from 'insomnia-components';
 import { showSettingsModal } from '../modals/settings-modal';
 import type { Settings } from '../../../models/settings';
@@ -6,12 +6,13 @@ import { selectSettings } from '../../redux/selectors';
 import { connect } from 'react-redux';
 import Hotkey from '../hotkey';
 import { hotKeyRefs } from '../../../common/hotkeys';
-type Props = {
+
+interface Props {
   className?: string;
   settings: Settings;
-};
+}
 
-const SettingsButton = ({ className, settings }: Props) => (
+const SettingsButton: FunctionComponent<Props> = ({ className, settings }) => (
   <Tooltip
     delay={1000}
     position="bottom"
@@ -27,11 +28,6 @@ const SettingsButton = ({ className, settings }: Props) => (
   </Tooltip>
 );
 
-const mapStateToProps = (state, props) => {
-  const settings = selectSettings(state, props);
-  return {
-    settings,
-  };
-};
-
-export default connect(mapStateToProps)(SettingsButton);
+export default connect((state, props) => ({
+    settings: selectSettings(state, props),
+}))(SettingsButton);

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -28,16 +28,17 @@ const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
 const REFRESH_PERIOD = 1000 * 60 * 1;
 const DEFAULT_BRANCH_NAME = 'master';
-type Props = {
+
+interface Props {
   workspace: Workspace;
   vcs: VCS;
-  syncItems: Array<StatusCandidate>;
-  // Optional
+  syncItems: StatusCandidate[];
   className?: string;
-};
-type State = {
+}
+
+interface State {
   currentBranch: string;
-  localBranches: Array<string>;
+  localBranches: string[];
   compare: {
     ahead: number;
     behind: number;
@@ -48,36 +49,33 @@ type State = {
   loadingPull: boolean;
   loadingProjectPull: boolean;
   loadingPush: boolean;
-  remoteProjects: Array<Project>;
-};
+  remoteProjects: Project[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncDropdown extends React.PureComponent<Props, State> {
-  checkInterval: IntervalID;
+class SyncDropdown extends PureComponent<Props, State> {
+  checkInterval: NodeJS.Timeout | null = null;
   refreshOnNextSyncItems = false;
   lastUserActivity = Date.now();
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      localBranches: [],
-      currentBranch: '',
-      compare: {
-        ahead: 0,
-        behind: 0,
-      },
-      historyCount: 0,
-      initializing: true,
-      loadingPull: false,
-      loadingPush: false,
-      loadingProjectPull: false,
-      status: {
-        key: 'n/a',
-        stage: {},
-        unstaged: {},
-      },
-      remoteProjects: [],
-    };
+  state: State = {
+    localBranches: [],
+    currentBranch: '',
+    compare: {
+      ahead: 0,
+      behind: 0,
+    },
+    historyCount: 0,
+    initializing: true,
+    loadingPull: false,
+    loadingPush: false,
+    loadingProjectPull: false,
+    status: {
+      key: 'n/a',
+      stage: {},
+      unstaged: {},
+    },
+    remoteProjects: [],
   }
 
   async refreshMainAttributes(extraState?: Record<string, any> = {}) {
@@ -137,7 +135,9 @@ class SyncDropdown extends React.PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
-    clearInterval(this.checkInterval);
+    if (this.checkInterval !== null) {
+      clearInterval(this.checkInterval);
+    }
     document.removeEventListener('mousemove', this._handleUserActivity);
   }
 
@@ -391,7 +391,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
     const snapshotToolTipMsg = canCreateSnapshot ? 'Local changes made' : 'No local changes made';
 
     if (currentBranch === null) {
-      return <React.Fragment>Sync</React.Fragment>;
+      return <Fragment>Sync</Fragment>;
     }
 
     return (
@@ -411,7 +411,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
           {/* Only show cloud icons if logged in */}
           {session.isLoggedIn() && (
-            <React.Fragment>
+            <Fragment>
               {loadingPull ? (
                 loadIcon
               ) : (
@@ -435,7 +435,7 @@ class SyncDropdown extends React.PureComponent<Props, State> {
                   />
                 </Tooltip>
               )}
-            </React.Fragment>
+            </Fragment>
           )}
         </div>
       </DropdownButton>
@@ -564,27 +564,27 @@ class SyncDropdown extends React.PureComponent<Props, State> {
 
           <DropdownItem onClick={this._handlePullChanges} disabled={behind === 0 || loadingPull}>
             {loadingPull ? (
-              <React.Fragment>
+              <Fragment>
                 <i className="fa fa-spin fa-refresh" /> Pulling Snapshots...
-              </React.Fragment>
+              </Fragment>
             ) : (
-              <React.Fragment>
+              <Fragment>
                 <i className="fa fa-cloud-upload" /> Pull {behind || ''} Snapshot
                 {behind === 1 ? '' : 's'}
-              </React.Fragment>
+              </Fragment>
             )}
           </DropdownItem>
 
           <DropdownItem onClick={this._handlePushChanges} disabled={ahead === 0 || loadingPush}>
             {loadingPush ? (
-              <React.Fragment>
+              <Fragment>
                 <i className="fa fa-spin fa-refresh" /> Pushing Snapshots...
-              </React.Fragment>
+              </Fragment>
             ) : (
-              <React.Fragment>
+              <Fragment>
                 <i className="fa fa-cloud-upload" /> Push {ahead || ''} Snapshot
                 {ahead === 1 ? '' : 's'}
-              </React.Fragment>
+              </Fragment>
             )}
           </DropdownItem>
         </Dropdown>

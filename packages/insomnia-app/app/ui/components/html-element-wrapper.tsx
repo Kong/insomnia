@@ -1,23 +1,20 @@
-import * as React from 'react';
+import React, { Component } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
-type Props = {
+
+interface Props {
   el: HTMLElement;
   onUnmount?: () => void;
-};
+}
+
 /**
  * This component provides an easy way to place a raw DOM node inside a React
  * application. This was created to facilitate the layer between UI plugins
  * and the Insomnia application.
  */
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class HtmlElementWrapper extends React.Component<Props> {
-  _setRef(n: HTMLDivElement | null | undefined) {
-    if (!n) {
-      return;
-    }
-
+class HtmlElementWrapper extends Component<Props> {
+  _setRef(n: HTMLDivElement) {
     // Add the element directly to the React ref
     n.innerHTML = '';
     n.appendChild(this.props.el);

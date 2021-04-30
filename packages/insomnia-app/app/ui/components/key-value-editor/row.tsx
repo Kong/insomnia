@@ -1,6 +1,5 @@
 // eslint-disable-next-line filenames/match-exported
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -15,17 +14,67 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import { showModal } from '../modals/index';
 import { describeByteSize } from '../../../common/misc';
 
+interface Props {
+  onChange: Function,
+  onDelete: Function,
+  onFocusName: Function,
+  onFocusValue: Function,
+  onFocusDescription: Function,
+  displayDescription: boolean,
+  index: number,
+  pair: {
+    name: string,
+    value: string,
+    description: string,
+    fileName: string,
+    type: string,
+    disabled: boolean,
+  },
+  readOnly?: boolean,
+  onMove?: Function,
+  onKeyDown?: Function,
+  onBlurName?: Function,
+  onBlurValue?: Function,
+  onBlurDescription?: Function,
+  handleRender?: Function,
+  handleGetRenderContext?: Function,
+  nunjucksPowerUserMode?: boolean,
+  isVariableUncovered?: boolean,
+  handleGetAutocompleteNameConstants?: Function,
+  handleGetAutocompleteValueConstants?: Function,
+  namePlaceholder?: string,
+  valuePlaceholder?: string,
+  descriptionPlaceholder?: string,
+  valueInputType?: string,
+  forceInput?: boolean,
+  allowMultiline?: boolean,
+  allowFile?: boolean,
+  sortable?: boolean,
+  noDelete?: boolean,
+  noDropZone?: boolean,
+  hideButtons?: boolean,
+  className?: string,
+  renderLeftIcon?: Function,
+  // For drag-n-drop
+  connectDragSource?: Function,
+  connectDragPreview?: Function,
+  connectDropTarget?: Function,
+  isDragging?: boolean,
+  isDraggingOver?: boolean,
+}
+
+interface State {
+  dragDirection: number;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class KeyValueEditorRow extends PureComponent {
-  constructor(props) {
-    super(props);
-    this._nameInput = null;
-    this._valueInput = null;
-    this._descriptionInput = null;
-    this.state = {
-      dragDirection: 0,
-    };
-  }
+class KeyValueEditorRow extends PureComponent<Props, State> {
+  _nameInput: OneLineEditor | null = null;
+  _valueInput: OneLineEditor | FileInputButton | null = null;
+  _descriptionInput: OneLineEditor | null = null;
+  state: State = {
+    dragDirection: 0,
+  };
 
   focusNameEnd() {
     if (this._nameInput) {
@@ -35,14 +84,12 @@ class KeyValueEditorRow extends PureComponent {
 
   focusValueEnd() {
     if (this._valueInput) {
-      this._valueInput.focusEnd();
+      this._valueInput?.focusEnd();
     }
   }
 
   focusDescriptionEnd() {
-    if (this._descriptionInput) {
-      this._descriptionInput.focusEnd();
-    }
+    this._descriptionInput?.focusEnd();
   }
 
   setDragDirection(dragDirection) {
@@ -53,15 +100,11 @@ class KeyValueEditorRow extends PureComponent {
     }
   }
 
-  _setNameInputRef(n) {
-    this._nameInput = n;
-  }
-
-  _setValueInputRef(n) {
+  _setValueInputRef(n: OneLineEditor | FileInputButton) {
     this._valueInput = n;
   }
 
-  _setDescriptionInputRef(n) {
+  _setDescriptionInputRef(n: OneLineEditor) {
     this._descriptionInput = n;
   }
 
@@ -88,10 +131,10 @@ class KeyValueEditorRow extends PureComponent {
 
       // Insert the pasted text into the current selection. Unfortunately, this
       // is the easiest way to do this.
-      const currentValue = this._valueInput.getValue();
+      const currentValue = this._valueInput?.getValue();
 
-      const prefix = currentValue.slice(0, this._valueInput.getSelectionStart());
-      const suffix = currentValue.slice(this._valueInput.getSelectionEnd());
+      const prefix = currentValue.slice(0, this._valueInput?.getSelectionStart());
+      const suffix = currentValue.slice(this._valueInput?.getSelectionEnd());
       const finalValue = `${prefix}${value}${suffix}`;
 
       // Update type and value
@@ -427,7 +470,7 @@ class KeyValueEditorRow extends PureComponent {
               'form-control--inactive': pair.disabled,
             })}>
             <OneLineEditor
-              ref={this._setNameInputRef}
+              ref={ref => { this._nameInput = ref; }}
               placeholder={namePlaceholder || 'Name'}
               defaultValue={pair.name}
               render={handleRender}
@@ -498,58 +541,8 @@ class KeyValueEditorRow extends PureComponent {
   }
 }
 
-KeyValueEditorRow.propTypes = {
-  // Required
-  onChange: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  onFocusName: PropTypes.func.isRequired,
-  onFocusValue: PropTypes.func.isRequired,
-  onFocusDescription: PropTypes.func.isRequired,
-  displayDescription: PropTypes.bool,
-  index: PropTypes.number.isRequired,
-  pair: PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    value: PropTypes.string,
-    description: PropTypes.string,
-    fileName: PropTypes.string,
-    type: PropTypes.string,
-    disabled: PropTypes.bool,
-  }).isRequired,
-  // Optional
-  readOnly: PropTypes.bool,
-  onMove: PropTypes.func,
-  onKeyDown: PropTypes.func,
-  onBlurName: PropTypes.func,
-  onBlurValue: PropTypes.func,
-  onBlurDescription: PropTypes.func,
-  handleRender: PropTypes.func,
-  handleGetRenderContext: PropTypes.func,
-  nunjucksPowerUserMode: PropTypes.bool,
-  isVariableUncovered: PropTypes.bool,
-  handleGetAutocompleteNameConstants: PropTypes.func,
-  handleGetAutocompleteValueConstants: PropTypes.func,
-  namePlaceholder: PropTypes.string,
-  valuePlaceholder: PropTypes.string,
-  descriptionPlaceholder: PropTypes.string,
-  valueInputType: PropTypes.string,
-  forceInput: PropTypes.bool,
-  allowMultiline: PropTypes.bool,
-  allowFile: PropTypes.bool,
-  sortable: PropTypes.bool,
-  noDelete: PropTypes.bool,
-  noDropZone: PropTypes.bool,
-  hideButtons: PropTypes.bool,
-  className: PropTypes.string,
-  renderLeftIcon: PropTypes.func,
-  // For drag-n-drop
-  connectDragSource: PropTypes.func,
-  connectDragPreview: PropTypes.func,
-  connectDropTarget: PropTypes.func,
-  isDragging: PropTypes.bool,
-  isDraggingOver: PropTypes.bool,
-};
 const dragSource = {
-  beginDrag(props) {
+  beginDrag(props: Props) {
     return {
       pair: props.pair,
     };

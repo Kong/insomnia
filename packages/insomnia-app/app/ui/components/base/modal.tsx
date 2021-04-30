@@ -1,5 +1,4 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { CSSProperties, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -10,16 +9,37 @@ import { pressedHotKey } from '../../../common/hotkeys-listener';
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
+interface Props {
+  tall?: boolean,
+  wide?: boolean,
+  skinny?: boolean,
+  noEscape?: boolean,
+  dontFocus?: boolean,
+  closeOnKeyCodes?: any[],
+  onHide?: Function,
+  onCancel?: Function,
+  onKeyDown?: Function,
+  freshState?: boolean,
+  children?: ReactNode,
+  className?: string,
+}
+
+interface State {
+  open: boolean;
+  forceRefreshCounter: number;
+  zIndex: number;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Modal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      open: false,
-      forceRefreshCounter: 0,
-      zIndex: globalZIndex,
-    };
-  }
+class Modal extends PureComponent<Props, State> {
+  onHide: Function | null = null;
+  _node: HTMLDivElement | null = null;
+
+  state: State = {
+    open: false,
+    forceRefreshCounter: 0,
+    zIndex: globalZIndex,
+  };
 
   async _handleKeyDown(e) {
     if (!this.state.open) {
@@ -72,13 +92,14 @@ class Modal extends PureComponent {
     }
   }
 
-  _setModalRef(n) {
+  _setModalRef(n: HTMLDivElement) {
     this._node = n;
   }
 
-  show(options) {
+  show(options?: Props) {
     const { freshState } = this.props;
     const { forceRefreshCounter } = this.state;
+
     this.setState({
       open: true,
       zIndex: globalZIndex++,
@@ -90,7 +111,7 @@ class Modal extends PureComponent {
     }
 
     // Allow instance-based onHide method
-    this.onHide = options ? options.onHide : null;
+    this.onHide = options?.onHide ?? null;
     setTimeout(() => this._node && this._node.focus());
   }
 
@@ -139,7 +160,7 @@ class Modal extends PureComponent {
         'modal--skinny': skinny,
       },
     );
-    const styles = {};
+    const styles: CSSProperties = {};
 
     if (open) {
       styles.zIndex = zIndex;
@@ -149,7 +170,7 @@ class Modal extends PureComponent {
       <KeydownBinder stopMetaPropagation scoped onKeydown={this._handleKeyDown}>
         <div
           ref={this._setModalRef}
-          tabIndex="-1"
+          tabIndex={-1}
           className={classes}
           style={styles}
           aria-hidden={!open}
@@ -166,18 +187,4 @@ class Modal extends PureComponent {
   }
 }
 
-Modal.propTypes = {
-  tall: PropTypes.bool,
-  wide: PropTypes.bool,
-  skinny: PropTypes.bool,
-  noEscape: PropTypes.bool,
-  dontFocus: PropTypes.bool,
-  closeOnKeyCodes: PropTypes.array,
-  onHide: PropTypes.func,
-  onCancel: PropTypes.func,
-  onKeyDown: PropTypes.func,
-  freshState: PropTypes.bool,
-  children: PropTypes.node,
-  className: PropTypes.string,
-};
 export default Modal;

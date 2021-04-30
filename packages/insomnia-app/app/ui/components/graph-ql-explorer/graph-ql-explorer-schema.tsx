@@ -1,12 +1,13 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import type { GraphQLSchema, GraphQLType } from 'graphql';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
-type Props = {
+
+interface Props {
   onNavigateType: (type: GraphQLType) => void;
   schema: GraphQLSchema;
-};
+}
 
-class GraphQLExplorerSchema extends React.PureComponent<Props> {
+class GraphQLExplorerSchema extends PureComponent<Props> {
   renderQueryType() {
     const { schema, onNavigateType } = this.props;
     const type = schema.getQueryType();
@@ -16,10 +17,10 @@ class GraphQLExplorerSchema extends React.PureComponent<Props> {
     }
 
     return (
-      <React.Fragment>
+      <Fragment>
         <span className="success">query</span>:{' '}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
-      </React.Fragment>
+      </Fragment>
     );
   }
 
@@ -32,10 +33,10 @@ class GraphQLExplorerSchema extends React.PureComponent<Props> {
     }
 
     return (
-      <React.Fragment>
+      <Fragment>
         <span className="success">mutation</span>:{' '}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
-      </React.Fragment>
+      </Fragment>
     );
   }
 
@@ -48,10 +49,10 @@ class GraphQLExplorerSchema extends React.PureComponent<Props> {
     }
 
     return (
-      <React.Fragment>
+      <Fragment>
         <span className="success">subscription</span>:{' '}
         <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={type} />
-      </React.Fragment>
+      </Fragment>
     );
   }
 

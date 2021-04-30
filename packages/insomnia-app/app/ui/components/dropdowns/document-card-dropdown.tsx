@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, getAppName } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
@@ -16,22 +16,24 @@ import type { Workspace } from '../../../models/workspace';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
-type Props = {
-  apiSpec: ApiSpec | null | undefined;
-  children: React.ReactNode | null | undefined;
+
+interface Props {
+  apiSpec?: ApiSpec | null;
+  children?: ReactNode | null;
   workspace: Workspace;
   handleSetActiveWorkspace: (workspaceId: string) => void;
   isLastWorkspace: boolean;
   className?: string;
-};
-type State = {
-  actionPlugins: Array<DocumentAction>;
+}
+
+interface State {
+  actionPlugins: DocumentAction[];
   loadingActions: Record<string, boolean>;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class DocumentCardDropdown extends React.PureComponent<Props, State> {
-  state = {
+class DocumentCardDropdown extends PureComponent<Props, State> {
+  state: State = {
     actionPlugins: [],
     loadingActions: {},
   };

@@ -2,13 +2,13 @@ import type { HotKeyDefinition, KeyBindings, KeyCombination } from './hotkeys';
 import { areSameKeyCombinations, getPlatformKeyCombinations } from './hotkeys';
 import * as models from '../models';
 
-function _pressedHotKey(e: KeyboardEvent, bindings: KeyBindings): boolean {
+const _pressedHotKey = (event: KeyboardEvent, bindings: KeyBindings) => {
   const pressedKeyComb: KeyCombination = {
-    ctrl: e.ctrlKey,
-    alt: e.altKey,
-    shift: e.shiftKey,
-    meta: e.metaKey,
-    keyCode: e.keyCode,
+    ctrl: event.ctrlKey,
+    alt: event.altKey,
+    shift: event.shiftKey,
+    meta: event.metaKey,
+    keyCode: event.keyCode,
   };
   const keyCombList = getPlatformKeyCombinations(bindings);
 
@@ -19,35 +19,33 @@ function _pressedHotKey(e: KeyboardEvent, bindings: KeyBindings): boolean {
   }
 
   return false;
-}
+};
 
 /**
  * Check whether a hotkey has been pressed.
- * @param e the activated keyboard event.
+ * @param event the activated keyboard event.
  * @param definition the hotkey definition being checked.
- * @returns {Promise<boolean>}
  */
-export async function pressedHotKey(
-  e: KeyboardEvent,
+export const pressedHotKey = async (
+  event: KeyboardEvent,
   definition: HotKeyDefinition,
-): Promise<boolean> {
+) => {
   const settings = await models.settings.getOrCreate();
-  return _pressedHotKey(e, settings.hotKeyRegistry[definition.id]);
-}
+  return _pressedHotKey(event, settings.hotKeyRegistry[definition.id]);
+};
 
 /**
  * Call callback if the hotkey has been pressed.
- * @param e the activated keyboard event.
+ * @param event the activated keyboard event.
  * @param definition the hotkey definition being checked.
  * @param callback to be called if the hotkey has been activated.
- * @returns {Promise<void>}
  */
-export async function executeHotKey(
-  e: KeyboardEvent,
+export const executeHotKey = async <T extends Function>(
+  event: KeyboardEvent,
   definition: HotKeyDefinition,
-  callback: (...args: Array<any>) => any,
-): Promise<void> {
-  if (await pressedHotKey(e, definition)) {
+  callback: T,
+) => {
+  if (await pressedHotKey(event, definition)) {
     callback();
   }
-}
+};

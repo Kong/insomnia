@@ -1,43 +1,40 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-type Props = {};
-type State = {
+
+interface State {
   title: string;
-  options: Array<{
+  options: {
     name: string;
     value: string;
-  }>;
+  }[];
   value: string;
   message: string;
-  onCancel?: (...args: Array<any>) => any;
-};
+  onCancel?: (...args: any[]) => any;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SelectModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  doneButton: HTMLButtonElement | null | undefined;
-  _doneCallback: ((...args: Array<any>) => any) | null | undefined;
+class SelectModal extends PureComponent<{}, State> {
+  modal: Modal | null = null;
+  doneButton: HTMLButtonElement | null = null;
+  _doneCallback: ((...args: any[]) => any) | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      title: '',
-      options: [],
-      message: '',
-      value: '',
-    };
+  state: State = {
+    title: '',
+    options: [],
+    message: '',
+    value: '',
   }
 
-  _setModalRef(m: Modal | null | undefined) {
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 
-  _setDoneButtonRef(n: HTMLButtonElement | null | undefined) {
+  _setDoneButtonRef(n: HTMLButtonElement) {
     this.doneButton = n;
   }
 

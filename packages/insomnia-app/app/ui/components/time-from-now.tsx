@@ -1,27 +1,25 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import moment from 'moment';
-type Props = {
+
+interface Props {
   timestamp: number | Date | string;
   intervalSeconds?: number;
   className?: string;
   capitalize?: boolean;
-};
-type State = {
+}
+
+interface State {
   text: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class TimeFromNow extends React.PureComponent<Props, State> {
-  _interval: any;
+class TimeFromNow extends PureComponent<Props, State> {
+  _interval: NodeJS.Timeout | null = null;
 
-  constructor(props: any) {
-    super(props);
-    this._interval = null;
-    this.state = {
-      text: '',
-    };
+  state: State = {
+    text: '',
   }
 
   _update() {
@@ -53,7 +51,9 @@ class TimeFromNow extends React.PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
-    clearInterval(this._interval);
+    if (this._interval !== null) {
+      clearInterval(this._interval);
+    }
   }
 
   render() {

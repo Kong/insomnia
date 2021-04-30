@@ -1,5 +1,5 @@
 import type { Request, RequestAuthentication } from '../../../../models/request';
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -14,15 +14,7 @@ import {
 import CodePromptModal from '../../modals/code-prompt-modal';
 import { showModal } from '../../modals';
 import Button from '../../base/button';
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  nunjucksPowerUserMode: boolean;
-  showPasswords: boolean;
-  isVariableUncovered: boolean;
-  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  request: Request;
-};
+
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEA39k9udklHnmkU0GtTLpnYtKk1l5txYmUD/cGI0bFd3HHOOLG
@@ -36,8 +28,18 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 -----END RSA PRIVATE KEY-----
 `.trim();
 
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
+  nunjucksPowerUserMode: boolean;
+  showPasswords: boolean;
+  isVariableUncovered: boolean;
+  onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
+  request: Request;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class OAuth1Auth extends React.PureComponent<Props> {
+class OAuth1Auth extends PureComponent<Props> {
   _handleEditPrivateKey() {
     const { handleRender, handleGetRenderContext, request } = this.props;
     const { privateKey } = request.authentication;
@@ -122,7 +124,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     property: string,
     help: string,
     onChange: (arg0: boolean) => void,
-  ): React.ReactElement<any> {
+  ) {
     const { request } = this.props;
     const { authentication } = request;
     return (
@@ -152,7 +154,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     );
   }
 
-  renderEnabledRow(onChange: (arg0: boolean) => void): React.ReactElement<any> {
+  renderEnabledRow(onChange: (arg0: boolean) => void) {
     const { request } = this.props;
     const { authentication } = request;
     return (
@@ -185,10 +187,10 @@ class OAuth1Auth extends React.PureComponent<Props> {
   renderInputRow(
     label: string,
     property: string,
-    onChange: (...args: Array<any>) => any,
+    onChange: (...args: any[]) => any,
     help: string | null = null,
-    handleAutocomplete: ((...args: Array<any>) => any) | null = null,
-  ): React.ReactElement<any> {
+    handleAutocomplete: ((...args: any[]) => any) | null = null,
+  ) {
     const {
       handleRender,
       handleGetRenderContext,
@@ -232,13 +234,13 @@ class OAuth1Auth extends React.PureComponent<Props> {
   renderSelectRow(
     label: string,
     property: string,
-    options: Array<{
+    options: {
       name: string;
       value: string;
-    }>,
-    onChange: (...args: Array<any>) => any,
+    }[],
+    onChange: (...args: any[]) => any,
     help: string | null = null,
-  ): React.ReactElement<any> {
+  ) {
     const { request } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -271,11 +273,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     );
   }
 
-  renderPrivateKeyInput(
-    label: string,
-    property: string,
-    onChange: (...args: Array<any>) => any,
-  ): React.ReactElement<any> {
+  renderPrivateKeyInput(label: string) {
     const id = label.replace(/ /g, '-');
     const { authentication } = this.props.request;
     return (
@@ -298,7 +296,7 @@ class OAuth1Auth extends React.PureComponent<Props> {
     );
   }
 
-  renderFields(): Array<React.ReactElement<any>> {
+  renderFields() {
     const consumerKey = this.renderInputRow(
       'Consumer Key',
       'consumerKey',

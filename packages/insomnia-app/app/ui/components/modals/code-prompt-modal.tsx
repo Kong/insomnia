@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -13,6 +12,7 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
 import MarkdownEditor from '../markdown-editor';
 import CopyButton from '../base/copy-button';
+
 const MODES = {
   'text/plain': 'Plain Text',
   'application/json': 'JSON',
@@ -22,24 +22,48 @@ const MODES = {
   'text/html': 'HTML',
 };
 
+interface Props {
+  editorFontSize: number;
+  editorIndentSize: number;
+  editorKeyMap: string;
+  editorLineWrapping: boolean;
+  nunjucksPowerUserMode: boolean;
+  isVariableUncovered: boolean;
+  handleGetRenderContext?: Function;
+  handleRender?: Function;
+}
+
+interface State {
+  title: string;
+  defaultValue: string;
+  submitName: string;
+  placeholder: string;
+  hint: string;
+  mode: string;
+  hideMode: boolean,
+  enableRender: boolean,
+  showCopyButton: boolean,
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CodePromptModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      title: 'Not Set',
-      defaultValue: '',
-      submitName: 'Not Set',
-      placeholder: '',
-      hint: '',
-      mode: 'text/plain',
-      hideMode: false,
-      enableRender: false,
-      showCopyButton: false,
-    };
+class CodePromptModal extends PureComponent<Props, State> {
+  state: State = {
+    title: 'Not Set',
+    defaultValue: '',
+    submitName: 'Not Set',
+    placeholder: '',
+    hint: '',
+    mode: 'text/plain',
+    hideMode: false,
+    enableRender: false,
+    showCopyButton: false,
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+  _onModeChange: Function = () => {};
+  _onChange: Function = () => {};
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -48,14 +72,12 @@ class CodePromptModal extends PureComponent {
   }
 
   _handleChangeMode(mode) {
-    this.setState({
-      mode,
-    });
-    this._onModeChange && this._onModeChange(mode);
+    this.setState({ mode });
+    this._onModeChange?.(mode);
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   show(options) {
@@ -86,7 +108,8 @@ class CodePromptModal extends PureComponent {
       showCopyButton,
       mode: realMode || this.state.mode || 'text/plain',
     });
-    this.modal.show();
+
+    this.modal?.show();
   }
 
   render() {
@@ -111,6 +134,7 @@ class CodePromptModal extends PureComponent {
       enableRender,
       showCopyButton,
     } = this.state;
+
     return (
       <Modal ref={this._setModalRef} freshState tall>
         <ModalHeader>{title}</ModalHeader>
@@ -201,16 +225,4 @@ class CodePromptModal extends PureComponent {
   }
 }
 
-CodePromptModal.propTypes = {
-  // Required
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-  nunjucksPowerUserMode: PropTypes.bool.isRequired,
-  isVariableUncovered: PropTypes.bool.isRequired,
-  // Optional
-  handleGetRenderContext: PropTypes.func,
-  handleRender: PropTypes.func,
-};
 export default CodePromptModal;

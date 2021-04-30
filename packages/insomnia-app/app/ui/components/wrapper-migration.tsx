@@ -1,5 +1,5 @@
 import { $Keys } from 'utility-types';
-import * as React from 'react';
+import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
 import type { WrapperProps } from './wrapper';
 import { ToggleSwitch, Button } from 'insomnia-components';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
@@ -14,17 +14,19 @@ import { goToNextActivity } from '../redux/modules/global';
 import HelpTooltip from './help-tooltip';
 import { trackEvent } from '../../common/analytics';
 type Step = 'options' | 'migrating' | 'results';
-type SettingProps = {
+
+interface SettingProps {
   label: string;
   name: $Keys<MigrationOptions>;
   options: MigrationOptions;
-};
+}
+
 type TextSettingProps = SettingProps & {
   handleChange: (arg0: React.SyntheticEvent<HTMLInputElement>) => void;
   errorMessage?: string;
 };
 
-const TextSetting = ({ handleChange, label, name, options, errorMessage }: TextSettingProps) => {
+const TextSetting: FunctionComponent<TextSettingProps> = ({ handleChange, label, name, options, errorMessage }) => {
   if (!options.hasOwnProperty(name)) {
     throw new Error(`Invalid text setting name ${name}`);
   }
@@ -57,7 +59,7 @@ const BooleanSetting = ({ handleChange, label, name, options, help }: BooleanSet
     throw new Error(`Invalid text setting name ${name}`);
   }
 
-  const labelNode = React.useMemo(
+  const labelNode = useMemo(
     () => (
       <>
         {label}
@@ -77,24 +79,24 @@ const BooleanSetting = ({ handleChange, label, name, options, help }: BooleanSet
   );
 };
 
-type OptionsProps = {
+interface OptionsProps {
   start: (arg0: MigrationOptions) => void;
   cancel: () => void;
-};
+}
 
 const Options = ({ start, cancel }: OptionsProps) => {
-  const [options, setOptions] = React.useState<MigrationOptions>(() => ({
+  const [options, setOptions] = useState<MigrationOptions>(() => ({
     useDesignerSettings: false,
     copyWorkspaces: false,
     copyPlugins: false,
     designerDataDir: getDesignerDataDir(),
     coreDataDir: getDataDirectory(),
   }));
-  const handleInputChange = React.useCallback((e: React.SyntheticEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.SyntheticEvent<HTMLInputElement>) => {
     const { name, value } = e.currentTarget;
     setOptions(prevOpts => ({ ...prevOpts, [name]: value }));
   }, []);
-  const handleSwitchChange = React.useCallback(
+  const handleSwitchChange = useCallback(
     (checked: boolean, event: Record<string, any>, id: string) => {
       setOptions(prevOpts => ({ ...prevOpts, [id]: checked }));
     },
@@ -107,8 +109,8 @@ const Options = ({ start, cancel }: OptionsProps) => {
     copyWorkspaces,
     copyPlugins,
   } = options;
-  const coreExists = React.useMemo(() => existsAndIsDirectory(coreDataDir), [coreDataDir]);
-  const designerExists = React.useMemo(() => existsAndIsDirectory(designerDataDir), [
+  const coreExists = useMemo(() => existsAndIsDirectory(coreDataDir), [coreDataDir]);
+  const designerExists = useMemo(() => existsAndIsDirectory(designerDataDir), [
     designerDataDir,
   ]);
   const hasSomethingToMigrate = useDesignerSettings || copyWorkspaces || copyPlugins;
@@ -217,9 +219,9 @@ const Success = () => (
   </>
 );
 
-type FailProps = {
+interface FailProps {
   error: Error;
-};
+}
 
 const Fail = ({ error }: FailProps) => (
   <>
@@ -254,9 +256,9 @@ const Fail = ({ error }: FailProps) => (
 
 const MigrationBody = () => {
   // The migration step does not need to be in redux, but a loading state does need to exist there.
-  const [step, setStep] = React.useState<Step>('options');
-  const [error, setError] = React.useState<Error>(null);
-  const start = React.useCallback(async (options: MigrationOptions) => {
+  const [step, setStep] = useState<Step>('options');
+  const [error, setError] = useState<Error>(null);
+  const start = useCallback(async (options: MigrationOptions) => {
     setStep('migrating');
     const { error } = await migrateFromDesigner(options);
 
@@ -266,8 +268,9 @@ const MigrationBody = () => {
 
     setStep('results');
   }, []);
+
   const reduxDispatch = useDispatch();
-  const cancel = React.useCallback(() => {
+  const cancel = useCallback(() => {
     trackEvent('Data', 'Migration', 'Skip');
     reduxDispatch(goToNextActivity());
   }, [reduxDispatch]);
@@ -283,15 +286,15 @@ const MigrationBody = () => {
       return error ? <Fail error={error} /> : <Success />;
 
     default:
-      throw new Error(`${this.state.step} is not recognized as a migration step.`);
+      throw new Error(`${step} is not recognized as a migration step.`);
   }
 };
 
-type Props = {
+interface Props {
   wrapperProps: WrapperProps;
-};
+}
 
-const WrapperMigration = ({ wrapperProps }: Props) => (
+const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => (
   <OnboardingContainer
     wrapperProps={wrapperProps}
     header="Migrate from Insomnia Designer"

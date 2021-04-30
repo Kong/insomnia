@@ -1,20 +1,18 @@
-import * as React from 'react';
-type Props = {
+import React, { PureComponent } from 'react';
+
+interface Props {
   children: string;
-  render: (...args: Array<any>) => any;
-};
-type State = {
+  render: (...args: any[]) => any;
+}
+interface State {
   renderedText: string;
   error: string;
-};
+}
 
-class RenderedText extends React.PureComponent<Props, State> {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      renderedText: '',
-      error: '',
-    };
+class RenderedText extends PureComponent<Props, State> {
+  state: State = {
+    renderedText: '',
+    error: '',
   }
 
   async _render() {

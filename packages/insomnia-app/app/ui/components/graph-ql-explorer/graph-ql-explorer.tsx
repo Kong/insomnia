@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import GraphQLExplorerField from './graph-ql-explorer-field';
@@ -7,7 +7,8 @@ import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from '
 import { GraphQLEnumType } from 'graphql';
 import GraphQLExplorerSchema from './graph-ql-explorer-schema';
 import GraphQLExplorerEnum from './graph-ql-explorer-enum';
-type Props = {
+
+interface Props {
   handleClose: () => void;
   schema: GraphQLSchema | null;
   visible: boolean;
@@ -16,24 +17,23 @@ type Props = {
     argument: GraphQLArgument | null;
     field: GraphQLField<any, any> | null;
   };
-};
-type HistoryItem = {
+}
+
+interface HistoryItem {
   currentType: null | GraphQLType | GraphQLEnumType;
   currentField: null | GraphQLField<any, any>;
-};
-type State = HistoryItem & {
-  history: Array<HistoryItem>;
-};
+}
+
+interface State extends HistoryItem {
+  history: HistoryItem[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorer extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      history: [],
-      currentType: null,
-      currentField: null,
-    };
+class GraphQLExplorer extends PureComponent<Props, State> {
+  state: State = {
+    history: [],
+    currentType: null,
+    currentField: null,
   }
 
   _handleNavigateType(type: GraphQLType | GraphQLEnumType) {

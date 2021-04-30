@@ -1,18 +1,18 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Tooltip from './tooltip';
 import { AUTOBIND_CFG } from '../../common/constants';
-type Props = {
-  children: React.ReactNode;
-  // Optional
+
+interface Props {
+  children: ReactNode;
   position?: string;
   className?: string;
   style?: Record<string, any>;
   info?: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class HelpTooltip extends React.PureComponent<Props> {
+class HelpTooltip extends PureComponent<Props> {
   render() {
     const { children, className, style, info } = this.props;
     return (

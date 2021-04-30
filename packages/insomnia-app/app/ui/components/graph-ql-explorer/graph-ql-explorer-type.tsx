@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { SvgIcon } from 'insomnia-components';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
@@ -9,15 +9,16 @@ import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
 import GraphQLDefaultValue from './graph-ql-default-value';
 import Tooltip from '../../components/tooltip';
-type Props = {
+
+interface Props {
   onNavigateType: (type: Record<string, any>) => void;
   onNavigateField: (field: Record<string, any>) => void;
   type: GraphQLType;
   schema: GraphQLSchema | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerType extends React.PureComponent<Props> {
+class GraphQLExplorerType extends PureComponent<Props> {
   _handleNavigateType(type: Record<string, any>) {
     const { onNavigateType } = this.props;
     onNavigateType(type);
@@ -57,7 +58,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
     }
 
     return (
-      <React.Fragment>
+      <Fragment>
         <h2 className="graphql-explorer__subheading">{title}</h2>
         <ul className="graphql-explorer__defs">
           {types.map(type => (
@@ -66,7 +67,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
             </li>
           ))}
         </ul>
-      </React.Fragment>
+      </Fragment>
     );
   }
 
@@ -81,7 +82,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
     const fields = type.getFields();
     const fieldKeys = Object.keys(fields).sort((a, b) => a.localeCompare(b));
     return (
-      <React.Fragment>
+      <Fragment>
         <h2 className="graphql-explorer__subheading">Fields</h2>
         <ul className="graphql-explorer__defs">
           {fieldKeys.map(key => {
@@ -91,7 +92,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
 
             if (args && args.length) {
               argLinks = (
-                <React.Fragment>
+                <Fragment>
                   (
                   {args.map(a => (
                     <div key={a.name} className="graphql-explorer__defs__arg">
@@ -100,7 +101,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
                     </div>
                   ))}
                   )
-                </React.Fragment>
+                </Fragment>
               );
             }
 
@@ -133,7 +134,7 @@ class GraphQLExplorerType extends React.PureComponent<Props> {
             );
           })}
         </ul>
-      </React.Fragment>
+      </Fragment>
     );
   }
 

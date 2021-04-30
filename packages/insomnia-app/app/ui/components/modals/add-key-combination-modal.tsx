@@ -9,29 +9,26 @@ import type { KeyCombination } from '../../../common/hotkeys';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
-type Props = {};
-type State = {
+
+interface State {
   hotKeyRefId: string | null;
-  checkKeyCombinationDuplicate: (...args: Array<any>) => any;
-  onAddKeyCombination: (...args: Array<any>) => any;
+  checkKeyCombinationDuplicate: (...args: any[]) => any;
+  onAddKeyCombination: (...args: any[]) => any;
   pressedKeyCombination: KeyCombination | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AddKeyCombinationModal extends PureComponent<Props, State> {
-  _modal: Modal | null;
+class AddKeyCombinationModal extends PureComponent<{}, State> {
+  _modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hotKeyRefId: null,
-      checkKeyCombinationDuplicate: misc.nullFn,
-      onAddKeyCombination: misc.nullFn,
-      pressedKeyCombination: null,
-    };
+  state: State = {
+    hotKeyRefId: null,
+    checkKeyCombinationDuplicate: misc.nullFn,
+    onAddKeyCombination: misc.nullFn,
+    pressedKeyCombination: null,
   }
 
-  _setModalRef(modal: Modal | null | undefined) {
+  _setModalRef(modal: Modal) {
     this._modal = modal;
   }
 
@@ -94,8 +91,8 @@ class AddKeyCombinationModal extends PureComponent<Props, State> {
 
   show(
     hotKeyRefId: string,
-    checkKeyCombinationDuplicate: (...args: Array<any>) => any,
-    onAddKeyCombination: (...args: Array<any>) => any,
+    checkKeyCombinationDuplicate: (...args: any[]) => any,
+    onAddKeyCombination: (...args: any[]) => any,
   ) {
     this.setState({
       hotKeyRefId: hotKeyRefId,

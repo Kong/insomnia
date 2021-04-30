@@ -1,6 +1,6 @@
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -28,23 +28,24 @@ import ResponseDebugModal from '../../modals/response-debug-modal';
 import type { Settings } from '../../../../models/settings';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import { convertEpochToMilliseconds } from '../../../../common/misc';
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
   isVariableUncovered: boolean;
-  // Optional
-  oAuth2Token: OAuth2Token | null | undefined;
-};
-type State = {
+  oAuth2Token?: OAuth2Token | null;
+}
+
+interface State {
   error: string;
   loading: boolean;
   showAdvanced: boolean;
-};
+}
 
 const getAuthorizationUrls = () => authorizationUrls;
 
@@ -53,14 +54,11 @@ const getAccessTokenUrls = () => accessTokenUrls;
 let showAdvanced = false;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class OAuth2Auth extends React.PureComponent<Props, State> {
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      error: '',
-      loading: false,
-      showAdvanced: showAdvanced, // Remember from last time
-    };
+class OAuth2Auth extends PureComponent<Props, State> {
+  state: State = {
+    error: '',
+    loading: false,
+    showAdvanced, // Remember from last time
   }
 
   _handleToggleAdvanced(): void {
@@ -239,7 +237,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
 
-  renderEnabledRow(onChange: (arg0: boolean) => void): React.ReactElement<any> {
+  renderEnabledRow(onChange: (arg0: boolean) => void) {
     const { request } = this.props;
     const { authentication } = request;
     return (
@@ -269,7 +267,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  renderUsePkceRow(onChange: (arg0: boolean) => void): React.ReactElement<any> {
+  renderUsePkceRow(onChange: (arg0: boolean) => void) {
     const { request } = this.props;
     const { authentication } = request;
     return (
@@ -302,10 +300,10 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
   renderInputRow(
     label: string,
     property: string,
-    onChange: (...args: Array<any>) => any,
+    onChange: (...args: any[]) => any,
     help: string | null = null,
-    handleAutocomplete: ((...args: Array<any>) => any) | null = null,
-  ): React.ReactElement<any> {
+    handleAutocomplete: ((...args: any[]) => any) | null = null,
+  ) {
     const {
       handleRender,
       handleGetRenderContext,
@@ -349,13 +347,13 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
   renderSelectRow(
     label: string,
     property: string,
-    options: Array<{
+    options: {
       name: string;
       value: string;
-    }>,
-    onChange: (...args: Array<any>) => any,
+    }[],
+    onChange: (...args: any[]) => any,
     help: string | null = null,
-  ): React.ReactElement<any> {
+  ) {
     const { request } = this.props;
     const { authentication } = request;
     const id = label.replace(/ /g, '-');
@@ -388,14 +386,9 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  renderGrantTypeFields(
-    grantType: string,
-  ): {
-    basic: Array<React.ReactElement<any>>;
-    advanced: Array<React.ReactElement<any>>;
-  } {
-    let basicFields = [];
-    let advancedFields = [];
+  renderGrantTypeFields(grantType: string) {
+    let basicFields: JSX.Element[] = [];
+    let advancedFields: JSX.Element[] = [];
     const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
     const clientSecret = this.renderInputRow(
       'Client Secret',
@@ -514,9 +507,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     };
   }
 
-  static renderIdentityTokenExpiry(
-    token: OAuth2Token | null | undefined,
-  ): React.ReactElement<any> | string | null {
+  static renderIdentityTokenExpiry(token?: OAuth2Token | null) {
     if (!token || !token.identityToken) {
       return null;
     }
@@ -545,9 +536,7 @@ class OAuth2Auth extends React.PureComponent<Props, State> {
     );
   }
 
-  static renderAccessTokenExpiry(
-    token: OAuth2Token | null | undefined,
-  ): React.ReactElement<any> | string | null {
+  static renderAccessTokenExpiry(token?: OAuth2Token | null) {
     if (!token || !token.accessToken) {
       return null;
     }

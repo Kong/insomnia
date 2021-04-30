@@ -9,27 +9,35 @@ import ModalFooter from '../base/modal-footer';
 import * as session from '../../../account/session';
 import { showModal } from './index';
 
+interface State {
+  loading: boolean;
+  error: string;
+  title: string;
+  message: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class LoginModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      loading: false,
-      error: '',
-      title: '',
-      message: '',
-    };
+class LoginModal extends PureComponent<{}, State> {
+  state: State = {
+    loading: false,
+    error: '',
+    title: '',
+    message: '',
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+  _passwordInput: HTMLInputElement | null = null;
+  _emailInput: HTMLInputElement | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setPasswordInputRef(n) {
+  _setPasswordInputRef(n: HTMLInputElement) {
     this._passwordInput = n;
   }
 
-  _setEmailInputRef(n) {
+  _setEmailInputRef(n: HTMLInputElement) {
     this._emailInput = n;
   }
 

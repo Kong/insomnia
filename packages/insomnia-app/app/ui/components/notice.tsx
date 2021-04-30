@@ -1,21 +1,23 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
 const DISMISSED_VALUE = 'dismissed';
-type Props = {
+
+interface Props {
   dismissKey?: string;
   color?: 'surprise' | 'success' | 'warning' | 'info' | 'error' | 'subtle';
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-};
-type State = {
+}
+
+interface State {
   visible: boolean;
   localStorageKey: string | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Notice extends React.PureComponent<Props, State> {
+class Notice extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     const { dismissKey } = props;
@@ -38,10 +40,10 @@ class Notice extends React.PureComponent<Props, State> {
   _dismissNotification() {
     const { localStorageKey } = this.state;
     // Hide the currently showing notification
-    this.setState({
-      visible: false,
-    });
-    window.localStorage.setItem(localStorageKey, DISMISSED_VALUE);
+    this.setState({ visible: false });
+    if (localStorageKey !== null) {
+      window.localStorage.setItem(localStorageKey, DISMISSED_VALUE);
+    }
   }
 
   render() {

@@ -6,24 +6,32 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
+interface State {
+  title: string;
+  message: string;
+  yesText: string;
+  noText: string;
+  loading: boolean;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AskModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      title: '',
-      message: '',
-      yesText: 'Yes',
-      noText: 'No',
-      loading: false,
-    };
+class AskModal extends PureComponent<{}, State> {
+  state: State = {
+    title: '',
+    message: '',
+    yesText: 'Yes',
+    noText: 'No',
+    loading: false,
   }
 
-  _setModalRef(m) {
+  modal: Modal | null = null;
+  yesButton: HTMLButtonElement | null = null;
+
+  _setModalRef(m: Modal) {
     this.modal = m;
   }
 
-  _setYesButtonRef(n) {
+  _setYesButtonRef(n: HTMLButtonElement) {
     this.yesButton = n;
   }
 
@@ -50,7 +58,7 @@ class AskModal extends PureComponent {
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   show(options = {}) {

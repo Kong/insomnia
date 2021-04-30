@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -9,28 +9,27 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
-type Props = {
-  workspaces: Array<Workspace>;
+
+interface Props {
+  workspaces: Workspace[];
   activeWorkspace: Workspace;
-};
-type State = {
+}
+
+interface State {
   requestGroup: RequestGroup | null;
   selectedWorkspaceId: string | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MoveRequestGroupModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class MoveRequestGroupModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      requestGroup: null,
-      selectedWorkspaceId: null,
-    };
+  state: State = {
+    requestGroup: null,
+    selectedWorkspaceId: null,
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { GlobalActivity } from '../../common/constants';
 import {
@@ -53,26 +53,29 @@ import * as workspaceActions from '../redux/modules/workspace';
 import * as gitActions from '../redux/modules/git';
 import { GitCloneWorkspaceCallback } from '../redux/modules/workspace';
 import { MemClient } from '../../sync/git/mem-client';
-type Props = {
+
+interface Props {
   wrapperProps: WrapperProps;
   handleImportFile: HandleImportFileCallback;
   handleImportUri: HandleImportUriCallback;
   handleImportClipboard: HandleImportClipboardCallback;
   handleCreateWorkspace: CreateWorkspaceCallback;
   handleGitCloneWorkspace: GitCloneWorkspaceCallback;
-};
-type State = {
+}
+
+interface State {
   filter: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperHome extends React.PureComponent<Props, State> {
-  state = {
+class WrapperHome extends PureComponent<Props, State> {
+  state: State = {
     filter: '',
   };
-  _filterInput: HTMLInputElement | null | undefined;
 
-  _setFilterInputRef(n: HTMLInputElement | null | undefined) {
+  _filterInput: HTMLInputElement | null = null;
+
+  _setFilterInputRef(n: HTMLInputElement) {
     this._filterInput = n;
   }
 
@@ -150,7 +153,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
   renderCard(
     workspace: Workspace,
   ): {
-    card: React.ReactNode;
+    card: ReactNode;
     lastModifiedTimestamp: number;
   } {
     const {
@@ -208,17 +211,17 @@ class WrapperHome extends React.PureComponent<Props, State> {
       // NOTE: this doesn't work for non-spec workspaces
       branch = lastActiveBranch + '*';
       log = (
-        <React.Fragment>
+        <Fragment>
           <TimeFromNow className="text-danger" timestamp={modifiedLocally} /> (unsaved)
-        </React.Fragment>
+        </Fragment>
       );
     } else if (lastCommitTime) {
       // Show last commit time and author
       branch = lastActiveBranch;
       log = (
-        <React.Fragment>
+        <Fragment>
           <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
-        </React.Fragment>
+        </Fragment>
       );
     }
 
@@ -233,7 +236,7 @@ class WrapperHome extends React.PureComponent<Props, State> {
     );
     const version = spec?.info?.version || '';
     let label: string = strings.collection;
-    let format: string = '';
+    let format = '';
     let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
@@ -368,11 +371,11 @@ class WrapperHome extends React.PureComponent<Props, State> {
           <Header
             className="app-header theme--app-header"
             gridLeft={
-              <React.Fragment>
+              <Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
                 <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
                 {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
-              </React.Fragment>
+              </Fragment>
             }
             gridRight={
               <>

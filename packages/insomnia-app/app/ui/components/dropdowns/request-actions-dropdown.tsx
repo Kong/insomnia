@@ -1,5 +1,4 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import PromptButton from '../base/prompt-button';
@@ -26,33 +25,36 @@ import * as pluginContexts from '../../../plugins/context/index';
 import { showError } from '../modals';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import classnames from 'classnames';
-type Props = {
-  handleDuplicateRequest: (...args: Array<any>) => any;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleCopyAsCurl: (...args: Array<any>) => any;
-  handleShowSettings: (...args: Array<any>) => any;
+
+interface Props {
+  handleDuplicateRequest: (...args: any[]) => any;
+  handleGenerateCode: (...args: any[]) => any;
+  handleCopyAsCurl: (...args: any[]) => any;
+  handleShowSettings: (...args: any[]) => any;
   isPinned: Boolean;
   request: Request;
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  handleSetRequestPinned: (...args: Array<any>) => any;
+  handleSetRequestPinned: (...args: any[]) => any;
   activeEnvironment: Environment | null;
-};
+}
+
 // Setup state for plugin actions
-type State = {
-  actionPlugins: Array<RequestGroupAction>;
+interface State {
+  actionPlugins: RequestGroupAction[];
   loadingActions: Record<string, boolean>;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestActionsDropdown extends React.PureComponent<Props, State> {
-  _dropdown: Dropdown | null | undefined;
-  state = {
+class RequestActionsDropdown extends PureComponent<Props, State> {
+  _dropdown: typeof Dropdown | null = null;
+
+  state: State = {
     actionPlugins: [],
     loadingActions: {},
   };
 
-  _setDropdownRef(n) {
+  _setDropdownRef(n: typeof Dropdown) {
     this._dropdown = n;
   }
 
@@ -84,14 +86,12 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
   }
 
   async _onOpen() {
-    const plugins = await getRequestActions();
-    this.setState({
-      actionPlugins: plugins,
-    });
+    const actionPlugins = await getRequestActions();
+    this.setState({ actionPlugins });
   }
 
   async show() {
-    this._dropdown && this._dropdown.show();
+    this._dropdown?.show();
   }
 
   async _handlePluginClick(p: RequestAction) {
@@ -122,7 +122,7 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: false },
     }));
-    this._dropdown && this._dropdown.hide();
+    this._dropdown?.hide();
   }
 
   render() {
@@ -173,18 +173,18 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
         </DropdownItem>
 
         {actionPlugins.length > 0 && <DropdownDivider>Plugins</DropdownDivider>}
-        {actionPlugins.map((p: RequestAction) => (
+        {actionPlugins.map((plugin: RequestAction) => (
           <DropdownItem
-            key={`${p.plugin.name}::${p.label}`}
-            value={p}
+            key={`${plugin.plugin.name}::${plugin.label}`}
+            value={plugin}
             onClick={this._handlePluginClick}
             stayOpenAfterClick>
-            {loadingActions[p.label] ? (
+            {loadingActions[plugin.label] ? (
               <i className="fa fa-refresh fa-spin" />
             ) : (
-              <i className={classnames('fa', p.icon || 'fa-code')} />
+              <i className={classnames('fa', plugin.icon || 'fa-code')} />
             )}
-            {p.label}
+            {plugin.label}
           </DropdownItem>
         ))}
 
@@ -199,15 +199,4 @@ class RequestActionsDropdown extends React.PureComponent<Props, State> {
   }
 }
 
-RequestActionsDropdown.propTypes = {
-  handleDuplicateRequest: PropTypes.func.isRequired,
-  handleGenerateCode: PropTypes.func.isRequired,
-  handleCopyAsCurl: PropTypes.func.isRequired,
-  handleShowSettings: PropTypes.func.isRequired,
-  isPinned: PropTypes.bool.isRequired,
-  request: PropTypes.object.isRequired,
-  // can be Request or GrpcRequest
-  hotKeyRegistry: PropTypes.object.isRequired,
-  handleSetRequestPinned: PropTypes.func.isRequired,
-};
 export default RequestActionsDropdown;

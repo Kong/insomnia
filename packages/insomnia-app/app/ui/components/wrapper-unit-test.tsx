@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, ACTIVITY_HOME } from '../../common/constants';
 import classnames from 'classnames';
@@ -27,23 +27,26 @@ import { getSendRequestCallback } from '../../common/send-request';
 import type { GlobalActivity } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
 import { trackSegmentEvent } from '../../common/analytics';
-type Props = {
+
+interface Props {
   children: SidebarChildObjects;
-  gitSyncDropdown: React.ReactNode;
+  gitSyncDropdown: ReactNode;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
   wrapperProps: WrapperProps;
-};
-type State = {
-  testsRunning: Array<UnitTest> | null;
+}
+
+interface State {
+  testsRunning: UnitTest[] | null;
   resultsError: string | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperUnitTest extends React.PureComponent<Props, State> {
-  state = {
+class WrapperUnitTest extends PureComponent<Props, State> {
+  state: State = {
     testsRunning: null,
     resultsError: null,
   };
+
   // Defining it here instead of in render() so it won't act as a changed prop
   // when being passed to <CodeEditor> again
   static lintOptions = {
@@ -86,10 +89,10 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
 
   autocompleteSnippets(
     unitTest: UnitTest,
-  ): Array<{
+  ): {
     name: string;
     value: () => Promise<string>;
-  }> {
+  }[] {
     return [
       {
         name: 'Send Current Request',
@@ -249,7 +252,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     });
   }
 
-  async _runTests(unitTests: Array<UnitTest>): Promise<void> {
+  async _runTests(unitTests: UnitTest[]): Promise<void> {
     const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
     this.setState({
       testsRunning: unitTests,
@@ -300,15 +303,15 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     });
   }
 
-  buildSelectableRequests(): Array<{
+  buildSelectableRequests(): {
     name: string;
     request: Request;
-  }> {
+  }[] {
     const { children } = this.props;
-    const selectableRequests: Array<{
+    const selectableRequests: {
       name: string;
       request: Request;
-    }> = [];
+    }[] = [];
 
     const next = (p, children) => {
       for (const c of children) {
@@ -327,7 +330,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     return selectableRequests;
   }
 
-  _renderResults(): React.ReactNode {
+  _renderResults() {
     const { activeUnitTestResult } = this.props.wrapperProps;
     const { testsRunning, resultsError } = this.state;
 
@@ -399,7 +402,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
-  renderUnitTest(unitTest: UnitTest): React.ReactNode {
+  renderUnitTest(unitTest: UnitTest) {
     const { settings } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     const selectableRequests = this.buildSelectableRequests();
@@ -440,7 +443,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
-  _renderTestSuite(): React.ReactNode {
+  _renderTestSuite() {
     const { activeUnitTests, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
 
@@ -476,7 +479,7 @@ class WrapperUnitTest extends React.PureComponent<Props, State> {
     );
   }
 
-  _renderPageSidebar(): React.ReactNode {
+  _renderPageSidebar() {
     const { activeUnitTestSuites, activeUnitTestSuite } = this.props.wrapperProps;
     const { testsRunning } = this.state;
     const activeId = activeUnitTestSuite ? activeUnitTestSuite._id : 'n/a';

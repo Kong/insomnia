@@ -1,24 +1,25 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
 import type { Request, RequestParameter } from '../../../models/request';
-type Props = {
-  onChange: (r: Request, parameters: Array<RequestParameter>) => Promise<Request>;
+
+interface Props {
+  onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
   bulk: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   request: Request;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestParametersEditor extends React.PureComponent<Props> {
+class RequestParametersEditor extends PureComponent<Props> {
   _handleBulkUpdate(paramsString: string) {
     const { onChange, request } = this.props;
 
@@ -27,7 +28,7 @@ class RequestParametersEditor extends React.PureComponent<Props> {
     onChange(request, params);
   }
 
-  _handleKeyValueUpdate(parameters: Array<RequestParameter>) {
+  _handleKeyValueUpdate(parameters: RequestParameter[]) {
     const { onChange, request } = this.props;
     onChange(request, parameters);
   }

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
@@ -17,8 +17,9 @@ import type { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-type Props = {
-  clientCertificates: Array<ClientCertificate>;
+
+interface Props {
+  clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
   editorFontSize: number;
@@ -27,13 +28,14 @@ type Props = {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  handleRemoveWorkspace: (...args: Array<any>) => any;
-  handleDuplicateWorkspace: (...args: Array<any>) => any;
-  handleClearAllResponses: (...args: Array<any>) => any;
-};
-type State = {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
+  handleRemoveWorkspace: (...args: any[]) => any;
+  handleDuplicateWorkspace: (...args: any[]) => any;
+  handleClearAllResponses: (...args: any[]) => any;
+}
+
+interface State {
   showAddCertificateForm: boolean;
   host: string;
   crtPath: string;
@@ -43,25 +45,22 @@ type State = {
   passphrase: string;
   showDescription: boolean;
   defaultPreviewMode: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
-  modal: Modal | null;
+class WorkspaceSettingsModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      showAddCertificateForm: false,
-      host: '',
-      crtPath: '',
-      keyPath: '',
-      pfxPath: '',
-      passphrase: '',
-      isPrivate: false,
-      showDescription: false,
-      defaultPreviewMode: false,
-    };
+  state: State = {
+    showAddCertificateForm: false,
+    host: '',
+    crtPath: '',
+    keyPath: '',
+    pfxPath: '',
+    passphrase: '',
+    isPrivate: false,
+    showDescription: false,
+    defaultPreviewMode: false,
   }
 
   _workspaceUpdate(patch: Record<string, any>) {
@@ -74,7 +73,7 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
     });
   }
 
-  _handleSetModalRef(n: Modal | null | undefined) {
+  _handleSetModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -295,10 +294,10 @@ class WorkspaceSettingsModal extends React.PureComponent<Props, State> {
       <ModalBody key={`body::${workspace._id}`} noScroll>
         <Tabs forceRenderTabPanel className="react-tabs">
           <TabList>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>Overview</button>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>Client Certificates</button>
             </Tab>
           </TabList>

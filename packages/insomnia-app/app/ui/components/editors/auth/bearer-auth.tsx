@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -6,17 +6,18 @@ import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
 import HelpTooltip from '../../help-tooltip';
 import type { Request, RequestAuthentication } from '../../../../models/request';
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   request: Request;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   isVariableUncovered: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class BearerAuth extends React.PureComponent<Props> {
+class BearerAuth extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });

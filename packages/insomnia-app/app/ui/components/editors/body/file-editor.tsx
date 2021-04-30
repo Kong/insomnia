@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import fs from 'fs';
@@ -8,13 +7,18 @@ import FileInputButton from '../../base/file-input-button';
 import PromptButton from '../../base/prompt-button';
 import * as misc from '../../../../common/misc';
 
+interface Props {
+  onChange: (path: string) => void;
+  path: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FileEditor extends PureComponent {
+class FileEditor extends PureComponent<Props> {
   _handleResetFile() {
     this.props.onChange('');
   }
 
-  _handleChooseFile(path) {
+  _handleChooseFile(path: string) {
     this.props.onChange(path);
   }
 
@@ -66,8 +70,4 @@ class FileEditor extends PureComponent {
   }
 }
 
-FileEditor.propTypes = {
-  onChange: PropTypes.func.isRequired,
-  path: PropTypes.string.isRequired,
-};
 export default FileEditor;

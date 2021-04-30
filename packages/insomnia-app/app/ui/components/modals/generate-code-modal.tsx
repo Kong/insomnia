@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import HTTPSnippet, { availableTargets } from 'httpsnippet';
@@ -12,6 +11,7 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import { exportHarRequest } from '../../../common/har';
 import Link from '../base/link';
+
 const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
 const DEFAULT_CLIENT = DEFAULT_TARGET.clients.find(t => t.key === 'curl');
 const MODE_MAP = {
@@ -26,9 +26,23 @@ const TO_ADD_CONTENT_LENGTH = {
   node: ['native'],
 };
 
+interface Props {
+  environmentId: string;
+  editorFontSize: number;
+  editorIndentSize: number;
+  editorKeyMap: string;
+}
+
+interface State {
+  cmd: string;
+  request: null;
+  target: string;
+  client: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GenerateCodeModal extends PureComponent {
-  constructor(props) {
+class GenerateCodeModal extends PureComponent<Props, State> {
+  constructor(props: Props) {
     super(props);
     let client;
     let target;
@@ -50,16 +64,19 @@ class GenerateCodeModal extends PureComponent {
     };
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+  _editor: CodeEditor | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setEditorRef(n) {
+  _setEditorRef(n: CodeEditor) {
     this._editor = n;
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleClientChange(client) {
@@ -104,7 +121,7 @@ class GenerateCodeModal extends PureComponent {
 
     this._generateCode(request, target, client);
 
-    this.modal.show();
+    this.modal?.show();
   }
 
   render() {
@@ -182,10 +199,4 @@ class GenerateCodeModal extends PureComponent {
   }
 }
 
-GenerateCodeModal.propTypes = {
-  environmentId: PropTypes.string.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorKeyMap: PropTypes.string.isRequired,
-};
 export default GenerateCodeModal;

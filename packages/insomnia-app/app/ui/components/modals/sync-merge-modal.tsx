@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -8,28 +8,27 @@ import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
 import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
 import ModalFooter from '../base/modal-footer';
-type Props = {
+
+interface Props {
   workspace: Workspace;
   vcs: VCS;
-  syncItems: Array<StatusCandidate>;
-};
-type State = {
-  conflicts: Array<MergeConflict>;
-};
+  syncItems: StatusCandidate[];
+}
+
+interface State {
+  conflicts: MergeConflict[];
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncMergeModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  _handleDone: (arg0: Array<MergeConflict>) => void;
+class SyncMergeModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
+  _handleDone: (arg0: MergeConflict[]) => void;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      conflicts: [],
-    };
+  state: State = {
+    conflicts: [],
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -53,8 +52,8 @@ class SyncMergeModal extends React.PureComponent<Props, State> {
   }
 
   async show(options: {
-    conflicts: Array<MergeConflict>;
-    handleDone: (arg0: Array<MergeConflict>) => void;
+    conflicts: MergeConflict[];
+    handleDone: (arg0: MergeConflict[]) => void;
   }) {
     this.modal && this.modal.show();
     this._handleDone = options.handleDone;

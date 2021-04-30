@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -10,42 +10,41 @@ import PromptButton from '../base/prompt-button';
 import * as db from '../../../common/database';
 import type { GitRepository } from '../../../models/git-repository';
 import ModalFooter from '../base/modal-footer';
-type Props = {
+
+interface Props {
   vcs: GitVCS;
   gitRepository: GitRepository;
   handleInitializeEntities: () => Promise<void>;
   handleGitBranchChanged: (branch: string) => void;
-};
-type State = {
+}
+
+interface State {
   error: string;
-  branches: Array<string>;
-  remoteBranches: Array<string>;
+  branches: string[];
+  remoteBranches: string[];
   branch: string;
   newBranchName: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitBranchesModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  input: HTMLInputElement | null | undefined;
+class GitBranchesModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
+  input: HTMLInputElement | null = null;
   _onHide: (() => void) | null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      error: '',
-      branch: '??',
-      branches: [],
-      remoteBranches: [],
-      newBranchName: '',
-    };
+  state: State = {
+    error: '',
+    branch: '??',
+    branches: [],
+    remoteBranches: [],
+    newBranchName: '',
   }
 
-  _setModalRef(ref: Modal | null | undefined) {
+  _setModalRef(ref: Modal) {
     this.modal = ref;
   }
 
-  _setInputRef(ref: HTMLInputElement | null | undefined) {
+  _setInputRef(ref: HTMLInputElement) {
     this.input = ref;
   }
 
@@ -226,7 +225,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
                     </td>
                     <td className="text-right">
                       {name !== currentBranch && (
-                        <React.Fragment>
+                        <Fragment>
                           <PromptButton
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Merged"
@@ -244,7 +243,7 @@ class GitBranchesModal extends React.PureComponent<Props, State> {
                             onClick={() => this._handleCheckout(name)}>
                             Checkout
                           </button>
-                        </React.Fragment>
+                        </Fragment>
                       )}
                     </td>
                   </tr>

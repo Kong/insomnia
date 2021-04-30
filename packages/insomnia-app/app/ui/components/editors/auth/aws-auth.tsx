@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import OneLineEditor from '../../codemirror/one-line-editor';
@@ -7,7 +7,8 @@ import HelpTooltip from '../../help-tooltip';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import { AUTOBIND_CFG } from '../../../../common/constants';
-type Props = {
+
+interface Props {
   request: Request;
   nunjucksPowerUserMode: boolean;
   showPasswords: boolean;
@@ -16,10 +17,10 @@ type Props = {
   handleRender: (arg0: string) => Promise<string>;
   handleGetRenderContext: () => Promise<Record<string, any>>;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AWSAuth extends React.PureComponent<Props> {
+class AWSAuth extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
@@ -50,7 +51,7 @@ class AWSAuth extends React.PureComponent<Props> {
     onChange(request, { ...request.authentication, sessionToken: value });
   }
 
-  renderRow(key: string, label: string, onChange: (...args: Array<any>) => any, help?: string) {
+  renderRow(key: string, label: string, onChange: (...args: any[]) => any, help?: string) {
     const {
       request,
       nunjucksPowerUserMode,

@@ -1,23 +1,25 @@
-import * as React from 'react';
+import React, { FunctionComponent } from 'react';
 import type { ProtoFile } from '../../../models/proto-file';
 import { ListGroup, ListGroupItem } from 'insomnia-components';
 import ProtoFileListItem from './proto-file-list-item';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import ProtoDirectoryListItem from './proto-directory-list-item';
+
 export type SelectProtoFileHandler = (id: string) => void;
 export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type DeleteProtoDirectoryHandler = (protoDirectory: ProtoDirectory) => Promise<void>;
 export type UpdateProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type RenameProtoFileHandler = (protoFile: ProtoFile, name: string) => Promise<void>;
-type Props = {
-  protoDirectories: Array<ExpandedProtoDirectory>;
+
+interface Props {
+  protoDirectories: ExpandedProtoDirectory[];
   selectedId?: string;
   handleSelect: SelectProtoFileHandler;
   handleDelete: DeleteProtoFileHandler;
   handleRename: RenameProtoFileHandler;
   handleUpdate: UpdateProtoFileHandler;
   handleDeleteDirectory: DeleteProtoDirectoryHandler;
-};
+}
 
 const recursiveRender = (
   { dir, files, subDirs }: ExpandedProtoDirectory,
@@ -56,7 +58,7 @@ const recursiveRender = (
   return [dirNode, ...fileNodes, ...subDirNodes];
 };
 
-const ProtoFileList = (props: Props) => (
+const ProtoFileList: FunctionComponent<Props> = props => (
   <ListGroup bordered>
     {!props.protoDirectories.length && (
       <ListGroupItem>No proto files exist for this workspace</ListGroupItem>

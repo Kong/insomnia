@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -20,20 +20,22 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import KeydownBinder from '../keydown-binder';
 import type { RequestMeta } from '../../../models/request-meta';
 import { keyboardKeys } from '../../../common/keyboard-keys';
-type Props = {
+
+interface Props {
   handleSetActiveWorkspace: (id: string) => void;
   activateRequest: (id: string) => void;
-  activeRequest: Request | null | undefined;
-  workspaceChildren: Array<Request | RequestGroup>;
+  activeRequest?: Request | null;
+  workspaceChildren: (Request | RequestGroup)[];
   workspace: Workspace;
-  workspaces: Array<Workspace>;
-  requestMetas: Array<RequestMeta>;
-};
-type State = {
+  workspaces: Workspace[];
+  requestMetas: RequestMeta[];
+}
+
+interface State {
   searchString: string;
-  workspaces: Array<Workspace>;
-  matchedRequests: Array<Request>;
-  matchedWorkspaces: Array<Workspace>;
+  workspaces: Workspace[];
+  matchedRequests: Request[];
+  matchedWorkspaces: Workspace[];
   activeIndex: number;
   maxRequests: number;
   maxWorkspaces: number;
@@ -42,30 +44,27 @@ type State = {
   hideNeverActiveRequests: boolean;
   isModalVisible: boolean;
   title: string | null;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestSwitcherModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
-  _input: HTMLInputElement | null | undefined;
-  _openTimeout: TimeoutID;
+class RequestSwitcherModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
+  _input: HTMLInputElement | null = null;
+  _openTimeout: NodeJS.Timeout | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      searchString: '',
-      workspaces: [],
-      matchedRequests: [],
-      matchedWorkspaces: [],
-      activeIndex: -1,
-      maxRequests: 20,
-      maxWorkspaces: 20,
-      disableInput: false,
-      selectOnKeyup: false,
-      hideNeverActiveRequests: false,
-      isModalVisible: true,
-      title: null,
-    };
+  state: State = {
+    searchString: '',
+    workspaces: [],
+    matchedRequests: [],
+    matchedWorkspaces: [],
+    activeIndex: -1,
+    maxRequests: 20,
+    maxWorkspaces: 20,
+    disableInput: false,
+    selectOnKeyup: false,
+    hideNeverActiveRequests: false,
+    isModalVisible: true,
+    title: null,
   }
 
   _handleInputKeydown(e: KeyboardEvent) {
@@ -87,11 +86,11 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     e.preventDefault();
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setInputRef(n: HTMLInputElement | null | undefined) {
+  _setInputRef(n: HTMLInputElement) {
     this._input = n;
   }
 
@@ -152,7 +151,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  _activateRequest(request: Request | null | undefined) {
+  _activateRequest(request: Request) {
     if (!request) {
       return;
     }
@@ -166,7 +165,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
   }
 
   /** Return array of path segments for given request or folder */
-  _groupOf(requestOrRequestGroup: BaseModel): Array<string> {
+  _groupOf(requestOrRequestGroup: BaseModel): string[] {
     const { workspaceChildren } = this.props;
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
@@ -271,7 +270,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
     this.setState({
       searchString,
       activeIndex: indexOfFirstNonActiveRequest >= 0 ? indexOfFirstNonActiveRequest : 0,
-      matchedRequests: (matchedRequests as Array<any>).slice(0, maxRequests),
+      matchedRequests: (matchedRequests as any[]).slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
   }
@@ -389,7 +388,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
           className={isModalVisible ? '' : 'hide'}>
           <ModalHeader hideCloseButton>
             {title || (
-              <React.Fragment>
+              <Fragment>
                 <div className="pull-right txt-sm pad-right tall">
                   <span className="vertically-center">
                     <div>
@@ -401,7 +400,7 @@ class RequestSwitcherModal extends React.PureComponent<Props, State> {
                   </span>
                 </div>
                 <div>Quick Switch</div>
-              </React.Fragment>
+              </Fragment>
             )}
           </ModalHeader>
           <ModalBody className="request-switcher">

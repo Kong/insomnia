@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import * as fontScanner from 'font-scanner';
 import * as electron from 'electron';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
@@ -32,36 +32,37 @@ import * as globalActions from '../../redux/modules/global';
 import { connect } from 'react-redux';
 import { stringsPlural } from '../../../common/strings';
 import { snapNumberToLimits } from '../../../common/misc';
+
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
+
 const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
-type Props = {
+
+interface Props {
   settings: Settings;
   hideModal: () => void;
-  updateSetting: (...args: Array<any>) => any;
-  handleToggleMenuBar: (...args: Array<any>) => any;
-  handleRootCssChange: (...args: Array<any>) => any;
+  updateSetting: (...args: any[]) => any;
+  handleToggleMenuBar: (...args: any[]) => any;
+  handleRootCssChange: (...args: any[]) => any;
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
-};
-type State = {
-  fonts: Array<{
+}
+
+interface State {
+  fonts: {
     family: string;
     monospace: boolean;
-  }> | null;
-  fontsMono: Array<{
+  }[] | null;
+  fontsMono: {
     family: string;
     monospace: boolean;
-  }> | null;
-};
+  }[] | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class General extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      fonts: null,
-      fontsMono: null,
-    };
+class General extends PureComponent<Props, State> {
+  state: State = {
+    fonts: null,
+    fontsMono: null,
   }
 
   async componentDidMount() {
@@ -124,10 +125,10 @@ class General extends React.PureComponent<Props, State> {
   renderEnumSetting(
     label: string,
     name: string,
-    values: Array<{
+    values: {
       name: string;
       value: any;
-    }>,
+    }[],
     help: string,
     forceRestart?: boolean,
   ) {
@@ -390,10 +391,10 @@ class General extends React.PureComponent<Props, State> {
                 value: HttpVersions.V2_0,
               }, // Enable when our version of libcurl supports HTTP/3
               // { name: 'HTTP/3', value: HttpVersions.v3 },
-            ] as Array<{
+            ] as {
               name: string;
               value: HttpVersion;
-            }>,
+            }[],
             'Preferred HTTP version to use for requests which will fall back if it cannot be' +
               'negotiated',
           )}
@@ -483,7 +484,7 @@ class General extends React.PureComponent<Props, State> {
         </div>
 
         {updatesSupported() && (
-          <React.Fragment>
+          <Fragment>
             <hr className="pad-top" />
             <div>
               <div className="pull-right">
@@ -510,11 +511,11 @@ class General extends React.PureComponent<Props, State> {
                 </select>
               </label>
             </div>
-          </React.Fragment>
+          </Fragment>
         )}
 
         {!updatesSupported() && (
-          <React.Fragment>
+          <Fragment>
             <hr className="pad-top" />
             <h2>Software Updates</h2>
             {this.renderBooleanSetting(
@@ -522,7 +523,7 @@ class General extends React.PureComponent<Props, State> {
               'disableUpdateNotification',
               '',
             )}
-          </React.Fragment>
+          </Fragment>
         )}
 
         <hr className="pad-top" />

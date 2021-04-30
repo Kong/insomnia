@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -15,37 +15,38 @@ import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { parseApiSpec } from '../../../common/api-specs';
 import { showModal } from './index';
-type Props = {
+
+interface Props {
   settings: Settings;
-};
-type Config = {
+}
+
+interface Config {
   label: string;
   content: string;
   mimeType: string;
   error: string | null;
-};
-type State = {
-  configs: Array<Config>;
+}
+
+interface State {
+  configs: Config[];
   activeTab: number;
-};
-type ShowOptions = {
+}
+
+interface ShowOptions {
   apiSpec: ApiSpec;
   activeTabLabel: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GenerateConfigModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class GenerateConfigModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      configs: [],
-      activeTab: 0,
-    };
+  state: State = {
+    configs: [],
+    activeTab: 0,
   }
 
-  _setModalRef(n: Modal | null | undefined) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -124,7 +125,7 @@ class GenerateConfigModal extends React.PureComponent<Props, State> {
 
   renderConfigTab(config: Config) {
     return (
-      <Tab key={config.label} tabIndex="-1">
+      <Tab key={config.label} tabIndex={-1}>
         <button>{config.label}</button>
       </Tab>
     );

@@ -1,29 +1,28 @@
 import { $ReadOnly } from 'utility-types';
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { showError } from './modals/index';
 import Mailto from './base/mailto';
-type Props = {
-  children: React.ReactNode;
+
+interface Props {
+  children: ReactNode;
   errorClassName?: string;
   showAlert?: boolean;
   // Avoid using invalidation with showAlert, otherwise an alert will be shown with every attempted re-render
   invalidationKey?: string;
-  renderError?: (error: Error) => React.ReactNode;
-};
-type State = {
+  renderError?: (error: Error) => ReactNode;
+}
+
+interface State {
   error: Error | null;
   info: {
     componentStack: string;
   } | null;
-};
+}
 
-class SingleErrorBoundary extends React.PureComponent<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      error: null,
-      info: null,
-    };
+class SingleErrorBoundary extends PureComponent<Props, State> {
+  state: State = {
+    error: null,
+    info: null,
   }
 
   // eslint-disable-next-line camelcase
@@ -87,7 +86,7 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
       return renderError ? (
         renderError(error)
       ) : (
-        <div className={errorClassName || null}>Render Failure: {error.message}</div>
+        <div className={errorClassName ?? ''}>Render Failure: {error.message}</div>
       );
     }
 
@@ -95,8 +94,8 @@ class SingleErrorBoundary extends React.PureComponent<Props, State> {
   }
 }
 
-class ErrorBoundary extends React.PureComponent<Props> {
-  render(): React.ReactNode {
+class ErrorBoundary extends PureComponent<Props> {
+  render() {
     const { children, ...extraProps } = this.props;
 
     if (!children) {

@@ -1,15 +1,16 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import MarkdownPreview from '../markdown-preview';
 import type { GraphQLEnumValue } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
-type Props = {
+
+interface Props {
   type: GraphQLEnumType;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerEnum extends React.PureComponent<Props> {
+class GraphQLExplorerEnum extends PureComponent<Props> {
   renderDescription() {
     const { type } = this.props;
     return <MarkdownPreview markdown={type.description || '*no description*'} />;
@@ -19,7 +20,7 @@ class GraphQLExplorerEnum extends React.PureComponent<Props> {
     const { type } = this.props;
     const values = type.getValues();
     return (
-      <React.Fragment>
+      <Fragment>
         <h2 className="graphql-explorer__subheading">Values</h2>
         <ul className="graphql-explorer__defs">
           {values.map((value: GraphQLEnumValue) => {
@@ -38,7 +39,7 @@ class GraphQLExplorerEnum extends React.PureComponent<Props> {
             );
           })}
         </ul>
-      </React.Fragment>
+      </Fragment>
     );
   }
 

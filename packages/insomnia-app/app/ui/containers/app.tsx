@@ -137,13 +137,13 @@ interface Props {
   activity: GlobalActivity,
   activeEnvironment?: Environment,
   isVariableUncovered: boolean,
-  sidebarHidden: boolean, 
-  workspaces: Array<Workspace>,
-  apiSpecs: Array<ApiSpec>,
+  sidebarHidden: boolean,
+  workspaces: Workspace[],
+  apiSpecs: ApiSpec[],
   activeWorkspaceMeta: WorkspaceMeta,
   activeGitRepository: GitRepository,
   activeCookieJar: CookieJar,
-  environments: Array<Environment>,
+  environments: Environment[],
   handleStartLoading: Function,
   handleStopLoading: Function
   handleImportUriToWorkspace: Function,
@@ -158,8 +158,8 @@ interface State {
   paneWidth: number,
   paneHeight: number,
   isVariableUncovered: boolean,
-  vcs: VCS,
-  gitVCS: GitVCS,
+  vcs: VCS | null,
+  gitVCS: GitVCS | null,
   forceRefreshCounter: number,
   forceRefreshHeaderCounter: number,
   isMigratingChildren: boolean,
@@ -176,7 +176,7 @@ class App extends PureComponent<Props, State> {
   private _requestPane: RefObject<any>;
   private _responsePane: RefObject<any>;
   private _sidebar: RefObject<any>;
-  private _wrapper: any;
+  private _wrapper: Wrapper | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout;
 
   constructor(props: Props) {
@@ -436,7 +436,7 @@ class App extends PureComponent<Props, State> {
     });
   }
 
-  async _recalculateMetaSortKey(docs: Array<BaseModel>) {
+  async _recalculateMetaSortKey(docs: BaseModel[]) {
     function __updateDoc(doc, metaSortKey) {
       return models.getModel(doc.type).update(doc, {
         metaSortKey,
@@ -1100,7 +1100,7 @@ class App extends PureComponent<Props, State> {
     showModal(SettingsModal, tabIndex);
   }
 
-  _setWrapperRef(n) {
+  _setWrapperRef(n: Wrapper) {
     this._wrapper = n;
   }
 
@@ -1308,7 +1308,7 @@ class App extends PureComponent<Props, State> {
 
     if (needsRefresh) {
       setTimeout(() => {
-        this._wrapper && this._wrapper._forceRequestPaneRefresh();
+        this._wrapper?._forceRequestPaneRefresh();
       }, 300);
     }
   }

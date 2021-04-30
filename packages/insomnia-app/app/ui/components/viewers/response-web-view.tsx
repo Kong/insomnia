@@ -1,20 +1,21 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { EventEmitter } from 'events';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import contextMenu from 'electron-context-menu';
-type Props = {
+
+interface Props {
   body: string;
   contentType: string;
   url: string;
   webpreferences: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseWebView extends React.PureComponent<Props> {
-  _webview: HTMLElement | null | undefined;
+class ResponseWebView extends PureComponent<Props> {
+  _webview: HTMLElement | null = null;
 
-  _handleSetWebViewRef(n: HTMLElement | null | undefined) {
+  _handleSetWebViewRef(n: HTMLElement) {
     this._webview = n;
 
     if (this._webview) {
@@ -38,7 +39,7 @@ class ResponseWebView extends React.PureComponent<Props> {
   }
 
   _setBody() {
-    const webview: Record<string, any> = this._webview;
+    const webview = this._webview;
 
     if (!webview) {
       return;

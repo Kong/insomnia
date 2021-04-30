@@ -13,15 +13,18 @@ export const type = 'Response';
 export const prefix = 'res';
 export const canDuplicate = false;
 export const canSync = false;
-export type ResponseHeader = {
+
+export interface ResponseHeader {
   name: string;
   value: string;
-};
-export type ResponseTimelineEntry = {
+}
+
+export interface ResponseTimelineEntry {
   name: string;
   value: string;
-};
-type BaseResponse = {
+}
+
+interface BaseResponse {
   environmentId: string | null;
   statusCode: number;
   statusMessage: string;
@@ -31,7 +34,7 @@ type BaseResponse = {
   bytesRead: number;
   bytesContent: number;
   elapsedTime: number;
-  headers: Array<ResponseHeader>;
+  headers: ResponseHeader[];
   bodyPath: string;
   // Actual bodies are stored on the filesystem
   timelinePath: string;
@@ -42,8 +45,10 @@ type BaseResponse = {
   // Things from the request
   settingStoreCookies: boolean | null;
   settingSendCookies: boolean | null;
-};
+}
+
 export type Response = BaseModel & BaseResponse;
+
 export function init(): BaseResponse {
   return {
     statusCode: 0,
@@ -72,19 +77,21 @@ export function init(): BaseResponse {
     environmentId: '__LEGACY__',
   };
 }
-export async function migrate(doc: Record<string, any>) {
+export async function migrate(doc: BaseResponse) {
   doc = await migrateBodyToFileSystem(doc);
   doc = await migrateBodyCompression(doc);
   doc = await migrateTimelineToFileSystem(doc);
   return doc;
 }
-export function hookDatabaseInit(consoleLog: () => void = console.log) {
+
+export function hookDatabaseInit(consoleLog: typeof console.log = console.log) {
   consoleLog('[db] Init responses DB');
   process.nextTick(async () => {
     await models.response.cleanDeletedResponses();
   });
 }
-export function hookRemove(doc: Response, consoleLog: () => void = console.log) {
+
+export function hookRemove(doc: Response, consoleLog: typeof console.log = console.log) {
   fs.unlink(doc.bodyPath, () => {
     consoleLog(`[response] Delete body ${doc.bodyPath}`);
   });
@@ -92,10 +99,11 @@ export function hookRemove(doc: Response, consoleLog: () => void = console.log) 
     consoleLog(`[response] Delete timeline ${doc.timelinePath}`);
   });
 }
+
 export function getById(id: string) {
   return db.get(type, id);
 }
-export async function all(): Promise<Array<Response>> {
+export async function all(): Promise<Response[]> {
   return db.all(type);
 }
 export async function removeForRequest(parentId: string, environmentId?: string | null) {
@@ -115,6 +123,7 @@ export async function removeForRequest(parentId: string, environmentId?: string 
   // why some responses are still showing in the UI.
   await db.removeWhere(type, query);
 }
+
 export function remove(response: Response) {
   return db.remove(response);
 }
@@ -123,7 +132,7 @@ async function _findRecentForRequest(
   requestId: string,
   environmentId: string | null,
   limit: number,
-): Promise<Array<Response>> {
+): Promise<Response[]> {
   const query: Record<string, any> = {
     parentId: requestId,
   };
@@ -144,7 +153,7 @@ export async function getLatestForRequest(
   const response = responses[0] as Response | null | undefined;
   return response || null;
 }
-export async function create(patch: Record<string, any> = {}, maxResponses: number = 20) {
+export async function create(patch: Record<string, any> = {}, maxResponses = 20) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
   }
@@ -179,31 +188,33 @@ export async function create(patch: Record<string, any> = {}, maxResponses: numb
   // Actually create the new response
   return db.docCreate(type, patch);
 }
+
 export function getLatestByParentId(parentId: string) {
   return db.getMostRecentlyModified(type, {
     parentId,
   });
 }
-export function getBodyStream<T>(
-  response: Record<string, any>,
-  readFailureValue: T | null | undefined,
-): Readable | null | T {
+
+export function getBodyStream<T extends BaseResponse>(
+  response: T,
+  readFailureValue?: T | null,
+) {
   return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
-export function getBodyBuffer<T>(
-  response: Record<string, any>,
-  readFailureValue: T | null | undefined,
-): Buffer | T | null {
-  return getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
-}
-export function getTimeline(response: Record<string, any>): Array<ResponseTimelineEntry> {
+
+export const getBodyBuffer = <T extends BaseResponse>(
+  response: T,
+  readFailureValue?: T | null,
+) => getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
+
+export function getTimeline(response: BaseResponse): ResponseTimelineEntry[] {
   return getTimelineFromPath(response.timelinePath || '');
 }
 
 function getBodyStreamFromPath<T>(
   bodyPath: string,
   compression: string | null,
-  readFailureValue: T | null | undefined,
+  readFailureValue?: T | null,
 ): Readable | null | T {
   // No body, so return empty Buffer
   if (!bodyPath) {
@@ -229,8 +240,8 @@ function getBodyStreamFromPath<T>(
 function getBodyBufferFromPath<T>(
   bodyPath: string,
   compression: string | null,
-  readFailureValue: T | null | undefined,
-): Buffer | T | null {
+  readFailureValue?: T | null,
+) {
   // No body, so return empty Buffer
   if (!bodyPath) {
     return Buffer.alloc(0);
@@ -250,7 +261,7 @@ function getBodyBufferFromPath<T>(
   }
 }
 
-function getTimelineFromPath(timelinePath: string): Array<ResponseTimelineEntry> {
+function getTimelineFromPath(timelinePath: string): ResponseTimelineEntry[] {
   // No body, so return empty Buffer
   if (!timelinePath) {
     return [];
@@ -265,7 +276,7 @@ function getTimelineFromPath(timelinePath: string): Array<ResponseTimelineEntry>
   }
 }
 
-async function migrateBodyToFileSystem(doc: Record<string, any>) {
+async function migrateBodyToFileSystem(doc: BaseResponse) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const dir = path.join(getDataDirectory(), 'responses');
@@ -292,7 +303,7 @@ async function migrateBodyToFileSystem(doc: Record<string, any>) {
   }
 }
 
-function migrateBodyCompression(doc: Record<string, any>) {
+function migrateBodyCompression(doc: BaseResponse) {
   if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
     doc.bodyCompression = 'zip';
   }
@@ -300,7 +311,7 @@ function migrateBodyCompression(doc: Record<string, any>) {
   return doc;
 }
 
-async function migrateTimelineToFileSystem(doc: Record<string, any>) {
+async function migrateTimelineToFileSystem(doc: BaseResponse) {
   if (doc.hasOwnProperty('timeline') && doc._id && !doc.timelinePath) {
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);

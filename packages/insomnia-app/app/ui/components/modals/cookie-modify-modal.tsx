@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
@@ -13,34 +13,33 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import { cookieToString } from 'insomnia-cookies';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   workspace: Workspace;
   cookieJar: CookieJar;
-};
-type State = {
+}
+
+interface State {
   cookie: Cookie | null;
   rawValue: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookieModifyModal extends React.PureComponent<Props, State> {
-  modal: Modal | null;
-  _rawTimeout: TimeoutID;
-  _cookieUpdateTimeout: TimeoutID;
+class CookieModifyModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
+  _rawTimeout: NodeJS.Timeout | null = null;
+  _cookieUpdateTimeout: NodeJS.Timeout | null = null;
 
-  constructor(props: any) {
-    super(props);
-    this.state = {
-      cookie: null,
-      rawValue: '',
-    };
+  state: State = {
+    cookie: null,
+    rawValue: '',
   }
 
-  _setModalRef(n: Modal | null) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -219,10 +218,10 @@ class CookieModifyModal extends React.PureComponent<Props, State> {
           {cookieJar && cookie && (
             <Tabs>
               <TabList>
-                <Tab tabIndex="-1">
+                <Tab tabIndex={-1}>
                   <button>Friendly</button>
                 </Tab>
-                <Tab tabIndex="-1">
+                <Tab tabIndex={-1}>
                   <button>Raw</button>
                 </Tab>
               </TabList>

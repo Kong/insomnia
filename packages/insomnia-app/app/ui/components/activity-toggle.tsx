@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { FunctionComponent } from 'react';
 import { MultiSwitch } from 'insomnia-components';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
-type Props = {
+
+interface Props {
   activity: GlobalActivity;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
   workspace: Workspace;
-};
-export default function ActivityToggle({ activity, handleActivityChange, workspace }: Props) {
+}
+
+const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChange, workspace }) => {
   const choices = [
     {
       label: 'Design',
@@ -31,4 +33,6 @@ export default function ActivityToggle({ activity, handleActivityChange, workspa
       selectedValue={activity}
     />
   );
-}
+};
+
+export default ActivityToggle;

@@ -6,7 +6,7 @@ import type { RenderedRequest } from './render';
 import { getRenderedRequestAndContext } from './render';
 import { jarFromCookies } from 'insomnia-cookies';
 import * as pluginContexts from '../plugins/context/index';
-import * as misc from './misc';
+import { getSetCookieHeaders, filterHeaders, hasAuthHeader } from './misc';
 import type { Cookie } from '../models/cookie-jar';
 import type { Request } from '../models/request';
 import { newBodyRaw } from '../models/request';
@@ -16,7 +16,8 @@ import { getAppVersion } from './constants';
 import { RenderError } from '../templating/index';
 import { smartEncodeUrl } from 'insomnia-url';
 import * as plugins from '../plugins';
-export type HarCookie = {
+
+export interface HarCookie {
   name: string;
   value: string;
   path?: string;
@@ -25,76 +26,86 @@ export type HarCookie = {
   httpOnly?: boolean;
   secure?: boolean;
   comment?: string;
-};
-export type HarHeader = {
+}
+
+export interface HarHeader {
   name: string;
   value: string;
   comment?: string;
-};
-export type HarQueryString = {
+}
+
+export interface HarQueryString {
   name: string;
   value: string;
   comment?: string;
-};
-export type HarPostParam = {
+}
+
+export interface HarPostParam {
   name: string;
   value?: string;
   fileName?: string;
   contentType?: string;
   comment?: string;
-};
-export type HarPostData = {
+}
+
+export interface HarPostData {
   mimeType: string;
-  params: Array<HarPostParam>;
+  params: HarPostParam[];
   text: string;
   comment?: string;
-};
-export type HarRequest = {
+}
+
+export interface HarRequest {
   method: string;
   url: string;
   httpVersion: string;
-  cookies: Array<HarCookie>;
-  headers: Array<HarHeader>;
-  queryString: Array<HarQueryString>;
+  cookies: HarCookie[];
+  headers: HarHeader[];
+  queryString: HarQueryString[];
   postData?: HarPostData;
   headersSize: number;
   bodySize: number;
   comment?: string;
   settingEncodeUrl: boolean;
-};
-export type HarContent = {
+}
+
+export interface HarContent {
   size: number;
   compression?: number;
   mimeType: string;
   text?: string;
   encoding?: string;
   comment?: string;
-};
-export type HarResponse = {
+}
+
+export interface HarResponse {
   status: number;
   statusText: string;
   httpVersion: string;
-  cookies: Array<HarCookie>;
-  headers: Array<HarHeader>;
+  cookies: HarCookie[];
+  headers: HarHeader[];
   content: HarContent;
   redirectURL: string;
   headersSize: number;
   bodySize: number;
   comment?: string;
-};
-export type HarRequestCache = {
+}
+
+export interface HarRequestCache {
   expires?: string;
   lastAccess: string;
   eTag: string;
   hitCount: number;
   comment?: string;
-};
-export type HarCache = {
+}
+
+export interface HarCache {
   beforeRequest?: HarRequestCache;
   afterRequest?: HarRequestCache;
   comment?: string;
-};
-export type HarEntryTimings = {
+}
+
+export interface HarEntryTimings {
   blocked?: number;
   dns?: number;
   connect?: number;
@@ -103,8 +114,9 @@ export type HarEntryTimings = {
   receive: number;
   ssl?: number;
   comment?: string;
-};
-export type HarEntry = {
+}
+
+export interface HarEntry {
   pageref?: string;
   startedDateTime: string;
   time: number;
@@ -115,48 +127,55 @@ export type HarEntry = {
   serverIPAddress?: string;
   connection?: string;
   comment?: string;
-};
-export type HarPageTimings = {
+}
+
+export interface HarPageTimings {
   onContentLoad?: number;
   onLoad?: number;
   comment?: string;
-};
-export type HarPage = {
+}
+
+export interface HarPage {
   startedDateTime: string;
   id: string;
   title: string;
   pageTimings: HarPageTimings;
   comment?: string;
-};
-export type HarCreator = {
+}
+
+export interface HarCreator {
   name: string;
   version: string;
   comment?: string;
-};
-export type HarBrowser = {
+}
+
+export interface HarBrowser {
   name: string;
   version: string;
   comment?: string;
-};
-export type HarLog = {
+}
+
+export interface HarLog {
   version: string;
   creator: HarCreator;
   browser?: HarBrowser;
-  pages?: Array<HarPage>;
-  entries: Array<HarEntry>;
+  pages?: HarPage[];
+  entries: HarEntry[];
   comment?: string;
-};
-export type Har = {
+}
+
+export interface Har {
   log: HarLog;
-};
-export type ExportRequest = {
+}
+
+export interface ExportRequest {
   requestId: string;
   environmentId: string | null;
-};
-export async function exportHar(exportRequests: Array<ExportRequest>): Promise<Har> {
+}
+export async function exportHar(exportRequests: ExportRequest[]): Promise<Har> {
   // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
-  const entries: Array<HarEntry> = [];
+  const entries: HarEntry[] = [];
 
   for (const exportRequest of exportRequests) {
     const request: Request | null = await models.request.getById(exportRequest.requestId);
@@ -245,7 +264,7 @@ export async function exportHarResponse(response: ResponseModel | null): Promise
 export async function exportHarRequest(
   requestId: string,
   environmentId: string,
-  addContentLength: boolean = false,
+  addContentLength = false,
 ): Promise<HarRequest | null> {
   const request = await models.request.getById(requestId);
 
@@ -258,7 +277,7 @@ export async function exportHarRequest(
 export async function exportHarWithRequest(
   request: Request,
   environmentId: string | null,
-  addContentLength: boolean = false,
+  addContentLength = false,
 ): Promise<HarRequest | null> {
   try {
     const renderResult = await getRenderedRequestAndContext(request, environmentId);
@@ -303,13 +322,13 @@ async function _applyRequestPluginHooks(
 
 export async function exportHarWithRenderedRequest(
   renderedRequest: RenderedRequest,
-  addContentLength: boolean = false,
+  addContentLength = false,
 ): Promise<HarRequest> {
   const url = smartEncodeUrl(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (addContentLength) {
     const hasContentLengthHeader =
-      misc.filterHeaders(renderedRequest.headers, 'Content-Length').length > 0;
+      filterHeaders(renderedRequest.headers, 'Content-Length').length > 0;
 
     if (!hasContentLengthHeader) {
       const name = 'Content-Length';
@@ -322,7 +341,7 @@ export async function exportHarWithRenderedRequest(
   }
 
   // Set auth header if we have it
-  if (!misc.hasAuthHeader(renderedRequest.headers)) {
+  if (!hasAuthHeader(renderedRequest.headers)) {
     const header = await getAuthHeader(renderedRequest, url);
 
     if (header) {
@@ -347,27 +366,28 @@ export async function exportHarWithRenderedRequest(
   };
 }
 
-function getRequestCookies(renderedRequest: RenderedRequest): Array<HarCookie> {
+function getRequestCookies(renderedRequest: RenderedRequest): HarCookie[] {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = jar.getCookiesSync(renderedRequest.url);
   return domainCookies.map(mapCookie);
 }
 
-function getReponseCookies(response: ResponseModel): Array<HarCookie> {
-  return misc
-    .getSetCookieHeaders(response.headers)
-    .map(h => {
-      let cookie;
+function getReponseCookies(response: ResponseModel): HarCookie[] {
+  const headers = response.headers.filter(Boolean) as HarCookie[];
+  // @ts-expect-error -- TSCONVERSION
+  return getSetCookieHeaders(headers)
+    .map(harCookie => {
+      let cookie: null | undefined | toughCookie = null;
 
       try {
-        cookie = toughCookie.parse(h.value || '');
+        cookie = toughCookie.parse(harCookie.value || '');
       } catch (error) {}
 
-      if (!cookie) {
+      if (cookie === null || cookie === undefined) {
         return null;
       }
 
-      return mapCookie(cookie);
+      return mapCookie(cookie as unknown as Cookie);
     })
     .filter(Boolean);
 }
@@ -387,7 +407,7 @@ function mapCookie(cookie: Cookie): HarCookie {
   }
 
   if (cookie.expires) {
-    let expires = null;
+    let expires: Date | null = null;
 
     if (cookie.expires instanceof Date) {
       expires = cookie.expires;
@@ -415,20 +435,21 @@ function mapCookie(cookie: Cookie): HarCookie {
 }
 
 function getResponseContent(response: ResponseModel): HarContent {
-  let body: Buffer | null = models.response.getBodyBuffer(response);
+  let body = models.response.getBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);
   }
 
   return {
+    // @ts-expect-error -- TSCONVERSION
     size: body.byteLength,
     mimeType: response.contentType,
     text: body.toString('utf8'),
   };
 }
 
-function getResponseHeaders(response: ResponseModel): Array<HarHeader> {
+function getResponseHeaders(response: ResponseModel): HarHeader[] {
   return response.headers
     .filter(header => header.name)
     .map(h => {
@@ -439,7 +460,7 @@ function getResponseHeaders(response: ResponseModel): Array<HarHeader> {
     });
 }
 
-function getRequestHeaders(renderedRequest: RenderedRequest): Array<HarHeader> {
+function getRequestHeaders(renderedRequest: RenderedRequest): HarHeader[] {
   return renderedRequest.headers
     .filter(header => header.name)
     .map(header => {
@@ -450,7 +471,7 @@ function getRequestHeaders(renderedRequest: RenderedRequest): Array<HarHeader> {
     });
 }
 
-function getRequestQueryString(renderedRequest: RenderedRequest): Array<HarQueryString> {
+function getRequestQueryString(renderedRequest: RenderedRequest): HarQueryString[] {
   return renderedRequest.parameters.map(parameter => {
     return {
       name: parameter.name,
@@ -459,7 +480,7 @@ function getRequestQueryString(renderedRequest: RenderedRequest): Array<HarQuery
   });
 }
 
-function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | void {
+function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | undefined {
   let body;
 
   if (renderedRequest.body.fileName) {
@@ -467,7 +488,7 @@ function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | voi
       body = newBodyRaw(fs.readFileSync(renderedRequest.body.fileName, 'base64'));
     } catch (e) {
       console.warn('[code gen] Failed to read file', e);
-      return undefined;
+      return;
     }
   } else {
     // For every other type, Insomnia uses the same body format as HAR

@@ -1,23 +1,22 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { basename as pathBasename } from 'path';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
-type Props = {
-  // Required
+
+interface Props {
   onChange: (path: string) => void;
-  // Optional
   path?: string;
-  itemtypes?: Array<'file' | 'directory'>;
-  extensions?: Array<string>;
+  itemtypes?: ('file' | 'directory')[];
+  extensions?: string[];
   showFileName?: boolean;
   showFileIcon?: boolean;
   name?: string;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FileInputButton extends React.PureComponent<Props> {
-  _button: HTMLButtonElement | null | undefined;
+class FileInputButton extends PureComponent<Props> {
+  _button: HTMLButtonElement | null = null;
 
   focus() {
     this._button && this._button.focus();
@@ -27,7 +26,7 @@ class FileInputButton extends React.PureComponent<Props> {
     this._button && this._button.focus();
   }
 
-  _setRef(n: HTMLButtonElement | null | undefined) {
+  _setRef(n: HTMLButtonElement) {
     this._button = n;
   }
 

@@ -1,10 +1,11 @@
-import React, { PureComponent } from 'react';
+import React, { HTMLAttributes, PureComponent, ReactNode } from 'react';
 
-interface Props {
-  children: React.ReactNode,
+interface Props extends HTMLAttributes<HTMLButtonElement> {
+  children: ReactNode,
   noWrap?: boolean,
   className?: string,
 }
+
 class DropdownButton extends PureComponent<Props> {
   render() {
     const { children, noWrap, ...props } = this.props;
@@ -20,4 +21,5 @@ class DropdownButton extends PureComponent<Props> {
     );
   }
 }
+
 export default DropdownButton;

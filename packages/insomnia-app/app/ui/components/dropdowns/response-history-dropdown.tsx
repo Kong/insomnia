@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import moment from 'moment';
@@ -16,22 +16,23 @@ import type { Response } from '../../../models/response';
 import type { RequestVersion } from '../../../models/request-version';
 import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
-type Props = {
+
+interface Props {
   handleSetActiveResponse: (arg0: Response) => Promise<void>;
   handleDeleteResponses: (requestId: string, environmentId: string | null) => Promise<void>;
   handleDeleteResponse: (arg0: Response) => Promise<void>;
   requestId: string;
-  responses: Array<Response>;
-  requestVersions: Array<RequestVersion>;
+  responses: Response[];
+  requestVersions: RequestVersion[];
   activeResponse: Response;
-  activeEnvironment: Environment | null | undefined;
-};
+  activeEnvironment?: Environment | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseHistoryDropdown extends React.PureComponent<Props> {
-  _dropdown: Dropdown | null | undefined;
+class ResponseHistoryDropdown extends PureComponent<Props> {
+  _dropdown: Dropdown | null = null;
 
-  _setDropdownRef(n: Dropdown | null | undefined) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 
@@ -95,7 +96,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
     );
   }
 
-  renderPastResponses(responses: Array<Response>) {
+  renderPastResponses(responses: Response[]) {
     const now = moment();
     // Four arrays for four time groups
     const categories = {
@@ -126,7 +127,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
       }
     });
     return (
-      <React.Fragment>
+      <Fragment>
         <DropdownDivider>5 Minutes Ago</DropdownDivider>
         {categories.minutes.map(this.renderDropdownItem)}
         <DropdownDivider>2 Hours Ago</DropdownDivider>
@@ -137,7 +138,7 @@ class ResponseHistoryDropdown extends React.PureComponent<Props> {
         {categories.week.map(this.renderDropdownItem)}
         <DropdownDivider>Older Than This Week</DropdownDivider>
         {categories.other.map(this.renderDropdownItem)}
-      </React.Fragment>
+      </Fragment>
     );
   }
 

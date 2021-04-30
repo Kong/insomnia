@@ -1,14 +1,15 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import type { GraphQLField } from 'graphql';
-type Props = {
+
+interface Props {
   onNavigate: (type: Record<string, any>) => void;
   field: GraphQLField<any, any>;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerFieldLink extends React.PureComponent<Props> {
+class GraphQLExplorerFieldLink extends PureComponent<Props> {
   _handleClick(e: MouseEvent) {
     e.preventDefault();
     const { onNavigate, field } = this.props;

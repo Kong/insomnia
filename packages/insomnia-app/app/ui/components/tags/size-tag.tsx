@@ -1,17 +1,17 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import * as misc from '../../../common/misc';
 import Tooltip from '../tooltip';
-type Props = {
+
+interface Props {
   bytesRead: number;
   bytesContent: number;
-  // Optional
   small?: boolean;
   className?: string;
   tooltipDelay?: number;
-};
+}
 
-class SizeTag extends React.PureComponent<Props> {
+class SizeTag extends PureComponent<Props> {
   render() {
     const { bytesRead, bytesContent, small, className, tooltipDelay } = this.props;
     const responseSizeReadStringShort = misc.describeByteSize(bytesRead);

@@ -1,8 +1,13 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { PureComponent, ReactNode } from 'react';
 import classnames from 'classnames';
 
-class ModalBody extends PureComponent {
+interface Props {
+  noScroll?: boolean;
+  className?: string;
+  children?: ReactNode;
+}
+
+class ModalBody extends PureComponent<Props> {
   render() {
     const { className, children, noScroll, ...props } = this.props;
     const classes = classnames(className, 'modal__body theme--dialog__body', {
@@ -16,9 +21,4 @@ class ModalBody extends PureComponent {
   }
 }
 
-ModalBody.propTypes = {
-  noScroll: PropTypes.bool,
-  className: PropTypes.string,
-  children: PropTypes.node,
-};
 export default ModalBody;

@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -7,19 +7,20 @@ import PasswordEditor from '../password-editor';
 import Button from '../../base/button';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
   isVariableUncovered: boolean;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class NTLMAuth extends React.PureComponent<Props> {
+class NTLMAuth extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });

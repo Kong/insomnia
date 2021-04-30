@@ -19,27 +19,34 @@ import * as models from '../../../models/index';
 import { trackEvent } from '../../../common/analytics';
 import { showModal } from './index';
 import ProtoFilesModal from './proto-files-modal';
-type RequestCreateModalOptions = {
+
+interface RequestCreateModalOptions {
   parentId: string;
   onComplete: (arg0: string) => void;
-};
+}
+
+interface State {
+  selectedContentType: string | null;
+  selectedMethod: string | null;
+  parentId: string | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestCreateModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedContentType: null,
-      selectedMethod: METHOD_GET,
-      parentId: null,
-    };
+class RequestCreateModal extends PureComponent<{}, State> {
+  state: State = {
+    selectedContentType: null,
+    selectedMethod: METHOD_GET,
+    parentId: null,
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+  _input: HTMLInputElement | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setInputRef(n) {
+  _setInputRef(n: HTMLInputElement) {
     this._input = n;
 
     if (this._input) {
@@ -55,7 +62,7 @@ class RequestCreateModal extends PureComponent {
   async _handleSubmit(e) {
     e.preventDefault();
     const { parentId, selectedContentType, selectedMethod } = this.state;
-    const requestName = this._input.value;
+    const requestName = this._input?.value;
 
     if (this._isGrpcSelected()) {
       showModal(ProtoFilesModal, {

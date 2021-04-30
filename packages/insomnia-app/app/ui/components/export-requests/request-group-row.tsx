@@ -1,28 +1,25 @@
-import * as React from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import type { RequestGroup } from '../../../models/request-group';
-type Props = {
-  // Required.
-  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
-  handleSetItemSelected: (...args: Array<any>) => any;
+
+interface Props {
+  handleSetRequestGroupCollapsed: (...args: any[]) => any;
+  handleSetItemSelected: (...args: any[]) => any;
   isCollapsed: boolean;
   totalRequests: number;
   selectedRequests: number;
   requestGroup: RequestGroup;
-  // Optional.
-  children?: React.ReactNode;
-};
+  children?: ReactNode;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestGroupRow extends React.PureComponent<Props> {
+class RequestGroupRow extends PureComponent<Props> {
   checkbox: HTMLInputElement;
 
-  setCheckboxRef(checkbox: HTMLInputElement | null | undefined) {
-    if (checkbox != null) {
-      this.checkbox = checkbox;
-    }
+  setCheckboxRef(checkbox: HTMLInputElement) {
+    this.checkbox = checkbox;
   }
 
   handleCollapse() {

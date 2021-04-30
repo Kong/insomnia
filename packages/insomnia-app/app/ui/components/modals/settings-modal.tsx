@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
@@ -24,14 +23,29 @@ export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
+interface Props {
+  handleShowExportRequestsModal: Function;
+  handleExportAllToFile: Function;
+  handleImportFile: Function;
+  handleImportUri: Function;
+  handleToggleMenuBar: Function;
+  handleImportClipBoard: Function;
+  settings: any;
+}
+
+interface State {
+  currentTabIndex: number | null;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SettingsModal extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {};
+class SettingsModal extends PureComponent<Props, State> {
+  state: State = {
+    currentTabIndex: null,
   }
 
-  _setModalRef(n) {
+  modal: Modal | null = null;
+
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
@@ -43,27 +57,27 @@ class SettingsModal extends PureComponent {
 
   _handleExportAllToFile() {
     this.props.handleExportAllToFile();
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleShowExportRequestsModal() {
     this.props.handleShowExportRequestsModal();
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleImportFile() {
     this.props.handleImportFile();
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleImportClipBoard() {
     this.props.handleImportClipBoard();
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleImportUri(uri) {
     this.props.handleImportUri(uri);
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   async _handleChangeTheme(themeName, colorScheme, persist = true) {
@@ -123,11 +137,11 @@ class SettingsModal extends PureComponent {
     this.setState({
       currentTabIndex,
     });
-    this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -147,24 +161,24 @@ class SettingsModal extends PureComponent {
           </span>
         </ModalHeader>
         <ModalBody noScroll>
-          <Tabs className="react-tabs" defaultIndex={currentTabIndex}>
+          <Tabs className="react-tabs" defaultIndex={currentTabIndex ?? undefined}>
             <TabList>
-              <Tab tabIndex="-1">
+              <Tab tabIndex={-1}>
                 <Button value="General">General</Button>
               </Tab>
-              <Tab tabIndex="-1">
+              <Tab tabIndex={-1}>
                 <Button value="Import/Export">Data</Button>
               </Tab>
-              <Tab tabIndex="-1">
+              <Tab tabIndex={-1}>
                 <Button value="Themes">Themes</Button>
               </Tab>
-              <Tab tabIndex="-1">
+              <Tab tabIndex={-1}>
                 <Button value="Shortcuts">Keyboard</Button>
               </Tab>
-              <Tab tabIndex="-1">
+              <Tab tabIndex={-1}>
                 <Button value="Account">Account</Button>
               </Tab>
-              <Tab tabIndex="-1">
+              <Tab tabIndex={-1}>
                 <Button value="Plugins">Plugins</Button>
               </Tab>
             </TabList>
@@ -215,15 +229,6 @@ class SettingsModal extends PureComponent {
   }
 }
 
-SettingsModal.propTypes = {
-  // Functions
-  handleShowExportRequestsModal: PropTypes.func.isRequired,
-  handleExportAllToFile: PropTypes.func.isRequired,
-  handleImportFile: PropTypes.func.isRequired,
-  handleImportUri: PropTypes.func.isRequired,
-  handleToggleMenuBar: PropTypes.func.isRequired,
-  // Properties
-  settings: PropTypes.object.isRequired,
-};
 export const showSettingsModal = () => showModal(SettingsModal);
+
 export default SettingsModal;

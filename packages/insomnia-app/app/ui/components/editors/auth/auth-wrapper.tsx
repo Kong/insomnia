@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import {
   AUTH_BASIC,
   AUTH_DIGEST,
@@ -26,21 +26,21 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Settings } from '../../../../models/settings';
-type Props = {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+
+interface Props {
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
   request: Request;
   showPasswords: boolean;
   isVariableUncovered: boolean;
-  // Optional
-  oAuth2Token: OAuth2Token | null | undefined;
-};
+  oAuth2Token?: OAuth2Token | null;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AuthWrapper extends React.PureComponent<Props> {
+class AuthWrapper extends PureComponent<Props> {
   renderEditor() {
     const {
       oAuth2Token,

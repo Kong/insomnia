@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
@@ -11,20 +11,22 @@ import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import OnboardingContainer from './onboarding-container';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import Analytics from './analytics';
-type Props = {
+
+interface Props {
   wrapperProps: WrapperProps;
   handleImportFile: HandleImportFileCallback;
   handleImportUri: HandleImportUriCallback;
   header: string;
   subHeader: string;
-};
-type State = {
+}
+
+interface State {
   step: number;
-};
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperOnboarding extends React.PureComponent<Props, State> {
-  state = {
+class WrapperOnboarding extends PureComponent<Props, State> {
+  state: State = {
     step: 1,
   };
 
@@ -37,7 +39,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
     db.offChange(this._handleDbChange);
   }
 
-  _handleDbChange(changes: Array<[string, BaseModel, boolean]>) {
+  _handleDbChange(changes: [string, BaseModel, boolean][]) {
     for (const change of changes) {
       if (change[1].type === models.workspace.type) {
         setTimeout(() => {
@@ -117,7 +119,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
       settings: { enableAnalytics },
     } = this.props.wrapperProps;
     return (
-      <React.Fragment>
+      <Fragment>
         <p className="notice success text-left margin-top margin-bottom">
           <a href="#" className="pull-right" onClick={this._handleBackStep}>
             Back
@@ -136,7 +138,7 @@ class WrapperOnboarding extends React.PureComponent<Props, State> {
         <button key="skip" className="btn btn--super-compact" onClick={this._handleSkipImport}>
           Skip
         </button>
-      </React.Fragment>
+      </Fragment>
     );
   }
 

@@ -1,5 +1,5 @@
 import YAML from 'yaml';
-import * as React from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import path from 'path';
@@ -18,24 +18,28 @@ import { gitRollback } from '../../../sync/git/git-rollback';
 import classnames from 'classnames';
 import parseGitPath from '../../../sync/git/parse-git-path';
 import { strings } from '../../../common/strings';
-type Props = {
-  workspace: Workspace;
-  vcs: GitVCS;
-};
-type Item = {
+
+interface Item {
   path: string;
   type: string;
   status: string;
   staged: boolean;
   added: boolean;
   editable: boolean;
-};
-type State = {
+}
+
+interface Props {
+  workspace: Workspace;
+  vcs: GitVCS;
+}
+
+interface State {
   loading: boolean;
   branch: string;
   message: string;
   items: Record<string, Item>;
-};
+}
+
 const INITIAL_STATE: State = {
   loading: false,
   branch: '',
@@ -44,10 +48,10 @@ const INITIAL_STATE: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitStagingModal extends React.PureComponent<Props, State> {
-  modal: Modal | null | undefined;
+class GitStagingModal extends PureComponent<Props, State> {
+  modal: Modal | null = null;
   statusNames: Record<string, string>;
-  textarea: HTMLTextAreaElement | null | undefined;
+  textarea: HTMLTextAreaElement | null = null;
   onCommit: null | (() => void);
 
   constructor(props: Props) {
@@ -56,11 +60,11 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     this.onCommit = null;
   }
 
-  _setModalRef(ref: Modal | null | undefined) {
+  _setModalRef(ref: Modal) {
     this.modal = ref;
   }
 
-  _setTextareaRef(ref: Modal | null | undefined) {
+  _setTextareaRef(ref: Modal) {
     this.textarea = ref;
   }
 
@@ -101,7 +105,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async _toggleAll(items: Array<Item>, forceAdd: boolean = false) {
+  async _toggleAll(items: Item[], forceAdd = false) {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
     const newItems = { ...this.state.items };
@@ -133,7 +137,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     });
   }
 
-  async getAllPaths(): Promise<Array<string>> {
+  async getAllPaths(): Promise<string[]> {
     const { vcs } = this.props;
     const f = vcs.getFs().promises;
     const fsPaths = [];
@@ -276,15 +280,15 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     }
 
     return (
-      <React.Fragment>
+      <Fragment>
         <Tooltip message={message}>
           {child} {type}
         </Tooltip>
-      </React.Fragment>
+      </Fragment>
     );
   }
 
-  async _handleRollback(items: Array<Item>) {
+  async _handleRollback(items: Item[]) {
     const { vcs } = this.props;
     const files = items.map(i => ({
       filePath: i.path,
@@ -326,7 +330,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderTable(title: string, items: Array<Item>, rollbackLabel: string) {
+  renderTable(title: string, items: Item[], rollbackLabel: string) {
     if (items.length === 0) {
       return null;
     }
@@ -377,7 +381,7 @@ class GitStagingModal extends React.PureComponent<Props, State> {
     return <>No changes to commit.</>;
   }
 
-  _renderItems(items: Array<Item>) {
+  _renderItems(items: Item[]) {
     const { message } = this.state;
     const newItems = items.filter(i => i.status.includes('added'));
     const existingItems = items.filter(i => !i.status.includes('added'));

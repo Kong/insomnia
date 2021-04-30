@@ -1,17 +1,17 @@
-import * as React from 'react';
+import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import Tooltip from '../tooltip';
-type Props = {
+
+interface Props {
   url: string;
-  // Optional
   small?: boolean;
   className?: string;
   maxLength?: number;
   method?: string;
   tooltipDelay?: number;
-};
+}
 
-class URLTag extends React.PureComponent<Props> {
+class URLTag extends PureComponent<Props> {
   render() {
     const { url, small, className, maxLength, method, tooltipDelay } = this.props;
     const max = maxLength || 30;
