@@ -4,10 +4,14 @@
     "app",
     "package.json",
     "jest.config.js",
-    "webpack"
+    ".babelrc.js",
+    "webpack",
+    "scripts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "bin",
+    "config"
   ]
 }

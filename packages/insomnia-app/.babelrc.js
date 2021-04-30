@@ -1,4 +1,4 @@
-{
+module.exports = /** @type { import('@babel/core').TransformOptions } */ {
   "presets": [
     "@babel/preset-react",
   ],

@@ -5,6 +5,7 @@
     "rootDir": ".",
     "resolveJsonModule": true,
     "strict": false,
+    "strictNullChecks": true,
     "jsx": "react",
     "experimentalDecorators": true
   },

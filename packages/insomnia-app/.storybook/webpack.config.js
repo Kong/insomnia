@@ -1,4 +1,4 @@
-module.exports = async function({ config, mode }) {
+module.exports = ({ config }) => {
   config.module.rules.push({
     test: /\.less$/,
     use: [

@@ -1,25 +1,13 @@
-module.exports.getBuildContext = forceFromGitRef => {
-  if (forceFromGitRef) {
-    return fromGitRef();
-  }
-
-  return fromSmokeTest() || fromGitRef();
-};
-
-function fromSmokeTest() {
-  const { SMOKE_TEST } = process.env;
-
-  if (SMOKE_TEST) {
-    return {
-      smokeTest: true,
-      version: '0.0.1',
-    };
-  }
-
-  return null;
+export interface BuildContext {
+  app?: string | null;
+  channel?: string | null;
+  gitCommit?: string | null;
+  gitRef?: string | null;
+  smokeTest: boolean;
+  version: string | null;
 }
 
-function fromGitRef() {
+const fromGitRef = (): BuildContext => {
   const {
     GIT_TAG,
     GITHUB_REF,
@@ -40,8 +28,24 @@ function fromGitRef() {
   return {
     app,
     channel,
-    version,
-    gitRef,
     gitCommit,
+    gitRef,
+    smokeTest: false,
+    version,
   };
-}
+};
+
+export const getBuildContext = (forceFromGitRef: boolean) => {
+  if (forceFromGitRef) {
+    return fromGitRef();
+  }
+
+  if (process.env.SMOKE_TEST) {
+    return {
+      smokeTest: true,
+      version: '0.0.1',
+    } as const;
+  }
+
+  return fromGitRef();
+};
