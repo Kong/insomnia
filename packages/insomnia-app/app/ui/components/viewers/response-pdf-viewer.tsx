@@ -66,7 +66,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
     }, 100);
   }
 
-  handleResize(e: React.SyntheticEvent<HTMLDivElement>) {
+  handleResize() {
     if (!this.container) {
       return;
     }
@@ -89,7 +89,7 @@ class ResponsePDFViewer extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const styles = {
+    const styles: React.CSSProperties = {
       width: '100%',
       height: '100%',
       overflowX: 'hidden',

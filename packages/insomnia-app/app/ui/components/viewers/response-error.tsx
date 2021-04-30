@@ -1,10 +1,14 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import Link from '../base/link';
 import { showModal } from '../modals/index';
 import SettingsModal from '../modals/settings-modal';
 
-class ResponseError extends PureComponent {
+interface Props {
+  error: string,
+  url: string,
+  fontSize: number,
+}
+class ResponseError extends PureComponent<Props> {
   render() {
     const { error, fontSize } = this.props;
     let msg = null;
@@ -55,10 +59,4 @@ class ResponseError extends PureComponent {
   }
 }
 
-ResponseError.propTypes = {
-  // Required
-  error: PropTypes.string.isRequired,
-  url: PropTypes.string.isRequired,
-  fontSize: PropTypes.number.isRequired,
-};
 export default ResponseError;

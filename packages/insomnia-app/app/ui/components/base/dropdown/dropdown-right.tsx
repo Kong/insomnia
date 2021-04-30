@@ -1,8 +1,12 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
-class DropdownRight extends PureComponent {
+interface Props {
+  children: React.ReactNode,
+  className?: string,
+};
+
+class DropdownRight extends PureComponent<Props> {
   render() {
     const { className, children, ...extraProps } = this.props;
     return (
@@ -13,8 +17,4 @@ class DropdownRight extends PureComponent {
   }
 }
 
-DropdownRight.propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string,
-};
 export default DropdownRight;

@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -13,9 +12,36 @@ import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
+interface Props {
+  children: React.ReactNode,
+  right?: boolean,
+  outline?: boolean,
+  wide?: boolean,
+  onOpen?: Function,
+  onHide?: Function,
+  className?: string,
+  style?: React.CSSProperties,
+  beside?: boolean,
+}
+
+interface State {
+  open: boolean,
+  dropUp: boolean,
+  filter: string,
+  filterVisible: boolean,
+  filterItems?: Array<number>,
+  filterActiveIndex: number,
+  forcedPosition?: {x: number, y: number},
+  uniquenessKey: number, 
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Dropdown extends PureComponent {
-  constructor(props) {
+class Dropdown extends PureComponent<Props, State> {
+  private _node: HTMLDivElement;
+  private _dropdownList: HTMLDivElement;
+  private _filter: any;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       open: false,
@@ -32,7 +58,7 @@ class Dropdown extends PureComponent {
     };
   }
 
-  _setRef(n) {
+  _setRef(n: HTMLDivElement) {
     this._node = n;
   }
 
@@ -43,6 +69,7 @@ class Dropdown extends PureComponent {
 
       const button = this._dropdownList.querySelector(selector);
 
+      // @ts-expect-error
       button && button.click();
     }
   }
@@ -58,6 +85,7 @@ class Dropdown extends PureComponent {
     // Filter the list items that are filterable (have data-filter-index property)
     const filterItems = [];
 
+    // @ts-expect-error convert to array or use querySelectorAll().forEach
     for (const listItem of this._dropdownList.querySelectorAll('li')) {
       if (!listItem.hasAttribute('data-filter-index')) {
         continue;
@@ -89,6 +117,7 @@ class Dropdown extends PureComponent {
       const items = filterItems || [];
 
       if (!filterItems) {
+    // @ts-expect-error convert to array or use querySelectorAll().forEach
         for (const li of this._dropdownList.querySelectorAll('li')) {
           if (li.hasAttribute('data-filter-index')) {
             const filterIndex = li.getAttribute('data-filter-index');
@@ -145,6 +174,7 @@ class Dropdown extends PureComponent {
     const { forcedPosition } = this.state;
 
     if (forcedPosition) {
+      // @ts-expect-error missing properties
       dropdownBtnRect = {
         left: forcedPosition.x,
         right: bodyRect.width - forcedPosition.x,
@@ -214,7 +244,7 @@ class Dropdown extends PureComponent {
     e.preventDefault();
   }
 
-  _addDropdownListRef(n) {
+  _addDropdownListRef(n: HTMLDivElement) {
     this._dropdownList = n;
   }
 
@@ -228,6 +258,7 @@ class Dropdown extends PureComponent {
   }
 
   _addDropdownMenuRef(n) {
+    // @ts-expect-error _dropdownMenu isn't used, this can be removed
     this._dropdownMenu = n;
   }
 
@@ -386,7 +417,7 @@ class Dropdown extends PureComponent {
             <div
               key={uniquenessKey}
               ref={this._addDropdownListRef}
-              tabIndex="-1"
+              tabIndex={-1}
               className={classnames('dropdown__list', {
                 'dropdown__list--filtering': filterVisible,
               })}>
@@ -420,7 +451,7 @@ class Dropdown extends PureComponent {
           className={classes}
           ref={this._setRef}
           onClick={this._handleClick}
-          tabIndex="-1"
+          tabIndex={-1}
           onMouseDown={Dropdown._handleMouseDown}>
           {finalChildren}
         </div>
@@ -429,17 +460,4 @@ class Dropdown extends PureComponent {
   }
 }
 
-Dropdown.propTypes = {
-  // Required
-  children: PropTypes.node.isRequired,
-  // Optional
-  right: PropTypes.bool,
-  outline: PropTypes.bool,
-  wide: PropTypes.bool,
-  onOpen: PropTypes.func,
-  onHide: PropTypes.func,
-  className: PropTypes.string,
-  style: PropTypes.string,
-  beside: PropTypes.bool,
-};
 export default Dropdown;

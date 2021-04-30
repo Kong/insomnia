@@ -204,6 +204,7 @@ class ResponseMultipart extends React.PureComponent<Props, State> {
       form.on('close', () => {
         resolve(parts);
       });
+      // @ts-expect-error
       form.parse(fakeReq);
       fakeReq.write(bodyBuffer);
       fakeReq.end();

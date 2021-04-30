@@ -1,11 +1,21 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 
+interface Props {
+  buttonClass?: string,
+  stayOpenAfterClick?: boolean,
+  value?: any,
+  disabled?: boolean,
+  onClick: Function,
+  children: React.ReactNode,
+  className?: string,
+  color?: string,
+};
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class DropdownItem extends PureComponent {
+class DropdownItem extends PureComponent<Props> {
   _handleClick(e) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
 
@@ -38,8 +48,8 @@ class DropdownItem extends PureComponent {
     } = this.props;
     const styles = color
       ? {
-          color,
-        }
+        color,
+      }
       : {};
     const inner = (
       <div className={classnames('dropdown__inner', className)}>
@@ -57,14 +67,4 @@ class DropdownItem extends PureComponent {
   }
 }
 
-DropdownItem.propTypes = {
-  buttonClass: PropTypes.any,
-  stayOpenAfterClick: PropTypes.bool,
-  value: PropTypes.any,
-  disabled: PropTypes.bool,
-  onClick: PropTypes.func,
-  children: PropTypes.node,
-  className: PropTypes.string,
-  color: PropTypes.string,
-};
 export default DropdownItem;

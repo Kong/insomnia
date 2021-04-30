@@ -1,6 +1,7 @@
 import * as React from 'react';
 import Hotkey from '../../hotkey';
 import type { KeyBindings } from '../../../../common/hotkeys';
+
 type Props = {
   keyBindings: KeyBindings;
 };

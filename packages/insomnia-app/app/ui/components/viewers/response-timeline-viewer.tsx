@@ -1,10 +1,16 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import { shell } from 'electron';
 import CodeEditor from '../codemirror/code-editor';
 import * as models from '../../../models';
+import { Response } from '../../../models/response';
 
-class ResponseTimelineViewer extends PureComponent {
+interface Props {
+  response: Response,
+  editorFontSize: number,
+  editorIndentSize: number,
+  editorLineWrapping: boolean,
+}
+class ResponseTimelineViewer extends PureComponent<Props> {
   state = {
     timeline: [],
     timelineKey: '',
@@ -112,10 +118,4 @@ class ResponseTimelineViewer extends PureComponent {
   }
 }
 
-ResponseTimelineViewer.propTypes = {
-  response: PropTypes.object.isRequired,
-  editorFontSize: PropTypes.number.isRequired,
-  editorIndentSize: PropTypes.number.isRequired,
-  editorLineWrapping: PropTypes.bool.isRequired,
-};
 export default ResponseTimelineViewer;
