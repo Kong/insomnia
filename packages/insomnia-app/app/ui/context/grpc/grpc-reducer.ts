@@ -110,7 +110,6 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
       return _patch(state, requestId, { ...oldState, error: payload });
     }
 
-    // @ts-expect-error
     case GrpcActionTypeEnum.status: {
       // @ts-expect-error
       const { payload }: StatusAction = action;

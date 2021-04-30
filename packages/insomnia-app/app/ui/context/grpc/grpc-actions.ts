@@ -104,7 +104,6 @@ const error = (requestId: string, error: ServiceError): ErrorAction => ({
 });
 
 const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
-  // @ts-expect-error
   type: GrpcActionTypeEnum.status,
   requestId,
   // @ts-expect-error

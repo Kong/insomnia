@@ -35,7 +35,7 @@ export function init() {
 export function migrate(doc: RequestMeta): RequestMeta {
   return doc;
 }
-export function create(patch: $Shape<RequestMeta> = {}) {
+export function create(patch: $Shape<RequestMeta> = {}): Promise<RequestMeta> {
   if (!patch.parentId) {
     throw new Error('New RequestMeta missing `parentId` ' + JSON.stringify(patch));
   }
@@ -47,13 +47,13 @@ export function update(requestMeta: RequestMeta, patch: $Shape<RequestMeta>) {
   // expectParentToBeRequest(patch.parentId || requestMeta.parentId);
   return db.docUpdate(requestMeta, patch);
 }
-export function getByParentId(parentId: string) {
+export function getByParentId(parentId: string): Promise<RequestMeta> {
   // expectParentToBeRequest(parentId);
   return db.getWhere(type, {
     parentId,
   });
 }
-export async function getOrCreateByParentId(parentId: string) {
+export async function getOrCreateByParentId(parentId: string): Promise<RequestMeta> {
   const requestMeta = await getByParentId(parentId);
 
   if (requestMeta) {

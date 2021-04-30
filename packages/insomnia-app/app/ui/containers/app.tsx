@@ -1,5 +1,4 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { PureComponent, RefObject } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -17,9 +16,11 @@ import {
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
   ACTIVITY_MIGRATION,
+  SortOrder,
+  GlobalActivity,
 } from '../../common/constants';
 import fs from 'fs';
-import { clipboard, ipcRenderer, remote } from 'electron';
+import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
 import { parse as urlParse } from 'url';
 import HTTPSnippet from 'httpsnippet';
 import ReactDOM from 'react-dom';
@@ -82,7 +83,7 @@ import * as plugins from '../../plugins';
 import * as templating from '../../templating/index';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
-import { updateMimeType } from '../../models/request';
+import { Request, updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
 import ExportRequestsModal from '../components/modals/export-requests-modal';
@@ -107,10 +108,78 @@ import withDragDropContext from '../context/app/drag-drop-context';
 import { trackSegmentEvent } from '../../common/analytics';
 import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
+import { Settings } from '../../models/settings';
+import { Workspace } from '../../models/workspace';
+import { GrpcRequest } from '../../models/grpc-request';
+import { Environment } from '../../models/environment';
+import { BaseModel } from '../../models';
+import { GrpcRequestMeta } from '../../models/grpc-request-meta';
+import { RequestMeta } from '../../models/request-meta';
+import { RequestGroup } from '../../models/request-group';
+import { ApiSpec } from '../../models/api-spec';
+import { WorkspaceMeta } from '../../models/workspace-meta';
+import { GitRepository } from '../../models/git-repository';
+import { CookieJar } from '../../models/cookie-jar';
+
+interface Props {
+  sidebarWidth: number,
+  paneWidth: number,
+  paneHeight: number,
+  handleCommand: Function,
+  settings: Settings,
+  isLoggedIn: boolean,
+  activeWorkspace: Workspace,
+  handleSetActiveActivity: Function,
+  handleGoToNextActivity: Function,
+  handleSetActiveWorkspace: Function,
+  activeRequest?: Request | GrpcRequest,
+  activeApiSpec: ApiSpec,
+  activity: GlobalActivity,
+  activeEnvironment?: Environment,
+  isVariableUncovered: boolean,
+  sidebarHidden: boolean, 
+  workspaces: Array<Workspace>,
+  apiSpecs: Array<ApiSpec>,
+  activeWorkspaceMeta: WorkspaceMeta,
+  activeGitRepository: GitRepository,
+  activeCookieJar: CookieJar,
+  environments: Array<Environment>,
+  handleStartLoading: Function,
+  handleStopLoading: Function
+  handleImportUriToWorkspace: Function,
+}
+
+interface State {
+  showDragOverlay: boolean,
+  draggingSidebar: boolean,
+  draggingPaneHorizontal: boolean,
+  draggingPaneVertical: boolean,
+  sidebarWidth: number,
+  paneWidth: number,
+  paneHeight: number,
+  isVariableUncovered: boolean,
+  vcs: VCS,
+  gitVCS: GitVCS,
+  forceRefreshCounter: number,
+  forceRefreshHeaderCounter: number,
+  isMigratingChildren: boolean,
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class App extends PureComponent {
-  constructor(props) {
+class App extends PureComponent<Props, State> {
+  private _getRenderContextPromiseCache: Object;
+  private _savePaneWidth: (paneWidth: number) => void;
+  private _savePaneHeight: (paneWidth: number) => void;
+  private _saveSidebarWidth: (paneWidth: number) => void;
+  private _globalKeyMap: any;
+  private _updateVCSLock: any;
+  private _requestPane: RefObject<any>;
+  private _responsePane: RefObject<any>;
+  private _sidebar: RefObject<any>;
+  private _wrapper: any;
+  private _responseFilterHistorySaveTimeout: NodeJS.Timeout;
+
+  constructor(props: Props) {
     super(props);
     this.state = {
       showDragOverlay: false,
@@ -127,6 +196,7 @@ class App extends PureComponent {
       forceRefreshHeaderCounter: 0,
       isMigratingChildren: false,
     };
+
     this._getRenderContextPromiseCache = {};
     this._savePaneWidth = debounce(paneWidth =>
       this._updateActiveWorkspaceMeta({
@@ -284,6 +354,7 @@ class App extends PureComponent {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
+          // @ts-expect-error apparently entities doesn't exist on props
           const { activeRequest, entities } = this.props;
 
           if (!activeRequest) {
@@ -293,7 +364,7 @@ class App extends PureComponent {
           const entitiesToCheck = isGrpcRequest(activeRequest)
             ? entities.grpcRequestMetas
             : entities.requestMetas;
-          const meta = Object.values(entitiesToCheck).find(m => m.parentId === activeRequest._id);
+          const meta = Object.values<GrpcRequestMeta | RequestMeta>(entitiesToCheck).find(m => m.parentId === activeRequest._id);
           await this._handleSetRequestPinned(this.props.activeRequest, !meta?.pinned);
         },
       ],
@@ -321,19 +392,19 @@ class App extends PureComponent {
     );
   }
 
-  _setRequestPaneRef(n) {
+  _setRequestPaneRef(n: RefObject<any>) {
     this._requestPane = n;
   }
 
-  _setResponsePaneRef(n) {
+  _setResponsePaneRef(n: RefObject<any>) {
     this._responsePane = n;
   }
 
-  _setSidebarRef(n) {
+  _setSidebarRef(n: RefObject<any>) {
     this._sidebar = n;
   }
 
-  _requestGroupCreate(parentId) {
+  _requestGroupCreate(parentId: string) {
     showPrompt({
       title: 'New Folder',
       defaultValue: 'My Folder',
@@ -353,10 +424,10 @@ class App extends PureComponent {
     });
   }
 
-  _requestCreate(parentId) {
+  _requestCreate(parentId: string) {
     showModal(RequestCreateModal, {
       parentId,
-      onComplete: requestId => {
+      onComplete: (requestId: string) => {
         this._handleSetActiveRequest(requestId);
 
         models.stats.incrementCreatedRequests();
@@ -365,7 +436,7 @@ class App extends PureComponent {
     });
   }
 
-  async _recalculateMetaSortKey(docs) {
+  async _recalculateMetaSortKey(docs: Array<BaseModel>) {
     function __updateDoc(doc, metaSortKey) {
       return models.getModel(doc.type).update(doc, {
         metaSortKey,
@@ -375,8 +446,8 @@ class App extends PureComponent {
     return Promise.all(docs.map((doc, i) => __updateDoc(doc, i * 100)));
   }
 
-  async _sortSidebar(order, parentId) {
-    let flushId;
+  async _sortSidebar(order: SortOrder, parentId?: string) {
+    let flushId: number;
 
     if (!parentId) {
       parentId = this.props.activeWorkspace._id;
@@ -397,14 +468,14 @@ class App extends PureComponent {
     }
   }
 
-  static async _requestGroupDuplicate(requestGroup) {
+  static async _requestGroupDuplicate(requestGroup: RequestGroup) {
     showPrompt({
       title: 'Duplicate Folder',
       defaultValue: requestGroup.name,
       submitName: 'Create',
       label: 'New Name',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name: string) => {
         const newRequestGroup = await models.requestGroup.duplicate(requestGroup, {
           name,
         });
@@ -413,13 +484,13 @@ class App extends PureComponent {
     });
   }
 
-  static async _requestGroupMove(requestGroup) {
+  static async _requestGroupMove(requestGroup: RequestGroup) {
     showModal(MoveRequestGroupModal, {
       requestGroup,
     });
   }
 
-  _requestDuplicate(request) {
+  _requestDuplicate(request: Request | GrpcRequest) {
     if (!request) {
       return;
     }
@@ -430,7 +501,7 @@ class App extends PureComponent {
       submitName: 'Create',
       label: 'New Name',
       selectText: true,
-      onComplete: async name => {
+      onComplete: async (name: string) => {
         const newRequest = await requestOperations.duplicate(request, {
           name,
         });
@@ -440,7 +511,7 @@ class App extends PureComponent {
     });
   }
 
-  _workspaceDuplicateById(callback, workspaceId) {
+  _workspaceDuplicateById(callback: () => void, workspaceId: string) {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
     const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
     showPrompt({
@@ -457,7 +528,7 @@ class App extends PureComponent {
     });
   }
 
-  _workspaceDuplicate(callback) {
+  _workspaceDuplicate(callback: () => void) {
     this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
   }
 
@@ -489,7 +560,7 @@ class App extends PureComponent {
    * @returns {Promise}
    * @private
    */
-  async _handleRenderText(text, contextCacheKey = null) {
+  async _handleRenderText(text: string, contextCacheKey = null) {
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
       this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
@@ -502,14 +573,15 @@ class App extends PureComponent {
   }
 
   _handleGenerateCodeForActiveRequest() {
+    // @ts-expect-error should skip this if active request is grpc request
     App._handleGenerateCode(this.props.activeRequest);
   }
 
-  static _handleGenerateCode(request) {
+  static _handleGenerateCode(request: Request) {
     showModal(GenerateCodeModal, request);
   }
 
-  async _handleCopyAsCurl(request) {
+  async _handleCopyAsCurl(request: Request) {
     const { activeEnvironment } = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     const har = await exportHarRequest(request._id, environmentId);
@@ -534,7 +606,7 @@ class App extends PureComponent {
     }
   }
 
-  async _updateActiveWorkspaceMeta(patch) {
+  async _updateActiveWorkspaceMeta(patch: Partial<WorkspaceMeta>) {
     const { activeWorkspaceMeta } = this.props;
     return models.workspaceMeta.update(activeWorkspaceMeta, patch);
   }
@@ -555,7 +627,7 @@ class App extends PureComponent {
     });
   }
 
-  _handleSetPaneWidth(paneWidth) {
+  _handleSetPaneWidth(paneWidth: number) {
     this.setState({
       paneWidth,
     });
@@ -563,7 +635,7 @@ class App extends PureComponent {
     this._savePaneWidth(paneWidth);
   }
 
-  _handleSetPaneHeight(paneHeight) {
+  _handleSetPaneHeight(paneHeight: number) {
     this.setState({
       paneHeight,
     });
@@ -571,7 +643,7 @@ class App extends PureComponent {
     this._savePaneHeight(paneHeight);
   }
 
-  async _handleSetActiveRequest(activeRequestId) {
+  async _handleSetActiveRequest(activeRequestId: string): Promise<void> {
     await this._updateActiveWorkspaceMeta({
       activeRequestId,
     });
@@ -580,7 +652,7 @@ class App extends PureComponent {
     });
   }
 
-  async _handleSetActiveEnvironment(activeEnvironmentId) {
+  async _handleSetActiveEnvironment(activeEnvironmentId: string) {
     await this._updateActiveWorkspaceMeta({
       activeEnvironmentId,
     });
@@ -590,7 +662,7 @@ class App extends PureComponent {
     }, 300);
   }
 
-  _handleSetSidebarWidth(sidebarWidth) {
+  _handleSetSidebarWidth(sidebarWidth: number) {
     this.setState({
       sidebarWidth,
     });
@@ -598,19 +670,19 @@ class App extends PureComponent {
     this._saveSidebarWidth(sidebarWidth);
   }
 
-  async _handleSetSidebarHidden(sidebarHidden) {
+  async _handleSetSidebarHidden(sidebarHidden: boolean) {
     await this._updateActiveWorkspaceMeta({
       sidebarHidden,
     });
   }
 
-  async _handleSetSidebarFilter(sidebarFilter) {
+  async _handleSetSidebarFilter(sidebarFilter: string) {
     await this._updateActiveWorkspaceMeta({
       sidebarFilter,
     });
   }
 
-  _handleSetRequestGroupCollapsed(requestGroupId, collapsed) {
+  _handleSetRequestGroupCollapsed(requestGroupId: string, collapsed: boolean) {
     App._updateRequestGroupMetaByParentId(requestGroupId, {
       collapsed,
     });
@@ -678,6 +750,7 @@ class App extends PureComponent {
     await models.requestMeta.update(requestMeta, {
       savedRequestBody: saveValue,
     });
+    // @ts-expect-error should skip this if active request is grpc request
     const newRequest = await updateMimeType(this.props.activeRequest, mimeType, false, savedBody);
     // Force it to update, because other editor components (header editor)
     // needs to change. Need to wait a delay so the next render can finish
@@ -690,7 +763,7 @@ class App extends PureComponent {
   }
 
   async _getDownloadLocation() {
-    const options = {
+    const options: SaveDialogOptions = {
       title: 'Select Download Location',
       buttonLabel: 'Save',
     };
@@ -706,7 +779,7 @@ class App extends PureComponent {
     return filePath || null;
   }
 
-  async _handleSendAndDownloadRequestWithEnvironment(requestId, environmentId, dir) {
+  async _handleSendAndDownloadRequestWithEnvironment(requestId: string, environmentId: string, dir: string) {
     const { settings, handleStartLoading, handleStopLoading } = this.props;
     const request = await models.request.getById(requestId);
 
@@ -747,17 +820,21 @@ class App extends PureComponent {
         }
 
         const to = fs.createWriteStream(filename);
+        // @ts-expect-error
         const readStream = models.response.getBodyStream(responsePatch);
 
         if (!readStream) {
           return;
         }
 
+        // @ts-expect-error incorrect stream type
         readStream.pipe(to);
+        // @ts-expect-error incorrect stream type
         readStream.on('end', async () => {
           responsePatch.error = `Saved to ${filename}`;
           await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
+        // @ts-expect-error incorrect stream type
         readStream.on('error', async err => {
           console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
           await models.response.create(responsePatch, settings.maxHistoryResponses);
@@ -1019,7 +1096,7 @@ class App extends PureComponent {
     showModal(ExportRequestsModal);
   }
 
-  static _handleShowSettingsModal(tabIndex) {
+  static _handleShowSettingsModal(tabIndex?: number) {
     showModal(SettingsModal, tabIndex);
   }
 
@@ -1091,6 +1168,7 @@ class App extends PureComponent {
     const thisGit = activeGitRepository || {};
     const nextGit = prevProps.activeGitRepository || {};
 
+    // @ts-expect-error
     if (changingWorkspace || thisGit._id !== nextGit._id) {
       this._updateGitVCS();
     }
@@ -1180,6 +1258,7 @@ class App extends PureComponent {
       const driver = new FileSystemDriver({
         directory,
       });
+      // @ts-expect-error
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
           showModal(SyncMergeModal, {
@@ -1246,7 +1325,7 @@ class App extends PureComponent {
 
     // Update VCS
     await this._updateVCS();
-    await this._updateGitVCS(this.props.activeWorkspace);
+    await this._updateGitVCS();
     db.onChange(this._handleDbChange);
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
@@ -1359,12 +1438,14 @@ class App extends PureComponent {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+    // @ts-expect-error this function doesn't even accept props but should it?
     this._ensureWorkspaceChildren(nextProps);
   }
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
+    // @ts-expect-error this function doesn't even accept props but should it?
     this._ensureWorkspaceChildren(this.props);
   }
 
@@ -1391,6 +1472,7 @@ class App extends PureComponent {
         <GrpcProvider>
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
+              {/* @ts-expect-error have fun */}
               <Wrapper
                 {...this.props}
                 ref={this._setWrapperRef}
@@ -1428,7 +1510,6 @@ class App extends PureComponent {
                   this._handleSendAndDownloadRequestWithEnvironment
                 }
                 handleSetActiveResponse={this._handleSetActiveResponse}
-                handleSetActiveRequest={this._handleSetActiveRequest}
                 handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                 handleSetSidebarFilter={this._handleSetSidebarFilter}
                 handleToggleMenuBar={this._handleToggleMenuBar}
@@ -1457,48 +1538,42 @@ class App extends PureComponent {
   }
 }
 
-App.propTypes = {
-  // Required
-  sidebarWidth: PropTypes.number.isRequired,
-  paneWidth: PropTypes.number.isRequired,
-  paneHeight: PropTypes.number.isRequired,
-  handleCommand: PropTypes.func.isRequired,
-  settings: PropTypes.object.isRequired,
-  isLoggedIn: PropTypes.bool.isRequired,
-  activeWorkspace: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }).isRequired,
-  handleSetActiveActivity: PropTypes.func.isRequired,
-  handleGoToNextActivity: PropTypes.func.isRequired,
-  handleSetActiveWorkspace: PropTypes.func.isRequired,
-  // Optional
-  activeRequest: PropTypes.object,
-  activeEnvironment: PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-  }),
-};
-
 function mapStateToProps(state, props) {
   const { entities, global } = state;
   const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = global;
   // Entities
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const entitiesLists = selectEntitiesLists(state, props);
   const {
+    // @ts-expect-error
     apiSpecs,
+    // @ts-expect-error
     environments,
+    // @ts-expect-error
     gitRepositories,
+    // @ts-expect-error
     requestGroups,
+    // @ts-expect-error
     requestMetas,
+    // @ts-expect-error
     requestVersions,
+    // @ts-expect-error
     requests,
+    // @ts-expect-error
     workspaceMetas,
+    // @ts-expect-error
     workspaces,
   } = entitiesLists;
+  // @ts-expect-error
   const settings = entitiesLists.settings[0];
   // Workspace stuff
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspace = selectActiveWorkspace(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeGitRepository = selectActiveGitRepository(state, props);
   const safeMeta = activeWorkspaceMeta || {};
   const sidebarHidden = safeMeta.sidebarHidden || false;
@@ -1507,35 +1582,49 @@ function mapStateToProps(state, props) {
   const paneWidth = safeMeta.paneWidth || DEFAULT_PANE_WIDTH;
   const paneHeight = safeMeta.paneHeight || DEFAULT_PANE_HEIGHT;
   // Request stuff
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const requestMeta = selectActiveRequestMeta(state, props) || {};
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeRequest = selectActiveRequest(state, props);
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
   const responseDownloadPath = requestMeta.downloadPath || null;
   // Cookie Jar
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeCookieJar = selectActiveCookieJar(state, props);
   // Response stuff
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeRequestResponses = selectActiveRequestResponses(state, props) || [];
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeResponse = selectActiveResponse(state, props) || null;
   // Environment stuff
   const activeEnvironmentId = safeMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
   // OAuth2Token stuff
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const oAuth2Token = selectActiveOAuth2Token(state, props);
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const sidebarChildren = selectSidebarChildren(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const unseenWorkspaces = selectUnseenWorkspaces(state, props);
   // Sync stuff
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const syncItems = selectSyncItems(state, props);
   // Api spec stuff
   const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
   // Test stuff
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTests = selectActiveUnitTests(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTestSuite = selectActiveUnitTestSuite(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
+  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTestResult = selectActiveUnitTestResult(state, props);
   return Object.assign({}, state, {
     activity: activeActivity,
