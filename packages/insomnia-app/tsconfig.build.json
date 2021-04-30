@@ -5,7 +5,8 @@
     "rootDir": ".",
     "resolveJsonModule": true,
     "strict": false,
-    "jsx": "preserve"
+    "jsx": "react",
+    "experimentalDecorators": true
   },
   "include": [
     "app",
