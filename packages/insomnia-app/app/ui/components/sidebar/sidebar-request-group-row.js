@@ -9,6 +9,8 @@ import Highlight from '../base/highlight';
 import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
 import SidebarRequestRow from './sidebar-request-row';
 import * as misc from '../../../common/misc';
+import { showModal } from '../modals';
+import RequestGroupSettingsModal from '../modals/request-group-settings-modal';
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarRequestGroupRow extends PureComponent {
@@ -45,6 +47,10 @@ class SidebarRequestGroupRow extends PureComponent {
     if (dragDirection !== this.state.dragDirection) {
       this.setState({ dragDirection });
     }
+  }
+
+  _handleShowRequestSettings() {
+    showModal(RequestGroupSettingsModal, { requestGroup: this.props.requestGroup });
   }
 
   render() {
@@ -123,6 +129,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
+              handleShowSettings={this._handleShowRequestSettings}
               handleMoveRequestGroup={handleMoveRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}

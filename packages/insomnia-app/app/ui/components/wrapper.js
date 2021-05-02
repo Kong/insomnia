@@ -47,6 +47,7 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import RequestSettingsModal from './modals/request-settings-modal';
+import RequestGroupSettingsModal from './modals/request-group-settings-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
 import GitStagingModal from './modals/git-staging-modal';
@@ -612,6 +613,19 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
             />
 
             <RequestSettingsModal
+              ref={registerModal}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              workspaces={workspaces}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <RequestGroupSettingsModal
               ref={registerModal}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}

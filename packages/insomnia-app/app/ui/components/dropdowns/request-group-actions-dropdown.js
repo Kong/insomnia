@@ -13,7 +13,7 @@ import {
 } from '../base/dropdown';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import type { RequestGroupAction } from '../../../plugins';
@@ -30,6 +30,7 @@ type Props = {
   hotKeyRegistry: HotKeyRegistry,
   activeEnvironment: Environment | null,
   handleCreateRequest: (id: string) => any,
+  handleShowSettings: Function,
   handleDuplicateRequestGroup: (rg: RequestGroup) => any,
   handleMoveRequestGroup: (rg: RequestGroup) => any,
   handleCreateRequestGroup: (id: string) => any,
@@ -51,18 +52,6 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
 
   _setDropdownRef(n: ?Dropdown) {
     this._dropdown = n;
-  }
-
-  _handleRename() {
-    const { requestGroup } = this.props;
-
-    showPrompt({
-      title: 'Rename Folder',
-      defaultValue: requestGroup.name,
-      onComplete: name => {
-        models.requestGroup.update(requestGroup, { name });
-      },
-    });
   }
 
   async _handleRequestCreate() {
@@ -155,9 +144,6 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy" /> Duplicate
         </DropdownItem>
-        <DropdownItem onClick={this._handleRename}>
-          <i className="fa fa-edit" /> Rename
-        </DropdownItem>
         <DropdownItem onClick={this._handleEditEnvironment}>
           <i className="fa fa-code" /> Environment
         </DropdownItem>
@@ -178,6 +164,10 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
             {p.label}
           </DropdownItem>
         ))}
+        <DropdownDivider />
+        <DropdownItem onClick={this.props.handleShowSettings}>
+          <i className="fa fa-wrench" /> Settings
+        </DropdownItem>
       </Dropdown>
     );
   }
