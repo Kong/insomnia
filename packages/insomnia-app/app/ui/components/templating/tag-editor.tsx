@@ -532,7 +532,7 @@ class TagEditor extends PureComponent<Props, State> {
       <select value={id} onChange={this._handleChange}>
         <option value="n/a">-- Select Item --</option>
         {docs.map((doc: any) => {
-          let namePrefix = null;
+          let namePrefix: string | null = null;
 
           // Show paren't folder with name if it's a request
           if (doc.type === models.request.type) {
@@ -689,7 +689,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  renderActions(actions = []) {
+  renderActions(actions: Array<NunjucksActionTag> = []) {
     return (
       <div className="form-row">
         <div className="form-control">
@@ -700,7 +700,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  renderAction(action: NunjucksActionTag, index: number) {
+  renderAction(action: NunjucksActionTag) {
     const name = action.name;
     const icon = action.icon ? <i className={action.icon} /> : undefined;
     return (

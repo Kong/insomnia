@@ -3,7 +3,7 @@ import * as util from '../../../common/misc';
 
 interface Props {
   method: string;
-  override?: string;
+  override?: string | null;
   fullNames?: boolean;
 }
 

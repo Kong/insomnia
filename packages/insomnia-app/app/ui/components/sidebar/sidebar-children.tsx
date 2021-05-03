@@ -4,14 +4,14 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
-import * as models from '../../../models/index';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
-import { Dropdown } from '../base/dropdown';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
+import { GrpcRequest } from '../../../models/grpc-request';
+import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
 
 interface Child {
   doc: Request | GrpcRequest | RequestGroup;
@@ -41,15 +41,15 @@ interface Props {
   workspace: Workspace;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
-  activeEnvironment: Environment | null;
-  activeRequest?: Request | null;
+  activeEnvironment?: Environment;
+  activeRequest?: Request;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class SidebarChildren extends PureComponent<Props> {
   _contextMenu: SidebarCreateDropdown | null = null;
 
-  _handleContextMenu(e: MouseEvent) {
+  _handleContextMenu(e: React.MouseEvent<HTMLUListElement>) {
     const { target, currentTarget, clientX, clientY } = e;
 
     if (target !== currentTarget) {
@@ -69,7 +69,7 @@ class SidebarChildren extends PureComponent<Props> {
     }
   }
 
-  _setContextMenuRef(n: Dropdown) {
+  _setContextMenuRef(n: SidebarCreateDropdown) {
     this._contextMenu = n;
   }
 
@@ -99,7 +99,7 @@ class SidebarChildren extends PureComponent<Props> {
         return null;
       }
 
-      if (child.doc.type === models.request.type || child.doc.type === models.grpcRequest.type) {
+      if (isRequest(child.doc) || isGrpcRequest(child.doc)) {
         return (
           <SidebarRequestRow
             key={child.doc._id}
@@ -116,7 +116,6 @@ class SidebarChildren extends PureComponent<Props> {
             isPinned={child.pinned}
             disableDragAndDrop={isInPinnedList}
             request={child.doc}
-            workspace={workspace}
             hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions on requests
             activeEnvironment={activeEnvironment}
           />
@@ -157,7 +156,6 @@ class SidebarChildren extends PureComponent<Props> {
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest}
           handleCreateRequestGroup={handleCreateRequestGroup}
-          numChildren={child.children.length}
           workspace={workspace}
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}

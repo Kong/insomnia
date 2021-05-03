@@ -48,7 +48,7 @@ class Sidebar extends PureComponent<Props> {
             activeEnvironment.color &&
             environmentHighlightColorStyle === 'sidebar-edge'
               ? '5px solid ' + activeEnvironment.color
-              : null,
+              : undefined,
         }}>
         {children}
       </aside>

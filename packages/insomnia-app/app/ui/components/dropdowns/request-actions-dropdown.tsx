@@ -36,7 +36,7 @@ interface Props {
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
   handleSetRequestPinned: (...args: any[]) => any;
-  activeEnvironment: Environment | null;
+  activeEnvironment?: Environment;
 }
 
 // Setup state for plugin actions

@@ -26,7 +26,7 @@ class SidebarFilter extends PureComponent<Props> {
     this._input = n;
   }
 
-  _handleClearFilter(e: React.SyntheticEvent<HTMLButtonElement>) {
+  _handleClearFilter(_: React.SyntheticEvent<HTMLButtonElement>) {
     this.props.onChange('');
 
     if (this._input) {

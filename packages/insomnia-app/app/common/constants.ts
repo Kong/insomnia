@@ -315,7 +315,7 @@ export function getAuthTypeName(authType, useLong = false) {
   }
 }
 
-export function getContentTypeFromHeaders(headers, defaultValue = null) {
+export function getContentTypeFromHeaders(headers, defaultValue: string | null = null) {
   if (!Array.isArray(headers)) {
     return null;
   }
@@ -323,6 +323,7 @@ export function getContentTypeFromHeaders(headers, defaultValue = null) {
   const header = headers.find(({ name }) => name.toLowerCase() === 'content-type');
   return header ? header.value : defaultValue;
 }
+
 // Sourced from https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
 export const RESPONSE_CODE_DESCRIPTIONS = {
   // Special

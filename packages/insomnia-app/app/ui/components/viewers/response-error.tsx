@@ -11,7 +11,7 @@ interface Props {
 class ResponseError extends PureComponent<Props> {
   render() {
     const { error, fontSize } = this.props;
-    let msg = null;
+    let msg: React.ReactNode = null;
 
     if (error && error.toLowerCase().indexOf('certificate') !== -1) {
       msg = (

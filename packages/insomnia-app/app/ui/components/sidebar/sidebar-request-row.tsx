@@ -7,7 +7,6 @@ import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
 import Editable from '../base/editable';
 import Highlight from '../base/highlight';
 import MethodTag from '../tags/method-tag';
-import * as models from '../../../models';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import { CONTENT_TYPE_GRAPHQL, AUTOBIND_CFG } from '../../../common/constants';
@@ -16,9 +15,13 @@ import GrpcTag from '../tags/grpc-tag';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import GrpcSpinner from '../grpc-spinner';
 import { Environment } from '../../../models/environment';
+import { RequestGroup } from '../../../models/request-group';
+import { GrpcRequest } from '../../../models/grpc-request';
+import { Request } from '../../../models/request';
+import { isGrpcRequest } from '../../../models/helpers/is-model';
 
 interface Props {
-  activeEnvironment: Environment | null;
+  activeEnvironment?: Environment;
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;
@@ -35,8 +38,8 @@ interface Props {
   isDraggingOver?: boolean;
   connectDragSource?: Function;
   connectDropTarget?: Function;
-  requestGroup?: object;
-  request?: object;
+  requestGroup?: RequestGroup;
+  request?: Request | GrpcRequest;
   /** can be Request or GrpcRequest */
   disableDragAndDrop?: boolean;
 }
@@ -79,6 +82,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     const patch = {
       name,
     };
+    // @ts-expect-error skip this if request is undefined
     await requestOperations.update(request, patch);
     this.setState({
       isEditing: false,
@@ -86,7 +90,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
   }
 
   _handleRequestCreateFromEmpty() {
-    const parentId = this.props.requestGroup._id;
+    const parentId = this.props.requestGroup?._id;
     this.props.requestCreate(parentId);
   }
 
@@ -97,6 +101,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
       return;
     }
 
+    // @ts-expect-error skip this if request is undefined
     handleActivateRequest(request._id);
   }
 
@@ -108,6 +113,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
 
   _getMethodOverrideHeaderValue() {
     const { request } = this.props;
+    // @ts-expect-error skip this if request is undefined or grpc
     const header = getMethodOverrideHeader(request.headers);
 
     if (header) {
@@ -115,6 +121,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     }
 
     // If no override, use GraphQL as override if it's a gql request
+    // @ts-expect-error skip this if request is undefined or grpc
     if (request.body && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
       return 'GQL';
     }
@@ -135,11 +142,13 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     let renderedUrl;
 
     try {
+      // @ts-expect-error skip this if request is undefined or grpc
       renderedUrl = await props.handleRender(props.request.url);
     } catch (e) {
       // Certain things, such as invalid variable tags and Prompts
       // without titles will result in a failure to parse. Can't do
       // much else, so let's just give them the unrendered URL
+      // @ts-expect-error skip this if request is undefined
       renderedUrl = props.request.url;
     }
 
@@ -222,7 +231,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
       );
     } else {
       const methodTag =
-        request.type === models.grpcRequest.type ? (
+        isGrpcRequest(request) ? (
           <GrpcTag />
         ) : (
           <MethodTag method={request.method} override={this._getMethodOverrideHeaderValue()} />
@@ -287,8 +296,10 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     if (disableDragAndDrop) {
       return node;
     } else if (!this.state.isEditing) {
+      // @ts-expect-error
       return connectDragSource(connectDropTarget(node));
     } else {
+      // @ts-expect-error
       return connectDropTarget(node);
     }
   }
@@ -322,7 +333,7 @@ const dragTarget = {
     }
   },
 
-  hover(props, monitor, component) {
+  hover(_, monitor, component) {
     if (isAbove(monitor, component)) {
       component.setDragDirection(1);
     } else {

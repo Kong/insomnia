@@ -14,7 +14,7 @@ class StatusTag extends PureComponent<Props> {
   render() {
     const { statusMessage, statusCode, small, tooltipDelay } = this.props;
     let colorClass;
-    let statusCodeToDisplay = statusCode;
+    let statusCodeToDisplay: string | number = statusCode;
     const firstChar = (statusCode + '')[0] || '';
 
     switch (firstChar) {

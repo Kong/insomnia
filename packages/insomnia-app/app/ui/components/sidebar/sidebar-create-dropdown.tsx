@@ -1,7 +1,8 @@
 import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Dropdown, DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
+import { DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 

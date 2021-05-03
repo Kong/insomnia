@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactNode } from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import ReactDOM from 'react-dom';
@@ -8,6 +8,9 @@ import Highlight from '../base/highlight';
 import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
 import SidebarRequestRow from './sidebar-request-row';
 import * as misc from '../../../common/misc';
+import { RequestGroup } from '../../../models/request-group';
+import { Workspace } from '../../../models/workspace';
+import { Environment } from '../../../models/environment';
 
 interface Props {
   handleSetRequestGroupCollapsed: Function;
@@ -21,15 +24,14 @@ interface Props {
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;
-  workspace: object;
-  requestGroup: object;
+  workspace: Workspace;
+  requestGroup: RequestGroup;
   hotKeyRegistry: object;
   isDragging?: boolean;
   isDraggingOver?: boolean;
   connectDragSource?: Function;
   connectDropTarget?: Function;
-  children?: ReactNode;
-  activeEnvironment?: object;
+  activeEnvironment?: Environment;
 }
 
 interface State {
@@ -65,7 +67,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
   _handleShowActions(e) {
     e.preventDefault();
 
-    this._requestGroupActionsDropdown.show();
+    this._requestGroupActionsDropdown?.show();
   }
 
   setDragDirection(dragDirection) {
@@ -107,7 +109,9 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
     });
     // NOTE: We only want the button draggable, not the whole container (ie. no children)
+    // @ts-expect-error
     const button = connectDragSource(
+      // @ts-expect-error
       connectDropTarget(
         <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
           <div className="sidebar__clickable">
@@ -160,7 +164,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
           className={classnames('sidebar__list', {
             'sidebar__list--collapsed': isCollapsed,
           })}>
-          {!isCollapsed && children.length > 0 ? (
+          {!isCollapsed && children ? (
             children
           ) : (
             <SidebarRequestRow
@@ -172,9 +176,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               handleRender={handleRender}
               moveDoc={moveDoc}
               isActive={false}
-              request={null}
               requestGroup={requestGroup}
-              workspace={workspace}
               requestCreate={handleCreateRequest}
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
