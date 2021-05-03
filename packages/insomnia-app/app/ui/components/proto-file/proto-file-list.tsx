@@ -4,6 +4,7 @@ import { ListGroup, ListGroupItem } from 'insomnia-components';
 import ProtoFileListItem from './proto-file-list-item';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import ProtoDirectoryListItem from './proto-directory-list-item';
+import { ProtoDirectory } from '../../../models/proto-directory';
 
 export type SelectProtoFileHandler = (id: string) => void;
 export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;

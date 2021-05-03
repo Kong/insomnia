@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 
 interface Props {
-  buttonClass?: string,
+  buttonClass?: React.ComponentType,
   stayOpenAfterClick?: boolean,
   value?: any,
   disabled?: boolean,
@@ -63,6 +63,7 @@ class DropdownItem extends PureComponent<Props> {
       onClick: this._handleClick,
       ...props,
     };
+    // @ts-expect-error
     return createElement(buttonClass || 'button', buttonProps, inner);
   }
 }

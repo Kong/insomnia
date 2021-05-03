@@ -1,4 +1,4 @@
-import React, { FormEventHandler, PureComponent } from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
@@ -19,7 +19,7 @@ export const shouldSave = (oldValue, newValue, preventBlank) => {
 };
 
 interface Props {
-  onSubmit: FormEventHandler<HTMLInputElement>,
+  onSubmit: (value?: string) => void,
   value: string,
   fallbackValue?: string,
   blankValue?: string,
@@ -112,10 +112,9 @@ class Editable extends PureComponent<Props, State> {
       blankValue,
       singleClick,
       onEditStart,
-      // eslint-disable-line no-unused-vars
       preventBlank,
-      // eslint-disable-line no-unused-vars
       className,
+      onSubmit,
       renderReadView,
       ...extra
     } = this.props;

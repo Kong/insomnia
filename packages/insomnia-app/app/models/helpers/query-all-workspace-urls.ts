@@ -1,10 +1,11 @@
 import * as db from '../../common/database';
-import * as models from '../index';
-import type { Workspace } from '../workspace';
-import type { GrpcRequest } from '../grpc-request';
+import { Request, type as RequestType } from '../request';
+import { GrpcRequest, type as GrpcRequestType } from '../grpc-request';
+import { Workspace } from '../workspace';
+
 export const queryAllWorkspaceUrls = async (
-  workspace: Workspace,
-  reqType: models.request.type | models.grpcRequest.type,
+  workspace: Workspace | null,
+  reqType: typeof RequestType | typeof GrpcRequestType,
   reqId: string = 'n/a',
 ): Promise<Array<string>> => {
   const docs = await db.withDescendants(workspace, reqType);

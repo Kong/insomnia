@@ -1,8 +1,7 @@
-import { $Shape } from 'utility-types';
 import * as path from 'path';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
-import React, { PureComponent } from 'react';
+import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -54,7 +53,7 @@ class Plugins extends PureComponent<Props, State> {
     this.setState({ error: null });
   }
 
-  _handleAddNpmPluginChange(e: Event) {
+  _handleAddNpmPluginChange(e: ChangeEvent<HTMLInputElement>) {
     if (e.target instanceof HTMLInputElement) {
       this.setState({
         npmPluginValue: e.target.value,
@@ -62,12 +61,13 @@ class Plugins extends PureComponent<Props, State> {
     }
   }
 
-  async _handleAddFromNpm(e: Event): Promise<void> {
+  async _handleAddFromNpm(e: FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     this.setState({
       isInstallingFromNpm: true,
     });
-    const newState: $Shape<State> = {
+    // @ts-expect-error
+    const newState: State = {
       isInstallingFromNpm: false,
       error: null,
       installPluginErrMsg: '',
@@ -185,6 +185,7 @@ class Plugins extends PureComponent<Props, State> {
   renderToggleSwitch(plugin: Plugin) {
     return (
       <ToggleSwitch
+        // @ts-expect-error should this be labelClassName or switchClassName?
         className="valign-middle"
         checked={!plugin.config.disabled}
         disabled={this.state.isRefreshingPlugins}

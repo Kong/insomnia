@@ -86,7 +86,9 @@ class General extends PureComponent<Props, State> {
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
     if (el.type === 'number') {
+      // @ts-expect-error
       value = snapNumberToLimits(
+        // @ts-expect-error
         parseInt(value, 10) || 0,
         parseInt(el.min, 10),
         parseInt(el.max, 10),
@@ -94,6 +96,7 @@ class General extends PureComponent<Props, State> {
     }
 
     if (el.value === '__NULL__') {
+      // @ts-expect-error
       value = null;
     }
 
@@ -139,6 +142,7 @@ class General extends PureComponent<Props, State> {
         <label>
           {label}
           {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
+          {/* @ts-expect-error */}
           <select value={settings[name] || '__NULL__'} name={name} onChange={onChange}>
             {values.map(({ name, value }) => (
               <option key={value} value={value}>
@@ -151,7 +155,7 @@ class General extends PureComponent<Props, State> {
     );
   }
 
-  renderBooleanSetting(label: string, name: string, help: string, forceRestart?: boolean) {
+  renderBooleanSetting(label: string, name: string, help?: string, forceRestart?: boolean) {
     const { settings } = this.props;
 
     if (!settings.hasOwnProperty(name)) {
@@ -231,6 +235,7 @@ class General extends PureComponent<Props, State> {
               <select
                 defaultValue={settings.environmentHighlightColorStyle}
                 name="environmentHighlightColorStyle"
+                // @ts-expect-error
                 onChange={this._handleUpdateSetting}>
                 <option value="sidebar-indicator">Sidebar indicator</option>
                 <option value="sidebar-edge">Sidebar edge</option>
@@ -271,6 +276,7 @@ class General extends PureComponent<Props, State> {
                 <select
                   name="fontInterface"
                   value={settings.fontInterface || '__NULL__'}
+                  // @ts-expect-error
                   onChange={this._handleFontChange}>
                   <option value="__NULL__">-- System Default --</option>
                   {fonts.map((item, index) => (
@@ -301,6 +307,7 @@ class General extends PureComponent<Props, State> {
                 <select
                   name="fontMonospace"
                   value={settings.fontMonospace || '__NULL__'}
+                  // @ts-expect-error
                   onChange={this._handleFontChange}>
                   <option value="__NULL__">-- System Default --</option>
                   {fontsMono.map((item, index) => (
@@ -333,6 +340,7 @@ class General extends PureComponent<Props, State> {
               <select
                 defaultValue={settings.editorKeyMap}
                 name="editorKeyMap"
+                // @ts-expect-error
                 onChange={this._handleUpdateSetting}>
                 <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
                 <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
@@ -355,8 +363,8 @@ class General extends PureComponent<Props, State> {
               'Filter responses by environment',
               'filterResponsesByEnv',
               'Only show responses that were sent under the currently-active environment. This ' +
-                'adds additional separation when working with Development, Staging, Production ' +
-                'environments, for example.',
+              'adds additional separation when working with Development, Staging, Production ' +
+              'environments, for example.',
             )}
           </div>
           <div>
@@ -396,7 +404,7 @@ class General extends PureComponent<Props, State> {
               value: HttpVersion;
             }[],
             'Preferred HTTP version to use for requests which will fall back if it cannot be' +
-              'negotiated',
+            'negotiated',
           )}
         </div>
 
@@ -505,6 +513,7 @@ class General extends PureComponent<Props, State> {
                 <select
                   value={settings.updateChannel}
                   name="updateChannel"
+                  // @ts-expect-error
                   onChange={this._handleUpdateSetting}>
                   <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
                   <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
@@ -596,8 +605,10 @@ class General extends PureComponent<Props, State> {
 }
 
 function mapDispatchToProps(dispatch) {
+  // @ts-expect-error
   const global = bindActionCreators(globalActions, dispatch);
   return {
+    // @ts-expect-error
     handleSetActiveActivity: global.setActiveActivity,
   };
 }

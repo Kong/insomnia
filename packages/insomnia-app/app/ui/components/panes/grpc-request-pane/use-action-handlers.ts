@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type { GrpcMethodType } from '../../../../network/grpc/method';
 import { GrpcRequestEventEnum } from '../../../../common/grpc-events';
 import { ipcRenderer } from 'electron';
-import { grpcActions } from '../../../context/grpc';
+import { grpcActions, GrpcDispatch } from '../../../context/grpc';
 import { prepareGrpcMessage, prepareGrpcRequest } from '../../../../network/grpc/prepare';
 
 const _sendStart = async (
@@ -35,6 +35,7 @@ const _sendMessage = async (reqId: string, envId: string, dispatch: GrpcDispatch
 
   const preparedMessage = await prepareGrpcMessage(reqId, envId);
   ipcRenderer.send(GrpcRequestEventEnum.sendMessage, preparedMessage);
+  // @ts-expect-error
   dispatch(grpcActions.requestMessage(reqId, preparedMessage.body.text));
 };
 

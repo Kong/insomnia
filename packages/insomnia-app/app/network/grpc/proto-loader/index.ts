@@ -2,6 +2,7 @@ import type { GrpcMethodDefinition } from '../method';
 import * as protoLoader from '@grpc/proto-loader';
 import * as models from '../../../models';
 import writeProtoFile from './write-proto-file';
+import { ProtoFile } from '../../../models/proto-file';
 const GRPC_LOADER_OPTIONS = {
   keepCase: true,
   longs: String,
@@ -17,7 +18,7 @@ const isServiceDefinition = (obj: Record<string, any>) => !isTypeOrEnumDefinitio
 // TODO: The file path for protoLoader.load can also be a URL, so we can avoid
 //  writing to a file in those cases, but it becomes more important to cache
 export const loadMethods = async (
-  protoFile: ProtoFile | undefined,
+  protoFile?: ProtoFile | null,
 ): Promise<Array<GrpcMethodDefinition>> => {
   if (!protoFile?.protoText) {
     return [];

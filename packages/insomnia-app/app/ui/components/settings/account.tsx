@@ -30,7 +30,7 @@ class Account extends PureComponent<{}, State> {
     finishedResetting: false,
   };
 
-  async _handleShowChangePasswordForm(e: React.SyntheticEvent<HTMLInputElement>) {
+  async _handleShowChangePasswordForm(_: React.SyntheticEvent<HTMLButtonElement>) {
     this.setState(state => ({
       showChangePassword: !state.showChangePassword,
       finishedResetting: false,
@@ -97,7 +97,7 @@ class Account extends PureComponent<{}, State> {
     this.forceUpdate();
   }
 
-  static _handleLogin(e: React.SyntheticEvent<HTMLButtonElement>) {
+  static _handleLogin(e: React.SyntheticEvent<HTMLAnchorElement>) {
     e.preventDefault();
     hideAllModals();
     showModal(LoginModal);
