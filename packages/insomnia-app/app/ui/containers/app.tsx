@@ -120,6 +120,7 @@ import { ApiSpec } from '../../models/api-spec';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { GitRepository } from '../../models/git-repository';
 import { CookieJar } from '../../models/cookie-jar';
+import { Response } from '../../models/response';
 
 interface Props {
   sidebarWidth: number,
@@ -438,7 +439,7 @@ class App extends PureComponent<Props, State> {
 
   async _recalculateMetaSortKey(docs: BaseModel[]) {
     function __updateDoc(doc, metaSortKey) {
-      return models.getModel(doc.type).update(doc, {
+      return models.getModel(doc.type)?.update(doc, {
         metaSortKey,
       });
     }
@@ -447,7 +448,7 @@ class App extends PureComponent<Props, State> {
   }
 
   async _sortSidebar(order: SortOrder, parentId?: string) {
-    let flushId: number;
+    let flushId: number | undefined;
 
     if (!parentId) {
       parentId = this.props.activeWorkspace._id;
@@ -490,7 +491,7 @@ class App extends PureComponent<Props, State> {
     });
   }
 
-  _requestDuplicate(request: Request | GrpcRequest) {
+  _requestDuplicate(request?: Request | GrpcRequest) {
     if (!request) {
       return;
     }
@@ -515,12 +516,15 @@ class App extends PureComponent<Props, State> {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
     const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
     showPrompt({
+      // @ts-expect-error workspace can be null
       title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      // @ts-expect-error workspace can be null
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
+        // @ts-expect-error workspace can be null
         const newWorkspace = await workspaceOperations.duplicate(workspace, name);
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
@@ -540,6 +544,7 @@ class App extends PureComponent<Props, State> {
       models.requestGroup.type,
       models.workspace.type,
     ]);
+    // @ts-expect-error null vs undefined :(
     return render.getRenderContext(activeRequest, environmentId, ancestors);
   }
 
@@ -561,13 +566,17 @@ class App extends PureComponent<Props, State> {
    * @private
    */
   async _handleRenderText(text: string, contextCacheKey = null) {
+    // @ts-expect-error contextCacheKey being null used as object index
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
+      // @ts-expect-error contextCacheKey being null used as object index
       this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
     }
 
     // Set timeout to delete the key eventually
+    // @ts-expect-error contextCacheKey being null used as object index
     setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
+    // @ts-expect-error contextCacheKey being null used as object index
     const context = await this._getRenderContextPromiseCache[contextCacheKey];
     return render.render(text, context);
   }
@@ -775,6 +784,7 @@ class App extends PureComponent<Props, State> {
     }
 
     const { filePath } = await remote.dialog.showSaveDialog(options);
+    // @ts-expect-error don't set item if filePath is undefined
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
     return filePath || null;
   }
@@ -801,9 +811,11 @@ class App extends PureComponent<Props, State> {
 
       if (
         responsePatch.bodyPath &&
+        responsePatch.statusCode &&
         responsePatch.statusCode >= 200 &&
         responsePatch.statusCode < 300
       ) {
+        // @ts-expect-error contentType can be undefined
         const extension = mime.extension(responsePatch.contentType) || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
@@ -910,28 +922,32 @@ class App extends PureComponent<Props, State> {
     handleStopLoading(requestId);
   }
 
-  async _handleSetActiveResponse(requestId, activeResponse = null) {
+  async _handleSetActiveResponse(requestId: string, activeResponse: Response | null = null) {
     const { activeEnvironment } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : null;
     await App._updateRequestMetaByParentId(requestId, {
       activeResponseId,
     });
-    let response;
+
+    let response: Response;
 
     if (activeResponseId) {
+      // @ts-expect-error can return null if not found
       response = await models.response.getById(activeResponseId);
     } else {
       const environmentId = activeEnvironment ? activeEnvironment._id : null;
+      // @ts-expect-error can return null if not found
       response = await models.response.getLatestForRequest(requestId, environmentId);
     }
 
     const requestVersionId = response ? response.requestVersionId : 'n/a';
+    // @ts-expect-error the above line should be response?.requestVersionId ?? 'n/a'
     const request = await models.requestVersion.restore(requestVersionId);
 
     if (request) {
       // Refresh app to reflect changes. Using timeout because we need to
       // wait for the request update to propagate.
-      setTimeout(() => this._wrapper._forceRequestPaneRefresh(), 500);
+      setTimeout(() => this._wrapper?._forceRequestPaneRefresh(), 500);
     } else {
       // Couldn't restore request. That's okay
     }
@@ -1168,7 +1184,6 @@ class App extends PureComponent<Props, State> {
     const thisGit = activeGitRepository || {};
     const nextGit = prevProps.activeGitRepository || {};
 
-    // @ts-expect-error
     if (changingWorkspace || thisGit._id !== nextGit._id) {
       this._updateGitVCS();
     }
@@ -1359,11 +1374,13 @@ class App extends PureComponent<Props, State> {
           return;
         }
 
+        // @ts-expect-error
         if (e.dataTransfer.files.length === 0) {
           console.log('[drag] Ignored drop event because no files present');
           return;
         }
 
+        // @ts-expect-error
         const file = e.dataTransfer.files[0];
         const { path } = file;
         const uri = `file://${path}`;
@@ -1710,6 +1727,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 
   function __updateDoc(doc, patch) {
+    // @ts-expect-error
     return models.getModel(docToMove.type).update(doc, patch);
   }
 

@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect';
 import * as models from '../../models';
+import { UnitTestResult } from '../../models/unit-test-result';
 // ~~~~~~~~~ //
 // Selectors //
 // ~~~~~~~~~ //
@@ -250,7 +251,7 @@ export const selectActiveUnitTestResult = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
-    let recentResult = null;
+    let recentResult: UnitTestResult | null = null;
 
     // @ts-expect-error
     for (const r of entities.unitTestResults) {

@@ -50,7 +50,7 @@ type InitOptions = {
 };
 type InitFromCloneOptions = {
   url: string;
-  gitCredentials: GitCredentials;
+  gitCredentials?: GitCredentials | null;
   directory: string;
   fs: Record<string, any>;
   gitDirectory: string;

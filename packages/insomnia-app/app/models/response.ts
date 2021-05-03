@@ -77,7 +77,7 @@ export function init(): BaseResponse {
     environmentId: '__LEGACY__',
   };
 }
-export async function migrate(doc: BaseResponse) {
+export async function migrate(doc: Response) {
   doc = await migrateBodyToFileSystem(doc);
   doc = await migrateBodyCompression(doc);
   doc = await migrateTimelineToFileSystem(doc);
@@ -100,7 +100,7 @@ export function hookRemove(doc: Response, consoleLog: typeof console.log = conso
   });
 }
 
-export function getById(id: string) {
+export function getById(id: string): Promise<Response | null> {
   return db.get(type, id);
 }
 export async function all(): Promise<Response[]> {
@@ -176,7 +176,7 @@ export async function create(patch: Record<string, any> = {}, maxResponses = 20)
   }
 
   // Delete all other responses before creating the new one
-  const allResponses = await db.findMostRecentlyModified(type, query, Math.max(1, maxResponses));
+  const allResponses = await db.findMostRecentlyModified<Response>(type, query, Math.max(1, maxResponses));
   const recentIds = allResponses.map(r => r._id);
   // Remove all that were in the last query, except the first `maxResponses` IDs
   await db.removeWhere(type, {
@@ -190,24 +190,24 @@ export async function create(patch: Record<string, any> = {}, maxResponses = 20)
 }
 
 export function getLatestByParentId(parentId: string) {
-  return db.getMostRecentlyModified(type, {
+  return db.getMostRecentlyModified<Response>(type, {
     parentId,
   });
 }
 
-export function getBodyStream<T extends BaseResponse>(
+export function getBodyStream<T extends Response>(
   response: T,
   readFailureValue?: T | null,
 ) {
   return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
-export const getBodyBuffer = <T extends BaseResponse>(
+export const getBodyBuffer = <T extends Response>(
   response: T,
   readFailureValue?: T | null,
 ) => getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 
-export function getTimeline(response: BaseResponse): ResponseTimelineEntry[] {
+export function getTimeline(response: Response): ResponseTimelineEntry[] {
   return getTimelineFromPath(response.timelinePath || '');
 }
 
@@ -276,8 +276,10 @@ function getTimelineFromPath(timelinePath: string): ResponseTimelineEntry[] {
   }
 }
 
-async function migrateBodyToFileSystem(doc: BaseResponse) {
+async function migrateBodyToFileSystem(doc: Response) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
+    // @ts-ignore previously doc.body and doc.encoding did exist but are now removed,
+    //  and if they exist we want to migrate away from them
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);
@@ -303,7 +305,7 @@ async function migrateBodyToFileSystem(doc: BaseResponse) {
   }
 }
 
-function migrateBodyCompression(doc: BaseResponse) {
+function migrateBodyCompression(doc: Response) {
   if (doc.bodyCompression === '__NEEDS_MIGRATION__') {
     doc.bodyCompression = 'zip';
   }
@@ -311,10 +313,12 @@ function migrateBodyCompression(doc: BaseResponse) {
   return doc;
 }
 
-async function migrateTimelineToFileSystem(doc: BaseResponse) {
+async function migrateTimelineToFileSystem(doc: Response) {
   if (doc.hasOwnProperty('timeline') && doc._id && !doc.timelinePath) {
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);
+    // @ts-ignore previously doc.timeline did exist but is now removed,
+    //  and if it exists we want to migrate away from it
     const timelineStr = JSON.stringify(doc.timeline, null, '\t');
     const fsPath = doc.bodyPath + '.timeline';
 
@@ -341,9 +345,9 @@ export async function cleanDeletedResponses() {
     return;
   }
 
-  const whitelistFiles = [];
+  const whitelistFiles: Array<string> = [];
 
-  for (const r of await db.all(type)) {
+  for (const r of await db.all<Response>(type)) {
     whitelistFiles.push(r.bodyPath.slice(responsesDir.length + 1));
     whitelistFiles.push(r.timelinePath.slice(responsesDir.length + 1));
   }

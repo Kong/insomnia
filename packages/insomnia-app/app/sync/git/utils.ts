@@ -20,8 +20,10 @@ const onAuthSuccess = (message: string) => {
   console.log(`[git-event] Auth Success: ${message}`);
 };
 
+// @ts-expect-error this needs to be handled better if credentials is undefined or which union type 
 const onAuth = (credentials: GitCredentials = {}) => () => ({
   username: credentials.username,
+// @ts-expect-error this needs to be handled better if credentials is undefined or which union type 
   password: credentials.password || credentials.token,
 });
 

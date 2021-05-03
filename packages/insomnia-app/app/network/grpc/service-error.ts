@@ -1,4 +1,5 @@
 import { $Values } from 'utility-types';
+
 export const GrpcStatusEnum = {
   OK: 0,
   CANCELLED: 1,
@@ -18,10 +19,12 @@ export const GrpcStatusEnum = {
   DATA_LOSS: 15,
   UNAUTHENTICATED: 16,
 };
+
 type GrpcStatus = $Values<typeof GrpcStatusEnum>;
 export type GrpcStatusObject = {
   code: GrpcStatus;
   details: string;
   metadata: Record<string, any>; // https://grpc.github.io/grpc/node/grpc.Metadata.html
 };
+
 export type ServiceError = GrpcStatusObject & Error;

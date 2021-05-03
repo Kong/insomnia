@@ -1,4 +1,4 @@
-import electron, { OpenDialogOptions } from 'electron';
+import electron, { OpenDialogOptions, SaveDialogOptions } from 'electron';
 import React, { Fragment } from 'react';
 import { combineReducers } from 'redux';
 import fs from 'fs';
@@ -40,6 +40,9 @@ import {
 import { selectSettings } from '../selectors';
 import { getDesignerDataDir } from '../../../common/misc';
 import { Settings } from '../../../models/settings';
+import { GrpcRequest } from '../../../models/grpc-request';
+import { Request } from '../../../models/request';
+import { Environment } from '../../../models/environment';
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 export const LOAD_START = 'global/load-start';
@@ -287,7 +290,7 @@ function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): 
   Go to the next activity in a sequential activity flow, depending on different conditions
  */
 export function goToNextActivity() {
-  return function(dispatch, getState) {
+  return function (dispatch, getState) {
     const state = getState();
     const { activeActivity } = state.global;
     const settings = selectSettings(state);
@@ -340,7 +343,7 @@ export function setActiveActivity(activity: GlobalActivity) {
     activity,
   };
 }
-export function setActiveWorkspace(workspaceId: string) {
+export function setActiveWorkspace(workspaceId: string | null) {
   const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
   window.localStorage.setItem(key, JSON.stringify(workspaceId));
   return {
@@ -535,7 +538,7 @@ async function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || electron.remote.app.getPath('desktop');
-  const options = {
+  const options: SaveDialogOptions = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
     defaultPath: path.join(dir, `${name}_${date}`),
@@ -575,7 +578,7 @@ function writeExportedFileToFileSystem(filename, jsonData, onDone) {
   fs.writeFile(filename, jsonData, {}, onDone);
 }
 
-export function exportWorkspacesToFile(workspaceId = null) {
+export function exportWorkspacesToFile(workspaceId: string | undefined = undefined) {
   return async dispatch => {
     dispatch(loadStart());
     showSelectExportTypeModal(
@@ -657,8 +660,8 @@ export function exportRequestsToFile(requestIds) {
     showSelectExportTypeModal(
       () => dispatch(loadStop()),
       async selectedFormat => {
-        const requests = [];
-        const privateEnvironments = [];
+        const requests: Array<GrpcRequest | Request> = [];
+        const privateEnvironments: Array<Environment> = [];
         const workspaceLookup = {};
 
         for (const requestId of requestIds) {
@@ -669,7 +672,6 @@ export function exportRequestsToFile(requestIds) {
           }
 
           requests.push(request);
-          // @ts-expect-error
           const ancestors = await db.withAncestors(request, [
             models.workspace.type,
             models.requestGroup.type,
@@ -683,9 +685,10 @@ export function exportRequestsToFile(requestIds) {
           workspaceLookup[workspace._id] = true;
           const descendants = await db.withDescendants(workspace);
           const privateEnvs = descendants.filter(
-            // @ts-expect-error
+            // @ts-expect-error need to cast before checking isPrivate
             descendant => descendant.type === models.environment.type && descendant.isPrivate,
           );
+          // @ts-expect-error privateEnvs should be an array of Environment
           privateEnvironments.push(...privateEnvs);
         }
 
@@ -753,6 +756,7 @@ export function initActiveWorkspace() {
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
     const item = window.localStorage.getItem(key);
+    // @ts-expect-error don't parse item if it's null
     workspaceId = JSON.parse(item);
   } catch (e) {
     // Nothing here...
@@ -783,7 +787,7 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   This will also decide whether to start with the migration or onboarding activities
  */
 export function initActiveActivity() {
-  return function(dispatch, getState) {
+  return function (dispatch, getState) {
     const state = getState();
     const settings = selectSettings(state);
     // Default to home
@@ -792,13 +796,14 @@ export function initActiveActivity() {
     try {
       const key = `${LOCALSTORAGE_PREFIX}::activity`;
       const item = window.localStorage.getItem(key);
+      // @ts-expect-error don't parse item if it's null
       activeActivity = JSON.parse(item);
     } catch (e) {
       // Nothing here...
     }
 
     activeActivity = _normalizeActivity(activeActivity);
-    let overrideActivity = null;
+    let overrideActivity: GlobalActivity | null = null;
 
     switch (activeActivity) {
       // If relaunched after a migration, go to the next activity

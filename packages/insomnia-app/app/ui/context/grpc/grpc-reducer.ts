@@ -11,17 +11,20 @@ import type {
 import { GrpcActionTypeEnum } from './grpc-actions';
 import type { GrpcStatusObject, ServiceError } from '../../../network/grpc/service-error';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
+
 export type GrpcRequestState = {
   running: boolean;
   requestMessages: Array<GrpcMessage>;
   responseMessages: Array<GrpcMessage>;
   status?: GrpcStatusObject;
-  error: ServiceError;
+  error?: ServiceError;
   methods: Array<GrpcMethodDefinition>;
   reloadMethods: boolean;
 };
+
 // TODO: delete from here when deleting a request - INS-288
 export type GrpcState = Record<string, GrpcRequestState>;
+
 const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
   running: false,
   requestMessages: [],
@@ -31,6 +34,7 @@ const INITIAL_GRPC_REQUEST_STATE: GrpcRequestState = {
   methods: [],
   reloadMethods: true,
 };
+
 const CLEAR_GRPC_REQUEST_STATE: Partial<GrpcRequestState> = {
   requestMessages: [],
   responseMessages: [],

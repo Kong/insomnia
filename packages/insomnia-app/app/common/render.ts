@@ -39,8 +39,8 @@ export async function buildRenderContext(
   rootEnvironment: Environment | null,
   subEnvironment: Environment | null,
   baseContext: Record<string, any> = {},
-): Record<string, any> {
-  const envObjects = [];
+): Promise<Record<string, any>> {
+  const envObjects: Array<Record<string, any>> = [];
 
   // Get root environment keys in correct order
   // Then get sub environment keys in correct order
@@ -132,7 +132,7 @@ export async function buildRenderContext(
     return subContext;
   }
 
-  for (const envObject: Record<string, any> of envObjects) {
+  for (const envObject of envObjects) {
     // For every environment render the Objects
     renderContext = await renderSubContext(envObject, renderContext);
   }
@@ -263,7 +263,7 @@ export async function render<T>(
   return next(newObj, name, true);
 }
 export async function getRenderContext(
-  request: Request | GrpcRequest,
+  request: Request | GrpcRequest | null,
   environmentId: string | null,
   ancestors: Array<BaseModel> | null = null,
   purpose: RenderPurpose | null = null,
@@ -331,7 +331,7 @@ export async function getRenderContext(
   }
 
   // Add meta data helper function
-  const baseContext = {};
+  const baseContext: Record<string, any> = {};
 
   baseContext.getMeta = () => ({
     requestId: request ? request._id : null,
@@ -364,10 +364,7 @@ export async function getRenderedGrpcRequest(
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
   skipBody?: boolean,
-): Promise<{
-  request: RenderedGrpcRequest;
-  context: Record<string, any>;
-}> {
+): Promise<RenderedGrpcRequest> {
   const renderContext = await getRenderContext(
     request,
     environmentId,
@@ -435,7 +432,7 @@ export async function getRenderedRequestAndContext(
       o.query = o.query.replace(/#}/g, '# }');
       request.body.text = JSON.stringify(o);
     }
-  } catch (err) {}
+  } catch (err) { }
 
   // Render description separately because it's lower priority
   const description = request.description;
@@ -524,7 +521,7 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): Ar
   });
 }
 
-async function _getRequestAncestors(request: Request | GrpcRequest): Promise<Array<BaseModel>> {
+async function _getRequestAncestors(request: Request | GrpcRequest | null): Promise<Array<BaseModel>> {
   return await db.withAncestors(request, [
     models.request.type,
     models.grpcRequest.type,

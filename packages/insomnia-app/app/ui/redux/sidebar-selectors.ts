@@ -12,11 +12,15 @@ import {
   selectPinnedRequests,
 } from './selectors';
 import { isGrpcRequest, isRequest, isRequestGroup } from '../../models/helpers/is-model';
+
 type SidebarModels = Request | GrpcRequest | RequestGroup;
+
 export const shouldShowInSidebar = (model: BaseModel): boolean =>
   isRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
+
 export const shouldIgnoreChildrenOf = (model: SidebarModels): boolean =>
   isRequest(model) || isGrpcRequest(model);
+
 export const sortByMetaKeyOrId = (a: SidebarModels, b: SidebarModels): number => {
   if (a.metaSortKey === b.metaSortKey) {
     return a._id > b._id ? -1 : 1; // ascending
@@ -24,6 +28,7 @@ export const sortByMetaKeyOrId = (a: SidebarModels, b: SidebarModels): number =>
     return a.metaSortKey < b.metaSortKey ? -1 : 1; // descending
   }
 };
+
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
   selectPinnedRequests,
@@ -61,7 +66,7 @@ export const selectSidebarChildren = createSelector(
       }
     }
 
-    function matchChildren(children, parentNames = []) {
+    function matchChildren(children, parentNames: Array<string> = []) {
       // Bail early if no filter defined
       if (!sidebarFilter) {
         return children;

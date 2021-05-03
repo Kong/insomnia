@@ -38,15 +38,15 @@ export function migrate(doc: CookieJar): CookieJar {
   doc = migrateCookieId(doc);
   return doc;
 }
-export async function create(patch: $Shape<CookieJar>) {
+export async function create(patch: $Shape<CookieJar>): Promise<CookieJar> {
   if (!patch.parentId) {
     throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
   return db.docCreate(type, patch);
 }
-export async function getOrCreateForParentId(parentId: string) {
-  const cookieJars = await db.find(type, {
+export async function getOrCreateForParentId(parentId: string): Promise<CookieJar> {
+  const cookieJars: Array<CookieJar> = await db.find(type, {
     parentId,
   });
 

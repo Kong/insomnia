@@ -310,7 +310,7 @@ export const getWhere = (database.getWhere = async function <T extends BaseModel
 });
 export const get = (database.get = async function <T extends BaseModel>(
   type: string,
-  id: string,
+  id?: string,
 ): Promise<T | null> {
   if (db._empty) return _send('get', ...arguments);
 

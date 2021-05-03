@@ -36,7 +36,7 @@ export async function migrate(doc: Workspace): Promise<Workspace> {
   doc = _migrateScope(doc);
   return doc;
 }
-export function getById(id: string): Promise<Workspace | null> {
+export function getById(id?: string): Promise<Workspace | null> {
   return db.get(type, id);
 }
 export async function create(patch: $Shape<Workspace> = {}): Promise<Workspace> {
