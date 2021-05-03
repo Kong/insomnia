@@ -49,7 +49,7 @@ class SidebarRequestGroupRow extends PureComponent {
     }
   }
 
-  _handleShowRequestSettings() {
+  _handleShowRequestGroupSettings() {
     showModal(RequestGroupSettingsModal, { requestGroup: this.props.requestGroup });
   }
 
@@ -129,7 +129,7 @@ class SidebarRequestGroupRow extends PureComponent {
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-              handleShowSettings={this._handleShowRequestSettings}
+              handleShowSettings={this._handleShowRequestGroupSettings}
               handleMoveRequestGroup={handleMoveRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
