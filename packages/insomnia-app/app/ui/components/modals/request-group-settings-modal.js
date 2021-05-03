@@ -302,8 +302,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
       <div>
         <div className="form-control form-control--outlined">
           <label>
-            Name{' '}
-            <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
+            Name
             <DebouncedInput
               delay={500}
               type="text"
