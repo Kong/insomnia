@@ -32,7 +32,6 @@ type Props = {
   handleCreateRequest: (id: string) => any,
   handleShowSettings: Function,
   handleDuplicateRequestGroup: (rg: RequestGroup) => any,
-  handleMoveRequestGroup: (rg: RequestGroup) => any,
   handleCreateRequestGroup: (id: string) => any,
 };
 
@@ -60,10 +59,6 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
 
   _handleRequestGroupDuplicate() {
     this.props.handleDuplicateRequestGroup(this.props.requestGroup);
-  }
-
-  _handleRequestGroupMove() {
-    this.props.handleMoveRequestGroup(this.props.requestGroup);
   }
 
   async _handleRequestGroupCreate() {
@@ -146,9 +141,6 @@ class RequestGroupActionsDropdown extends React.PureComponent<Props, State> {
         </DropdownItem>
         <DropdownItem onClick={this._handleEditEnvironment}>
           <i className="fa fa-code" /> Environment
-        </DropdownItem>
-        <DropdownItem onClick={this._handleRequestGroupMove}>
-          <i className="fa fa-exchange" /> Move
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
           <i className="fa fa-trash-o" /> Delete

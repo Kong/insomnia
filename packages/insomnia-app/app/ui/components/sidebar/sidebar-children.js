@@ -36,7 +36,6 @@ type Props = {
   handleSetRequestGroupCollapsed: Function,
   handleDuplicateRequest: Function,
   handleDuplicateRequestGroup: Function,
-  handleMoveRequestGroup: Function,
   handleGenerateCode: Function,
   handleCopyAsCurl: Function,
   handleRender: Function,
@@ -85,7 +84,6 @@ class SidebarChildren extends React.PureComponent<Props> {
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
       handleGenerateCode,
       handleCopyAsCurl,
       handleRender,
@@ -158,7 +156,6 @@ class SidebarChildren extends React.PureComponent<Props> {
           handleActivateRequest={handleActivateRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
           handleRender={handleRender}
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest}

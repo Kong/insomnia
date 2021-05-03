@@ -110,7 +110,6 @@ class WrapperDebug extends React.PureComponent<Props> {
       handleDuplicateRequestGroup,
       handleGenerateCode,
       handleMoveDoc,
-      handleMoveRequestGroup,
       handleRender,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
@@ -159,7 +158,6 @@ class WrapperDebug extends React.PureComponent<Props> {
           handleSetRequestPinned={handleSetRequestPinned}
           handleDuplicateRequest={handleDuplicateRequest}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
           handleRender={handleRender}

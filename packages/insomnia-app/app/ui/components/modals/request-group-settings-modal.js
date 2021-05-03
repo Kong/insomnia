@@ -110,12 +110,16 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
       return;
     }
 
-    const patch = {
-      metaSortKey: -1e9, // Move to top of sort order
-      parentId: activeWorkspaceIdToCopyTo,
-    };
+    // TODO: if there are gRPC requests in a request group
+    //  we should also copy the protofiles to the destination workspace - INS-267
 
-    await models.requestGroup.update(requestGroup, patch);
+    await models.requestGroup.duplicate(requestGroup, {
+      metaSortKey: -1e9,
+      parentId: activeWorkspaceIdToCopyTo,
+      name: requestGroup.name, // Because duplicating will add (Copy) suffix
+    });
+
+    await models.requestGroup.remove(requestGroup);
 
     this.setState({ justMoved: true });
     setTimeout(() => {

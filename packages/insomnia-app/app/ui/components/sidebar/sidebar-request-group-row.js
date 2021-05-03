@@ -66,7 +66,6 @@ class SidebarRequestGroupRow extends PureComponent {
       handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
       handleRender,
       isDragging,
       isDraggingOver,
@@ -130,7 +129,6 @@ class SidebarRequestGroupRow extends PureComponent {
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleShowSettings={this._handleShowRequestGroupSettings}
-              handleMoveRequestGroup={handleMoveRequestGroup}
               workspace={workspace}
               requestGroup={requestGroup}
               hotKeyRegistry={hotKeyRegistry}
@@ -177,7 +175,6 @@ SidebarRequestGroupRow.propTypes = {
   // Functions
   handleSetRequestGroupCollapsed: PropTypes.func.isRequired,
   handleDuplicateRequestGroup: PropTypes.func.isRequired,
-  handleMoveRequestGroup: PropTypes.func.isRequired,
   moveDoc: PropTypes.func.isRequired,
   handleActivateRequest: PropTypes.func.isRequired,
   handleCreateRequest: PropTypes.func.isRequired,

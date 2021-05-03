@@ -84,7 +84,6 @@ import * as templating from '../../templating/index';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import AskModal from '../components/modals/ask-modal';
 import { updateMimeType } from '../../models/request';
-import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
 import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
@@ -399,10 +398,6 @@ class App extends PureComponent {
         models.stats.incrementCreatedRequestsForDescendents(newRequestGroup);
       },
     });
-  }
-
-  static async _requestGroupMove(requestGroup) {
-    showModal(MoveRequestGroupModal, { requestGroup });
   }
 
   _requestDuplicate(request) {
@@ -1333,7 +1328,6 @@ class App extends PureComponent {
                 handleGetRenderContext={this._handleGetRenderContext}
                 handleDuplicateRequest={this._requestDuplicate}
                 handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                handleMoveRequestGroup={App._requestGroupMove}
                 handleDuplicateWorkspace={this._workspaceDuplicate}
                 handleCreateRequestGroup={this._requestGroupCreate}
                 handleGenerateCode={App._handleGenerateCode}

@@ -69,7 +69,6 @@ import type { CookieJar } from '../../models/cookie-jar';
 import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
-import MoveRequestGroupModal from './modals/move-request-group-modal';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import VCS from '../../sync/vcs';
@@ -120,7 +119,6 @@ export type WrapperProps = {
   handleCreateRequest: Function,
   handleDuplicateRequest: Function,
   handleDuplicateRequestGroup: Function,
-  handleMoveRequestGroup: Function,
   handleDuplicateWorkspace: Function,
   handleCreateRequestGroup: Function,
   handleGenerateCodeForActiveRequest: Function,
@@ -667,12 +665,6 @@ class Wrapper extends React.PureComponent<WrapperProps, State> {
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               workspace={activeWorkspace}
-            />
-
-            <MoveRequestGroupModal
-              ref={registerModal}
-              workspaces={workspaces}
-              activeWorkspace={activeWorkspace}
             />
 
             <WorkspaceSettingsModal
