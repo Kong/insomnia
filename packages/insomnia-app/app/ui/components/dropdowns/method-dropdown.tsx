@@ -81,7 +81,7 @@ class MethodDropdown extends PureComponent<Props> {
       method,
       right,
       onChange,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       showGrpc,
       ...extraProps
     } = this.props;

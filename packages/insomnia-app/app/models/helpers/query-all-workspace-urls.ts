@@ -6,8 +6,8 @@ import { Workspace } from '../workspace';
 export const queryAllWorkspaceUrls = async (
   workspace: Workspace | null,
   reqType: typeof RequestType | typeof GrpcRequestType,
-  reqId: string = 'n/a',
-): Promise<Array<string>> => {
+  reqId = 'n/a',
+): Promise<string[]> => {
   const docs = await db.withDescendants(workspace, reqType);
   const urls = docs
     .filter(

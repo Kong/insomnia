@@ -1,13 +1,18 @@
-import { $Shape } from 'utility-types';
 import crypto from 'crypto';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+
 export const name = 'Cookie Jar';
+
 export const type = 'CookieJar';
+
 export const prefix = 'jar';
+
 export const canDuplicate = true;
+
 export const canSync = false;
-export type Cookie = {
+
+export interface Cookie {
   id: string;
   key: string;
   value: string;
@@ -16,37 +21,43 @@ export type Cookie = {
   path: string;
   secure: boolean;
   httpOnly: boolean;
-  extensions?: Array<any>;
+  extensions?: any[];
   creation?: Date;
   creationIndex?: number;
   hostOnly?: boolean;
   pathIsDefault?: boolean;
   lastAccessed?: Date;
-};
-type BaseCookieJar = {
+}
+
+interface BaseCookieJar {
   name: string;
-  cookies: Array<Cookie>;
-};
+  cookies: Cookie[];
+}
+
 export type CookieJar = BaseModel & BaseCookieJar;
+
 export function init() {
   return {
     name: 'Default Jar',
     cookies: [],
   };
 }
-export function migrate(doc: CookieJar): CookieJar {
+
+export function migrate(doc: CookieJar) {
   doc = migrateCookieId(doc);
   return doc;
 }
-export async function create(patch: $Shape<CookieJar>): Promise<CookieJar> {
+
+export async function create(patch: Partial<CookieJar>) {
   if (!patch.parentId) {
     throw new Error(`New CookieJar missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<CookieJar>(type, patch);
 }
-export async function getOrCreateForParentId(parentId: string): Promise<CookieJar> {
-  const cookieJars: Array<CookieJar> = await db.find(type, {
+
+export async function getOrCreateForParentId(parentId: string) {
+  const cookieJars: CookieJar[] = await db.find(type, {
     parentId,
   });
 
@@ -61,13 +72,16 @@ export async function getOrCreateForParentId(parentId: string): Promise<CookieJa
     return cookieJars[0];
   }
 }
-export async function all(): Promise<Array<BaseModel>> {
-  return db.all(type);
+
+export async function all() {
+  return db.all<BaseModel>(type);
 }
+
 export async function getById(id: string) {
   return db.get(type, id);
 }
-export async function update(cookieJar: CookieJar, patch: $Shape<CookieJar> = {}) {
+
+export async function update(cookieJar: CookieJar, patch: Partial<CookieJar> = {}) {
   return db.docUpdate(cookieJar, patch);
 }
 

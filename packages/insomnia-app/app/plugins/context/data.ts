@@ -6,10 +6,10 @@ import {
 } from '../../common/import';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 import type { ImportRawConfig } from '../../common/import';
-type PluginImportOptions = {
+interface PluginImportOptions {
   workspaceId?: string;
   scope?: WorkspaceScope;
-};
+}
 export function init(): {
   data: {
     import: Record<string, any>;
@@ -19,11 +19,10 @@ export function init(): {
   return {
     data: {
       import: {
-        async uri(uri: string, options: PluginImportOptions = {}): Promise<void> {
+        async uri(uri: string, options: PluginImportOptions = {}) {
           await importUri(uri, buildImportRawConfig(options));
         },
-
-        async raw(text: string, options: PluginImportOptions = {}): Promise<void> {
+        async raw(text: string, options: PluginImportOptions = {}) {
           await importRaw(text, buildImportRawConfig(options));
         },
       },
@@ -34,7 +33,7 @@ export function init(): {
             format?: 'json' | 'yaml';
             workspace?: Workspace;
           } = {},
-        ): Promise<string> {
+        ) {
           options = options || {};
           return exportWorkspacesData(
             options.workspace || null,
@@ -48,7 +47,7 @@ export function init(): {
             includePrivate?: boolean;
             workspace?: Workspace;
           } = {},
-        ): Promise<string> {
+        ) {
           return exportWorkspacesHAR(options.workspace || null, !!options.includePrivate);
         },
       },

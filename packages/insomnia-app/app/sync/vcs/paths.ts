@@ -1,31 +1,31 @@
-export function projects(): string {
+export function projects() {
   return '/projects/';
 }
-export function projectBase(projectId: string): string {
+export function projectBase(projectId: string) {
   return `${projects()}${projectId}/`;
 }
-export function head(projectId: string): string {
+export function head(projectId: string) {
   return `${projectBase(projectId)}head.json`;
 }
-export function project(projectId: string): string {
+export function project(projectId: string) {
   return `${projectBase(projectId)}meta.json`;
 }
-export function blobs(projectId: string): string {
+export function blobs(projectId: string) {
   return `${projectBase(projectId)}blobs/`;
 }
-export function blob(projectId: string, blobId: string): string {
+export function blob(projectId: string, blobId: string) {
   const subPath = `${blobId.slice(0, 2)}/${blobId.slice(2)}`;
   return `${blobs(projectId)}${subPath}`;
 }
-export function snapshots(projectId: string): string {
+export function snapshots(projectId: string) {
   return `${projectBase(projectId)}snapshots/`;
 }
-export function snapshot(projectId: string, snapshotId: string): string {
+export function snapshot(projectId: string, snapshotId: string) {
   return `${snapshots(projectId)}${snapshotId}.json`;
 }
-export function branches(projectId: string): string {
+export function branches(projectId: string) {
   return `${projectBase(projectId)}branches/`;
 }
-export function branch(projectId: string, branchName: string): string {
+export function branch(projectId: string, branchName: string) {
   return `${branches(projectId)}${branchName}.json`;
 }

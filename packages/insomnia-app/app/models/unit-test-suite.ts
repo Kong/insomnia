@@ -1,44 +1,51 @@
-import { $Shape } from 'utility-types';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+
 export const name = 'Unit Test Suite';
+
 export const type = 'UnitTestSuite';
+
 export const prefix = 'uts';
+
 export const canDuplicate = true;
+
 export const canSync = true;
-type BaseUnitTestSuite = {
+interface BaseUnitTestSuite {
   name: string;
-};
+}
+
 export type UnitTestSuite = BaseModel & BaseUnitTestSuite;
+
 export function init() {
   return {
     name: 'My Test',
   };
 }
-export function migrate(doc: UnitTestSuite): UnitTestSuite {
+
+export function migrate(doc: UnitTestSuite) {
   return doc;
 }
-export function create(patch: $Shape<UnitTestSuite> = {}) {
+
+export function create(patch: Partial<UnitTestSuite> = {}) {
   if (!patch.parentId) {
     throw new Error('New UnitTestSuite missing `parentId` ' + JSON.stringify(patch));
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<UnitTestSuite>(type, patch);
 }
-export function update(
-  unitTestSuite: UnitTestSuite,
-  patch: $Shape<UnitTestSuite> = {},
-): Promise<UnitTestSuite> {
-  return db.docUpdate(unitTestSuite, patch);
+
+export function update(unitTestSuite: UnitTestSuite, patch: Partial<UnitTestSuite> = {}) {
+  return db.docUpdate<UnitTestSuite>(unitTestSuite, patch);
 }
-export function remove(unitTestSuite: UnitTestSuite): Promise<void> {
+
+export function remove(unitTestSuite: UnitTestSuite) {
   return db.remove(unitTestSuite);
 }
-export function getByParentId(parentId: string): Promise<UnitTestSuite | null> {
-  return db.getWhere(type, {
-    parentId,
-  });
+
+export function getByParentId(parentId: string) {
+  return db.getWhere<UnitTestSuite>(type, { parentId });
 }
-export function all(): Promise<Array<UnitTestSuite>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<UnitTestSuite>(type);
 }

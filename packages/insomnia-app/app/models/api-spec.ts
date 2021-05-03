@@ -1,18 +1,25 @@
-import { $Shape } from 'utility-types';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
 import { strings } from '../common/strings';
+
 export const name = 'ApiSpec';
+
 export const type = 'ApiSpec';
+
 export const prefix = 'spc';
+
 export const canDuplicate = true;
+
 export const canSync = false;
-type BaseApiSpec = {
+
+interface BaseApiSpec {
   fileName: string;
   contentType: 'json' | 'yaml';
   contents: string;
-};
+}
+
 export type ApiSpec = BaseModel & BaseApiSpec;
+
 export function init(): BaseApiSpec {
   return {
     fileName: `New ${strings.document}`,
@@ -20,43 +27,46 @@ export function init(): BaseApiSpec {
     contentType: 'yaml',
   };
 }
-export async function migrate(doc: ApiSpec): Promise<ApiSpec> {
+
+export async function migrate(doc: ApiSpec) {
   return doc;
 }
-export function getByParentId(workspaceId: string): Promise<ApiSpec | null> {
-  return db.getWhere(type, {
-    parentId: workspaceId,
-  });
+
+export function getByParentId(workspaceId: string) {
+  return db.getWhere<ApiSpec>(type, { parentId: workspaceId });
 }
+
 export async function getOrCreateForParentId(
   workspaceId: string,
-  patch: $Shape<ApiSpec> = {},
-): Promise<ApiSpec> {
-  const spec = await db.getWhere(type, {
+  patch: Partial<ApiSpec> = {},
+) {
+  const spec = await db.getWhere<ApiSpec>(type, {
     parentId: workspaceId,
   });
 
   if (!spec) {
-    return db.docCreate(type, { ...patch, parentId: workspaceId });
+    return db.docCreate<ApiSpec>(type, { ...patch, parentId: workspaceId });
   }
 
   return spec;
 }
+
 export async function updateOrCreateForParentId(
   workspaceId: string,
-  patch: $Shape<ApiSpec> = {},
-): Promise<ApiSpec> {
+  patch: Partial<ApiSpec> = {},
+) {
   const spec = await getOrCreateForParentId(workspaceId);
   return db.docUpdate(spec, patch);
 }
-export async function all(): Promise<Array<ApiSpec>> {
-  return db.all(type);
+
+export async function all() {
+  return db.all<ApiSpec>(type);
 }
-export function update(apiSpec: ApiSpec, patch: $Shape<ApiSpec> = {}): Promise<ApiSpec> {
+
+export function update(apiSpec: ApiSpec, patch: Partial<ApiSpec> = {}) {
   return db.docUpdate(apiSpec, patch);
 }
-export function removeWhere(parentId: string): Promise<void> {
-  return db.removeWhere(type, {
-    parentId,
-  });
+
+export function removeWhere(parentId: string) {
+  return db.removeWhere(type, { parentId });
 }

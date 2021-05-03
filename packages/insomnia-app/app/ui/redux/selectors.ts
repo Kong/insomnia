@@ -5,7 +5,7 @@ import { UnitTestResult } from '../../models/unit-test-result';
 // Selectors //
 // ~~~~~~~~~ //
 export const selectEntitiesLists = createSelector(
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   state => state.entities,
   entities => {
     const entitiesLists = {};
@@ -38,15 +38,15 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   return parentLookupMap;
 });
 export const selectSettings = createSelector(selectEntitiesLists, entities => {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   return entities.settings[0] || models.settings.init();
 });
 export const selectActiveWorkspace = createSelector(
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   state => selectEntitiesLists(state).workspaces,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   state => state.entities,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   state => state.global.activeWorkspaceId,
   (workspaces, entities, activeWorkspaceId) => {
     return entities.workspaces[activeWorkspaceId] || workspaces[0];
@@ -57,7 +57,7 @@ export const selectActiveWorkspaceMeta = createSelector(
   selectEntitiesLists,
   (activeWorkspace, entities) => {
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.workspaceMetas.find(m => m.parentId === id);
   },
 );
@@ -69,7 +69,7 @@ export const selectActiveEnvironment = createSelector(
       return null;
     }
 
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.environments.find(e => e._id === meta.activeEnvironmentId) || null;
   },
 );
@@ -77,7 +77,7 @@ export const selectActiveWorkspaceClientCertificates = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.clientCertificates.filter(c => c.parentId === activeWorkspace._id);
   },
 );
@@ -90,7 +90,7 @@ export const selectActiveGitRepository = createSelector(
     }
 
     const id = activeWorkspaceMeta ? activeWorkspaceMeta.gitRepositoryId : 'n/a';
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const repo = entities.gitRepositories.find(r => r._id === id);
     return repo || null;
   },
@@ -99,13 +99,13 @@ export const selectCollapsedRequestGroups = createSelector(selectEntitiesLists, 
   const collapsed = {};
 
   // Default all to collapsed
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   for (const requestGroup of entities.requestGroups) {
     collapsed[requestGroup._id] = true;
   }
 
   // Update those that have metadata (not all do)
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   for (const meta of entities.requestGroupMetas) {
     collapsed[meta.parentId] = meta.collapsed;
   }
@@ -118,7 +118,7 @@ export const selectActiveWorkspaceEntities = createSelector(
   (activeWorkspace, childrenMap) => {
     const descendants = [activeWorkspace];
 
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const addChildrenOf = parent => {
       // Don't add children of requests (eg. auth requests)
       if (parent.type === models.request.type) {
@@ -140,9 +140,9 @@ export const selectActiveWorkspaceEntities = createSelector(
 );
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
   const pinned = {};
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   const requests = [...entities.requests, ...entities.grpcRequests];
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
 
   // Default all to unpinned
@@ -166,7 +166,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   },
 );
 export const selectActiveRequest = createSelector(
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   state => state.entities,
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
@@ -178,7 +178,7 @@ export const selectActiveCookieJar = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, workspace) => {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const cookieJar = entities.cookieJars.find(cj => cj.parentId === workspace._id);
     return cookieJar || null;
   },
@@ -188,12 +188,12 @@ export const selectActiveOAuth2Token = createSelector(
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
     const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.oAuth2Tokens.find(t => t.parentId === id);
   },
 );
 export const selectUnseenWorkspaces = createSelector(selectEntitiesLists, entities => {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
   const { workspaces, workspaceMetas } = entities;
   return workspaces.filter(workspace => {
     const meta = workspaceMetas.find(m => m.parentId === workspace._id);
@@ -205,7 +205,7 @@ export const selectActiveRequestMeta = createSelector(
   selectEntitiesLists,
   (activeRequest, entities) => {
     const id = activeRequest ? activeRequest._id : 'n/a';
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.requestMetas.find(m => m.parentId === id);
   },
 );
@@ -217,7 +217,7 @@ export const selectActiveRequestResponses = createSelector(
   (activeRequest, entities, activeEnvironment, settings) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
     // Filter responses down if the setting is enabled
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.responses
       .filter(response => {
         const requestMatches = requestId === response.parentId;
@@ -253,7 +253,7 @@ export const selectActiveUnitTestResult = createSelector(
   (entities, activeWorkspace) => {
     let recentResult: UnitTestResult | null = null;
 
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     for (const r of entities.unitTestResults) {
       if (r.parentId !== activeWorkspace._id) {
         continue;
@@ -281,7 +281,7 @@ export const selectActiveUnitTestSuite = createSelector(
     }
 
     const id = activeWorkspaceMeta.activeUnitTestSuiteId;
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.unitTestSuites.find(s => s._id === id) || null;
   },
 );
@@ -293,7 +293,7 @@ export const selectActiveUnitTests = createSelector(
       return [];
     }
 
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
   },
 );
@@ -301,7 +301,7 @@ export const selectActiveUnitTestSuites = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace._id);
   },
 );

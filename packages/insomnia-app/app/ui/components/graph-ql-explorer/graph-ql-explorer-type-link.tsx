@@ -11,8 +11,8 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLExplorerTypeLink extends PureComponent<Props> {
-  _handleClick(e: MouseEvent) {
-    e.preventDefault();
+  _handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
     const { onNavigate, type } = this.props;
     onNavigate(type);
   }

@@ -61,12 +61,12 @@ class Plugins extends PureComponent<Props, State> {
     }
   }
 
-  async _handleAddFromNpm(e: FormEvent<HTMLFormElement>): Promise<void> {
+  async _handleAddFromNpm(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     this.setState({
       isInstallingFromNpm: true,
     });
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const newState: State = {
       isInstallingFromNpm: false,
       error: null,
@@ -85,11 +85,11 @@ class Plugins extends PureComponent<Props, State> {
     this.setState(newState);
   }
 
-  static _handleOpenDirectory(directory: string): void {
+  static _handleOpenDirectory(directory: string) {
     electron.remote.shell.showItemInFolder(directory);
   }
 
-  async _handleRefreshPlugins(): Promise<void> {
+  async _handleRefreshPlugins() {
     const start = Date.now();
     this.setState({
       isRefreshingPlugins: true,

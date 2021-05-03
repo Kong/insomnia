@@ -1,21 +1,21 @@
 import crypto from 'crypto';
-type InsertOperation = {
+interface InsertOperation {
   type: 'INSERT';
   content: string;
-};
-type CopyOperation = {
+}
+interface CopyOperation {
   type: 'COPY';
   start: number;
   len: number;
-};
+}
 export type Operation = InsertOperation | CopyOperation;
-type Block = {
+interface Block {
   start: number;
   len: number;
   hash: string;
-};
-export function diff(source: string, target: string, blockSize: number): Array<Operation> {
-  const operations: Array<Operation> = [];
+}
+export function diff(source: string, target: string, blockSize: number): Operation[] {
+  const operations: Operation[] = [];
   const sourceBlockMap = getBlockMap(source, blockSize);
   // Iterate over source blocks in order and match them to target
   let lastTargetMatch = 0;

@@ -3,57 +3,67 @@ import * as templating from './index';
 import * as pluginContexts from '../plugins/context';
 import * as db from '../common/database';
 import { decodeEncoding } from './utils';
+import { PluginTemplateTag } from './extensions';
+
 const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
+
 export default class BaseExtension {
-  constructor(ext, plugin) {
+  _ext: PluginTemplateTag | null = null;
+  _plugin: Plugin | null = null;
+  tags: PluginTemplateTag['name'][] | null = null;
+
+  constructor(ext: PluginTemplateTag, plugin: Plugin) {
     this._ext = ext;
     this._plugin = plugin;
-    this.tags = [this.getTag()];
+    const tag = this.getTag();
+    this.tags = [
+      ...(tag === null ? [] : [tag]),
+    ];
   }
 
   getTag() {
-    return this._ext.name;
+    return this._ext?.name || null;
   }
 
   getPriority() {
-    return this._ext.priority || -1;
+    return this._ext?.priority || -1;
   }
 
   getName() {
-    return this._ext.displayName || this.getTag();
+    return this._ext?.displayName || this.getTag();
   }
 
   getDescription() {
-    return this._ext.description || 'no description';
+    return this._ext?.description || 'no description';
   }
 
   getLiveDisplayName() {
     return (
-      this._ext.liveDisplayName ||
-      function(args) {
+      this._ext?.liveDisplayName ||
+      function() {
         return '';
       }
     );
   }
 
   getDisablePreview() {
-    return this._ext.disablePreview || (() => false);
+    return this._ext?.disablePreview || (() => false);
   }
 
   getArgs() {
-    return this._ext.args || [];
+    return this._ext?.args || [];
   }
 
   getActions() {
-    return this._ext.actions || [];
+    return this._ext?.actions || [];
   }
 
   isDeprecated() {
-    return this._ext.deprecated || false;
+    return this._ext?.deprecated || false;
   }
 
   run(...args) {
-    return this._ext.run(...args);
+    return this._ext?.run(...args);
   }
 
   parse(parser, nodes, lexer) {

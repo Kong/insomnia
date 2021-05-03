@@ -59,10 +59,10 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   // NOTE: This is px
   keyMap: 'default',
   extraKeys: CodeMirror.normalizeKeyMap({
-    'Ctrl-Q': function (cm) {
+    'Ctrl-Q': function(cm) {
       cm.foldCode(cm.getCursor());
     },
-    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function() {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
@@ -123,7 +123,7 @@ interface Props {
   readOnly?: boolean,
   type?: string,
   filter?: string,
-  filterHistory?: Array<string>,
+  filterHistory?: string[],
   singleLine?: boolean,
   debounceMillis?: number,
   dynamicHeight?: boolean,
@@ -148,9 +148,9 @@ class CodeEditor extends Component<Props, State> {
   private _originalCode: string;
   codeMirror?: CodeMirror.EditorFromTextArea;
   private _filterInput: HTMLInputElement;
-  private _autocompleteDebounce: NodeJS.Timeout;
+  private _autocompleteDebounce: NodeJS.Timeout | null = null;
   private _ignoreNextChange: boolean;
-  private _filterTimeout: NodeJS.Timeout;
+  private _filterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -260,7 +260,7 @@ class CodeEditor extends Component<Props, State> {
         },
       );
       this.codeMirror.scrollIntoView({
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         line: lineStart,
         char: chStart,
       });
@@ -283,7 +283,7 @@ class CodeEditor extends Component<Props, State> {
       );
       this.codeMirror.scrollIntoView(
         {
-          // @ts-expect-error
+          // @ts-expect-error -- TSCONVERSION
           line: lineStart,
           char: chStart,
         }, // If sizing permits, position selection just above center
@@ -293,7 +293,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   getSelectionStart() {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const selections = this.codeMirror.listSelections();
 
     if (selections.length) {
@@ -304,7 +304,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   getSelectionEnd() {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const selections = this.codeMirror.listSelections();
 
     if (selections.length) {
@@ -334,17 +334,17 @@ class CodeEditor extends Component<Props, State> {
   }
 
   setAttribute(name, value) {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.getTextArea().parentNode.setAttribute(name, value);
   }
 
   removeAttribute(name) {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.getTextArea().parentNode.removeAttribute(name);
   }
 
   getAttribute(name) {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.getTextArea().parentNode.getAttribute(name);
   }
 
@@ -389,10 +389,10 @@ class CodeEditor extends Component<Props, State> {
 
     const marks = this.codeMirror
       .getAllMarks()
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       .filter(c => c.__isFold)
       .map(mark => {
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         const { from, to } = mark.find();
         return {
           from,
@@ -418,23 +418,23 @@ class CodeEditor extends Component<Props, State> {
 
     // @ts-expect-error only try access if uniquenessKey is defined
     const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.scrollTo(scroll.left, scroll.top);
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.setHistory(history);
     // NOTE: These won't be visible unless the editor is focused
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.setCursor(cursor.line, cursor.ch, {
       scroll: false,
     });
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.setSelections(selections, null, {
       scroll: false,
     });
 
     // Restore marks one-by-one
     for (const { from, to } of marks || []) {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       this.codeMirror.foldCode(from, to);
     }
   }
@@ -462,7 +462,7 @@ class CodeEditor extends Component<Props, State> {
         let endToken = '}';
         // Prevent retrieving an invalid content if undefined
         if (!from?.line || !to?.line) return '\u2194';
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         const prevLine = this.codeMirror.getLine(from.line);
         if (!prevLine) return '\u2194';
 
@@ -472,7 +472,7 @@ class CodeEditor extends Component<Props, State> {
         }
 
         // Get json content
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         const internal = this.codeMirror.getRange(from, to);
         const toParse = startToken + internal + endToken;
 
@@ -513,7 +513,7 @@ class CodeEditor extends Component<Props, State> {
       ch: -1,
     });
     this.codeMirror.setOption('extraKeys', {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       ...BASE_CODEMIRROR_OPTIONS.extraKeys,
       Tab: cm => {
         // Indent with tabs or spaces
@@ -534,7 +534,7 @@ class CodeEditor extends Component<Props, State> {
       this._codemirrorSetValue(defaultValue || '');
 
       // Clear history so we can't undo the initial set
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       this.codeMirror.clearHistory();
 
       // Setup nunjucks listeners
@@ -556,7 +556,7 @@ class CodeEditor extends Component<Props, State> {
       // HACK: Refresh because sometimes it renders too early and the scroll doesn't
       // quite fit.
       setTimeout(() => {
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         this.codeMirror.refresh();
       }, 100);
 
@@ -613,15 +613,15 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _indentChars() {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return this.codeMirror.getOption('indentWithTabs')
       ? '\t'
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
   }
 
   _handleBeautify() {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this._prettify(this.codeMirror.getValue());
   }
 
@@ -785,8 +785,8 @@ class CodeEditor extends Component<Props, State> {
 
     // Setup the hint options
     if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
-      let getVariables: (() => Promise<Array<Object>>) | undefined;
-      let getTags: (() => Promise<Array<NunjucksParsedTag>>) | undefined;
+      let getVariables: (() => Promise<Object[]>) | undefined;
+      let getTags: (() => Promise<NunjucksParsedTag[]>) | undefined;
 
       if (getRenderContext) {
         getVariables = async () => {
@@ -797,7 +797,7 @@ class CodeEditor extends Component<Props, State> {
 
         // Only allow tags if we have variables too
         getTags = async () => {
-          const expandedTags: Array<NunjucksParsedTag> = [];
+          const expandedTags: NunjucksParsedTag[] = [];
 
           for (const tagDef of await getTagDefinitions()) {
             const firstArg = tagDef.args[0];
@@ -849,9 +849,9 @@ class CodeEditor extends Component<Props, State> {
     if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
       // Use stringify here because these could be infinitely recursive due to GraphQL
       // schemas
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       shouldSetOption = JSON.stringify(value) !== JSON.stringify(cm.options[key]);
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
     } else if (!deepEqual(value, cm.options[key])) {
       // Don't set the option if it hasn't changed
       shouldSetOption = true;
@@ -865,7 +865,7 @@ class CodeEditor extends Component<Props, State> {
     // Set the option safely. When setting "lint", for example, it can throw an exception
     // and cause the editor to break.
     try {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       cm.setOption(key, value);
     } catch (err) {
       console.log('Failed to set CodeMirror option', err.message, {
@@ -918,7 +918,9 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _codemirrorEndCompletion() {
-    clearInterval(this._autocompleteDebounce);
+    if (this._autocompleteDebounce !== null) {
+      clearInterval(this._autocompleteDebounce);
+    }
   }
 
   _codemirrorTriggerCompletionKeyUp(doc, e) {
@@ -930,20 +932,22 @@ class CodeEditor extends Component<Props, State> {
         return;
       }
 
-      clearTimeout(this._autocompleteDebounce);
+      if (this._autocompleteDebounce !== null) {
+        clearTimeout(this._autocompleteDebounce);
+      }
       this._autocompleteDebounce = setTimeout(() => {
         doc.execCommand('autocomplete');
       }, 700);
     }
   }
 
-  _codemirrorFocus(doc, e) {
+  _codemirrorFocus(_doc, e) {
     if (this.props.onFocus) {
       this.props.onFocus(e);
     }
   }
 
-  _codemirrorBlur(doc, e) {
+  _codemirrorBlur(_doc, e) {
     this._persistState();
 
     if (this.props.onBlur) {
@@ -959,7 +963,7 @@ class CodeEditor extends Component<Props, State> {
     this._persistState();
   }
 
-  _codemirrorKeyHandled(codeMirror, keyName, event) {
+  _codemirrorKeyHandled(_codeMirror, _keyName, event) {
     const { keyMap } = this.props;
     const { keyCode } = event;
     const isVimKeyMap = keyMap === EDITOR_KEY_MAP_VIM;
@@ -971,7 +975,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _codemirrorValueBeforeChange(doc, change) {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const value = this.codeMirror.getDoc().getValue();
 
     // If we're in single-line mode, merge all changed lines into one
@@ -996,13 +1000,13 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorPaste(cm, e) {
+  _codemirrorPaste(_cm, e) {
     if (this.props.onPaste) {
       this.props.onPaste(e);
     }
   }
 
-  _codemirrorPreventWhenTypePassword(cm, e) {
+  _codemirrorPreventWhenTypePassword(_cm, e) {
     const { type } = this.props;
 
     if (type && type.toLowerCase() === 'password') {
@@ -1020,7 +1024,7 @@ class CodeEditor extends Component<Props, State> {
       return;
     }
 
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const value = this.codeMirror.getDoc().getValue();
     // Disable linting if the document reaches a maximum size or is empty
     const shouldLint =
@@ -1069,7 +1073,7 @@ class CodeEditor extends Component<Props, State> {
       }
     }
 
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.setValue(code || '');
   }
 
@@ -1084,7 +1088,9 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _setFilter(filter) {
-    clearTimeout(this._filterTimeout);
+    if (this._filterTimeout !== null) {
+      clearTimeout(this._filterTimeout);
+    }
     this._filterTimeout = setTimeout(() => {
       this.setState({
         filter,
@@ -1132,7 +1138,7 @@ class CodeEditor extends Component<Props, State> {
       'editor--readonly': readOnly,
       'raw-editor': raw,
     });
-    const toolbarChildren: Array<ReactNode> = [];
+    const toolbarChildren: ReactNode[] = [];
 
     if (this.props.updateFilter && (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode))) {
       toolbarChildren.push(

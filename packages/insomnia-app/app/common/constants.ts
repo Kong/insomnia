@@ -1,9 +1,9 @@
-import { $Keys } from 'utility-types';
 import { appConfig } from '../../config';
 import * as electron from 'electron';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import { getDataDirectory } from './misc';
+import { ValueOf } from 'type-fest';
 
 // App Stuff
 export const getAppVersion = () => appConfig().version;
@@ -16,16 +16,13 @@ export const getAppSynopsis = () => appConfig().synopsis;
 export const getAppId = () => appConfig().appId;
 export const getGoogleAnalyticsId = () => appConfig().gaId;
 export const getGoogleAnalyticsLocation = () => appConfig().gaLocation;
-
 export const getAppPlatform = () => process.platform;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
-
 export const getSegmentWriteKey = () => appConfig().segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
-
 export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () => encodeURIComponent(
@@ -57,21 +54,17 @@ export function updatesSupported() {
 }
 
 export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
-
 export const changelogUrl = () => appConfig().changelogUrl;
 
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while
-
 export const DEBOUNCE_MILLIS = 100;
 export const REQUEST_TIME_TO_SHOW_COUNTER = 1; // Seconds
-
 export const STATUS_CODE_PLUGIN_ERROR = -222;
 export const LARGE_RESPONSE_MB = 5;
 export const HUGE_RESPONSE_MB = 100;
 export const FLEXIBLE_URL_REGEX = /^(http|https):\/\/[\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ\-_.]+[/\wàâäèéêëîïôóœùûüÿçÀÂÄÈÉÊËÎÏÔŒÙÛÜŸÇ.\-+=:\][@%^*&!#?;$]*/;
 export const CHECK_FOR_UPDATES_INTERVAL = 1000 * 60 * 60 * 3; // 3 hours
-
 export const PLUGIN_PATH = path.join(getDataDirectory(), 'plugins');
 export const AUTOBIND_CFG = {
   methodsToIgnore: [
@@ -80,28 +73,34 @@ export const AUTOBIND_CFG = {
     'UNSAFE_componentWillUpdate',
   ],
 };
-// Available editor key maps
+
+// Available editor key map
 export const EDITOR_KEY_MAP_DEFAULT = 'default';
 export const EDITOR_KEY_MAP_EMACS = 'emacs';
 export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
 export const EDITOR_KEY_MAP_VIM = 'vim';
-// Hotkeys
+
+// Hotkey
 export const MNEMONIC_SYM = isMac() ? '' : '&';
 export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
 export const ALT_SYM = isMac() ? '⌥' : 'Alt';
 export const SHIFT_SYM = isMac() ? '⇧' : 'Shift';
 export const META_SYM = isMac() ? '⌘' : 'Super';
-// Updates
+
+// Update
 export const UPDATE_CHANNEL_STABLE = 'stable';
 export const UPDATE_CHANNEL_BETA = 'beta';
 export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
 export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
-// API
+
+// AP
 export const API_BASE_URL = 'https://api.insomnia.rest';
-// PLUGINS
+
+// PLUGIN
 export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
 export const NPM_PACKAGE_BASE = 'https://www.npmjs.com/package';
-// UI Stuff
+
+// UI Stuf
 export const MAX_SIDEBAR_REMS = 45;
 export const MIN_SIDEBAR_REMS = 0.75;
 export const COLLAPSE_SIDEBAR_REMS = 3;
@@ -117,6 +116,7 @@ export const MIN_INTERFACE_FONT_SIZE = 8;
 export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
+
 // Activities
 export type GlobalActivity =
   | 'spec'
@@ -134,6 +134,7 @@ export const ACTIVITY_ONBOARDING: GlobalActivity = 'onboarding';
 export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
+
 export const isWorkspaceActivity = (activity: GlobalActivity): boolean => {
   switch (activity) {
     case ACTIVITY_SPEC:
@@ -149,6 +150,7 @@ export const isWorkspaceActivity = (activity: GlobalActivity): boolean => {
       return false;
   }
 };
+
 export const isValidActivity = (activity: GlobalActivity): boolean => {
   switch (activity) {
     case ACTIVITY_SPEC:
@@ -164,6 +166,7 @@ export const isValidActivity = (activity: GlobalActivity): boolean => {
       return false;
   }
 };
+
 // HTTP Methods
 export const METHOD_GET = 'GET';
 export const METHOD_POST = 'POST';
@@ -181,8 +184,10 @@ export const HTTP_METHODS = [
   METHOD_OPTIONS,
   METHOD_HEAD,
 ];
+
 // Additional methods
 export const METHOD_GRPC = 'GRPC';
+
 // Preview Modes
 export const PREVIEW_MODE_FRIENDLY = 'friendly';
 export const PREVIEW_MODE_SOURCE = 'source';
@@ -193,6 +198,7 @@ const previewModeMap = {
   [PREVIEW_MODE_RAW]: ['Raw', 'Raw Data'],
 };
 export const PREVIEW_MODES = Object.keys(previewModeMap);
+
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
 export const CONTENT_TYPE_XML = 'application/xml';
@@ -214,6 +220,7 @@ const contentTypesMap = {
   [CONTENT_TYPE_XML]: ['XML', 'XML'],
   [CONTENT_TYPE_YAML]: ['YAML', 'YAML'],
 };
+
 // Auth Types
 export const AUTH_NONE = 'none';
 export const AUTH_OAUTH_2 = 'oauth2';
@@ -228,9 +235,11 @@ export const AUTH_NETRC = 'netrc';
 export const AUTH_ASAP = 'asap';
 export const HAWK_ALGORITHM_SHA256 = 'sha256';
 export const HAWK_ALGORITHM_SHA1 = 'sha1';
+
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
+
 // HTTP version codes
 export const HttpVersions = {
   V1_0: 'V1_0',
@@ -238,8 +247,9 @@ export const HttpVersions = {
   V2_0: 'V2_0',
   v3: 'v3',
   default: 'default',
-};
-export type HttpVersion = $Keys<typeof HttpVersions>;
+} as const;
+export type HttpVersion = ValueOf<typeof HttpVersions>;
+
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
   [AUTH_DIGEST]: ['Digest', 'Digest Auth'],
@@ -251,7 +261,8 @@ const authTypesMap = {
   [AUTH_AWS_IAM]: ['AWS', 'AWS IAM v4'],
   [AUTH_ASAP]: ['ASAP', 'Atlassian ASAP'],
   [AUTH_NETRC]: ['Netrc', 'Netrc File'],
-};
+} as const;
+
 // Sort Orders
 export type SortOrder =
   | 'name-asc'
@@ -295,7 +306,7 @@ export function getPreviewModeName(previewMode, useLong = false) {
   }
 }
 
-export function getContentTypeName(contentType: string | undefined, useLong = false) {
+export function getContentTypeName(contentType?: string | null, useLong = false) {
   if (typeof contentType !== 'string') {
     return '';
   }
@@ -395,6 +406,7 @@ export const RESPONSE_CODE_DESCRIPTIONS = {
   510: 'Further extensions to the request are required for the server to fulfill it.',
   511: 'The 511 status code indicates that the client needs to authenticate to gain network access.',
 };
+
 export const RESPONSE_CODE_REASONS = {
   // Special
   [STATUS_CODE_PLUGIN_ERROR]: 'Plugin Error',

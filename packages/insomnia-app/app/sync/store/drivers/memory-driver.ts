@@ -6,16 +6,16 @@ export default class MemoryDriver implements BaseDriver {
     this._init();
   }
 
-  async hasItem(key: string): Promise<boolean> {
+  async hasItem(key: string) {
     return this._db[String(key)] instanceof Buffer;
   }
 
-  async setItem(key: string, value: Buffer): Promise<void> {
+  async setItem(key: string, value: Buffer) {
     this._db[String(key)] = value;
   }
 
-  async getItem(key: string): Promise<Buffer | null> {
-    let value = null;
+  async getItem(key: string) {
+    let value: Buffer | null = null;
 
     if (await this.hasItem(key)) {
       value = this._db[key];
@@ -24,16 +24,16 @@ export default class MemoryDriver implements BaseDriver {
     return value;
   }
 
-  async removeItem(key: string): Promise<void> {
+  async removeItem(key: string) {
     delete this._db[String(key)];
   }
 
-  async clear(): Promise<void> {
+  async clear() {
     this._init();
   }
 
-  async keys(prefix: string, recursive: boolean): Promise<Array<string>> {
-    const keys = [];
+  async keys(prefix: string, recursive: boolean) {
+    const keys: string[] = [];
     const baseLevels = prefix.split('/').length;
 
     for (const key of Object.keys(this._db)) {

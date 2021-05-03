@@ -48,14 +48,11 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   ) {
     const { children } = this.props;
     const firstChild = Array.isArray(children) && children.length === 1 ? children[0] : children;
-    this.setState({
-      error,
-      info,
-    });
+    this.setState({ error, info });
     let componentName = 'component';
 
     try {
-      componentName = (firstChild as any).type.name;
+      componentName = firstChild.type.name;
     } catch (err) {
       // It's okay
     }
@@ -105,7 +102,7 @@ class ErrorBoundary extends PureComponent<Props> {
     // Unwrap multiple children into single children for better error isolation
     const childArray = Array.isArray(children) ? children : [children];
     return childArray.map((child, i) => (
-      <SingleErrorBoundary key={i} {...(extraProps as Record<string, any>)}>
+      <SingleErrorBoundary key={i} {...extraProps}>
         {child}
       </SingleErrorBoundary>
     ));

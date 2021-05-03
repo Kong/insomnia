@@ -1,12 +1,12 @@
 import { remote } from 'electron';
-type Options = {
-  itemTypes?: Array<'file' | 'directory'>;
-  extensions?: Array<string>;
-};
-type FileSelection = {
+interface Options {
+  itemTypes?: ('file' | 'directory')[];
+  extensions?: string[];
+}
+interface FileSelection {
   filePath: string;
   canceled: boolean;
-};
+}
 
 const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<FileSelection> => {
   // If no types are selected then default to just files and not directories

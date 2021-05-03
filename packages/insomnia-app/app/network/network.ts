@@ -68,6 +68,8 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 import type { Environment } from '../models/environment';
+import { CurlOptionName } from 'node-libcurl/dist/generated/CurlOption';
+
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
   bodyPath?: string;
@@ -88,10 +90,13 @@ export interface ResponsePatch {
   timelinePath?: string;
   url?: string;
 }
+
 // Time since user's last keypress to wait before making the request
 const MAX_DELAY_TIME = 1000;
+
 // Special header value that will prevent the header being sent
 const DISABLE_HEADER_VALUE = '__Di$aB13d__';
+
 // Because node-libcurl changed some names that we used in the timeline
 const LIBCURL_DEBUG_MIGRATION_MAP = {
   HeaderIn: 'HEADER_IN',
@@ -103,8 +108,11 @@ const LIBCURL_DEBUG_MIGRATION_MAP = {
   Text: 'TEXT',
   '': '',
 };
+
 const cancelRequestFunctionMap = {};
+
 let lastUserInteraction = Date.now();
+
 export async function cancelRequestById(requestId) {
   if (hasCancelFunctionForId(requestId)) {
     const cancelRequestFunction = cancelRequestFunctionMap[requestId];
@@ -126,14 +134,15 @@ function clearCancelFunctionForId(requestId) {
 export function hasCancelFunctionForId(requestId) {
   return cancelRequestFunctionMap.hasOwnProperty(requestId);
 }
+
 export async function _actuallySend(
   renderedRequest: RenderedRequest,
   renderContext: Record<string, any>,
   workspace: Workspace,
   settings: Settings,
   environment: Environment | null,
-): Promise<ResponsePatch> {
-  return new Promise(async resolve => {
+) {
+  return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
 
     function addTimeline(name, value) {
@@ -156,7 +165,7 @@ export async function _actuallySend(
       patch: ResponsePatch,
       bodyPath: string | null,
       noPlugins = false,
-    ): Promise<void> {
+    ) {
       const timelinePath = await storeTimeline(timeline);
       // Tear Down the cancellation logic
       clearCancelFunctionForId(renderedRequest._id);
@@ -199,7 +208,7 @@ export async function _actuallySend(
     }
 
     /** Helper function to respond with an error */
-    async function handleError(err: Error): Promise<void> {
+    async function handleError(err: Error) {
       await respond(
         {
           url: renderedRequest.url,
@@ -216,12 +225,11 @@ export async function _actuallySend(
     }
 
     /** Helper function to set Curl options */
-    function setOpt(opt: number, val: any, optional = false) {
-      const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
-
+    function setOpt(opt: Parameters<typeof curl.setOpt>[0] | CurlOptionName, val: Parameters<typeof curl.setOpt>[1], optional = false) {
       try {
         curl.setOpt(opt, val);
       } catch (err) {
+        const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
         if (!optional) {
           throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
         } else {
@@ -239,8 +247,10 @@ export async function _actuallySend(
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
         await respond(
           {
-            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
+            elapsedTime: (curl.getInfo(Curl.info.TOTAL_TIME) as number || 0) * 1000,
+            // @ts-expect-error -- needs generic
             bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+            // @ts-expect-error -- needs generic
             url: curl.getInfo(Curl.info.EFFECTIVE_URL),
             statusMessage: 'Cancelled',
             error: 'Request was cancelled',
@@ -253,12 +263,15 @@ export async function _actuallySend(
       };
 
       // Set all the basic options
-      setOpt(Curl.option.VERBOSE, true); // True so debug function works
+      setOpt(Curl.option.VERBOSE, true);
 
-      setOpt(Curl.option.NOPROGRESS, true); // True so curl doesn't print progress
+      // True so debug function works\
+      setOpt(Curl.option.NOPROGRESS, true);
 
-      setOpt(Curl.option.ACCEPT_ENCODING, ''); // Auto decode everything
+      // True so curl doesn't print progress
+      setOpt(Curl.option.ACCEPT_ENCODING, '');
 
+      // Auto decode everything
       enable(CurlFeature.Raw);
 
       // Set follow redirects setting
@@ -307,16 +320,19 @@ export async function _actuallySend(
           break;
       }
 
+      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       // Setup debug handler
       setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, contentBuffer: Buffer) => {
         const content = contentBuffer.toString('utf8');
         const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
         const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
+        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
           return 0;
         }
 
+        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         // Ignore the possibly large data messages
         if (infoType === CurlInfoDebug.DataOut) {
           if (contentBuffer.length === 0) {
@@ -330,11 +346,13 @@ export async function _actuallySend(
           return 0;
         }
 
+        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         if (infoType === CurlInfoDebug.DataIn) {
           addTimelineText(`Received ${describeByteSize(contentBuffer.length)} chunk`);
           return 0;
         }
 
+        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         // Don't show cookie setting because this will display every domain in the jar
         if (infoType === CurlInfoDebug.Text && content.indexOf('Added cookie') === 0) {
           return 0;
@@ -556,7 +574,7 @@ export async function _actuallySend(
 
       // Build the body
       let noBody = false;
-      let requestBody = null;
+      let requestBody: string | null = null;
       const expectsBody = ['POST', 'PUT', 'PATCH'].includes(renderedRequest.method.toUpperCase());
 
       if (renderedRequest.body.mimeType === CONTENT_TYPE_FORM_URLENCODED) {
@@ -731,6 +749,7 @@ export async function _actuallySend(
             return `${h.name}: ${value}`;
           }
         });
+      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       setOpt(Curl.option.HTTPHEADER, headerStrings);
       let responseBodyBytes = 0;
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
@@ -739,13 +758,14 @@ export async function _actuallySend(
       const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
       curl.on('end', () => responseBodyWriteStream.end());
       curl.on('error', () => responseBodyWriteStream.end());
+      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       setOpt(Curl.option.WRITEFUNCTION, (buff: Buffer) => {
         responseBodyBytes += buff.length;
         responseBodyWriteStream.write(buff);
         return buff.length;
       });
       // Handle the response ending
-      curl.on('end', async (_1, _2, rawHeaders) => {
+      curl.on('end', async (_1, _2, rawHeaders: Buffer) => {
         const allCurlHeadersObjects = _parseHeaders(rawHeaders);
 
         // Headers are an array (one for each redirect)
@@ -813,6 +833,7 @@ export async function _actuallySend(
           statusMessage,
           bytesContent: responseBodyBytes,
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
+          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
           url: curl.getInfo(Curl.info.EFFECTIVE_URL),
         };
@@ -848,10 +869,11 @@ export async function _actuallySend(
     }
   });
 }
+
 export async function sendWithSettings(
   requestId: string,
   requestPatch: Record<string, any>,
-): Promise<ResponsePatch> {
+) {
   const request = await models.request.getById(requestId);
 
   if (!request) {
@@ -898,11 +920,12 @@ export async function sendWithSettings(
     environment,
   );
 }
+
 export async function send(
   requestId: string,
   environmentId?: string,
   extraInfo?: ExtraRenderInfo,
-): Promise<ResponsePatch> {
+) {
   console.log(`[network] Sending req=${requestId} env=${environmentId || 'null'}`);
   // HACK: wait for all debounces to finish
 
@@ -966,7 +989,7 @@ export async function send(
       statusCode: STATUS_CODE_PLUGIN_ERROR,
       statusMessage: err.plugin ? `Plugin ${err.plugin.name}` : 'Plugin',
       url: renderedRequestBeforePlugins.url,
-    };
+    } as ResponsePatch;
   }
 
   const response = await _actuallySend(
@@ -987,7 +1010,7 @@ export async function send(
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-): Promise<RenderedRequest> {
+) {
   const newRenderedRequest = clone(renderedRequest);
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
@@ -1014,7 +1037,7 @@ async function _applyResponsePluginHooks(
   response: ResponsePatch,
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-): Promise<ResponsePatch> {
+) {
   const newResponse = clone(response);
   const newRequest = clone(renderedRequest);
 
@@ -1081,6 +1104,7 @@ export function _parseHeaders(
 
   return results;
 }
+
 // exported for unit tests only
 export function _getAwsAuthHeaders(
   credentials: {
@@ -1127,8 +1151,8 @@ export function _getAwsAuthHeaders(
     }));
 }
 
-function storeTimeline(timeline: ResponseTimelineEntry[]): Promise<string> {
-  return new Promise((resolve, reject) => {
+function storeTimeline(timeline: ResponseTimelineEntry[]) {
+  return new Promise<string>((resolve, reject) => {
     const timelineStr = JSON.stringify(timeline, null, '\t');
     const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
     const responsesDir = pathJoin(getDataDirectory(), 'responses');
@@ -1152,7 +1176,7 @@ if (global.document) {
 
     lastUserInteraction = Date.now();
   });
-  document.addEventListener('paste', (e: Event) => {
+  document.addEventListener('paste', () => {
     lastUserInteraction = Date.now();
   });
 }

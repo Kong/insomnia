@@ -17,6 +17,7 @@ import type { RequestParameter } from '../models/request';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './misc';
 import Analytics from 'analytics-node';
 import { getAccountId } from '../account/session';
+
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
 const KEY_TRACKING_ID = 'tid';
@@ -41,17 +42,19 @@ const KEY_APPLICATION_ID = 'aid';
 const KEY_APPLICATION_VERSION = 'av';
 const KEY_CUSTOM_DIMENSION_PREFIX = 'cd';
 let _currentLocationPath = '/';
+
 export function trackEvent(
   category: string,
   action: string,
-  label?: string,
-  value?: string,
+  label?: string | null,
+  value?: string | null,
 ) {
   process.nextTick(async () => {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     await _trackEvent(true, category, action, label, value);
   });
 }
+
 export function trackNonInteractiveEvent(
   category: string,
   action: string,
@@ -85,12 +88,14 @@ export function trackNonInteractiveEventQueueable(
     await _trackEvent(false, category, action, label, value, true);
   });
 }
+
 export function trackPageView(path: string) {
   process.nextTick(async () => {
     await _trackPageView(path);
   });
 }
-export async function getDeviceId(): Promise<string> {
+
+export async function getDeviceId() {
   const settings = await models.settings.getOrCreate();
   let { deviceId } = settings;
 
@@ -105,7 +110,9 @@ export async function getDeviceId(): Promise<string> {
 
   return deviceId;
 }
+
 let segmentClient = null;
+
 export async function trackSegmentEvent(event: String, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();
 
@@ -153,7 +160,7 @@ export async function trackSegmentEvent(event: String, properties?: Record<strin
 // ~~~~~~~~~~~~~~~~~ //
 // Private Functions //
 // ~~~~~~~~~~~~~~~~~ //
-function _getOsName(): string {
+function _getOsName() {
   const platform = getAppPlatform();
 
   switch (platform) {
@@ -210,6 +217,7 @@ export async function _trackEvent(
     });
   await _sendToGoogle(params, !!queuable);
 }
+
 export async function _trackPageView(location: string) {
   _currentLocationPath = location;
   console.log('[ga] Page', _currentLocationPath);
@@ -222,7 +230,7 @@ export async function _trackPageView(location: string) {
   await _sendToGoogle(params, false);
 }
 
-async function _getDefaultParams(): Promise<Array<RequestParameter>> {
+async function _getDefaultParams(): Promise<RequestParameter[]> {
   const deviceId = await getDeviceId();
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
   const ua = String(window?.navigator?.userAgent)
@@ -314,7 +322,7 @@ db.onChange(async changes => {
   }
 });
 
-async function _sendToGoogle(params: Array<RequestParameter>, queueable: boolean) {
+async function _sendToGoogle(params: RequestParameter[], queueable: boolean) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {

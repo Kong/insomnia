@@ -5,7 +5,7 @@ import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import * as toughCookie from 'tough-cookie';
 import * as models from '../../../models';
 import clone from 'clone';
-import Modal from '../base/modal';
+import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -14,7 +14,7 @@ import { cookieToString } from 'insomnia-cookies';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
 
-interface Props {
+interface Props extends ModalProps {
   handleRender: (...args: any[]) => any;
   handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
@@ -70,7 +70,9 @@ class CookieModifyModal extends PureComponent<Props, State> {
 
   _handleChangeRawValue(e: React.SyntheticEvent<HTMLInputElement>) {
     const value = e.currentTarget.value;
-    clearTimeout(this._rawTimeout);
+    if (this._rawTimeout !== null) {
+      clearTimeout(this._rawTimeout);
+    }
     this._rawTimeout = setTimeout(async () => {
       const oldCookie = this.state.cookie;
       let cookie;
@@ -148,7 +150,9 @@ class CookieModifyModal extends PureComponent<Props, State> {
     const newCookie = Object.assign({}, cookie, {
       [field]: value,
     });
-    clearTimeout(this._cookieUpdateTimeout);
+    if (this._cookieUpdateTimeout !== null) {
+      clearTimeout(this._cookieUpdateTimeout);
+    }
     this._cookieUpdateTimeout = setTimeout(async () => {
       await this._handleCookieUpdate(newCookie);
       this.setState({
@@ -212,7 +216,7 @@ class CookieModifyModal extends PureComponent<Props, State> {
     const { cookie } = this.state;
     const checkFields = ['secure', 'httpOnly'];
     return (
-      <Modal ref={this._setModalRef} {...(this.props as Record<string, any>)}>
+      <Modal ref={this._setModalRef} {...this.props}>
         <ModalHeader>Edit Cookie</ModalHeader>
         <ModalBody className="cookie-modify">
           {cookieJar && cookie && (

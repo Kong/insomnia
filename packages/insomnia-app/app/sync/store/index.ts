@@ -1,26 +1,30 @@
 import path from 'path';
 import type { BaseDriver } from './drivers/base';
+
 // Can't really make this any more specific unfortunately
 type JSONValue = any;
+
 export type HookFn = (extension: string, value: Buffer) => Promise<Buffer>;
-export type Hook = {
+
+export interface Hook {
   read: HookFn;
   write: HookFn;
-};
+}
+
 export default class Store {
   _driver: BaseDriver;
-  _hooks: Array<Hook>;
+  _hooks: Hook[];
 
-  constructor(driver: BaseDriver, hooks?: Array<Hook>) {
+  constructor(driver: BaseDriver, hooks?: Hook[]) {
     this._driver = driver;
     this._hooks = hooks || [];
   }
 
-  async hasItem(key: string): Promise<boolean> {
+  async hasItem(key: string) {
     return this._driver.hasItem(key);
   }
 
-  async setItem(key: string, value: JSONValue | Buffer): Promise<void> {
+  async setItem(key: string, value: JSONValue | Buffer) {
     const ext = path.extname(key);
     let serializedValue;
 
@@ -33,7 +37,7 @@ export default class Store {
     return this._driver.setItem(key, serializedValue);
   }
 
-  async setItemRaw(key: string, value: Buffer): Promise<void> {
+  async setItemRaw(key: string, value: Buffer) {
     return this._driver.setItem(key, value);
   }
 
@@ -62,19 +66,19 @@ export default class Store {
     return this._driver.getItem(key);
   }
 
-  async removeItem(key: string): Promise<void> {
+  async removeItem(key: string) {
     return this._driver.removeItem(key);
   }
 
-  async keys(prefix: string, recursive: boolean = true): Promise<Array<string>> {
+  async keys(prefix: string, recursive = true) {
     return this._driver.keys(prefix, recursive);
   }
 
-  async clear(): Promise<void> {
+  async clear() {
     return this._driver.clear();
   }
 
-  async _serialize(ext: string, raw: JSONValue | Buffer): Promise<Buffer> {
+  async _serialize(ext: string, raw: JSONValue | Buffer) {
     let buff = raw instanceof Buffer ? raw : Buffer.from(JSON.stringify(raw, null, 2), 'utf8');
 
     for (const hook of this._hooks) {

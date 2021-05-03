@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 
 interface Props {
+  addIcon?: boolean; // TODO(TSCONVERSION) some consumers are passing this prop but it appears to be unused
   buttonClass?: React.ComponentType,
   stayOpenAfterClick?: boolean,
   value?: any,
@@ -41,9 +42,9 @@ class DropdownItem extends PureComponent<Props> {
       className,
       color,
       onClick,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       stayOpenAfterClick,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       ...props
     } = this.props;
     const styles = color
@@ -63,7 +64,7 @@ class DropdownItem extends PureComponent<Props> {
       onClick: this._handleClick,
       ...props,
     };
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return createElement(buttonClass || 'button', buttonProps, inner);
   }
 }

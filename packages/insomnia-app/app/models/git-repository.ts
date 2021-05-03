@@ -1,23 +1,19 @@
-import { $Shape } from 'utility-types';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
 import type { GitCredentials } from '../sync/git/git-vcs';
-type BaseGitRepository = {
-  needsFullClone: boolean;
-  uri: string;
-  credentials: GitCredentials | null;
-  author: {
-    name: string;
-    email: string;
-  };
-  uriNeedsMigration: boolean;
-};
+
 export type GitRepository = BaseModel & BaseGitRepository;
+
 export const name = 'Git Repository';
+
 export const type = 'GitRepository';
+
 export const prefix = 'git';
+
 export const canDuplicate = false;
+
 export const canSync = false;
+
 export function init(): BaseGitRepository {
   return {
     needsFullClone: false,
@@ -30,26 +26,41 @@ export function init(): BaseGitRepository {
     uriNeedsMigration: true,
   };
 }
-export function migrate(doc: GitRepository): GitRepository {
+
+interface BaseGitRepository {
+  needsFullClone: boolean;
+  uri: string;
+  credentials: GitCredentials | null;
+  author: {
+    name: string;
+    email: string;
+  };
+  uriNeedsMigration: boolean;
+}
+
+export function migrate(doc: GitRepository) {
   return doc;
 }
-export function create(patch: $Shape<GitRepository> = {}): Promise<GitRepository> {
-  return db.docCreate(type, {
+
+export function create(patch: Partial<GitRepository> = {}) {
+  return db.docCreate<GitRepository>(type, {
     uriNeedsMigration: false,
     ...patch,
   });
 }
-export async function getById(id: string): Promise<GitRepository | null> {
-  return db.getWhere(type, {
-    _id: id,
-  });
+
+export async function getById(id: string) {
+  return db.getWhere<GitRepository>(type, { _id: id });
 }
-export function update(repo: GitRepository, patch: $Shape<GitRepository>): Promise<GitRepository> {
-  return db.docUpdate(repo, patch);
+
+export function update(repo: GitRepository, patch: Partial<GitRepository>) {
+  return db.docUpdate<GitRepository>(repo, patch);
 }
-export function remove(repo: GitRepository): Promise<void> {
+
+export function remove(repo: GitRepository) {
   return db.remove(repo);
 }
-export function all(): Promise<Array<GitRepository>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<GitRepository>(type);
 }

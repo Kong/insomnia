@@ -97,7 +97,7 @@ class RequestHeadersEditor extends PureComponent<Props> {
     }
   }
 
-  static _getCommonHeaderNames(pair: RequestHeader) {
+  static _getCommonHeaderNames() {
     return allHeaderNames;
   }
 

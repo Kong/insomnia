@@ -11,16 +11,15 @@ import WrapperModal from '../../ui/components/modals/wrapper-modal';
 import HtmlElementWrapper from '../../ui/components/html-element-wrapper';
 import { axiosRequest as axios } from '../../../app/network/axios-request';
 import * as analytics from '../../../app/common/analytics';
-export function init(
-  renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL,
-): {
+
+export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
   app: Record<string, any>;
 } {
   const canShowDialogs =
     renderPurpose === RENDER_PURPOSE_SEND || renderPurpose === RENDER_PURPOSE_NO_RENDER;
   return {
     app: {
-      alert(title: string, message?: string): Promise<void> {
+      alert(title: string, message?: string) {
         if (!canShowDialogs) {
           return Promise.resolve();
         }
@@ -40,7 +39,7 @@ export function init(
           skinny?: boolean;
           wide?: boolean;
         } = {},
-      ): void {
+      ) {
         if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
           return;
         }
@@ -62,7 +61,7 @@ export function init(
           submitName?: string;
           cancelable?: boolean;
         },
-      ): Promise<string> {
+      ) {
         options = options || {};
 
         if (!canShowDialogs) {
@@ -85,7 +84,7 @@ export function init(
         });
       },
 
-      getPath(name: string): string {
+      getPath(name: string) {
         switch (name.toLowerCase()) {
           case 'desktop':
             return electron.remote.app.getPath('desktop');
@@ -123,7 +122,7 @@ export function init(
         options?: {
           html: string;
         } = {},
-      ): void {
+      ) {
         console.warn('app.showGenericModalDialog() is deprecated. Use app.dialog() instead.');
         // Create DOM node so we can adapt to the new dialog() method
         const body = document.createElement('div');

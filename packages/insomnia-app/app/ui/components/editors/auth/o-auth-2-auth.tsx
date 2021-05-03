@@ -61,7 +61,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     showAdvanced, // Remember from last time
   }
 
-  _handleToggleAdvanced(): void {
+  _handleToggleAdvanced() {
     // Remember this for the entirety of the session
     showAdvanced = !this.state.showAdvanced;
     this.setState({
@@ -69,7 +69,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     });
   }
 
-  async _handleUpdateAccessToken(e: React.SyntheticEvent<HTMLInputElement>): Promise<void> {
+  async _handleUpdateAccessToken(e: React.SyntheticEvent<HTMLInputElement>) {
     const { oAuth2Token } = this.props;
     const accessToken = e.currentTarget.value;
 
@@ -85,7 +85,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }
   }
 
-  async _handleUpdateIdentityToken(e: React.SyntheticEvent<HTMLInputElement>): Promise<void> {
+  async _handleUpdateIdentityToken(e: React.SyntheticEvent<HTMLInputElement>) {
     const { oAuth2Token } = this.props;
     const identityToken = e.currentTarget.value;
 
@@ -101,7 +101,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }
   }
 
-  async _handleUpdateRefreshToken(e: React.SyntheticEvent<HTMLInputElement>): Promise<void> {
+  async _handleUpdateRefreshToken(e: React.SyntheticEvent<HTMLInputElement>) {
     const { oAuth2Token } = this.props;
     const refreshToken = e.currentTarget.value;
 
@@ -117,7 +117,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }
   }
 
-  async _handleClearTokens(): Promise<void> {
+  async _handleClearTokens() {
     const oAuth2Token = await models.oAuth2Token.getByParentId(this.props.request._id);
 
     if (oAuth2Token) {
@@ -125,7 +125,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }
   }
 
-  _handleDebugResponseClick(responseId: string) {
+  _handleDebugResponseClick() {
     const { oAuth2Token } = this.props;
 
     if (!oAuth2Token || !oAuth2Token.xResponseId) {
@@ -137,7 +137,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     });
   }
 
-  async _handleRefreshToken(): Promise<void> {
+  async _handleRefreshToken() {
     // First, clear the state and the current tokens
     this.setState({
       error: '',
@@ -161,7 +161,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }
   }
 
-  _handleChangeProperty(property: string, value: string | boolean): void {
+  _handleChangeProperty(property: string, value: string | boolean) {
     const { onChange, request } = this.props;
     const authentication = Object.assign({}, request.authentication, {
       [property]: value,
@@ -169,71 +169,71 @@ class OAuth2Auth extends PureComponent<Props, State> {
     onChange(request, authentication);
   }
 
-  _handlerChangeResponseType(e: React.SyntheticEvent<HTMLInputElement>): void {
+  _handlerChangeResponseType(e: React.SyntheticEvent<HTMLInputElement>) {
     this._handleChangeProperty('responseType', e.currentTarget.value);
   }
 
-  _handleChangeClientId(value: string): void {
+  _handleChangeClientId(value: string) {
     this._handleChangeProperty('clientId', value);
   }
 
-  _handleChangeCredentialsInBody(e: React.SyntheticEvent<HTMLInputElement>): void {
+  _handleChangeCredentialsInBody(e: React.SyntheticEvent<HTMLInputElement>) {
     this._handleChangeProperty('credentialsInBody', e.currentTarget.value === 'true');
   }
 
-  _handleChangeEnabled(value: boolean): void {
+  _handleChangeEnabled(value: boolean) {
     this._handleChangeProperty('disabled', value);
   }
 
-  _handleChangeClientSecret(value: string): void {
+  _handleChangeClientSecret(value: string) {
     this._handleChangeProperty('clientSecret', value);
   }
 
-  _handleChangePkce(value: boolean): void {
+  _handleChangePkce(value: boolean) {
     this._handleChangeProperty('usePkce', value);
   }
 
-  _handleChangeAuthorizationUrl(value: string): void {
+  _handleChangeAuthorizationUrl(value: string) {
     this._handleChangeProperty('authorizationUrl', value);
   }
 
-  _handleChangeAccessTokenUrl(value: string): void {
+  _handleChangeAccessTokenUrl(value: string) {
     this._handleChangeProperty('accessTokenUrl', value);
   }
 
-  _handleChangeRedirectUrl(value: string): void {
+  _handleChangeRedirectUrl(value: string) {
     this._handleChangeProperty('redirectUrl', value);
   }
 
-  _handleChangeScope(value: string): void {
+  _handleChangeScope(value: string) {
     this._handleChangeProperty('scope', value);
   }
 
-  _handleChangeState(value: string): void {
+  _handleChangeState(value: string) {
     this._handleChangeProperty('state', value);
   }
 
-  _handleChangeUsername(value: string): void {
+  _handleChangeUsername(value: string) {
     this._handleChangeProperty('username', value);
   }
 
-  _handleChangePassword(value: string): void {
+  _handleChangePassword(value: string) {
     this._handleChangeProperty('password', value);
   }
 
-  _handleChangeTokenPrefix(value: string): void {
+  _handleChangeTokenPrefix(value: string) {
     this._handleChangeProperty('tokenPrefix', value);
   }
 
-  _handleChangeAudience(value: string): void {
+  _handleChangeAudience(value: string) {
     this._handleChangeProperty('audience', value);
   }
 
-  _handleChangeResource(value: string): void {
+  _handleChangeResource(value: string) {
     this._handleChangeProperty('resource', value);
   }
 
-  _handleChangeGrantType(e: React.SyntheticEvent<HTMLInputElement>): void {
+  _handleChangeGrantType(e: React.SyntheticEvent<HTMLInputElement>) {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
 

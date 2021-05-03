@@ -32,10 +32,9 @@ class IndeterminateCheckbox extends PureComponent<Props> {
   render() {
     const {
       indeterminate,
-      // eslint-disable-line no-unused-vars
       ...otherProps
     } = this.props;
-    return <input ref={this._setRef} type="checkbox" {...(otherProps as Record<string, any>)} />;
+    return <input ref={this._setRef} type="checkbox" {...otherProps} />;
   }
 }
 

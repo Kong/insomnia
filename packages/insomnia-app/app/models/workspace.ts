@@ -1,25 +1,36 @@
-import { $Keys, $Shape } from 'utility-types';
 import type { BaseModel } from './index';
 import * as models from './index';
 import * as db from '../common/database';
 import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
+import { ValueOf } from 'type-fest';
+
 export const name = 'Workspace';
+
 export const type = 'Workspace';
+
 export const prefix = 'wrk';
+
 export const canDuplicate = true;
+
 export const canSync = true;
+
 export const WorkspaceScopeKeys = {
   design: 'design',
   collection: 'collection',
-};
-export type WorkspaceScope = $Keys<typeof WorkspaceScopeKeys>;
-type BaseWorkspace = {
+} as const;
+
+export type WorkspaceScope = ValueOf<typeof WorkspaceScopeKeys>;
+
+interface BaseWorkspace {
   name: string;
   description: string;
   scope: WorkspaceScope;
-};
+  certificates?: any;
+}
+
 export type Workspace = BaseModel & BaseWorkspace;
+
 export function init() {
   return {
     name: `New ${strings.collection}`,
@@ -27,7 +38,8 @@ export function init() {
     scope: WorkspaceScopeKeys.collection,
   };
 }
-export async function migrate(doc: Workspace): Promise<Workspace> {
+
+export async function migrate(doc: Workspace) {
   doc = await _migrateExtractClientCertificates(doc);
   doc = await _migrateEnsureName(doc);
   await models.apiSpec.getOrCreateForParentId(doc._id, {
@@ -36,14 +48,17 @@ export async function migrate(doc: Workspace): Promise<Workspace> {
   doc = _migrateScope(doc);
   return doc;
 }
-export function getById(id?: string): Promise<Workspace | null> {
-  return db.get(type, id);
+
+export function getById(id?: string) {
+  return db.get<Workspace>(type, id);
 }
-export async function create(patch: $Shape<Workspace> = {}): Promise<Workspace> {
-  return db.docCreate(type, patch);
+
+export async function create(patch: Partial<Workspace> = {}) {
+  return db.docCreate<Workspace>(type, patch);
 }
-export async function all(): Promise<Array<Workspace>> {
-  const workspaces = await db.all(type);
+
+export async function all() {
+  const workspaces = await db.all<Workspace>(type) || [];
 
   if (workspaces.length === 0) {
     // Create default workspace
@@ -56,18 +71,21 @@ export async function all(): Promise<Array<Workspace>> {
     return workspaces;
   }
 }
+
 export function count() {
   return db.count(type);
 }
-export function update(workspace: Workspace, patch: $Shape<Workspace>): Promise<Workspace> {
+
+export function update(workspace: Workspace, patch: Partial<Workspace>) {
   return db.docUpdate(workspace, patch);
 }
-export function remove(workspace: Workspace): Promise<void> {
+
+export function remove(workspace: Workspace) {
   return db.remove(workspace);
 }
 
-async function _migrateExtractClientCertificates(workspace: Workspace): Promise<Workspace> {
-  const certificates = (workspace as Record<string, any>).certificates || null;
+async function _migrateExtractClientCertificates(workspace: Workspace) {
+  const certificates = workspace.certificates || null;
 
   if (!Array.isArray(certificates)) {
     // Already migrated
@@ -86,7 +104,7 @@ async function _migrateExtractClientCertificates(workspace: Workspace): Promise<
     });
   }
 
-  delete (workspace as Record<string, any>).certificates;
+  delete workspace.certificates;
   // This will remove the now-missing `certificates` property
   // NOTE: Using db.update so we don't change things like modified time
   await db.update(workspace);
@@ -98,7 +116,7 @@ async function _migrateExtractClientCertificates(workspace: Workspace): Promise<
  * this happens (and it causes problems) so this migration will ensure that it is
  * corrected.
  */
-async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
+async function _migrateEnsureName(workspace: Workspace) {
   if (typeof workspace.name !== 'string') {
     workspace.name = 'My Workspace';
   }
@@ -109,7 +127,7 @@ async function _migrateEnsureName(workspace: Workspace): Promise<Workspace> {
 /**
  * Ensure workspace scope is set to a valid entry
  */
-function _migrateScope(workspace: Workspace): Workspace {
+function _migrateScope(workspace: Workspace) {
   if (
     workspace.scope === WorkspaceScopeKeys.design ||
     workspace.scope === WorkspaceScopeKeys.collection

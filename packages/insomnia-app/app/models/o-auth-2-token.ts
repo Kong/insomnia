@@ -1,7 +1,19 @@
-import { $Shape } from 'utility-types';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
-type BaseOAuth2Token = {
+
+export type OAuth2Token = BaseModel & BaseOAuth2Token;
+
+export const name = 'OAuth 2.0 Token';
+
+export const type = 'OAuth2Token';
+
+export const prefix = 'oa2';
+
+export const canDuplicate = false;
+
+export const canSync = false;
+
+interface BaseOAuth2Token {
   refreshToken: string;
   accessToken: string;
   identityToken: string;
@@ -14,13 +26,8 @@ type BaseOAuth2Token = {
   error: string;
   errorDescription: string;
   errorUri: string;
-};
-export type OAuth2Token = BaseModel & BaseOAuth2Token;
-export const name = 'OAuth 2.0 Token';
-export const type = 'OAuth2Token';
-export const prefix = 'oa2';
-export const canDuplicate = false;
-export const canSync = false;
+}
+
 export function init(): BaseOAuth2Token {
   return {
     refreshToken: '',
@@ -37,29 +44,33 @@ export function init(): BaseOAuth2Token {
     errorUri: '',
   };
 }
-export function migrate<T>(doc: T): T {
+
+export function migrate(doc: OAuth2Token) {
   return doc;
 }
-export function create(patch: $Shape<OAuth2Token> = {}): Promise<OAuth2Token> {
+
+export function create(patch: Partial<OAuth2Token> = {}) {
   if (!patch.parentId) {
     throw new Error(`New OAuth2Token missing \`parentId\` ${JSON.stringify(patch)}`);
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<OAuth2Token>(type, patch);
 }
-export function update(token: OAuth2Token, patch: $Shape<OAuth2Token>): Promise<OAuth2Token> {
+
+export function update(token: OAuth2Token, patch: Partial<OAuth2Token>) {
   return db.docUpdate(token, patch);
 }
-export function remove(token: OAuth2Token): Promise<void> {
+
+export function remove(token: OAuth2Token) {
   return db.remove(token);
 }
-export function getByParentId(parentId: string): Promise<OAuth2Token | null> {
-  return db.getWhere(type, {
-    parentId,
-  });
+
+export function getByParentId(parentId: string) {
+  return db.getWhere<OAuth2Token>(type, { parentId });
 }
-export async function getOrCreateByParentId(parentId: string): Promise<OAuth2Token> {
-  let token = await db.getWhere(type, {
+
+export async function getOrCreateByParentId(parentId: string) {
+  let token = await db.getWhere<OAuth2Token>(type, {
     parentId,
   });
 
@@ -71,6 +82,7 @@ export async function getOrCreateByParentId(parentId: string): Promise<OAuth2Tok
 
   return token;
 }
-export function all(): Promise<Array<OAuth2Token>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<OAuth2Token>(type);
 }

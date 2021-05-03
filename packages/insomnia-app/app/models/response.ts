@@ -8,10 +8,15 @@ import zlib from 'zlib';
 import mkdirp from 'mkdirp';
 import * as db from '../common/database';
 import { getDataDirectory } from '../common/misc';
+
 export const name = 'Response';
+
 export const type = 'Response';
+
 export const prefix = 'res';
+
 export const canDuplicate = false;
+
 export const canSync = false;
 
 export interface ResponseHeader {
@@ -23,6 +28,8 @@ export interface ResponseTimelineEntry {
   name: string;
   value: string;
 }
+
+type Compression = 'zip' | null | '__NEEDS_MIGRATION__' | undefined;
 
 interface BaseResponse {
   environmentId: string | null;
@@ -39,7 +46,7 @@ interface BaseResponse {
   // Actual bodies are stored on the filesystem
   timelinePath: string;
   // Actual timelines are stored on the filesystem
-  bodyCompression: 'zip' | null | '__NEEDS_MIGRATION__';
+  bodyCompression: Compression;
   error: string;
   requestVersionId: string | null;
   // Things from the request
@@ -77,6 +84,7 @@ export function init(): BaseResponse {
     environmentId: '__LEGACY__',
   };
 }
+
 export async function migrate(doc: Response) {
   doc = await migrateBodyToFileSystem(doc);
   doc = await migrateBodyCompression(doc);
@@ -100,12 +108,14 @@ export function hookRemove(doc: Response, consoleLog: typeof console.log = conso
   });
 }
 
-export function getById(id: string): Promise<Response | null> {
-  return db.get(type, id);
+export function getById(id: string) {
+  return db.get<Response>(type, id);
 }
-export async function all(): Promise<Response[]> {
-  return db.all(type);
+
+export async function all() {
+  return db.all<Response>(type);
 }
+
 export async function removeForRequest(parentId: string, environmentId?: string | null) {
   const settings = await models.settings.getOrCreate();
   const query: Record<string, any> = {
@@ -132,8 +142,8 @@ async function _findRecentForRequest(
   requestId: string,
   environmentId: string | null,
   limit: number,
-): Promise<Response[]> {
-  const query: Record<string, any> = {
+) {
+  const query: db.Query = {
     parentId: requestId,
   };
 
@@ -142,17 +152,18 @@ async function _findRecentForRequest(
     query.environmentId = environmentId;
   }
 
-  return db.findMostRecentlyModified(type, query, limit);
+  return db.findMostRecentlyModified<Response>(type, query, limit);
 }
 
 export async function getLatestForRequest(
   requestId: string,
   environmentId: string | null,
-): Promise<Response | null> {
+) {
   const responses = await _findRecentForRequest(requestId, environmentId, 1);
   const response = responses[0] as Response | null | undefined;
   return response || null;
 }
+
 export async function create(patch: Record<string, any> = {}, maxResponses = 20) {
   if (!patch.parentId) {
     throw new Error('New Response missing `parentId`');
@@ -202,18 +213,22 @@ export function getBodyStream<T extends Response, TFail extends Readable>(
   return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
-export const getBodyBuffer = <T extends Response, TFail>(
-  response: T,
+export const getBodyBuffer = <TFail = null>(
+  response?: { bodyPath?: string, bodyCompression?: Compression },
   readFailureValue?: TFail | null,
-) => getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
+) => getBodyBufferFromPath(
+  response?.bodyPath || '',
+  response?.bodyCompression || null,
+  readFailureValue,
+);
 
-export function getTimeline(response: Response): ResponseTimelineEntry[] {
+export function getTimeline(response: Response) {
   return getTimelineFromPath(response.timelinePath || '');
 }
 
 function getBodyStreamFromPath<TFail extends Readable>(
   bodyPath: string,
-  compression: string | null,
+  compression: Compression,
   readFailureValue?: TFail | null,
 ): Readable | null | TFail {
   // No body, so return empty Buffer
@@ -239,7 +254,7 @@ function getBodyStreamFromPath<TFail extends Readable>(
 
 function getBodyBufferFromPath<T>(
   bodyPath: string,
-  compression: string | null,
+  compression: Compression,
   readFailureValue?: T | null,
 ) {
   // No body, so return empty Buffer
@@ -261,7 +276,7 @@ function getBodyBufferFromPath<T>(
   }
 }
 
-function getTimelineFromPath(timelinePath: string): ResponseTimelineEntry[] {
+function getTimelineFromPath(timelinePath: string) {
   // No body, so return empty Buffer
   if (!timelinePath) {
     return [];
@@ -269,7 +284,7 @@ function getTimelineFromPath(timelinePath: string): ResponseTimelineEntry[] {
 
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
-    return JSON.parse(rawBuffer.toString());
+    return JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return [];
@@ -278,8 +293,7 @@ function getTimelineFromPath(timelinePath: string): ResponseTimelineEntry[] {
 
 async function migrateBodyToFileSystem(doc: Response) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
-    // @ts-ignore previously doc.body and doc.encoding did exist but are now removed,
-    //  and if they exist we want to migrate away from them
+    // @ts-expect-error previously doc.body and doc.encoding did exist but are now removed, and if they exist we want to migrate away from them
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);
@@ -317,8 +331,7 @@ async function migrateTimelineToFileSystem(doc: Response) {
   if (doc.hasOwnProperty('timeline') && doc._id && !doc.timelinePath) {
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);
-    // @ts-ignore previously doc.timeline did exist but is now removed,
-    //  and if it exists we want to migrate away from it
+    // @ts-expect-error previously doc.timeline did exist but is now removed, and if it exists we want to migrate away from it
     const timelineStr = JSON.stringify(doc.timeline, null, '\t');
     const fsPath = doc.bodyPath + '.timeline';
 
@@ -345,9 +358,9 @@ export async function cleanDeletedResponses() {
     return;
   }
 
-  const whitelistFiles: Array<string> = [];
+  const whitelistFiles: string[] = [];
 
-  for (const r of await db.all<Response>(type)) {
+  for (const r of (await db.all<Response>(type) || [])) {
     whitelistFiles.push(r.bodyPath.slice(responsesDir.length + 1));
     whitelistFiles.push(r.timelinePath.slice(responsesDir.length + 1));
   }

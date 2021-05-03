@@ -14,12 +14,12 @@ export default async function(
   credentialsInBody: boolean,
   clientId: string,
   clientSecret: string,
-  redirectUri: string = '',
-  scope: string = '',
-  state: string = '',
-  audience: string = '',
-  resource: string = '',
-  usePkce: boolean = false,
+  redirectUri = '',
+  scope = '',
+  state = '',
+  audience = '',
+  resource = '',
+  usePkce = false,
 ): Promise<Record<string, any>> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
@@ -153,11 +153,11 @@ async function _getToken(
   clientId: string,
   clientSecret: string,
   code: string,
-  redirectUri: string = '',
-  state: string = '',
-  audience: string = '',
-  resource: string = '',
-  codeVerifier: string = '',
+  redirectUri = '',
+  state = '',
+  audience = '',
+  resource = '',
+  codeVerifier = '',
 ): Promise<Record<string, any>> {
   const params = [
     {
@@ -261,7 +261,7 @@ async function _getToken(
   return results;
 }
 
-function _base64UrlEncode(str: string): string {
+function _base64UrlEncode(str: string) {
   return str.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''); // The characters + / = are reserved for PKCE as per the RFC,
   // so we replace them with unreserved characters
   // Docs: https://tools.ietf.org/html/rfc7636#section-4.2

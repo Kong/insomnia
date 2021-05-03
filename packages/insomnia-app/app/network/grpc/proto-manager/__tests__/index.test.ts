@@ -298,7 +298,7 @@ describe('protoManager', () => {
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
       expect(modals.showError).toHaveBeenCalledWith({
         title: 'Invalid Proto File',
-        message: `The file time.proto could not be parsed`,
+        message: 'The file time.proto could not be parsed',
         error,
       });
       expect(dbFlushChangesSpy).toHaveBeenCalledWith(expect.any(Number), true);

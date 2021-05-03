@@ -2,7 +2,7 @@ import type { ResponseHeader } from '../../models/response';
 import * as models from '../../models/index';
 import fs from 'fs';
 import { Readable } from 'stream';
-type MaybeResponse = {
+interface MaybeResponse {
   parentId?: string;
   statusCode?: number;
   statusMessage?: string;
@@ -10,8 +10,8 @@ type MaybeResponse = {
   bytesContent?: number;
   bodyPath?: string;
   elapsedTime?: number;
-  headers?: Array<ResponseHeader>;
-};
+  headers?: ResponseHeader[];
+}
 export function init(
   response: MaybeResponse,
 ): {
@@ -28,23 +28,23 @@ export function init(
       // getId () {
       //   return response.parentId;
       // },
-      getRequestId(): string {
+      getRequestId() {
         return response.parentId || '';
       },
 
-      getStatusCode(): number {
+      getStatusCode() {
         return response.statusCode || 0;
       },
 
-      getStatusMessage(): string {
+      getStatusMessage() {
         return response.statusMessage || '';
       },
 
-      getBytesRead(): number {
+      getBytesRead() {
         return response.bytesRead || 0;
       },
 
-      getTime(): number {
+      getTime() {
         return response.elapsedTime || 0;
       },
 
@@ -66,7 +66,7 @@ export function init(
         response.bytesContent = body.length;
       },
 
-      getHeader(name: string): string | Array<string> | null {
+      getHeader(name: string): string | string[] | null {
         const headers = response.headers || [];
         const matchedHeaders = headers.filter(h => h.name.toLowerCase() === name.toLowerCase());
 
@@ -79,17 +79,17 @@ export function init(
         }
       },
 
-      getHeaders(): Array<{
+      getHeaders(): {
         name: string;
         value: string;
-      }> {
+      }[] {
         return response.headers.map(h => ({
           name: h.name,
           value: h.value,
         }));
       },
 
-      hasHeader(name: string): boolean {
+      hasHeader(name: string) {
         return this.getHeader(name) !== null;
       },
     },

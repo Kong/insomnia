@@ -64,7 +64,7 @@ describe('grpc', () => {
       expect(respond.sendStart).not.toHaveBeenCalled();
       expect(respond.sendError).toHaveBeenCalledWith(
         params.request._id,
-        new Error(`URL not specified`),
+        new Error('URL not specified'),
       );
     });
 

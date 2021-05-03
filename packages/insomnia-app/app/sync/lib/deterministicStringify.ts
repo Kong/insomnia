@@ -1,4 +1,4 @@
-export function deterministicStringify(value: any): string {
+export function deterministicStringify(value: any) {
   const t = Object.prototype.toString.call(value);
 
   if (t === '[object Object]') {

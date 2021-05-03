@@ -115,13 +115,13 @@ class DebouncedInput extends PureComponent<Props> {
   render() {
     const {
       onChange,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       onFocus,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       onBlur,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       delay,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       textarea,
       ...props
     } = this.props;

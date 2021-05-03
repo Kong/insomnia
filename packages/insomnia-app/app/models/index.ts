@@ -30,6 +30,8 @@ export interface BaseModel {
   parentId: string;
   modified: number;
   created: number;
+  isPrivate: boolean;
+  name: string;
 }
 
 // Reference to each model
@@ -57,6 +59,7 @@ export const grpcRequest = _grpcRequest;
 export const grpcRequestMeta = _grpcRequestMeta;
 export const workspace = _workspace;
 export const workspaceMeta = _workspaceMeta;
+
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
   // For example, stats, settings and workspace are global models, with workspace being the top-most parent,
@@ -86,13 +89,15 @@ export function all() {
     protoDirectory,
     grpcRequest,
     grpcRequestMeta,
-  ];
+  ] as const;
 }
-export function types(): any[] {
+
+export function types() {
   return all().map(model => model.type);
 }
-export function canSync(d: BaseModel): boolean {
-  if ((d as any).isPrivate) {
+
+export function canSync(d: BaseModel) {
+  if (d.isPrivate) {
     return false;
   }
 
@@ -104,10 +109,12 @@ export function canSync(d: BaseModel): boolean {
 
   return m.canSync || false;
 }
-export function getModel(type: string): Record<string, any> | null {
+
+export function getModel(type: string) {
   return all().find(m => m.type === type) || null;
 }
-export function mustGetModel(type: string): Record<string, any> {
+
+export function mustGetModel(type: string) {
   const model = getModel(type);
 
   if (!model) {
@@ -116,10 +123,12 @@ export function mustGetModel(type: string): Record<string, any> {
 
   return model;
 }
+
 export function canDuplicate(type: string) {
   const model = getModel(type);
   return model ? model.canDuplicate : false;
 }
+
 export function getModelName(type: string, count = 1) {
   const model = getModel(type);
 
@@ -131,10 +140,8 @@ export function getModelName(type: string, count = 1) {
     return pluralize(model.name);
   }
 }
-export async function initModel<T extends BaseModel>(
-  type: string,
-  ...sources: Record<string, any>[]
-): Promise<T> {
+
+export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
 
   if (!model) {

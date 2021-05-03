@@ -12,13 +12,14 @@ import { docsTemplateTags } from '../../../common/documentation';
 
 interface State {
   error: Error | null;
-  request: any;
+  request: any | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestRenderErrorModal extends PureComponent<{}, State> {
   state: State = {
     error: null,
+    request: null,
   }
 
   modal: Modal | null = null;

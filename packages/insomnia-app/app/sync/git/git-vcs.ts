@@ -4,57 +4,69 @@ import { httpClient } from './http-client';
 import { convertToOsSep, convertToPosixSep } from './path-sep';
 import path from 'path';
 import { gitCallbacks } from './utils';
-export type GitAuthor = {
+
+export interface GitAuthor {
   name: string;
   email: string;
-};
-export type GitRemoteConfig = {
+}
+
+export interface GitRemoteConfig {
   remote: string;
   url: string;
-};
-type GitCredentialsPassword = {
+}
+
+interface GitCredentialsPassword {
   username: string;
   password: string;
-};
-type GitCredentialsToken = {
+}
+
+interface GitCredentialsToken {
   username: string;
   token: string;
-};
+}
+
 export type GitCredentials = GitCredentialsPassword | GitCredentialsToken;
+
 export type GitHash = string;
+
 export type GitRef = GitHash | string;
-export type GitTimestamp = {
+
+export interface GitTimestamp {
   timezoneOffset: number;
   timestamp: number;
-};
-export type GitLogEntry = {
+}
+
+export interface GitLogEntry {
   oid: string;
   commit: {
     message: string;
     tree: GitRef;
     author: GitAuthor & GitTimestamp;
     committer: GitAuthor & GitTimestamp;
-    parent: Array<GitRef>;
+    parent: GitRef[];
   };
   payload: string;
-};
-export type PushResponse = {
-  ok?: Array<string>;
-  errors?: Array<string>;
+}
+
+export interface PushResponse {
+  ok?: string[];
+  errors?: string[];
   headers?: object;
-};
-type InitOptions = {
+}
+
+interface InitOptions {
   directory?: string;
-  fs?: Record<string, any>;
+  fs: git.CallbackFsClient | git.PromiseFsClient;
   gitDirectory?: string;
-};
-type InitFromCloneOptions = {
+}
+
+interface InitFromCloneOptions {
   url: string;
   gitCredentials?: GitCredentials | null;
   directory: string;
-  fs: Record<string, any>;
+  fs: git.CallbackFsClient | git.PromiseFsClient;
   gitDirectory: string;
-};
+}
 
 /**
  * isomorphic-git internally will default an empty ('') clone directory to '.'
@@ -68,17 +80,21 @@ const gitInternalDirName = 'git';
 export const GIT_INSOMNIA_DIR_NAME = '.insomnia';
 export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName);
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
+
+interface BaseOpts {
+  dir?: string;
+  gitdir?: string;
+  fs: git.CallbackFsClient | git.PromiseFsClient;
+  http: Record<string, any>;
+  onMessage: (message: string) => void;
+  onAuthFailure: (message: string) => void;
+  onAuthSuccess: (message: string) => void;
+  onAuth: () => void;
+}
+
 export class GitVCS {
-  _baseOpts: {
-    dir: string;
-    gitdir?: string;
-    fs: Record<string, any>;
-    http: Record<string, any>;
-    onMessage: (message: string) => void;
-    onAuthFailure: (message: string) => void;
-    onAuthSuccess: (message: string) => void;
-    onAuth: () => void;
-  } = gitCallbacks();
+  _baseOpts: BaseOpts = gitCallbacks();
+
   initialized: boolean;
 
   constructor() {
@@ -119,17 +135,17 @@ export class GitVCS {
     this.initialized = true;
   }
 
-  isInitialized(): boolean {
+  isInitialized() {
     return this.initialized;
   }
 
-  async listFiles(): Promise<Array<string>> {
+  async listFiles() {
     console.log('[git] List files');
     const files = await git.listFiles({ ...this._baseOpts });
     return files.map(convertToOsSep);
   }
 
-  async getBranch(): Promise<string> {
+  async getBranch() {
     const branch = await git.currentBranch({ ...this._baseOpts });
 
     if (typeof branch !== 'string') {
@@ -139,7 +155,7 @@ export class GitVCS {
     return branch;
   }
 
-  async listBranches(): Promise<Array<string>> {
+  async listBranches() {
     const branch = await this.getBranch();
     const branches = await git.listBranches({ ...this._baseOpts });
 
@@ -151,7 +167,7 @@ export class GitVCS {
     return GitVCS.sortBranches(branches);
   }
 
-  async listRemoteBranches(): Promise<Array<string>> {
+  async listRemoteBranches() {
     const branches = await git.listBranches({ ...this._baseOpts, remote: 'origin' });
     // Don't care about returning remote HEAD
     return GitVCS.sortBranches(branches.filter(b => b !== 'HEAD'));
@@ -161,19 +177,19 @@ export class GitVCS {
     return git.status({ ...this._baseOpts, filepath: convertToPosixSep(filepath) });
   }
 
-  async add(relPath: string): Promise<void> {
+  async add(relPath: string) {
     relPath = convertToPosixSep(relPath);
     console.log(`[git] Add ${relPath}`);
     return git.add({ ...this._baseOpts, filepath: relPath });
   }
 
-  async remove(relPath: string): Promise<void> {
+  async remove(relPath: string) {
     relPath = convertToPosixSep(relPath);
     console.log(`[git] Remove relPath=${relPath}`);
     return git.remove({ ...this._baseOpts, filepath: relPath });
   }
 
-  async addRemote(url: string): Promise<GitRemoteConfig> {
+  async addRemote(url: string) {
     console.log(`[git] Add Remote url=${url}`);
     await git.addRemote({ ...this._baseOpts, remote: 'origin', url, force: true });
     const config = await this.getRemote('origin');
@@ -186,20 +202,20 @@ export class GitVCS {
     return config;
   }
 
-  async listRemotes(): Promise<Array<GitRemoteConfig>> {
+  async listRemotes(): Promise<GitRemoteConfig[]> {
     return git.listRemotes({ ...this._baseOpts });
   }
 
-  async getAuthor(): Promise<GitAuthor> {
+  async getAuthor() {
     const name = await git.getConfig({ ...this._baseOpts, path: 'user.name' });
     const email = await git.getConfig({ ...this._baseOpts, path: 'user.email' });
     return {
       name: name || '',
       email: email || '',
-    };
+    } as GitAuthor;
   }
 
-  async setAuthor(name: string, email: string): Promise<void> {
+  async setAuthor(name: string, email: string) {
     await git.setConfig({ ...this._baseOpts, path: 'user.name', value: name });
     await git.setConfig({ ...this._baseOpts, path: 'user.email', value: email });
   }
@@ -209,7 +225,7 @@ export class GitVCS {
     return remotes.find(r => r.remote === name) || null;
   }
 
-  async commit(message: string): Promise<string> {
+  async commit(message: string) {
     console.log(`[git] Commit "${message}"`);
     trackEvent('Git', 'Commit');
     return git.commit({ ...this._baseOpts, message });
@@ -250,7 +266,7 @@ export class GitVCS {
     return true;
   }
 
-  async push(gitCredentials?: GitCredentials | null, force: boolean = false): Promise<void> {
+  async push(gitCredentials?: GitCredentials | null, force = false) {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
     // eslint-disable-next-line no-unreachable
@@ -262,7 +278,7 @@ export class GitVCS {
     });
 
     if (response.errors?.length) {
-      console.log(`[git] Push rejected`, response);
+      console.log('[git] Push rejected', response);
       const errorsString = JSON.stringify(response.errors);
       throw new Error(
         `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`,
@@ -270,7 +286,7 @@ export class GitVCS {
     }
   }
 
-  async pull(gitCredentials?: GitCredentials | null): Promise<void> {
+  async pull(gitCredentials?: GitCredentials | null) {
     console.log('[git] Pull remote=origin', await this.getBranch());
     trackEvent('Git', 'Pull');
     return git.pull({
@@ -282,18 +298,22 @@ export class GitVCS {
     });
   }
 
-  async merge(theirBranch: string): Promise<void> {
+  async merge(theirBranch: string) {
     const ours = await this.getBranch();
     console.log(`[git] Merge ${ours} <-- ${theirBranch}`);
     trackEvent('Git', 'Merge');
-    return git.merge({ ...this._baseOpts, ours, theirs: theirBranch });
+    return git.merge({
+      ...this._baseOpts,
+      ours,
+      theirs: theirBranch,
+    });
   }
 
   async fetch(
     singleBranch: boolean,
     depth: number | null,
     gitCredentials?: GitCredentials | null,
-  ): Promise<void> {
+  ) {
     console.log('[git] Fetch remote=origin');
     return git.fetch({
       ...this._baseOpts,
@@ -306,7 +326,7 @@ export class GitVCS {
     });
   }
 
-  async log(depth?: number): Promise<Array<GitLogEntry>> {
+  async log(depth?: number) {
     try {
       return await git.log({ ...this._baseOpts, depth });
     } catch (error) {
@@ -318,17 +338,17 @@ export class GitVCS {
     }
   }
 
-  async branch(branch: string, checkout: boolean = false): Promise<void> {
+  async branch(branch: string, checkout = false) {
     trackEvent('Git', 'Create Branch');
     await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 
-  async deleteBranch(branch: string): Promise<void> {
+  async deleteBranch(branch: string) {
     trackEvent('Git', 'Delete Branch');
     await git.deleteBranch({ ...this._baseOpts, ref: branch });
   }
 
-  async checkout(branch: string): Promise<void> {
+  async checkout(branch: string) {
     console.log('[git] Checkout', {
       branch,
     });
@@ -342,7 +362,7 @@ export class GitVCS {
     }
   }
 
-  async undoPendingChanges(fileFilter?: Array<String>): Promise<void> {
+  async undoPendingChanges(fileFilter?: String[]) {
     console.log('[git] Undo pending changes');
     await git.checkout({
       ...this._baseOpts,
@@ -353,7 +373,7 @@ export class GitVCS {
     });
   }
 
-  async readObjFromTree(treeOid: string, objPath: string): Record<string, any> | null {
+  async readObjFromTree(treeOid: string, objPath: string) {
     try {
       const obj = await git.readObject({
         ...this._baseOpts,
@@ -381,7 +401,7 @@ export class GitVCS {
     return this._baseOpts.fs;
   }
 
-  static sortBranches(branches: Array<string>) {
+  static sortBranches(branches: string[]) {
     const newBranches = [...branches];
     newBranches.sort((a: string, b: string) => {
       if (a === 'master') {

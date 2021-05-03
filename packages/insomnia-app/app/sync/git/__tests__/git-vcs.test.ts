@@ -211,7 +211,7 @@ First commit!
       await vcs.commit('First commit!');
       // Change all files
       await Promise.all(files.map(f => fsClient.promises.writeFile(f, changedContent)));
-      await Promise.all(files.map(f => expect(vcs.status(foo1Txt)).resolves.toBe('*modified')));
+      await Promise.all(files.map(() => expect(vcs.status(foo1Txt)).resolves.toBe('*modified')));
       // Undo foo1 and foo2, but not foo3
       await vcs.undoPendingChanges([foo1Txt, foo2Txt]);
       expect(await vcs.status(foo1Txt)).toBe('unmodified');

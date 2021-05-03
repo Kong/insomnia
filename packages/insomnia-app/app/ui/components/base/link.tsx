@@ -28,7 +28,7 @@ class Link extends PureComponent<Props> {
   render() {
     const {
       onClick,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       button,
       href,
       children,

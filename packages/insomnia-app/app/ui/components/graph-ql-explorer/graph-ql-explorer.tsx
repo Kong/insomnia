@@ -89,8 +89,9 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     const { type, field } = nextProps.reference;
     const { currentType, currentField } = this.state;
 
-    const compare = (a: any, b: any) => (!a && !b) || (a && b && a.name === b.name);
+    const compare = <T extends { name: string } | null, U extends { name: string } | null>(a: T, b: U) => (!a && !b) || (a && b && a.name === b.name);
 
+    // @ts-expect-error -- needs generic for `name`
     const sameType = compare(currentType, type);
     const sameField = compare(currentField, field);
     const nothingChanged = sameType && sameField;
@@ -129,12 +130,13 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     }
 
     const { currentType: lastType, currentField: lastField } = history[history.length - 1];
-    let name = null;
+    let name: string | null = null;
 
     if (lastField) {
-      name = (lastField as any).name || 'Unknown';
+      name = lastField.name || 'Unknown';
     } else if (lastType) {
-      name = (lastType as any).name || 'Unknown';
+      // @ts-expect-error -- needs generic for `name`
+      name = lastType.name || 'Unknown';
     } else {
       return null;
     }
@@ -161,7 +163,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     }
 
     const { currentType, currentField } = this.state;
-    let child = null;
+    let child: JSX.Element | null = null;
 
     if (currentField) {
       child = (
@@ -186,8 +188,9 @@ class GraphQLExplorer extends PureComponent<Props, State> {
       return null;
     }
 
-    const fieldName = currentField ? (currentField as any).name : null;
-    const typeName = currentType ? (currentType as any).name : null;
+    const fieldName = currentField ? currentField.name : null;
+    // @ts-expect-error -- needs generic for `name`
+    const typeName = currentType ? currentType.name : null;
     const schemaName = schema ? 'Schema' : null;
     return (
       <div className="graphql-explorer theme--dialog">

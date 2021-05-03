@@ -26,7 +26,7 @@ import type { OAuth2Token } from '../../models/o-auth-2-token';
 export default async function(
   requestId: string,
   authentication: RequestAuthentication,
-  forceRefresh: boolean = false,
+  forceRefresh = false,
 ): Promise<OAuth2Token | null> {
   switch (authentication.grantType) {
     case GRANT_TYPE_AUTHORIZATION_CODE:

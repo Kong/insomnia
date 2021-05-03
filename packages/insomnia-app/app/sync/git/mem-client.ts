@@ -1,29 +1,29 @@
 import path from 'path';
 import Stat from './stat';
-type FSFile = {
+interface FSFile {
   readonly type: 'file';
   readonly ino: number;
   readonly mtimeMs: number;
   readonly name: string;
   readonly path: string;
   contents: string;
-};
-type FSLink = {
+}
+interface FSLink {
   readonly type: 'symlink';
   readonly ino: number;
   readonly mtimeMs: number;
   readonly name: string;
   readonly path: string;
   readonly linkTo: string;
-};
-type FSDir = {
+}
+interface FSDir {
   readonly type: 'dir';
   readonly ino: number;
   readonly mtimeMs: number;
   readonly name: string;
   readonly path: string;
-  readonly children: Array<FSFile | FSDir | FSLink>;
-};
+  readonly children: (FSFile | FSDir | FSLink)[];
+}
 type FSEntry = FSDir | FSFile | FSLink;
 export class MemClient {
   __fs: FSEntry;
@@ -47,10 +47,10 @@ export class MemClient {
     };
   }
 
-  async tree(baseDir: string = '/') {
+  async tree(baseDir = '/') {
     baseDir = path.normalize(baseDir);
 
-    const next = async (dir: string, toPrint: string): Promise<string> => {
+    const next = async (dir: string, toPrint: string) => {
       const entry = this._find(dir);
 
       if (!entry) {
@@ -84,7 +84,7 @@ export class MemClient {
       | {
           encoding?: buffer$Encoding;
         } = {},
-  ): Promise<Buffer | string> {
+  ) {
     filePath = path.normalize(filePath);
 
     if (typeof options === 'string') {
@@ -115,7 +115,7 @@ export class MemClient {
           encoding?: buffer$Encoding;
           flag?: string;
         },
-  ): Promise<void> {
+  ) {
     filePath = path.normalize(filePath);
 
     if (typeof options === 'string') {
@@ -172,13 +172,13 @@ export class MemClient {
     return Promise.resolve();
   }
 
-  async unlink(filePath: string, ...x: Array<any>): Promise<void> {
+  async unlink(filePath: string) {
     filePath = path.normalize(filePath);
 
     this._remove(this._assertFile(filePath));
   }
 
-  async readdir(basePath: string, ...x: Array<any>): Promise<Array<string>> {
+  async readdir(basePath: string) {
     basePath = path.normalize(basePath);
 
     const entry = this._assertDir(basePath);
@@ -188,12 +188,7 @@ export class MemClient {
     return names;
   }
 
-  async mkdir(
-    dirPath: string,
-    options?: {
-      recursive?: boolean;
-    },
-  ): Promise<void> {
+  async mkdir(dirPath: string, options?: { recursive?: boolean }) {
     dirPath = path.normalize(dirPath);
     const doRecursive = (options || {}).recursive || false;
 
@@ -228,7 +223,7 @@ export class MemClient {
     }
   }
 
-  async rmdir(dirPath: string, ...x: Array<any>) {
+  async rmdir(dirPath: string) {
     dirPath = path.normalize(dirPath);
 
     const dirEntry = this._assertDir(dirPath);
@@ -245,12 +240,12 @@ export class MemClient {
     this._remove(dirEntry);
   }
 
-  async stat(filePath: string, ...x: Array<any>): Promise<Stat> {
+  async stat(filePath: string) {
     filePath = path.normalize(filePath);
     return this._statEntry(this._assertExists(filePath));
   }
 
-  async lstat(filePath: string, ...x: Array<any>) {
+  async lstat(filePath: string) {
     filePath = path.normalize(filePath);
 
     const linkEntry = this._assertExists(filePath);
@@ -258,7 +253,7 @@ export class MemClient {
     return this._statEntry(this._resolveLinks(linkEntry));
   }
 
-  async readlink(filePath: string, ...x: Array<any>) {
+  async readlink(filePath: string) {
     filePath = path.normalize(filePath);
 
     const linkEntry = this._assertSymlink(filePath);
@@ -266,7 +261,7 @@ export class MemClient {
     return linkEntry.linkTo;
   }
 
-  async symlink(target: string, filePath: string, ...x: Array<any>) {
+  async symlink(target: string, filePath: string) {
     filePath = path.normalize(filePath);
 
     // Make sure we don't already have one there
@@ -287,7 +282,7 @@ export class MemClient {
     });
   }
 
-  _statEntry(entry: FSEntry): Stat {
+  _statEntry(entry: FSEntry) {
     return new Stat({
       type: entry.type,
       mode: 0o777,
@@ -297,7 +292,7 @@ export class MemClient {
     });
   }
 
-  _find(filePath: string): FSEntry | null {
+  _find(filePath: string) {
     filePath = path.normalize(filePath);
     let current = this.__fs;
     // Ignore empty and current directory '.' segments
@@ -317,7 +312,7 @@ export class MemClient {
     return current;
   }
 
-  _assertDoesNotExist(filePath: string): void {
+  _assertDoesNotExist(filePath: string) {
     const entry = this._find(filePath);
 
     if (entry) {
@@ -330,7 +325,7 @@ export class MemClient {
     }
   }
 
-  _assertExists(filePath: string): FSEntry {
+  _assertExists(filePath: string) {
     const entry = this._find(filePath);
 
     if (!entry) {
@@ -345,7 +340,7 @@ export class MemClient {
     return entry;
   }
 
-  _assertDirEntry(entry: FSEntry): FSDir {
+  _assertDirEntry(entry: FSEntry) {
     if (entry.type !== 'dir') {
       const e: ErrnoError = new Error(`ENOTDIR: not a directory, scandir '${entry.path}'`);
       e.errno = -20;
@@ -358,13 +353,13 @@ export class MemClient {
     return entry;
   }
 
-  _assertDir(filePath: string): FSDir {
+  _assertDir(filePath: string) {
     const entry = this._assertExists(filePath);
 
     return this._assertDirEntry(entry);
   }
 
-  _assertSymlinkEntry(entry: FSEntry): FSLink {
+  _assertSymlinkEntry(entry: FSEntry) {
     if (entry.type !== 'symlink') {
       const e: ErrnoError = new Error(`ENOTDIR: not a simlink, scandir '${entry.path}'`);
       e.errno = -20;
@@ -377,7 +372,7 @@ export class MemClient {
     return entry;
   }
 
-  _assertSymlink(filePath: string): FSLink {
+  _assertSymlink(filePath: string) {
     const entry = this._assertExists(filePath);
 
     return this._assertSymlinkEntry(entry);
@@ -398,7 +393,7 @@ export class MemClient {
     return entry;
   }
 
-  _assertFileEntry(entry: FSEntry): FSFile {
+  _assertFileEntry(entry: FSEntry) {
     entry = this._resolveLinks(entry);
 
     if (entry.type === 'dir') {
@@ -413,7 +408,7 @@ export class MemClient {
     return entry;
   }
 
-  _assertFile(filePath: string): FSFile {
+  _assertFile(filePath: string) {
     const entry = this._assertExists(filePath);
 
     return this._assertFileEntry(entry);

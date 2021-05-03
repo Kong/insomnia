@@ -1,4 +1,4 @@
-import { convert } from 'insomnia-importers';
+import { convert, ImportRequest } from 'insomnia-importers';
 import clone from 'clone';
 import * as db from './database';
 import * as har from './har';
@@ -78,11 +78,11 @@ export interface ImportRawConfig {
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
   bypassDiffProps?: {
-    url: string;
+    url: boolean;
   };
 }
 
-export async function importUri(uri: string, importConfig: ImportRawConfig): Promise<ImportResult> {
+export async function importUri(uri: string, importConfig: ImportRawConfig) {
   let rawText;
   // If GH preview, force raw
   const url = new URL(uri);
@@ -147,17 +147,18 @@ export async function importRaw(
     enableDiffDeep,
     bypassDiffProps,
   }: ImportRawConfig,
-): Promise<ImportResult> {
+) {
   let results: ConvertResult;
 
   try {
     results = await convert(rawContent);
   } catch (err) {
-    return {
+    const importResult: ImportResult = {
       source: 'not found',
       error: err,
       summary: {},
     };
+    return importResult;
   }
 
   const { data, type: resultsType } = results;
@@ -323,11 +324,12 @@ export async function importRaw(
 
   await db.flushChanges();
   trackEvent('Data', 'Import', resultsType.id);
-  return {
+  const importRequest: ImportResult = {
     source: resultsType && typeof resultsType.id === 'string' ? resultsType.id : 'unknown',
     summary: importedDocs,
     error: null,
   };
+  return importRequest;
 }
 
 async function updateWorkspaceScope(
@@ -357,18 +359,18 @@ async function updateWorkspaceScope(
   }
 }
 
-export function isApiSpecImport({ id }: ConvertResultType): boolean {
+export function isApiSpecImport({ id }: ConvertResultType) {
   return id === 'openapi3' || id === 'swagger2';
 }
 
-export function isInsomniaV4Import({ id }: ConvertResultType): boolean {
+export function isInsomniaV4Import({ id }: ConvertResultType) {
   return id === 'insomnia-4';
 }
 
 export async function exportWorkspacesHAR(
   parentDoc: BaseModel | null = null,
   includePrivateDocs = false,
-): Promise<string> {
+) {
   const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
   const requests: BaseModel[] = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
@@ -377,7 +379,7 @@ export async function exportWorkspacesHAR(
 export async function exportRequestsHAR(
   requests: BaseModel[],
   includePrivateDocs = false,
-): Promise<string> {
+) {
   const workspaces: BaseModel[] = [];
   const mapRequestIdToWorkspace: Record<string, any> = {};
   const workspaceLookup: Record<string, any> = {};
@@ -441,7 +443,7 @@ export async function exportWorkspacesData(
   parentDoc: BaseModel | null,
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
-): Promise<string> {
+) {
   const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
   const requests: BaseModel[] = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
@@ -451,7 +453,7 @@ export async function exportRequestsData(
   requests: BaseModel[],
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
-): Promise<string> {
+) {
   const data = {
     _type: 'export',
     __export_format: EXPORT_FORMAT,
@@ -568,8 +570,7 @@ async function getDocWithDescendants(
 ): Promise<BaseModel[]> {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(
-    (
-      d, // Don't include if private, except if we want to
-    ) => !(d as any).isPrivate || includePrivateDocs,
+    // Don't include if private, except if we want to
+    doc => !doc?.isPrivate || includePrivateDocs,
   );
 }

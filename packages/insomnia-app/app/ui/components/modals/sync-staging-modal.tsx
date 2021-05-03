@@ -125,7 +125,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     }
   }
 
-  async _handleTakeSnapshot(): Promise<boolean> {
+  async _handleTakeSnapshot() {
     const { vcs } = this.props;
     const {
       message,

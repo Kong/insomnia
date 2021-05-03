@@ -11,7 +11,7 @@ export function routableFSClient(
   defaultFS: Record<string, any>,
   otherFS: Record<string, Record<string, any>>,
 ) {
-  const execMethod = async (method: string, filePath: string, ...args: Array<any>) => {
+  const execMethod = async (method: string, filePath: string, ...args: any[]) => {
     filePath = path.normalize(filePath);
 
     for (const prefix of Object.keys(otherFS)) {

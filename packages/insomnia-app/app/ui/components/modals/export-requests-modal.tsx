@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
+import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -20,7 +20,7 @@ export interface Node {
   selectedRequests: number;
 }
 
-interface Props {
+interface Props extends ModalProps {
   childObjects: Record<string, any>[];
   handleExportRequestsToFile: (...args: any[]) => any;
 }
@@ -162,7 +162,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     });
   }
 
-  setRequestGroupCollapsed(node: Node, isCollapsed: boolean, requestGroupId: string): boolean {
+  setRequestGroupCollapsed(node: Node, isCollapsed: boolean, requestGroupId: string) {
     if (!isRequestGroup(node.doc)) {
       return false;
     }
@@ -183,7 +183,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     return false;
   }
 
-  setItemSelected(node: Node, isSelected: boolean, id?: string): boolean {
+  setItemSelected(node: Node, isSelected: boolean, id?: string) {
     if (id == null || node.doc._id === id) {
       // Switch the flags of all children in this subtree.
       for (const child of node.children) {
@@ -212,7 +212,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     const { treeRoot } = this.state;
     const isExportDisabled = treeRoot != null ? treeRoot.selectedRequests === 0 : false;
     return (
-      <Modal ref={this.setModalRef} tall freshState {...(this.props as Record<string, any>)}>
+      <Modal ref={this.setModalRef} tall freshState {...this.props}>
         <ModalHeader>Select Requests to Export</ModalHeader>
         <ModalBody>
           <div className="requests-tree">

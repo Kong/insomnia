@@ -41,7 +41,7 @@ const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 interface Props {
   settings: Settings;
   hideModal: () => void;
-  updateSetting: (...args: any[]) => any;
+  updateSetting: (...args: any[]) => Settings;
   handleToggleMenuBar: (...args: any[]) => any;
   handleRootCssChange: (...args: any[]) => any;
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
@@ -81,14 +81,14 @@ class General extends PureComponent<Props, State> {
     });
   }
 
-  async _handleUpdateSetting(e: React.SyntheticEvent<HTMLInputElement>): Promise<Settings> {
+  async _handleUpdateSetting(e: React.SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;
     let value = el.type === 'checkbox' ? el.checked : el.value;
 
     if (el.type === 'number') {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       value = snapNumberToLimits(
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         parseInt(value, 10) || 0,
         parseInt(el.min, 10),
         parseInt(el.max, 10),
@@ -96,7 +96,7 @@ class General extends PureComponent<Props, State> {
     }
 
     if (el.value === '__NULL__') {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       value = null;
     }
 
@@ -235,7 +235,7 @@ class General extends PureComponent<Props, State> {
               <select
                 defaultValue={settings.environmentHighlightColorStyle}
                 name="environmentHighlightColorStyle"
-                // @ts-expect-error
+                // @ts-expect-error -- TSCONVERSION
                 onChange={this._handleUpdateSetting}>
                 <option value="sidebar-indicator">Sidebar indicator</option>
                 <option value="sidebar-edge">Sidebar edge</option>
@@ -276,7 +276,7 @@ class General extends PureComponent<Props, State> {
                 <select
                   name="fontInterface"
                   value={settings.fontInterface || '__NULL__'}
-                  // @ts-expect-error
+                  // @ts-expect-error -- TSCONVERSION
                   onChange={this._handleFontChange}>
                   <option value="__NULL__">-- System Default --</option>
                   {fonts.map((item, index) => (
@@ -307,7 +307,7 @@ class General extends PureComponent<Props, State> {
                 <select
                   name="fontMonospace"
                   value={settings.fontMonospace || '__NULL__'}
-                  // @ts-expect-error
+                  // @ts-expect-error -- TSCONVERSION
                   onChange={this._handleFontChange}>
                   <option value="__NULL__">-- System Default --</option>
                   {fontsMono.map((item, index) => (
@@ -340,7 +340,7 @@ class General extends PureComponent<Props, State> {
               <select
                 defaultValue={settings.editorKeyMap}
                 name="editorKeyMap"
-                // @ts-expect-error
+                // @ts-expect-error -- TSCONVERSION
                 onChange={this._handleUpdateSetting}>
                 <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
                 <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
@@ -513,7 +513,7 @@ class General extends PureComponent<Props, State> {
                 <select
                   value={settings.updateChannel}
                   name="updateChannel"
-                  // @ts-expect-error
+                  // @ts-expect-error -- TSCONVERSION
                   onChange={this._handleUpdateSetting}>
                   <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
                   <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
@@ -605,10 +605,10 @@ class General extends PureComponent<Props, State> {
 }
 
 function mapDispatchToProps(dispatch) {
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   const global = bindActionCreators(globalActions, dispatch);
   return {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     handleSetActiveActivity: global.setActiveActivity,
   };
 }

@@ -1,48 +1,58 @@
-import { $Shape } from 'utility-types';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
 import { generateId } from '../common/misc';
+
 export const name = 'Proto Directory';
+
 export const type = 'ProtoDirectory';
+
 export const prefix = 'pd';
+
 export const canDuplicate = true;
+
 export const canSync = true;
-type BaseProtoDirectory = {
+
+interface BaseProtoDirectory {
   name: string;
-};
+}
+
 export type ProtoDirectory = BaseModel & BaseProtoDirectory;
+
 export function init(): BaseProtoDirectory {
   return {
     name: 'New Proto Directory',
   };
 }
-export function migrate(doc: ProtoDirectory): ProtoDirectory {
+
+export function migrate(doc: ProtoDirectory) {
   return doc;
 }
-export function createId(): string {
+
+export function createId() {
   return generateId(prefix);
 }
-export function create(patch: $Shape<ProtoDirectory> = {}): Promise<ProtoDirectory> {
+
+export function create(patch: Partial<ProtoDirectory> = {}) {
   if (!patch.parentId) {
     throw new Error('New ProtoDirectory missing `parentId`');
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<ProtoDirectory>(type, patch);
 }
-export function getById(_id: string): Promise<ProtoDirectory | null> {
-  return db.getWhere(type, {
-    _id,
-  });
+
+export function getById(_id: string) {
+  return db.getWhere<ProtoDirectory>(type, { _id });
 }
-export function getByParentId(parentId: string): Promise<ProtoDirectory | null> {
-  return db.getWhere(type, {
-    parentId,
-  });
+
+export function getByParentId(parentId: string) {
+  return db.getWhere<ProtoDirectory>(type, { parentId });
 }
-export function remove(obj: ProtoDirectory): Promise<void> {
+
+export function remove(obj: ProtoDirectory) {
   return db.remove(obj);
 }
-export async function batchRemoveIds(ids: Array<string>): Promise<void> {
+
+export async function batchRemoveIds(ids: string[]) {
   const dirs = await db.find(type, {
     _id: {
       $in: ids,
@@ -53,6 +63,7 @@ export async function batchRemoveIds(ids: Array<string>): Promise<void> {
     remove: dirs,
   });
 }
-export function all(): Promise<Array<ProtoDirectory>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<ProtoDirectory>(type);
 }

@@ -33,10 +33,6 @@ interface Props {
 class ResponseHistoryDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
-  _setDropdownRef(n: Dropdown) {
-    this._dropdown = n;
-  }
-
   _handleDeleteResponses() {
     const { requestId, activeEnvironment } = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
@@ -101,32 +97,34 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
     const now = moment();
     // Four arrays for four time groups
     const categories = {
-      minutes: [],
-      hours: [],
-      today: [],
-      week: [],
-      other: [],
+      minutes: [] as Response[],
+      hours: [] as Response[],
+      today: [] as Response[],
+      week: [] as Response[],
+      other: [] as Response[],
     };
-    responses.forEach(r => {
-      const resTime = moment(r.created);
+
+    responses.forEach(response => {
+      const resTime = moment(response.created);
 
       if (now.diff(resTime, 'minutes') < 5) {
         // Five minutes ago
-        categories.minutes.push(r);
+        categories.minutes.push(response);
       } else if (now.diff(resTime, 'hours') < 2) {
         // Two hours ago
-        categories.hours.push(r);
+        categories.hours.push(response);
       } else if (now.isSame(resTime, 'day')) {
         // Today
-        categories.today.push(r);
+        categories.today.push(response);
       } else if (now.isSame(resTime, 'week')) {
         // This week
-        categories.week.push(r);
+        categories.week.push(response);
       } else {
         // Older
-        categories.other.push(r);
+        categories.other.push(response);
       }
     });
+
     return (
       <Fragment>
         <DropdownDivider>5 Minutes Ago</DropdownDivider>
@@ -146,13 +144,13 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
   render() {
     const {
       activeResponse,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       handleSetActiveResponse,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       handleDeleteResponses,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       handleDeleteResponse,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       responses,
       activeEnvironment,
       ...extraProps
@@ -162,9 +160,10 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
         <Dropdown
-          ref={this._setDropdownRef}
+          ref={ref => { this._dropdown = ref; }}
           key={activeResponse ? activeResponse._id : 'n/a'}
-          {...(extraProps as Record<string, any>)}>
+          {...extraProps}
+        >
           <DropdownButton className="btn btn--super-compact tall" title="Response history">
             {activeResponse && <TimeFromNow timestamp={activeResponse.created} capitalize />}
             {!isLatestResponseActive ? (

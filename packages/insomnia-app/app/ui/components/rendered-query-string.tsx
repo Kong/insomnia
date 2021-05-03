@@ -22,13 +22,12 @@ class RenderedQueryString extends PureComponent<Props, State> {
   _interval: NodeJS.Timeout | null = null;
 
   async _debouncedUpdate(props: Props) {
-    if (this._interval === null) {
-      return;
+    if (this._interval !== null) {
+      clearTimeout(this._interval);
+      this._interval = setTimeout(() => {
+        this._update(props);
+      }, 300);
     }
-    clearTimeout(this._interval);
-    this._interval = setTimeout(() => {
-      this._update(props);
-    }, 300);
   }
 
   async _update(props: Props) {
@@ -60,10 +59,9 @@ class RenderedQueryString extends PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
-    if (this._interval === null) {
-      return;
+    if (this._interval !== null) {
+      clearTimeout(this._interval);
     }
-    clearTimeout(this._interval);
   }
 
   // eslint-disable-next-line camelcase

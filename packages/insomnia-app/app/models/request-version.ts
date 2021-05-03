@@ -4,15 +4,23 @@ import * as db from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import type { BaseModel } from './index';
 import type { Request } from './request';
+
 export const name = 'Request Version';
+
 export const type = 'RequestVersion';
+
 export const prefix = 'rvr';
+
 export const canDuplicate = false;
+
 export const canSync = false;
-type BaseRequestVersion = {
+
+interface BaseRequestVersion {
   compressedRequest: string | null;
-};
+}
+
 export type RequestVersion = BaseModel & BaseRequestVersion;
+
 const FIELDS_TO_IGNORE = [
   '_id',
   'type',
@@ -23,18 +31,23 @@ const FIELDS_TO_IGNORE = [
   'parentId',
   'name',
 ];
+
 export function init() {
   return {
     compressedRequest: null,
   };
 }
-export function migrate(doc: RequestVersion): RequestVersion {
+
+export function migrate(doc: RequestVersion) {
   return doc;
 }
-export function getById(id: string): Promise<RequestVersion | null> {
-  return db.get(type, id);
+
+export function getById(id: string) {
+  return db.get<RequestVersion>(type, id);
 }
-export async function create(request: Request): Promise<RequestVersion> {
+
+export async function create(request: Request) {
+  // @ts-expect-error -- TSCONVERSION
   if (!request.type === models.request.type) {
     throw new Error(`New ${type} was not given a valid ${models.request.type} instance`);
   }
@@ -50,7 +63,7 @@ export async function create(request: Request): Promise<RequestVersion> {
   if (hasChanged || !latestRequestVersion) {
     // Create a new version if the request has been modified
     const compressedRequest = compressObject(request);
-    return db.docCreate(type, {
+    return db.docCreate<RequestVersion>(type, {
       parentId,
       compressedRequest,
     });
@@ -59,12 +72,12 @@ export async function create(request: Request): Promise<RequestVersion> {
     return latestRequestVersion;
   }
 }
-export function getLatestByParentId(parentId: string): Promise<RequestVersion | null> {
-  return db.getMostRecentlyModified(type, {
-    parentId,
-  });
+
+export function getLatestByParentId(parentId: string) {
+  return db.getMostRecentlyModified<RequestVersion>(type, { parentId });
 }
-export async function restore(requestVersionId: string): Promise<Request | null> {
+
+export async function restore(requestVersionId: string) {
   const requestVersion = await getById(requestVersionId);
 
   // Older responses won't have versions saved with them
@@ -73,7 +86,7 @@ export async function restore(requestVersionId: string): Promise<Request | null>
   }
 
   const requestPatch = decompressObject(requestVersion.compressedRequest);
-  const originalRequest: Request | null = await models.request.getById(requestPatch._id);
+  const originalRequest = await models.request.getById(requestPatch._id);
 
   if (!originalRequest) {
     return null;
@@ -87,7 +100,7 @@ export async function restore(requestVersionId: string): Promise<Request | null>
   return models.request.update(originalRequest, requestPatch);
 }
 
-function _diffRequests(rOld: Request | null, rNew: Request): boolean {
+function _diffRequests(rOld: Request | null, rNew: Request) {
   if (!rOld) {
     return true;
   }
@@ -106,6 +119,6 @@ function _diffRequests(rOld: Request | null, rNew: Request): boolean {
   return false;
 }
 
-export function all(): Promise<Array<RequestVersion>> {
-  return db.all(type);
+export function all() {
+  return db.all<RequestVersion>(type);
 }

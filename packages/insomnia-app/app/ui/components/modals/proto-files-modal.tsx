@@ -81,7 +81,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleDeleteFile(protoFile: ProtoFile): Promise<void> {
+  _handleDeleteFile(protoFile: ProtoFile) {
     return protoManager.deleteFile(protoFile, deletedId => {
       // if the deleted protoFile was previously selected, clear the selection
       if (this.state.selectedProtoFileId === deletedId) {
@@ -92,7 +92,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleDeleteDirectory(protoDirectory: ProtoDirectory): Promise<void> {
+  _handleDeleteDirectory(protoDirectory: ProtoDirectory) {
     return protoManager.deleteDirectory(protoDirectory, deletedIds => {
       // if previously selected protoFile has been deleted, clear the selection
       if (deletedIds.includes(this.state.selectedProtoFileId)) {
@@ -103,7 +103,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleAdd(): Promise<void> {
+  _handleAdd() {
     return protoManager.addFile(this.props.workspace._id, createdId => {
       this.setState({
         selectedProtoFileId: createdId,
@@ -111,7 +111,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleUpload(protoFile: ProtoFile): Promise<void> {
+  _handleUpload(protoFile: ProtoFile) {
     const { grpcDispatch } = this.props;
     return protoManager.updateFile(protoFile, async updatedId => {
       const action = await grpcActions.invalidateMany(updatedId);
@@ -120,11 +120,11 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleAddDirectory(): Promise<void> {
+  _handleAddDirectory() {
     return protoManager.addDirectory(this.props.workspace._id);
   }
 
-  _handleRename(protoFile: ProtoFile, name: string): Promise<void> {
+  _handleRename(protoFile: ProtoFile, name: string) {
     return protoManager.renameFile(protoFile, name);
   }
 

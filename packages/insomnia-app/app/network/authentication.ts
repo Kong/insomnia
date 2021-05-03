@@ -13,10 +13,10 @@ import jwtAuthentication from 'jwt-authentication';
 import type { RenderedRequest } from '../common/render';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
-type Header = {
+interface Header {
   name: string;
   value: string;
-};
+}
 export async function getAuthHeader(
   renderedRequest: RenderedRequest,
   url: string,

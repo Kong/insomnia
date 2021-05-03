@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import deepEqual from 'deep-equal';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
+import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -12,8 +12,8 @@ import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
 import { fuzzyMatch } from '../../../common/misc';
 
-interface Props {
-  handleShowModifyCookieModal: (...args: any[]) => any;
+interface Props extends ModalProps {
+  handleShowModifyCookieModal: Function;
   handleRender: (arg0: string | Record<string, any>) => Promise<string | Record<string, any>>;
   cookieJar: CookieJar;
   workspace: Workspace;
@@ -158,7 +158,7 @@ class CookiesModal extends PureComponent<Props, State> {
     const cookies = this._getVisibleCookies();
 
     return (
-      <Modal ref={this._setModalRef} wide tall {...(this.props as Record<string, any>)}>
+      <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Cookies</ModalHeader>
         <ModalBody noScroll>
           {cookieJar && (

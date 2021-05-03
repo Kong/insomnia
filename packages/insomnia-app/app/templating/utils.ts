@@ -1,7 +1,7 @@
 import type { PluginArgumentEnumOption } from './extensions';
 import objectPath from 'objectpath';
 import type { PluginStore } from '../plugins/context';
-export type NunjucksParsedTagArg = {
+export interface NunjucksParsedTagArg {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
   encoding?: 'base64';
   value: string | number | boolean;
@@ -12,26 +12,26 @@ export type NunjucksParsedTagArg = {
   displayName?: string;
   quotedBy?: '"' | "'";
   validate?: (value: any) => string;
-  hide?: (arg0: Array<NunjucksParsedTagArg>) => boolean;
+  hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
   model?: string;
-  options?: Array<PluginArgumentEnumOption>;
-  itemTypes?: Array<string>;
-  extensions?: Array<string>;
-};
-export type NunjucksActionTag = {
+  options?: PluginArgumentEnumOption[];
+  itemTypes?: string[];
+  extensions?: string[];
+}
+export interface NunjucksActionTag {
   name: string;
   icon?: string;
   run: (context: PluginStore) => Promise<void>;
-};
-export type NunjucksParsedTag = {
+}
+export interface NunjucksParsedTag {
   name: string;
-  args: Array<NunjucksParsedTagArg>;
-  actions?: Array<NunjucksActionTag>;
+  args: NunjucksParsedTagArg[];
+  actions?: NunjucksActionTag[];
   rawValue?: string;
   displayName?: string;
   description?: string;
-  disablePreview?: (arg0: Array<NunjucksParsedTagArg>) => boolean;
-};
+  disablePreview?: (arg0: NunjucksParsedTagArg[]) => boolean;
+}
 
 interface Key {
   name: string;
@@ -46,9 +46,9 @@ interface Key {
  */
 export function getKeys(
   obj: any,
-  prefix: string = '',
-): Array<Key> {
-  let allKeys: Array<Key> = [];
+  prefix = '',
+): Key[] {
+  let allKeys: Key[] = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
   if (typeOfObj === '[object Array]') {
@@ -72,11 +72,11 @@ export function getKeys(
 
   return allKeys;
 }
-export function forceBracketNotation(prefix: string, key: string | number): string {
+export function forceBracketNotation(prefix: string, key: string | number) {
   // Prefix is already in bracket notation because getKeys is recursive
   return `${prefix}${objectPath.stringify([key], "'", true)}`;
 }
-export function normalizeToDotAndBracketNotation(prefix: string): string {
+export function normalizeToDotAndBracketNotation(prefix: string) {
   return objectPath.normalize(prefix);
 }
 
@@ -96,7 +96,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
   // ~~~~~~~~~~~~~ //
   // Tokenize Args //
   // ~~~~~~~~~~~~~ //
-  const args: Array<NunjucksParsedTagArg> = [];
+  const args: NunjucksParsedTagArg[] = [];
   let quotedBy: string | null = null;
   let currentArg: string | null = null;
 
@@ -190,8 +190,8 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
 }
 
 /** Convert a tokenized tag back into a Nunjucks string */
-export function unTokenizeTag(tagData: NunjucksParsedTag): string {
-  const args: Array<string> = [];
+export function unTokenizeTag(tagData: NunjucksParsedTag) {
+  const args: string[] = [];
 
   for (const arg of tagData.args) {
     if (['string', 'model', 'file', 'enum'].includes(arg.type)) {
@@ -202,7 +202,7 @@ export function unTokenizeTag(tagData: NunjucksParsedTag): string {
     } else if (arg.type === 'boolean') {
       args.push(arg.value ? 'true' : 'false');
     } else {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       args.push(arg.value);
     }
   }
@@ -212,8 +212,8 @@ export function unTokenizeTag(tagData: NunjucksParsedTag): string {
 }
 
 /** Get the default Nunjucks string for an extension */
-export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>): string {
-  const stringArgs: Array<string> = (args || []).map(argDefinition => {
+export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
+  const stringArgs: string[] = (args || []).map(argDefinition => {
     switch (argDefinition.type) {
       case 'enum':
         const { defaultValue, options } = argDefinition;
@@ -222,7 +222,7 @@ export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>):
         return `'${value}'`;
 
       case 'number':
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         return `${parseFloat(argDefinition.defaultValue) || 0}`;
 
       case 'boolean':
@@ -239,7 +239,7 @@ export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>):
   });
   return `${name} ${stringArgs.join(', ')}`;
 }
-export function encodeEncoding(value: string, encoding: 'base64'): string {
+export function encodeEncoding(value: string, encoding: 'base64') {
   if (typeof value !== 'string') {
     return value;
   }
@@ -251,7 +251,7 @@ export function encodeEncoding(value: string, encoding: 'base64'): string {
 
   return value;
 }
-export function decodeEncoding(value: string): string {
+export function decodeEncoding(value: string) {
   if (typeof value !== 'string') {
     return value;
   }

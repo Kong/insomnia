@@ -22,11 +22,11 @@ class Analytics extends PureComponent<Props> {
     this.props.handleDone();
   }
 
-  async _handleClickEnableAnalytics(e: React.SyntheticEvent<HTMLButtonElement>) {
+  async _handleClickEnableAnalytics() {
     this._handleAnalyticsSetting(true);
   }
 
-  async _handleClickDisableAnalytics(e: React.SyntheticEvent<HTMLButtonElement>) {
+  async _handleClickDisableAnalytics() {
     this._handleAnalyticsSetting(false);
   }
 

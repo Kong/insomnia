@@ -138,7 +138,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handlePush(e: any, force = false) {
+  async _handlePush(_e, force = false) {
     this.setState({
       loadingPush: true,
     });

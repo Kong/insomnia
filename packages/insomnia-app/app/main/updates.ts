@@ -95,14 +95,14 @@ export async function init() {
 
     _sendUpdateStatus('Downloading...');
   });
-  autoUpdater.on('update-downloaded', (e, releaseNotes, releaseName, releaseDate, updateUrl) => {
+  autoUpdater.on('update-downloaded', (_error, _releaseNotes, releaseName) => {
     console.log(`[updater] Downloaded ${releaseName}`);
 
     _sendUpdateComplete(true, 'Updated (Restart Required)');
 
     _showUpdateNotification();
   });
-  ipcMain.on('updater.check', async e => {
+  ipcMain.on('updater.check', async () => {
     await _checkForUpdates(true);
   });
   // Check for updates on an interval

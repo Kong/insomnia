@@ -27,11 +27,11 @@ interface Props {
   workspace: Workspace;
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  activeEnvironment: Environment | null;
+  activeEnvironment?: Environment | null;
   handleCreateRequest: (id: string) => any;
-  handleDuplicateRequestGroup: (rg: RequestGroup) => any;
-  handleMoveRequestGroup: (rg: RequestGroup) => any;
-  handleCreateRequestGroup: (id: string) => any;
+  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
+  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
+  handleCreateRequestGroup: (requestGroup: string) => any;
 }
 
 interface State {
@@ -136,9 +136,9 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
   render() {
     const {
       workspace,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       requestGroup,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       hotKeyRegistry,
       ...other
     } = this.props;

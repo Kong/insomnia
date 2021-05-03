@@ -19,6 +19,7 @@ import { RequestGroup } from '../../../models/request-group';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { isGrpcRequest } from '../../../models/helpers/is-model';
+import { HotKeyRegistry } from '../../../common/hotkeys';
 
 interface Props {
   activeEnvironment?: Environment;
@@ -33,7 +34,7 @@ interface Props {
   filter: string;
   isActive: boolean;
   isPinned: boolean;
-  hotKeyRegistry: object;
+  hotKeyRegistry: HotKeyRegistry;
   isDragging?: boolean;
   isDraggingOver?: boolean;
   connectDragSource?: Function;
@@ -296,10 +297,10 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     if (disableDragAndDrop) {
       return node;
     } else if (!this.state.isEditing) {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       return connectDragSource(connectDropTarget(node));
     } else {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       return connectDropTarget(node);
     }
   }

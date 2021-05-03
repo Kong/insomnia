@@ -13,6 +13,7 @@ import type { Request } from '../models/request';
 import type { GrpcRequest } from '../models/grpc-request';
 import type { RequestGroup } from '../models/request-group';
 import { isGrpcRequest, isRequest, isRequestGroup } from '../models/helpers/is-model';
+
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction = (a: SortableModel, b: SortableModel) => number;
 
@@ -55,6 +56,7 @@ const httpMethodSort: SortFunction = (a, b) => {
   // Sort Requests by HTTP method
   if (isRequest(a)) {
     const aIndex = HTTP_METHODS.indexOf(a.method);
+    // @ts-expect-error -- TSCONVERSION
     const bIndex = HTTP_METHODS.indexOf(b.method);
 
     if (aIndex !== bIndex) {
@@ -62,7 +64,9 @@ const httpMethodSort: SortFunction = (a, b) => {
     }
 
     // Sort by ascending method name if comparing two custom methods
+    // @ts-expect-error -- TSCONVERSION
     if (aIndex === -1 && a.method.localeCompare(b.method) !== 0) {
+      // @ts-expect-error -- TSCONVERSION
       return a.method.localeCompare(b.method);
     }
   }
@@ -95,12 +99,16 @@ export const metaSortKeySort: SortFunction = (a, b) => {
 
   return a.metaSortKey < b.metaSortKey ? -1 : 1;
 };
+
 export const ascendingNumberSort = (a: number, b: number): number => {
   return a < b ? -1 : 1;
 };
+
 export const descendingNumberSort = (a: number, b: number): number => {
   return ascendingNumberSort(b, a);
 };
+
+// @ts-expect-error -- TSCONVERSION appears to be a genuine error
 export const sortMethodMap: Record<SortOrder, SortFunction> = {
   [SORT_NAME_ASC]: ascendingNameSort,
   [SORT_NAME_DESC]: descendingNameSort,

@@ -12,8 +12,8 @@ export default async function(
   clientSecret: string,
   username: string,
   password: string,
-  scope: string = '',
-  audience: string = '',
+  scope = '',
+  audience = '',
 ): Promise<Record<string, any>> {
   const params = [
     {

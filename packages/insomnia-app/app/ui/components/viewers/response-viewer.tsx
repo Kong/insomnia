@@ -66,7 +66,7 @@ class ResponseViewer extends Component<Props, State> {
     }
   }
 
-  _decodeIconv(bodyBuffer: Buffer, charset: string): string {
+  _decodeIconv(bodyBuffer: Buffer, charset: string) {
     try {
       return iconv.decode(bodyBuffer, charset);
     } catch (err) {

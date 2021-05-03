@@ -5,11 +5,11 @@ const pathSep = path.sep === path.win32.sep ? '\\\\' : '/';
 
 const _cloneDirRegExp = new RegExp(`^${GIT_CLONE_DIR}${pathSep}`);
 
-type GitPathSegments = {
+interface GitPathSegments {
   root: string | null;
   type: string | null;
   id: string | null;
-};
+}
 
 const parseGitPath = (filePath: string): GitPathSegments => {
   filePath = path.normalize(filePath);

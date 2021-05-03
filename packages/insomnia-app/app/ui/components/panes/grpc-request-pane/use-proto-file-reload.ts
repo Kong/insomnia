@@ -18,7 +18,7 @@ const useProtoFileReload = (
     grpcDispatch(grpcActions.clear(_id));
 
     const func = async () => {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       grpcDispatch(await grpcActions.loadMethods(_id, protoFileId));
     };
 

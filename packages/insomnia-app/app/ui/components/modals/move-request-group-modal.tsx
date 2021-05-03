@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
+import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -10,7 +10,7 @@ import type { Workspace } from '../../../models/workspace';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 
-interface Props {
+interface Props extends ModalProps {
   workspaces: Workspace[];
   activeWorkspace: Workspace;
 }
@@ -82,7 +82,7 @@ class MoveRequestGroupModal extends PureComponent<Props, State> {
     const { selectedWorkspaceId } = this.state;
     return (
       <form onSubmit={this._handleSubmit}>
-        <Modal ref={this._setModalRef} {...(this.props as Record<string, any>)}>
+        <Modal ref={this._setModalRef} {...this.props}>
           <ModalHeader key="header">Move Folder to Workspace</ModalHeader>
           <ModalBody key="body" className="pad">
             <div className="form-control form-control--outlined">

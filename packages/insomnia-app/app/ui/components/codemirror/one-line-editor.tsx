@@ -37,8 +37,9 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class OneLineEditor extends PureComponent<Props, State> {
-  _editor: typeof CodeEditor | null = null;
-  _input: typeof Input | null = null;
+  _editor: CodeEditor | null = null;
+  _input: Input | null = null;
+  _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -148,7 +149,9 @@ class OneLineEditor extends PureComponent<Props, State> {
   }
 
   _handleInputMouseLeave() {
-    clearTimeout(this._mouseEnterTimeout);
+    if (this._mouseEnterTimeout !== null) {
+      clearTimeout(this._mouseEnterTimeout);
+    }
   }
 
   _handleEditorMouseLeave() {
@@ -170,7 +173,7 @@ class OneLineEditor extends PureComponent<Props, State> {
     // Set focused state
     this._editor?.setAttribute('data-focused', 'on');
 
-    this.props.onFocus && this.props.onFocus(e);
+    this.props.onFocus?.(e);
   }
 
   _handleInputFocus(e) {
@@ -194,13 +197,13 @@ class OneLineEditor extends PureComponent<Props, State> {
     this._input?.setAttribute('data-focused', 'on');
 
     // Also call the regular callback
-    this.props.onFocus && this.props.onFocus(e);
+    this.props.onFocus?.(e);
   }
 
   _handleInputChange(value) {
     this._convertToEditorPreserveFocus();
 
-    this.props.onChange && this.props.onChange(value);
+    this.props.onChange?.(value);
   }
 
   _handleInputKeyDown(e) {
@@ -213,7 +216,7 @@ class OneLineEditor extends PureComponent<Props, State> {
     // Set focused state
     this._input?.removeAttribute('data-focused');
 
-    this.props.onBlur && this.props.onBlur();
+    this.props.onBlur?.();
   }
 
   _handleEditorBlur() {
@@ -235,7 +238,7 @@ class OneLineEditor extends PureComponent<Props, State> {
       }, 2000);
     }
 
-    this.props.onBlur && this.props.onBlur();
+    this.props.onBlur?.();
   }
 
   _handleKeyDown(e) {
@@ -255,7 +258,7 @@ class OneLineEditor extends PureComponent<Props, State> {
       }
     }
 
-    this.props.onKeyDown && this.props.onKeyDown(e, this.getValue());
+    this.props.onKeyDown?.(e, this.getValue());
   }
 
   _convertToEditorPreserveFocus() {
@@ -310,11 +313,11 @@ class OneLineEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(n: typeof CodeEditor) {
+  _setEditorRef(n: CodeEditor) {
     this._editor = n;
   }
 
-  _setInputRef(n: typeof Input) {
+  _setInputRef(n: Input) {
     this._input = n;
   }
 

@@ -38,12 +38,12 @@ class AsapAuth extends PureComponent<Props> {
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
   }
 
-  _handleChangeProperty(property: string, value: string | boolean): void {
+  _handleChangeProperty(property: string, value: string | boolean) {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, [property]: value });
   }
 
-  _handleChangePrivateKey(value: string): void {
+  _handleChangePrivateKey(value: string) {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, privateKey: value });
   }

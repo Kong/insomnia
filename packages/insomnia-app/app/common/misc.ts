@@ -43,27 +43,27 @@ export function filterHeaders<T extends Header>(headers: T[], name?: string): T[
   });
 }
 
-export function hasContentTypeHeader<T extends Header>(headers: T[]): boolean {
+export function hasContentTypeHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'content-type').length > 0;
 }
 
-export function hasContentLengthHeader<T extends Header>(headers: T[]): boolean {
+export function hasContentLengthHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'content-length').length > 0;
 }
 
-export function hasAuthHeader<T extends Header>(headers: T[]): boolean {
+export function hasAuthHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'authorization').length > 0;
 }
 
-export function hasAcceptHeader<T extends Header>(headers: T[]): boolean {
+export function hasAcceptHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept').length > 0;
 }
 
-export function hasUserAgentHeader<T extends Header>(headers: T[]): boolean {
+export function hasUserAgentHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'user-agent').length > 0;
 }
 
-export function hasAcceptEncodingHeader<T extends Header>(headers: T[]): boolean {
+export function hasAcceptEncodingHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept-encoding').length > 0;
 }
 
@@ -106,7 +106,7 @@ export function getContentLengthHeader<T extends Header>(headers: T[]): T | null
  * @param prefix
  * @returns {string}
  */
-export function generateId(prefix?: string): string {
+export function generateId(prefix?: string) {
   const id = uuid.v4().replace(/-/g, '');
 
   if (prefix) {
@@ -116,15 +116,15 @@ export function generateId(prefix?: string): string {
   }
 }
 
-export function delay(milliseconds: number = DEBOUNCE_MILLIS): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
+export function delay(milliseconds: number = DEBOUNCE_MILLIS) {
+  return new Promise<void>(resolve => setTimeout(resolve, milliseconds));
 }
 
-export function removeVowels(str: string): string {
+export function removeVowels(str: string) {
   return str.replace(/[aeiouyAEIOUY]/g, '');
 }
 
-export function formatMethodName(method: string): string {
+export function formatMethodName(method: string) {
   let methodName = method || '';
 
   if (method === METHOD_DELETE || method === METHOD_OPTIONS) {
@@ -165,7 +165,7 @@ export function debounce<T extends Function>(
   }, milliseconds).bind(null, '__key__');
 }
 
-export function describeByteSize(bytes: number, long = false): string {
+export function describeByteSize(bytes: number, long = false) {
   bytes = Math.round(bytes * 10) / 10;
   let size;
   // NOTE: We multiply these by 2 so we don't end up with
@@ -190,15 +190,15 @@ export function describeByteSize(bytes: number, long = false): string {
   return `${rounded} ${unit}`;
 }
 
-export function nullFn(): void {
+export function nullFn() {
   // Do nothing
 }
 
-export function preventDefault(e: Event): void {
+export function preventDefault(e: Event) {
   e.preventDefault();
 }
 
-export function clickLink(href: string): void {
+export function clickLink(href: string) {
   electron.shell.openExternal(href);
 }
 
@@ -210,7 +210,7 @@ export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]
   }
 }
 
-export function compressObject(obj: any): string {
+export function compressObject(obj: any) {
   const compressed = zlib.gzipSync(JSON.stringify(obj));
   return compressed.toString('base64');
 }
@@ -224,7 +224,7 @@ export function decompressObject(input: string | null): any {
   return JSON.parse(jsonBuffer.toString('utf8'));
 }
 
-export function resolveHomePath(p: string): string {
+export function resolveHomePath(p: string) {
   if (p.indexOf('~/') === 0) {
     return pathJoin(process.env.HOME || '/', p.slice(1));
   } else {
@@ -240,7 +240,7 @@ export function jsonParseOr(str: string, fallback: any): any {
   }
 }
 
-export function escapeHTML(unsafeText: string): string {
+export function escapeHTML(unsafeText: string) {
   const div = document.createElement('div');
   div.innerText = unsafeText;
   return div.innerHTML;
@@ -251,7 +251,7 @@ export function escapeHTML(unsafeText: string): string {
  * @param str - string to escape
  * @returns {string} escaped string
  */
-export function escapeRegex(str: string): string {
+export function escapeRegex(str: string) {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
 
@@ -344,41 +344,41 @@ export function getViewportSize(): string | null {
   }
 }
 
-export function getScreenResolution(): string {
+export function getScreenResolution() {
   const { screen } = electron.remote || electron;
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   return `${width}x${height}`;
 }
 
-export function getUserLanguage(): string {
+export function getUserLanguage() {
   const { app } = electron.remote || electron;
   return app.getLocale();
 }
-export async function waitForStreamToFinish(s: Readable | Writable): Promise<void> {
-  return new Promise(resolve => {
-    if ((s as any)._readableState && (s as any)._readableState.finished) {
+export async function waitForStreamToFinish(stream: Readable | Writable) {
+  return new Promise<void>(resolve => {
+    if (stream._readableState?.finished) {
       return resolve();
     }
 
-    if ((s as any)._writableState && (s as any)._writableState.finished) {
+    if (stream._writableState?.finished) {
       return resolve();
     }
 
-    s.on('close', () => {
+    stream.on('close', () => {
       resolve();
     });
-    s.on('error', () => {
+    stream.on('error', () => {
       resolve();
     });
   });
 }
 
-export function getDesignerDataDir(): string {
+export function getDesignerDataDir() {
   const { app } = electron.remote || electron;
   return process.env.DESIGNER_DATA_PATH || pathJoin(app.getPath('appData'), 'Insomnia Designer');
 }
 
-export function getDataDirectory(): string {
+export function getDataDirectory() {
   const { app } = electron.remote || electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
 }
@@ -393,7 +393,7 @@ export function chunkArray<T>(arr: T[], chunkSize: number) {
   return chunks;
 }
 
-export function pluralize(text: string): string {
+export function pluralize(text: string) {
   let trailer = 's';
   let chop = 0;
 

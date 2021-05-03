@@ -22,8 +22,8 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: Function;
+  handleGetRenderContext: Function;
   workspaces: Workspace[];
 }
 

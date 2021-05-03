@@ -9,7 +9,7 @@ import Button from '../base/button';
 import Link from '../base/link';
 import EnvironmentEditor from '../editors/environment-editor';
 import Editable from '../base/editable';
-import Modal from '../base/modal';
+import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
@@ -22,7 +22,7 @@ import Tooltip from '../tooltip';
 import { docsTemplateTags } from '../../../common/documentation';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
-interface Props {
+interface Props extends ModalProps {
   handleChangeEnvironment: (id: string | null) => Promise<void>;
   activeEnvironmentId: string | null;
   editorFontSize: number;
@@ -260,7 +260,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   }
 
   _handleChangeEnvironmentColor(environment: Environment, color: string | null) {
-    clearTimeout(this.colorChangeTimeout);
+    if (this.colorChangeTimeout !== null) {
+      clearTimeout(this.colorChangeTimeout);
+    }
     this.colorChangeTimeout = setTimeout(async () => {
       await this._updateEnvironment(environment, {
         color,
@@ -301,7 +303,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
       for (const change of changes) {
         const [
-          _, // eslint-disable-line no-unused-vars
+          _, // eslint-disable-line @typescript-eslint/no-unused-vars
           doc,
           fromSync,
         ] = change;
@@ -387,7 +389,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     const activeEnvironment = this._getActiveEnvironment();
 
     if (activeEnvironment) {
-      clearTimeout(this.saveTimeout);
+      if (this.saveTimeout !== null) {
+        clearTimeout(this.saveTimeout);
+      }
       this.saveTimeout = setTimeout(async () => {
         await this._updateEnvironment(activeEnvironment, patch);
       }, DEBOUNCE_MILLIS * 4);
@@ -414,7 +418,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       propertyOrder: activeEnvironment && activeEnvironment.dataPropertyOrder,
     };
     return (
-      <Modal ref={this._setModalRef} wide tall {...(this.props as Record<string, any>)}>
+      <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Environments</ModalHeader>
         <ModalBody noScroll className="env-modal">
           <div className="env-modal__sidebar">

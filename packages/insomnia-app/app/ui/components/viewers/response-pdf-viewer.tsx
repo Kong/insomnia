@@ -15,14 +15,16 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponsePDFViewer extends PureComponent<Props, State> {
   container: HTMLDivElement | null = null;
-  debounceTimeout: any;
+  debounceTimeout: NodeJS.Timeout | null = null;
 
   setRef(n: HTMLDivElement) {
     this.container = n;
   }
 
   loadPDF() {
-    clearTimeout(this.debounceTimeout);
+    if (this.debounceTimeout !== null) {
+      clearTimeout(this.debounceTimeout);
+    }
     this.debounceTimeout = setTimeout(async () => {
       // get node for this react component
       const container = this.container;
@@ -73,7 +75,9 @@ class ResponsePDFViewer extends PureComponent<Props, State> {
       return;
     }
 
-    clearTimeout(this.debounceTimeout);
+    if (this.debounceTimeout !== null) {
+      clearTimeout(this.debounceTimeout);
+    }
     this.debounceTimeout = setTimeout(this.loadPDF, 300);
   }
 

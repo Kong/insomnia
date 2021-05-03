@@ -14,7 +14,7 @@ import { trackEvent } from './analytics';
 import { WorkspaceScopeKeys } from '../models/workspace';
 
 async function loadDesignerDb(
-  types: Array<string>,
+  types: string[],
   designerDataDir: string,
 ): Promise<Record<string, any>> {
   const designerDb = {};
@@ -23,7 +23,7 @@ async function loadDesignerDb(
   });
   const promises = types.map(
     type =>
-      new Promise((resolve, reject) => {
+      new Promise<void>((resolve, reject) => {
         const filePath = fsPath.join(designerDataDir, `insomnia.${type}.db`);
 
         if (!fs.existsSync(filePath)) {
@@ -38,12 +38,12 @@ async function loadDesignerDb(
           corruptAlertThreshold: 0.9,
         });
         // Find every entry and store in memory
-        collection.find({}, (err, docs: Array<BaseModel>) => {
+        collection.find({}, (err, docs: BaseModel[]) => {
           if (err) {
             return reject(err);
           }
 
-          (designerDb[type] as Array<Record<string, any>>).push(...docs);
+          (designerDb[type] as Record<string, any>[]).push(...docs);
           resolve();
         });
       }),
@@ -53,20 +53,22 @@ async function loadDesignerDb(
   return designerDb;
 }
 
-type DBType = Record<string, Array<BaseModel>>;
-export type MigrationOptions = {
+type DBType = Record<string, BaseModel[]>;
+
+export interface MigrationOptions {
   useDesignerSettings: boolean;
   copyPlugins: boolean;
   copyWorkspaces: boolean;
   designerDataDir: string;
   coreDataDir: string;
-};
-export type MigrationResult = {
-  error?: Error;
-};
+}
 
-async function createCoreBackup(modelTypes: Array<string>, coreDataDir: string) {
-  console.log(`[db-merge] creating backup`);
+export interface MigrationResult {
+  error?: Error;
+}
+
+async function createCoreBackup(modelTypes: string[], coreDataDir: string) {
+  console.log('[db-merge] creating backup');
   const backupDir = fsPath.join(coreDataDir, 'core-backup');
   await fsx.remove(backupDir);
   await fsx.ensureDir(backupDir);
@@ -103,7 +105,7 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   await removeDirs(pluginsToDelete, corePluginDir);
 }
 
-async function readDirs(srcDir: string): Array<string> {
+async function readDirs(srcDir: string): string[] {
   if (existsAndIsDirectory(srcDir)) {
     return await fs.promises.readdir(srcDir);
   } else {
@@ -111,7 +113,7 @@ async function readDirs(srcDir: string): Array<string> {
   }
 }
 
-async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
+async function copyDirs(dirs: string[], srcDir: string, destDir: string) {
   for (const dir of dirs.filter(c => c)) {
     const src = fsPath.join(srcDir, dir);
     const dest = fsPath.join(destDir, dir);
@@ -124,7 +126,7 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
   }
 }
 
-async function removeDirs(dirs: Array<string>, srcDir: string) {
+async function removeDirs(dirs: string[], srcDir: string) {
   for (const dir of dirs.filter(c => c)) {
     const dirToRemove = fsPath.join(srcDir, dir);
 
@@ -134,7 +136,7 @@ async function removeDirs(dirs: Array<string>, srcDir: string) {
   }
 }
 
-export function existsAndIsDirectory(name: string): boolean {
+export function existsAndIsDirectory(name: string) {
   return fs.existsSync(name) && fs.statSync(name).isDirectory();
 }
 export default async function migrateFromDesigner({
@@ -143,7 +145,7 @@ export default async function migrateFromDesigner({
   coreDataDir,
   copyPlugins,
   copyWorkspaces,
-}: MigrationOptions): Promise<MigrationResult> {
+}: MigrationOptions) {
   console.log(
     `[db-merge] starting process for migrating from ${designerDataDir} to ${coreDataDir}`,
   );
@@ -158,9 +160,9 @@ export default async function migrateFromDesigner({
   if (useDesignerSettings) {
     trackEvent('Data', 'Migration', 'Settings');
     modelTypesToMerge.push(models.settings.type);
-    console.log(`[db-merge] keeping settings from Insomnia Designer`);
+    console.log('[db-merge] keeping settings from Insomnia Designer');
   } else {
-    console.log(`[db-merge] keeping settings from Insomnia Core`);
+    console.log('[db-merge] keeping settings from Insomnia Core');
   }
 
   if (copyWorkspaces) {
@@ -213,14 +215,14 @@ export default async function migrateFromDesigner({
     }
 
     if (copyWorkspaces) {
-      console.log(`[db-merge] migrating version control data from designer to core`);
+      console.log('[db-merge] migrating version control data from designer to core');
       await copyDirs(['version-control'], designerDataDir, coreDataDir);
-      console.log(`[db-merge] migrating response cache from designer to core`);
+      console.log('[db-merge] migrating response cache from designer to core');
       await copyDirs(['responses'], designerDataDir, coreDataDir);
     }
 
     if (copyPlugins) {
-      console.log(`[db-merge] migrating plugins from designer to core`);
+      console.log('[db-merge] migrating plugins from designer to core');
       trackEvent('Data', 'Migration', 'Plugins');
       await migratePlugins(designerDataDir, coreDataDir);
     }
@@ -235,12 +237,12 @@ export default async function migrateFromDesigner({
     await restoreCoreBackup(backupDir, coreDataDir);
     return {
       error,
-    };
+    } as MigrationResult;
   }
 }
 export async function restoreCoreBackup(backupDir: string, coreDataDir: string) {
   if (!backupDir) {
-    console.log(`[db-merge] nothing to restore; no backup was created`);
+    console.log('[db-merge] nothing to restore; no backup was created');
     return;
   }
 
@@ -249,10 +251,10 @@ export async function restoreCoreBackup(backupDir: string, coreDataDir: string) 
     return;
   }
 
-  console.log(`[db-merge] restoring from backup`);
+  console.log('[db-merge] restoring from backup');
   await removeDirs(['plugins', 'responses', 'version-control'], coreDataDir);
   await fsx.copy(backupDir, coreDataDir);
-  console.log(`[db-merge] restored from backup`);
+  console.log('[db-merge] restored from backup');
 }
 export function restartApp() {
   const { app } = electron.remote || electron;

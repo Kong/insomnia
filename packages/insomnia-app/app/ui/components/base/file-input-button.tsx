@@ -1,10 +1,10 @@
-import React, { PureComponent } from 'react';
+import React, { HTMLAttributes, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { basename as pathBasename } from 'path';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
 
-interface Props {
+interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   onChange: (path: string) => void;
   path?: string;
   itemtypes?: ('file' | 'directory')[];
@@ -45,7 +45,7 @@ class FileInputButton extends PureComponent<Props> {
   }
 
   render() {
-    const { showFileName, showFileIcon, path, name, ...extraProps } = this.props;
+    const { showFileName, showFileIcon, path, name, onChange, ...extraProps } = this.props;
     // NOTE: Basename fails if path is not a string, so let's make sure it is
     const fileName = typeof path === 'string' ? pathBasename(path) : null;
     return (
@@ -54,7 +54,8 @@ class FileInputButton extends PureComponent<Props> {
         ref={this._setRef}
         onClick={this._handleChooseFile}
         title={path}
-        {...(extraProps as Record<string, any>)}>
+        {...extraProps}
+      >
         {showFileIcon && <i className="fa fa-file-o space-right" />}
         {showFileName && fileName ? `${fileName}` : `Choose ${name || 'File'}`}
       </button>

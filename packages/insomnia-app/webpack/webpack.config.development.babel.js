@@ -40,7 +40,7 @@ module.exports = {
     contentBase: '/',
   },
   optimization: {
-    noEmitOnErrors: true
+    noEmitOnErrors: true,
   },
   plugins: [
     ...baseConfig.plugins,

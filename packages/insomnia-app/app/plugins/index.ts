@@ -12,62 +12,69 @@ import type { RequestGroup } from '../models/request-group';
 import type { Request } from '../models/request';
 import type { PluginConfig, PluginConfigMap } from '../models/settings';
 import type { Workspace } from '../models/workspace';
-export type Plugin = {
+
+export interface Plugin {
   name: string;
   description: string;
   version: string;
   directory: string;
   config: PluginConfig;
   module: any;
-};
-export type TemplateTag = {
+}
+
+export interface TemplateTag {
   plugin: Plugin;
   templateTag: PluginTemplateTag;
-};
-export type RequestGroupAction = {
+}
+
+export interface RequestGroupAction {
   plugin: Plugin;
   action: (
     context: Record<string, any>,
     models: {
       requestGroup: RequestGroup;
-      requests: Array<Request>;
+      requests: Request[];
     },
   ) => void | Promise<void>;
   label: string;
   icon?: string;
-};
-export type RequestAction = {
+}
+
+export interface RequestAction {
   plugin: Plugin;
   action: (
     context: Record<string, any>,
     models: {
       requestGroup: RequestGroup;
-      request: Array<Request>;
+      request: Request[];
     },
   ) => void | Promise<void>;
   label: string;
   icon?: string;
-};
-export type WorkspaceAction = {
+}
+
+export interface WorkspaceAction {
   plugin: Plugin;
   action: (
     context: Record<string, any>,
     models: {
       workspace: Workspace;
-      requestGroups: Array<RequestGroup>;
-      requests: Array<Request>;
+      requestGroups: RequestGroup[];
+      requests: Request[];
     },
   ) => void | Promise<void>;
   label: string;
   icon?: string;
-};
-export type SpecInfo = {
+}
+
+export interface SpecInfo {
   contents: Record<string, any>;
   rawContents: string;
   format: string;
   formatVersion: string;
-};
-export type ConfigGenerator = {
+}
+
+export interface ConfigGenerator {
   plugin: Plugin;
   label: string;
   generate: (
@@ -76,44 +83,54 @@ export type ConfigGenerator = {
     document?: string;
     error?: string;
   }>;
-};
-export type DocumentAction = {
+}
+
+export interface DocumentAction {
   plugin: Plugin;
   action: (context: Record<string, any>, documents: SpecInfo) => void | Promise<void>;
   label: string;
   hideAfterClick?: boolean;
-};
-export type RequestHook = {
+}
+
+export interface RequestHook {
   plugin: Plugin;
-  hook: (...args: Array<any>) => any;
-};
-export type ResponseHook = {
+  hook: (...args: any[]) => any;
+}
+
+export interface ResponseHook {
   plugin: Plugin;
-  hook: (...args: Array<any>) => any;
-};
-export type Theme = {
+  hook: (...args: any[]) => any;
+}
+
+export interface Theme {
   plugin: Plugin;
   theme: PluginTheme;
-};
+}
+
 export type ColorScheme = 'default' | 'light' | 'dark';
-let plugins: Array<Plugin> | null | undefined = null;
-let ignorePlugins: Array<string> = [];
-export async function init(): Promise<void> {
+
+let plugins: Plugin[] | null | undefined = null;
+
+let ignorePlugins: string[] = [];
+
+export async function init() {
   clearIgnores();
   await reloadPlugins();
 }
+
 export function ignorePlugin(name: string) {
   if (!ignorePlugins.includes(name)) {
     ignorePlugins.push(name);
   }
 }
+
 export function clearIgnores() {
   ignorePlugins = [];
 }
 
 async function _traversePluginPath(
   pluginMap: Record<string, any>,
-  allPaths: Array<string>,
+  allPaths: string[],
   allConfigs: PluginConfigMap,
 ) {
   for (const p of allPaths) {
@@ -173,7 +190,7 @@ async function _traversePluginPath(
   }
 }
 
-export async function getPlugins(force: boolean = false): Promise<Array<Plugin>> {
+export async function getPlugins(force = false): Promise<Plugin[]> {
   if (force) {
     plugins = null;
   }
@@ -220,15 +237,16 @@ export async function getPlugins(force: boolean = false): Promise<Array<Plugin>>
 
   return plugins;
 }
-export async function reloadPlugins(): Promise<void> {
+
+export async function reloadPlugins() {
   await getPlugins(true);
 }
 
-async function getActivePlugins(): Promise<Array<Plugin>> {
+async function getActivePlugins(): Promise<Plugin[]> {
   return (await getPlugins()).filter(p => !p.config.disabled);
 }
 
-export async function getRequestGroupActions(): Promise<Array<RequestGroupAction>> {
+export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -244,7 +262,8 @@ export async function getRequestGroupActions(): Promise<Array<RequestGroupAction
 
   return extensions;
 }
-export async function getRequestActions(): Promise<Array<RequestAction>> {
+
+export async function getRequestActions(): Promise<RequestAction[]> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -260,7 +279,8 @@ export async function getRequestActions(): Promise<Array<RequestAction>> {
 
   return extensions;
 }
-export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
+
+export async function getWorkspaceActions(): Promise<WorkspaceAction[]> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -276,7 +296,8 @@ export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
 
   return extensions;
 }
-export async function getDocumentActions(): Promise<Array<DocumentAction>> {
+
+export async function getDocumentActions(): Promise<DocumentAction[]> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -292,7 +313,8 @@ export async function getDocumentActions(): Promise<Array<DocumentAction>> {
 
   return extensions;
 }
-export async function getTemplateTags(): Promise<Array<TemplateTag>> {
+
+export async function getTemplateTags(): Promise<TemplateTag[]> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -308,7 +330,8 @@ export async function getTemplateTags(): Promise<Array<TemplateTag>> {
 
   return extensions;
 }
-export async function getRequestHooks(): Promise<Array<RequestHook>> {
+
+export async function getRequestHooks(): Promise<RequestHook[]> {
   let functions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -324,7 +347,8 @@ export async function getRequestHooks(): Promise<Array<RequestHook>> {
 
   return functions;
 }
-export async function getResponseHooks(): Promise<Array<ResponseHook>> {
+
+export async function getResponseHooks(): Promise<ResponseHook[]> {
   let functions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -340,7 +364,8 @@ export async function getResponseHooks(): Promise<Array<ResponseHook>> {
 
   return functions;
 }
-export async function getThemes(): Promise<Array<Theme>> {
+
+export async function getThemes(): Promise<Theme[]> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -356,7 +381,8 @@ export async function getThemes(): Promise<Array<Theme>> {
 
   return extensions;
 }
-export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
+
+export async function getConfigGenerators(): Promise<ConfigGenerator[]> {
   let functions = [];
 
   for (const plugin of await getActivePlugins()) {

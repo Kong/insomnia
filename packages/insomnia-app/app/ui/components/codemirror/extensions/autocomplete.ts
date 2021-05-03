@@ -135,7 +135,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return CodeMirror.Pass;
   }
 
-  let keydownDebounce = null;
+  let keydownDebounce: NodeJS.Timeout | null = null;
   cm.on('keydown', async (cm, e) => {
     // Close autocomplete on Escape if it's open
     if (cm.isHintDropdownActive() && e.key === 'Escape') {
@@ -154,7 +154,9 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    clearTimeout(keydownDebounce);
+    if (keydownDebounce !== null) {
+      clearTimeout(keydownDebounce);
+    }
     const { autocompleteDelay } = await models.settings.getOrCreate();
 
     if (autocompleteDelay > 0) {
@@ -165,7 +167,9 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   });
   // Clear timeout if we already closed the completion
   cm.on('endCompletion', () => {
-    clearTimeout(keydownDebounce);
+    if (keydownDebounce !== null) {
+      clearTimeout(keydownDebounce);
+    }
   });
   // Remove keymap if we're already added it
   cm.removeKeyMap('autocomplete-keymap');

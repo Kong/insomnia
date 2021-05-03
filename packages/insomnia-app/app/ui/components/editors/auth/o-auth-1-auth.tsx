@@ -55,7 +55,7 @@ class OAuth1Auth extends PureComponent<Props> {
     });
   }
 
-  _handleChangeProperty(property: string, value: string | boolean): void {
+  _handleChangeProperty(property: string, value: string | boolean) {
     const { request } = this.props;
     const authentication = Object.assign({}, request.authentication, {
       [property]: value,
@@ -63,59 +63,59 @@ class OAuth1Auth extends PureComponent<Props> {
     this.props.onChange(request, authentication);
   }
 
-  _handleChangeConsumerKey(value: string): void {
+  _handleChangeConsumerKey(value: string) {
     this._handleChangeProperty('consumerKey', value);
   }
 
-  _handleChangeConsumerSecret(value: string): void {
+  _handleChangeConsumerSecret(value: string) {
     this._handleChangeProperty('consumerSecret', value);
   }
 
-  _handleChangeTokenKey(value: string): void {
+  _handleChangeTokenKey(value: string) {
     this._handleChangeProperty('tokenKey', value);
   }
 
-  _handleChangeTokenSecret(value: string): void {
+  _handleChangeTokenSecret(value: string) {
     this._handleChangeProperty('tokenSecret', value);
   }
 
-  _handleChangeRealm(value: string): void {
+  _handleChangeRealm(value: string) {
     this._handleChangeProperty('realm', value);
   }
 
-  _handleChangeCallback(value: string): void {
+  _handleChangeCallback(value: string) {
     this._handleChangeProperty('callback', value);
   }
 
-  _handleChangeNonce(value: string): void {
+  _handleChangeNonce(value: string) {
     this._handleChangeProperty('nonce', value);
   }
 
-  _handleChangeVerifier(value: string): void {
+  _handleChangeVerifier(value: string) {
     this._handleChangeProperty('verifier', value);
   }
 
-  _handleChangeTimestamp(value: string): void {
+  _handleChangeTimestamp(value: string) {
     this._handleChangeProperty('timestamp', value);
   }
 
-  _handleChangeSignatureMethod(e: React.SyntheticEvent<HTMLInputElement>): void {
+  _handleChangeSignatureMethod(e: React.SyntheticEvent<HTMLInputElement>) {
     this._handleChangeProperty('signatureMethod', e.currentTarget.value);
   }
 
-  _handleChangePrivateKey(value: string): void {
+  _handleChangePrivateKey(value: string) {
     this._handleChangeProperty('privateKey', value);
   }
 
-  _handleChangeIncludeBodyHash(value: boolean): void {
+  _handleChangeIncludeBodyHash(value: boolean) {
     this._handleChangeProperty('includeBodyHash', value);
   }
 
-  _handleChangeVersion(value: string): void {
+  _handleChangeVersion(value: string) {
     this._handleChangeProperty('version', value);
   }
 
-  _handleChangeEnabled(value: boolean): void {
+  _handleChangeEnabled(value: boolean) {
     this._handleChangeProperty('disabled', value);
   }
 

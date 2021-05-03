@@ -1,4 +1,4 @@
-import electron from 'electron';
+import electron, { BrowserWindow } from 'electron';
 import path from 'path';
 import { Curl } from 'node-libcurl';
 import fs from 'fs';
@@ -18,33 +18,53 @@ import * as misc from '../common/misc';
 import * as log from '../common/log';
 import * as os from 'os';
 import { docsBase } from '../common/documentation';
-const { app, Menu, BrowserWindow, shell, dialog, clipboard } = electron;
+
+const { app, Menu, shell, dialog, clipboard } = electron;
 // So we can use native modules in renderer
 // NOTE: This will be deprecated in Electron 10 and impossible in 11
 //   https://github.com/electron/electron/issues/18397
 app.allowRendererProcessReuse = false;
+
+// Note: this hack is required because MenuItemConstructorOptions is not exported from the electron types as of 9.3.5
+type MenuItemConstructorOptions = Parameters<typeof Menu.buildFromTemplate>[0][0];
+
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 700;
 const MINIMUM_WIDTH = 500;
 const MINIMUM_HEIGHT = 400;
-let mainWindow = null;
-let localStorage = null;
+
+let mainWindow: BrowserWindow | null = null;
+let localStorage: LocalStorage | null = null;
+
+interface Bounds {
+  height?: number;
+  width?: number;
+  x?: number;
+  y?: number;
+}
+
 export function init() {
   initLocalStorage();
   initContextMenus();
 }
+
 export function createWindow() {
   const zoomFactor = getZoomFactor();
   const { bounds, fullscreen, maximize } = getBounds();
   const { x, y, width, height } = bounds;
+
   const appLogo = 'static/insomnia-core-logo_16x.png';
   let isVisibleOnAnyDisplay = true;
 
   for (const d of electron.screen.getAllDisplays()) {
     const isVisibleOnDisplay =
+      // @ts-expect-error -- TSCONVERSION genuine error
       x >= d.bounds.x &&
+      // @ts-expect-error -- TSCONVERSION genuine error
       y >= d.bounds.y &&
+      // @ts-expect-error -- TSCONVERSION genuine error
       x + width <= d.bounds.x + d.bounds.width &&
+      // @ts-expect-error -- TSCONVERSION genuine error
       y + height <= d.bounds.y + d.bounds.height;
 
     if (!isVisibleOnDisplay) {
@@ -77,18 +97,18 @@ export function createWindow() {
 
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
   if (maximize) {
-    mainWindow.maximize();
+    mainWindow?.maximize();
   }
 
-  mainWindow.on('resize', e => saveBounds());
-  mainWindow.on('maximize', e => saveBounds());
-  mainWindow.on('unmaximize', e => saveBounds());
-  mainWindow.on('move', e => saveBounds());
-  mainWindow.on('unresponsive', e => {
+  mainWindow?.on('resize', () => saveBounds());
+  mainWindow?.on('maximize', () => saveBounds());
+  mainWindow?.on('unmaximize', () => saveBounds());
+  mainWindow?.on('move', () => saveBounds());
+  mainWindow?.on('unresponsive', () => {
     showUnresponsiveModal();
   });
   // Open generic links (<a .../>) in default browser
-  mainWindow.webContents.on('will-navigate', (e, url) => {
+  mainWindow?.webContents.on('will-navigate', (e, url) => {
     if (url === appUrl) {
       return;
     }
@@ -101,20 +121,21 @@ export function createWindow() {
   const url = process.env.APP_RENDER_URL;
   const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
   console.log(`[main] Loading ${appUrl}`);
-  mainWindow.loadURL(appUrl);
+  mainWindow?.loadURL(appUrl);
   // Emitted when the window is closed.
-  mainWindow.on('closed', () => {
+  mainWindow?.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
   });
-  const applicationMenu = {
+
+  const applicationMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Application`,
     submenu: [
       {
         label: `${MNEMONIC_SYM}Preferences`,
-        click: function(menuItem, window, e) {
+        click: function(_menuItem, window) {
           if (!window || !window.webContents) {
             return;
           }
@@ -124,7 +145,7 @@ export function createWindow() {
       },
       {
         label: `${MNEMONIC_SYM}Changelog`,
-        click: function(menuItem, window, e) {
+        click: function(_menuItem, window) {
           if (!window || !window.webContents) {
             return;
           }
@@ -139,6 +160,7 @@ export function createWindow() {
         role: 'hide',
       },
       {
+        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         role: 'hideothers',
       },
       {
@@ -151,17 +173,20 @@ export function createWindow() {
       },
     ],
   };
-  const editMenu = {
+
+  const editMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Edit`,
     submenu: [
       {
         label: `${MNEMONIC_SYM}Undo`,
         accelerator: 'CmdOrCtrl+Z',
+        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'undo:',
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
         accelerator: 'Shift+CmdOrCtrl+Z',
+        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'redo:',
       },
       {
@@ -170,26 +195,31 @@ export function createWindow() {
       {
         label: `Cu${MNEMONIC_SYM}t`,
         accelerator: 'CmdOrCtrl+X',
+        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'cut:',
       },
       {
         label: `${MNEMONIC_SYM}Copy`,
         accelerator: 'CmdOrCtrl+C',
+        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'copy:',
       },
       {
         label: `${MNEMONIC_SYM}Paste`,
         accelerator: 'CmdOrCtrl+V',
+        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'paste:',
       },
       {
         label: `Select ${MNEMONIC_SYM}All`,
         accelerator: 'CmdOrCtrl+A',
+        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'selectAll:',
       },
     ],
   };
-  const viewMenu = {
+
+  const viewMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}View`,
     submenu: [
       {
@@ -256,11 +286,13 @@ export function createWindow() {
       {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
-        click: () => mainWindow.toggleDevTools(),
+        // @ts-expect-error -- TSCONVERSION needs global module augmentation
+        click: () => mainWindow?.toggleDevTools(),
       },
     ],
   };
-  const windowMenu = {
+
+  const windowMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Window`,
     role: 'window',
     submenu: [
@@ -268,8 +300,8 @@ export function createWindow() {
         label: `${MNEMONIC_SYM}Minimize`,
         role: 'minimize',
       },
-      ...(isMac()
-        ? [
+      // @ts-expect-error -- TSCONVERSION missing in official electron types
+      ...(isMac() ? [
             {
               label: `${MNEMONIC_SYM}Close`,
               role: 'close',
@@ -278,13 +310,15 @@ export function createWindow() {
         : []),
     ],
   };
-  const helpMenu = {
+
+  const helpMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Help`,
     role: 'help',
     id: 'help',
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
+        // @ts-expect-error TSCONVERSION `Accelerator` type from electron is needed here as a cas but is not exported as of the 9.3.5 types
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
           shell.openExternal(docsBase);
@@ -293,7 +327,7 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Keyboard Shortcuts`,
         accelerator: 'CmdOrCtrl+Shift+?',
-        click: (menuItem, w, e) => {
+        click: (_menuItem, w) => {
           if (!w || !w.webContents) {
             return;
           }
@@ -303,21 +337,21 @@ export function createWindow() {
       },
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
-        click: (menuItem, w, e) => {
+        click: () => {
           const directory = misc.getDataDirectory();
           shell.showItemInFolder(directory);
         },
       },
       {
         label: `Show App ${MNEMONIC_SYM}Logs Folder`,
-        click: (menuItem, w, e) => {
+        click: () => {
           const directory = log.getLogDirectory();
           shell.showItemInFolder(directory);
         },
       },
       {
         label: 'Show Open Source Licenses',
-        click: (menuItem, w, e) => {
+        click: () => {
           const licensePath = path.resolve(app.getAppPath(), '../opensource-licenses.txt');
           shell.openPath(licensePath);
         },
@@ -345,6 +379,7 @@ export function createWindow() {
       `Architecture: ${process.arch}`,
       `node-libcurl: ${Curl.getVersion()}`,
     ].join('\n');
+
     const msgBox = await dialog.showMessageBox({
       type: 'info',
       title: getAppName(),
@@ -362,7 +397,8 @@ export function createWindow() {
   };
 
   if (isMac()) {
-    applicationMenu.submenu.unshift(
+    // @ts-expect-error -- TSCONVERSION type splitting
+    applicationMenu.submenu?.unshift(
       {
         label: `A${MNEMONIC_SYM}bout ${getAppName()}`,
         click: aboutMenuClickHandler,
@@ -372,25 +408,27 @@ export function createWindow() {
       },
     );
   } else {
-    helpMenu.submenu.push({
+    // @ts-expect-error -- TSCONVERSION type splitting
+    helpMenu.submenu?.push({
       label: `${MNEMONIC_SYM}About`,
       click: aboutMenuClickHandler,
     });
   }
 
-  const developerMenu = {
+  const developerMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Developer`,
+    // @ts-expect-error -- TSCONVERSION missing in official electron types
     position: 'before=help',
     submenu: [
       {
         label: `${MNEMONIC_SYM}Reload`,
         accelerator: 'Shift+F5',
-        click: () => mainWindow.reload(),
+        click: () => mainWindow?.reload(),
       },
       {
         label: `Resize to Defaul${MNEMONIC_SYM}t`,
         click: () =>
-          mainWindow.setBounds({
+          mainWindow?.setBounds({
             x: 100,
             y: 100,
             width: DEFAULT_WIDTH,
@@ -400,7 +438,8 @@ export function createWindow() {
       {
         label: `Take ${MNEMONIC_SYM}Screenshot`,
         click: function() {
-          mainWindow.capturePage(image => {
+          // @ts-expect-error -- TSCONVERSION not accounted for in the electron types to provide a function
+          mainWindow?.capturePage(image => {
             const buffer = image.toPNG();
             const dir = app.getPath('desktop');
             fs.writeFileSync(path.join(dir, `Screenshot-${new Date()}.png`), buffer);
@@ -417,7 +456,7 @@ export function createWindow() {
       },
     ],
   };
-  const toolsMenu = {
+  const toolsMenu: MenuItemConstructorOptions = {
     label: `${MNEMONIC_SYM}Tools`,
     submenu: [
       {
@@ -434,7 +473,7 @@ export function createWindow() {
       },
     ],
   };
-  const template = [];
+  const template: MenuItemConstructorOptions[] = [];
   template.push(applicationMenu);
   template.push(editMenu);
   template.push(viewMenu);
@@ -460,8 +499,9 @@ async function showUnresponsiveModal() {
     message: 'Insomnia has become unresponsive. Do you want to reload?',
   });
 
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   if (id === 1) {
-    mainWindow.destroy();
+    mainWindow?.destroy();
     createWindow();
   }
 }
@@ -471,27 +511,27 @@ function saveBounds() {
     return;
   }
 
-  const fullscreen = mainWindow.isFullScreen();
+  const fullscreen = mainWindow?.isFullScreen();
 
   // Only save the size if we're not in fullscreen
   if (!fullscreen) {
-    localStorage.setItem('bounds', mainWindow.getBounds());
-    localStorage.setItem('maximize', mainWindow.isMaximized());
-    localStorage.setItem('fullscreen', false);
+    localStorage?.setItem('bounds', mainWindow?.getBounds());
+    localStorage?.setItem('maximize', mainWindow?.isMaximized());
+    localStorage?.setItem('fullscreen', false);
   } else {
-    localStorage.setItem('fullscreen', true);
+    localStorage?.setItem('fullscreen', true);
   }
 }
 
 function getBounds() {
-  let bounds = {};
+  let bounds: Bounds = {};
   let fullscreen = false;
   let maximize = false;
 
   try {
-    bounds = localStorage.getItem('bounds', {});
-    fullscreen = localStorage.getItem('fullscreen', false);
-    maximize = localStorage.getItem('maximize', false);
+    bounds = localStorage?.getItem('bounds', {});
+    fullscreen = localStorage?.getItem('fullscreen', false);
+    maximize = localStorage?.getItem('maximize', false);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse window bounds', e);
@@ -505,14 +545,14 @@ function getBounds() {
 }
 
 function saveZoomFactor(zoomFactor) {
-  localStorage.setItem('zoomFactor', zoomFactor);
+  localStorage?.setItem('zoomFactor', zoomFactor);
 }
 
 function getZoomFactor() {
   let zoomFactor = 1;
 
   try {
-    zoomFactor = localStorage.getItem('zoomFactor', 1);
+    zoomFactor = localStorage?.getItem('zoomFactor', 1);
   } catch (e) {
     // This should never happen, but if it does...!
     console.error('Failed to parse zoomFactor', e);

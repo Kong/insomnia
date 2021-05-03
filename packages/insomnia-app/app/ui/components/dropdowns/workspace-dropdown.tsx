@@ -66,10 +66,10 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
       const docs = await db.withDescendants(activeWorkspace);
-      const requests: any = docs.filter(
-        d => d.type === models.request.type && !(d as any).isPrivate,
-      );
-      const requestGroups: any = docs.filter(d => d.type === models.requestGroup.type);
+      const requests = docs.filter(doc => (
+        doc.type === models.request.type && !doc.isPrivate
+      ));
+      const requestGroups = docs.filter(d => d.type === models.requestGroup.type);
       await p.action(context, {
         requestGroups,
         requests,

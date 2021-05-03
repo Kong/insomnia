@@ -47,7 +47,7 @@ export class NeDBClient {
 
     const doc = await db.get(type, id);
 
-    if (!doc || (doc as any).isPrivate) {
+    if (!doc || doc.isPrivate) {
       throw this._errMissing(filePath);
     }
 
@@ -70,7 +70,7 @@ export class NeDBClient {
     }
   }
 
-  async writeFile(filePath: string, data: Buffer | string, ...x: Array<any>): Promise<void> {
+  async writeFile(filePath: string, data: Buffer | string) {
     filePath = path.normalize(filePath);
     const { root, id, type } = parseGitPath(filePath);
 
@@ -92,7 +92,7 @@ export class NeDBClient {
     await db.upsert(doc, true);
   }
 
-  async unlink(filePath: string, ...x: Array<any>): Promise<void> {
+  async unlink(filePath: string) {
     filePath = path.normalize(filePath);
     const { id, type } = parseGitPath(filePath);
 
@@ -109,7 +109,7 @@ export class NeDBClient {
     await db.unsafeRemove(doc, true);
   }
 
-  async readdir(filePath: string, ...x: Array<any>): Promise<Array<string>> {
+  async readdir(filePath: string) {
     filePath = path.normalize(filePath);
     const { root, type, id } = parseGitPath(filePath);
     let docs = [];
@@ -133,7 +133,7 @@ export class NeDBClient {
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
-      docs = children.filter(d => d.type === type && !(d as any).isPrivate);
+      docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);
     }
@@ -142,14 +142,14 @@ export class NeDBClient {
     return [...ids, ...otherFolders].sort();
   }
 
-  async mkdir(filePath: string, ...x: Array<any>) {
+  async mkdir() {
     throw new Error('NeDBClient is not writable');
   }
 
-  async stat(filePath: string, ...x: Array<any>): Promise<Stat> {
+  async stat(filePath: string) {
     filePath = path.normalize(filePath);
     let fileBuff: Buffer | string | null = null;
-    let dir: Array<string> | null = null;
+    let dir: string[] | null = null;
 
     try {
       fileBuff = await this.readFile(filePath);
@@ -190,24 +190,24 @@ export class NeDBClient {
     }
   }
 
-  async readlink(filePath: string, ...x: Array<any>): Promise<Buffer | string> {
+  async readlink(filePath: string, ...x: any[]) {
     return this.readFile(filePath, ...x);
   }
 
-  async lstat(filePath: string, ...x: Array<any>): Promise<Stat> {
-    return this.stat(filePath, ...x);
+  async lstat(filePath: string) {
+    return this.stat(filePath);
   }
 
-  async rmdir(dir: string, ...x: Array<any>): Promise<void> {
+  async rmdir() {
     // Dirs in NeDB can't be removed, so we'll just pretend like it succeeded
     return Promise.resolve();
   }
 
-  async symlink(targetPath: string, filePath: string, ...x: Array<any>): Promise<void> {
+  async symlink() {
     throw new Error('NeDBClient symlink not supported');
   }
 
-  _errMissing(filePath: string): Error {
+  _errMissing(filePath: string) {
     const e: ErrnoError = new Error(`ENOENT: no such file or directory, scandir '${filePath}'`);
     e.errno = -2;
     e.code = 'ENOENT';

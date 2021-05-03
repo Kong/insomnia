@@ -35,7 +35,7 @@ const _sendMessage = async (reqId: string, envId: string, dispatch: GrpcDispatch
 
   const preparedMessage = await prepareGrpcMessage(reqId, envId);
   ipcRenderer.send(GrpcRequestEventEnum.sendMessage, preparedMessage);
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   dispatch(grpcActions.requestMessage(reqId, preparedMessage.body.text));
 };
 
@@ -47,12 +47,12 @@ const _sendCommit = (reqId: string) => {
   ipcRenderer.send(GrpcRequestEventEnum.commit, reqId);
 };
 
-type ActionHandlers = {
+interface ActionHandlers {
   start: () => Promise<void>;
   stream: () => Promise<void>;
   cancel: () => void;
   commit: () => void;
-};
+}
 
 const useActionHandlers = (
   reqId: string,

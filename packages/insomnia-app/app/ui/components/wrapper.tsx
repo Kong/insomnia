@@ -97,56 +97,57 @@ import WrapperMigration from './wrapper-migration';
 import type { ImportOptions } from '../redux/modules/global';
 import WrapperAnalytics from './wrapper-analytics';
 import { HandleGetRenderContext } from '../../common/render';
+import { RequestGroup } from '../../models/request-group';
 
 const spectral = new Spectral();
 
 export interface WrapperProps {
   // Helper Functions
-  handleActivateRequest: (...args: any[]) => any;
-  handleSetSidebarFilter: (...args: any[]) => any;
-  handleToggleMenuBar: (...args: any[]) => any;
+  handleActivateRequest: Function;
+  handleSetSidebarFilter: Function;
+  handleToggleMenuBar: Function;
   handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
   handleInitializeEntities: () => Promise<void>;
-  handleExportFile: (...args: any[]) => any;
-  handleShowExportRequestsModal: (...args: any[]) => any;
-  handleShowSettingsModal: (...args: any[]) => any;
-  handleExportRequestsToFile: (...args: any[]) => any;
+  handleExportFile: Function;
+  handleShowExportRequestsModal: Function;
+  handleShowSettingsModal: Function;
+  handleExportRequestsToFile: Function;
   handleSetActiveWorkspace: (workspaceId: string | null) => void;
-  handleSetActiveEnvironment: (...args: any[]) => any;
-  handleMoveDoc: (...args: any[]) => any;
-  handleCreateRequest: (...args: any[]) => any;
-  handleDuplicateRequest: (...args: any[]) => any;
-  handleDuplicateRequestGroup: (...args: any[]) => any;
-  handleMoveRequestGroup: (...args: any[]) => any;
-  handleDuplicateWorkspace: (...args: any[]) => any;
-  handleCreateRequestGroup: (...args: any[]) => any;
-  handleGenerateCodeForActiveRequest: (...args: any[]) => any;
-  handleGenerateCode: (...args: any[]) => any;
-  handleCopyAsCurl: (...args: any[]) => any;
-  handleCreateRequestForWorkspace: (...args: any[]) => any;
-  handleSetRequestPaneRef: (...args: any[]) => any;
-  handleSetResponsePaneRef: (...args: any[]) => any;
-  handleSetResponsePreviewMode: (...args: any[]) => any;
-  handleRender: (...args: any[]) => any;
+  handleSetActiveEnvironment: Function;
+  handleMoveDoc: Function;
+  handleCreateRequest: (id: string) => any;
+  handleDuplicateRequest: Function;
+  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
+  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
+  handleDuplicateWorkspace: Function;
+  handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
+  handleGenerateCodeForActiveRequest: Function;
+  handleGenerateCode: Function;
+  handleCopyAsCurl: Function;
+  handleCreateRequestForWorkspace: Function;
+  handleSetRequestPaneRef: Function;
+  handleSetResponsePaneRef: Function;
+  handleSetResponsePreviewMode: Function;
+  handleRender: (arg0: string | Record<string, any>) => Promise<string | Record<string, any>>;;
   handleGetRenderContext: HandleGetRenderContext;
-  handleSetResponseFilter: (...args: any[]) => any;
-  handleSetActiveResponse: (...args: any[]) => any;
-  handleSetSidebarRef: (...args: any[]) => any;
+  handleSetResponseFilter: Function;
+  handleSetActiveResponse: Function;
+  handleSetSidebarRef: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleStartDragSidebar: (...args: any[]) => any;
-  handleResetDragSidebar: (...args: any[]) => any;
-  handleStartDragPaneHorizontal: (...args: any[]) => any;
-  handleStartDragPaneVertical: (...args: any[]) => any;
-  handleResetDragPaneHorizontal: (...args: any[]) => any;
-  handleResetDragPaneVertical: (...args: any[]) => any;
-  handleSetRequestGroupCollapsed: (...args: any[]) => any;
-  handleSetRequestPinned: (...args: any[]) => any;
-  handleSendRequestWithEnvironment: (...args: any[]) => any;
-  handleSendAndDownloadRequestWithEnvironment: (...args: any[]) => any;
-  handleUpdateRequestMimeType: (...args: any[]) => any;
-  handleUpdateDownloadPath: (...args: any[]) => any;
+  handleStartDragSidebar: Function;
+  handleResetDragSidebar: Function;
+  handleStartDragPaneHorizontal: Function;
+  handleStartDragPaneVertical: Function;
+  handleResetDragPaneHorizontal: Function;
+  handleResetDragPaneVertical: Function;
+  handleSetRequestGroupCollapsed: Function;
+  handleSetRequestPinned: Function;
+  handleSendRequestWithEnvironment: Function;
+  handleSendAndDownloadRequestWithEnvironment: Function;
+  handleUpdateRequestMimeType: Function;
+  handleUpdateDownloadPath: Function;
   handleSetActiveActivity: (activity: GlobalActivity) => void;
   handleGoToNextActivity: () => void;
   // Properties
@@ -203,11 +204,12 @@ interface State {
   activeGitBranch: string;
 }
 
-const rUpdate = (request, ...args) => {
+const rUpdate = (request, ...args: Partial<Request>[]) => {
   if (!request) {
     throw new Error('Tried to update null request');
   }
 
+  // @ts-expect-error -- TSCONVERSION
   return models.request.update(request, ...args);
 };
 
@@ -221,7 +223,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   // Request updaters
-  async _handleForceUpdateRequest(r: Request, patch: Record<string, any>): Promise<Request> {
+  async _handleForceUpdateRequest(r: Request, patch: Record<string, any>) {
     const newRequest = await rUpdate(r, patch);
     // Give it a second for the app to render first. If we don't wait, it will refresh
     // on the old request and won't catch the newest one.
@@ -230,53 +232,47 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     return newRequest;
   }
 
-  _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]): Promise<Request> {
+  _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return this._handleForceUpdateRequest(r, {
       headers,
     });
   }
 
-  async _handleUpdateApiSpec(s: ApiSpec): Promise<void> {
+  async _handleUpdateApiSpec(s: ApiSpec) {
     await models.apiSpec.update(s);
   }
 
-  static _handleUpdateRequestBody(r: Request, body: RequestBody): Promise<Request> {
+  static _handleUpdateRequestBody(r: Request, body: RequestBody) {
     return rUpdate(r, {
       body,
     });
   }
 
-  static _handleUpdateRequestParameters(
-    r: Request,
-    parameters: RequestParameter[],
-  ): Promise<Request> {
+  static _handleUpdateRequestParameters(r: Request, parameters: RequestParameter[]) {
     return rUpdate(r, {
       parameters,
     });
   }
 
-  static _handleUpdateRequestAuthentication(
-    r: Request,
-    authentication: RequestAuthentication,
-  ): Promise<Request> {
+  static _handleUpdateRequestAuthentication(r: Request, authentication: RequestAuthentication) {
     return rUpdate(r, {
       authentication,
     });
   }
 
-  static _handleUpdateRequestHeaders(r: Request, headers: RequestHeader[]): Promise<Request> {
+  static _handleUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return rUpdate(r, {
       headers,
     });
   }
 
-  static _handleUpdateRequestMethod(r: Request, method: string): Promise<Request> {
+  static _handleUpdateRequestMethod(r: Request, method: string) {
     return rUpdate(r, {
       method,
     });
   }
 
-  static _handleUpdateRequestUrl(r: Request, url: string): Promise<Request> {
+  static _handleUpdateRequestUrl(r: Request, url: string) {
     // Don't update if we don't need to
     if (r.url === url) {
       return Promise.resolve(r);
@@ -287,7 +283,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  async _handleImport(text: string): Promise<Request | null> {
+  async _handleImport(text: string) {
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -365,39 +361,37 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   // Settings updaters
-  _handleUpdateSettingsShowPasswords(showPasswords: boolean): Promise<Settings> {
+  _handleUpdateSettingsShowPasswords(showPasswords: boolean) {
     return sUpdate(this.props.settings, {
       showPasswords,
     });
   }
 
-  _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean): Promise<Settings> {
+  _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean) {
     return sUpdate(this.props.settings, {
       useBulkHeaderEditor,
     });
   }
 
-  _handleUpdateSettingsUseBulkParametersEditor(
-    useBulkParametersEditor: boolean,
-  ): Promise<Settings> {
+  _handleUpdateSettingsUseBulkParametersEditor(useBulkParametersEditor: boolean) {
     return sUpdate(this.props.settings, {
       useBulkParametersEditor,
     });
   }
 
-  _handleImportFile(options?: ImportOptions): void {
+  _handleImportFile(options?: ImportOptions) {
     this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, options);
   }
 
-  _handleImportUri(uri: string, options?: ImportOptions): void {
+  _handleImportUri(uri: string, options?: ImportOptions) {
     this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, options);
   }
 
-  _handleImportClipBoard(options?: ImportOptions): void {
+  _handleImportClipBoard(options?: ImportOptions) {
     this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, options);
   }
 
-  _handleSetActiveResponse(responseId: string | null): void {
+  _handleSetActiveResponse(responseId: string | null) {
     if (!this.props.activeRequest) {
       console.warn('Tried to set active response when request not active');
       return;
@@ -406,25 +400,25 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     this.props.handleSetActiveResponse(this.props.activeRequest._id, responseId);
   }
 
-  _handleShowEnvironmentsModal(): void {
+  _handleShowEnvironmentsModal() {
     showModal(WorkspaceEnvironmentsEditModal, this.props.activeWorkspace);
   }
 
-  _handleShowCookiesModal(): void {
+  _handleShowCookiesModal() {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  static _handleShowModifyCookieModal(cookie: Record<string, any>): void {
+  static _handleShowModifyCookieModal(cookie: Record<string, any>) {
     showModal(CookieModifyModal, cookie);
   }
 
-  _handleShowRequestSettingsModal(): void {
+  _handleShowRequestSettingsModal() {
     showModal(RequestSettingsModal, {
       request: this.props.activeRequest,
     });
   }
 
-  async _handleDeleteResponses(requestId: string, environmentId: string | null): Promise<void> {
+  async _handleDeleteResponses(requestId: string, environmentId: string | null) {
     const { handleSetActiveResponse, activeRequest } = this.props;
     await models.response.removeForRequest(requestId, environmentId);
 
@@ -433,7 +427,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     }
   }
 
-  async _handleDeleteResponse(response: Response): Promise<void> {
+  async _handleDeleteResponse(response: Response) {
     if (response) {
       await models.response.remove(response);
     }
@@ -444,7 +438,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     }
   }
 
-  async _handleRemoveActiveWorkspace(): Promise<void> {
+  async _handleRemoveActiveWorkspace() {
     const { workspaces, activeWorkspace } = this.props;
 
     if (workspaces.length <= 1) {
@@ -465,7 +459,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     }
   }
 
-  async _handleActiveWorkspaceClearAllResponses(): Promise<void> {
+  async _handleActiveWorkspaceClearAllResponses() {
     const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
     const requests = docs.filter(doc => doc.type === models.request.type);
 
@@ -474,14 +468,14 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     }
   }
 
-  _handleSendRequestWithActiveEnvironment(): void {
+  _handleSendRequestWithActiveEnvironment() {
     const { activeRequest, activeEnvironment, handleSendRequestWithEnvironment } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : 'n/a';
     handleSendRequestWithEnvironment(activeRequestId, activeEnvironmentId);
   }
 
-  async _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string): Promise<void> {
+  async _handleSendAndDownloadRequestWithActiveEnvironment(filename?: string) {
     const {
       activeRequest,
       activeEnvironment,
@@ -496,13 +490,13 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     );
   }
 
-  _handleSetPreviewMode(previewMode: string): void {
+  _handleSetPreviewMode(previewMode: string) {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponsePreviewMode(activeRequestId, previewMode);
   }
 
-  _handleSetResponseFilter(filter: string): void {
+  _handleSetResponseFilter(filter: string) {
     const activeRequest = this.props.activeRequest;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     this.props.handleSetResponseFilter(activeRequestId, filter);
@@ -523,7 +517,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     handleSetActiveEnvironment(id);
   }
 
-  _forceRequestPaneRefresh(): void {
+  _forceRequestPaneRefresh() {
     this.setState({
       forceRefreshKey: Date.now(),
     });
@@ -540,7 +534,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     trackPageView(`/${activity || ''}`);
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: WrapperProps) {
     // We're using activities as page views so here we monitor
     // for a change in activity and send it as a pageview.
     const { activity } = this.props;
@@ -582,13 +576,14 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       workspaces,
     } = this.props;
     // Setup git sync dropdown for use in Design/Debug pages
-    let gitSyncDropdown = null;
+    let gitSyncDropdown: JSX.Element | null = null;
 
     if (gitVCS) {
       gitSyncDropdown = (
         <GitSyncDropdown
           className="margin-left"
           workspace={activeWorkspace}
+          // @ts-expect-error this prop is unused
           dropdownButtonClassName="btn--clicky-small btn-sync btn-utility"
           gitRepository={activeGitRepository}
           vcs={gitVCS}

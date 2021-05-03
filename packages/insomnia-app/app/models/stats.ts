@@ -1,15 +1,20 @@
-import { $Shape } from 'utility-types';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
 import type { RequestGroup } from './request-group';
 import { isRequest, isGrpcRequest } from './helpers/is-model';
+
 export const name = 'Stats';
+
 export const type = 'Stats';
+
 export const prefix = 'sta';
+
 export const canDuplicate = false;
+
 export const canSync = false;
-type BaseStats = {
+
+interface BaseStats {
   currentLaunch: number | null;
   lastLaunch: number | null;
   currentVersion: string | null;
@@ -18,8 +23,10 @@ type BaseStats = {
   createdRequests: number;
   deletedRequests: number;
   executedRequests: number;
-};
+}
+
 export type Stats = BaseModel & BaseStats;
+
 export function init(): BaseStats {
   return {
     currentLaunch: null,
@@ -32,18 +39,22 @@ export function init(): BaseStats {
     executedRequests: 0,
   };
 }
-export function migrate(doc: Stats): Stats {
+
+export function migrate(doc: Stats) {
   return doc;
 }
-export function create(patch: $Shape<Stats> = {}): Promise<Stats> {
-  return db.docCreate(type, patch);
+
+export function create(patch: Partial<Stats> = {}) {
+  return db.docCreate<Stats>(type, patch);
 }
-export async function update(patch: $Shape<Stats>): Promise<Stats> {
+
+export async function update(patch: Partial<Stats>) {
   const stats = await get();
-  return db.docUpdate(stats, patch);
+  return db.docUpdate<Stats>(stats, patch);
 }
-export async function get(): Promise<Stats> {
-  const results = await db.all(type);
+
+export async function get() {
+  const results = await db.all<Stats>(type) || [];
 
   if (results.length === 0) {
     return create();
@@ -51,11 +62,12 @@ export async function get(): Promise<Stats> {
     return results[0];
   }
 }
+
 export async function incrementRequestStats({
   createdRequests,
   deletedRequests,
   executedRequests,
-}: $Shape<Stats>) {
+}: Partial<Stats>) {
   const stats = await get();
   await update({
     ...(createdRequests && {
@@ -69,21 +81,25 @@ export async function incrementRequestStats({
     }),
   });
 }
+
 export async function incrementCreatedRequests() {
   await incrementRequestStats({
     createdRequests: 1,
   });
 }
+
 export async function incrementDeletedRequests() {
   await incrementRequestStats({
     deletedRequests: 1,
   });
 }
+
 export async function incrementExecutedRequests() {
   await incrementRequestStats({
     executedRequests: 1,
   });
 }
+
 export async function incrementCreatedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.withDescendants(doc);
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
@@ -91,6 +107,7 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
     createdRequests: requests.length,
   });
 }
+
 export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup) {
   const docs = await db.withDescendants(doc);
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));

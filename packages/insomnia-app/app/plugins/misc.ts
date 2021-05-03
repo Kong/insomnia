@@ -3,6 +3,7 @@ import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
 import { getAppDefaultTheme } from '../common/constants';
+
 interface ThemeBlock {
   background?: {
     default: string;
@@ -32,6 +33,7 @@ interface ThemeBlock {
     xl?: string;
   };
 }
+
 type ThemeInner = ThemeBlock & {
   rawCss?: string;
   styles?:
@@ -53,12 +55,14 @@ type ThemeInner = ThemeBlock & {
       }
     | null;
 };
+
 export interface PluginTheme {
   name: string;
   displayName: string;
   theme: ThemeInner;
 }
-export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
+
+export async function generateThemeCSS(theme: PluginTheme) {
   const renderedTheme: ThemeInner = await render(
     theme.theme,
     theme.theme,
@@ -120,7 +124,7 @@ export async function generateThemeCSS(theme: PluginTheme): Promise<string> {
   return css;
 }
 
-function getThemeBlockCSS(block?: ThemeBlock): string {
+function getThemeBlockCSS(block?: ThemeBlock) {
   if (!block) {
     return '';
   }
@@ -216,7 +220,7 @@ function wrapStyles(theme: string, selector: string, styles: string) {
   ].join('\n');
 }
 
-export function getColorScheme(settings: Settings): ColorScheme {
+export function getColorScheme(settings: Settings) {
   if (!settings.autoDetectColorScheme) {
     return 'default';
   }
@@ -231,7 +235,8 @@ export function getColorScheme(settings: Settings): ColorScheme {
 
   return 'default';
 }
-export async function applyColorScheme(settings: Settings): Promise<void> {
+
+export async function applyColorScheme(settings: Settings) {
   const scheme = getColorScheme(settings);
 
   if (scheme === 'light') {
@@ -242,6 +247,7 @@ export async function applyColorScheme(settings: Settings): Promise<void> {
     await setTheme(settings.theme);
   }
 }
+
 export async function setTheme(themeName: string) {
   if (!document) {
     return;
@@ -283,6 +289,7 @@ export async function setTheme(themeName: string) {
     s.innerHTML = themeCSS;
   }
 }
+
 export async function setFont(settings: Record<string, any>) {
   if (!document) {
     return;
@@ -299,6 +306,7 @@ export async function setFont(settings: Record<string, any>) {
   html.style.setProperty('--font-ligatures', settings.fontVariantLigatures ? 'normal' : 'none');
   html.style.setProperty('font-size', `${settings.fontSize}px`);
 }
+
 const _baseTheme = {
   background: {
     default: '#fff',

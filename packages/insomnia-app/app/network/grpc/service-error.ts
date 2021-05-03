@@ -21,10 +21,10 @@ export const GrpcStatusEnum = {
 };
 
 type GrpcStatus = $Values<typeof GrpcStatusEnum>;
-export type GrpcStatusObject = {
+export interface GrpcStatusObject {
   code: GrpcStatus;
   details: string;
   metadata: Record<string, any>; // https://grpc.github.io/grpc/node/grpc.Metadata.html
-};
+}
 
 export type ServiceError = GrpcStatusObject & Error;

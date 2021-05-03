@@ -50,11 +50,11 @@ class Tooltip extends PureComponent<Props, State> {
     this._bubble = n;
   }
 
-  _handleStopClick(e: MouseEvent): void {
-    e.stopPropagation();
+  _handleStopClick(event: React.MouseEvent<HTMLDivElement>) {
+    event.stopPropagation();
   }
 
-  _handleMouseEnter(e: MouseEvent): void {
+  _handleMouseEnter() {
     if (this._showTimeout !== null) {
       clearTimeout(this._showTimeout);
     }
@@ -111,7 +111,7 @@ class Tooltip extends PureComponent<Props, State> {
     }, this.props.delay || 400);
   }
 
-  _handleMouseLeave(): void {
+  _handleMouseLeave() {
     if (this._showTimeout !== null) {
       clearTimeout(this._showTimeout);
     }

@@ -495,7 +495,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]): string {
+  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]) {
     let prefix = '';
     let reqGroup: any;
 
@@ -689,7 +689,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  renderActions(actions: Array<NunjucksActionTag> = []) {
+  renderActions(actions: NunjucksActionTag[] = []) {
     return (
       <div className="form-row">
         <div className="form-control">

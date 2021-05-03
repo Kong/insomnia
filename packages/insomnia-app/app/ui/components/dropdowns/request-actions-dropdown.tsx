@@ -128,7 +128,7 @@ class RequestActionsDropdown extends PureComponent<Props, State> {
   render() {
     const {
       request,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       handleShowSettings,
       hotKeyRegistry,
       ...other

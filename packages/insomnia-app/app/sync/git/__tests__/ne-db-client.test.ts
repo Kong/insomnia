@@ -143,12 +143,12 @@ describe('NeDBClient', () => {
         type: models.environment.type,
         parentId: workspaceId,
       };
-      const filePath = path.join(GIT_INSOMNIA_DIR, env.type, `env_2.yml`);
+      const filePath = path.join(GIT_INSOMNIA_DIR, env.type, 'env_2.yml');
       // Act
       const promiseResult = neDbClient.writeFile(filePath, YAML.stringify(env));
       // Assert
       await expect(promiseResult).rejects.toThrowError(
-        `Doc _id does not match file path [env_1 != env_2]`,
+        'Doc _id does not match file path [env_1 != env_2]',
       );
     });
 
@@ -166,7 +166,7 @@ describe('NeDBClient', () => {
       const promiseResult = neDbClient.writeFile(filePath, YAML.stringify(env));
       // Assert
       await expect(promiseResult).rejects.toThrowError(
-        `Doc type does not match file path [Environment != Request]`,
+        'Doc type does not match file path [Environment != Request]',
       );
     });
   });

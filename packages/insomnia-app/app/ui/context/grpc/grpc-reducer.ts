@@ -12,15 +12,15 @@ import { GrpcActionTypeEnum } from './grpc-actions';
 import type { GrpcStatusObject, ServiceError } from '../../../network/grpc/service-error';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 
-export type GrpcRequestState = {
+export interface GrpcRequestState {
   running: boolean;
-  requestMessages: Array<GrpcMessage>;
-  responseMessages: Array<GrpcMessage>;
+  requestMessages: GrpcMessage[];
+  responseMessages: GrpcMessage[];
   status?: GrpcStatusObject;
   error?: ServiceError;
-  methods: Array<GrpcMethodDefinition>;
+  methods: GrpcMethodDefinition[];
   reloadMethods: boolean;
-};
+}
 
 // TODO: delete from here when deleting a request - INS-288
 export type GrpcState = Record<string, GrpcRequestState>;
@@ -42,7 +42,7 @@ const CLEAR_GRPC_REQUEST_STATE: Partial<GrpcRequestState> = {
   error: undefined,
 };
 
-// @ts-expect-error
+// @ts-expect-error -- TSCONVERSION
 const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestState): State => ({
   ...state,
   [requestId]: requestState,
@@ -73,7 +73,7 @@ const multiRequestReducer = (state: GrpcState, action: GrpcActionMany): GrpcStat
 };
 
 const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState => {
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   const requestId = action.requestId;
   const oldState = findGrpcRequestState(state, requestId);
 
@@ -91,7 +91,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.requestMessage: {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       const { payload }: RequestMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -100,7 +100,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.responseMessage: {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       const { payload }: ResponseMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -109,13 +109,13 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.error: {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       const { payload }: ErrorAction = action;
       return _patch(state, requestId, { ...oldState, error: payload });
     }
 
     case GrpcActionTypeEnum.status: {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       const { payload }: StatusAction = action;
       return _patch(state, requestId, { ...oldState, status: payload });
     }
@@ -125,7 +125,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.loadMethods: {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       const { payload }: LoadMethodsAction = action;
       return _patch(state, requestId, { ...oldState, methods: payload, reloadMethods: false });
     }
@@ -148,9 +148,9 @@ export const grpcReducer = (
     return state;
   }
 
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   return action.requestIds
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     ? multiRequestReducer(state, action)
     : singleRequestReducer(state, action);
 };

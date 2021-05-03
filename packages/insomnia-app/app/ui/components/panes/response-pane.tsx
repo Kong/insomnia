@@ -99,14 +99,14 @@ class ResponsePane extends PureComponent<Props> {
     }
 
     const readStream = models.response.getBodyStream(response);
-    const dataBuffers: Array<any> = [];
+    const dataBuffers: any[] = [];
 
     if (readStream) {
       readStream.on('data', data => {
         dataBuffers.push(data);
       });
       readStream.on('end', () => {
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         const to = fs.createWriteStream(outputPath);
         const finalBuffer = Buffer.concat(dataBuffers);
         to.on('error', err => {
@@ -156,7 +156,7 @@ class ResponsePane extends PureComponent<Props> {
     const readStream = models.response.getBodyStream(response);
 
     if (readStream) {
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       const to = fs.createWriteStream(filePath);
       to.write(headers);
       readStream.pipe(to);
@@ -172,7 +172,7 @@ class ResponsePane extends PureComponent<Props> {
       // Refresh must be called when the editor is visible,
       // so use nextTick to give time for it to be visible.
       process.nextTick(() => {
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         this._responseViewer.refresh();
       });
     }

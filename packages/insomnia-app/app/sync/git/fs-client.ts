@@ -1,25 +1,27 @@
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
+
 type FSWraps =
-  | fs.FSPromise.readFile
-  | fs.FSPromise.writeFile
-  | fs.FSPromise.unlink
-  | fs.FSPromise.readdir
-  | fs.FSPromise.mkdir
-  | fs.FSPromise.rmdir
-  | fs.FSPromise.stat
-  | fs.FSPromise.lstat
-  | fs.FSPromise.readlink
-  | fs.FSPromise.symlink;
+  | typeof fs.promises.readFile
+  | typeof fs.promises.writeFile
+  | typeof fs.promises.unlink
+  | typeof fs.promises.readdir
+  | typeof fs.promises.mkdir
+  | typeof fs.promises.rmdir
+  | typeof fs.promises.stat
+  | typeof fs.promises.lstat
+  | typeof fs.promises.readlink
+  | typeof fs.promises.symlink;
 
 /** This is a client for isomorphic-git. {@link https://isomorphic-git.org/docs/en/fs} */
 export const fsClient = (basePath: string) => {
   console.log(`[fsClient] Created in ${basePath}`);
   mkdirp.sync(basePath);
 
-  const wrap = (fn: FSWraps) => async (filePath: string, ...args: Array<any>): Promise<T> => {
+  const wrap = (fn: FSWraps) => async (filePath: string, ...args: any[]) => {
     const modifiedPath = path.join(basePath, path.normalize(filePath));
+    // @ts-expect-error -- TSCONVERSION
     return fn(modifiedPath, ...args);
   };
 

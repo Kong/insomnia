@@ -179,7 +179,7 @@ class App extends PureComponent<Props, State> {
   private _responsePane: RefObject<any>;
   private _sidebar: RefObject<any>;
   private _wrapper: Wrapper | null = null;
-  private _responseFilterHistorySaveTimeout: NodeJS.Timeout;
+  private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -549,7 +549,6 @@ class App extends PureComponent<Props, State> {
     return render.getRenderContext(activeRequest, environmentId, ancestors);
   }
 
-
   async _handleGetRenderContext(): Promise<RenderContextAndKeys> {
     const context = await this._fetchRenderContext();
     const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
@@ -654,7 +653,7 @@ class App extends PureComponent<Props, State> {
     this._savePaneHeight(paneHeight);
   }
 
-  async _handleSetActiveRequest(activeRequestId: string): Promise<void> {
+  async _handleSetActiveRequest(activeRequestId: string) {
     await this._updateActiveWorkspaceMeta({
       activeRequestId,
     });
@@ -721,7 +720,10 @@ class App extends PureComponent<Props, State> {
     await App._updateRequestMetaByParentId(requestId, {
       responseFilter,
     });
-    clearTimeout(this._responseFilterHistorySaveTimeout);
+
+    if (this._responseFilterHistorySaveTimeout !== null) {
+      clearTimeout(this._responseFilterHistorySaveTimeout);
+    }
     this._responseFilterHistorySaveTimeout = setTimeout(async () => {
       const meta = await models.requestMeta.getByParentId(requestId);
       const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
@@ -834,13 +836,12 @@ class App extends PureComponent<Props, State> {
         }
 
         const to = fs.createWriteStream(filename);
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         const readStream = models.response.getBodyStream(responsePatch);
 
         if (!readStream) {
           return;
         }
-
 
         readStream.pipe(to);
 
@@ -1275,7 +1276,7 @@ class App extends PureComponent<Props, State> {
       const driver = new FileSystemDriver({
         directory,
       });
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
           showModal(SyncMergeModal, {
@@ -1376,13 +1377,13 @@ class App extends PureComponent<Props, State> {
           return;
         }
 
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         if (e.dataTransfer.files.length === 0) {
           console.log('[drag] Ignored drop event because no files present');
           return;
         }
 
-        // @ts-expect-error
+        // @ts-expect-error -- TSCONVERSION
         const file = e.dataTransfer.files[0];
         const { path } = file;
         const uri = `file://${path}`;
@@ -1491,7 +1492,6 @@ class App extends PureComponent<Props, State> {
         <GrpcProvider>
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
-              {/* @ts-expect-error have fun */}
               <Wrapper
                 {...this.props}
                 ref={this._setWrapperRef}
@@ -1564,26 +1564,26 @@ function mapStateToProps(state, props) {
   // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const entitiesLists = selectEntitiesLists(state, props);
   const {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     apiSpecs,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     environments,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     gitRepositories,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     requestGroups,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     requestMetas,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     requestVersions,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     requests,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     workspaceMetas,
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     workspaces,
   } = entitiesLists;
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   const settings = entitiesLists.settings[0];
   // Workspace stuff
   // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
@@ -1692,7 +1692,7 @@ function mapStateToProps(state, props) {
 }
 
 function mapDispatchToProps(dispatch) {
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   const global: any = bindActionCreators(globalActions, dispatch);
   const entities = bindActionCreators(entitiesActions, dispatch);
   return {
@@ -1729,7 +1729,7 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 
   function __updateDoc(doc, patch) {
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     return models.getModel(docToMove.type).update(doc, patch);
   }
 

@@ -105,13 +105,13 @@ export function authorizeUserInWindow(
 
       _parseUrl(currentUrl, 'did-navigate');
     });
-    child.webContents.on('will-redirect', (e, url) => {
+    child.webContents.on('will-redirect', (_error, url) => {
       // Also listen for will-redirect, as some redirections do not trigger 'did-navigate'
       // 'will-redirect' does not cover all cases that 'did-navigate' does, so both events are required
       // GitHub's flow triggers only 'did-navigate', while Microsoft's only 'will-redirect'
       _parseUrl(url, 'will-redirect');
     });
-    child.webContents.on('did-fail-load', (e, errorCode, errorDescription, url) => {
+    child.webContents.on('did-fail-load', (_error, _errorCode, _errorDescription, url) => {
       // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
       _parseUrl(url, 'did-fail-load');
     });

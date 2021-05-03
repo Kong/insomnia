@@ -1,36 +1,47 @@
-import { $Shape } from 'utility-types';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+
 export const name = 'Proto File';
+
 export const type = 'ProtoFile';
+
 export const prefix = 'pf';
+
 export const canDuplicate = true;
+
 export const canSync = true;
-type BaseProtoFile = {
+
+interface BaseProtoFile {
   name: string;
   protoText: string;
-};
+}
+
 export type ProtoFile = BaseModel & BaseProtoFile;
+
 export function init(): BaseProtoFile {
   return {
     name: 'New Proto File',
     protoText: '',
   };
 }
-export function migrate(doc: ProtoFile): ProtoFile {
+
+export function migrate(doc: ProtoFile) {
   return doc;
 }
-export function create(patch: $Shape<ProtoFile> = {}): Promise<ProtoFile> {
+
+export function create(patch: Partial<ProtoFile> = {}) {
   if (!patch.parentId) {
     throw new Error('New ProtoFile missing `parentId`');
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<ProtoFile>(type, patch);
 }
-export function remove(protoFile: ProtoFile): Promise<void> {
+
+export function remove(protoFile: ProtoFile) {
   return db.remove(protoFile);
 }
-export async function batchRemoveIds(ids: Array<string>): Promise<void> {
+
+export async function batchRemoveIds(ids: string[]) {
   const files = await db.find(type, {
     _id: {
       $in: ids,
@@ -41,24 +52,23 @@ export async function batchRemoveIds(ids: Array<string>): Promise<void> {
     remove: files,
   });
 }
-export function update(protoFile: ProtoFile, patch: $Shape<ProtoFile> = {}): Promise<ProtoFile> {
-  return db.docUpdate(protoFile, patch);
+
+export function update(protoFile: ProtoFile, patch: Partial<ProtoFile> = {}) {
+  return db.docUpdate<ProtoFile>(protoFile, patch);
 }
-export function getById(_id: string): Promise<ProtoFile | null> {
-  return db.getWhere(type, {
-    _id,
-  });
+
+export function getById(_id: string) {
+  return db.getWhere<ProtoFile>(type, { _id });
 }
-export function getByParentId(parentId: string): Promise<ProtoFile | null> {
-  return db.getWhere(type, {
-    parentId,
-  });
+
+export function getByParentId(parentId: string) {
+  return db.getWhere<ProtoFile>(type, { parentId });
 }
-export function findByParentId(parentId: string): Promise<Array<ProtoFile>> {
-  return db.find(type, {
-    parentId,
-  });
+
+export function findByParentId(parentId: string) {
+  return db.find<ProtoFile>(type, { parentId });
 }
-export function all(): Promise<Array<ProtoFile>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<ProtoFile>(type);
 }

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import type { BaseDriver } from './base';
+
 export default class FileSystemDriver implements BaseDriver {
   _directory: string;
 
@@ -10,9 +11,9 @@ export default class FileSystemDriver implements BaseDriver {
     console.log(`[FileSystemDriver] Initialized in "${this._directory}"`);
   }
 
-  async hasItem(key: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      fs.stat(this._getKeyPath(key), (err, result) => {
+  async hasItem(key: string) {
+    return new Promise<boolean>((resolve, reject) => {
+      fs.stat(this._getKeyPath(key), err => {
         if (err && err.code === 'ENOENT') {
           resolve(false);
         } else if (err) {
@@ -24,8 +25,8 @@ export default class FileSystemDriver implements BaseDriver {
     });
   }
 
-  setItem(key: string, value: Buffer): Promise<void> {
-    return new Promise((resolve, reject) => {
+  setItem(key: string, value: Buffer) {
+    return new Promise<void>((resolve, reject) => {
       const finalPath = this._getKeyPath(key);
 
       // Temp path contains randomness to avoid race-condition collisions. This
@@ -49,8 +50,8 @@ export default class FileSystemDriver implements BaseDriver {
     });
   }
 
-  getItem(key: string): Promise<Buffer | null> {
-    return new Promise((resolve, reject) => {
+  getItem(key: string) {
+    return new Promise<Buffer | null>((resolve, reject) => {
       fs.readFile(this._getKeyPath(key), (err, data) => {
         if (err && err.code === 'ENOENT') {
           resolve(null);
@@ -63,8 +64,8 @@ export default class FileSystemDriver implements BaseDriver {
     });
   }
 
-  removeItem(key: string): Promise<void> {
-    return new Promise((resolve, reject) => {
+  removeItem(key: string) {
+    return new Promise<void>((resolve, reject) => {
       fs.unlink(this._getKeyPath(key), err => {
         if (err && err.code === 'ENOENT') {
           resolve();
@@ -77,8 +78,8 @@ export default class FileSystemDriver implements BaseDriver {
     });
   }
 
-  clear(): Promise<void> {
-    return new Promise((resolve, reject) => {
+  clear() {
+    return new Promise<void>((resolve, reject) => {
       fs.readdir(this._directory, (err, names) => {
         if (err) {
           return reject(err);
@@ -93,11 +94,11 @@ export default class FileSystemDriver implements BaseDriver {
     });
   }
 
-  async keys(prefix: string, recursive: boolean): Promise<Array<string>> {
+  async keys(prefix: string, recursive: boolean) {
     const next = dir => {
-      return new Promise(async (resolve, reject) => {
-        let keys: Array<string> = [];
-        let names = [];
+      return new Promise<string>(async (resolve, reject) => {
+        let keys: string[] = [];
+        let names: string[] = [];
 
         try {
           names = fs.readdirSync(dir);
@@ -140,7 +141,7 @@ export default class FileSystemDriver implements BaseDriver {
     return keys;
   }
 
-  _getKeyPath(key: string): string {
+  _getKeyPath(key: string) {
     const p = path.join(this._directory, key);
     // Create base directory
     mkdirp.sync(path.dirname(p));

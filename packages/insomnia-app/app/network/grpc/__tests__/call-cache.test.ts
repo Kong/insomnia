@@ -25,7 +25,7 @@ describe('call-cache', () => {
   it('should log to console if id not found', () => {
     const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const call = callCache.get('abc');
-    expect(consoleLogSpy).toHaveBeenCalledWith(`[gRPC] client call for req=abc not found`);
+    expect(consoleLogSpy).toHaveBeenCalledWith('[gRPC] client call for req=abc not found');
     expect(call).toBe(undefined);
   });
 
@@ -70,7 +70,7 @@ describe('call-cache', () => {
     callCache.clear(id);
     expect(callCache.get(id)).toBe(undefined);
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      `[gRPC] failed to close channel for req=abc because it was not found`,
+      '[gRPC] failed to close channel for req=abc because it was not found',
     );
   });
 });

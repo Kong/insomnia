@@ -5,7 +5,7 @@ describe('gitRepositoryOperations', () => {
   beforeEach(globalBeforeEach);
   describe('createGitRepository', () => {
     it('should create and link to workspace meta', async () => {
-      const repoId = `git_1`;
+      const repoId = 'git_1';
       const workspaceId = 'wrk_1';
       await createGitRepository(workspaceId, {
         _id: repoId,

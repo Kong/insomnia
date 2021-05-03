@@ -1,19 +1,25 @@
-import { $Shape } from 'utility-types';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+
 export const name = 'Folder';
+
 export const type = 'RequestGroup';
+
 export const prefix = 'fld';
+
 export const canDuplicate = true;
+
 export const canSync = true;
-type BaseRequestGroup = {
+interface BaseRequestGroup {
   name: string;
   description: string;
   environment: Record<string, any>;
   environmentPropertyOrder: Record<string, any> | null;
   metaSortKey: number;
-};
+}
+
 export type RequestGroup = BaseModel & BaseRequestGroup;
+
 export function init(): BaseRequestGroup {
   return {
     name: 'New Folder',
@@ -23,40 +29,40 @@ export function init(): BaseRequestGroup {
     metaSortKey: -1 * Date.now(),
   };
 }
+
 export function migrate(doc: RequestGroup) {
   return doc;
 }
-export function create(patch: $Shape<RequestGroup> = {}): Promise<RequestGroup> {
+
+export function create(patch: Partial<RequestGroup> = {}) {
   if (!patch.parentId) {
     throw new Error('New RequestGroup missing `parentId`: ' + JSON.stringify(patch));
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<RequestGroup>(type, patch);
 }
-export function update(
-  requestGroup: RequestGroup,
-  patch: $Shape<RequestGroup> = {},
-): Promise<RequestGroup> {
-  return db.docUpdate(requestGroup, patch);
+
+export function update(requestGroup: RequestGroup, patch: Partial<RequestGroup> = {}) {
+  return db.docUpdate<RequestGroup>(requestGroup, patch);
 }
-export function getById(id: string): Promise<RequestGroup | null> {
-  return db.get(type, id);
+
+export function getById(id: string) {
+  return db.get<RequestGroup>(type, id);
 }
-export function findByParentId(parentId: string): Promise<Array<RequestGroup>> {
-  return db.find(type, {
-    parentId,
-  });
+
+export function findByParentId(parentId: string) {
+  return db.find<RequestGroup>(type, { parentId });
 }
-export function remove(requestGroup: RequestGroup): Promise<void> {
+
+export function remove(requestGroup: RequestGroup) {
   return db.remove(requestGroup);
 }
-export function all(): Promise<Array<RequestGroup>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<RequestGroup>(type);
 }
-export async function duplicate(
-  requestGroup: RequestGroup,
-  patch: $Shape<RequestGroup> = {},
-): Promise<RequestGroup> {
+
+export async function duplicate(requestGroup: RequestGroup, patch: Partial<RequestGroup> = {}) {
   if (!patch.name) {
     patch.name = `${requestGroup.name} (Copy)`;
   }
@@ -67,16 +73,19 @@ export async function duplicate(
       $gt: requestGroup.metaSortKey,
     },
   };
-  const [nextRequestGroup] = await db.find(type, q, {
+
+  const [nextRequestGroup] = await db.find<RequestGroup>(type, q, {
     metaSortKey: 1,
   });
+
   const nextSortKey = nextRequestGroup
     ? nextRequestGroup.metaSortKey
     : requestGroup.metaSortKey + 100;
+
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - requestGroup.metaSortKey) / 2;
   const metaSortKey = requestGroup.metaSortKey + sortKeyIncrement;
-  return db.duplicate(requestGroup, {
+  return db.duplicate<RequestGroup>(requestGroup, {
     metaSortKey,
     ...patch,
   });

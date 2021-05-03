@@ -54,6 +54,7 @@ class Editor extends PureComponent<Props, State> {
   _focusedPairId: string | null = null;
   _focusedField: string | null = NAME;
   _rows: (typeof KeyValueEditorRow)[] = [];
+  _triggerTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
     super(props);
@@ -180,7 +181,7 @@ class Editor extends PureComponent<Props, State> {
     this._addPair();
   }
 
-  _handleKeyDown(pair, e, value) {
+  _handleKeyDown(_pair, e, value) {
     if (e.metaKey || e.ctrlKey) {
       return;
     }
@@ -212,7 +213,9 @@ class Editor extends PureComponent<Props, State> {
         pairs,
       },
       () => {
-        clearTimeout(this._triggerTimeout);
+        if (this._triggerTimeout !== null) {
+          clearTimeout(this._triggerTimeout);
+        }
         this._triggerTimeout = setTimeout(() => {
           this.props.onChange(pairs);
         }, DEBOUNCE_MILLIS);

@@ -8,7 +8,7 @@ export function init(
   network: Record<string, any>;
 } {
   const network = {
-    async sendRequest(request: Request, extraInfo?: ExtraRenderInfo): Promise<Response> {
+    async sendRequest(request: Request, extraInfo?: ExtraRenderInfo) {
       const responsePatch = await send(request._id, activeEnvironmentId || undefined, extraInfo);
       const settings = await models.settings.getOrCreate();
       return models.response.create(responsePatch, settings.maxHistoryResponses);

@@ -70,7 +70,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
     this._input = n;
   }
 
-  _handleMetaClickSend(e: MouseEvent) {
+  _handleMetaClickSend(e: React.MouseEvent<HTMLDivElement>) {
     e.preventDefault();
     this._dropdown && this._dropdown.show();
   }
@@ -87,7 +87,9 @@ class RequestUrlBar extends PureComponent<Props, State> {
   }
 
   _handleUrlChange(url: string) {
-    clearTimeout(this._urlChangeDebounceTimeout);
+    if (this._urlChangeDebounceTimeout !== null) {
+      clearTimeout(this._urlChangeDebounceTimeout);
+    }
     this._urlChangeDebounceTimeout = setTimeout(async () => {
       const pastedText = this._lastPastedText;
 
@@ -221,7 +223,9 @@ class RequestUrlBar extends PureComponent<Props, State> {
   }
 
   _handleStopTimeout() {
-    clearTimeout(this._sendTimeout);
+    if (this._sendTimeout !== null) {
+      clearTimeout(this._sendTimeout);
+    }
 
     if (this.state.currentTimeout) {
       this.setState({
@@ -236,7 +240,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
     this._handleStopInterval();
   }
 
-  _handleClickSend(e: MouseEvent) {
+  _handleClickSend(e: React.MouseEvent<HTMLDivElement>) {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
 
     // If we're pressing a meta key, let the dropdown open

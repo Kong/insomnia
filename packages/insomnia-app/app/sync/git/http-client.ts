@@ -4,7 +4,7 @@ import { axiosRequest } from '../../network/axios-request';
 export const httpClient = {
   request: async config => {
     let response;
-    let body = null;
+    let body: Buffer | null = null;
 
     if (Array.isArray(config.body)) {
       body = Buffer.concat(config.body);

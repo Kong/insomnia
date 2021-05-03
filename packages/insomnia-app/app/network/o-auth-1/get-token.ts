@@ -16,25 +16,25 @@ import { CONTENT_TYPE_FORM_URLENCODED } from '../../common/constants';
 
 function hashFunction(signatureMethod: OAuth1SignatureMethod) {
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA1) {
-    return function(baseString: string, key: string): string {
+    return function(baseString: string, key: string) {
       return crypto.createHmac('sha1', key).update(baseString).digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_HMAC_SHA256) {
-    return function(baseString: string, key: string): string {
+    return function(baseString: string, key: string) {
       return crypto.createHmac('sha256', key).update(baseString).digest('base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_RSA_SHA1) {
-    return function(baseString: string, privatekey: string): string {
+    return function(baseString: string, privatekey: string) {
       return crypto.createSign('RSA-SHA1').update(baseString).sign(privatekey, 'base64');
     };
   }
 
   if (signatureMethod === SIGNATURE_METHOD_PLAINTEXT) {
-    return function(baseString: string): string {
+    return function(baseString: string) {
       return baseString;
     };
   }

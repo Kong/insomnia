@@ -3,7 +3,8 @@ import * as db from '../../common/database';
 import { isDesign } from './is-model';
 import type { Workspace } from '../workspace';
 import type { ApiSpec } from '../api-spec';
-export async function rename(w: Workspace, s: ApiSpec, name: string): Promise<void> {
+
+export async function rename(w: Workspace, s: ApiSpec, name: string) {
   if (isDesign(w)) {
     await models.apiSpec.update(s, {
       fileName: name,
@@ -14,7 +15,8 @@ export async function rename(w: Workspace, s: ApiSpec, name: string): Promise<vo
     });
   }
 }
-export async function duplicate(w: Workspace, name: string): Promise<Workspace> {
+
+export async function duplicate(w: Workspace, name: string) {
   const newWorkspace = await db.duplicate(w, {
     name,
   });

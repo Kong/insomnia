@@ -27,6 +27,7 @@ import ResponseDebugModal from '../../modals/response-debug-modal';
 import Tooltip from '../../tooltip';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
 import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
+import { HandleGetRenderContext } from '../../../../common/render';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
@@ -39,11 +40,17 @@ interface GraphQLBody {
   operationName?: string;
 }
 
+interface ActiveReference {
+  type: GraphQLType | null;
+  argument: GraphQLArgument | null;
+  field: GraphQLField<any, any> | null;
+}
+
 interface Props {
-  onChange: (...args: any[]) => any;
+  onChange: Function;
   content: string;
-  render: ((...args: any[]) => any) | null;
-  getRenderContext: ((...args: any[]) => any) | null;
+  render?: Function;
+  getRenderContext?: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -66,11 +73,7 @@ interface State {
   variablesSyntaxError: string;
   automaticFetch: boolean;
   explorerVisible: boolean;
-  activeReference: null | {
-    type: GraphQLType | null;
-    argument: GraphQLArgument | null;
-    field: GraphQLField<any, any> | null;
-  };
+  activeReference: null | ActiveReference;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -162,8 +165,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  _handleClickReference(reference: Record<string, any>, e: MouseEvent) {
-    e.preventDefault();
+  _handleClickReference(reference: ActiveReference, event: React.MouseEvent) {
+    event.preventDefault();
     this.setState({
       explorerVisible: true,
       activeReference: reference,
@@ -365,7 +368,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     );
   }
 
-  async _handleToggleAutomaticFetching(): Promise<void> {
+  async _handleToggleAutomaticFetching() {
     const automaticFetch = !this.state.automaticFetch;
     this.setState({
       automaticFetch,
@@ -407,7 +410,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     query: string,
     variables: Record<string, any> | null | undefined,
     operationName: string | null | undefined,
-  ): void {
+  ) {
     this._setDocumentAST(query);
 
     const body: GraphQLBody = {
@@ -442,14 +445,14 @@ class GraphQLEditor extends PureComponent<Props, State> {
     this._highlightOperation(body.operationName || null);
   }
 
-  _handleQueryChange(query: string): void {
+  _handleQueryChange(query: string) {
     // Since we're editing the query, we may be changing the operation name, so
     // Don't pass it to the body change in order to automatically re-detect it
     // based on the current cursor position.
     this._handleBodyChange(query, this.state.body.variables, null);
   }
 
-  _handleVariablesChange(variables: string): void {
+  _handleVariablesChange(variables: string) {
     try {
       const variablesObj = JSON.parse(variables || 'null');
 
@@ -494,7 +497,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     return body;
   }
 
-  static _graphQLToString(body: GraphQLBody): string {
+  static _graphQLToString(body: GraphQLBody) {
     return JSON.stringify(body);
   }
 

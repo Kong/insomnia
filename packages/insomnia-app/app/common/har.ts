@@ -172,7 +172,8 @@ export interface ExportRequest {
   requestId: string;
   environmentId: string | null;
 }
-export async function exportHar(exportRequests: ExportRequest[]): Promise<Har> {
+
+export async function exportHar(exportRequests: ExportRequest[]) {
   // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
   const entries: HarEntry[] = [];
@@ -220,7 +221,7 @@ export async function exportHar(exportRequests: ExportRequest[]): Promise<Har> {
     entries.push(entry);
   }
 
-  return {
+  const har: Har = {
     log: {
       version: '1.2',
       creator: {
@@ -230,8 +231,10 @@ export async function exportHar(exportRequests: ExportRequest[]): Promise<Har> {
       entries: entries,
     },
   };
+  return har;
 }
-export async function exportHarResponse(response: ResponseModel | null): Promise<HarResponse> {
+
+export async function exportHarResponse(response: ResponseModel | null) {
   if (!response) {
     return {
       status: 0,
@@ -249,7 +252,7 @@ export async function exportHarResponse(response: ResponseModel | null): Promise
     };
   }
 
-  return {
+  const harResponse: HarResponse = {
     status: response.statusCode,
     statusText: response.statusMessage,
     httpVersion: 'HTTP/1.1',
@@ -260,12 +263,14 @@ export async function exportHarResponse(response: ResponseModel | null): Promise
     headersSize: -1,
     bodySize: -1,
   };
+  return harResponse;
 }
+
 export async function exportHarRequest(
   requestId: string,
   environmentId: string,
   addContentLength = false,
-): Promise<HarRequest | null> {
+) {
   const request = await models.request.getById(requestId);
 
   if (!request) {
@@ -274,11 +279,12 @@ export async function exportHarRequest(
 
   return exportHarWithRequest(request, environmentId, addContentLength);
 }
+
 export async function exportHarWithRequest(
   request: Request,
   environmentId: string | null,
   addContentLength = false,
-): Promise<HarRequest | null> {
+) {
   try {
     const renderResult = await getRenderedRequestAndContext(request, environmentId);
     const renderedRequest = await _applyRequestPluginHooks(
@@ -298,7 +304,7 @@ export async function exportHarWithRequest(
 async function _applyRequestPluginHooks(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-): Promise<RenderedRequest> {
+) {
   let newRenderedRequest = renderedRequest;
 
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
@@ -323,7 +329,7 @@ async function _applyRequestPluginHooks(
 export async function exportHarWithRenderedRequest(
   renderedRequest: RenderedRequest,
   addContentLength = false,
-): Promise<HarRequest> {
+) {
   const url = smartEncodeUrl(renderedRequest.url, renderedRequest.settingEncodeUrl);
 
   if (addContentLength) {
@@ -352,7 +358,7 @@ export async function exportHarWithRenderedRequest(
     }
   }
 
-  return {
+  const harRequest: HarRequest = {
     method: renderedRequest.method,
     url,
     httpVersion: 'HTTP/1.1',
@@ -364,17 +370,18 @@ export async function exportHarWithRenderedRequest(
     bodySize: -1,
     settingEncodeUrl: renderedRequest.settingEncodeUrl,
   };
+  return harRequest;
 }
 
-function getRequestCookies(renderedRequest: RenderedRequest): HarCookie[] {
+function getRequestCookies(renderedRequest: RenderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = jar.getCookiesSync(renderedRequest.url);
-  return domainCookies.map(mapCookie);
+  const harCookies: HarCookie[] = domainCookies.map(mapCookie);
+  return harCookies;
 }
 
-function getReponseCookies(response: ResponseModel): HarCookie[] {
+function getReponseCookies(response: ResponseModel) {
   const headers = response.headers.filter(Boolean) as HarCookie[];
-  // @ts-expect-error -- TSCONVERSION
   return getSetCookieHeaders(headers)
     .map(harCookie => {
       let cookie: null | undefined | toughCookie = null;
@@ -392,7 +399,7 @@ function getReponseCookies(response: ResponseModel): HarCookie[] {
     .filter(Boolean);
 }
 
-function mapCookie(cookie: Cookie): HarCookie {
+function mapCookie(cookie: Cookie) {
   const harCookie: HarCookie = {
     name: cookie.key,
     value: cookie.value,
@@ -434,50 +441,44 @@ function mapCookie(cookie: Cookie): HarCookie {
   return harCookie;
 }
 
-function getResponseContent(response: ResponseModel): HarContent {
+function getResponseContent(response: ResponseModel) {
   let body = models.response.getBodyBuffer(response);
 
   if (body === null) {
     body = Buffer.alloc(0);
   }
 
-  return {
-    // @ts-expect-error -- TSCONVERSION
+  const harContent: HarContent = {
     size: body.byteLength,
     mimeType: response.contentType,
     text: body.toString('utf8'),
   };
+  return harContent;
 }
 
-function getResponseHeaders(response: ResponseModel): HarHeader[] {
+function getResponseHeaders(response: ResponseModel) {
   return response.headers
     .filter(header => header.name)
-    .map(h => {
-      return {
-        name: h.name,
-        value: h.value,
-      };
-    });
+    .map<HarHeader>(header => ({
+      name: header.name,
+      value: header.value,
+    }));
 }
 
-function getRequestHeaders(renderedRequest: RenderedRequest): HarHeader[] {
+function getRequestHeaders(renderedRequest: RenderedRequest) {
   return renderedRequest.headers
     .filter(header => header.name)
-    .map(header => {
-      return {
-        name: header.name,
-        value: header.value,
-      };
-    });
+    .map<HarHeader>(header => ({
+      name: header.name,
+      value: header.value,
+    }));
 }
 
 function getRequestQueryString(renderedRequest: RenderedRequest): HarQueryString[] {
-  return renderedRequest.parameters.map(parameter => {
-    return {
-      name: parameter.name,
-      value: parameter.value,
-    };
-  });
+  return renderedRequest.parameters.map<HarQueryString>(parameter => ({
+    name: parameter.name,
+    value: parameter.value,
+  }));
 }
 
 function getRequestPostData(renderedRequest: RenderedRequest): HarPostData | undefined {

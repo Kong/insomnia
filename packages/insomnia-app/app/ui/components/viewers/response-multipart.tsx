@@ -164,22 +164,23 @@ class ResponseMultipart extends PureComponent<Props, State> {
     }
   }
 
-  _getParts(): Promise<Array<Part>> {
+  _getParts(): Promise<Part[]> {
     return new Promise((resolve, reject) => {
       const { bodyBuffer, contentType } = this.props;
-      const parts: Array<Part> = [];
+      const parts: Part[] = [];
 
       if (!bodyBuffer) {
         return resolve(parts);
       }
 
       const fakeReq = new PassThrough();
-      (fakeReq as Record<string, any>).headers = {
+      // @ts-expect-error -- TSCONVERSION investigate `stream` types
+      fakeReq.headers = {
         'content-type': contentType,
       };
       const form = new multiparty.Form();
       form.on('part', part => {
-        const dataBuffers: Array<any> = [];
+        const dataBuffers: any[] = [];
         part.on('data', data => {
           dataBuffers.push(data);
         });
@@ -205,7 +206,7 @@ class ResponseMultipart extends PureComponent<Props, State> {
       form.on('close', () => {
         resolve(parts);
       });
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       form.parse(fakeReq);
       fakeReq.write(bodyBuffer);
       fakeReq.end();

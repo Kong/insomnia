@@ -68,7 +68,7 @@ app.on('window-all-closed', () => {
   }
 });
 // Mac-only, when the user clicks the doc icon
-app.on('activate', (e, hasVisibleWindows) => {
+app.on('activate', (_error, hasVisibleWindows) => {
   // Create a new window when clicking the doc icon if there isn't one open
   if (!hasVisibleWindows) {
     try {
@@ -96,7 +96,7 @@ function _launchApp() {
     return;
   }
 
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
+  app.on('second-instance', () => {
     // Someone tried to run a second instance, we should focus our window.
     if (window) {
       if (window.isMinimized()) window.restore();
@@ -104,7 +104,7 @@ function _launchApp() {
     }
   });
   // Handle URLs when app already open
-  app.addListener('open-url', (e, url) => {
+  app.addListener('open-url', (_error, url) => {
     window.send('run-command', url);
     // Apparently a timeout is needed because Chrome steals back focus immediately
     // after opening the URL.
@@ -144,7 +144,7 @@ async function _updateFlags({ launches }: Stats) {
   }
 }
 
-async function _trackStats(): Promise<Stats> {
+async function _trackStats() {
   // Handle the stats
   const oldStats = await models.stats.get();
   const stats: Stats = await models.stats.update({

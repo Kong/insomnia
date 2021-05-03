@@ -1,7 +1,7 @@
 import type { HookFn } from '../index';
 import zlib from 'zlib';
 
-const read: HookFn = async function read(extension: string, value: Buffer): Promise<Buffer> {
+const read: HookFn = async function read(extension: string, value: Buffer) {
   if (extension) {
     return value;
   }
@@ -17,7 +17,7 @@ const read: HookFn = async function read(extension: string, value: Buffer): Prom
   });
 };
 
-const write: HookFn = async function read(extension: string, value: Buffer): Promise<Buffer> {
+const write: HookFn = async function read(extension: string, value: Buffer) {
   if (extension) {
     return value;
   }

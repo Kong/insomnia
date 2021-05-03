@@ -20,7 +20,7 @@ CodeMirror.defineExtension(
     );
 
     const debouncedRefreshFn = misc.debounce(refreshFn);
-    this.on('change', (cm, change) => {
+    this.on('change', (_cm, change) => {
       const origin = change.origin || 'unknown';
 
       if (!origin.match(/^[+*]/)) {
@@ -169,13 +169,13 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       let droppedInSameEditor = false;
 
       // Modify paste events so we can merge into them
-      const beforeChangeCb = (cm, change) => {
+      const beforeChangeCb = (_cm, change) => {
         if (change.origin === 'paste') {
           change.origin = '+dnd';
         }
       };
 
-      const dropCb = (cm, e) => {
+      const dropCb = () => {
         droppedInSameEditor = true;
       };
 
@@ -190,7 +190,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
         this.on('beforeChange', beforeChangeCb);
         this.on('drop', dropCb);
       });
-      el.addEventListener('dragend', e => {
+      el.addEventListener('dragend', () => {
         // If dragged within same editor, delete the old reference
         // TODO: Actually only use dropEffect for this logic. For some reason
         // changing it doesn't seem to take affect in Chromium 56 (maybe bug?)

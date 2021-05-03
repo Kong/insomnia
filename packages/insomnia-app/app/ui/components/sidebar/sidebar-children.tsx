@@ -26,13 +26,13 @@ export interface SidebarChildObjects {
 }
 interface Props {
   handleActivateRequest: (...args: any[]) => any;
-  handleCreateRequest: (...args: any[]) => any;
-  handleCreateRequestGroup: (...args: any[]) => any;
+  handleCreateRequest: (id: string) => any;
+  handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
   handleSetRequestPinned: (...args: any[]) => any;
   handleSetRequestGroupCollapsed: (...args: any[]) => any;
   handleDuplicateRequest: (...args: any[]) => any;
-  handleDuplicateRequestGroup: (...args: any[]) => any;
-  handleMoveRequestGroup: (...args: any[]) => any;
+  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
+  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
   handleGenerateCode: (...args: any[]) => any;
   handleCopyAsCurl: (...args: any[]) => any;
   handleRender: (...args: any[]) => any;

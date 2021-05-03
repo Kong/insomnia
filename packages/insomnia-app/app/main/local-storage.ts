@@ -3,11 +3,13 @@ import fs from 'fs';
 import path from 'path';
 
 class LocalStorage {
-  constructor(basePath) {
+  _buffer: Record<string, string> = {};
+  _timeouts: Record<string, NodeJS.Timeout> = {};
+  _basePath: string | null = null;
+
+  constructor(basePath: string) {
     this._basePath = basePath;
     // Debounce writes on a per key basis
-    this._timeouts = {};
-    this._buffer = {};
     mkdirp.sync(basePath);
     console.log(`[localstorage] Initialized at ${basePath}`);
   }
@@ -27,7 +29,7 @@ class LocalStorage {
     const path = this._getKeyPath(key);
 
     try {
-      contents = fs.readFileSync(path);
+      contents = String(fs.readFileSync(path));
     } catch (e) {
       if (e.code === 'ENOENT') {
         this.setItem(key, defaultObj);
@@ -65,6 +67,7 @@ class LocalStorage {
   }
 
   _getKeyPath(key) {
+    // @ts-expect-error -- TSCONVERSION this appears to be a genuine error
     return path.join(this._basePath, key);
   }
 }

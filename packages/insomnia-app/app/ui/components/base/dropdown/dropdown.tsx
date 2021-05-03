@@ -66,7 +66,7 @@ class Dropdown extends PureComponent<Props, State> {
 
       const button = this._dropdownList.querySelector(selector);
 
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       button && button.click();
     }
   }
@@ -164,7 +164,7 @@ class Dropdown extends PureComponent<Props, State> {
     const dropdownList = this._dropdownList;
 
     // Compute the size of all the menus
-    let dropdownBtnRect = this._node.getBoundingClientRect();
+    let dropdownBtnRect = this._node?.getBoundingClientRect();
 
     const bodyRect = document.body.getBoundingClientRect();
     const dropdownListRect = dropdownList.getBoundingClientRect();
@@ -295,7 +295,7 @@ class Dropdown extends PureComponent<Props, State> {
     this.props.onHide && this.props.onHide();
   }
 
-  show(filterVisible = false, forcedPosition = null) {
+  show(filterVisible = false, forcedPosition: { x: number; y: number } | null = null) {
     const bodyHeight = document.body.getBoundingClientRect().height;
 
     const dropdownTop = this._node.getBoundingClientRect().top;

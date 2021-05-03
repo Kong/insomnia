@@ -5,8 +5,10 @@ import childProcess from 'child_process';
 import { getTempDir, isDevelopment, isWindows, PLUGIN_PATH } from '../common/constants';
 import mkdirp from 'mkdirp';
 import path from 'path';
+
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
-export default async function(lookupName: string): Promise<void> {
+
+export default async function(lookupName: string) {
   return new Promise(async (resolve, reject) => {
     let info: Record<string, any> = {};
 
@@ -53,7 +55,7 @@ export default async function(lookupName: string): Promise<void> {
   });
 }
 
-async function _isInsomniaPlugin(lookupName: string): Promise<Record<string, any>> {
+async function _isInsomniaPlugin(lookupName: string) {
   return new Promise((resolve, reject) => {
     console.log('[plugins] Fetching module info from npm');
     childProcess.execFile(
@@ -119,12 +121,8 @@ async function _isInsomniaPlugin(lookupName: string): Promise<Record<string, any
   });
 }
 
-async function _installPluginToTmpDir(
-  lookupName: string,
-): Promise<{
-  tmpDir: string;
-}> {
-  return new Promise((resolve, reject) => {
+async function _installPluginToTmpDir(lookupName: string) {
+  return new Promise<{ tmpDir: string }>((resolve, reject) => {
     const tmpDir = path.join(getTempDir(), `${lookupName}-${Date.now()}`);
     mkdirp.sync(tmpDir);
     console.log(`[plugins] Installing plugin to ${tmpDir}`);
@@ -194,7 +192,7 @@ export function containsOnlyDeprecationWarnings(stderr) {
  * @param str The error message
  * @returns {boolean} Returns true if it's a deprecated warning
  */
-export function isDeprecatedDependencies(str: string): boolean {
+export function isDeprecatedDependencies(str: string) {
   // The issue contains the message as it is without the dependency list
   const message = YARN_DEPRECATED_WARN.exec(str)?.groups.issue;
   // Strict check, everything must be matched to be a false positive

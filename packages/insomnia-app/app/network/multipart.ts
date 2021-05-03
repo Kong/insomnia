@@ -4,16 +4,16 @@ import fs from 'fs';
 import path from 'path';
 import type { RequestBodyParameter } from '../models/request';
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
-export async function buildMultipart(params: Array<RequestBodyParameter>) {
+export async function buildMultipart(params: RequestBodyParameter[]) {
   return new Promise(
-    async (resolve: (...args: Array<any>) => any, reject: (...args: Array<any>) => any) => {
+    async (resolve: (...args: any[]) => any, reject: (...args: any[]) => any) => {
       const filePath = path.join(electron.remote.app.getPath('temp'), Math.random() + '.body');
       const writeStream = fs.createWriteStream(filePath);
       const lineBreak = '\r\n';
       let totalSize = 0;
 
-      function addFile(path: string): Promise<void> {
-        return new Promise((resolve, reject) => {
+      function addFile(path: string) {
+        return new Promise<void>((resolve, reject) => {
           let size;
 
           try {

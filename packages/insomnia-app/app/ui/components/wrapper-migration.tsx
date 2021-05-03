@@ -97,7 +97,7 @@ const Options = ({ start, cancel }: OptionsProps) => {
     setOptions(prevOpts => ({ ...prevOpts, [name]: value }));
   }, []);
   const handleSwitchChange = useCallback(
-    (checked: boolean, event: Record<string, any>, id: string) => {
+    (checked: boolean, _event, id: string) => {
       setOptions(prevOpts => ({ ...prevOpts, [id]: checked }));
     },
     [],

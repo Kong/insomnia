@@ -1,14 +1,19 @@
-import { $Shape } from 'utility-types';
 import * as crypto from 'crypto';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
+
 export const name = 'Environment';
+
 export const type = 'Environment';
+
 export const prefix = 'env';
+
 export const canDuplicate = true;
+
 export const canSync = true;
-type BaseEnvironment = {
+
+interface BaseEnvironment {
   name: string;
   data: Record<string, any>;
   dataPropertyOrder: Record<string, any> | null;
@@ -16,8 +21,10 @@ type BaseEnvironment = {
   metaSortKey: number;
   // For sync control
   isPrivate: boolean;
-};
+}
+
 export type Environment = BaseModel & BaseEnvironment;
+
 export function init() {
   return {
     name: 'New Environment',
@@ -28,21 +35,25 @@ export function init() {
     metaSortKey: Date.now(),
   };
 }
-export function migrate(doc: Environment): Environment {
+
+export function migrate(doc: Environment) {
   return doc;
 }
-export function create(patch: $Shape<Environment> = {}): Promise<Environment> {
+
+export function create(patch: Partial<Environment> = {}) {
   if (!patch.parentId) {
     throw new Error(`New Environment missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<Environment>(type, patch);
 }
-export function update(environment: Environment, patch: $Shape<Environment>): Promise<Environment> {
+
+export function update(environment: Environment, patch: Partial<Environment>) {
   return db.docUpdate(environment, patch);
 }
-export function findByParentId(parentId: string): Promise<Array<Environment>> {
-  return db.find(
+
+export function findByParentId(parentId: string) {
+  return db.find<Environment>(
     type,
     {
       parentId,
@@ -52,8 +63,9 @@ export function findByParentId(parentId: string): Promise<Array<Environment>> {
     },
   );
 }
-export async function getOrCreateForWorkspaceId(workspaceId: string): Promise<Environment> {
-  const environments = await db.find(type, {
+
+export async function getOrCreateForWorkspaceId(workspaceId: string) {
+  const environments = await db.find<Environment>(type, {
     parentId: workspaceId,
   });
 
@@ -69,13 +81,16 @@ export async function getOrCreateForWorkspaceId(workspaceId: string): Promise<En
 
   return environments[environments.length - 1];
 }
-export async function getOrCreateForWorkspace(workspace: Workspace): Promise<Environment> {
+
+export async function getOrCreateForWorkspace(workspace: Workspace) {
   return getOrCreateForWorkspaceId(workspace._id);
 }
+
 export function getById(id: string): Promise<Environment | null> {
   return db.get(type, id);
 }
-export async function duplicate(environment: Environment): Promise<Environment> {
+
+export async function duplicate(environment: Environment) {
   const name = `${environment.name} (Copy)`;
   // Get sort key of next environment
   const q = {
@@ -83,9 +98,7 @@ export async function duplicate(environment: Environment): Promise<Environment> 
       $gt: environment.metaSortKey,
     },
   };
-  const [nextEnvironment] = await db.find(type, q, {
-    metaSortKey: 1,
-  });
+  const [nextEnvironment] = await db.find<Environment>(type, q, { metaSortKey: 1 });
   const nextSortKey = nextEnvironment ? nextEnvironment.metaSortKey : environment.metaSortKey + 100;
   // Calculate new sort key
   const metaSortKey = (environment.metaSortKey + nextSortKey) / 2;
@@ -94,9 +107,11 @@ export async function duplicate(environment: Environment): Promise<Environment> 
     metaSortKey,
   });
 }
-export function remove(environment: Environment): Promise<void> {
+
+export function remove(environment: Environment) {
   return db.remove(environment);
 }
-export function all(): Promise<Array<Environment>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<Environment>(type);
 }

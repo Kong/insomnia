@@ -2,11 +2,11 @@ import * as models from '../../../models';
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import path from 'path';
 import fs from 'fs';
-type IngestResult = {
+interface IngestResult {
   createdDir?: ProtoDirectory | null;
-  createdIds: Array<string>;
+  createdIds: string[];
   error?: Error;
-};
+}
 
 class ProtoDirectoryLoader {
   constructor(rootDirPath: string, workspaceId: string) {
@@ -15,12 +15,12 @@ class ProtoDirectoryLoader {
     this.createdIds = [];
   }
 
-  async _parseDir(entryPath: string, parentId: string): Promise<boolean> {
+  async _parseDir(entryPath: string, parentId: string) {
     const result = await this._ingest(entryPath, parentId);
     return Boolean(result);
   }
 
-  async _parseFile(entryPath: string, parentId: string): Promise<boolean> {
+  async _parseFile(entryPath: string, parentId: string) {
     const extension = path.extname(entryPath);
 
     // Ignore if not a .proto file
@@ -75,20 +75,20 @@ class ProtoDirectoryLoader {
     return null;
   }
 
-  async load(): Promise<IngestResult> {
+  async load() {
     try {
       const createdDir = await this._ingest(this.rootDirPath, this.workspaceId);
       return {
         createdDir,
         createdIds: this.createdIds,
         error: null,
-      };
+      } as IngestResult;
     } catch (error) {
       return {
         createdDir: null,
         createdIds: this.createdIds,
         error,
-      };
+      } as IngestResult;
     }
   }
 }

@@ -1,12 +1,17 @@
-import { $Shape } from 'utility-types';
 import * as db from '../common/database';
 import type { BaseModel } from './index';
+
 export const name = 'Client Certificate';
+
 export const type = 'ClientCertificate';
+
 export const prefix = 'crt';
+
 export const canDuplicate = true;
+
 export const canSync = false;
-type BaseClientCertificate = {
+
+interface BaseClientCertificate {
   parentId: string;
   host: string;
   passphrase: string | null;
@@ -16,8 +21,10 @@ type BaseClientCertificate = {
   disabled: boolean;
   // For sync control
   isPrivate: boolean;
-};
+}
+
 export type ClientCertificate = BaseModel & BaseClientCertificate;
+
 export function init(): BaseClientCertificate {
   return {
     parentId: '',
@@ -30,33 +37,40 @@ export function init(): BaseClientCertificate {
     isPrivate: false,
   };
 }
+
 export async function migrate(doc: ClientCertificate) {
   return doc;
 }
-export function create(patch: $Shape<ClientCertificate> = {}): Promise<ClientCertificate> {
+
+export function create(patch: Partial<ClientCertificate> = {}) {
   if (!patch.parentId) {
     throw new Error('New ClientCertificate missing `parentId`: ' + JSON.stringify(patch));
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<ClientCertificate>(type, patch);
 }
+
 export function update(
   cert: ClientCertificate,
-  patch: $Shape<ClientCertificate> = {},
-): Promise<ClientCertificate> {
-  return db.docUpdate(cert, patch);
+  patch: Partial<ClientCertificate> = {},
+) {
+  return db.docUpdate<ClientCertificate>(cert, patch);
 }
-export function getById(id: string): Promise<ClientCertificate | null> {
-  return db.get(type, id);
+
+export function getById(id: string) {
+  return db.get<ClientCertificate>(type, id);
 }
-export function findByParentId(parentId: string): Promise<Array<ClientCertificate>> {
-  return db.find(type, {
+
+export function findByParentId(parentId: string) {
+  return db.find<ClientCertificate>(type, {
     parentId,
   });
 }
-export function remove(cert: ClientCertificate): Promise<void> {
+
+export function remove(cert: ClientCertificate) {
   return db.remove(cert);
 }
-export function all(): Promise<Array<ClientCertificate>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<ClientCertificate>(type);
 }

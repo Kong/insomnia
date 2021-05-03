@@ -7,7 +7,7 @@ export async function createPlugin(
   moduleName: string,
   version: string,
   mainJs: string,
-): Promise<void> {
+) {
   const pluginDir = path.join(PLUGIN_PATH, moduleName);
 
   if (fs.existsSync(pluginDir)) {

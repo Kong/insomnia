@@ -4,11 +4,11 @@ import { generateId } from '../../../common/misc';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 import * as models from '../../../models';
 import * as protoLoader from '../../../network/grpc/proto-loader';
-export type GrpcMessage = {
+export interface GrpcMessage {
   id: string;
   text: string;
   created: number;
-};
+}
 export const GrpcActionTypeEnum = {
   reset: 'reset',
   clear: 'clear',
@@ -23,17 +23,17 @@ export const GrpcActionTypeEnum = {
   status: 'status',
 };
 type GrpcActionType = $Values<typeof GrpcActionTypeEnum>;
-type Action<T extends GrpcActionType> = {
+interface Action<T extends GrpcActionType> {
   type: T;
   requestId: string;
-};
-type ActionMany<T extends GrpcActionType> = {
+}
+interface ActionMany<T extends GrpcActionType> {
   type: T;
-  requestIds: Array<string>;
-};
-type Payload<T> = {
+  requestIds: string[];
+}
+interface Payload<T> {
   payload: T;
-};
+}
 type ResetAction = Action<typeof GrpcActionTypeEnum.reset>;
 type ClearAction = Action<typeof GrpcActionTypeEnum.clear>;
 type StartAction = Action<typeof GrpcActionTypeEnum.start>;
@@ -45,7 +45,7 @@ export type ResponseMessageAction = Action<typeof GrpcActionTypeEnum.responseMes
 export type ErrorAction = Action<typeof GrpcActionTypeEnum.error> & Payload<ServiceError>;
 export type StatusAction = Action<typeof GrpcActionTypeEnum.status> & Payload<GrpcStatusObject>;
 export type LoadMethodsAction = Action<typeof GrpcActionTypeEnum.loadMethods> &
-  Payload<Array<GrpcMethodDefinition>>;
+  Payload<GrpcMethodDefinition[]>;
 type InvalidateManyAction = ActionMany<typeof GrpcActionTypeEnum.invalidateMany>;
 export type GrpcAction =
   | ClearAction
@@ -106,7 +106,7 @@ const error = (requestId: string, error: ServiceError): ErrorAction => ({
 const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
   type: GrpcActionTypeEnum.status,
   requestId,
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   payload: status,
 });
 

@@ -55,8 +55,8 @@ describe('store', () => {
     const s = new Store(new MemoryDriver(), [
       {
         // Just some dumb hooks to test with
-        read: (ext, buff) => Buffer.from(buff.toString('utf8').replace('WORLD', 'World')),
-        write: (ext, buff) => Buffer.from(buff.toString('utf8').replace('World', 'WORLD')),
+        read: (_ext, buff) => Buffer.from(buff.toString('utf8').replace('WORLD', 'World')),
+        write: (_ext, buff) => Buffer.from(buff.toString('utf8').replace('World', 'WORLD')),
       },
     ]);
     await s.setItem('foo', {

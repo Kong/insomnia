@@ -52,8 +52,8 @@ class EnvironmentEditor extends PureComponent<Props, State> {
   }
 
   _handleChange() {
-    let error = null;
-    let value = null;
+    let error: string | null = null;
+    let value: EnvironmentInfo | null = null;
 
     // Check for JSON parse errors
     try {
@@ -148,7 +148,7 @@ class EnvironmentEditor extends PureComponent<Props, State> {
           render={render}
           getRenderContext={getRenderContext}
           mode="application/json"
-          {...(props as Record<string, any>)}
+          {...props}
         />
         {error && <p className="notice error margin">{error}</p>}
       </div>

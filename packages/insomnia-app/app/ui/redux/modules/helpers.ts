@@ -9,7 +9,7 @@ export const ForceToWorkspaceKeys = {
 export type ForceToWorkspace = $Keys<typeof ForceToWorkspaceKeys>;
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
 export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?: ForceToWorkspace): ImportToWorkspacePrompt {
-  return function () {
+  return function() {
     switch (forceToWorkspace) {
       case ForceToWorkspaceKeys.new:
         return null;
@@ -35,7 +35,7 @@ export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?:
 
 export type SetWorkspaceScopePrompt = (name: string) => WorkspaceScope | Promise<WorkspaceScope>;
 export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScopePrompt {
-  return function (name: string) {
+  return function(name: string) {
     switch (scope) {
       case WorkspaceScopeKeys.collection:
       case WorkspaceScopeKeys.design:
@@ -49,7 +49,6 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
             noText: 'Request Collection',
             yesText: 'Design Document',
             onDone: yes => {
-              // @ts-expect-error convert WorkspaceScope to an enum
               resolve(yes ? WorkspaceScopeKeys.design : WorkspaceScopeKeys.collection);
             },
           });

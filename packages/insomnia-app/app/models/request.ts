@@ -1,4 +1,3 @@
-import { $Shape } from 'utility-types';
 import type { BaseModel } from './index';
 import {
   AUTH_ASAP,
@@ -27,26 +26,35 @@ import { getContentTypeHeader } from '../common/misc';
 import { deconstructQueryStringToParams } from 'insomnia-url';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
+
 export const name = 'Request';
+
 export const type = 'Request';
+
 export const prefix = 'req';
+
 export const canDuplicate = true;
+
 export const canSync = true;
+
 export type RequestAuthentication = Record<string, any>;
-export type RequestHeader = {
+
+export interface RequestHeader {
   name: string;
   value: string;
   description?: string;
   disabled?: boolean;
-};
-export type RequestParameter = {
+}
+
+export interface RequestParameter {
   name: string;
   value: string;
   disabled?: boolean;
   id?: string;
   fileName?: string;
-};
-export type RequestBodyParameter = {
+}
+
+export interface RequestBodyParameter {
   name: string;
   value: string;
   description?: string;
@@ -55,21 +63,23 @@ export type RequestBodyParameter = {
   id?: string;
   fileName?: string;
   type?: string;
-};
-export type RequestBody = {
+}
+
+export interface RequestBody {
   mimeType?: string | null;
   text?: string;
   fileName?: string;
-  params?: Array<RequestBodyParameter>;
-};
-type BaseRequest = {
+  params?: RequestBodyParameter[];
+}
+
+interface BaseRequest {
   url: string;
   name: string;
   description: string;
   method: string;
   body: RequestBody;
-  parameters: Array<RequestParameter>;
-  headers: Array<RequestHeader>;
+  parameters: RequestParameter[];
+  headers: RequestHeader[];
   authentication: RequestAuthentication;
   metaSortKey: number;
   isPrivate: boolean;
@@ -80,8 +90,10 @@ type BaseRequest = {
   settingEncodeUrl: boolean;
   settingRebuildPath: boolean;
   settingFollowRedirects: string;
-};
+}
+
 export type Request = BaseModel & BaseRequest;
+
 export function init(): BaseRequest {
   return {
     url: '',
@@ -103,6 +115,7 @@ export function init(): BaseRequest {
     settingFollowRedirects: 'global',
   };
 }
+
 export function newAuth(type: string, oldAuth: RequestAuthentication = {}): RequestAuthentication {
   switch (type) {
     // No Auth
@@ -188,9 +201,11 @@ export function newAuth(type: string, oldAuth: RequestAuthentication = {}): Requ
       };
   }
 }
+
 export function newBodyNone(): RequestBody {
   return {};
 }
+
 export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
   if (typeof contentType !== 'string') {
     return {
@@ -204,6 +219,7 @@ export function newBodyRaw(rawBody: string, contentType?: string): RequestBody {
     text: rawBody,
   };
 }
+
 export function newBodyGraphQL(rawBody: string): RequestBody {
   try {
     // Only strip the newlines if rawBody is a parsable JSON
@@ -223,54 +239,61 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
     }
   }
 }
-export function newBodyFormUrlEncoded(parameters: Array<RequestBodyParameter> | null): RequestBody {
+
+export function newBodyFormUrlEncoded(parameters: RequestBodyParameter[] | null): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
     params: parameters || [],
   };
 }
+
 export function newBodyFile(path: string): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FILE,
     fileName: path,
   };
 }
-export function newBodyForm(parameters: Array<RequestBodyParameter>): RequestBody {
+
+export function newBodyForm(parameters: RequestBodyParameter[]): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
     params: parameters || [],
   };
 }
+
 export function migrate(doc: Request): Request {
   doc = migrateBody(doc);
   doc = migrateWeirdUrls(doc);
   doc = migrateAuthType(doc);
   return doc;
 }
-export function create(patch: $Shape<Request> = {}): Promise<Request> {
+
+export function create(patch: Partial<Request> = {}) {
   if (!patch.parentId) {
     throw new Error(`New Requests missing \`parentId\`: ${JSON.stringify(patch)}`);
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<Request>(type, patch);
 }
+
 export function getById(id: string): Promise<Request | null> {
   return db.get(type, id);
 }
-export function findByParentId(parentId: string): Promise<Array<Request>> {
-  return db.find(type, {
-    parentId: parentId,
-  });
+
+export function findByParentId(parentId: string) {
+  return db.find<Request>(type, { parentId: parentId });
 }
-export function update(request: Request, patch: $Shape<Request>): Promise<Request> {
-  return db.docUpdate(request, patch);
+
+export function update(request: Request, patch: Partial<Request>) {
+  return db.docUpdate<Request>(request, patch);
 }
+
 export function updateMimeType(
   request: Request,
   mimeType: string,
-  doCreate: boolean = false,
+  doCreate = false,
   savedBody: RequestBody = {},
-): Promise<Request> {
+) {
   let headers = request.headers ? [...request.headers] : [];
   const contentTypeHeader = getContentTypeHeader(headers);
   // GraphQL uses JSON content-type
@@ -322,11 +345,13 @@ export function updateMimeType(
     // Urlencoded
     body = oldBody.params
       ? newBodyFormUrlEncoded(oldBody.params)
+      // @ts-expect-error -- TSCONVERSION
       : newBodyFormUrlEncoded(deconstructQueryStringToParams(oldBody.text));
-  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-    // Form Data
-    body = oldBody.params
+    } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
+      // Form Data
+      body = oldBody.params
       ? newBodyForm(oldBody.params)
+      // @ts-expect-error -- TSCONVERSION
       : newBodyForm(deconstructQueryStringToParams(oldBody.text));
   } else if (mimeType === CONTENT_TYPE_FILE) {
     // File
@@ -361,7 +386,8 @@ export function updateMimeType(
     });
   }
 }
-export async function duplicate(request: Request, patch: $Shape<Request> = {}): Promise<Request> {
+
+export async function duplicate(request: Request, patch: Partial<Request> = {}) {
   // Only set name and "(Copy)" if the patch does
   // not define it and the request itself has a name.
   // Otherwise leave it blank so the request URL can
@@ -376,24 +402,28 @@ export async function duplicate(request: Request, patch: $Shape<Request> = {}): 
       $gt: request.metaSortKey,
     },
   };
-  const [nextRequest] = await db.find(type, q, {
+
+  const [nextRequest] = await db.find<Request>(type, q, {
     metaSortKey: 1,
   });
+
   const nextSortKey = nextRequest ? nextRequest.metaSortKey : request.metaSortKey + 100;
   // Calculate new sort key
   const sortKeyIncrement = (nextSortKey - request.metaSortKey) / 2;
   const metaSortKey = request.metaSortKey + sortKeyIncrement;
-  return db.duplicate(request, {
+  return db.duplicate<Request>(request, {
     name,
     metaSortKey,
     ...patch,
   });
 }
-export function remove(request: Request): Promise<void> {
+
+export function remove(request: Request) {
   return db.remove(request);
 }
-export async function all(): Promise<Array<Request>> {
-  return db.all(type);
+
+export async function all() {
+  return db.all<Request>(type);
 }
 
 // ~~~~~~~~~~ //
@@ -403,9 +433,8 @@ export async function all(): Promise<Array<Request>> {
 /**
  * Migrate old body (string) to new body (object)
  * @param request
- * @returns {*}
  */
-function migrateBody(request: Request): Request {
+function migrateBody(request: Request) {
   if (request.body && typeof request.body === 'object') {
     return request;
   }
@@ -431,9 +460,8 @@ function migrateBody(request: Request): Request {
 /**
  * Fix some weird URLs that were caused by an old bug
  * @param request
- * @returns {*}
  */
-function migrateWeirdUrls(request: Request): Request {
+function migrateWeirdUrls(request: Request) {
   // Some people seem to have requests with URLs that don't have the indexOf
   // function. This should clear that up. This can be removed at a later date.
   if (typeof request.url !== 'string') {
@@ -446,9 +474,8 @@ function migrateWeirdUrls(request: Request): Request {
 /**
  * Ensure the request.authentication.type property is added
  * @param request
- * @returns {*}
  */
-function migrateAuthType(request: Request): Request {
+function migrateAuthType(request: Request) {
   const isAuthSet = request.authentication && request.authentication.username;
 
   if (isAuthSet && !request.authentication.type) {

@@ -1,84 +1,84 @@
-export type Team = {
+export interface Team {
   id: string;
   name: string;
-};
-export type Project = {
+}
+export interface Project {
   id: string;
   name: string;
   rootDocumentId: string;
-};
+}
 export type DocumentKey = string;
 export type BlobId = string;
-export type Head = {
+export interface Head {
   branch: string;
-};
-export type SnapshotStateEntry = {
+}
+export interface SnapshotStateEntry {
   key: DocumentKey;
   blob: BlobId;
   name: string;
-};
-export type SnapshotState = Array<SnapshotStateEntry>;
+}
+export type SnapshotState = SnapshotStateEntry[];
 export type SnapshotStateMap = Record<DocumentKey, SnapshotStateEntry>;
 export type SnapshotId = string;
-export type Snapshot = {
+export interface Snapshot {
   id: SnapshotId;
   created: Date;
   parent: string;
   author: string;
   name: string;
   description: string;
-  state: Array<SnapshotStateEntry>;
+  state: SnapshotStateEntry[];
   // Only exists in Snapshots that are pulled from the server
   authorAccount?: {
     firstName: string;
     lastName: string;
     email: string;
   };
-};
-export type Branch = {
+}
+export interface Branch {
   name: string;
   created: Date;
   modified: Date;
-  snapshots: Array<string>;
-};
-export type StageEntryDelete = {
+  snapshots: string[];
+}
+export interface StageEntryDelete {
   deleted: true;
   key: string;
   name: string;
   blobId: string;
-};
-export type StageEntryAdd = {
+}
+export interface StageEntryAdd {
   added: true;
   key: string;
   name: string;
   blobId: string;
   blobContent: string;
-};
-export type StageEntryModify = {
+}
+export interface StageEntryModify {
   modified: true;
   key: string;
   name: string;
   blobId: string;
   blobContent: string;
-};
+}
 export type StageEntry = StageEntryDelete | StageEntryAdd | StageEntryModify;
-export type MergeConflict = {
+export interface MergeConflict {
   name: string;
   key: DocumentKey;
   message: string;
   mineBlob: BlobId | null;
   theirsBlob: BlobId | null;
   choose: BlobId | null;
-};
+}
 export type Stage = Record<DocumentKey, StageEntry>;
-export type StatusCandidate = {
+export interface StatusCandidate {
   key: DocumentKey;
   name: string;
   document: Record<string, any>;
-};
+}
 export type StatusCandidateMap = Record<DocumentKey, StatusCandidate>;
-export type Status = {
+export interface Status {
   key: string;
   stage: Stage;
   unstaged: Record<DocumentKey, StageEntry>;
-};
+}

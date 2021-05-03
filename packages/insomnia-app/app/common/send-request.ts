@@ -3,6 +3,7 @@ import { types as modelTypes, stats } from '../models';
 import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 import * as plugins from '../plugins';
+
 export async function getSendRequestCallbackMemDb(environmentId, memDB) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await db.init(
@@ -13,7 +14,7 @@ export async function getSendRequestCallbackMemDb(environmentId, memDB) {
     true,
     () => {},
   );
-  const docs = [];
+  const docs: Record<string, any> = [];
 
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {
@@ -48,7 +49,7 @@ async function sendAndTransform(requestId, environmentId) {
       headersObj[name.toLowerCase()] = h.value || '';
     }
 
-    const bodyBuffer = await getBodyBuffer(res);
+    const bodyBuffer = await getBodyBuffer(res) as Buffer;
     return {
       status: res.statusCode,
       statusMessage: res.statusMessage,

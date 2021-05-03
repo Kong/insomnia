@@ -11,22 +11,23 @@ import * as misc from '../../../common/misc';
 import { RequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
 import { Environment } from '../../../models/environment';
+import { HotKeyRegistry } from '../../../common/hotkeys';
 
 interface Props {
   handleSetRequestGroupCollapsed: Function;
-  handleDuplicateRequestGroup: Function;
-  handleMoveRequestGroup: Function;
+  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
+  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
   moveDoc: Function;
   handleActivateRequest: Function;
-  handleCreateRequest: Function;
-  handleCreateRequestGroup: Function;
+  handleCreateRequest: (id: string) => any;
+  handleCreateRequestGroup: (requestGroup: string) => any;
   handleRender: Function;
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;
   workspace: Workspace;
   requestGroup: RequestGroup;
-  hotKeyRegistry: object;
+  hotKeyRegistry: HotKeyRegistry;
   isDragging?: boolean;
   isDraggingOver?: boolean;
   connectDragSource?: Function;
@@ -109,9 +110,9 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
     });
     // NOTE: We only want the button draggable, not the whole container (ie. no children)
-    // @ts-expect-error
+    // @ts-expect-error -- TSCONVERSION
     const button = connectDragSource(
-      // @ts-expect-error
+      // @ts-expect-error -- TSCONVERSION
       connectDropTarget(
         <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
           <div className="sidebar__clickable">
@@ -155,6 +156,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               requestGroup={requestGroup}
               hotKeyRegistry={hotKeyRegistry}
               activeEnvironment={activeEnvironment}
+              // @ts-expect-error -- TSCONVERSION
               right
             />
           </div>

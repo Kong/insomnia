@@ -5,10 +5,11 @@ import { DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
 import Dropdown from '../base/dropdown/dropdown';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
+import { RequestGroup } from '../../../models/request-group';
 
 interface Props {
-  handleCreateRequest: (...args: any[]) => any;
-  handleCreateRequestGroup: (...args: any[]) => any;
+  handleCreateRequest: (id: string) => any;
+  handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
   hotKeyRegistry: HotKeyRegistry;
   right?: boolean;
 }

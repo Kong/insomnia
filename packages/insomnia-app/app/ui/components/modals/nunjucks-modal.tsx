@@ -68,7 +68,7 @@ class NunjucksModal extends PureComponent<Props, State> {
   render() {
     const { handleRender, handleGetRenderContext, uniqueKey, workspace } = this.props;
     const { defaultTemplate } = this.state;
-    let editor = null;
+    let editor: JSX.Element | null = null;
     let title = '';
 
     if (defaultTemplate.indexOf('{{') === 0) {

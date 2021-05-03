@@ -14,7 +14,7 @@ const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
 
 interface Props extends HTMLAttributes<HTMLButtonElement> {
-  onClick?: Function;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   addIcon?: boolean;
   children?: ReactNode;
   disabled?: boolean;
@@ -100,7 +100,7 @@ class PromptButton extends PureComponent<Props> {
   render() {
     const {
       onClick,
-      // eslint-disable-line no-unused-vars
+      // eslint-disable-line @typescript-eslint/no-unused-vars
       children,
       addIcon,
       disabled,

@@ -307,7 +307,7 @@ export async function generateKeyPairJWK() {
  * @returns {Promise}
  */
 async function _hkdfSalt(rawSalt, rawEmail) {
-  return new Promise(resolve => {
+  return new Promise<string>(resolve => {
     const hkdf = new HKDF('sha256', rawSalt, rawEmail);
     hkdf.derive('', DEFAULT_BYTE_LENGTH, buffer => resolve(buffer.toString('hex')));
   });

@@ -66,7 +66,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     esversion: 8, // ES8 syntax (async/await, etc)
   };
 
-  generateSendReqSnippet(existingCode: string, requestId: string): string {
+  generateSendReqSnippet(existingCode: string, requestId: string) {
     let variableName = 'response';
 
     for (let i = 1; i < 100; i++) {
@@ -127,7 +127,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     ];
   }
 
-  async _handleCreateTestSuite(): Promise<void> {
+  async _handleCreateTestSuite() {
     const { activeWorkspace } = this.props.wrapperProps;
     showPrompt({
       title: 'New Test Suite',
@@ -146,7 +146,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     });
   }
 
-  async _handleCreateTest(): Promise<void> {
+  async _handleCreateTest() {
     const { activeUnitTestSuite } = this.props.wrapperProps;
     showPrompt({
       title: 'New Test',
@@ -165,13 +165,13 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     });
   }
 
-  async _handleUnitTestCodeChange(unitTest: UnitTest, v: string): Promise<void> {
+  async _handleUnitTestCodeChange(unitTest: UnitTest, v: string) {
     await models.unitTest.update(unitTest, {
       code: v,
     });
   }
 
-  async _handleBreadcrumb(): void {
+  async _handleBreadcrumb() {
     const {
       handleActivityChange,
       wrapperProps: { activeWorkspace },
@@ -179,18 +179,18 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     await handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
   }
 
-  async _handleRunTests(): Promise<void> {
+  async _handleRunTests() {
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
     trackSegmentEvent('Ran All Unit Tests');
   }
 
-  async _handleRunTest(unitTest: UnitTest): Promise<void> {
+  async _handleRunTest(unitTest: UnitTest) {
     await this._runTests([unitTest]);
     trackSegmentEvent('Ran Individual Unit Test');
   }
 
-  async _handleDeleteTest(unitTest: UnitTest): Promise<void> {
+  async _handleDeleteTest(unitTest: UnitTest) {
     showAlert({
       title: `Delete ${unitTest.name}`,
       message: (
@@ -209,14 +209,14 @@ class WrapperUnitTest extends PureComponent<Props, State> {
   async _handleSetActiveRequest(
     unitTest: UnitTest,
     e: React.SyntheticEvent<HTMLSelectElement>,
-  ): Promise<void> {
+  ) {
     const requestId = e.currentTarget.value === '__NULL__' ? null : e.currentTarget.value;
     await models.unitTest.update(unitTest, {
       requestId,
     });
   }
 
-  async _handleDeleteUnitTestSuite(unitTestSuite: UnitTestSuite): Promise<void> {
+  async _handleDeleteUnitTestSuite(unitTestSuite: UnitTestSuite) {
     showAlert({
       title: `Delete ${unitTestSuite.name}`,
       message: (
@@ -232,27 +232,27 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite): Promise<void> {
+  async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite) {
     const { activeWorkspace } = this.props.wrapperProps;
     await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
       activeUnitTestSuiteId: unitTestSuite._id,
     });
   }
 
-  async _handleChangeTestName(unitTest: UnitTest, name: string): Promise<void> {
+  async _handleChangeTestName(unitTest: UnitTest, name: string) {
     await models.unitTest.update(unitTest, {
       name,
     });
   }
 
-  async _handleChangeActiveSuiteName(name: string): Promise<void> {
+  async _handleChangeActiveSuiteName(name: string) {
     const { activeUnitTestSuite } = this.props.wrapperProps;
     await models.unitTestSuite.update(activeUnitTestSuite, {
       name,
     });
   }
 
-  async _runTests(unitTests: UnitTest[]): Promise<void> {
+  async _runTests(unitTests: UnitTest[]) {
     const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
     this.setState({
       testsRunning: unitTests,

@@ -10,9 +10,9 @@ export default async function(
   credentialsInBody: boolean,
   clientId: string,
   clientSecret: string,
-  scope: string = '',
-  audience: string = '',
-  resource: string = '',
+  scope = '',
+  audience = '',
+  resource = '',
 ): Promise<Record<string, any>> {
   const params = [
     {

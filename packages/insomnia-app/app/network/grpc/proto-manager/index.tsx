@@ -10,10 +10,8 @@ import fs from 'fs';
 import path from 'path';
 import * as protoLoader from '../proto-loader';
 import { isProtoFile } from '../../../models/helpers/is-model';
-export async function deleteFile(
-  protoFile: ProtoFile,
-  callback: (arg0: string) => void,
-): Promise<void> {
+
+export async function deleteFile(protoFile: ProtoFile, callback: (arg0: string) => void) {
   showAlert({
     title: `Delete ${protoFile.name}`,
     message: (
@@ -29,10 +27,8 @@ export async function deleteFile(
     },
   });
 }
-export async function deleteDirectory(
-  protoDirectory: ProtoDirectory,
-  callback: (arg0: Array<string>) => void,
-): Promise<void> {
+
+export async function deleteDirectory(protoDirectory: ProtoDirectory, callback: (arg0: string[]) => void) {
   showAlert({
     title: `Delete ${protoDirectory.name}`,
     message: (
@@ -49,9 +45,10 @@ export async function deleteDirectory(
     },
   });
 }
-export async function addDirectory(workspaceId: string): Promise<void> {
+
+export async function addDirectory(workspaceId: string) {
   let rollback = false;
-  let createdIds: Array<string>;
+  let createdIds: string[];
   const bufferId = await db.bufferChangesIndefinitely();
 
   try {
@@ -124,10 +121,7 @@ export async function addDirectory(workspaceId: string): Promise<void> {
   }
 }
 
-async function _readFile(): Promise<{
-  fileName: string;
-  fileContents: string;
-} | null> {
+async function _readFile() {
   try {
     // Select file
     const { filePath, canceled } = await selectFileOrFolder({
@@ -166,10 +160,7 @@ async function _readFile(): Promise<{
   }
 }
 
-export async function addFile(
-  workspaceId: string,
-  callback: (arg0: string) => void,
-): Promise<void> {
+export async function addFile(workspaceId: string, callback: (arg0: string) => void) {
   const result = await _readFile();
 
   if (result) {
@@ -181,10 +172,8 @@ export async function addFile(
     callback(newFile._id);
   }
 }
-export async function updateFile(
-  protoFile: ProtoFile,
-  callback: (arg0: string) => void,
-): Promise<void> {
+
+export async function updateFile(protoFile: ProtoFile, callback: (arg0: string) => void) {
   const result = await _readFile();
 
   if (result) {
@@ -195,7 +184,8 @@ export async function updateFile(
     callback(updatedFile._id);
   }
 }
-export async function renameFile(protoFile: ProtoFile, name: string): Promise<void> {
+
+export async function renameFile(protoFile: ProtoFile, name: string) {
   await models.protoFile.update(protoFile, {
     name,
   });

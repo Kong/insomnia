@@ -18,7 +18,7 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class PageLayout extends PureComponent<Props> {
   // Special request updaters
-  _handleStartDragSidebar(e: Event): void {
+  _handleStartDragSidebar(e: Event) {
     e.preventDefault();
     const { handleStartDragSidebar } = this.props.wrapperProps;
     handleStartDragSidebar();

@@ -53,7 +53,6 @@ class CopyButton extends PureComponent<Props, State> {
   render() {
     const {
       content,
-      // eslint-disable-line no-unused-vars
       children,
       title,
       confirmMessage,

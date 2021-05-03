@@ -10,6 +10,7 @@ export class RenderError extends Error {
     line: number;
     column: number;
   };
+
   type: string;
   reason: string;
 }
@@ -38,7 +39,7 @@ export function render(
     path?: string;
     renderMode?: string;
   } = {},
-): Promise<string> {
+) {
   const context = config.context || {};
   // context needs to exist on the root for the old templating syntax, and in _ for the new templating syntax
   // old: {{ arr[0].prop }}
@@ -46,9 +47,9 @@ export function render(
   const templatingContext = { ...context, [NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME]: context };
   const path = config.path || null;
   const renderMode = config.renderMode || RENDER_ALL;
-  return new Promise(async (resolve, reject) => {
+  return new Promise<string | null>(async (resolve, reject) => {
     const nj = await getNunjucks(renderMode);
-    nj.renderString(text, templatingContext, (err, result) => {
+    nj?.renderString(text, templatingContext, (err, result) => {
       if (err) {
         const sanitizedMsg = err.message
           .replace(/\(unknown path\)\s/, '')
@@ -81,7 +82,7 @@ export function render(
 /**
  * Reload Nunjucks environments. Useful for if plugins change.
  */
-export function reload(): void {
+export function reload() {
   nunjucksAll = null;
   nunjucksVariablesOnly = null;
   nunjucksTagsOnly = null;
@@ -90,7 +91,7 @@ export function reload(): void {
 /**
  * Get definitions of template tags
  */
-export async function getTagDefinitions(): Promise<Array<NunjucksParsedTag>> {
+export async function getTagDefinitions(): Promise<NunjucksParsedTag[]> {
   const env = await getNunjucks(RENDER_ALL);
   return Object.keys(env.extensions)
     .map(k => env.extensions[k])
@@ -154,7 +155,7 @@ async function getNunjucks(renderMode: string) {
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nj = nunjucks.configure(config);
-  let allTemplateTagPlugins: Array<TemplateTag>;
+  let allTemplateTagPlugins: TemplateTag[];
 
   try {
     plugins.ignorePlugin('insomnia-plugin-kong-bundle');

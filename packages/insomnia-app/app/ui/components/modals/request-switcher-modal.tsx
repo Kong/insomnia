@@ -67,7 +67,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     title: null,
   }
 
-  _handleInputKeydown(e: KeyboardEvent) {
+  _handleInputKeydown(e: React.KeyboardEvent<HTMLDivElement>) {
     const keyCode = e.keyCode;
 
     if (keyCode === 38 || (keyCode === 9 && e.shiftKey)) {
@@ -171,7 +171,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
     const currentGroupName =
       requestOrRequestGroup.type === models.requestGroup.type
-        ? `${(requestOrRequestGroup as any).name}`
+        ? `${requestOrRequestGroup.name}`
         : '';
 
     // It's the final parent
@@ -322,7 +322,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    clearTimeout(this._openTimeout);
+    if (this._openTimeout !== null) {
+      clearTimeout(this._openTimeout);
+    }
     this.modal && this.modal.hide();
   }
 
@@ -437,11 +439,11 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                             <i className="fa fa-folder-o" />
                           </div>
                         ) : null}
-                        <Highlight search={searchString} text={(r as any).name} />
+                        <Highlight search={searchString} text={r.name} />
                       </div>
                       <div className="margin-left-xs faint">
-                        <MethodTag method={(r as any).method} />
-                        <Highlight search={searchString} text={(r as any).url} />
+                        <MethodTag method={r.method} />
+                        <Highlight search={searchString} text={r.url} />
                       </div>
                     </Button>
                   </li>
@@ -462,7 +464,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                   <li key={w._id}>
                     <Button onClick={this._activateWorkspace} value={w} className={buttonClasses}>
                       <i className="fa fa-random" />
-                      &nbsp;&nbsp;&nbsp; Switch to <strong>{(w as any).name}</strong>
+                      &nbsp;&nbsp;&nbsp; Switch to <strong>{w.name}</strong>
                     </Button>
                   </li>
                 );

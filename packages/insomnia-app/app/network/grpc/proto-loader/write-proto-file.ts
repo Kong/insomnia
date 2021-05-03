@@ -15,10 +15,10 @@ const getProtoTempFileName = ({ _id, modified }: ProtoFile): string => `${_id}.$
 const getProtoTempDirectoryName = ({ _id, modified }: ProtoDirectory): string =>
   `${_id}.${modified}`;
 
-type WriteResult = {
+interface WriteResult {
   filePath: string;
-  dirs: Array<string>;
-};
+  dirs: string[];
+}
 
 const writeIndividualProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
   // Create temp folder
@@ -41,7 +41,7 @@ const writeIndividualProtoFile = async (protoFile: ProtoFile): Promise<WriteResu
   return result;
 };
 
-const writeNestedProtoFile = async (protoFile: ProtoFile, dirPath: string): Promise<void> => {
+const writeNestedProtoFile = async (protoFile: ProtoFile, dirPath: string) => {
   // Check if file already exists
   const fullPath = path.join(dirPath, protoFile.name);
 
@@ -54,8 +54,8 @@ const writeNestedProtoFile = async (protoFile: ProtoFile, dirPath: string): Prom
 };
 
 const writeProtoFileTree = async (
-  ancestors: Array<ProtoDirectory | Workspace>,
-): Promise<Array<string>> => {
+  ancestors: (ProtoDirectory | Workspace)[],
+): Promise<string[]> => {
   // Find the ancestor workspace
   const ancestorWorkspace = ancestors.find(isWorkspace);
   // Find the root ancestor directory
@@ -80,9 +80,9 @@ const writeProtoFileTree = async (
 
 const recursiveWriteProtoDirectory = async (
   dir: ProtoDirectory,
-  descendants: Array<BaseModel>,
+  descendants: BaseModel[],
   currentDirPath: string,
-): Promise<Array<string>> => {
+): Promise<string[]> => {
   // Increment folder path
   const dirPath = path.join(currentDirPath, dir.name);
   mkdirp.sync(dirPath);

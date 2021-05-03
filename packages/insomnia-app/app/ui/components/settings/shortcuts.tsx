@@ -31,7 +31,7 @@ class Shortcuts extends PureComponent<Props> {
    * @param newKeyComb the key combination to be checked.
    * @returns {boolean} true if already existed.
    */
-  checkKeyCombinationDuplicate(newKeyComb: KeyCombination): boolean {
+  checkKeyCombinationDuplicate(newKeyComb: KeyCombination) {
     const { hotKeyRegistry } = this.props;
 
     for (const hotKeyRefId in hotKeyRegistry) {

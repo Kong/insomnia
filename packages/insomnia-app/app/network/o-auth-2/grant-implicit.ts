@@ -2,14 +2,14 @@ import * as c from './constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import { responseToObject, authorizeUserInWindow } from './misc';
 export default async function(
-  requestId: string,
+  _requestId: string,
   authorizationUrl: string,
   clientId: string,
   responseType: string = c.RESPONSE_TYPE_TOKEN,
-  redirectUri: string = '',
-  scope: string = '',
-  state: string = '',
-  audience: string = '',
+  redirectUri = '',
+  scope = '',
+  state = '',
+  audience = '',
 ): Promise<Record<string, any>> {
   const params = [
     {

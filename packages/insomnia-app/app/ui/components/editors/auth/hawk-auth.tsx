@@ -27,28 +27,28 @@ class HawkAuth extends PureComponent<Props> {
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
   }
 
-  _handleChangeProperty(property: string, value: string | boolean): void {
+  _handleChangeProperty(property: string, value: string | boolean) {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, [property]: value });
   }
 
-  _handleChangeHawkAuthId(value: string): void {
+  _handleChangeHawkAuthId(value: string) {
     this._handleChangeProperty('id', value);
   }
 
-  _handleChangeHawkAuthKey(value: string): void {
+  _handleChangeHawkAuthKey(value: string) {
     this._handleChangeProperty('key', value);
   }
 
-  _handleChangeAlgorithm(e: React.SyntheticEvent<HTMLSelectElement>): void {
+  _handleChangeAlgorithm(e: React.SyntheticEvent<HTMLSelectElement>) {
     this._handleChangeProperty('algorithm', e.currentTarget.value);
   }
 
-  _handleChangeExt(value: string): void {
+  _handleChangeExt(value: string) {
     this._handleChangeProperty('ext', value);
   }
 
-  _handleChangePayloadValidation(): void {
+  _handleChangePayloadValidation() {
     const { request } = this.props;
 
     this._handleChangeProperty('validatePayload', !request.authentication.validatePayload);

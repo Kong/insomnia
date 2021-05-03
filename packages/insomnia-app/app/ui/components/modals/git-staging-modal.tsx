@@ -74,7 +74,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleCommit(e: React.SyntheticEvent<HTMLButtonElement>) {
+  async _handleCommit() {
     const { vcs } = this.props;
     const { items, message } = this.state;
 
@@ -212,7 +212,7 @@ class GitStagingModal extends PureComponent<Props, State> {
 
         try {
           const doc = YAML.parse(docYML);
-          this.statusNames[gitPath] = (doc as any).name || '';
+          this.statusNames[gitPath] = doc.name || '';
         } catch (err) {
           // Nothing here
         }

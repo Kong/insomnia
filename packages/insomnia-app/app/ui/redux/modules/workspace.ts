@@ -1,4 +1,3 @@
-import { $Shape } from 'utility-types';
 import type { Workspace, WorkspaceScope } from '../../../models/workspace';
 import * as models from '../../../models';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
@@ -8,7 +7,7 @@ import { showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveWorkspace } from './global';
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
-const actuallyCreate = (patch: $Shape<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
+const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
   return async dispatch => {
     const workspace = await models.workspace.create(patch);
 

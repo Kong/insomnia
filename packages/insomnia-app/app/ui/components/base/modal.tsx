@@ -9,7 +9,7 @@ import { pressedHotKey } from '../../../common/hotkeys-listener';
 // appear over top of an existing one.
 let globalZIndex = 1000;
 
-interface Props {
+export interface ModalProps {
   tall?: boolean,
   wide?: boolean,
   skinny?: boolean,
@@ -31,7 +31,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Modal extends PureComponent<Props, State> {
+class Modal extends PureComponent<ModalProps, State> {
   onHide: Function | null = null;
   _node: HTMLDivElement | null = null;
 
@@ -96,7 +96,7 @@ class Modal extends PureComponent<Props, State> {
     this._node = n;
   }
 
-  show(options?: Props) {
+  show(options?: ModalProps) {
     const { freshState } = this.props;
     const { forceRefreshCounter } = this.state;
 

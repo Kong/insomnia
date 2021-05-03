@@ -1,13 +1,13 @@
 import { $Values } from 'utility-types';
 // https://grpc.github.io/grpc/node/grpc.html#~MethodDefinition
-export type GrpcMethodDefinition = {
+export interface GrpcMethodDefinition {
   path: string;
   originalName: string;
   requestStream: boolean;
   responseStream: boolean;
-  requestSerialize: (...args: Array<any>) => any;
-  responseDeserialize: (...args: Array<any>) => any;
-};
+  requestSerialize: (...args: any[]) => any;
+  responseDeserialize: (...args: any[]) => any;
+}
 export const GrpcMethodTypeEnum = {
   unary: 'unary',
   server: 'server',

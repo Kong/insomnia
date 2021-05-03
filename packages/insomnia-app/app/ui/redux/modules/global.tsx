@@ -290,7 +290,7 @@ function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): 
   Go to the next activity in a sequential activity flow, depending on different conditions
  */
 export function goToNextActivity() {
-  return function (dispatch, getState) {
+  return function(dispatch, getState) {
     const state = getState();
     const { activeActivity } = state.global;
     const settings = selectSettings(state);
@@ -431,7 +431,7 @@ function handleImportResult(result: ImportResult, errorMessage: string): Workspa
   models.stats.incrementRequestStats({
     createdRequests: createdRequests,
   });
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   return summary[models.workspace.type] || [];
 }
 
@@ -660,8 +660,8 @@ export function exportRequestsToFile(requestIds) {
     showSelectExportTypeModal(
       () => dispatch(loadStop()),
       async selectedFormat => {
-        const requests: Array<GrpcRequest | Request> = [];
-        const privateEnvironments: Array<Environment> = [];
+        const requests: (GrpcRequest | Request)[] = [];
+        const privateEnvironments: Environment[] = [];
         const workspaceLookup = {};
 
         for (const requestId of requestIds) {
@@ -685,7 +685,6 @@ export function exportRequestsToFile(requestIds) {
           workspaceLookup[workspace._id] = true;
           const descendants = await db.withDescendants(workspace);
           const privateEnvs = descendants.filter(
-            // @ts-expect-error need to cast before checking isPrivate
             descendant => descendant.type === models.environment.type && descendant.isPrivate,
           );
           // @ts-expect-error privateEnvs should be an array of Environment
@@ -766,7 +765,7 @@ export function initActiveWorkspace() {
 }
 
 function _migrateDeprecatedActivity(activity: GlobalActivity): GlobalActivity {
-  // @ts-expect-error
+  // @ts-expect-error -- TSCONVERSION
   return activity === DEPRECATED_ACTIVITY_INSOMNIA ? ACTIVITY_DEBUG : activity;
 }
 
@@ -787,7 +786,7 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   This will also decide whether to start with the migration or onboarding activities
  */
 export function initActiveActivity() {
-  return function (dispatch, getState) {
+  return function(dispatch, getState) {
     const state = getState();
     const settings = selectSettings(state);
     // Default to home

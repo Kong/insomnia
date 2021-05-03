@@ -34,8 +34,9 @@ class MarkdownPreview extends PureComponent<Props, State> {
    * Debounce and compile the markdown (won't debounce first render)
    */
   _compileMarkdown(markdown) {
-    // @ts-expect-error -- TSCONVERSION
-    clearTimeout(this._compileTimeout);
+    if (this._compileTimeout !== null) {
+      clearTimeout(this._compileTimeout);
+    }
     // @ts-expect-error -- TSCONVERSION
     this._compileTimeout = setTimeout(
       async () => {
@@ -86,8 +87,9 @@ class MarkdownPreview extends PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
-    // @ts-expect-error -- TSCONVERSION
-    clearTimeout(this._compileTimeout);
+    if (this._compileTimeout !== null) {
+      clearTimeout(this._compileTimeout);
+    }
   }
 
   // eslint-disable-next-line camelcase

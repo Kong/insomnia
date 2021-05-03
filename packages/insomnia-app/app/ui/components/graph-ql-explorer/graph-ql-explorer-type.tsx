@@ -88,7 +88,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
           {fieldKeys.map(key => {
             const field: GraphQLField<any, any> = fields[key] as any;
             let argLinks = null;
-            const args = (field as any).args;
+            const { args } = field;
 
             if (args && args.length) {
               argLinks = (

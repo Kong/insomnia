@@ -16,7 +16,7 @@ const remote = {
     },
   },
   net: {
-    request(url) {
+    request() {
       const req = new events.EventEmitter();
 
       req.end = function() {};

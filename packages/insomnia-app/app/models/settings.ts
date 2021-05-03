@@ -1,4 +1,3 @@
-import { $Shape } from 'utility-types';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
 import {
@@ -10,11 +9,14 @@ import {
 } from '../common/constants';
 import * as hotkeys from '../common/hotkeys';
 import type { HttpVersion } from '../common/constants';
-export type PluginConfig = {
+
+export interface PluginConfig {
   disabled: boolean;
-};
+}
+
 export type PluginConfigMap = Record<string, PluginConfig>;
-type BaseSettings = {
+
+interface BaseSettings {
   autoHideMenuBar: boolean;
   autocompleteDelay: number;
   deviceId: string | null;
@@ -62,13 +64,20 @@ type BaseSettings = {
   hasPromptedToMigrateFromDesigner: boolean;
   hasPromptedOnboarding: boolean;
   hasPromptedAnalytics: boolean;
-};
+}
+
 export type Settings = BaseModel & BaseSettings;
+
 export const name = 'Settings';
+
 export const type = 'Settings';
+
 export const prefix = 'set';
+
 export const canDuplicate = false;
+
 export const canSync = false;
+
 export function init(): BaseSettings {
   return {
     autoHideMenuBar: false,
@@ -126,12 +135,14 @@ export function init(): BaseSettings {
     hasPromptedAnalytics: false,
   };
 }
-export function migrate(doc: Settings): Settings {
+
+export function migrate(doc: Settings) {
   doc = migrateEnsureHotKeys(doc);
   return doc;
 }
-export async function all(patch: $Shape<Settings> = {}): Promise<Array<Settings>> {
-  const settings = await db.all(type);
+
+export async function all() {
+  const settings = await db.all<Settings>(type);
 
   if (settings.length === 0) {
     return [await getOrCreate()];
@@ -139,18 +150,22 @@ export async function all(patch: $Shape<Settings> = {}): Promise<Array<Settings>
     return settings;
   }
 }
-export async function create(patch: $Shape<Settings> = {}): Promise<Settings> {
-  return db.docCreate(type, patch);
+
+export async function create(patch: Partial<Settings> = {}) {
+  return db.docCreate<Settings>(type, patch);
 }
-export async function update(settings: Settings, patch: $Shape<Settings>): Promise<Settings> {
-  return db.docUpdate(settings, patch);
+
+export async function update(settings: Settings, patch: Partial<Settings>) {
+  return db.docUpdate<Settings>(settings, patch);
 }
-export async function patch(patch: $Shape<Settings>): Promise<Settings> {
+
+export async function patch(patch: Partial<Settings>) {
   const settings = await getOrCreate();
-  return db.docUpdate(settings, patch);
+  return db.docUpdate<Settings>(settings, patch);
 }
-export async function getOrCreate(): Promise<Settings> {
-  const results = await db.all(type);
+
+export async function getOrCreate() {
+  const results = await db.all<Settings>(type) || [];
 
   if (results.length === 0) {
     return create();

@@ -1,19 +1,19 @@
 import classnames from 'classnames';
 import React from 'react';
 
-type PaneProps = {
+interface PaneProps {
   className?: string;
   type: 'request' | 'response';
-};
+}
 
-type PaneHeaderProps = {
+interface PaneHeaderProps {
   className?: string;
-};
+}
 
-type PaneBodyProps = {
+interface PaneBodyProps {
   className?: string;
   placeholder?: boolean;
-};
+}
 
 export const Pane: React.FC<PaneProps> = ({ className, type, children }) => (
   <section className={classnames(`${type}-pane`, 'theme--pane', 'pane', className)}>

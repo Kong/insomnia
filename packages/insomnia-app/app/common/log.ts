@@ -19,7 +19,7 @@ export const initializeLogging = () => {
   // Overwrite the console.log/warn/etc methods
   Object.assign(console, log.functions);
 };
-export function getLogDirectory(): string {
+export function getLogDirectory() {
   const logPath = log.transports.file.getFile().path;
   return dirname(logPath);
 }

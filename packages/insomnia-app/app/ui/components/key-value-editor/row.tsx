@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { DragSource, DropTarget } from 'react-dnd';
+import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 import FileInputButton from '../base/file-input-button';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
@@ -56,9 +56,9 @@ interface Props {
   className?: string,
   renderLeftIcon?: Function,
   // For drag-n-drop
-  connectDragSource?: Function,
-  connectDragPreview?: Function,
-  connectDropTarget?: Function,
+  connectDragSource?: ConnectDragSource,
+  connectDragPreview?: ConnectDragPreview,
+  connectDropTarget?: ConnectDropTarget,
   isDragging?: boolean,
   isDraggingOver?: boolean,
 }
@@ -100,10 +100,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     }
   }
 
-  _setValueInputRef(n: OneLineEditor | FileInputButton) {
-    this._valueInput = n;
-  }
-
   _setDescriptionInputRef(n: OneLineEditor) {
     this._descriptionInput = n;
   }
@@ -129,11 +125,14 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     if (value && value.includes('\n')) {
       e.preventDefault();
 
-      // Insert the pasted text into the current selection. Unfortunately, this
-      // is the easiest way to do this.
+      // Insert the pasted text into the current selection.
+      // Unfortunately, this is the easiest way to do this.
+      // @ts-expect-error -- TSCONVERSION
       const currentValue = this._valueInput?.getValue();
 
+      // @ts-expect-error -- TSCONVERSION
       const prefix = currentValue.slice(0, this._valueInput?.getSelectionStart());
+      // @ts-expect-error -- TSCONVERSION
       const suffix = currentValue.slice(this._valueInput?.getSelectionEnd());
       const finalValue = `${prefix}${value}${suffix}`;
 
@@ -206,7 +205,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _handleBlurValue(e) {
     if (this.props.onBlurName) {
-      this.props.onBlurValue(this.props.pair, e);
+      this.props.onBlurValue?.(this.props.pair, e);
     }
   }
 
@@ -285,6 +284,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
         )}>
         <OneLineEditor
           ref={this._setDescriptionInputRef}
+          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
           readOnly={readOnly}
           forceInput={forceInput}
           placeholder={descriptionPlaceholder || 'Description'}
@@ -318,7 +318,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     if (pair.type === 'file') {
       return (
         <FileInputButton
-          ref={this._setValueInputRef}
+          ref={ref => { this._valueInput = ref; }}
           showFileName
           showFileIcon
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
@@ -339,7 +339,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     } else {
       return (
         <OneLineEditor
-          ref={this._setValueInputRef}
+          ref={ref => { this._valueInput = ref; }}
+          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
           readOnly={readOnly}
           forceInput={forceInput}
           type={valueInputType || 'text'}
@@ -453,7 +454,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       handle = renderLeftIcon ? (
         <div className="key-value-editor__drag">{renderLeftIcon()}</div>
       ) : (
-        connectDragSource(
+        connectDragSource?.(
           <div className="key-value-editor__drag">
             <i className={'fa ' + (hideButtons ? 'fa-empty' : 'fa-reorder')} />
           </div>,
@@ -461,7 +462,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       );
     }
 
-    const row = (
+    const row: ConnectDropTarget = (
       <li className={classes}>
         {handle}
         <div className="key-value-editor__row">
@@ -479,6 +480,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
+              // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
               readOnly={readOnly}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
@@ -536,7 +538,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     if (noDropZone) {
       return row;
     } else {
-      return connectDragPreview(connectDropTarget(row));
+      const dropTarget = connectDropTarget?.(row);
+      return connectDragPreview?.(dropTarget);
     }
   }
 }
@@ -567,7 +570,7 @@ const dragTarget = {
     }
   },
 
-  hover(props, monitor, component) {
+  hover(_props, monitor, component) {
     if (isAbove(monitor, component)) {
       component.setDragDirection(1);
     } else {
@@ -576,23 +579,16 @@ const dragTarget = {
   },
 };
 
-function sourceCollect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    connectDragPreview: connect.dragPreview(),
-    isDragging: monitor.isDragging(),
-  };
-}
+const source = DragSource('KEY_VALUE_EDITOR', dragSource, (connect, monitor) => ({
+  connectDragSource: connect.dragSource(),
+  connectDragPreview: connect.dragPreview(),
+  isDragging: monitor.isDragging(),
+}))(KeyValueEditorRow);
 
-function targetCollect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver(),
-  };
-}
-
-const source = DragSource('KEY_VALUE_EDITOR', dragSource, sourceCollect)(KeyValueEditorRow);
-const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, targetCollect)(source);
+const target = DropTarget('KEY_VALUE_EDITOR', dragTarget, (connect, monitor) => ({
+  connectDropTarget: connect.dropTarget(),
+  isDraggingOver: monitor.isOver(),
+}))(source);
 
 target.prototype.focusNameEnd = function() {
   this.decoratedRef.current.decoratedRef.current.focusNameEnd();

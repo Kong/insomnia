@@ -11,7 +11,7 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseRaw extends PureComponent<Props> {
   private _codeEditor?: CodeEditor;
-  
+
   _setCodeEditorRef(n: CodeEditor) {
     this._codeEditor = n;
   }

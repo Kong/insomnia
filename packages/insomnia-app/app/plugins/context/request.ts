@@ -4,7 +4,7 @@ import * as misc from '../../common/misc';
 export function init(
   renderedRequest: RenderedRequest,
   renderedContext: Record<string, any>,
-  readOnly: boolean = false,
+  readOnly = false,
 ): {
   request: Record<string, any>;
 } {
@@ -13,31 +13,31 @@ export function init(
   }
 
   const request = {
-    getId(): string {
+    getId() {
       return renderedRequest._id;
     },
 
-    getName(): string {
+    getName() {
       return renderedRequest.name;
     },
 
-    getUrl(): string {
+    getUrl() {
       return renderedRequest.url;
     },
 
-    getMethod(): string {
+    getMethod() {
       return renderedRequest.method;
     },
 
-    setMethod(method: string): void {
+    setMethod(method: string) {
       renderedRequest.method = method;
     },
 
-    setUrl(url: string): void {
+    setUrl(url: string) {
       renderedRequest.url = url;
     },
 
-    setCookie(name: string, value: string): void {
+    setCookie(name: string, value: string) {
       const cookie = renderedRequest.cookies.find(c => c.name === name);
 
       if (cookie) {
@@ -52,11 +52,11 @@ export function init(
 
     getEnvironmentVariable(
       name: string,
-    ): string | number | boolean | Record<string, any> | Array<any> | null {
+    ): string | number | boolean | Record<string, any> | any[] | null {
       return renderedContext[name];
     },
 
-    getEnvironment(): Record<string, any> {
+    getEnvironment() {
       return renderedContext;
     },
 
@@ -80,7 +80,7 @@ export function init(
       renderedRequest.settingFollowRedirects = enabled;
     },
 
-    getHeader(name: string): string | null {
+    getHeader(name: string) {
       const headers = misc.filterHeaders(renderedRequest.headers, name);
 
       if (headers.length) {
@@ -92,26 +92,23 @@ export function init(
       }
     },
 
-    getHeaders(): Array<{
-      name: string;
-      value: string;
-    }> {
+    getHeaders() {
       return renderedRequest.headers.map(h => ({
         name: h.name,
         value: h.value,
       }));
     },
 
-    hasHeader(name: string): boolean {
+    hasHeader(name: string) {
       return this.getHeader(name) !== null;
     },
 
-    removeHeader(name: string): void {
+    removeHeader(name: string) {
       const headers = misc.filterHeaders(renderedRequest.headers, name);
       renderedRequest.headers = renderedRequest.headers.filter(h => !headers.includes(h));
     },
 
-    setHeader(name: string, value: string): void {
+    setHeader(name: string, value: string) {
       const header = misc.filterHeaders(renderedRequest.headers, name)[0];
 
       if (header) {
@@ -121,7 +118,7 @@ export function init(
       }
     },
 
-    addHeader(name: string, value: string): void {
+    addHeader(name: string, value: string) {
       const header = misc.filterHeaders(renderedRequest.headers, name)[0];
 
       if (!header) {
@@ -132,7 +129,7 @@ export function init(
       }
     },
 
-    getParameter(name: string): string | null {
+    getParameter(name: string) {
       const parameters = misc.filterParameters(renderedRequest.parameters, name);
 
       if (parameters.length) {
@@ -144,26 +141,23 @@ export function init(
       }
     },
 
-    getParameters(): Array<{
-      name: string;
-      value: string;
-    }> {
+    getParameters() {
       return renderedRequest.parameters.map(p => ({
         name: p.name,
         value: p.value,
       }));
     },
 
-    hasParameter(name: string): boolean {
+    hasParameter(name: string) {
       return this.getParameter(name) !== null;
     },
 
-    removeParameter(name: string): void {
+    removeParameter(name: string) {
       const parameters = misc.filterParameters(renderedRequest.parameters, name);
       renderedRequest.parameters = renderedRequest.parameters.filter(p => !parameters.includes(p));
     },
 
-    setParameter(name: string, value: string): void {
+    setParameter(name: string, value: string) {
       const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];
 
       if (parameter) {
@@ -173,7 +167,7 @@ export function init(
       }
     },
 
-    addParameter(name: string, value: string): void {
+    addParameter(name: string, value: string) {
       const parameter = misc.filterParameters(renderedRequest.parameters, name)[0];
 
       if (!parameter) {
@@ -184,21 +178,21 @@ export function init(
       }
     },
 
-    setAuthenticationParameter(name: string, value: string): void {
+    setAuthenticationParameter(name: string, value: string) {
       Object.assign(renderedRequest.authentication, {
         [name]: value,
       });
     },
 
-    getAuthentication(): Record<string, any> {
+    getAuthentication() {
       return renderedRequest.authentication;
     },
 
-    getBody(): RequestBody {
+    getBody() {
       return renderedRequest.body;
     },
 
-    setBody(body: RequestBody): void {
+    setBody(body: RequestBody) {
       renderedRequest.body = body;
     },
 
@@ -207,39 +201,59 @@ export function init(
     // ~~~~~~~~~~~~~~~~~~ //
 
     /** @deprecated in favor of getting the whole body by getBody */
-    getBodyText(): string {
+    getBodyText() {
       console.warn('request.getBodyText() is deprecated. Use request.getBody() instead.');
       return renderedRequest.body.text || '';
     },
 
     /** @deprecated in favor of setting the whole body by setBody */
-    setBodyText(text: string): void {
+    setBodyText(text: string) {
       console.warn('request.setBodyText() is deprecated. Use request.setBody() instead.');
       renderedRequest.body.text = text;
-    }, // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
-    // addCookie (name: string, value: string): void {}
+    },
+
+    // NOTE: For these to make sense, we'd need to account for cookies in the jar as well
+    // addCookie (name: string, value: string) {}
     // getCookie (name: string): string | null {}
-    // removeCookie (name: string): void {}
-  } as Record<string, any>;
+    // removeCookie (name: string) {}
+  };
 
   if (readOnly) {
+    // @ts-expect-error -- needs a proper request type
     delete request.setUrl;
+    // @ts-expect-error -- needs a proper request type
     delete request.setMethod;
+    // @ts-expect-error -- needs a proper request type
     delete request.setBodyText;
+    // @ts-expect-error -- needs a proper request type
     delete request.setCookie;
+    // @ts-expect-error -- needs a proper request type
     delete request.settingSendCookies;
+    // @ts-expect-error -- needs a proper request type
     delete request.settingStoreCookies;
+    // @ts-expect-error -- needs a proper request type
     delete request.settingEncodeUrl;
+    // @ts-expect-error -- needs a proper request type
     delete request.settingDisableRenderRequestBody;
+    // @ts-expect-error -- needs a proper request type
     delete request.settingFollowRedirects;
+    // @ts-expect-error -- needs a proper request type
     delete request.removeHeader;
+    // @ts-expect-error -- needs a proper request type
     delete request.setHeader;
+    // @ts-expect-error -- needs a proper request type
     delete request.addHeader;
+    // @ts-expect-error -- needs a proper request type
     delete request.removeParameter;
+    // @ts-expect-error -- needs a proper request type
     delete request.setParameter;
+    // @ts-expect-error -- needs a proper request type
     delete request.addParameter;
+    // @ts-expect-error -- needs a proper request type
     delete request.addParameter;
+    // @ts-expect-error -- needs a proper request type
     delete request.setAuthenticationParameter;
+    // @ts-expect-error -- needs a proper request type
     delete request.setBody;
   }
 

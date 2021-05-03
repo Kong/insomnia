@@ -356,7 +356,7 @@ export function getPlatformKeyCombinations(bindings: KeyBindings): KeyCombinatio
 export function areSameKeyCombinations(
   keyComb1: KeyCombination,
   keyComb2: KeyCombination,
-): boolean {
+) {
   return (
     keyComb1.alt === keyComb2.alt &&
     keyComb1.shift === keyComb2.shift &&
@@ -373,7 +373,7 @@ export function areSameKeyCombinations(
  * @param keyBinds to check with the default ones.
  * @returns {boolean}
  */
-export function areKeyBindingsSameAsDefault(hotKeyRefId: string, keyBinds: KeyBindings): boolean {
+export function areKeyBindingsSameAsDefault(hotKeyRefId: string, keyBinds: KeyBindings) {
   const keyCombs = getPlatformKeyCombinations(keyBinds);
   const defaultKeyCombs = getPlatformKeyCombinations(defaultRegistry[hotKeyRefId]);
 
@@ -401,7 +401,7 @@ export function areKeyBindingsSameAsDefault(hotKeyRefId: string, keyBinds: KeyBi
  * @param keyCode
  * @returns {string}
  */
-export function getChar(keyCode: number): string {
+export function getChar(keyCode: number) {
   let char;
   const key = Object.keys(keyboardKeys).find(k => keyboardKeys[k].keyCode === keyCode);
 
@@ -414,7 +414,7 @@ export function getChar(keyCode: number): string {
   return char || 'unknown';
 }
 
-function joinHotKeys(mustUsePlus: boolean, keys: string[]): string {
+function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
   if (!mustUsePlus && isMac()) {
     return keys.join('');
   }
@@ -427,7 +427,7 @@ function joinHotKeys(mustUsePlus: boolean, keys: string[]): string {
  * @param keyCode
  * @returns {boolean}
  */
-export function isModifierKeyCode(keyCode: number): boolean {
+export function isModifierKeyCode(keyCode: number) {
   return (
     keyCode === keyboardKeys.alt.keyCode ||
     keyCode === keyboardKeys.shift.keyCode ||
@@ -451,7 +451,7 @@ export function isModifierKeyCode(keyCode: number): boolean {
 export function constructKeyCombinationDisplay(
   keyComb: KeyCombination,
   mustUsePlus: boolean,
-): string {
+) {
   const { ctrl, alt, shift, meta, keyCode } = keyComb;
   const chars: string[] = [];
   alt && chars.push(ALT_SYM);

@@ -1,11 +1,11 @@
-type StatObj = {
+interface StatObj {
   type: 'file' | 'dir' | 'symlink';
   mode: number;
   size: number;
   ino: number;
   mtimeMs: number;
   ctimeMs?: number;
-};
+}
 export default class Stat {
   type: 'file' | 'dir' | 'symlink';
   mode: number;

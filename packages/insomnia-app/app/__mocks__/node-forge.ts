@@ -65,7 +65,7 @@ module.exports = {
     },
   },
   cipher: {
-    createCipher(alg, key) {
+    createCipher() {
       return {
         start(config) {
           this._config = config;
@@ -84,7 +84,7 @@ module.exports = {
       };
     },
 
-    createDecipher(alg, key) {
+    createDecipher() {
       return {
         start(config) {
           this._config = config;

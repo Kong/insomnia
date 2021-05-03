@@ -1,4 +1,3 @@
-import { $Shape } from 'utility-types';
 import type { BaseModel } from './index';
 import * as db from '../common/database';
 import {
@@ -8,12 +7,18 @@ import {
   ACTIVITY_DEBUG,
   DEPRECATED_ACTIVITY_INSOMNIA,
 } from '../common/constants';
+
 export const name = 'Workspace Meta';
+
 export const type = 'WorkspaceMeta';
+
 export const prefix = 'wrkm';
+
 export const canDuplicate = false;
+
 export const canSync = false;
-type BaseWorkspaceMeta = {
+
+interface BaseWorkspaceMeta {
   activeActivity: string | null;
   activeEnvironmentId: string | null;
   activeRequestId: string | null;
@@ -25,12 +30,15 @@ type BaseWorkspaceMeta = {
   hasSeen: boolean;
   paneHeight: number;
   paneWidth: number;
+  parentId: string | null;
   previewHidden: boolean;
   sidebarFilter: string;
   sidebarHidden: boolean;
   sidebarWidth: number;
-};
+}
+
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
+
 export function init(): BaseWorkspaceMeta {
   return {
     activeActivity: null,
@@ -51,12 +59,13 @@ export function init(): BaseWorkspaceMeta {
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
   };
 }
-export function migrate(doc: WorkspaceMeta): WorkspaceMeta {
+
+export function migrate(doc: WorkspaceMeta) {
   doc = _migrateInsomniaActivity(doc);
   return doc;
 }
 
-function _migrateInsomniaActivity(doc: WorkspaceMeta): WorkspaceMeta {
+function _migrateInsomniaActivity(doc: WorkspaceMeta) {
   if (doc.activeActivity === DEPRECATED_ACTIVITY_INSOMNIA) {
     doc.activeActivity = ACTIVITY_DEBUG;
   }
@@ -64,45 +73,37 @@ function _migrateInsomniaActivity(doc: WorkspaceMeta): WorkspaceMeta {
   return doc;
 }
 
-export function create(patch: $Shape<WorkspaceMeta> = {}): Promise<WorkspaceMeta> {
+export function create(patch: Partial<WorkspaceMeta> = {}) {
   if (!patch.parentId) {
     throw new Error(`New WorkspaceMeta missing parentId ${JSON.stringify(patch)}`);
   }
 
-  return db.docCreate(type, patch);
+  return db.docCreate<WorkspaceMeta>(type, patch);
 }
-export function update(
-  workspaceMeta: WorkspaceMeta,
-  patch: $Shape<WorkspaceMeta> = {},
-): Promise<WorkspaceMeta> {
-  return db.docUpdate(workspaceMeta, patch);
+
+export function update(workspaceMeta: WorkspaceMeta, patch: Partial<WorkspaceMeta> = {}) {
+  return db.docUpdate<WorkspaceMeta>(workspaceMeta, patch);
 }
-export async function updateByParentId(
-  workspaceId: string,
-  patch: $Shape<WorkspaceMeta> = {},
-): Promise<WorkspaceMeta> {
+
+export async function updateByParentId(workspaceId: string, patch: Partial<WorkspaceMeta> = {}) {
   const meta = await getByParentId(workspaceId);
-  return db.docUpdate(meta, patch);
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error not previously caught by Flow
+  return db.docUpdate<WorkspaceMeta>(meta, patch);
 }
-export async function getByParentId(parentId: string): Promise<WorkspaceMeta | null> {
-  return db.getWhere(type, {
-    parentId,
-  });
+
+export async function getByParentId(parentId: string) {
+  return db.getWhere<WorkspaceMeta>(type, { parentId });
 }
-export async function getByGitRepositoryId(gitRepositoryId: string): Promise<WorkspaceMeta | null> {
-  return db.getWhere(type, {
-    gitRepositoryId,
-  });
+
+export async function getByGitRepositoryId(gitRepositoryId: string) {
+  return db.getWhere<WorkspaceMeta>(type, { gitRepositoryId });
 }
-export async function getOrCreateByParentId(parentId: string): Promise<WorkspaceMeta> {
+
+export async function getOrCreateByParentId(parentId: string) {
   const doc = await getByParentId(parentId);
-  return (
-    doc ||
-    this.create({
-      parentId,
-    })
-  );
+  return doc || create({ parentId });
 }
-export function all(): Promise<Array<WorkspaceMeta>> {
-  return db.all(type);
+
+export function all() {
+  return db.all<WorkspaceMeta>(type);
 }
