@@ -250,8 +250,8 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
           <label>
             Move/Copy to Workspace
             <HelpTooltip position="top" className="space-left">
-              Copy or move the current request group to a new workspace. It will be placed at the
-              root of the new workspace's folder structure.
+              Copy or move the current folder to a new workspace. It will be placed at the root of
+              the new workspace's folder structure.
             </HelpTooltip>
             <select
               value={activeWorkspaceIdToCopyTo || '__NULL__'}
@@ -306,7 +306,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
             <DebouncedInput
               delay={500}
               type="text"
-              placeholder={requestGroup.url || 'My Request Group'}
+              placeholder={requestGroup.url || 'My Folder'}
               defaultValue={requestGroup.name}
               onChange={this._handleNameChange}
             />
@@ -323,7 +323,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     return (
       <Modal ref={this._setModalRef} freshState>
         <ModalHeader>
-          Request Group Settings{' '}
+          Folder Settings{' '}
           <span className="txt-sm selectable faint monospace">
             {requestGroup ? requestGroup._id : ''}
           </span>
