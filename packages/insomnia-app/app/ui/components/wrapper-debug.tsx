@@ -36,7 +36,7 @@ interface Props {
   handleSendRequestWithActiveEnvironment: (...args: any[]) => any;
   handleSetActiveResponse: (...args: any[]) => any;
   handleSetPreviewMode: (...args: any[]) => any;
-  handleSetResponseFilter: (...args: any[]) => any;
+  handleSetResponseFilter: (filter: string) => void;
   handleShowCookiesModal: (...args: any[]) => any;
   handleShowRequestSettingsModal: (...args: any[]) => any;
   handleSidebarSort: (sortOrder: SortOrder) => void;

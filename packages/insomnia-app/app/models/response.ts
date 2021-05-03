@@ -195,27 +195,27 @@ export function getLatestByParentId(parentId: string) {
   });
 }
 
-export function getBodyStream<T extends Response>(
+export function getBodyStream<T extends Response, TFail extends Readable>(
   response: T,
-  readFailureValue?: T | null,
+  readFailureValue?: TFail | null,
 ) {
   return getBodyStreamFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 }
 
-export const getBodyBuffer = <T extends Response>(
+export const getBodyBuffer = <T extends Response, TFail>(
   response: T,
-  readFailureValue?: T | null,
+  readFailureValue?: TFail | null,
 ) => getBodyBufferFromPath(response.bodyPath || '', response.bodyCompression, readFailureValue);
 
 export function getTimeline(response: Response): ResponseTimelineEntry[] {
   return getTimelineFromPath(response.timelinePath || '');
 }
 
-function getBodyStreamFromPath<T>(
+function getBodyStreamFromPath<TFail extends Readable>(
   bodyPath: string,
   compression: string | null,
-  readFailureValue?: T | null,
-): Readable | null | T {
+  readFailureValue?: TFail | null,
+): Readable | null | TFail {
   // No body, so return empty Buffer
   if (!bodyPath) {
     return null;

@@ -34,7 +34,7 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
 
 interface Props {
-  handleSetFilter: (...args: any[]) => any;
+  handleSetFilter: (filter: string) => void;
   showCookiesModal: (...args: any[]) => any;
   handleSetPreviewMode: (...args: any[]) => any;
   handleSetActiveResponse: (...args: any[]) => any;
@@ -99,13 +99,14 @@ class ResponsePane extends PureComponent<Props> {
     }
 
     const readStream = models.response.getBodyStream(response);
-    const dataBuffers = [];
+    const dataBuffers: Array<any> = [];
 
     if (readStream) {
       readStream.on('data', data => {
         dataBuffers.push(data);
       });
       readStream.on('end', () => {
+        // @ts-expect-error
         const to = fs.createWriteStream(outputPath);
         const finalBuffer = Buffer.concat(dataBuffers);
         to.on('error', err => {
@@ -155,6 +156,7 @@ class ResponsePane extends PureComponent<Props> {
     const readStream = models.response.getBodyStream(response);
 
     if (readStream) {
+      // @ts-expect-error
       const to = fs.createWriteStream(filePath);
       to.write(headers);
       readStream.pipe(to);
@@ -170,6 +172,7 @@ class ResponsePane extends PureComponent<Props> {
       // Refresh must be called when the editor is visible,
       // so use nextTick to give time for it to be visible.
       process.nextTick(() => {
+        // @ts-expect-error
         this._responseViewer.refresh();
       });
     }
@@ -237,7 +240,6 @@ class ResponsePane extends PureComponent<Props> {
               handleDeleteResponses={handleDeleteResponses}
               handleDeleteResponse={handleDeleteResponse}
               className="tall pane__header__right"
-              right
             />
           </PaneHeader>
         )}
@@ -246,7 +248,7 @@ class ResponsePane extends PureComponent<Props> {
           onSelect={this._handleTabSelect}
           forceRenderTabPanel>
           <TabList>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
@@ -255,7 +257,7 @@ class ResponsePane extends PureComponent<Props> {
                 showPrettifyOption={response.contentType.includes('json')}
               />
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <Button>
                 Header{' '}
                 {response.headers.length > 0 && (
@@ -263,7 +265,7 @@ class ResponsePane extends PureComponent<Props> {
                 )}
               </Button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <Button>
                 Cookie{' '}
                 {cookieHeaders.length ? (
@@ -271,7 +273,7 @@ class ResponsePane extends PureComponent<Props> {
                 ) : null}
               </Button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <Button>Timeline</Button>
             </Tab>
           </TabList>
@@ -293,7 +295,7 @@ class ResponsePane extends PureComponent<Props> {
               getBody={this._handleGetResponseBody}
               previewMode={response.error ? PREVIEW_MODE_SOURCE : previewMode}
               responseId={response._id}
-              updateFilter={response.error ? null : handleSetFilter}
+              updateFilter={response.error ? undefined : handleSetFilter}
               url={response.url}
             />
           </TabPanel>

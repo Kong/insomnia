@@ -1,15 +1,16 @@
 import React, { FunctionComponent } from 'react';
 import CodeEditor from '../codemirror/code-editor';
 import type { Settings } from '../../../models/settings';
+import { HandleGetRenderContext } from '../../../common/render';
 
 interface Props {
-  content: string;
-  handleChange: (arg0: string) => Promise<void>;
+  content?: string;
+  handleChange?: (arg0: string) => void;
   settings: Settings;
-  readOnly: boolean;
+  readOnly?: boolean;
   handleRender?: (arg0: string) => Promise<string>;
   isVariableUncovered?: boolean;
-  handleGetRenderContext?: (...args: any[]) => any;
+  handleGetRenderContext?: HandleGetRenderContext;
 }
 
 const GRPCEditor: FunctionComponent<Props> = ({

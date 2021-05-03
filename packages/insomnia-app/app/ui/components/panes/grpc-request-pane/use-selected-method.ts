@@ -17,7 +17,7 @@ interface MethodSelection {
 
 const useSelectedMethod = (
   { methods, reloadMethods }: GrpcRequestState,
-  { _id, protoMethodName }: GrpcRequest,
+  { protoMethodName }: GrpcRequest,
 ): MethodSelection => {
   const [selection, setSelection] = useState({});
   // if methods are waiting to be reloaded because they are stale, don't update the method selection.
@@ -30,6 +30,7 @@ const useSelectedMethod = (
 
     const selectedMethod = methods.find(c => c.path === protoMethodName);
     const methodType = selectedMethod && getMethodType(selectedMethod);
+    // @ts-expect-error undefined as index
     const methodTypeLabel = GrpcMethodTypeName[methodType];
     const enableClientStream = canClientStream(methodType);
     setSelection({

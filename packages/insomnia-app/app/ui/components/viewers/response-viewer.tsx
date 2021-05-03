@@ -38,7 +38,7 @@ interface Props {
   previewMode: string;
   responseId: string;
   url: string;
-  updateFilter?: ((...args: any[]) => any) | null;
+  updateFilter?: (filter: string) => void;
   error?: string | null;
 }
 
@@ -50,7 +50,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseViewer extends Component<Props, State> {
-  _selectableView: ResponseRaw | CodeEditor | null = null;
+  _selectableView: ResponseRaw | CodeEditor | null;
 
   state: State = {
     blockingBecauseTooLarge: false,
@@ -59,7 +59,9 @@ class ResponseViewer extends Component<Props, State> {
   }
 
   refresh() {
+    // @ts-expect-error refresh only exists on a code-editor, not response-raw
     if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
+      // @ts-expect-error refresh only exists on a code-editor, not response-raw
       this._selectableView.refresh();
     }
   }
@@ -170,7 +172,7 @@ class ResponseViewer extends Component<Props, State> {
     return false;
   }
 
-  _setSelectableViewRef(n: ResponseRaw | CodeEditor) {
+  _setSelectableViewRef<T extends ResponseRaw | CodeEditor | null>(n: T) {
     this._selectableView = n;
   }
 
@@ -420,7 +422,7 @@ class ResponseViewer extends Component<Props, State> {
           lineWrapping={editorLineWrapping}
           mode={mode}
           noMatchBrackets
-          onClickLink={disablePreviewLinks ? null : this._handleOpenLink}
+          onClickLink={disablePreviewLinks ? undefined : this._handleOpenLink}
           placeholder="..."
           readOnly
           uniquenessKey={responseId}

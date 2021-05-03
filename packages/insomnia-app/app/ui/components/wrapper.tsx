@@ -96,6 +96,8 @@ import { GrpcDispatchModalWrapper } from '../context/grpc';
 import WrapperMigration from './wrapper-migration';
 import type { ImportOptions } from '../redux/modules/global';
 import WrapperAnalytics from './wrapper-analytics';
+import { HandleGetRenderContext } from '../../common/render';
+
 const spectral = new Spectral();
 
 export interface WrapperProps {
@@ -128,7 +130,7 @@ export interface WrapperProps {
   handleSetResponsePaneRef: (...args: any[]) => any;
   handleSetResponsePreviewMode: (...args: any[]) => any;
   handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleGetRenderContext: HandleGetRenderContext;
   handleSetResponseFilter: (...args: any[]) => any;
   handleSetActiveResponse: (...args: any[]) => any;
   handleSetSidebarRef: (...args: any[]) => any;

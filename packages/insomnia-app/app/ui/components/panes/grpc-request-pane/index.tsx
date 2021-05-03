@@ -61,6 +61,7 @@ const GrpcRequestPane: FunctionComponent<Props> = ({
   const selection = useSelectedMethod(state, activeRequest);
   const { method, methodType, methodTypeLabel, enableClientStream } = selection;
   const handleChange = useChangeHandlers(activeRequest, dispatch);
+  // @ts-expect-error methodType can be undefined
   const handleAction = useActionHandlers(activeRequest._id, environmentId, methodType, dispatch);
   const getExistingGrpcUrls = useExistingGrpcUrls(workspaceId, activeRequest._id);
   // Used to refresh input fields to their default value when switching between requests.

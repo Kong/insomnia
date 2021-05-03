@@ -26,12 +26,17 @@ export type NunjucksActionTag = {
 export type NunjucksParsedTag = {
   name: string;
   args: Array<NunjucksParsedTagArg>;
-  actions: Array<NunjucksActionTag>;
+  actions?: Array<NunjucksActionTag>;
   rawValue?: string;
   displayName?: string;
   description?: string;
   disablePreview?: (arg0: Array<NunjucksParsedTagArg>) => boolean;
 };
+
+interface Key {
+  name: string;
+  value: any;
+}
 
 /**
  * Get list of paths to all primitive types in nested object
@@ -42,11 +47,8 @@ export type NunjucksParsedTag = {
 export function getKeys(
   obj: any,
   prefix: string = '',
-): Array<{
-  name: string;
-  value: any;
-}> {
-  let allKeys = [];
+): Array<Key> {
+  let allKeys: Array<Key> = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
   if (typeOfObj === '[object Array]') {
@@ -94,9 +96,9 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
   // ~~~~~~~~~~~~~ //
   // Tokenize Args //
   // ~~~~~~~~~~~~~ //
-  const args = [];
-  let quotedBy = null;
-  let currentArg = null;
+  const args: Array<NunjucksParsedTagArg> = [];
+  let quotedBy: string | null = null;
+  let currentArg: string | null = null;
 
   for (let i = 0; i < argsStr.length + 1; i++) {
     // Adding an "invisible" at the end helps us terminate the last arg
@@ -189,7 +191,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
 
 /** Convert a tokenized tag back into a Nunjucks string */
 export function unTokenizeTag(tagData: NunjucksParsedTag): string {
-  const args = [];
+  const args: Array<string> = [];
 
   for (const arg of tagData.args) {
     if (['string', 'model', 'file', 'enum'].includes(arg.type)) {
@@ -200,6 +202,7 @@ export function unTokenizeTag(tagData: NunjucksParsedTag): string {
     } else if (arg.type === 'boolean') {
       args.push(arg.value ? 'true' : 'false');
     } else {
+      // @ts-expect-error
       args.push(arg.value);
     }
   }
@@ -219,6 +222,7 @@ export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>):
         return `'${value}'`;
 
       case 'number':
+        // @ts-expect-error
         return `${parseFloat(argDefinition.defaultValue) || 0}`;
 
       case 'boolean':

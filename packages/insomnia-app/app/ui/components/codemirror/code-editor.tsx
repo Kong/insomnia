@@ -1,4 +1,4 @@
-import React, { Component, CSSProperties } from 'react';
+import React, { Component, CSSProperties, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -24,6 +24,9 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
+import { CodeMirrorLinkClickCallback } from './extensions/clickable';
+import { HandleGetRenderContext } from '../../../common/render';
+import { NunjucksParsedTag } from '../../../templating/utils';
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB
@@ -44,7 +47,7 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   autoCloseBrackets: true,
   tabSize: TAB_SIZE,
   indentUnit: TAB_SIZE,
-  hintOptions: null,
+  hintOptions: undefined,
   dragDrop: true,
   viewportMargin: 30,
   // default 10
@@ -56,10 +59,10 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   // NOTE: This is px
   keyMap: 'default',
   extraKeys: CodeMirror.normalizeKeyMap({
-    'Ctrl-Q': function(cm) {
+    'Ctrl-Q': function (cm) {
       cm.foldCode(cm.getCursor());
     },
-    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function(cm) {
+    [isMac() ? 'Cmd-Enter' : 'Ctrl-Enter']: function (cm) {
       // HACK: So nothing conflicts withe the "Send Request" shortcut
     },
     [isMac() ? 'Cmd-/' : 'Ctrl-/']: 'toggleComment',
@@ -80,11 +83,11 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 
 interface Props {
   indentWithTabs?: boolean,
-  onChange?: Function,
+  onChange?: (value: string) => void,
   onCursorActivity?: Function,
   onFocus?: Function,
   onBlur?: Function,
-  onClickLink?: Function,
+  onClickLink?: CodeMirrorLinkClickCallback,
   onKeyDown?: Function,
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>,
   onClick?: React.MouseEventHandler<HTMLDivElement>,
@@ -92,7 +95,7 @@ interface Props {
   onCodeMirrorInit?: Function,
   render?: Function,
   nunjucksPowerUserMode?: boolean,
-  getRenderContext?: Function,
+  getRenderContext?: HandleGetRenderContext,
   getAutocompleteConstants?: Function,
   getAutocompleteSnippets?: Function,
   keyMap?: string,
@@ -115,12 +118,12 @@ interface Props {
   noStyleActiveLine?: boolean,
   className?: string,
   style?: Object,
-  updateFilter?: Function,
+  updateFilter?: (filter: string) => void,
   defaultTabBehavior?: boolean,
   readOnly?: boolean,
   type?: string,
   filter?: string,
-  filterHistory?: string[],
+  filterHistory?: Array<string>,
   singleLine?: boolean,
   debounceMillis?: number,
   dynamicHeight?: boolean,
@@ -129,7 +132,7 @@ interface Props {
   lintOptions?: Object,
   infoOptions?: Object,
   jumpOptions?: Object,
-  uniquenessKey?: string | null,
+  uniquenessKey?: string,
   isVariableUncovered?: boolean,
   raw?: boolean,
 }
@@ -140,11 +143,11 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class CodeEditor extends Component<Props, State> {
-  private _uniquenessKey?: string | null = null;
-  private _previousUniquenessKey?: string | null = null;
+  private _uniquenessKey?: string;
+  private _previousUniquenessKey?: string;
   private _originalCode: string;
   codeMirror?: CodeMirror.EditorFromTextArea;
-  private _filterInput: HTMLInputElement | null = null;
+  private _filterInput: HTMLInputElement;
   private _autocompleteDebounce: NodeJS.Timeout;
   private _ignoreNextChange: boolean;
   private _filterTimeout: NodeJS.Timeout;
@@ -155,7 +158,7 @@ class CodeEditor extends Component<Props, State> {
       filter: props.filter || '',
     };
     this._originalCode = '';
-    this._uniquenessKey = this.props.uniquenessKey || null;
+    this._uniquenessKey = this.props.uniquenessKey;
     this._previousUniquenessKey = 'n/a';
   }
 
@@ -290,6 +293,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   getSelectionStart() {
+    // @ts-expect-error
     const selections = this.codeMirror.listSelections();
 
     if (selections.length) {
@@ -300,6 +304,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   getSelectionEnd() {
+    // @ts-expect-error
     const selections = this.codeMirror.listSelections();
 
     if (selections.length) {
@@ -406,23 +411,30 @@ class CodeEditor extends Component<Props, State> {
   _restoreState() {
     const { uniquenessKey } = this.props;
 
+    // @ts-expect-error only try access if uniquenessKey is defined
     if (!editorStates.hasOwnProperty(uniquenessKey)) {
       return;
     }
 
+    // @ts-expect-error only try access if uniquenessKey is defined
     const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
+    // @ts-expect-error
     this.codeMirror.scrollTo(scroll.left, scroll.top);
+    // @ts-expect-error
     this.codeMirror.setHistory(history);
     // NOTE: These won't be visible unless the editor is focused
+    // @ts-expect-error
     this.codeMirror.setCursor(cursor.line, cursor.ch, {
       scroll: false,
     });
+    // @ts-expect-error
     this.codeMirror.setSelections(selections, null, {
       scroll: false,
     });
 
     // Restore marks one-by-one
     for (const { from, to } of marks || []) {
+      // @ts-expect-error
       this.codeMirror.foldCode(from, to);
     }
   }
@@ -450,6 +462,7 @@ class CodeEditor extends Component<Props, State> {
         let endToken = '}';
         // Prevent retrieving an invalid content if undefined
         if (!from?.line || !to?.line) return '\u2194';
+        // @ts-expect-error
         const prevLine = this.codeMirror.getLine(from.line);
         if (!prevLine) return '\u2194';
 
@@ -459,6 +472,7 @@ class CodeEditor extends Component<Props, State> {
         }
 
         // Get json content
+        // @ts-expect-error
         const internal = this.codeMirror.getRange(from, to);
         const toParse = startToken + internal + endToken;
 
@@ -520,6 +534,7 @@ class CodeEditor extends Component<Props, State> {
       this._codemirrorSetValue(defaultValue || '');
 
       // Clear history so we can't undo the initial set
+      // @ts-expect-error
       this.codeMirror.clearHistory();
 
       // Setup nunjucks listeners
@@ -541,6 +556,7 @@ class CodeEditor extends Component<Props, State> {
       // HACK: Refresh because sometimes it renders too early and the scroll doesn't
       // quite fit.
       setTimeout(() => {
+        // @ts-expect-error
         this.codeMirror.refresh();
       }, 100);
 
@@ -597,12 +613,15 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _indentChars() {
+    // @ts-expect-error
     return this.codeMirror.getOption('indentWithTabs')
       ? '\t'
+      // @ts-expect-error
       : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
   }
 
   _handleBeautify() {
+    // @ts-expect-error
     this._prettify(this.codeMirror.getValue());
   }
 
@@ -766,8 +785,8 @@ class CodeEditor extends Component<Props, State> {
 
     // Setup the hint options
     if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
-      let getVariables = null;
-      let getTags = null;
+      let getVariables: (() => Promise<Array<Object>>) | undefined;
+      let getTags: (() => Promise<Array<NunjucksParsedTag>>) | undefined;
 
       if (getRenderContext) {
         getVariables = async () => {
@@ -778,7 +797,7 @@ class CodeEditor extends Component<Props, State> {
 
         // Only allow tags if we have variables too
         getTags = async () => {
-          const expandedTags = [];
+          const expandedTags: Array<NunjucksParsedTag> = [];
 
           for (const tagDef of await getTagDefinitions()) {
             const firstArg = tagDef.args[0];
@@ -788,7 +807,7 @@ class CodeEditor extends Component<Props, State> {
               continue;
             }
 
-            for (const option of tagDef.args[0].options) {
+            for (const option of firstArg.options || []) {
               // @ts-expect-error option.name doesn't exist
               const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
               const newDef = clone(tagDef);
@@ -846,6 +865,7 @@ class CodeEditor extends Component<Props, State> {
     // Set the option safely. When setting "lint", for example, it can throw an exception
     // and cause the editor to break.
     try {
+      // @ts-expect-error
       cm.setOption(key, value);
     } catch (err) {
       console.log('Failed to set CodeMirror option', err.message, {
@@ -951,6 +971,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _codemirrorValueBeforeChange(doc, change) {
+    // @ts-expect-error
     const value = this.codeMirror.getDoc().getValue();
 
     // If we're in single-line mode, merge all changed lines into one
@@ -999,6 +1020,7 @@ class CodeEditor extends Component<Props, State> {
       return;
     }
 
+    // @ts-expect-error
     const value = this.codeMirror.getDoc().getValue();
     // Disable linting if the document reaches a maximum size or is empty
     const shouldLint =
@@ -1047,6 +1069,7 @@ class CodeEditor extends Component<Props, State> {
       }
     }
 
+    // @ts-expect-error
     this.codeMirror.setValue(code || '');
   }
 
@@ -1109,7 +1132,7 @@ class CodeEditor extends Component<Props, State> {
       'editor--readonly': readOnly,
       'raw-editor': raw,
     });
-    const toolbarChildren = [];
+    const toolbarChildren: Array<ReactNode> = [];
 
     if (this.props.updateFilter && (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode))) {
       toolbarChildren.push(
@@ -1126,14 +1149,13 @@ class CodeEditor extends Component<Props, State> {
 
       if (filterHistory && filterHistory.length) {
         toolbarChildren.push(
-          // @ts-expect-error
+
           <Dropdown key="history" className="tall" right>
-            {/* @ts-expect-error */}
             <DropdownButton className="btn btn--compact">
               <i className="fa fa-clock-o" />
             </DropdownButton>
             {filterHistory.reverse().map(filter => (
-              // @ts-expect-error
+
               <DropdownItem key={filter} value={filter} onClick={this._handleFilterHistorySelect}>
                 {filter}
               </DropdownItem>
@@ -1171,7 +1193,7 @@ class CodeEditor extends Component<Props, State> {
       );
     }
 
-    let toolbar = null;
+    let toolbar: ReactNode = null;
 
     if (toolbarChildren.length) {
       toolbar = (

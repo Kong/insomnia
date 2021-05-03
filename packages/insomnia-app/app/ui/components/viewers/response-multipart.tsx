@@ -304,7 +304,6 @@ class ResponseMultipart extends PureComponent<Props, State> {
               key={`${responseId}::${activePart}`}
               previewMode={PREVIEW_MODE_FRIENDLY}
               responseId={`${responseId}[${activePart}]`}
-              updateFilter={null}
               url={url}
             />
           </div>

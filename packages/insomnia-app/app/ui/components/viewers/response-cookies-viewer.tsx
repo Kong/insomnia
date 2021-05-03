@@ -5,8 +5,8 @@ import { Cookie } from 'tough-cookie';
 
 interface Props {
   showCookiesModal: Function;
-  cookiesSent: boolean;
-  cookiesStored: boolean;
+  cookiesSent?: boolean | null;
+  cookiesStored?: boolean | null;
   headers: any[];
   handleShowRequestSettings: Function;
 }
@@ -14,7 +14,7 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseCookiesViewer extends PureComponent<Props> {
   renderRow(h, i) {
-    let cookie = null;
+    let cookie: Cookie | undefined | null = null;
 
     try {
       cookie = h ? Cookie.parse(h.value || '') : null;

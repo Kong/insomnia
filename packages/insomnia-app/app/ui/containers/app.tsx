@@ -121,6 +121,7 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { GitRepository } from '../../models/git-repository';
 import { CookieJar } from '../../models/cookie-jar';
 import { Response } from '../../models/response';
+import { RenderContextAndKeys } from '../../common/render';
 
 interface Props {
   sidebarWidth: number,
@@ -548,7 +549,8 @@ class App extends PureComponent<Props, State> {
     return render.getRenderContext(activeRequest, environmentId, ancestors);
   }
 
-  async _handleGetRenderContext() {
+
+  async _handleGetRenderContext(): Promise<RenderContextAndKeys> {
     const context = await this._fetchRenderContext();
     const keys = getKeys(context, NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME);
     return {
@@ -839,14 +841,14 @@ class App extends PureComponent<Props, State> {
           return;
         }
 
-        // @ts-expect-error incorrect stream type
+
         readStream.pipe(to);
-        // @ts-expect-error incorrect stream type
+
         readStream.on('end', async () => {
           responsePatch.error = `Saved to ${filename}`;
           await models.response.create(responsePatch, settings.maxHistoryResponses);
         });
-        // @ts-expect-error incorrect stream type
+
         readStream.on('error', async err => {
           console.warn('Failed to download request after sending', responsePatch.bodyPath, err);
           await models.response.create(responsePatch, settings.maxHistoryResponses);

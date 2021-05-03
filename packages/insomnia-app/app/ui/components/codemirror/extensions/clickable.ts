@@ -3,7 +3,10 @@ import 'codemirror/addon/mode/overlay';
 import { AllHtmlEntities } from 'html-entities';
 import { FLEXIBLE_URL_REGEX } from '../../../../common/constants';
 const entities = new AllHtmlEntities();
-CodeMirror.defineExtension('makeLinksClickable', function(handleClick) {
+
+export type CodeMirrorLinkClickCallback = (url: string) => void;
+
+CodeMirror.defineExtension('makeLinksClickable', function(handleClick: CodeMirrorLinkClickCallback) {
   // Only add the click mode if we have links to click
   this.addOverlay({
     token: function(stream, state) {

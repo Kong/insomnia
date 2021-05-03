@@ -26,6 +26,7 @@ interface Props {
   requestVersions: RequestVersion[];
   activeResponse: Response;
   activeEnvironment?: Environment | null;
+  className?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

@@ -34,6 +34,16 @@ export type RenderedRequest = Request & {
 };
 export type RenderedGrpcRequest = GrpcRequest;
 export type RenderedGrpcRequestBody = GrpcRequestBody;
+export interface RenderContextAndKeys {
+  context: Record<string, any>;
+  keys: Array<{
+    name: string;
+    value: any;
+  }>
+}
+
+export type HandleGetRenderContext = () => Promise<RenderContextAndKeys>;
+
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,
   rootEnvironment: Environment | null,
