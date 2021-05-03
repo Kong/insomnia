@@ -8,7 +8,7 @@ import chartSrc from '../images/chart.svg';
 
 interface Props {
   wrapperProps: WrapperProps;
-  handleDone: (...args: any[]) => any;
+  handleDone: (...args: Array<any>) => any;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

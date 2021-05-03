@@ -15,28 +15,28 @@ import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
 
 interface Child {
   doc: Request | GrpcRequest | RequestGroup;
-  children: Child[];
+  children: Array<Child>;
   collapsed: boolean;
   hidden: boolean;
   pinned: boolean;
 }
 export interface SidebarChildObjects {
-  pinned: Child[];
-  all: Child[];
+  pinned: Array<Child>;
+  all: Array<Child>;
 }
 interface Props {
-  handleActivateRequest: (...args: any[]) => any;
+  handleActivateRequest: (...args: Array<any>) => any;
   handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleSetRequestPinned: (...args: any[]) => any;
-  handleSetRequestGroupCollapsed: (...args: any[]) => any;
-  handleDuplicateRequest: (...args: any[]) => any;
+  handleSetRequestPinned: (...args: Array<any>) => any;
+  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
+  handleDuplicateRequest: (...args: Array<any>) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
-  handleGenerateCode: (...args: any[]) => any;
-  handleCopyAsCurl: (...args: any[]) => any;
-  handleRender: (...args: any[]) => any;
-  moveDoc: (...args: any[]) => any;
+  handleGenerateCode: (...args: Array<any>) => any;
+  handleCopyAsCurl: (...args: Array<any>) => any;
+  handleRender: (...args: Array<any>) => any;
+  moveDoc: (...args: Array<any>) => any;
   childObjects: SidebarChildObjects;
   workspace: Workspace;
   filter: string;
@@ -73,7 +73,7 @@ class SidebarChildren extends PureComponent<Props> {
     this._contextMenu = n;
   }
 
-  _renderChildren(children: Child[], isInPinnedList: boolean) {
+  _renderChildren(children: Array<Child>, isInPinnedList: boolean) {
     const {
       filter,
       handleCreateRequest,
@@ -166,7 +166,7 @@ class SidebarChildren extends PureComponent<Props> {
     });
   }
 
-  _renderList(children: Child[], pinnedList: boolean) {
+  _renderList(children: Array<Child>, pinnedList: boolean) {
     return (
       <ul
         className="sidebar__list sidebar__list-root theme--sidebar__list"

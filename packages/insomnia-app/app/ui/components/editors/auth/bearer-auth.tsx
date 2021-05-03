@@ -8,8 +8,8 @@ import HelpTooltip from '../../help-tooltip';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
   nunjucksPowerUserMode: boolean;
   request: Request;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

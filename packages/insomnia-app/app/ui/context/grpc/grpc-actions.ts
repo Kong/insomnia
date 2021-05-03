@@ -29,7 +29,7 @@ interface Action<T extends GrpcActionType> {
 }
 interface ActionMany<T extends GrpcActionType> {
   type: T;
-  requestIds: string[];
+  requestIds: Array<string>;
 }
 interface Payload<T> {
   payload: T;
@@ -45,7 +45,7 @@ export type ResponseMessageAction = Action<typeof GrpcActionTypeEnum.responseMes
 export type ErrorAction = Action<typeof GrpcActionTypeEnum.error> & Payload<ServiceError>;
 export type StatusAction = Action<typeof GrpcActionTypeEnum.status> & Payload<GrpcStatusObject>;
 export type LoadMethodsAction = Action<typeof GrpcActionTypeEnum.loadMethods> &
-  Payload<GrpcMethodDefinition[]>;
+  Payload<Array<GrpcMethodDefinition>>;
 type InvalidateManyAction = ActionMany<typeof GrpcActionTypeEnum.invalidateMany>;
 export type GrpcAction =
   | ClearAction

@@ -5,7 +5,7 @@ import KeyValueEditor from '../../key-value-editor/editor';
 
 interface Props {
   onChange: Function;
-  parameters: any[];
+  parameters: Array<any>;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   handleRender?: Function;

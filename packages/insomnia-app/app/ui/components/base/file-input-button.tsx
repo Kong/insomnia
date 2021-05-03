@@ -7,8 +7,8 @@ import selectFileOrFolder from '../../../common/select-file-or-folder';
 interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   onChange: (path: string) => void;
   path?: string;
-  itemtypes?: ('file' | 'directory')[];
-  extensions?: string[];
+  itemtypes?: Array<'file' | 'directory'>;
+  extensions?: Array<string>;
   showFileName?: boolean;
   showFileIcon?: boolean;
   name?: string;

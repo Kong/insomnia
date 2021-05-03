@@ -10,7 +10,7 @@ interface MaybeResponse {
   bytesContent?: number;
   bodyPath?: string;
   elapsedTime?: number;
-  headers?: ResponseHeader[];
+  headers?: Array<ResponseHeader>;
 }
 export function init(
   response: MaybeResponse,
@@ -66,7 +66,7 @@ export function init(
         response.bytesContent = body.length;
       },
 
-      getHeader(name: string): string | string[] | null {
+      getHeader(name: string): string | Array<string> | null {
         const headers = response.headers || [];
         const matchedHeaders = headers.filter(h => h.name.toLowerCase() === name.toLowerCase());
 
@@ -79,10 +79,10 @@ export function init(
         }
       },
 
-      getHeaders(): {
+      getHeaders(): Array<{
         name: string;
         value: string;
-      }[] {
+      }> {
         return response.headers.map(h => ({
           name: h.name,
           value: h.value,

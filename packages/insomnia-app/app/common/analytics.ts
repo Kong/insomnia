@@ -230,7 +230,7 @@ export async function _trackPageView(location: string) {
   await _sendToGoogle(params, false);
 }
 
-async function _getDefaultParams(): Promise<RequestParameter[]> {
+async function _getDefaultParams(): Promise<Array<RequestParameter>> {
   const deviceId = await getDeviceId();
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
   const ua = String(window?.navigator?.userAgent)
@@ -322,7 +322,7 @@ db.onChange(async changes => {
   }
 });
 
-async function _sendToGoogle(params: RequestParameter[], queueable: boolean) {
+async function _sendToGoogle(params: Array<RequestParameter>, queueable: boolean) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {

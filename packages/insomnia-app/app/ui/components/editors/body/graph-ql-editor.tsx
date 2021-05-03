@@ -78,7 +78,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLEditor extends PureComponent<Props, State> {
-  _disabledOperationMarkers: TextMarker[] = [];
+  _disabledOperationMarkers: Array<TextMarker> = [];
   _documentAST: null | Record<string, any> = null;
   _isMounted = false;
   _queryEditor: null | CodeMirror = null;
@@ -390,7 +390,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     }
   }
 
-  _getOperations(): any[] {
+  _getOperations(): Array<any> {
     if (!this._documentAST) {
       return [];
     }

@@ -27,21 +27,21 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import classnames from 'classnames';
 
 interface Props {
-  handleDuplicateRequest: (...args: any[]) => any;
-  handleGenerateCode: (...args: any[]) => any;
-  handleCopyAsCurl: (...args: any[]) => any;
-  handleShowSettings: (...args: any[]) => any;
+  handleDuplicateRequest: (...args: Array<any>) => any;
+  handleGenerateCode: (...args: Array<any>) => any;
+  handleCopyAsCurl: (...args: Array<any>) => any;
+  handleShowSettings: (...args: Array<any>) => any;
   isPinned: Boolean;
   request: Request;
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  handleSetRequestPinned: (...args: any[]) => any;
+  handleSetRequestPinned: (...args: Array<any>) => any;
   activeEnvironment?: Environment;
 }
 
 // Setup state for plugin actions
 interface State {
-  actionPlugins: RequestGroupAction[];
+  actionPlugins: Array<RequestGroupAction>;
   loadingActions: Record<string, boolean>;
 }
 

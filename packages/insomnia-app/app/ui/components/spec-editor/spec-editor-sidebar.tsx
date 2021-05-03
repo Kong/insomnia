@@ -47,7 +47,7 @@ class SpecEditorSidebar extends Component<Props, State> {
     handleSetSelection(pos.start.col - 1, pos.end.col - 1, pos.start.line - 1, pos.end.line - 1);
   }
 
-  _mapPosition(itemPath: any[]) {
+  _mapPosition(itemPath: Array<any>) {
     const sourceMap = new YAMLSourceMap();
     const { contents } = this.props.apiSpec;
     const scrollPosition = {

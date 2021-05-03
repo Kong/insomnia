@@ -25,7 +25,7 @@ interface HistoryItem {
 }
 
 interface State extends HistoryItem {
-  history: HistoryItem[];
+  history: Array<HistoryItem>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

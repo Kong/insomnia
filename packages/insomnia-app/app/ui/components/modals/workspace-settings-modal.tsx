@@ -19,7 +19,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 
 interface Props {
-  clientCertificates: ClientCertificate[];
+  clientCertificates: Array<ClientCertificate>;
   workspace: Workspace;
   apiSpec: ApiSpec;
   editorFontSize: number;
@@ -28,11 +28,11 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
-  handleRemoveWorkspace: (...args: any[]) => any;
-  handleDuplicateWorkspace: (...args: any[]) => any;
-  handleClearAllResponses: (...args: any[]) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRemoveWorkspace: (...args: Array<any>) => any;
+  handleDuplicateWorkspace: (...args: Array<any>) => any;
+  handleClearAllResponses: (...args: Array<any>) => any;
 }
 
 interface State {

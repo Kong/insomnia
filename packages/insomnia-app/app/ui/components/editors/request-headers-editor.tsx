@@ -10,15 +10,15 @@ import allEncodings from '../../../datasets/encodings';
 import type { Request, RequestHeader } from '../../../models/request';
 
 interface Props {
-  onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  onChange: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
   bulk: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
   request: Request;
 }
 
@@ -32,7 +32,7 @@ class RequestHeadersEditor extends PureComponent<Props> {
     onChange(request, headers);
   }
 
-  _handleKeyValueUpdate(headers: RequestHeader[]) {
+  _handleKeyValueUpdate(headers: Array<RequestHeader>) {
     const { onChange, request } = this.props;
     onChange(request, headers);
   }

@@ -8,7 +8,7 @@ const isAdded = ({ status }: FileWithStatus) => status.includes('added');
 
 const isNotAdded = ({ status }: FileWithStatus) => !status.includes('added');
 
-export const gitRollback = async (vcs: GitVCS, files: FileWithStatus[]) => {
+export const gitRollback = async (vcs: GitVCS, files: Array<FileWithStatus>) => {
   const addedFiles = files.filter(isAdded);
   // Remove and delete added (unversioned) files
   const promises = addedFiles.map(async ({ filePath }) => {

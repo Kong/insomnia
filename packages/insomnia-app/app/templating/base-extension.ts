@@ -10,7 +10,7 @@ const EMPTY_ARG = '__EMPTY_NUNJUCKS_ARG__';
 export default class BaseExtension {
   _ext: PluginTemplateTag | null = null;
   _plugin: Plugin | null = null;
-  tags: PluginTemplateTag['name'][] | null = null;
+  tags: Array<PluginTemplateTag['name']> | null = null;
 
   constructor(ext: PluginTemplateTag, plugin: Plugin) {
     this._ext = ext;

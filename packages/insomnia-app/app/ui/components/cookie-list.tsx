@@ -10,13 +10,13 @@ import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
 import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
-  handleCookieAdd: (...args: any[]) => any;
-  handleCookieDelete: (...args: any[]) => any;
-  handleDeleteAll: (...args: any[]) => any;
-  cookies: Cookie[];
+  handleCookieAdd: (...args: Array<any>) => any;
+  handleCookieDelete: (...args: Array<any>) => any;
+  handleDeleteAll: (...args: Array<any>) => any;
+  cookies: Array<Cookie>;
   newCookieDomainName: string;
-  handleShowModifyCookieModal: (...args: any[]) => any;
-  handleRender: (...args: any[]) => any;
+  handleShowModifyCookieModal: (...args: Array<any>) => any;
+  handleRender: (...args: Array<any>) => any;
 }
 
 // Use tough-cookie MAX_DATE value

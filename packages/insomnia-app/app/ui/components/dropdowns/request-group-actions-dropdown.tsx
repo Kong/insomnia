@@ -35,7 +35,7 @@ interface Props {
 }
 
 interface State {
-  actionPlugins: RequestGroupAction[];
+  actionPlugins: Array<RequestGroupAction>;
   loadingActions: Record<string, boolean>;
 }
 

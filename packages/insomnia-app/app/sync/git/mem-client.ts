@@ -22,7 +22,7 @@ interface FSDir {
   readonly mtimeMs: number;
   readonly name: string;
   readonly path: string;
-  readonly children: (FSFile | FSDir | FSLink)[];
+  readonly children: Array<FSFile | FSDir | FSLink>;
 }
 type FSEntry = FSDir | FSFile | FSLink;
 export class MemClient {

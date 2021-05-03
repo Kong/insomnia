@@ -29,8 +29,8 @@ interface Props extends ModalProps {
   editorIndentSize: number;
   editorKeyMap: string;
   lineWrapping: boolean;
-  render: (...args: any[]) => any;
-  getRenderContext: (...args: any[]) => any;
+  render: (...args: Array<any>) => any;
+  getRenderContext: (...args: Array<any>) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
 }
@@ -38,7 +38,7 @@ interface Props extends ModalProps {
 interface State {
   workspace: Workspace | null;
   isValid: boolean;
-  subEnvironments: Environment[];
+  subEnvironments: Array<Environment>;
   rootEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
 }
@@ -320,7 +320,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   async _handleSortEnd(results: {
     oldIndex: number;
     newIndex: number;
-    collection: Environment[];
+    collection: Array<Environment>;
   }) {
     const { oldIndex, newIndex } = results;
 

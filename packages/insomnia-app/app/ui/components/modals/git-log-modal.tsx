@@ -14,7 +14,7 @@ interface Props {
 }
 
 interface State {
-  logs: GitLogEntry[];
+  logs: Array<GitLogEntry>;
   branch: string;
 }
 

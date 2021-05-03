@@ -33,7 +33,7 @@ export interface RequestGroupAction {
     context: Record<string, any>,
     models: {
       requestGroup: RequestGroup;
-      requests: Request[];
+      requests: Array<Request>;
     },
   ) => void | Promise<void>;
   label: string;
@@ -46,7 +46,7 @@ export interface RequestAction {
     context: Record<string, any>,
     models: {
       requestGroup: RequestGroup;
-      request: Request[];
+      request: Array<Request>;
     },
   ) => void | Promise<void>;
   label: string;
@@ -59,8 +59,8 @@ export interface WorkspaceAction {
     context: Record<string, any>,
     models: {
       workspace: Workspace;
-      requestGroups: RequestGroup[];
-      requests: Request[];
+      requestGroups: Array<RequestGroup>;
+      requests: Array<Request>;
     },
   ) => void | Promise<void>;
   label: string;
@@ -94,12 +94,12 @@ export interface DocumentAction {
 
 export interface RequestHook {
   plugin: Plugin;
-  hook: (...args: any[]) => any;
+  hook: (...args: Array<any>) => any;
 }
 
 export interface ResponseHook {
   plugin: Plugin;
-  hook: (...args: any[]) => any;
+  hook: (...args: Array<any>) => any;
 }
 
 export interface Theme {
@@ -109,9 +109,9 @@ export interface Theme {
 
 export type ColorScheme = 'default' | 'light' | 'dark';
 
-let plugins: Plugin[] | null | undefined = null;
+let plugins: Array<Plugin> | null | undefined = null;
 
-let ignorePlugins: string[] = [];
+let ignorePlugins: Array<string> = [];
 
 export async function init() {
   clearIgnores();
@@ -130,7 +130,7 @@ export function clearIgnores() {
 
 async function _traversePluginPath(
   pluginMap: Record<string, any>,
-  allPaths: string[],
+  allPaths: Array<string>,
   allConfigs: PluginConfigMap,
 ) {
   for (const p of allPaths) {
@@ -190,7 +190,7 @@ async function _traversePluginPath(
   }
 }
 
-export async function getPlugins(force = false): Promise<Plugin[]> {
+export async function getPlugins(force = false): Promise<Array<Plugin>> {
   if (force) {
     plugins = null;
   }
@@ -242,11 +242,11 @@ export async function reloadPlugins() {
   await getPlugins(true);
 }
 
-async function getActivePlugins(): Promise<Plugin[]> {
+async function getActivePlugins(): Promise<Array<Plugin>> {
   return (await getPlugins()).filter(p => !p.config.disabled);
 }
 
-export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
+export async function getRequestGroupActions(): Promise<Array<RequestGroupAction>> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -263,7 +263,7 @@ export async function getRequestGroupActions(): Promise<RequestGroupAction[]> {
   return extensions;
 }
 
-export async function getRequestActions(): Promise<RequestAction[]> {
+export async function getRequestActions(): Promise<Array<RequestAction>> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -280,7 +280,7 @@ export async function getRequestActions(): Promise<RequestAction[]> {
   return extensions;
 }
 
-export async function getWorkspaceActions(): Promise<WorkspaceAction[]> {
+export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -297,7 +297,7 @@ export async function getWorkspaceActions(): Promise<WorkspaceAction[]> {
   return extensions;
 }
 
-export async function getDocumentActions(): Promise<DocumentAction[]> {
+export async function getDocumentActions(): Promise<Array<DocumentAction>> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -314,7 +314,7 @@ export async function getDocumentActions(): Promise<DocumentAction[]> {
   return extensions;
 }
 
-export async function getTemplateTags(): Promise<TemplateTag[]> {
+export async function getTemplateTags(): Promise<Array<TemplateTag>> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -331,7 +331,7 @@ export async function getTemplateTags(): Promise<TemplateTag[]> {
   return extensions;
 }
 
-export async function getRequestHooks(): Promise<RequestHook[]> {
+export async function getRequestHooks(): Promise<Array<RequestHook>> {
   let functions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -348,7 +348,7 @@ export async function getRequestHooks(): Promise<RequestHook[]> {
   return functions;
 }
 
-export async function getResponseHooks(): Promise<ResponseHook[]> {
+export async function getResponseHooks(): Promise<Array<ResponseHook>> {
   let functions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -365,7 +365,7 @@ export async function getResponseHooks(): Promise<ResponseHook[]> {
   return functions;
 }
 
-export async function getThemes(): Promise<Theme[]> {
+export async function getThemes(): Promise<Array<Theme>> {
   let extensions = [];
 
   for (const plugin of await getActivePlugins()) {
@@ -382,7 +382,7 @@ export async function getThemes(): Promise<Theme[]> {
   return extensions;
 }
 
-export async function getConfigGenerators(): Promise<ConfigGenerator[]> {
+export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
   let functions = [];
 
   for (const plugin of await getActivePlugins()) {

@@ -14,7 +14,7 @@ import SyncPullButton from '../sync-pull-button';
 
 interface Props {
   workspace: Workspace;
-  syncItems: StatusCandidate[];
+  syncItems: Array<StatusCandidate>;
   vcs: VCS;
 }
 
@@ -22,8 +22,8 @@ interface State {
   error: string;
   newBranchName: string;
   currentBranch: string;
-  branches: string[];
-  remoteBranches: string[];
+  branches: Array<string>;
+  remoteBranches: Array<string>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -165,7 +165,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async show(options: { onHide: (...args: any[]) => any }) {
+  async show(options: { onHide: (...args: Array<any>) => any }) {
     this.modal &&
       this.modal.show({
         onHide: options.onHide,

@@ -17,7 +17,7 @@ interface Props {
 }
 
 interface State {
-  themes: ThemeType[];
+  themes: Array<ThemeType>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -108,8 +108,8 @@ class Theme extends PureComponent<Props, State> {
 
   renderThemeRows() {
     const { themes } = this.state;
-    const rows: ThemeType[][] = [];
-    let row: ThemeType[] = [];
+    const rows: Array<Array<ThemeType>> = [];
+    let row: Array<ThemeType> = [];
 
     for (const theme of themes) {
       row.push(theme);

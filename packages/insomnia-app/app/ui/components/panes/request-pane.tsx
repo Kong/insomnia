@@ -35,25 +35,25 @@ import type { HandleImportFileCallback } from '../wrapper';
 interface Props {
   // Functions
   forceUpdateRequest: (r: Request, patch: Record<string, any>) => Promise<Request>;
-  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  forceUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleCreateRequest: () => Promise<Request>;
-  handleGenerateCode: (...args: any[]) => any;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
-  handleUpdateDownloadPath: (...args: any[]) => any;
+  handleGenerateCode: (...args: Array<any>) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
+  handleUpdateDownloadPath: (...args: Array<any>) => any;
   updateRequestUrl: (r: Request, url: string) => Promise<Request>;
   updateRequestMethod: (r: Request, method: string) => Promise<Request>;
   updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
+  updateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>;
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  updateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
   updateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>;
-  updateSettingsShowPasswords: (...args: any[]) => any;
-  updateSettingsUseBulkHeaderEditor: (...args: any[]) => any;
-  updateSettingsUseBulkParametersEditor: (...args: any[]) => any;
-  handleImport: (...args: any[]) => any;
+  updateSettingsShowPasswords: (...args: Array<any>) => any;
+  updateSettingsUseBulkHeaderEditor: (...args: Array<any>) => any;
+  updateSettingsUseBulkParametersEditor: (...args: Array<any>) => any;
+  handleImport: (...args: Array<any>) => any;
   handleImportFile: HandleImportFileCallback;
   workspace: Workspace;
   settings: Settings;
@@ -79,7 +79,7 @@ class RequestPane extends PureComponent<Props> {
     });
   }
 
-  _autocompleteUrls(): Promise<string[]> {
+  _autocompleteUrls(): Promise<Array<string>> {
     const { workspace, request } = this.props;
     return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
   }

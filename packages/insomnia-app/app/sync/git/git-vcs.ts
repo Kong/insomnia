@@ -43,14 +43,14 @@ export interface GitLogEntry {
     tree: GitRef;
     author: GitAuthor & GitTimestamp;
     committer: GitAuthor & GitTimestamp;
-    parent: GitRef[];
+    parent: Array<GitRef>;
   };
   payload: string;
 }
 
 export interface PushResponse {
-  ok?: string[];
-  errors?: string[];
+  ok?: Array<string>;
+  errors?: Array<string>;
   headers?: object;
 }
 
@@ -202,7 +202,7 @@ export class GitVCS {
     return config;
   }
 
-  async listRemotes(): Promise<GitRemoteConfig[]> {
+  async listRemotes(): Promise<Array<GitRemoteConfig>> {
     return git.listRemotes({ ...this._baseOpts });
   }
 
@@ -362,7 +362,7 @@ export class GitVCS {
     }
   }
 
-  async undoPendingChanges(fileFilter?: String[]) {
+  async undoPendingChanges(fileFilter?: Array<String>) {
     console.log('[git] Undo pending changes');
     await git.checkout({
       ...this._baseOpts,
@@ -401,7 +401,7 @@ export class GitVCS {
     return this._baseOpts.fs;
   }
 
-  static sortBranches(branches: string[]) {
+  static sortBranches(branches: Array<string>) {
     const newBranches = [...branches];
     newBranches.sort((a: string, b: string) => {
       if (a === 'master') {

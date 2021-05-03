@@ -16,7 +16,7 @@ interface BaseRequestMeta {
   parentId: string;
   previewMode: string;
   responseFilter: string;
-  responseFilterHistory: string[];
+  responseFilterHistory: Array<string>;
   activeResponseId: string | null;
   savedRequestBody: Record<string, any>;
   pinned: boolean;

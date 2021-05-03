@@ -8,7 +8,7 @@ interface Props {
   href: string;
   title?: string;
   button?: boolean;
-  onClick?: (...args: any[]) => any;
+  onClick?: (...args: Array<any>) => any;
   className?: string;
   children?: ReactNode;
   disabled?: boolean;

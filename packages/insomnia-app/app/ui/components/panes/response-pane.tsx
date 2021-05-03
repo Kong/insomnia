@@ -35,25 +35,25 @@ import classnames from 'classnames';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  showCookiesModal: (...args: any[]) => any;
-  handleSetPreviewMode: (...args: any[]) => any;
-  handleSetActiveResponse: (...args: any[]) => any;
-  handleDeleteResponses: (...args: any[]) => any;
-  handleDeleteResponse: (...args: any[]) => any;
-  handleShowRequestSettings: (...args: any[]) => any;
+  showCookiesModal: (...args: Array<any>) => any;
+  handleSetPreviewMode: (...args: Array<any>) => any;
+  handleSetActiveResponse: (...args: Array<any>) => any;
+  handleDeleteResponses: (...args: Array<any>) => any;
+  handleDeleteResponse: (...args: Array<any>) => any;
+  handleShowRequestSettings: (...args: Array<any>) => any;
   previewMode: string;
   filter: string;
-  filterHistory: string[];
+  filterHistory: Array<string>;
   disableHtmlPreviewJs: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   loadStartTime: number;
-  responses: Response[];
+  responses: Array<Response>;
   hotKeyRegistry: HotKeyRegistry;
   disableResponsePreviewLinks: boolean;
-  requestVersions: RequestVersion[];
+  requestVersions: Array<RequestVersion>;
   request?: Request | null;
   response?: Response | null;
   environment?: Environment | null;
@@ -99,7 +99,7 @@ class ResponsePane extends PureComponent<Props> {
     }
 
     const readStream = models.response.getBodyStream(response);
-    const dataBuffers: any[] = [];
+    const dataBuffers: Array<any> = [];
 
     if (readStream) {
       readStream.on('data', data => {

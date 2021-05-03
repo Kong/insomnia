@@ -140,12 +140,12 @@ interface Props {
   activeEnvironment?: Environment,
   isVariableUncovered: boolean,
   sidebarHidden: boolean,
-  workspaces: Workspace[],
-  apiSpecs: ApiSpec[],
+  workspaces: Array<Workspace>,
+  apiSpecs: Array<ApiSpec>,
   activeWorkspaceMeta: WorkspaceMeta,
   activeGitRepository: GitRepository,
   activeCookieJar: CookieJar,
-  environments: Environment[],
+  environments: Array<Environment>,
   handleStartLoading: Function,
   handleStopLoading: Function
   handleImportUriToWorkspace: Function,
@@ -438,7 +438,7 @@ class App extends PureComponent<Props, State> {
     });
   }
 
-  async _recalculateMetaSortKey(docs: BaseModel[]) {
+  async _recalculateMetaSortKey(docs: Array<BaseModel>) {
     function __updateDoc(doc, metaSortKey) {
       return models.getModel(doc.type)?.update(doc, {
         metaSortKey,

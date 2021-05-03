@@ -20,14 +20,14 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 
 interface Props {
-  handleAutocompleteUrls: (...args: any[]) => any;
-  handleGenerateCode: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
-  handleImport: (...args: any[]) => any;
+  handleAutocompleteUrls: (...args: Array<any>) => any;
+  handleGenerateCode: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
+  handleImport: (...args: Array<any>) => any;
   handleRender: (arg0: string) => Promise<string>;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleUpdateDownloadPath: (...args: any[]) => any;
+  handleUpdateDownloadPath: (...args: Array<any>) => any;
   isVariableUncovered: boolean;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;

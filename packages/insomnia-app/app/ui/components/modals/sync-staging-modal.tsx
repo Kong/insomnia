@@ -16,7 +16,7 @@ import { strings } from '../../../common/strings';
 
 interface Props {
   workspace: Workspace;
-  syncItems: StatusCandidate[];
+  syncItems: Array<StatusCandidate>;
   vcs: VCS;
 }
 
@@ -29,7 +29,7 @@ interface State {
     string,
     {
       entry: StageEntry;
-      changes: null | string[];
+      changes: null | Array<string>;
       type: string;
       checked: boolean;
     }
@@ -87,13 +87,13 @@ class SyncStagingModal extends PureComponent<Props, State> {
     await this.refreshMainAttributes({}, newStage);
   }
 
-  async _handleAllToggle(keys: DocumentKey[], doStage: boolean) {
+  async _handleAllToggle(keys: Array<DocumentKey>, doStage: boolean) {
     const { vcs } = this.props;
     const { status } = this.state;
     let stage;
 
     if (doStage) {
-      const entries: StageEntry[] = [];
+      const entries: Array<StageEntry> = [];
 
       for (const k of Object.keys(status.unstaged)) {
         if (keys.includes(k)) {
@@ -103,7 +103,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
       stage = await vcs.stage(status.stage, entries);
     } else {
-      const entries: StageEntry[] = [];
+      const entries: Array<StageEntry> = [];
 
       for (const k of Object.keys(status.stage)) {
         if (keys.includes(k)) {
@@ -219,7 +219,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     this.textarea && this.textarea.focus();
   }
 
-  static renderOperation(entry: StageEntry, type: string, changes: string[]) {
+  static renderOperation(entry: StageEntry, type: string, changes: Array<string>) {
     let child = null;
     let message = '';
 
@@ -250,7 +250,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     );
   }
 
-  renderTable(keys: DocumentKey[], title: ReactNode) {
+  renderTable(keys: Array<DocumentKey>, title: ReactNode) {
     const { status, lookupMap } = this.state;
 
     if (keys.length === 0) {

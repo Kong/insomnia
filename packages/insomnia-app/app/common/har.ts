@@ -50,7 +50,7 @@ export interface HarPostParam {
 
 export interface HarPostData {
   mimeType: string;
-  params: HarPostParam[];
+  params: Array<HarPostParam>;
   text: string;
   comment?: string;
 }
@@ -59,9 +59,9 @@ export interface HarRequest {
   method: string;
   url: string;
   httpVersion: string;
-  cookies: HarCookie[];
-  headers: HarHeader[];
-  queryString: HarQueryString[];
+  cookies: Array<HarCookie>;
+  headers: Array<HarHeader>;
+  queryString: Array<HarQueryString>;
   postData?: HarPostData;
   headersSize: number;
   bodySize: number;
@@ -82,8 +82,8 @@ export interface HarResponse {
   status: number;
   statusText: string;
   httpVersion: string;
-  cookies: HarCookie[];
-  headers: HarHeader[];
+  cookies: Array<HarCookie>;
+  headers: Array<HarHeader>;
   content: HarContent;
   redirectURL: string;
   headersSize: number;
@@ -159,8 +159,8 @@ export interface HarLog {
   version: string;
   creator: HarCreator;
   browser?: HarBrowser;
-  pages?: HarPage[];
-  entries: HarEntry[];
+  pages?: Array<HarPage>;
+  entries: Array<HarEntry>;
   comment?: string;
 }
 
@@ -173,10 +173,10 @@ export interface ExportRequest {
   environmentId: string | null;
 }
 
-export async function exportHar(exportRequests: ExportRequest[]) {
+export async function exportHar(exportRequests: Array<ExportRequest>) {
   // Export HAR entries with the same start time in order to keep their workspace sort order.
   const startedDateTime = new Date().toISOString();
-  const entries: HarEntry[] = [];
+  const entries: Array<HarEntry> = [];
 
   for (const exportRequest of exportRequests) {
     const request: Request | null = await models.request.getById(exportRequest.requestId);
@@ -376,12 +376,12 @@ export async function exportHarWithRenderedRequest(
 function getRequestCookies(renderedRequest: RenderedRequest) {
   const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
   const domainCookies = jar.getCookiesSync(renderedRequest.url);
-  const harCookies: HarCookie[] = domainCookies.map(mapCookie);
+  const harCookies: Array<HarCookie> = domainCookies.map(mapCookie);
   return harCookies;
 }
 
 function getReponseCookies(response: ResponseModel) {
-  const headers = response.headers.filter(Boolean) as HarCookie[];
+  const headers = response.headers.filter(Boolean) as Array<HarCookie>;
   return getSetCookieHeaders(headers)
     .map(harCookie => {
       let cookie: null | undefined | toughCookie = null;
@@ -474,7 +474,7 @@ function getRequestHeaders(renderedRequest: RenderedRequest) {
     }));
 }
 
-function getRequestQueryString(renderedRequest: RenderedRequest): HarQueryString[] {
+function getRequestQueryString(renderedRequest: RenderedRequest): Array<HarQueryString> {
   return renderedRequest.parameters.map<HarQueryString>(parameter => ({
     name: parameter.name,
     value: parameter.value,

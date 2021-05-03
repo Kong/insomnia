@@ -62,7 +62,7 @@ class SyncDeleteModal extends PureComponent<Props, State> {
     }
   }
 
-  async show(options: { onHide: (...args: any[]) => any }) {
+  async show(options: { onHide: (...args: Array<any>) => any }) {
     this.modal &&
       this.modal.show({
         onHide: options.onHide,

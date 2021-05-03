@@ -69,7 +69,7 @@ export interface RequestBody {
   mimeType?: string | null;
   text?: string;
   fileName?: string;
-  params?: RequestBodyParameter[];
+  params?: Array<RequestBodyParameter>;
 }
 
 interface BaseRequest {
@@ -78,8 +78,8 @@ interface BaseRequest {
   description: string;
   method: string;
   body: RequestBody;
-  parameters: RequestParameter[];
-  headers: RequestHeader[];
+  parameters: Array<RequestParameter>;
+  headers: Array<RequestHeader>;
   authentication: RequestAuthentication;
   metaSortKey: number;
   isPrivate: boolean;
@@ -240,7 +240,7 @@ export function newBodyGraphQL(rawBody: string): RequestBody {
   }
 }
 
-export function newBodyFormUrlEncoded(parameters: RequestBodyParameter[] | null): RequestBody {
+export function newBodyFormUrlEncoded(parameters: Array<RequestBodyParameter> | null): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_URLENCODED,
     params: parameters || [],
@@ -254,7 +254,7 @@ export function newBodyFile(path: string): RequestBody {
   };
 }
 
-export function newBodyForm(parameters: RequestBodyParameter[]): RequestBody {
+export function newBodyForm(parameters: Array<RequestBodyParameter>): RequestBody {
   return {
     mimeType: CONTENT_TYPE_FORM_DATA,
     params: parameters || [],

@@ -20,8 +20,8 @@ interface Props {
 
 interface State {
   error: string;
-  branches: string[];
-  remoteBranches: string[];
+  branches: Array<string>;
+  remoteBranches: Array<string>;
   branch: string;
   newBranchName: string;
 }

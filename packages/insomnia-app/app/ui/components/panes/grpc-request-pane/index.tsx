@@ -24,7 +24,7 @@ interface Props {
   // For variables
   handleRender: (arg0: string) => Promise<string>;
   isVariableUncovered: boolean;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
 }
 
 const StyledUrlBar = styled.div`

@@ -29,8 +29,8 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 `.trim();
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
   nunjucksPowerUserMode: boolean;
   showPasswords: boolean;
   isVariableUncovered: boolean;
@@ -187,9 +187,9 @@ class OAuth1Auth extends PureComponent<Props> {
   renderInputRow(
     label: string,
     property: string,
-    onChange: (...args: any[]) => any,
+    onChange: (...args: Array<any>) => any,
     help: string | null = null,
-    handleAutocomplete: ((...args: any[]) => any) | null = null,
+    handleAutocomplete: ((...args: Array<any>) => any) | null = null,
   ) {
     const {
       handleRender,
@@ -234,11 +234,11 @@ class OAuth1Auth extends PureComponent<Props> {
   renderSelectRow(
     label: string,
     property: string,
-    options: {
+    options: Array<{
       name: string;
       value: string;
-    }[],
-    onChange: (...args: any[]) => any,
+    }>,
+    onChange: (...args: Array<any>) => any,
     help: string | null = null,
   ) {
     const { request } = this.props;

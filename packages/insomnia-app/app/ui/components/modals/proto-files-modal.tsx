@@ -21,7 +21,7 @@ import * as protoManager from '../../../network/grpc/proto-manager';
 interface Props {
   grpcDispatch: GrpcDispatch;
   workspace: Workspace;
-  protoDirectories: ExpandedProtoDirectory[];
+  protoDirectories: Array<ExpandedProtoDirectory>;
 }
 
 interface State {

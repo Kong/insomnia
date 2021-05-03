@@ -35,10 +35,10 @@ import AskModal from '../../modals/ask-modal';
 
 interface Props {
   onChange: (r: Request, body: RequestBody) => Promise<Request>;
-  onChangeHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  onChangeHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
   handleUpdateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -61,13 +61,13 @@ class BodyEditor extends PureComponent<Props> {
     onChange(request, newBody);
   }
 
-  _handleFormUrlEncodedChange(parameters: RequestBodyParameter[]) {
+  _handleFormUrlEncodedChange(parameters: Array<RequestBodyParameter>) {
     const { onChange, request } = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(request, newBody);
   }
 
-  _handleFormChange(parameters: RequestBodyParameter[]) {
+  _handleFormChange(parameters: Array<RequestBodyParameter>) {
     const { onChange, request } = this.props;
     const newBody = newBodyForm(parameters);
     onChange(request, newBody);

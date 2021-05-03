@@ -12,11 +12,11 @@ export interface NunjucksParsedTagArg {
   displayName?: string;
   quotedBy?: '"' | "'";
   validate?: (value: any) => string;
-  hide?: (arg0: NunjucksParsedTagArg[]) => boolean;
+  hide?: (arg0: Array<NunjucksParsedTagArg>) => boolean;
   model?: string;
-  options?: PluginArgumentEnumOption[];
-  itemTypes?: string[];
-  extensions?: string[];
+  options?: Array<PluginArgumentEnumOption>;
+  itemTypes?: Array<string>;
+  extensions?: Array<string>;
 }
 export interface NunjucksActionTag {
   name: string;
@@ -25,12 +25,12 @@ export interface NunjucksActionTag {
 }
 export interface NunjucksParsedTag {
   name: string;
-  args: NunjucksParsedTagArg[];
-  actions?: NunjucksActionTag[];
+  args: Array<NunjucksParsedTagArg>;
+  actions?: Array<NunjucksActionTag>;
   rawValue?: string;
   displayName?: string;
   description?: string;
-  disablePreview?: (arg0: NunjucksParsedTagArg[]) => boolean;
+  disablePreview?: (arg0: Array<NunjucksParsedTagArg>) => boolean;
 }
 
 interface Key {
@@ -47,8 +47,8 @@ interface Key {
 export function getKeys(
   obj: any,
   prefix = '',
-): Key[] {
-  let allKeys: Key[] = [];
+): Array<Key> {
+  let allKeys: Array<Key> = [];
   const typeOfObj = Object.prototype.toString.call(obj);
 
   if (typeOfObj === '[object Array]') {
@@ -96,7 +96,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
   // ~~~~~~~~~~~~~ //
   // Tokenize Args //
   // ~~~~~~~~~~~~~ //
-  const args: NunjucksParsedTagArg[] = [];
+  const args: Array<NunjucksParsedTagArg> = [];
   let quotedBy: string | null = null;
   let currentArg: string | null = null;
 
@@ -191,7 +191,7 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
 
 /** Convert a tokenized tag back into a Nunjucks string */
 export function unTokenizeTag(tagData: NunjucksParsedTag) {
-  const args: string[] = [];
+  const args: Array<string> = [];
 
   for (const arg of tagData.args) {
     if (['string', 'model', 'file', 'enum'].includes(arg.type)) {
@@ -212,8 +212,8 @@ export function unTokenizeTag(tagData: NunjucksParsedTag) {
 }
 
 /** Get the default Nunjucks string for an extension */
-export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
-  const stringArgs: string[] = (args || []).map(argDefinition => {
+export function getDefaultFill(name: string, args: Array<NunjucksParsedTagArg>) {
+  const stringArgs: Array<string> = (args || []).map(argDefinition => {
     switch (argDefinition.type) {
       case 'enum':
         const { defaultValue, options } = argDefinition;

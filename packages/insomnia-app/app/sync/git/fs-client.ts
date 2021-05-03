@@ -19,7 +19,7 @@ export const fsClient = (basePath: string) => {
   console.log(`[fsClient] Created in ${basePath}`);
   mkdirp.sync(basePath);
 
-  const wrap = (fn: FSWraps) => async (filePath: string, ...args: any[]) => {
+  const wrap = (fn: FSWraps) => async (filePath: string, ...args: Array<any>) => {
     const modifiedPath = path.join(basePath, path.normalize(filePath));
     // @ts-expect-error -- TSCONVERSION
     return fn(modifiedPath, ...args);

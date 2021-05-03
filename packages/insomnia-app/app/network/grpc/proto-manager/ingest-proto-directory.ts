@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 interface IngestResult {
   createdDir?: ProtoDirectory | null;
-  createdIds: string[];
+  createdIds: Array<string>;
   error?: Error;
 }
 

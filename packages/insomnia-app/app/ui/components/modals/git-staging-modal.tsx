@@ -105,7 +105,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  async _toggleAll(items: Item[], forceAdd = false) {
+  async _toggleAll(items: Array<Item>, forceAdd = false) {
     const allStaged = items.every(i => i.staged);
     const doStage = !allStaged;
     const newItems = { ...this.state.items };
@@ -137,7 +137,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     });
   }
 
-  async getAllPaths(): Promise<string[]> {
+  async getAllPaths(): Promise<Array<string>> {
     const { vcs } = this.props;
     const f = vcs.getFs().promises;
     const fsPaths = [];
@@ -288,7 +288,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     );
   }
 
-  async _handleRollback(items: Item[]) {
+  async _handleRollback(items: Array<Item>) {
     const { vcs } = this.props;
     const files = items.map(i => ({
       filePath: i.path,
@@ -330,7 +330,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     );
   }
 
-  renderTable(title: string, items: Item[], rollbackLabel: string) {
+  renderTable(title: string, items: Array<Item>, rollbackLabel: string) {
     if (items.length === 0) {
       return null;
     }
@@ -381,7 +381,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     return <>No changes to commit.</>;
   }
 
-  _renderItems(items: Item[]) {
+  _renderItems(items: Array<Item>) {
     const { message } = this.state;
     const newItems = items.filter(i => i.status.includes('added'));
     const existingItems = items.filter(i => !i.status.includes('added'));

@@ -9,8 +9,8 @@ import type { Request, RequestAuthentication } from '../../../../models/request'
 import type { Settings } from '../../../../models/settings';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

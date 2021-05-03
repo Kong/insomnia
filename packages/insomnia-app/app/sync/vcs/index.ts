@@ -38,7 +38,7 @@ import { strings } from '../../common/strings';
 
 const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
-type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
+type ConflictHandler = (conflicts: Array<MergeConflict>) => Promise<Array<MergeConflict>>;
 
 export default class VCS {
   _store: Store;
@@ -136,7 +136,7 @@ export default class VCS {
     return this._getBlob(entry.blob);
   }
 
-  async status(candidates: StatusCandidate[], baseStage: Stage) {
+  async status(candidates: Array<StatusCandidate>, baseStage: Stage) {
     const stage = clone(baseStage);
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
@@ -162,7 +162,7 @@ export default class VCS {
     };
   }
 
-  async stage(stage: Stage, stageEntries: StageEntry[]) {
+  async stage(stage: Stage, stageEntries: Array<StageEntry>) {
     const blobsToStore: Record<string, string> = {};
 
     for (const entry of stageEntries) {
@@ -179,7 +179,7 @@ export default class VCS {
     return stage;
   }
 
-  async unstage(stage: Stage, stageEntries: StageEntry[]) {
+  async unstage(stage: Stage, stageEntries: Array<StageEntry>) {
     for (const entry of stageEntries) {
       delete stage[entry.key];
     }
@@ -253,11 +253,11 @@ export default class VCS {
   }
 
   async checkout(
-    candidates: StatusCandidate[],
+    candidates: Array<StatusCandidate>,
     branchName: string,
   ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
+    upsert: Array<Record<string, any>>;
+    remove: Array<Record<string, any>>;
   }> {
     const branchCurrent = await this._getCurrentBranch();
     const latestSnapshotCurrent: Snapshot | null = await this._getLatestSnapshot(
@@ -293,9 +293,9 @@ export default class VCS {
   }
 
   async handleAnyConflicts(
-    conflicts: MergeConflict[],
+    conflicts: Array<MergeConflict>,
     errorMsg: string,
-  ): Promise<MergeConflict[]> {
+  ): Promise<Array<MergeConflict>> {
     if (conflicts.length === 0) {
       return conflicts;
     }
@@ -319,10 +319,10 @@ export default class VCS {
   }
 
   async rollbackToLatest(
-    candidates: StatusCandidate[],
+    candidates: Array<StatusCandidate>,
   ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
+    upsert: Array<Record<string, any>>;
+    remove: Array<Record<string, any>>;
   }> {
     const branch = await this._getCurrentBranch();
     const latestSnapshot = await this._getLatestSnapshot(branch.name);
@@ -336,10 +336,10 @@ export default class VCS {
 
   async rollback(
     snapshotId: string,
-    candidates: StatusCandidate[],
+    candidates: Array<StatusCandidate>,
   ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
+    upsert: Array<Record<string, any>>;
+    remove: Array<Record<string, any>>;
   }> {
     const rollbackSnapshot: Snapshot | null = await this._getSnapshot(snapshotId);
 
@@ -383,7 +383,7 @@ export default class VCS {
 
   async getHistory(count = 0) {
     const branch = await this._getCurrentBranch();
-    const snapshots: Snapshot[] = [];
+    const snapshots: Array<Snapshot> = [];
     const total = branch.snapshots.length;
     const slice = count <= 0 || count > total ? 0 : total - count;
 
@@ -405,18 +405,18 @@ export default class VCS {
     return branch.name;
   }
 
-  async getRemoteBranches(): Promise<string[]> {
+  async getRemoteBranches(): Promise<Array<string>> {
     const branches = await this._queryBranches();
     return branches.map(b => b.name);
   }
 
-  async getBranches(): Promise<string[]> {
+  async getBranches(): Promise<Array<string>> {
     const branches = await this._getBranches();
     return branches.map(b => b.name);
   }
 
   async merge(
-    candidates: StatusCandidate[],
+    candidates: Array<StatusCandidate>,
     otherBranchName: string,
     snapshotMessage?: string,
   ) {
@@ -471,10 +471,10 @@ export default class VCS {
   }
 
   async pull(
-    candidates: StatusCandidate[],
+    candidates: Array<StatusCandidate>,
   ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
+    upsert: Array<Record<string, any>>;
+    remove: Array<Record<string, any>>;
   }> {
     await this._getOrCreateRemoteProject();
     const localBranch = await this._getCurrentBranch();
@@ -579,7 +579,7 @@ export default class VCS {
     }
 
     // Fetch snapshots and blobs from remote branch
-    const snapshotsToFetch: string[] = [];
+    const snapshotsToFetch: Array<string> = [];
 
     for (const snapshotId of remoteBranch.snapshots) {
       const localSnapshot = await this._getSnapshot(snapshotId);
@@ -620,14 +620,14 @@ export default class VCS {
   }
 
   async _merge(
-    candidates: StatusCandidate[],
+    candidates: Array<StatusCandidate>,
     trunkBranchName: string,
     otherBranchName: string,
     snapshotMessage?: string,
     useOtherBranchHistory?: boolean,
   ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
+    upsert: Array<Record<string, any>>;
+    remove: Array<Record<string, any>>;
   }> {
     const branchOther = await this._assertBranch(otherBranchName);
     const latestSnapshotOther: Snapshot | null = await this._getLatestSnapshot(branchOther.name);
@@ -749,7 +749,7 @@ export default class VCS {
     return data;
   }
 
-  async _queryBlobsMissing(ids: string[]): Promise<string[]> {
+  async _queryBlobsMissing(ids: Array<string>): Promise<Array<string>> {
     const { blobsMissing } = await this._runGraphQL(
       `
           query ($projectId: ID!, $ids: [ID!]!) {
@@ -767,7 +767,7 @@ export default class VCS {
     return blobsMissing.missing;
   }
 
-  async _queryBranches(): Promise<Branch[]> {
+  async _queryBranches(): Promise<Array<Branch>> {
     const { branches } = await this._runGraphQL(
       `
       query ($projectId: ID!) {
@@ -821,7 +821,7 @@ export default class VCS {
     return branch;
   }
 
-  async _querySnapshots(allIds: string[]): Promise<Snapshot[]> {
+  async _querySnapshots(allIds: Array<string>): Promise<Array<Snapshot>> {
     let allSnapshots = [];
 
     for (const ids of chunkArray(allIds, 20)) {
@@ -859,7 +859,7 @@ export default class VCS {
     return allSnapshots;
   }
 
-  async _queryPushSnapshots(allSnapshots: Snapshot[]) {
+  async _queryPushSnapshots(allSnapshots: Array<Snapshot>) {
     const { accountId } = this._assertSession();
 
     for (const snapshots of chunkArray(allSnapshots, 20)) {
@@ -916,7 +916,7 @@ export default class VCS {
     }
   }
 
-  async _queryBlobs(allIds: string[]): Promise<Record<string, Buffer>> {
+  async _queryBlobs(allIds: Array<string>): Promise<Record<string, Buffer>> {
     const symmetricKey = await this._getProjectSymmetricKey();
     const result = {};
 
@@ -945,14 +945,14 @@ export default class VCS {
     return result;
   }
 
-  async _queryPushBlobs(allIds: string[]) {
+  async _queryPushBlobs(allIds: Array<string>) {
     const symmetricKey = await this._getProjectSymmetricKey();
 
     const next = async (
-      items: {
+      items: Array<{
         id: string;
         content: string;
-      }[],
+      }>,
     ) => {
       const encodedBlobs = items.map(i => ({
         id: i.id,
@@ -1041,7 +1041,7 @@ export default class VCS {
       {},
       'teams',
     );
-    return teams as Team[];
+    return teams as Array<Team>;
   }
 
   async _queryProjectUnShare() {
@@ -1062,10 +1062,10 @@ export default class VCS {
 
   async _queryProjectShare(
     teamId: string,
-    keys: {
+    keys: Array<{
       accountId: string;
       encSymmetricKey: string;
-    }[],
+    }>,
   ) {
     await this._runGraphQL(
       `
@@ -1091,10 +1091,10 @@ export default class VCS {
     projectKey: {
       encSymmetricKey: string;
     };
-    memberKeys: {
+    memberKeys: Array<{
       accountId: string;
       publicKey: string;
-    }[];
+    }>;
   }> {
     const { projectShareInstructions } = await this._runGraphQL(
       `
@@ -1120,7 +1120,7 @@ export default class VCS {
     return projectShareInstructions;
   }
 
-  async _queryProjects(): Promise<Project[]> {
+  async _queryProjects(): Promise<Array<Project>> {
     const { projects } = await this._runGraphQL(
       `
         query {
@@ -1156,7 +1156,7 @@ export default class VCS {
     return project;
   }
 
-  async _queryProjectTeams(): Promise<Team[]> {
+  async _queryProjectTeams(): Promise<Array<Team>> {
     const { project } = await this._runGraphQL(
       `
       query ($id: ID!) {
@@ -1302,7 +1302,7 @@ export default class VCS {
   }
 
   async _getBranches(projectId?: string) {
-    const branches: Branch[] = [];
+    const branches: Array<Branch> = [];
 
     const pId = projectId || this._projectId();
 
@@ -1394,7 +1394,7 @@ export default class VCS {
   }
 
   async _allProjects() {
-    const projects: Project[] = [];
+    const projects: Array<Project> = [];
     const basePath = paths.projects();
     const keys = await this._store.keys(basePath, false);
 
@@ -1448,7 +1448,7 @@ export default class VCS {
     return this._store.setItem(paths.snapshot(this._projectId(), snapshot.id), snapshot);
   }
 
-  async _storeSnapshots(snapshots: Snapshot[]) {
+  async _storeSnapshots(snapshots: Array<Snapshot>) {
     const promises = [];
 
     for (const snapshot of snapshots) {
@@ -1488,8 +1488,8 @@ export default class VCS {
     return this._store.getItem(p);
   }
 
-  async _getBlobs(ids: string[]) {
-    const promises: Promise<Record<string, any>>[] = [];
+  async _getBlobs(ids: Array<string>) {
+    const promises: Array<Promise<Record<string, any>>> = [];
 
     for (const id of ids) {
       promises.push(this._getBlob(id));

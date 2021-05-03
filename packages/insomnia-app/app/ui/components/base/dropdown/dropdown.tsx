@@ -29,7 +29,7 @@ interface State {
   dropUp: boolean,
   filter: string,
   filterVisible: boolean,
-  filterItems?: number[] | null,
+  filterItems?: Array<number> | null,
   filterActiveIndex: number,
   forcedPosition?: {x: number, y: number} | null,
   uniquenessKey: number,

@@ -14,15 +14,15 @@ import { isGrpcRequest, isRequest, isRequestGroup } from '../../../models/helper
 
 export interface Node {
   doc: Request | GrpcRequest | RequestGroup;
-  children: Node[];
+  children: Array<Node>;
   collapsed: boolean;
   totalRequests: number;
   selectedRequests: number;
 }
 
 interface Props extends ModalProps {
-  childObjects: Record<string, any>[];
-  handleExportRequestsToFile: (...args: any[]) => any;
+  childObjects: Array<Record<string, any>>;
+  handleExportRequestsToFile: (...args: Array<any>) => any;
 }
 
 interface State {
@@ -64,14 +64,14 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     this.hide();
   }
 
-  getSelectedRequestIds(node: Node): string[] {
+  getSelectedRequestIds(node: Node): Array<string> {
     const docIsRequest = isRequest(node.doc) || isGrpcRequest(node.doc);
 
     if (docIsRequest && node.selectedRequests === node.totalRequests) {
       return [node.doc._id];
     }
 
-    const requestIds: string[] = [];
+    const requestIds: Array<string> = [];
 
     for (const child of node.children) {
       const reqIds = this.getSelectedRequestIds(child);
@@ -83,7 +83,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
 
   createTree() {
     const { childObjects } = this.props;
-    const children: Node[] = childObjects.map(child => this.createNode(child));
+    const children: Array<Node> = childObjects.map(child => this.createNode(child));
     const totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
@@ -107,7 +107,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
   }
 
   createNode(item: Record<string, any>): Node {
-    const children: Node[] = item.children.map(child => this.createNode(child));
+    const children: Array<Node> = item.children.map(child => this.createNode(child));
     let totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);

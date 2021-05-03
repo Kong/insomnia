@@ -27,26 +27,26 @@ import { getTemplateTags } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: (...args: Array<any>) => any;
+  handleGetRenderContext: (...args: Array<any>) => any;
   defaultValue: string;
-  onChange: (...args: any[]) => any;
+  onChange: (...args: Array<any>) => any;
   workspace: Workspace;
 }
 
 interface State {
   activeTagData: NunjucksParsedTag | null;
   activeTagDefinition: NunjucksParsedTag | null;
-  tagDefinitions: Record<string, any>[];
+  tagDefinitions: Array<Record<string, any>>;
   loadingDocs: boolean;
-  allDocs: Record<string, BaseModel[]>;
+  allDocs: Record<string, Array<BaseModel>>;
   rendering: boolean;
   preview: string;
   error: string;
-  variables: {
+  variables: Array<{
     name: string;
     value: string;
-  }[];
+  }>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -113,7 +113,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  _sortRequests(_models: (Request | RequestGroup)[], parentId: string) {
+  _sortRequests(_models: Array<Request | RequestGroup>, parentId: string) {
     let sortedModels = [];
 
     _models
@@ -330,7 +330,7 @@ class TagEditor extends PureComponent<Props, State> {
   }
 
   async _update(
-    tagDefinitions: NunjucksParsedTag[],
+    tagDefinitions: Array<NunjucksParsedTag>,
     tagDefinition: NunjucksParsedTag | null,
     tagData: NunjucksParsedTag | null,
     noCallback = false,
@@ -448,8 +448,8 @@ class TagEditor extends PureComponent<Props, State> {
   renderArgFile(
     value: string,
     argIndex: number,
-    itemTypes?: string[],
-    extensions?: string[],
+    itemTypes?: Array<string>,
+    extensions?: Array<string>,
   ) {
     return (
       <FileInputButton
@@ -464,7 +464,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  renderArgEnum(value: string, options: PluginArgumentEnumOption[]) {
+  renderArgEnum(value: string, options: Array<PluginArgumentEnumOption>) {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
     let unsetOption = null;
 
@@ -495,7 +495,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]) {
+  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: Array<any>) {
     let prefix = '';
     let reqGroup: any;
 
@@ -559,7 +559,7 @@ class TagEditor extends PureComponent<Props, State> {
 
   renderArg(
     argDefinition: NunjucksParsedTagArg,
-    argDatas: NunjucksParsedTagArg[],
+    argDatas: Array<NunjucksParsedTagArg>,
     argIndex: number,
   ) {
     // Decide whether or not to show it
@@ -689,7 +689,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  renderActions(actions: NunjucksActionTag[] = []) {
+  renderActions(actions: Array<NunjucksActionTag> = []) {
     return (
       <div className="form-row">
         <div className="form-control">

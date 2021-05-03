@@ -20,7 +20,7 @@ import type { Request, RequestBody } from '../../../models/request';
 import { trackEvent } from '../../../common/analytics';
 
 interface Props {
-  onChange: (...args: any[]) => any;
+  onChange: (...args: Array<any>) => any;
   contentType?: string | null;
   children?: ReactNode | null;
   className?: string;

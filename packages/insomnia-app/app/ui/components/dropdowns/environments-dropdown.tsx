@@ -19,9 +19,9 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 
 interface Props {
-  handleChangeEnvironment: (...args: any[]) => any;
+  handleChangeEnvironment: (...args: Array<any>) => any;
   workspace: Workspace;
-  environments: Environment[];
+  environments: Array<Environment>;
   environmentHighlightColorStyle: string;
   hotKeyRegistry: HotKeyRegistry;
   className?: string;
