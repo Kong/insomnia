@@ -17,8 +17,8 @@
     "storybook": "start-storybook --port 3222",
     "build": "ts-node ./scripts/build.ts",
     "build:sr": "webpack --config send-request/webpack.config.babel.js",
-    "package": "ts-node ./scripts/package.js",
-    "release": "ts-node ./scripts/release.js",
+    "package": "ts-node ./scripts/package.ts",
+    "release": "ts-node ./scripts/release.ts",
     "bootstrap": ""
   },
   "dev": {
