@@ -13,22 +13,36 @@ import type { Request } from '../models/request';
 import type { PluginConfig, PluginConfigMap } from '../models/settings';
 import type { Workspace } from '../models/workspace';
 
+export interface Module {
+  templateTags?: Array<PluginTemplateTag>,
+  requestHooks?: Array<(requstContext: any) => void>,
+  responseHooks?: Array<(responseContext: any) => void>,
+  themes?: Array<PluginTheme>,
+  requestGroupActions?: Array<OmitInternal<RequestGroupAction>>,
+  requestActions?: Array<OmitInternal<RequestAction>>,
+  workspaceActions?: Array<OmitInternal<WorkspaceAction>>,
+  documentActions?: Array<OmitInternal<DocumentAction>>,
+  configGenerators?: Array<OmitInternal<ConfigGenerator>>,
+}
+
 export interface Plugin {
   name: string;
   description: string;
   version: string;
   directory: string;
   config: PluginConfig;
-  module: any;
+  module: Module;
+}
+interface InternalProperties {
+  plugin: Plugin;
 }
 
-export interface TemplateTag {
-  plugin: Plugin;
+type OmitInternal<T> = Omit<T, keyof InternalProperties>;
+export interface TemplateTag extends InternalProperties {
   templateTag: PluginTemplateTag;
 }
 
-export interface RequestGroupAction {
-  plugin: Plugin;
+export interface RequestGroupAction extends InternalProperties {
   action: (
     context: Record<string, any>,
     models: {
@@ -40,21 +54,19 @@ export interface RequestGroupAction {
   icon?: string;
 }
 
-export interface RequestAction {
-  plugin: Plugin;
+export interface RequestAction extends InternalProperties {
   action: (
     context: Record<string, any>,
     models: {
       requestGroup: RequestGroup;
-      request: Array<Request>;
+      request: Request;
     },
   ) => void | Promise<void>;
   label: string;
   icon?: string;
 }
 
-export interface WorkspaceAction {
-  plugin: Plugin;
+export interface WorkspaceAction extends InternalProperties {
   action: (
     context: Record<string, any>,
     models: {
@@ -74,8 +86,7 @@ export interface SpecInfo {
   formatVersion: string;
 }
 
-export interface ConfigGenerator {
-  plugin: Plugin;
+export interface ConfigGenerator extends InternalProperties {
   label: string;
   generate: (
     info: SpecInfo,
@@ -85,25 +96,24 @@ export interface ConfigGenerator {
   }>;
 }
 
-export interface DocumentAction {
-  plugin: Plugin;
+export interface DocumentAction extends InternalProperties {
   action: (context: Record<string, any>, documents: SpecInfo) => void | Promise<void>;
   label: string;
   hideAfterClick?: boolean;
 }
 
-export interface RequestHook {
-  plugin: Plugin;
-  hook: (...args: Array<any>) => any;
+type RequestHookCallback = (context: any) => void;
+
+export interface RequestHook extends InternalProperties {
+  hook: RequestHookCallback;
 }
 
-export interface ResponseHook {
-  plugin: Plugin;
-  hook: (...args: Array<any>) => any;
+type ResponseHookCallback = (context: any) => void;
+export interface ResponseHook extends InternalProperties {
+  hook: ResponseHookCallback;
 }
 
-export interface Theme {
-  plugin: Plugin;
+export interface Theme extends InternalProperties {
   theme: PluginTheme;
 }
 
@@ -247,7 +257,7 @@ async function getActivePlugins(): Promise<Array<Plugin>> {
 }
 
 export async function getRequestGroupActions(): Promise<Array<RequestGroupAction>> {
-  let extensions = [];
+  let extensions: Array<RequestGroupAction> = [];
 
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.requestGroupActions || [];
@@ -264,7 +274,7 @@ export async function getRequestGroupActions(): Promise<Array<RequestGroupAction
 }
 
 export async function getRequestActions(): Promise<Array<RequestAction>> {
-  let extensions = [];
+  let extensions: Array<RequestAction> = [];
 
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.requestActions || [];
@@ -281,7 +291,7 @@ export async function getRequestActions(): Promise<Array<RequestAction>> {
 }
 
 export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
-  let extensions = [];
+  let extensions: Array<WorkspaceAction> = [];
 
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.workspaceActions || [];
@@ -298,7 +308,7 @@ export async function getWorkspaceActions(): Promise<Array<WorkspaceAction>> {
 }
 
 export async function getDocumentActions(): Promise<Array<DocumentAction>> {
-  let extensions = [];
+  let extensions: Array<DocumentAction> = [];
 
   for (const plugin of await getActivePlugins()) {
     const actions = plugin.module.documentActions || [];
@@ -315,7 +325,7 @@ export async function getDocumentActions(): Promise<Array<DocumentAction>> {
 }
 
 export async function getTemplateTags(): Promise<Array<TemplateTag>> {
-  let extensions = [];
+  let extensions: Array<TemplateTag> = [];
 
   for (const plugin of await getActivePlugins()) {
     const templateTags = plugin.module.templateTags || [];
@@ -332,7 +342,7 @@ export async function getTemplateTags(): Promise<Array<TemplateTag>> {
 }
 
 export async function getRequestHooks(): Promise<Array<RequestHook>> {
-  let functions = [];
+  let functions: Array<RequestHook> = [];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.requestHooks || [];
@@ -349,7 +359,7 @@ export async function getRequestHooks(): Promise<Array<RequestHook>> {
 }
 
 export async function getResponseHooks(): Promise<Array<ResponseHook>> {
-  let functions = [];
+  let functions: Array<ResponseHook> = [];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.responseHooks || [];
@@ -366,7 +376,7 @@ export async function getResponseHooks(): Promise<Array<ResponseHook>> {
 }
 
 export async function getThemes(): Promise<Array<Theme>> {
-  let extensions = [];
+  let extensions: Array<Theme> = [];
 
   for (const plugin of await getActivePlugins()) {
     const themes = plugin.module.themes || [];
@@ -383,7 +393,7 @@ export async function getThemes(): Promise<Array<Theme>> {
 }
 
 export async function getConfigGenerators(): Promise<Array<ConfigGenerator>> {
-  let functions = [];
+  let functions: Array<ConfigGenerator> = [];
 
   for (const plugin of await getActivePlugins()) {
     const moreFunctions = plugin.module.configGenerators || [];
@@ -406,7 +416,7 @@ function _initPlugin(
   packageJSON: Record<string, any>,
   module: any,
   allConfigs: PluginConfigMap,
-  path: string | null | undefined,
+  path?: string | null,
 ): Plugin {
   const meta = packageJSON.insomnia || {};
   const name = packageJSON.name || meta.name;

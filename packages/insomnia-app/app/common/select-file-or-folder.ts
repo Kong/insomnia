@@ -1,4 +1,4 @@
-import { remote } from 'electron';
+import { OpenDialogOptions, remote } from 'electron';
 interface Options {
   itemTypes?: Array<'file' | 'directory'>;
   extensions?: Array<string>;
@@ -25,9 +25,10 @@ const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<F
     title += ' Directory';
   }
 
-  const options = {
+  const options: OpenDialogOptions = {
     title: title,
     buttonLabel: 'Select',
+    // @ts-expect-error we should update this to accept other properties types as well, which flow all the way up to plugins
     properties: types.map(type => {
       if (type === 'file') {
         return 'openFile';

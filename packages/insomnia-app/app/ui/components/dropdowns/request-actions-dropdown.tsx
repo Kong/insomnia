@@ -3,19 +3,19 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import PromptButton from '../base/prompt-button';
 import {
-  Dropdown,
   DropdownButton,
   DropdownDivider,
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown/index';
+import Dropdown from '../base/dropdown/dropdown';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
 import { isRequest } from '../../../models/helpers/is-model';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { incrementDeletedRequests } from '../../../models/stats';
 // Plugin action related imports
-import type { RequestAction, RequestGroupAction } from '../../../plugins';
+import type { RequestAction } from '../../../plugins';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
@@ -41,20 +41,20 @@ interface Props {
 
 // Setup state for plugin actions
 interface State {
-  actionPlugins: Array<RequestGroupAction>;
+  actionPlugins: Array<RequestAction>;
   loadingActions: Record<string, boolean>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestActionsDropdown extends PureComponent<Props, State> {
-  _dropdown: typeof Dropdown | null = null;
+  _dropdown: Dropdown | null = null;
 
   state: State = {
     actionPlugins: [],
     loadingActions: {},
   };
 
-  _setDropdownRef(n: typeof Dropdown) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 

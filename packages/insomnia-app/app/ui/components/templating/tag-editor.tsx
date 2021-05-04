@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -37,7 +37,7 @@ interface Props {
 interface State {
   activeTagData: NunjucksParsedTag | null;
   activeTagDefinition: NunjucksParsedTag | null;
-  tagDefinitions: Array<Record<string, any>>;
+  tagDefinitions: Array<NunjucksParsedTag>;
   loadingDocs: boolean;
   allDocs: Record<string, Array<BaseModel>>;
   rendering: boolean;
@@ -114,7 +114,7 @@ class TagEditor extends PureComponent<Props, State> {
   }
 
   _sortRequests(_models: Array<Request | RequestGroup>, parentId: string) {
-    let sortedModels = [];
+    let sortedModels: Array<Request | RequestGroup> = [];
 
     _models
       .filter(model => model.parentId === parentId)
@@ -255,7 +255,7 @@ class TagEditor extends PureComponent<Props, State> {
     return this._updateArg(path, argIndex);
   }
 
-  _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleChange(e: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     const parent = e.currentTarget.parentNode;
     let argIndex = -1;
 
@@ -276,6 +276,7 @@ class TagEditor extends PureComponent<Props, State> {
     if (e.currentTarget.type === 'number') {
       return this._updateArg(parseFloat(e.currentTarget.value), argIndex);
     } else if (e.currentTarget.type === 'checkbox') {
+      // @ts-expect-error .checked doesn't exist on HTMLSelectElement
       return this._updateArg(e.currentTarget.checked, argIndex);
     } else {
       return this._updateArg(e.currentTarget.value, argIndex);
@@ -293,7 +294,7 @@ class TagEditor extends PureComponent<Props, State> {
     this._update(tagDefinitions, activeTagDefinition, tagData, false);
   }
 
-  async _handleChangeTag(e: React.SyntheticEvent<HTMLInputElement>) {
+  async _handleChangeTag(e: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     const name = e.currentTarget.value;
     const tagDefinitions = await templating.getTagDefinitions();
     const tagDefinition = tagDefinitions.find(d => d.name === name) || null;
@@ -304,9 +305,10 @@ class TagEditor extends PureComponent<Props, State> {
   async _handleActionClick(action: NunjucksActionTag) {
     const templateTags = await getTemplateTags();
     const activeTemplateTag = templateTags.find(({ templateTag }) => {
-      return templateTag.name === this.state.activeTagData.name;
+      return templateTag.name === this.state.activeTagData?.name;
     });
-    const helperContext = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
+    // @ts-expect-error activeTemplateTag can be undefined
+    const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
     await action.run(helperContext);
     return this._handleRefresh();
   }
@@ -448,7 +450,7 @@ class TagEditor extends PureComponent<Props, State> {
   renderArgFile(
     value: string,
     argIndex: number,
-    itemTypes?: Array<string>,
+    itemTypes?: Array<'file' | 'directory'>,
     extensions?: Array<string>,
   ) {
     return (
@@ -466,7 +468,7 @@ class TagEditor extends PureComponent<Props, State> {
 
   renderArgEnum(value: string, options: Array<PluginArgumentEnumOption>) {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
-    let unsetOption = null;
+    let unsetOption: ReactNode = null;
 
     if (!options.find(o => o.value === value)) {
       unsetOption = <option value="">-- Select Option --</option>;
@@ -486,6 +488,7 @@ class TagEditor extends PureComponent<Props, State> {
           }
 
           return (
+            // @ts-expect-error boolean not accepted by option
             <option key={option.value.toString()} value={option.value}>
               {label}
             </option>

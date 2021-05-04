@@ -15,7 +15,7 @@ export interface NunjucksParsedTagArg {
   hide?: (arg0: Array<NunjucksParsedTagArg>) => boolean;
   model?: string;
   options?: Array<PluginArgumentEnumOption>;
-  itemTypes?: Array<string>;
+  itemTypes?: Array<'file' | 'directory'>;
   extensions?: Array<string>;
 }
 export interface NunjucksActionTag {
