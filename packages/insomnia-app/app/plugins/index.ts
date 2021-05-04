@@ -12,6 +12,7 @@ import type { RequestGroup } from '../models/request-group';
 import type { Request } from '../models/request';
 import type { PluginConfig, PluginConfigMap } from '../models/settings';
 import type { Workspace } from '../models/workspace';
+import { GrpcRequest } from '../models/grpc-request';
 
 export interface Module {
   templateTags?: Array<PluginTemplateTag>,
@@ -47,7 +48,7 @@ export interface RequestGroupAction extends InternalProperties {
     context: Record<string, any>,
     models: {
       requestGroup: RequestGroup;
-      requests: Array<Request>;
+      requests: Array<Request | GrpcRequest>;
     },
   ) => void | Promise<void>;
   label: string;
@@ -58,8 +59,8 @@ export interface RequestAction extends InternalProperties {
   action: (
     context: Record<string, any>,
     models: {
-      requestGroup: RequestGroup;
-      request: Request;
+      requestGroup?: RequestGroup;
+      request: Request | GrpcRequest;
     },
   ) => void | Promise<void>;
   label: string;

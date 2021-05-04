@@ -8,7 +8,7 @@ import {
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown/index';
-import Dropdown from '../base/dropdown/dropdown';
+import Dropdown, { DropdownProps } from '../base/dropdown/dropdown';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
 import { isRequest } from '../../../models/helpers/is-model';
@@ -25,17 +25,18 @@ import * as pluginContexts from '../../../plugins/context/index';
 import { showError } from '../modals';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import classnames from 'classnames';
+import { GrpcRequest } from '../../../models/grpc-request';
 
-interface Props {
-  handleDuplicateRequest: (...args: Array<any>) => any;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleCopyAsCurl: (...args: Array<any>) => any;
-  handleShowSettings: (...args: Array<any>) => any;
+interface Props extends Partial<DropdownProps> {
+  handleDuplicateRequest: Function;
+  handleGenerateCode: Function;
+  handleCopyAsCurl: Function;
+  handleShowSettings: Function;
   isPinned: Boolean;
-  request: Request;
-  requestGroup: RequestGroup;
+  request: Request | GrpcRequest;
+  requestGroup?: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  handleSetRequestPinned: (...args: Array<any>) => any;
+  handleSetRequestPinned: Function;
   activeEnvironment?: Environment;
 }
 

@@ -12,7 +12,7 @@ import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
-interface Props {
+export interface DropdownProps {
   children: ReactNode,
   right?: boolean,
   outline?: boolean,
@@ -36,10 +36,10 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Dropdown extends PureComponent<Props, State> {
+class Dropdown extends PureComponent<DropdownProps, State> {
   private _node: HTMLDivElement | null = null;
   private _dropdownList: HTMLDivElement | null = null;
-  private _filter: HTMLDivElement | null = null;
+  private _filter: HTMLInputElement | null = null;
 
   state: State = {
     open: false,
@@ -64,7 +64,7 @@ class Dropdown extends PureComponent<Props, State> {
       // Listen for the Enter key and "click" on the active list item
       const selector = `li[data-filter-index="${this.state.filterActiveIndex}"] button`;
 
-      const button = this._dropdownList.querySelector(selector);
+      const button = this._dropdownList?.querySelector(selector);
 
       // @ts-expect-error -- TSCONVERSION
       button && button.click();
@@ -80,7 +80,7 @@ class Dropdown extends PureComponent<Props, State> {
     }
 
     // Filter the list items that are filterable (have data-filter-index property)
-    const filterItems = [];
+    const filterItems: Array<number> = [];
 
     // @ts-expect-error convert to array or use querySelectorAll().forEach
     for (const listItem of this._dropdownList.querySelectorAll('li')) {
@@ -114,7 +114,7 @@ class Dropdown extends PureComponent<Props, State> {
       const items = filterItems || [];
 
       if (!filterItems) {
-    // @ts-expect-error convert to array or use querySelectorAll().forEach
+        // @ts-expect-error convert to array or use querySelectorAll().forEach
         for (const li of this._dropdownList.querySelectorAll('li')) {
           if (li.hasAttribute('data-filter-index')) {
             const filterIndex = li.getAttribute('data-filter-index');
@@ -137,7 +137,7 @@ class Dropdown extends PureComponent<Props, State> {
       }
     }
 
-    this._filter.focus();
+    this._filter?.focus();
   }
 
   _handleBodyKeyDown(e) {
@@ -164,7 +164,8 @@ class Dropdown extends PureComponent<Props, State> {
     const dropdownList = this._dropdownList;
 
     // Compute the size of all the menus
-    let dropdownBtnRect = this._node?.getBoundingClientRect();
+    // @ts-expect-error should exit if node is not defined
+    let dropdownBtnRect = this._node.getBoundingClientRect();
 
     const bodyRect = document.body.getBoundingClientRect();
     const dropdownListRect = dropdownList.getBoundingClientRect();
@@ -245,7 +246,7 @@ class Dropdown extends PureComponent<Props, State> {
     this._dropdownList = n;
   }
 
-  _addFilterRef(n: HTMLDivElement) {
+  _addFilterRef(n: HTMLInputElement) {
     this._filter = n;
 
     // Automatically focus the filter element when mounted so we can start typing
@@ -255,7 +256,7 @@ class Dropdown extends PureComponent<Props, State> {
   }
 
   _getFlattenedChildren(children) {
-    let newChildren = [];
+    let newChildren: Array<ReactNode> = [];
     // Ensure children is an array
     children = Array.isArray(children) ? children : [children];
 
@@ -298,6 +299,7 @@ class Dropdown extends PureComponent<Props, State> {
   show(filterVisible = false, forcedPosition: { x: number; y: number } | null = null) {
     const bodyHeight = document.body.getBoundingClientRect().height;
 
+    // @ts-expect-error _node can be undefined
     const dropdownTop = this._node.getBoundingClientRect().top;
 
     const dropUp = dropdownTop > bodyHeight - 200;
@@ -338,6 +340,7 @@ class Dropdown extends PureComponent<Props, State> {
       'dropdown--open': open,
     });
     const menuClasses = classnames({
+      // eslint-disable-next-line camelcase
       dropdown__menu: true,
       'theme--dropdown__menu': true,
       'dropdown__menu--open': open,
@@ -345,12 +348,13 @@ class Dropdown extends PureComponent<Props, State> {
       'dropdown__menu--up': dropUp,
       'dropdown__menu--right': right,
     });
-    const dropdownButtons = [];
-    const dropdownItems = [];
+    const dropdownButtons: Array<ReactNode> = [];
+    const dropdownItems: Array<ReactNode> = [];
 
     const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
+      // @ts-expect-error this should cater for all types that ReactNode can be
       if (child.type.name !== DropdownItem.name) {
         return true;
       }
@@ -362,8 +366,10 @@ class Dropdown extends PureComponent<Props, State> {
     for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];
 
+      // @ts-expect-error this should cater for all types that ReactNode can be
       if (child.type.name === DropdownButton.name) {
         dropdownButtons.push(child);
+      // @ts-expect-error this should cater for all types that ReactNode can be
       } else if (child.type.name === DropdownItem.name) {
         const active = i === filterActiveIndex;
         const hide = !visibleChildren.includes(child);
@@ -378,18 +384,20 @@ class Dropdown extends PureComponent<Props, State> {
             {child}
           </li>,
         );
+      // @ts-expect-error this should cater for all types that ReactNode can be
       } else if (child.type.name === DropdownDivider.name) {
         const currentIndex = visibleChildren.indexOf(child);
         const nextChild = visibleChildren[currentIndex + 1];
 
         // Only show the divider if the next child is a DropdownItem
+        // @ts-expect-error this should cater for all types that ReactNode can be
         if (nextChild && nextChild.type.name === DropdownItem.name) {
           dropdownItems.push(<li key={i}>{child}</li>);
         }
       }
     }
 
-    let finalChildren = [];
+    let finalChildren: React.ReactNode = [];
 
     if (dropdownButtons.length !== 1) {
       console.error(`Dropdown needs exactly one DropdownButton! Got ${dropdownButtons.length}`, {
@@ -403,7 +411,6 @@ class Dropdown extends PureComponent<Props, State> {
           <div
             key="item"
             className={menuClasses}
-            ref={this._addDropdownMenuRef}
             aria-hidden={!open}>
             <div className="dropdown__backdrop theme--transparent-overlay" />
             <div
