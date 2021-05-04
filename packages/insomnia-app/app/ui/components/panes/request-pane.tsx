@@ -203,7 +203,7 @@ class RequestPane extends PureComponent<Props> {
         </PaneHeader>
         <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
           <TabList>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <ContentTypeDropdown
                 onChange={updateRequestMimeType}
                 contentType={request.body.mimeType}
@@ -216,7 +216,7 @@ class RequestPane extends PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <AuthDropdown
                 onChange={updateRequestAuthentication}
                 request={request}
@@ -225,19 +225,19 @@ class RequestPane extends PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>
                 Query
                 {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>
                 Header
                 {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
-            <Tab tabIndex="-1">
+            <Tab tabIndex={-1}>
               <button>
                 Docs
                 {request.description && (
