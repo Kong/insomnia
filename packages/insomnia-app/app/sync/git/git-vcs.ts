@@ -48,14 +48,8 @@ export interface GitLogEntry {
   payload: string;
 }
 
-export interface PushResponse {
-  ok?: Array<string>;
-  errors?: Array<string>;
-  headers?: object;
-}
-
 interface InitOptions {
-  directory?: string;
+  directory: string;
   fs: git.CallbackFsClient | git.PromiseFsClient;
   gitDirectory?: string;
 }
@@ -82,10 +76,10 @@ export const GIT_INTERNAL_DIR = path.join(GIT_CLONE_DIR, gitInternalDirName);
 export const GIT_INSOMNIA_DIR = path.join(GIT_CLONE_DIR, GIT_INSOMNIA_DIR_NAME);
 
 interface BaseOpts {
-  dir?: string;
+  dir: string;
   gitdir?: string;
   fs: git.CallbackFsClient | git.PromiseFsClient;
-  http: Record<string, any>;
+  http: git.HttpClient;
   onMessage: (message: string) => void;
   onAuthFailure: (message: string) => void;
   onAuthSuccess: (message: string) => void;
@@ -93,6 +87,7 @@ interface BaseOpts {
 }
 
 export class GitVCS {
+  // @ts-expect-error not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
   initialized: boolean;
@@ -270,15 +265,17 @@ export class GitVCS {
     console.log(`[git] Push remote=origin force=${force ? 'true' : 'false'}`);
     trackEvent('Git', 'Push');
     // eslint-disable-next-line no-unreachable
-    const response: PushResponse = await git.push({
+    const response: git.PushResult = await git.push({
       ...this._baseOpts,
       ...gitCallbacks(gitCredentials),
       remote: 'origin',
       force,
     });
 
+    // @ts-expect-error git errors are not handled correctly
     if (response.errors?.length) {
       console.log('[git] Push rejected', response);
+      // @ts-expect-error git errors are not handled correctly
       const errorsString = JSON.stringify(response.errors);
       throw new Error(
         `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`,
@@ -294,7 +291,6 @@ export class GitVCS {
       ...gitCallbacks(gitCredentials),
       remote: 'origin',
       singleBranch: true,
-      fast: true,
     });
   }
 
@@ -311,7 +307,7 @@ export class GitVCS {
 
   async fetch(
     singleBranch: boolean,
-    depth: number | null,
+    depth: number,
     gitCredentials?: GitCredentials | null,
   ) {
     console.log('[git] Fetch remote=origin');
@@ -340,6 +336,7 @@ export class GitVCS {
 
   async branch(branch: string, checkout = false) {
     trackEvent('Git', 'Create Branch');
+    // @ts-expect-error remote doesn't exist as an option
     await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 

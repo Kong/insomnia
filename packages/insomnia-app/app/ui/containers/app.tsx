@@ -112,7 +112,6 @@ import { Settings } from '../../models/settings';
 import { Workspace } from '../../models/workspace';
 import { GrpcRequest } from '../../models/grpc-request';
 import { Environment } from '../../models/environment';
-import { BaseModel } from '../../models';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { RequestGroup } from '../../models/request-group';
@@ -438,8 +437,10 @@ class App extends PureComponent<Props, State> {
     });
   }
 
-  async _recalculateMetaSortKey(docs: Array<BaseModel>) {
+  async _recalculateMetaSortKey(docs: Array<RequestGroup | Request | GrpcRequest>) {
     function __updateDoc(doc, metaSortKey) {
+      // @ts-expect-error the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
+      // Which all have the .update method. How do we better filter types?
       return models.getModel(doc.type)?.update(doc, {
         metaSortKey,
       });
@@ -726,6 +727,7 @@ class App extends PureComponent<Props, State> {
     }
     this._responseFilterHistorySaveTimeout = setTimeout(async () => {
       const meta = await models.requestMeta.getByParentId(requestId);
+      // @ts-expect-error meta can be null
       const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
 
       // Already in history?
@@ -1492,6 +1494,7 @@ class App extends PureComponent<Props, State> {
         <GrpcProvider>
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
+              {/* @ts-expect-error expected props are not recieved likely because of the this.props expansion */}
               <Wrapper
                 {...this.props}
                 ref={this._setWrapperRef}

@@ -21,15 +21,15 @@ const onAuthSuccess = (message: string) => {
 };
 
 // @ts-expect-error this needs to be handled better if credentials is undefined or which union type
-const onAuth = (credentials: GitCredentials = {}) => () => ({
+const onAuth = (credentials?: GitCredentials = {}) => () => ({
   username: credentials.username,
 // @ts-expect-error this needs to be handled better if credentials is undefined or which union type
   password: credentials.password || credentials.token,
 });
 
-export const gitCallbacks = (credentials?: GitCredentials) => ({
+export const gitCallbacks = (credentials?: GitCredentials | null) => ({
   onMessage,
   onAuthFailure,
   onAuthSuccess,
-  onAuth: onAuth(credentials),
+  onAuth: onAuth(credentials || undefined),
 });

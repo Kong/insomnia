@@ -1,4 +1,5 @@
 import path from 'path';
+import * as git from 'isomorphic-git';
 
 /**
  * An isometric-git FS client that can route to various client depending on what the filePath is.
@@ -8,9 +9,9 @@ import path from 'path';
  * @returns {{promises: *}}
  */
 export function routableFSClient(
-  defaultFS: Record<string, any>,
-  otherFS: Record<string, Record<string, any>>,
-) {
+  defaultFS: git.PromiseFsClient,
+  otherFS: Record<string, git.PromiseFsClient>,
+): git.PromiseFsClient {
   const execMethod = async (method: string, filePath: string, ...args: Array<any>) => {
     filePath = path.normalize(filePath);
 
@@ -29,7 +30,8 @@ export function routableFSClient(
     return result;
   };
 
-  const methods = {};
+  // @ts-expect-error declare and initialize together to avoid an error
+  const methods: git.CallbackFsClient = {};
   methods.readFile = execMethod.bind(methods, 'readFile');
   methods.writeFile = execMethod.bind(methods, 'writeFile');
   methods.unlink = execMethod.bind(methods, 'unlink');

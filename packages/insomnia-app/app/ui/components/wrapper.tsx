@@ -119,10 +119,10 @@ export interface WrapperProps {
   handleMoveDoc: Function;
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequest: Function;
-  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
+  handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
+  handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
   handleDuplicateWorkspace: Function;
-  handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
+  handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
@@ -130,7 +130,7 @@ export interface WrapperProps {
   handleSetRequestPaneRef: Function;
   handleSetResponsePaneRef: Function;
   handleSetResponsePreviewMode: Function;
-  handleRender: (arg0: string | Record<string, any>) => Promise<string | Record<string, any>>;;
+  handleRender: (arg0: string | Record<string, any>) => Promise<string | Record<string, any>>;
   handleGetRenderContext: HandleGetRenderContext;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
@@ -152,44 +152,44 @@ export interface WrapperProps {
   handleGoToNextActivity: () => void;
   // Properties
   activity: GlobalActivity;
-  apiSpecs: ApiSpec[];
+  apiSpecs: Array<ApiSpec>;
   loadStartTime: number;
   isLoading: boolean;
   paneWidth: number;
   paneHeight: number;
   responsePreviewMode: string;
   responseFilter: string;
-  responseFilterHistory: string[];
+  responseFilterHistory: Array<string>;
   responseDownloadPath: string | null;
   sidebarWidth: number;
   sidebarHidden: boolean;
   sidebarFilter: string;
   sidebarChildren: SidebarChildObjects;
   settings: Settings;
-  workspaces: Workspace[];
-  requestMetas: RequestMeta[];
-  requests: Request[];
-  requestVersions: RequestVersion[];
-  unseenWorkspaces: Workspace[];
-  workspaceChildren: Record<string, any>[];
+  workspaces: Array<Workspace>;
+  requestMetas: Array<RequestMeta>;
+  requests: Array<Request>;
+  requestVersions: Array<RequestVersion>;
+  unseenWorkspaces: Array<Workspace>;
+  workspaceChildren: Array<Record<string, any>>;
   activeWorkspaceMeta: WorkspaceMeta;
-  environments: Record<string, any>[];
+  environments: Array<Record<string, any>>;
   activeApiSpec: ApiSpec;
-  activeRequestResponses: Response[];
+  activeRequestResponses: Array<Response>;
   activeWorkspace: Workspace;
   activeCookieJar: CookieJar;
   activeEnvironment: Environment | null;
   activeGitRepository: GitRepository | null;
   activeUnitTestResult: UnitTestResult | null;
-  activeUnitTestSuites: UnitTestSuite[];
-  activeUnitTests: UnitTest[];
-  activeWorkspaceClientCertificates: ClientCertificate[];
+  activeUnitTestSuites: Array<UnitTestSuite>;
+  activeUnitTests: Array<UnitTest>;
+  activeWorkspaceClientCertificates: Array<ClientCertificate>;
   headerEditorKey: string;
   isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  gitRepositories: GitRepository[];
-  syncItems: StatusCandidate[];
+  gitRepositories: Array<GitRepository>;
+  syncItems: Array<StatusCandidate>;
   oAuth2Token?: OAuth2Token | null;
   activeRequest?: Request | null;
   activeResponse?: Response | null;
@@ -204,7 +204,7 @@ interface State {
   activeGitBranch: string;
 }
 
-const rUpdate = (request, ...args: Partial<Request>[]) => {
+const rUpdate = (request, ...args: Array<Partial<Request>>) => {
   if (!request) {
     throw new Error('Tried to update null request');
   }
@@ -232,7 +232,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     return newRequest;
   }
 
-  _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
+  _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>) {
     return this._handleForceUpdateRequest(r, {
       headers,
     });
@@ -248,7 +248,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  static _handleUpdateRequestParameters(r: Request, parameters: RequestParameter[]) {
+  static _handleUpdateRequestParameters(r: Request, parameters: Array<RequestParameter>) {
     return rUpdate(r, {
       parameters,
     });
@@ -260,7 +260,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  static _handleUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
+  static _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>) {
     return rUpdate(r, {
       headers,
     });

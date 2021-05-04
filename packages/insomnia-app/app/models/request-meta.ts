@@ -58,7 +58,7 @@ export function update(requestMeta: RequestMeta, patch: Partial<RequestMeta>) {
   return db.docUpdate<RequestMeta>(requestMeta, patch);
 }
 
-export function getByParentId(parentId: string) {
+export function getByParentId(parentId: string): Promise<RequestMeta | null> {
   // expectParentToBeRequest(parentId);
   return db.getWhere<RequestMeta>(type, { parentId });
 }

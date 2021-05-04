@@ -46,7 +46,10 @@ interface Database {
   getMostRecentlyModified: <T>(type: string, query?: Query) => Promise<T | null>;
   findMostRecentlyModified: <T>(type: string, query?: Query, limit?: number | null) => Promise<T[]>;
   find: <T extends BaseModel>(type: string, query?: ModelQuery<T>, sort?: Sort) => Promise<T[]>;
-  all: <T extends BaseModel>(type: string) => Promise<T[] | undefined>;
+  // OS: TSCONVERSION: The implementation of all() could return undefined but typing as such breaks usages
+  // Since we're looking to tidy up this file we'll type these correctly at that time
+  // For an example, add set the return type to Promise<T[] | undefined> and check /packages/insomnia-app/app/ui/redux/modules/entities.ts 
+  all: <T extends BaseModel>(type: string) => Promise<T[]>;
   getWhere: <T extends BaseModel>(type: string, query: ModelQuery<T>) => Promise<T | null>;
   get: <T extends BaseModel>(type: string, id?: string) => Promise<T | null>;
   count: (type: string, query?: Query) => Promise<number>;
