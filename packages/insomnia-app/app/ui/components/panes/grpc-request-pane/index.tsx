@@ -16,7 +16,7 @@ import useActionHandlers from './use-action-handlers';
 import useExistingGrpcUrls from './use-existing-grpc-urls';
 
 interface Props {
-  forceRefreshKey: string;
+  forceRefreshKey: number;
   activeRequest: GrpcRequest;
   environmentId: string;
   workspaceId: string;

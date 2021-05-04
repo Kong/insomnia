@@ -2,14 +2,15 @@ import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import KeyValueEditor from '../../key-value-editor/editor';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
   onChange: Function;
   parameters: Array<any>;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender?: Function;
-  handleGetRenderContext?: Function;
+  handleRender?: HandleRender;
+  handleGetRenderContext?: HandleGetRenderContext;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

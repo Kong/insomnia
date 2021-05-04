@@ -37,7 +37,7 @@ interface Props extends Partial<DropdownProps> {
   requestGroup?: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
   handleSetRequestPinned: Function;
-  activeEnvironment?: Environment;
+  activeEnvironment?: Environment | null;
 }
 
 // Setup state for plugin actions

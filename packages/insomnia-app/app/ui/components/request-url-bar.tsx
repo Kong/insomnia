@@ -1,14 +1,14 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { remote } from 'electron';
+import { OpenDialogOptions, remote } from 'electron';
 import { DEBOUNCE_MILLIS, AUTOBIND_CFG, isMac } from '../../common/constants';
 import {
-  Dropdown,
   DropdownButton,
   DropdownDivider,
   DropdownHint,
   DropdownItem,
 } from './base/dropdown';
+import Dropdown from './base/dropdown/dropdown';
 import { showPrompt } from './modals/index';
 import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
@@ -18,16 +18,17 @@ import type { Request } from '../../models/request';
 import type { HotKeyRegistry } from '../../common/hotkeys';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
+import { HandleGetRenderContext, HandleRender } from '../../common/render';
 
 interface Props {
-  handleAutocompleteUrls: (...args: Array<any>) => any;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  handleImport: (...args: Array<any>) => any;
-  handleRender: (arg0: string) => Promise<string>;
+  handleAutocompleteUrls: Function;
+  handleGenerateCode: Function;
+  handleGetRenderContext: HandleGetRenderContext;
+  handleImport: Function;
+  handleRender: HandleRender;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleUpdateDownloadPath: (...args: Array<any>) => any;
+  handleUpdateDownloadPath: Function;
   isVariableUncovered: boolean;
   nunjucksPowerUserMode: boolean;
   onMethodChange: (r: Request, method: string) => Promise<Request>;
@@ -49,7 +50,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
   _sendTimeout: NodeJS.Timeout | null = null;
   _sendInterval: NodeJS.Timeout | null = null;
   _dropdown: Dropdown | null = null;
-  _methodDropdown: Dropdown | null = null;
+  _methodDropdown: MethodDropdown | null = null;
   _input: OneLineEditor | null = null;
   state: State = {
     currentInterval: null,
@@ -62,15 +63,15 @@ class RequestUrlBar extends PureComponent<Props, State> {
     this._dropdown = n;
   }
 
-  _setMethodDropdownRef(n: Dropdown) {
+  _setMethodDropdownRef(n: MethodDropdown) {
     this._methodDropdown = n;
   }
 
-  _setInputRef(n: HTMLInputElement) {
+  _setInputRef(n: OneLineEditor) {
     this._input = n;
   }
 
-  _handleMetaClickSend(e: React.MouseEvent<HTMLDivElement>) {
+  _handleMetaClickSend(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     this._dropdown && this._dropdown.show();
   }
@@ -122,7 +123,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
 
   async _handleSetDownloadLocation() {
     const { request } = this.props;
-    const options = {
+    const options: OpenDialogOptions = {
       title: 'Select Download Location',
       buttonLabel: 'Select',
       properties: ['openDirectory'],
@@ -213,7 +214,9 @@ class RequestUrlBar extends PureComponent<Props, State> {
   }
 
   _handleStopInterval() {
-    clearInterval(this._sendInterval);
+    if (this._sendInterval) {
+      clearInterval(this._sendInterval);
+    }
 
     if (this.state.currentInterval) {
       this.setState({
@@ -240,7 +243,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
     this._handleStopInterval();
   }
 
-  _handleClickSend(e: React.MouseEvent<HTMLDivElement>) {
+  _handleClickSend(e: React.MouseEvent<HTMLButtonElement>) {
     const metaPressed = isMac() ? e.metaKey : e.ctrlKey;
 
     // If we're pressing a meta key, let the dropdown open
@@ -264,7 +267,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
   renderSendButton() {
     const { hotKeyRegistry, downloadPath } = this.props;
     const { currentInterval, currentTimeout } = this.state;
-    let cancelButton = null;
+    let cancelButton: ReactNode = null;
 
     if (currentInterval) {
       cancelButton = (
@@ -297,6 +300,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
             onClick={this._handleClickSend}
+            // @ts-expect-error type doesn't exist
             type="button">
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>

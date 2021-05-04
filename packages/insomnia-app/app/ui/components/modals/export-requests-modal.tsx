@@ -11,6 +11,7 @@ import type { RequestGroup } from '../../../models/request-group';
 import * as models from '../../../models';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest, isRequest, isRequestGroup } from '../../../models/helpers/is-model';
+import { Child } from '../sidebar/sidebar-children';
 
 export interface Node {
   doc: Request | GrpcRequest | RequestGroup;
@@ -21,8 +22,8 @@ export interface Node {
 }
 
 interface Props extends ModalProps {
-  childObjects: Array<Record<string, any>>;
-  handleExportRequestsToFile: (...args: Array<any>) => any;
+  childObjects: Array<Child>;
+  handleExportRequestsToFile: Function;
 }
 
 interface State {
@@ -87,6 +88,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     const totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
+    // @ts-expect-error missing property
     const rootFolder: RequestGroup = Object.assign({}, models.requestGroup.init(), {
       _id: 'all',
       type: models.requestGroup.type,

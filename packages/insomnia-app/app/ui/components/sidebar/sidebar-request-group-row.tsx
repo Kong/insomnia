@@ -32,7 +32,7 @@ interface Props {
   isDraggingOver?: boolean;
   connectDragSource?: Function;
   connectDropTarget?: Function;
-  activeEnvironment?: Environment;
+  activeEnvironment?: Environment | null;
 }
 
 interface State {

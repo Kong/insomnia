@@ -6,7 +6,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 interface Props {
   download: (pretty: boolean) => any;
   fullDownload: (pretty: boolean) => any;
-  updatePreviewMode: (arg0: string) => any;
+  updatePreviewMode: Function;
   previewMode: string;
   showPrettifyOption?: boolean;
 }

@@ -8,7 +8,7 @@ import ResponsePane from './panes/response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import { AUTOBIND_CFG } from '../../common/constants';
+import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
 import { isCollection, isDesign, isGrpcRequest } from '../../models/helpers/is-model';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
@@ -18,36 +18,39 @@ import SyncDropdown from './dropdowns/sync-dropdown';
 import { Button } from 'insomnia-components';
 import { showSyncShareModal } from './modals/sync-share-modal';
 import * as session from '../../account/session';
+import { Settings } from '../../models/settings';
+import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 
 interface Props {
-  forceRefreshKey: string;
+  forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
-  handleChangeEnvironment: (...args: Array<any>) => any;
-  handleDeleteResponse: (...args: Array<any>) => any;
-  handleDeleteResponses: (...args: Array<any>) => any;
-  handleForceUpdateRequest: (...args: Array<any>) => any;
-  handleForceUpdateRequestHeaders: (...args: Array<any>) => any;
-  handleImport: (...args: Array<any>) => any;
+  handleChangeEnvironment: Function;
+  handleDeleteResponse: Function;
+  handleDeleteResponses: Function;
+  handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
+  handleForceUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  handleImport: Function;
   handleImportFile: HandleImportFileCallback;
-  handleRequestCreate: (...args: Array<any>) => any;
-  handleRequestGroupCreate: (...args: Array<any>) => any;
-  handleSendAndDownloadRequestWithActiveEnvironment: (...args: Array<any>) => any;
-  handleSendRequestWithActiveEnvironment: (...args: Array<any>) => any;
-  handleSetActiveResponse: (...args: Array<any>) => any;
-  handleSetPreviewMode: (...args: Array<any>) => any;
+  handleRequestCreate: () => void;
+  handleRequestGroupCreate: () => void;
+  handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
+  handleSendRequestWithActiveEnvironment: () => void;
+  handleSetActiveResponse: Function;
+  handleSetPreviewMode: Function;
   handleSetResponseFilter: (filter: string) => void;
-  handleShowCookiesModal: (...args: Array<any>) => any;
-  handleShowRequestSettingsModal: (...args: Array<any>) => any;
+  handleShowCookiesModal: Function;
+  handleShowRequestSettingsModal: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleUpdateRequestAuthentication: (...args: Array<any>) => any;
-  handleUpdateRequestBody: (...args: Array<any>) => any;
-  handleUpdateRequestHeaders: (...args: Array<any>) => any;
-  handleUpdateRequestMethod: (...args: Array<any>) => any;
-  handleUpdateRequestParameters: (...args: Array<any>) => any;
-  handleUpdateRequestUrl: (...args: Array<any>) => any;
-  handleUpdateSettingsShowPasswords: (...args: Array<any>) => any;
-  handleUpdateSettingsUseBulkHeaderEditor: (...args: Array<any>) => any;
+  handleUpdateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
+  handleUpdateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
+  handleUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  handleUpdateRequestMethod: (r: Request, method: string) => Promise<Request>;
+  handleUpdateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>;
+  handleUpdateRequestUrl: (r: Request, url: string) => Promise<Request>;
+  handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
+  handleUpdateSettingsUseBulkHeaderEditor: Function;
+  handleUpdateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   wrapperProps: WrapperProps;
 }
 
@@ -125,6 +128,7 @@ class WrapperDebug extends PureComponent<Props> {
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             hotKeyRegistry={settings.hotKeyRegistry}
           />
+          {/* @ts-expect-error onClick event doesn't matter */}
           <button className="btn btn--super-compact" onClick={handleShowCookiesModal}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
@@ -156,6 +160,7 @@ class WrapperDebug extends PureComponent<Props> {
           handleCopyAsCurl={handleCopyAsCurl}
           handleRender={handleRender}
           moveDoc={handleMoveDoc}
+          // @ts-expect-error this prop isn't sent
           hidden={sidebarHidden}
           width={sidebarWidth}
           workspace={activeWorkspace}
@@ -190,7 +195,6 @@ class WrapperDebug extends PureComponent<Props> {
     const {
       activeEnvironment,
       activeRequest,
-      activeUnitTest,
       activeWorkspace,
       handleCreateRequestForWorkspace,
       handleGenerateCodeForActiveRequest,
@@ -214,7 +218,7 @@ class WrapperDebug extends PureComponent<Props> {
             activeRequest={activeRequest}
             environmentId={activeEnvironment ? activeEnvironment._id : ''}
             workspaceId={activeWorkspace._id}
-            forceRefreshCounter={forceRefreshKey}
+            forceRefreshKey={forceRefreshKey}
             settings={settings}
             handleRender={handleRender}
             isVariableUncovered={isVariableUncovered}
@@ -243,10 +247,8 @@ class WrapperDebug extends PureComponent<Props> {
           handleUpdateDownloadPath={handleUpdateDownloadPath}
           headerEditorKey={headerEditorKey}
           isVariableUncovered={isVariableUncovered}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           oAuth2Token={oAuth2Token}
           request={activeRequest}
-          unitTest={activeUnitTest}
           settings={settings}
           updateRequestAuthentication={handleUpdateRequestAuthentication}
           updateRequestBody={handleUpdateRequestBody}
@@ -296,7 +298,7 @@ class WrapperDebug extends PureComponent<Props> {
         <ErrorBoundary showAlert>
           <GrpcResponsePane
             activeRequest={activeRequest}
-            forceRefreshCounter={forceRefreshKey}
+            forceRefreshKey={forceRefreshKey}
             settings={settings}
           />
         </ErrorBoundary>

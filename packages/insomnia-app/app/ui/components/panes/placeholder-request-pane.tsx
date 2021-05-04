@@ -2,14 +2,13 @@ import React, { FunctionComponent } from 'react';
 import Hotkey from '../hotkey';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
-import type { Request } from '../../../models/request';
 import { Pane, PaneBody, PaneHeader } from './pane';
 import type { HandleImportFileCallback } from '../wrapper';
 
 interface Props {
   hotKeyRegistry: hotkeys.HotKeyRegistry;
   handleImportFile: HandleImportFileCallback;
-  handleCreateRequest: () => Promise<Request>;
+  handleCreateRequest: () => void;
 }
 
 const PlaceholderRequestPane: FunctionComponent<Props> = ({
@@ -60,6 +59,7 @@ const PlaceholderRequestPane: FunctionComponent<Props> = ({
         </table>
 
         <div className="text-center pane__body--placeholder__cta">
+          {/* @ts-expect-error event not used */}
           <button className="btn inline-block btn--clicky" onClick={handleImportFile}>
             Import from File
           </button>

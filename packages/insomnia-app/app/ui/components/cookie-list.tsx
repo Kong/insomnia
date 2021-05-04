@@ -8,15 +8,16 @@ import RenderedText from './rendered-text';
 import type { Cookie } from '../../models/cookie-jar';
 import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
 import { AUTOBIND_CFG } from '../../common/constants';
+import { HandleRender } from '../../common/render';
 
 interface Props {
-  handleCookieAdd: (...args: Array<any>) => any;
-  handleCookieDelete: (...args: Array<any>) => any;
-  handleDeleteAll: (...args: Array<any>) => any;
+  handleCookieAdd: Function;
+  handleCookieDelete: Function;
+  handleDeleteAll: Function;
   cookies: Array<Cookie>;
   newCookieDomainName: string;
-  handleShowModifyCookieModal: (...args: Array<any>) => any;
-  handleRender: (...args: Array<any>) => any;
+  handleShowModifyCookieModal: Function;
+  handleRender: HandleRender;
 }
 
 // Use tough-cookie MAX_DATE value

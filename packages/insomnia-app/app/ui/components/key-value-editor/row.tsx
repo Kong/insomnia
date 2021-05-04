@@ -23,6 +23,7 @@ interface Props {
   displayDescription: boolean,
   index: number,
   pair: {
+    id: string,
     name: string,
     value: string,
     description: string,

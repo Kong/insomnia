@@ -43,6 +43,7 @@ export interface RenderContextAndKeys {
 }
 
 export type HandleGetRenderContext = () => Promise<RenderContextAndKeys>;
+export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
 export async function buildRenderContext(
   ancestors: Array<BaseModel> | null,

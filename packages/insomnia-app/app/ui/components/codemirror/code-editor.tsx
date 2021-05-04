@@ -25,7 +25,7 @@ import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
 import { CodeMirrorLinkClickCallback } from './extensions/clickable';
-import { HandleGetRenderContext } from '../../../common/render';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { NunjucksParsedTag } from '../../../templating/utils';
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -81,9 +81,11 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   gutters: ['CodeMirror-lint-markers'],
 };
 
+export type CodeEditorOnChange = (value: string) => void;
+
 interface Props {
   indentWithTabs?: boolean,
-  onChange?: (value: string) => void,
+  onChange?: CodeEditorOnChange,
   onCursorActivity?: Function,
   onFocus?: Function,
   onBlur?: Function,
@@ -92,8 +94,8 @@ interface Props {
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>,
   onClick?: React.MouseEventHandler<HTMLDivElement>,
   onPaste?: Function,
-  onCodeMirrorInit?: Function,
-  render?: Function,
+  onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void,
+  render?: HandleRender,
   nunjucksPowerUserMode?: boolean,
   getRenderContext?: HandleGetRenderContext,
   getAutocompleteConstants?: Function,

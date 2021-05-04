@@ -61,5 +61,5 @@ interface GrpcContextModalWrapperProps {
 
 export const GrpcDispatchModalWrapper = ({ children }: GrpcContextModalWrapperProps) => {
   const dispatch = useGrpcDispatch();
-  return children(dispatch);
+  return <>{children(dispatch)}</>;
 };

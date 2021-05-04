@@ -1,4 +1,4 @@
-import React, { Fragment, PureComponent } from 'react';
+import React, { FormEvent, Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
@@ -20,17 +20,18 @@ import * as db from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
 import { docsTemplateTags } from '../../../common/documentation';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface Props extends ModalProps {
-  handleChangeEnvironment: (id: string | null) => Promise<void>;
+  handleChangeEnvironment: (id: string | null) => void;
   activeEnvironmentId: string | null;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   lineWrapping: boolean;
-  render: (...args: Array<any>) => any;
-  getRenderContext: (...args: Array<any>) => any;
+  render: HandleRender;
+  getRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
 }
@@ -106,7 +107,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   environmentColorInputRef: HTMLInputElement;
   saveTimeout: NodeJS.Timeout | null = null;
   modal: Modal | null = null;
-  editorKey: number;
+  editorKey = 0;
+
   state: State = {
     workspace: null,
     isValid: true,
@@ -116,7 +118,6 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   }
 
   colorChangeTimeout: NodeJS.Timeout | null = null;
-  editorKey = 0;
 
   hide() {
     this.modal?.hide();
@@ -234,7 +235,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
   async _updateEnvironment(
     environment: Environment,
-    patch: Record<string, any>,
+    patch: Partial<Environment>,
     refresh = true,
   ) {
     const { workspace } = this.state;
@@ -259,11 +260,12 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleChangeEnvironmentColor(environment: Environment, color: string | null) {
+  _handleChangeEnvironmentColor(environment: Environment | null, color: string | null) {
     if (this.colorChangeTimeout !== null) {
       clearTimeout(this.colorChangeTimeout);
     }
     this.colorChangeTimeout = setTimeout(async () => {
+      // @ts-expect-error environment can be null
       await this._updateEnvironment(environment, {
         color,
       });
@@ -360,9 +362,10 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     this.environmentColorInputRef?.click();
   }
 
-  _handleInputColorChange(event: React.SyntheticEvent<HTMLInputElement>) {
+  _handleInputColorChange(event: FormEvent<HTMLInputElement>) {
     this._handleChangeEnvironmentColor(
       this._getActiveEnvironment(),
+      // @ts-expect-error what? apparently value doesn't exist on the target
       event.target && event.target.value,
     );
   }
@@ -474,6 +477,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                     className="wide"
                     onSubmit={name =>
                       activeEnvironment &&
+                      // @ts-expect-error only set name if defined
                       this._handleChangeEnvironmentName(activeEnvironment, name)
                     }
                     value={activeEnvironment ? activeEnvironment.name : ''}
@@ -486,7 +490,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                   <input
                     className="hidden"
                     type="color"
-                    value={activeEnvironment.color}
+                    value={activeEnvironment.color || undefined}
                     ref={this._setInputColorRef}
                     onInput={this._handleInputColorChange}
                   />
@@ -508,6 +512,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                       <i
                         className="fa fa-circle"
                         style={{
+                          // @ts-expect-error don't set color if undefined
                           color: activeEnvironment.color,
                         }}
                       />

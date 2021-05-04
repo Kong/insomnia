@@ -96,15 +96,15 @@ import { GrpcDispatchModalWrapper } from '../context/grpc';
 import WrapperMigration from './wrapper-migration';
 import type { ImportOptions } from '../redux/modules/global';
 import WrapperAnalytics from './wrapper-analytics';
-import { HandleGetRenderContext } from '../../common/render';
+import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { RequestGroup } from '../../models/request-group';
 
 const spectral = new Spectral();
 
 export interface WrapperProps {
   // Helper Functions
-  handleActivateRequest: Function;
-  handleSetSidebarFilter: Function;
+  handleActivateRequest: (activeRequestId: string) => void;
+  handleSetSidebarFilter: (value: string) => Promise<void>;
   handleToggleMenuBar: Function;
   handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
@@ -115,7 +115,7 @@ export interface WrapperProps {
   handleShowSettingsModal: Function;
   handleExportRequestsToFile: Function;
   handleSetActiveWorkspace: (workspaceId: string | null) => void;
-  handleSetActiveEnvironment: Function;
+  handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
   handleMoveDoc: Function;
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequest: Function;
@@ -126,11 +126,11 @@ export interface WrapperProps {
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleCreateRequestForWorkspace: Function;
+  handleCreateRequestForWorkspace: () => void;
   handleSetRequestPaneRef: Function;
   handleSetResponsePaneRef: Function;
   handleSetResponsePreviewMode: Function;
-  handleRender: (arg0: string | Record<string, any>) => Promise<string | Record<string, any>>;
+  handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
@@ -146,7 +146,7 @@ export interface WrapperProps {
   handleSetRequestPinned: Function;
   handleSendRequestWithEnvironment: Function;
   handleSendAndDownloadRequestWithEnvironment: Function;
-  handleUpdateRequestMimeType: Function;
+  handleUpdateRequestMimeType: (mimeType: string) => Promise<Request | null>;
   handleUpdateDownloadPath: Function;
   handleSetActiveActivity: (activity: GlobalActivity) => void;
   handleGoToNextActivity: () => void;
@@ -171,9 +171,9 @@ export interface WrapperProps {
   requests: Array<Request>;
   requestVersions: Array<RequestVersion>;
   unseenWorkspaces: Array<Workspace>;
-  workspaceChildren: Array<Record<string, any>>;
+  workspaceChildren: Array<Request | RequestGroup>;
   activeWorkspaceMeta: WorkspaceMeta;
-  environments: Array<Record<string, any>>;
+  environments: Array<Environment>;
   activeApiSpec: ApiSpec;
   activeRequestResponses: Array<Response>;
   activeWorkspace: Workspace;
@@ -223,7 +223,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   // Request updaters
-  async _handleForceUpdateRequest(r: Request, patch: Record<string, any>) {
+  async _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
     const newRequest = await rUpdate(r, patch);
     // Give it a second for the app to render first. If we don't wait, it will refresh
     // on the old request and won't catch the newest one.
@@ -297,8 +297,10 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           url: r.url,
           method: r.method,
           headers: r.headers,
+          // @ts-expect-error insomnia-importers type difference
           body: r.body,
           authentication: r.authentication,
+          // @ts-expect-error insomnia-importers type difference
           parameters: r.parameters,
         });
       }
@@ -646,11 +648,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               <CookiesModal
                 handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                 handleRender={handleRender}
-                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 ref={registerModal}
                 workspace={activeWorkspace}
                 cookieJar={activeCookieJar}
-                isVariableUncovered={isVariableUncovered}
               />
             ) : null}
 

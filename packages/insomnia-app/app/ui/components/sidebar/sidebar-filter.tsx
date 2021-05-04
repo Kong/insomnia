@@ -9,7 +9,7 @@ import SidebarCreateDropdown from './sidebar-create-dropdown';
 import SidebarSortDropdown from './sidebar-sort-dropdown';
 
 interface Props {
-  onChange: (arg0: string) => void;
+  onChange: (value: string) => Promise<void>;
   requestCreate: () => void;
   requestGroupCreate: () => void;
   sidebarSort: (sortOrder: SortOrder) => void;

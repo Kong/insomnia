@@ -32,7 +32,7 @@ interface State {
   showDescription: boolean;
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
-  workspace: Workspace | null;
+  workspace?: Workspace;
   workspaces: Array<Workspace>;
   justCopied: boolean;
   justMoved: boolean;
@@ -53,7 +53,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
     showDescription: false,
     defaultPreviewMode: false,
     activeWorkspaceIdToCopyTo: null,
-    workspace: null,
+    workspace: undefined,
     workspaces: [],
     justCopied: false,
     justMoved: false,
@@ -75,13 +75,14 @@ class RequestSettingsModal extends PureComponent<Props, State> {
 
     const value = e.currentTarget.checked;
     const setting = e.currentTarget.name;
+    // @ts-expect-error request settings only exist for regular requests, the types should filter down and exit if grpc
     const request = await models.request.update(this.state.request, {
       [setting]: value,
     });
     this.setState({ request });
   }
 
-  async _updateRequestSettingString(e: React.SyntheticEvent<HTMLInputElement>) {
+  async _updateRequestSettingString(e: React.SyntheticEvent<HTMLInputElement | HTMLSelectElement>) {
     if (!this.state.request) {
       // Should never happen
       return;
@@ -89,6 +90,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
 
     const value = e.currentTarget.value;
     const setting = e.currentTarget.name;
+    // @ts-expect-error request settings only exist for regular requests, the types should filter down and exit if grpc
     const request = await models.request.update(this.state.request, {
       [setting]: value,
     });
@@ -116,6 +118,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
       return;
     }
 
+    // @ts-expect-error description only exists for regular requests at the moment, the types should filter down and exit if grpc
     const request = await models.request.update(this.state.request, {
       description,
     });
@@ -304,6 +307,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
           <label>
             Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
             <select
+              // @ts-expect-error this setting only exists for a Request not GrpcRequest
               defaultValue={this.state.request && this.state.request.settingFollowRedirects}
               name="settingFollowRedirects"
               onChange={this._updateRequestSettingString}>
@@ -448,6 +452,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
             <DebouncedInput
               delay={500}
+              // @ts-expect-error props expand into an input but are difficult to type
               type="text"
               placeholder={request.url || 'My Request'}
               defaultValue={request.name}

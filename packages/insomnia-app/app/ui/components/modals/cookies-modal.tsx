@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { ChangeEvent, PureComponent } from 'react';
 import deepEqual from 'deep-equal';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -11,10 +11,11 @@ import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
 import { fuzzyMatch } from '../../../common/misc';
+import { HandleRender } from '../../../common/render';
 
 interface Props extends ModalProps {
   handleShowModifyCookieModal: Function;
-  handleRender: (arg0: string | Record<string, any>) => Promise<string | Record<string, any>>;
+  handleRender: HandleRender;
   cookieJar: CookieJar;
   workspace: Workspace;
 }
@@ -68,7 +69,7 @@ class CookiesModal extends PureComponent<Props, State> {
     await this._saveChanges();
   }
 
-  async _handleFilterChange(e: Event) {
+  async _handleFilterChange(e: ChangeEvent<HTMLInputElement>) {
     if (!(e.target instanceof HTMLInputElement)) {
       return;
     }
@@ -90,7 +91,7 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 
   async _applyFilter(filter: string, cookies: Array<Cookie>) {
-    const renderedCookies = [];
+    const renderedCookies: Array<Cookie> = [];
 
     for (const cookie of cookies) {
       try {
@@ -135,7 +136,7 @@ class CookiesModal extends PureComponent<Props, State> {
       return cookieJar.cookies;
     }
 
-    return cookieJar.cookies.filter((c, i) => visibleCookieIndexes.includes(i));
+    return cookieJar.cookies.filter((_, i) => visibleCookieIndexes.includes(i));
   }
 
   async show() {

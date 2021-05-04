@@ -4,7 +4,7 @@ import Tooltip from '../tooltip';
 import { GrpcStatusEnum } from '../../../network/grpc/service-error';
 
 interface Props {
-  statusCode: number;
+  statusCode?: number;
   small?: boolean;
   statusMessage?: string;
   tooltipDelay?: number;

@@ -35,12 +35,12 @@ import classnames from 'classnames';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
-  showCookiesModal: (...args: Array<any>) => any;
-  handleSetPreviewMode: (...args: Array<any>) => any;
-  handleSetActiveResponse: (...args: Array<any>) => any;
-  handleDeleteResponses: (...args: Array<any>) => any;
-  handleDeleteResponse: (...args: Array<any>) => any;
-  handleShowRequestSettings: (...args: Array<any>) => any;
+  showCookiesModal: Function;
+  handleSetPreviewMode: Function;
+  handleSetActiveResponse: Function;
+  handleDeleteResponses: Function;
+  handleDeleteResponse: Function;
+  handleShowRequestSettings: Function;
   previewMode: string;
   filter: string;
   filterHistory: Array<string>;

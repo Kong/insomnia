@@ -7,7 +7,7 @@ interface Props {
   value?: any,
   className?: string,
   onDisabledClick?: Function,
-  onClick?: Function,
+  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: any, e: React.MouseEvent<HTMLButtonElement>) => void),
   disabled?: boolean,
   tabIndex?: number,
   type?: ButtonHTMLAttributes<HTMLButtonElement>['type'],
@@ -16,7 +16,7 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class Button extends PureComponent<Props> {
-  _handleClick(e) {
+  _handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     const { onClick, onDisabledClick, disabled } = this.props;
     const fn = disabled ? onDisabledClick : onClick;
 

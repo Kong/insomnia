@@ -3,12 +3,12 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
 import {
-  Dropdown,
   DropdownButton,
   DropdownDivider,
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
 import { showModal } from '../modals/index';
 import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
@@ -19,7 +19,7 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 
 interface Props {
-  handleChangeEnvironment: (...args: Array<any>) => any;
+  handleChangeEnvironment: Function;
   workspace: Workspace;
   environments: Array<Environment>;
   environmentHighlightColorStyle: string;
@@ -53,6 +53,7 @@ class EnvironmentsDropdown extends PureComponent<Props> {
         <i
           className="fa fa-random"
           style={{
+            // @ts-expect-error don't set color if undefined
             color: environment.color,
           }}
         />

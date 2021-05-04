@@ -7,6 +7,7 @@ import KeyValueEditorRow from './row';
 import { generateId, nullFn } from '../../../common/misc';
 import { Dropdown, DropdownItem, DropdownButton } from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -21,8 +22,8 @@ const RIGHT = 39;
 interface Props {
   onChange: Function;
   pairs: Array<any>;
-  handleRender?: Function;
-  handleGetRenderContext?: Function;
+  handleRender?: HandleRender;
+  handleGetRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
   isVariableUncovered?: boolean;
   handleGetAutocompleteNameConstants?: Function;
@@ -53,7 +54,8 @@ interface State {
 class Editor extends PureComponent<Props, State> {
   _focusedPairId: string | null = null;
   _focusedField: string | null = NAME;
-  _rows: Array<typeof KeyValueEditorRow> = [];
+  // @ts-expect-error being imported as a value but should be usable as a type
+  private _rows: Array<KeyValueEditorRow> = [];
   _triggerTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -74,7 +76,8 @@ class Editor extends PureComponent<Props, State> {
     };
   }
 
-  _setRowRef(n?: typeof KeyValueEditorRow) {
+  // @ts-expect-error being imported as a value but should be usable as a type
+  private _setRowRef(n?: KeyValueEditorRow) {
     // NOTE: We're not handling unmounting (may lead to a bug)
     if (n) {
       this._rows[n.props.pair.id] = n;
@@ -223,7 +226,7 @@ class Editor extends PureComponent<Props, State> {
     );
   }
 
-  _addPair(position: number) {
+  _addPair(position?: number) {
     const numPairs = this.state.pairs.length;
     const { maxPairs } = this.props;
 
@@ -234,6 +237,7 @@ class Editor extends PureComponent<Props, State> {
 
     position = position === undefined ? numPairs : position;
     const pair = {
+      id: '',
       name: '',
       value: '',
       description: '',
@@ -506,6 +510,7 @@ class Editor extends PureComponent<Props, State> {
               onFocusDescription={this._handleAddFromDescription}
               allowMultiline={allowMultiline}
               allowFile={allowFile}
+              // @ts-expect-error missing defaults
               pair={{
                 name: '',
                 value: '',

@@ -3,7 +3,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import classnames from 'classnames';
 import GRPCEditor from '../editors/grpc-editor';
 import Button from '../base/button';
-import { HandleGetRenderContext } from '../../../common/render';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Settings } from '../../../models/settings';
 
 interface Message {
@@ -22,9 +22,9 @@ interface Props {
   handleStream?: () => void;
   handleCommit?: () => void;
   showActions?: boolean;
-  handleRender: (arg0: string) => Promise<string>;
-  isVariableUncovered: boolean;
-  handleGetRenderContext: HandleGetRenderContext;
+  handleRender?: HandleRender;
+  isVariableUncovered?: boolean;
+  handleGetRenderContext?: HandleGetRenderContext;
 }
 
 const GrpcTabbedMessages: FunctionComponent<Props> = ({

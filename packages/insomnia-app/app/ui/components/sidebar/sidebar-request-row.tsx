@@ -22,7 +22,7 @@ import { isGrpcRequest } from '../../../models/helpers/is-model';
 import { HotKeyRegistry } from '../../../common/hotkeys';
 
 interface Props {
-  activeEnvironment?: Environment;
+  activeEnvironment?: Environment | null;
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;

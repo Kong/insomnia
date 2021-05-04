@@ -1,10 +1,11 @@
 import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import CodeEditor from '../../codemirror/code-editor';
+import CodeEditor, { CodeEditorOnChange } from '../../codemirror/code-editor';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
-  onChange: Function;
+  onChange: CodeEditorOnChange;
   content: string;
   contentType: string;
   fontSize: number;
@@ -15,8 +16,8 @@ interface Props {
   uniquenessKey: string;
   isVariableUncovered: boolean;
   className?: string;
-  render?: Function;
-  getRenderContext?: Function;
+  render?: HandleRender;
+  getRenderContext?: HandleGetRenderContext;
   indentWithTabs?: boolean;
 }
 

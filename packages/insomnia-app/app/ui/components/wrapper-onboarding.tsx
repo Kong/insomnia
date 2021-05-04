@@ -16,8 +16,6 @@ interface Props {
   wrapperProps: WrapperProps;
   handleImportFile: HandleImportFileCallback;
   handleImportUri: HandleImportUriCallback;
-  header: string;
-  subHeader: string;
 }
 
 interface State {

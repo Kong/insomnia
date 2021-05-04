@@ -32,13 +32,14 @@ import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
 import { showModal } from '../../modals/index';
 import AskModal from '../../modals/ask-modal';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
   onChange: (r: Request, body: RequestBody) => Promise<Request>;
   onChangeHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
-  handleUpdateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
   settings: Settings;
@@ -122,8 +123,8 @@ class BodyEditor extends PureComponent<Props> {
       isVariableUncovered,
     } = this.props;
     const noRender = request.settingDisableRenderRequestBody;
-    const handleRender = noRender ? null : render;
-    const handleGetRenderContext = noRender ? null : getRenderContext;
+    const handleRender = noRender ? undefined : render;
+    const handleGetRenderContext = noRender ? undefined : getRenderContext;
     const uniqueKey = `${request._id}::${noRender ? 'no-render' : 'render'}`;
     const fileName = request.body.fileName;
     const mimeType = request.body.mimeType;
@@ -167,7 +168,6 @@ class BodyEditor extends PureComponent<Props> {
           settings={settings}
           environmentId={environmentId}
           getRenderContext={handleGetRenderContext}
-          nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
           isVariableUncovered={isVariableUncovered}
           onChange={this._handleGraphQLChange}
         />

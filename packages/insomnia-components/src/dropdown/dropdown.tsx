@@ -134,7 +134,7 @@ interface State {
   dropUp: boolean;
   filter: string;
   filterVisible: boolean;
-  filterItems: number[] | null;
+  filterItems: Array<number> | null;
   filterActiveIndex: number;
   forcedPosition: null | {
     x: number;
@@ -384,7 +384,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
   }
 
   _getFlattenedChildren(children: ReactNode) {
-    let newChildren: (ReactChild | ReactFragment | ReactPortal)[] = [];
+    let newChildren: Array<ReactChild | ReactFragment | ReactPortal> = [];
 
     for (const child of React.Children.toArray(children)) {
       if (!child) {

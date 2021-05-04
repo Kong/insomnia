@@ -8,7 +8,7 @@ import GrpcSpinner from '../grpc-spinner';
 import { useGrpcRequestState } from '../../context/grpc';
 
 interface Props {
-  forceRefreshKey: string;
+  forceRefreshKey: number;
   activeRequest: GrpcRequest;
   settings: Settings;
 }

@@ -12,9 +12,8 @@ type States =
 const STATE_DEFAULT = 'default';
 const STATE_ASK = 'ask';
 const STATE_DONE = 'done';
-
-interface Props extends HTMLAttributes<HTMLButtonElement> {
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+interface Props {
+  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: any, event: React.MouseEvent<HTMLButtonElement>) => void);
   addIcon?: boolean;
   children?: ReactNode;
   disabled?: boolean;
@@ -44,6 +43,7 @@ class PromptButton extends PureComponent<Props> {
     }
 
     // Fire the click handler
+    // @ts-expect-error -- TSCONVERSION
     this.props.onClick?.(...args);
     // Set the state to done (but delay a bit to not alarm user)
     this._doneTimeout = setTimeout(() => {
@@ -137,6 +137,7 @@ class PromptButton extends PureComponent<Props> {
     }
 
     return (
+      // TODO(TSCONVERSION) - don't spread into Button because any additional buttons props are not used
       <Button onClick={this._handleClick} disabled={disabled} tabIndex={tabIndex} {...other}>
         {innerMsg}
       </Button>

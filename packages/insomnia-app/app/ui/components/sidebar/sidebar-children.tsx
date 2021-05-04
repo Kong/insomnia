@@ -13,7 +13,7 @@ import SidebarCreateDropdown from './sidebar-create-dropdown';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
 
-interface Child {
+export interface Child {
   doc: Request | GrpcRequest | RequestGroup;
   children: Array<Child>;
   collapsed: boolean;
@@ -25,24 +25,24 @@ export interface SidebarChildObjects {
   all: Array<Child>;
 }
 interface Props {
-  handleActivateRequest: (...args: Array<any>) => any;
+  handleActivateRequest: Function;
   handleCreateRequest: (id: string) => any;
-  handleCreateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleSetRequestPinned: (...args: Array<any>) => any;
-  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
-  handleDuplicateRequest: (...args: Array<any>) => any;
+  handleCreateRequestGroup: (parentId: string) => void;
+  handleSetRequestPinned: Function;
+  handleSetRequestGroupCollapsed: Function;
+  handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleCopyAsCurl: (...args: Array<any>) => any;
-  handleRender: (...args: Array<any>) => any;
-  moveDoc: (...args: Array<any>) => any;
+  handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
+  handleGenerateCode: Function;
+  handleCopyAsCurl: Function;
+  handleRender: Function;
+  moveDoc: Function;
   childObjects: SidebarChildObjects;
   workspace: Workspace;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
-  activeEnvironment?: Environment;
-  activeRequest?: Request;
+  activeEnvironment?: Environment | null;
+  activeRequest?: Request | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

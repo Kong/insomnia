@@ -7,7 +7,7 @@ import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from '
 import { parse, print, typeFromAST } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
-import type { CodeMirror, TextMarker } from 'codemirror';
+// import type { CodeMirror, TextMarker } from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
@@ -27,7 +27,8 @@ import ResponseDebugModal from '../../modals/response-debug-modal';
 import Tooltip from '../../tooltip';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
 import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
-import { HandleGetRenderContext } from '../../../../common/render';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import { EditorFromTextArea, TextMarker } from 'codemirror';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
@@ -49,7 +50,7 @@ interface ActiveReference {
 interface Props {
   onChange: Function;
   content: string;
-  render?: Function;
+  render?: HandleRender;
   getRenderContext?: HandleGetRenderContext;
   request: Request;
   workspace: Workspace;
@@ -81,7 +82,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: Array<TextMarker> = [];
   _documentAST: null | Record<string, any> = null;
   _isMounted = false;
-  _queryEditor: null | CodeMirror = null;
+  _queryEditor: null | EditorFromTextArea = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -92,6 +93,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     let automaticFetch;
 
     try {
+      // @ts-expect-error don't parse if the read item is not defined
       automaticFetch = JSON.parse(window.localStorage.getItem('graphql.automaticFetch'));
     } catch (err) {
       automaticFetch = true;
@@ -129,8 +131,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
     const cursorIndex = _queryEditor.indexFromPos(cursor);
 
-    let operationName = null;
-    const allOperationNames = [];
+    let operationName: string | null = null;
+    const allOperationNames: Array<string | null> = [];
 
     // Loop through all operations to see if one contains the cursor.
     for (let i = 0; i < operations.length; i++) {
@@ -215,6 +217,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
         line: endToken.line,
         ch: endToken.column - 1,
       };
+      // @ts-expect-error - doc doesn't exist, use getDoc()
       return _queryEditor.doc.markText(from, to, {
         className: 'cm-gql-disabled',
       });
@@ -241,8 +244,9 @@ class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  _handleQueryEditorInit(codeMirror: CodeMirror) {
+  _handleQueryEditorInit(codeMirror: EditorFromTextArea) {
     this._queryEditor = codeMirror;
+    // @ts-expect-error window.cm doesn't exist
     window.cm = this._queryEditor;
     const { query, variables, operationName } = this.state.body;
 
@@ -336,6 +340,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
       }
 
       for (const { variable, type } of variableDefinitions) {
+        // @ts-expect-error -- TSCONVERSION
         const inputType = typeFromAST(schema, type);
 
         if (!inputType) {
@@ -373,6 +378,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     this.setState({
       automaticFetch,
     });
+    // @ts-expect-error convert boolean to string when setting
     window.localStorage.setItem('graphql.automaticFetch', automaticFetch);
   }
 
@@ -648,7 +654,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
                 ? {
                     schema,
                   }
-                : null
+                : undefined
             }
             fontSize={settings.editorFontSize}
             indentSize={settings.editorIndentSize}

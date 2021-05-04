@@ -5,6 +5,7 @@ import { AUTOBIND_CFG } from '../../../../common/constants';
 
 interface Props {
   addIcon?: boolean; // TODO(TSCONVERSION) some consumers are passing this prop but it appears to be unused
+  title?: string,
   buttonClass?: React.ComponentType,
   stayOpenAfterClick?: boolean,
   value?: any,

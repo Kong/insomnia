@@ -31,29 +31,30 @@ import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
 import type { HandleImportFileCallback } from '../wrapper';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   // Functions
-  forceUpdateRequest: (r: Request, patch: Record<string, any>) => Promise<Request>;
+  forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   forceUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
-  handleCreateRequest: () => Promise<Request>;
-  handleGenerateCode: (...args: Array<any>) => any;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  handleUpdateDownloadPath: (...args: Array<any>) => any;
+  handleCreateRequest: () => void;
+  handleGenerateCode: Function;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
+  handleUpdateDownloadPath: Function;
   updateRequestUrl: (r: Request, url: string) => Promise<Request>;
   updateRequestMethod: (r: Request, method: string) => Promise<Request>;
   updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
   updateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>;
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
   updateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
-  updateRequestMimeType: (r: Request, mimeType: string) => Promise<Request>;
-  updateSettingsShowPasswords: (...args: Array<any>) => any;
-  updateSettingsUseBulkHeaderEditor: (...args: Array<any>) => any;
-  updateSettingsUseBulkParametersEditor: (...args: Array<any>) => any;
-  handleImport: (...args: Array<any>) => any;
+  updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
+  updateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
+  updateSettingsUseBulkHeaderEditor: Function;
+  updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
+  handleImport: Function;
   handleImportFile: HandleImportFileCallback;
   workspace: Workspace;
   settings: Settings;
@@ -202,7 +203,7 @@ class RequestPane extends PureComponent<Props> {
         </PaneHeader>
         <Tabs className={classnames(paneBodyClasses, 'react-tabs')} forceRenderTabPanel>
           <TabList>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <ContentTypeDropdown
                 onChange={updateRequestMimeType}
                 contentType={request.body.mimeType}
@@ -215,7 +216,7 @@ class RequestPane extends PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </ContentTypeDropdown>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <AuthDropdown
                 onChange={updateRequestAuthentication}
                 request={request}
@@ -224,19 +225,19 @@ class RequestPane extends PureComponent<Props> {
                 <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <button>
                 Query
                 {numParameters > 0 && <span className="bubble space-left">{numParameters}</span>}
               </button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <button>
                 Header
                 {numHeaders > 0 && <span className="bubble space-left">{numHeaders}</span>}
               </button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <button>
                 Docs
                 {request.description && (
@@ -259,7 +260,6 @@ class RequestPane extends PureComponent<Props> {
               settings={settings}
               onChange={updateRequestBody}
               onChangeHeaders={forceUpdateRequestHeaders}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
               isVariableUncovered={isVariableUncovered}
             />
           </TabPanel>
@@ -353,6 +353,7 @@ class RequestPane extends PureComponent<Props> {
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">
+                  {/* @ts-expect-error the click handler expects a boolean prop... */}
                   <button className="btn btn--clicky" onClick={this._handleEditDescription}>
                     Edit
                   </button>

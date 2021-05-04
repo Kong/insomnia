@@ -2,7 +2,8 @@ import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import moment from 'moment';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
 import StatusTag from '../tags/status-tag';
 import URLTag from '../tags/url-tag';
 import PromptButton from '../base/prompt-button';
@@ -18,9 +19,9 @@ import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 
 interface Props {
-  handleSetActiveResponse: (arg0: Response) => Promise<void>;
-  handleDeleteResponses: (requestId: string, environmentId: string | null) => Promise<void>;
-  handleDeleteResponse: (arg0: Response) => Promise<void>;
+  handleSetActiveResponse: Function;
+  handleDeleteResponses: Function;
+  handleDeleteResponse: Function;
   requestId: string;
   responses: Array<Response>;
   requestVersions: Array<RequestVersion>;

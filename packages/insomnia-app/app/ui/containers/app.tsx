@@ -567,7 +567,7 @@ class App extends PureComponent<Props, State> {
    * @returns {Promise}
    * @private
    */
-  async _handleRenderText(text: string, contextCacheKey = null) {
+  async _handleRenderText<T>(obj: T, contextCacheKey = null) {
     // @ts-expect-error contextCacheKey being null used as object index
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
@@ -580,7 +580,7 @@ class App extends PureComponent<Props, State> {
     setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
     // @ts-expect-error contextCacheKey being null used as object index
     const context = await this._getRenderContextPromiseCache[contextCacheKey];
-    return render.render(text, context);
+    return render.render(obj, context);
   }
 
   _handleGenerateCodeForActiveRequest() {
@@ -747,7 +747,7 @@ class App extends PureComponent<Props, State> {
     }, 2000);
   }
 
-  async _handleUpdateRequestMimeType(mimeType) {
+  async _handleUpdateRequestMimeType(mimeType: string | null): Promise<Request | null> {
     if (!this.props.activeRequest) {
       console.warn('Tried to update request mime-type when no active request');
       return null;

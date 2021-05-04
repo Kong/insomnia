@@ -17,6 +17,7 @@ import type { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   clientCertificates: Array<ClientCertificate>;
@@ -28,11 +29,11 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
-  handleRemoveWorkspace: (...args: Array<any>) => any;
-  handleDuplicateWorkspace: (...args: Array<any>) => any;
-  handleClearAllResponses: (...args: Array<any>) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
+  handleRemoveWorkspace: Function;
+  handleDuplicateWorkspace: Function;
+  handleClearAllResponses: Function;
 }
 
 interface State {
@@ -228,7 +229,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
               <strong>Key:</strong>{' '}
               {certificate.key ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
             </span>
-            <span className="pad-right no-wrap" title={certificate.passphrase || null}>
+            <span className="pad-right no-wrap" title={certificate.passphrase || undefined}>
               <strong>Passphrase:</strong>{' '}
               {certificate.passphrase ? (
                 <i className="fa fa-check" />
@@ -294,10 +295,10 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
       <ModalBody key={`body::${workspace._id}`} noScroll>
         <Tabs forceRenderTabPanel className="react-tabs">
           <TabList>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <button>Overview</button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <button>Client Certificates</button>
             </Tab>
           </TabList>
@@ -306,6 +307,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
               <label>
                 Name
                 <DebouncedInput
+                  // @ts-expect-error props are spread into an input element
                   type="text"
                   delay={500}
                   placeholder="Awesome API"
@@ -404,9 +406,9 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                     </HelpTooltip>
                     <input
                       type="text"
-                      required="required"
+                      required
                       placeholder="my-api.com"
-                      autoFocus="autoFocus"
+                      autoFocus
                       onChange={this._handleCreateHostChange}
                     />
                   </label>
@@ -473,6 +475,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                     </HelpTooltip>
                     <input
                       type="checkbox"
+                      // @ts-expect-error boolean not valid
                       value={isPrivate}
                       onChange={this._handleCreateIsPrivateChange}
                     />
