@@ -257,7 +257,7 @@ class GitStagingModal extends PureComponent<Props, State> {
   }
 
   renderOperation(item: Item) {
-    let child = null;
+    let child: JSX.Element | null = null;
     let message = '';
     let type = item.type;
 

@@ -20,9 +20,9 @@ export const RENDER_VARS = 'variables';
 export const RENDER_TAGS = 'tags';
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
 // Cached globals
-let nunjucksVariablesOnly = null;
-let nunjucksTagsOnly = null;
-let nunjucksAll = null;
+let nunjucksVariablesOnly: nunjucks.Environment | null = null;
+let nunjucksTagsOnly: nunjucks.Environment | null = null;
+let nunjucksAll: nunjucks.Environment | null = null;
 
 /**
  * Render text based on stuff

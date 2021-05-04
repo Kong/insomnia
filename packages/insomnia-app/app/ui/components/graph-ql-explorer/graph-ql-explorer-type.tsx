@@ -31,6 +31,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
 
   renderDescription() {
     const { type } = this.props;
+    // @ts-expect-error -- TSCONVERSION
     return <MarkdownPreview markdown={type.description || '*no description*'} />;
   }
 
@@ -42,13 +43,15 @@ class GraphQLExplorerType extends PureComponent<Props> {
     }
 
     let title = 'Types';
-    let types = [];
+    let types: GraphQLInterfaceType[] | GraphQLObjectType[] = [];
 
     if (type instanceof GraphQLUnionType) {
       title = 'Possible Types';
+      // @ts-expect-error -- TSCONVERSION
       types = schema.getPossibleTypes(type);
     } else if (type instanceof GraphQLInterfaceType) {
       title = 'Implementations';
+      // @ts-expect-error -- TSCONVERSION
       types = schema.getPossibleTypes(type);
     } else if (type instanceof GraphQLObjectType) {
       title = 'Implements';
@@ -74,11 +77,12 @@ class GraphQLExplorerType extends PureComponent<Props> {
   renderFieldsMaybe() {
     const { type, onNavigateType } = this.props;
 
+      // @ts-expect-error -- TSCONVERSION
     if (typeof type.getFields !== 'function') {
       return null;
     }
 
-    // $FlowFixMe
+    // @ts-expect-error -- TSCONVERSION
     const fields = type.getFields();
     const fieldKeys = Object.keys(fields).sort((a, b) => a.localeCompare(b));
     return (
@@ -87,7 +91,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
         <ul className="graphql-explorer__defs">
           {fieldKeys.map(key => {
             const field: GraphQLField<any, any> = fields[key] as any;
-            let argLinks = null;
+            let argLinks: JSX.Element | null = null;
             const { args } = field;
 
             if (args && args.length) {

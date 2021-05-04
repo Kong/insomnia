@@ -17,7 +17,7 @@ export function initNewOAuthSession() {
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
 }
 export function responseToObject(body, keys, defaults = {}) {
-  let data = null;
+  let data: querystring.ParsedUrlQuery | null = null;
 
   try {
     data = JSON.parse(body);
@@ -56,9 +56,9 @@ export function authorizeUserInWindow(
   urlFailureRegex = /(error=).*/,
 ) {
   return new Promise((resolve, reject) => {
-    let finalUrl = null;
+    let finalUrl: string | null = null;
 
-    function _parseUrl(currentUrl, source) {
+    function _parseUrl(currentUrl: string, source: string) {
       if (currentUrl.match(urlSuccessRegex)) {
         console.log(
           `[oauth2] ${source}: Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,

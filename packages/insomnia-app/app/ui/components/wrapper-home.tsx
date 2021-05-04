@@ -41,7 +41,7 @@ import Notice from './notice';
 import PageLayout from './page-layout';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { parseApiSpec } from '../../common/api-specs';
+import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
@@ -164,9 +164,9 @@ class WrapperHome extends PureComponent<Props, State> {
     } = this.props.wrapperProps;
     const { filter } = this.state;
     const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
-    let spec = null;
-    let specFormat = null;
-    let specFormatVersion = null;
+    let spec: ParsedApiSpec['contents'] = null;
+    let specFormat: ParsedApiSpec['format'] = null;
+    let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
 
     try {
       const result = parseApiSpec(apiSpec.contents);

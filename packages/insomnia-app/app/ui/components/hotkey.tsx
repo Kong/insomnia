@@ -22,7 +22,7 @@ class Hotkey extends PureComponent<Props> {
       return null;
     }
 
-    let keyComb = null;
+    let keyComb: KeyCombination | null = null;
 
     if (keyCombination != null) {
       keyComb = keyCombination;

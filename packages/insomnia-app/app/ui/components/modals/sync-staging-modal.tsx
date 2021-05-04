@@ -65,15 +65,11 @@ class SyncStagingModal extends PureComponent<Props, State> {
   }
 
   _handleClearError() {
-    this.setState({
-      error: '',
-    });
+    this.setState({ error: '' });
   }
 
-  _handleMessageChange(e: React.SyntheticEvent<HTMLInputElement>) {
-    this.setState({
-      message: e.currentTarget.value,
-    });
+  _handleMessageChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    this.setState({ message: e.currentTarget.value });
   }
 
   async _handleStageToggle(e: React.SyntheticEvent<HTMLInputElement>) {
@@ -167,7 +163,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
         continue;
       }
 
-      let changes = null;
+      let changes: string[] | null = null;
 
       if (item && item.document && oldDoc) {
         changes = describeChanges(item.document, oldDoc);
@@ -220,15 +216,18 @@ class SyncStagingModal extends PureComponent<Props, State> {
   }
 
   static renderOperation(entry: StageEntry, type: string, changes: string[]) {
-    let child = null;
+    let child: JSX.Element | null = null;
     let message = '';
 
+    // @ts-expect-error -- TSCONVERSION type narrowing
     if (entry.added) {
       child = <i className="fa fa-plus-circle success" />;
       message = 'Added';
+      // @ts-expect-error -- TSCONVERSION type narrowing
     } else if (entry.modified) {
       child = <i className="fa fa-circle faded" />;
       message = `Modified (${changes.join(', ')})`;
+      // @ts-expect-error -- TSCONVERSION type narrowing
     } else if (entry.deleted) {
       child = <i className="fa fa-minus-circle danger" />;
       message = 'Deleted';
@@ -282,7 +281,6 @@ class SyncStagingModal extends PureComponent<Props, State> {
                   <span className="txt-md">
                     <IndeterminateCheckbox
                       className="space-right"
-                      type="checkbox"
                       checked={allChecked}
                       onChange={() => this._handleAllToggle(keys, allUnChecked)}
                       indeterminate={indeterminate}
@@ -363,8 +361,8 @@ class SyncStagingModal extends PureComponent<Props, State> {
                 Snapshot Message
                 <textarea
                   ref={this._setTextAreaRef}
-                  cols="30"
-                  rows="3"
+                  cols={30}
+                  rows={3}
                   onChange={this._handleMessageChange}
                   value={message}
                   placeholder="This is a helpful message that describe the changes made in this snapshot"

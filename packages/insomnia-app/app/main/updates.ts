@@ -16,7 +16,7 @@ const { autoUpdater, BrowserWindow, ipcMain } = electron;
 async function getUpdateUrl(force: boolean): Promise<string | null> {
   const platform = process.platform;
   const settings = await models.settings.getOrCreate();
-  let updateUrl = null;
+  let updateUrl: string | null = null;
 
   if (!updatesSupported()) {
     return null;

@@ -1,13 +1,16 @@
 import YAML from 'yaml';
-export function parseApiSpec(
-  rawDocument: string,
-): {
+
+export interface ParsedApiSpec {
   contents: Record<string, any> | null;
   rawContents: string;
   format: 'openapi' | 'swagger' | null;
   formatVersion: string | null;
-} {
-  const result = {
+}
+
+export function parseApiSpec(
+  rawDocument: string,
+) {
+  const result: ParsedApiSpec = {
     contents: null,
     rawContents: rawDocument,
     format: null,

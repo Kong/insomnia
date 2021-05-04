@@ -6,7 +6,7 @@ import { isDevelopment } from '../common/constants';
 export async function axiosRequest(config) {
   const settings = await models.settings.getOrCreate();
   const isHttps = config.url.indexOf('https:') === 0;
-  let proxyUrl = null;
+  let proxyUrl: string | null = null;
 
   if (isHttps && settings.httpsProxy) {
     proxyUrl = settings.httpsProxy;

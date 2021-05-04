@@ -4,6 +4,7 @@ import NunjucksVariableModal from '../../modals/nunjucks-modal';
 import { showModal } from '../../modals/index';
 import { tokenizeTag } from '../../../../templating/utils';
 import { getTagDefinitions } from '../../../../templating/index';
+
 CodeMirror.defineExtension(
   'enableNunjucksTags',
   function(handleRender, handleGetRenderContext, isVariableUncovered = false) {
@@ -46,15 +47,20 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
   const activeMarks = [];
   const doc = this.getDoc();
+
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
     const tokens = line.filter(({ type }) => type && type.indexOf('nunjucks') >= 0);
+
     // Aggregate same tokens
     const newTokens = [];
-    let currTok = null;
+    let currTok: {
+      end: string;
+      string: string;
+    } | null = null;
 
     for (let i = 0; i < tokens.length; i++) {
       const nextTok = tokens[i];

@@ -111,7 +111,7 @@ export async function getDeviceId() {
   return deviceId;
 }
 
-let segmentClient = null;
+let segmentClient: Analytics | null = null;
 
 export async function trackSegmentEvent(event: String, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();

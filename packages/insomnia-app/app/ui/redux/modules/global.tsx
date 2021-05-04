@@ -590,7 +590,7 @@ export function exportWorkspacesToFile(workspaceId: string | undefined = undefin
 
         if (workspace) {
           const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
-          environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id))];
+          environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id) || [])];
         } else {
           environments = await models.environment.all();
         }
@@ -750,7 +750,7 @@ export function exportRequestsToFile(requestIds) {
   };
 }
 export function initActiveWorkspace() {
-  let workspaceId = null;
+  let workspaceId: string | null = null;
 
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;

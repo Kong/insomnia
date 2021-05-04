@@ -449,7 +449,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       'key-value-editor__row-wrapper--dragging-below': isDraggingOver && dragDirection < 0,
       'key-value-editor__row-wrapper--disabled': pair.disabled,
     });
-    let handle = null;
+
+    let handle: ConnectDragSource | JSX.Element | undefined | null = null;
 
     if (sortable) {
       handle = renderLeftIcon ? (

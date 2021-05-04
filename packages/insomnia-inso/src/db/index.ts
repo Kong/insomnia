@@ -13,7 +13,7 @@ import { getAppDataDir } from '../data-directory';
 import { logger } from '../logger';
 import path from 'path';
 
-export type Database = {
+export interface Database {
   ApiSpec: ApiSpec[];
   Environment: Environment[];
   Request: BaseModel[];
@@ -21,7 +21,7 @@ export type Database = {
   Workspace: Workspace[];
   UnitTestSuite: UnitTestSuite[];
   UnitTest: UnitTest[];
-};
+}
 
 export const emptyDb = (): Database => ({
   ApiSpec: [],
@@ -38,19 +38,20 @@ export type DbAdapter = (
   filterTypes?: (keyof Database)[],
 ) => Promise<Database | null>;
 
-type Options = {
+interface Options {
   workingDir?: string;
   appDataDir?: string;
   filterTypes?: (keyof Database)[];
-};
+}
 
 export const loadDb = async ({
   workingDir,
   appDataDir,
   filterTypes,
-}: Options = {}): Promise<Database> => {
-  let db = null; // try load from git
+}: Options = {}) => {
+  let db: Database | null = null;
 
+  // try load from git
   if (!appDataDir) {
     const dir = workingDir || '.';
     db = await gitAdapter(dir, filterTypes);

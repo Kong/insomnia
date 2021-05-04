@@ -1,8 +1,8 @@
-import React, { PureComponent } from 'react';
+import React, { HTMLAttributes, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 
-interface Props {
+interface Props extends HTMLAttributes<HTMLInputElement> {
   indeterminate: boolean;
   checked: boolean;
 }

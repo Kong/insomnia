@@ -47,7 +47,7 @@ export default async function(
   method: string,
   authentication: RequestAuthentication,
   body: RequestBody | null = null,
-): Record<string, string> {
+) {
   const oauth = new OAuth1({
     consumer: {
       key: authentication.consumerKey,
@@ -91,7 +91,7 @@ export default async function(
     }
   }
 
-  let token = null;
+  let token: OAuth1.Token | undefined;
 
   if (authentication.tokenKey && authentication.tokenSecret) {
     token = {
@@ -99,6 +99,7 @@ export default async function(
       secret: authentication.tokenSecret,
     };
   } else if (authentication.tokenKey) {
+    // @ts-expect-error -- TSCONVERSION likely needs a `secret: undefined` or the type is not actually correct.
     token = {
       key: authentication.tokenKey,
     };
