@@ -5,6 +5,7 @@
     "package.json",
     "jest.config.js",
     ".babelrc.js",
+    ".eslintrc.js",
     "webpack",
     "scripts"
   ],
