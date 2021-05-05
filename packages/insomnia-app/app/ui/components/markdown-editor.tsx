@@ -83,10 +83,10 @@ class MarkdownEditor extends PureComponent<Props, State> {
     return (
       <Tabs className={classes} defaultIndex={defaultPreviewMode ? 1 : 0}>
         <TabList>
-          <Tab tabIndex={-1}>
+          <Tab tabIndex="-1">
             <Button value="Write">Write</Button>
           </Tab>
-          <Tab tabIndex={-1}>
+          <Tab tabIndex="-1">
             <Button value="Preview">Preview</Button>
           </Tab>
         </TabList>

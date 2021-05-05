@@ -45,7 +45,7 @@ const configuration: Configuration = {
         loader: 'url-loader',
       },
       {
-        test: require.resolve('../app/network/ca-certs.ts'),
+        test: require.resolve('../app/network/ca-certs.js'),
         use: [
           {
             loader: 'val-loader',

@@ -295,10 +295,10 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
       <ModalBody key={`body::${workspace._id}`} noScroll>
         <Tabs forceRenderTabPanel className="react-tabs">
           <TabList>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <button>Overview</button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <button>Client Certificates</button>
             </Tab>
           </TabList>

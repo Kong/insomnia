@@ -248,7 +248,7 @@ class ResponsePane extends PureComponent<Props> {
           onSelect={this._handleTabSelect}
           forceRenderTabPanel>
           <TabList>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
@@ -257,7 +257,7 @@ class ResponsePane extends PureComponent<Props> {
                 showPrettifyOption={response.contentType.includes('json')}
               />
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <Button>
                 Header{' '}
                 {response.headers.length > 0 && (
@@ -265,7 +265,7 @@ class ResponsePane extends PureComponent<Props> {
                 )}
               </Button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <Button>
                 Cookie{' '}
                 {cookieHeaders.length ? (
@@ -273,7 +273,7 @@ class ResponsePane extends PureComponent<Props> {
                 ) : null}
               </Button>
             </Tab>
-            <Tab tabIndex={-1}>
+            <Tab tabIndex="-1">
               <Button>Timeline</Button>
             </Tab>
           </TabList>

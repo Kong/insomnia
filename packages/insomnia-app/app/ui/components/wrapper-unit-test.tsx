@@ -32,9 +32,7 @@ interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
-  wrapperProps: WrapperProps & {
-    activeUnitTestSuite: any;
-  };
+  wrapperProps: WrapperProps;
 }
 
 interface State {
@@ -154,7 +152,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       selectText: true,
       onComplete: async name => {
         await models.unitTest.create({
-          parentId: activeUnitTestSuite._id,
+          parentId: activeUnitTestSuite?._id,
           code: this.generateSendReqSnippet('', ''),
           name,
         });
@@ -245,6 +243,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   async _handleChangeActiveSuiteName(name: string) {
     const { activeUnitTestSuite } = this.props.wrapperProps;
+    // @ts-expect-error -- TSCONVERSION
     await models.unitTestSuite.update(activeUnitTestSuite, {
       name,
     });

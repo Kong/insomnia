@@ -3,6 +3,3 @@ build
 
 # Generated
 app/main.min.js
-webpack/**.js
-webpack/**.d.ts
-webpack/**.map

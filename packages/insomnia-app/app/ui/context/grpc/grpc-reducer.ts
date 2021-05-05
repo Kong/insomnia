@@ -42,8 +42,7 @@ const CLEAR_GRPC_REQUEST_STATE: Partial<GrpcRequestState> = {
   error: undefined,
 };
 
-// @ts-expect-error -- TSCONVERSION
-const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestState): State => ({
+const _patch = (state: GrpcState, requestId: string, requestState: GrpcRequestState): GrpcState => ({
   ...state,
   [requestId]: requestState,
 });
@@ -91,7 +90,6 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.requestMessage: {
-      // @ts-expect-error -- TSCONVERSION
       const { payload }: RequestMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -100,7 +98,6 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.responseMessage: {
-      // @ts-expect-error -- TSCONVERSION
       const { payload }: ResponseMessageAction = action;
       return _patch(state, requestId, {
         ...oldState,
@@ -109,13 +106,11 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.error: {
-      // @ts-expect-error -- TSCONVERSION
       const { payload }: ErrorAction = action;
       return _patch(state, requestId, { ...oldState, error: payload });
     }
 
     case GrpcActionTypeEnum.status: {
-      // @ts-expect-error -- TSCONVERSION
       const { payload }: StatusAction = action;
       return _patch(state, requestId, { ...oldState, status: payload });
     }
@@ -125,7 +120,6 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
     }
 
     case GrpcActionTypeEnum.loadMethods: {
-      // @ts-expect-error -- TSCONVERSION
       const { payload }: LoadMethodsAction = action;
       return _patch(state, requestId, { ...oldState, methods: payload, reloadMethods: false });
     }

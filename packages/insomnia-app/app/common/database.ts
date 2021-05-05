@@ -636,16 +636,10 @@ function getDBFilePath(modelType: string) {
 let bufferingChanges = false;
 let bufferChangesId = 1;
 
-// TSCONVERSION -- named tuple syntax was causing trouble but it shouldn't be.  investigate adding the below:
-// type ChangeBufferEvent = [
-//   event: string,
-//   doc: BaseModel,
-//   fromSync: boolean
-// ];
 type ChangeBufferEvent = [
-  string,
-  BaseModel,
-  boolean
+  event: string,
+  doc: BaseModel,
+  fromSync: boolean
 ];
 
 let changeBuffer: Array<ChangeBufferEvent> = [];

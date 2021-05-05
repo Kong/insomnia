@@ -127,7 +127,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
 
   renderConfigTab(config: Config) {
     return (
-      <Tab key={config.label} tabIndex={-1}>
+      <Tab key={config.label} tabIndex="-1">
         <button>{config.label}</button>
       </Tab>
     );

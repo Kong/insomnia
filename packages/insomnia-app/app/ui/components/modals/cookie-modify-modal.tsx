@@ -224,10 +224,10 @@ class CookieModifyModal extends PureComponent<Props, State> {
           {cookieJar && cookie && (
             <Tabs>
               <TabList>
-                <Tab tabIndex={-1}>
+                <Tab tabIndex="-1">
                   <button>Friendly</button>
                 </Tab>
-                <Tab tabIndex={-1}>
+                <Tab tabIndex="-1">
                   <button>Raw</button>
                 </Tab>
               </TabList>

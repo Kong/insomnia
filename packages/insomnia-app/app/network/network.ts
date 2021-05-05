@@ -451,6 +451,7 @@ export async function _actuallySend(
       } catch (err) {
         // Doesn't exist yet, so write it
         mkdirp.sync(baseCAPath);
+        console.log('asdf'.repeat(100), fullCAPath);
         // @ts-expect-error -- TSCONVERSION
         fs.writeFileSync(fullCAPath, caCerts);
         console.log('[net] Set CA to', fullCAPath);
@@ -911,7 +912,6 @@ export async function sendWithSettings(
   };
 
   try {
-    // @ts-expect-error -- TSCONVERSION cookie jar problem
     renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
@@ -981,7 +981,6 @@ export async function send(
 
   try {
     renderedRequest = await _applyRequestPluginHooks(
-      // @ts-expect-error -- TSCONVERSION cookie jar problem
       renderedRequestBeforePlugins,
       renderedContextBeforePlugins,
     );

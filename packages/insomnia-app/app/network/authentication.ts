@@ -89,6 +89,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
     const header = Hawk.client.header(url, method, headerOptions);
     return {
       name: 'Authorization',
+      // @ts-expect-error -- TSCONVERSION need to update hawk, types only exist for the latest version (v9) and we need those types in order to successfully build
       value: header.field,
     };
   }

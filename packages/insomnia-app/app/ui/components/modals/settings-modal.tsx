@@ -163,22 +163,22 @@ class SettingsModal extends PureComponent<Props, State> {
         <ModalBody noScroll>
           <Tabs className="react-tabs" defaultIndex={currentTabIndex ?? undefined}>
             <TabList>
-              <Tab tabIndex={-1}>
+              <Tab tabIndex="-1">
                 <Button value="General">General</Button>
               </Tab>
-              <Tab tabIndex={-1}>
+              <Tab tabIndex="-1">
                 <Button value="Import/Export">Data</Button>
               </Tab>
-              <Tab tabIndex={-1}>
+              <Tab tabIndex="-1">
                 <Button value="Themes">Themes</Button>
               </Tab>
-              <Tab tabIndex={-1}>
+              <Tab tabIndex="-1">
                 <Button value="Shortcuts">Keyboard</Button>
               </Tab>
-              <Tab tabIndex={-1}>
+              <Tab tabIndex="-1">
                 <Button value="Account">Account</Button>
               </Tab>
-              <Tab tabIndex={-1}>
+              <Tab tabIndex="-1">
                 <Button value="Plugins">Plugins</Button>
               </Tab>
             </TabList>

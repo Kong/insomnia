@@ -175,6 +175,7 @@ export interface WrapperProps {
   activeWorkspaceMeta: WorkspaceMeta;
   environments: Array<Environment>;
   activeApiSpec: ApiSpec;
+  activeUnitTestSuite: UnitTestSuite | null;
   activeRequestResponses: Array<Response>;
   activeWorkspace: Workspace;
   activeCookieJar: CookieJar;

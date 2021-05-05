@@ -1,4 +1,3 @@
-import { QueryMethod } from '@testing-library/dom';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
