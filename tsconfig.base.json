@@ -3,6 +3,7 @@
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
+    "allowJs": true,
     "checkJs": true,
     "declaration": true,
     "declarationMap": true,
