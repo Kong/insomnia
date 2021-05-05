@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 
 interface Props {
   children: string;
-  render: (...args: any[]) => any;
+  render: (...args: Array<any>) => any;
 }
 interface State {
   renderedText: string;

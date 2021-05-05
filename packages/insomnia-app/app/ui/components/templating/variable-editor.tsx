@@ -11,7 +11,7 @@ interface Props {
 }
 
 interface State {
-  variables: any[];
+  variables: Array<any>;
   value: string;
   preview: string;
   error: string;

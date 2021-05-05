@@ -5,8 +5,8 @@ import { isMac, AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
   children: ReactNode;
-  onKeydown?: (...args: any[]) => any;
-  onKeyup?: (...args: any[]) => any;
+  onKeydown?: (...args: Array<any>) => any;
+  onKeyup?: (...args: Array<any>) => any;
   disabled?: boolean;
   scoped?: boolean;
   stopMetaPropagation?: boolean;

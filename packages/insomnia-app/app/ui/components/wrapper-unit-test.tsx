@@ -36,7 +36,7 @@ interface Props {
 }
 
 interface State {
-  testsRunning: UnitTest[] | null;
+  testsRunning: Array<UnitTest> | null;
   resultsError: string | null;
 }
 
@@ -89,10 +89,10 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   autocompleteSnippets(
     unitTest: UnitTest,
-  ): {
+  ): Array<{
     name: string;
     value: () => Promise<string>;
-  }[] {
+  }> {
     return [
       {
         name: 'Send Current Request',
@@ -252,7 +252,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     });
   }
 
-  async _runTests(unitTests: UnitTest[]) {
+  async _runTests(unitTests: Array<UnitTest>) {
     const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
     this.setState({
       testsRunning: unitTests,
@@ -303,15 +303,15 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     });
   }
 
-  buildSelectableRequests(): {
+  buildSelectableRequests(): Array<{
     name: string;
     request: Request;
-  }[] {
+  }> {
     const { children } = this.props;
-    const selectableRequests: {
+    const selectableRequests: Array<{
       name: string;
       request: Request;
-    }[] = [];
+    }> = [];
 
     const next = (p, children) => {
       for (const c of children) {

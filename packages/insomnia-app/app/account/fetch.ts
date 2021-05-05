@@ -3,7 +3,7 @@ import { parse as urlParse } from 'url';
 import zlib from 'zlib';
 let _userAgent = '';
 let _baseUrl = '';
-const _commandListeners: Function[] = [];
+const _commandListeners: Array<Function> = [];
 
 export function setup(userAgent, baseUrl) {
   _userAgent = userAgent;

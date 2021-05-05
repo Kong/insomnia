@@ -14,7 +14,7 @@ export async function getSendRequestCallbackMemDb(environmentId, memDB) {
     true,
     () => {},
   );
-  const docs: BaseModel[] = [];
+  const docs: Array<BaseModel> = [];
 
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {

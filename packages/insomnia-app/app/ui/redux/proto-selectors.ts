@@ -3,9 +3,9 @@ import { selectActiveWorkspace, selectEntitiesLists } from './selectors';
 import type { ProtoDirectory } from '../../models/proto-directory';
 import type { ProtoFile } from '../../models/proto-file';
 export interface ExpandedProtoDirectory {
-  files: ProtoFile[];
+  files: Array<ProtoFile>;
   dir: ProtoDirectory | null;
-  subDirs: ExpandedProtoDirectory[];
+  subDirs: Array<ExpandedProtoDirectory>;
 }
 const selectAllProtoFiles = createSelector(
   selectEntitiesLists,
@@ -21,7 +21,7 @@ export const selectExpandedActiveProtoDirectories = createSelector(
   selectActiveWorkspace,
   selectAllProtoFiles,
   selectAllProtoDirectories,
-  (workspace, allFiles, allDirs): ExpandedProtoDirectory[] => {
+  (workspace, allFiles, allDirs): Array<ExpandedProtoDirectory> => {
     // Get files where the parent is the workspace
     const individualFiles = allFiles.filter(pf => pf.parentId === workspace._id);
     // Get directories where the parent is the workspace
@@ -46,8 +46,8 @@ export const selectExpandedActiveProtoDirectories = createSelector(
 
 const expandDir = (
   dir: ProtoDirectory,
-  allFiles: ProtoFile[],
-  allDirs: ProtoDirectory[],
+  allFiles: Array<ProtoFile>,
+  allDirs: Array<ProtoDirectory>,
 ): ExpandedProtoDirectory => {
   const filesInDir = allFiles.filter(pf => pf.parentId === dir._id);
   const subDirs = allDirs.filter(pd => pd.parentId === dir._id);

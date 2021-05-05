@@ -25,17 +25,17 @@ interface Props {
   handleSetActiveWorkspace: (id: string) => void;
   activateRequest: (id: string) => void;
   activeRequest?: Request | null;
-  workspaceChildren: (Request | RequestGroup)[];
+  workspaceChildren: Array<Request | RequestGroup>;
   workspace: Workspace;
-  workspaces: Workspace[];
-  requestMetas: RequestMeta[];
+  workspaces: Array<Workspace>;
+  requestMetas: Array<RequestMeta>;
 }
 
 interface State {
   searchString: string;
-  workspaces: Workspace[];
-  matchedRequests: Request[];
-  matchedWorkspaces: Workspace[];
+  workspaces: Array<Workspace>;
+  matchedRequests: Array<Request>;
+  matchedWorkspaces: Array<Workspace>;
   activeIndex: number;
   maxRequests: number;
   maxWorkspaces: number;
@@ -165,7 +165,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   /** Return array of path segments for given request or folder */
-  _groupOf(requestOrRequestGroup: BaseModel): string[] {
+  _groupOf(requestOrRequestGroup: BaseModel): Array<string> {
     const { workspaceChildren } = this.props;
     const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
@@ -270,7 +270,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.setState({
       searchString,
       activeIndex: indexOfFirstNonActiveRequest >= 0 ? indexOfFirstNonActiveRequest : 0,
-      matchedRequests: (matchedRequests as any[]).slice(0, maxRequests),
+      matchedRequests: (matchedRequests as Array<any>).slice(0, maxRequests),
       matchedWorkspaces: matchedWorkspaces.slice(0, maxWorkspaces),
     });
   }

@@ -24,7 +24,7 @@ export interface SnapshotStateEntry {
   name: string;
 }
 
-export type SnapshotState = SnapshotStateEntry[];
+export type SnapshotState = Array<SnapshotStateEntry>;
 
 export type SnapshotStateMap = Record<DocumentKey, SnapshotStateEntry>;
 
@@ -37,7 +37,7 @@ export interface Snapshot {
   author: string;
   name: string;
   description: string;
-  state: SnapshotStateEntry[];
+  state: Array<SnapshotStateEntry>;
   // Only exists in Snapshots that are pulled from the server
   authorAccount?: {
     firstName: string;
@@ -50,7 +50,7 @@ export interface Branch {
   name: string;
   created: Date;
   modified: Date;
-  snapshots: string[];
+  snapshots: Array<string>;
 }
 
 export interface StageEntryDelete {

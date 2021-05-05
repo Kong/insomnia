@@ -34,7 +34,7 @@ export default class MemoryDriver implements BaseDriver {
   }
 
   async keys(prefix: string, recursive: boolean) {
-    const keys: string[] = [];
+    const keys: Array<string> = [];
     const baseLevels = prefix.split('/').length;
 
     for (const key of Object.keys(this._db)) {

@@ -14,7 +14,7 @@ interface Props {
   handleCookieAdd: Function;
   handleCookieDelete: Function;
   handleDeleteAll: Function;
-  cookies: Cookie[];
+  cookies: Array<Cookie>;
   newCookieDomainName: string;
   handleShowModifyCookieModal: Function;
   handleRender: HandleRender;

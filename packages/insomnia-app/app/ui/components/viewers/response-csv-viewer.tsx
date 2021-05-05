@@ -9,7 +9,7 @@ interface Props {
 
 interface State {
   result: null | {
-    data: string[][];
+    data: Array<Array<string>>;
   };
 }
 
@@ -23,7 +23,7 @@ class ResponseCSVViewer extends PureComponent<Props, State> {
 
   update(body: Buffer) {
     const csv = body.toString('utf8');
-    Papa.parse<string[]>(csv, {
+    Papa.parse<Array<string>>(csv, {
       skipEmptyLines: true,
       complete: result => {
         this.setState({ result });

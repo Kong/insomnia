@@ -21,7 +21,7 @@ const RIGHT = 39;
 
 interface Props {
   onChange: Function;
-  pairs: any[];
+  pairs: Array<any>;
   handleRender?: HandleRender;
   handleGetRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
@@ -55,7 +55,7 @@ class Editor extends PureComponent<Props, State> {
   _focusedPairId: string | null = null;
   _focusedField: string | null = NAME;
   // @ts-expect-error being imported as a value but should be usable as a type
-  private _rows: KeyValueEditorRow[] = [];
+  private _rows: Array<KeyValueEditorRow> = [];
   _triggerTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {

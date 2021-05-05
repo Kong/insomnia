@@ -14,7 +14,7 @@ interface Message {
 
 interface Props {
   settings: Settings;
-  messages?: Message[];
+  messages?: Array<Message>;
   tabNamePrefix: 'Stream' | 'Response';
   bodyText?: string;
   uniquenessKey: string;

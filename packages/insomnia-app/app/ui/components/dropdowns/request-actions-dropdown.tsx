@@ -42,7 +42,7 @@ interface Props extends Partial<DropdownProps> {
 
 // Setup state for plugin actions
 interface State {
-  actionPlugins: RequestAction[];
+  actionPlugins: Array<RequestAction>;
   loadingActions: Record<string, boolean>;
 }
 

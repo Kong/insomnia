@@ -43,7 +43,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
     }
 
     let title = 'Types';
-    let types: GraphQLInterfaceType[] | GraphQLObjectType[] = [];
+    let types: Array<GraphQLInterfaceType> | Array<GraphQLObjectType> = [];
 
     if (type instanceof GraphQLUnionType) {
       title = 'Possible Types';

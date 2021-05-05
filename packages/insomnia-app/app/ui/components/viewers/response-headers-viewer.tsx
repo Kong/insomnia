@@ -5,7 +5,7 @@ import Link from '../base/link';
 import { URL } from 'url';
 
 interface Props {
-  headers: ResponseHeader[];
+  headers: Array<ResponseHeader>;
 }
 
 function validateURL(urlString) {

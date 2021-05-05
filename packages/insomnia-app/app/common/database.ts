@@ -25,29 +25,29 @@ export interface Query {
 type Sort = Record<string, any>;
 
 interface Operation {
-  upsert?: BaseModel[];
-  remove?: BaseModel[];
+  upsert?: Array<BaseModel>;
+  remove?: Array<BaseModel>;
 }
 
 export interface SpecificQuery {
   $gt?: number;
-  $in?: string[];
-  $nin?: string[];
+  $in?: Array<string>;
+  $nin?: Array<string>;
 }
 
 export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQuery>>;
 
 export const database = {
   all: async function<T extends BaseModel>(type: string) {
-    if (db._empty) return _send<T[]>('all', ...arguments);
+    if (db._empty) return _send<Array<T>>('all', ...arguments);
     return database.find?.<T>(type);
   },
 
   batchModifyDocs: async function(operation: Operation) {
     if (db._empty) return _send<void>('batchModifyDocs', ...arguments);
     const flushId = await database.bufferChanges();
-    const promisesUpserted: Promise<any>[] = [];
-    const promisesDeleted: Promise<any>[] = [];
+    const promisesUpserted: Array<Promise<any>> = [];
+    const promisesDeleted: Array<Promise<any>> = [];
 
     // @ts-expect-error -- need real type for Operation properties
     for (const doc of operation.upsert) {
@@ -100,7 +100,7 @@ export const database = {
     });
   },
 
-  docCreate: async <T extends BaseModel>(type: string, ...patches: Patch[]) => {
+  docCreate: async <T extends BaseModel>(type: string, ...patches: Array<Patch>) => {
     const doc = await models.initModel<T>(
       type,
       ...patches, // Fields that the user can't touch
@@ -111,7 +111,7 @@ export const database = {
     return database.insert?.<T>(doc);
   },
 
-  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Patch[]) => {
+  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Array<Patch>) => {
     // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
     const doc = await models.initModel<T>(
       originalDoc.type,
@@ -171,8 +171,8 @@ export const database = {
     query: Query | string = {},
     sort: Sort = { created: 1 },
   ) {
-    if (db._empty) return _send<T[]>('find', ...arguments);
-    return new Promise<T[] | undefined>((resolve, reject) => {
+    if (db._empty) return _send<Array<T>>('find', ...arguments);
+    return new Promise<Array<T> | undefined>((resolve, reject) => {
       db[type]
         .find(query)
         .sort(sort)
@@ -182,7 +182,7 @@ export const database = {
             return;
           }
 
-          const docs: T[] = [];
+          const docs: Array<T> = [];
 
           for (const rawDoc of rawDocs) {
             docs.push(await models.initModel(type, rawDoc));
@@ -198,8 +198,8 @@ export const database = {
     query: Query = {},
     limit: number | null = null,
   ) {
-    if (db._empty) return _send<T[]>('findMostRecentlyModified', ...arguments);
-    return new Promise<T[]>(resolve => {
+    if (db._empty) return _send<Array<T>>('findMostRecentlyModified', ...arguments);
+    return new Promise<Array<T>>(resolve => {
       db[type]
         .find(query)
         .sort({
@@ -213,7 +213,7 @@ export const database = {
             return;
           }
 
-          const docs: T[] = [];
+          const docs: Array<T> = [];
 
           for (const rawDoc of rawDocs) {
             docs.push(await models.initModel(type, rawDoc));
@@ -290,7 +290,7 @@ export const database = {
   },
 
   init: async (
-    types: string[],
+    types: Array<string>,
     config: NeDB.DataStoreOptions = {},
     forceReset = false,
     consoleLog: typeof console.log = console.log,
@@ -533,17 +533,17 @@ export const database = {
     }
   },
 
-  withAncestors: async function<T extends BaseModel>(doc: T | null, types: string[] = allTypes()) {
-    if (db._empty) return _send<T[]>('withAncestors', ...arguments);
+  withAncestors: async function<T extends BaseModel>(doc: T | null, types: Array<string> = allTypes()) {
+    if (db._empty) return _send<Array<T>>('withAncestors', ...arguments);
 
     if (!doc) {
       return [];
     }
 
-    let docsToReturn: (T | null)[] = doc ? [doc] : [];
+    let docsToReturn: Array<T | null> = doc ? [doc] : [];
 
-    async function next(docs: T[]) {
-      const foundDocs: T[] = [];
+    async function next(docs: Array<T>) {
+      const foundDocs: Array<T> = [];
 
       for (const d of docs) {
         for (const type of types) {
@@ -563,25 +563,25 @@ export const database = {
         ...docsToReturn,
         ...foundDocs,
       ];
-      return next(foundDocs) as T[];
+      return next(foundDocs) as Array<T>;
     }
 
-    return next([doc]) as T[];
+    return next([doc]) as Array<T>;
   },
 
   withDescendants: async function<T extends BaseModel>(doc: T | null, stopType: string | null = null) {
-    if (db._empty) return _send<T[]>('withDescendants', ...arguments);
+    if (db._empty) return _send<Array<T>>('withDescendants', ...arguments);
     let docsToReturn = doc ? [doc] : [];
 
-    async function next(docs: (T | null)[]) {
-      let foundDocs: T[] = [];
+    async function next(docs: Array<T | null>) {
+      let foundDocs: Array<T> = [];
 
       for (const doc of docs) {
         if (stopType && doc && doc.type === stopType) {
           continue;
         }
 
-        const promises: Promise<T[] | undefined>[] = [];
+        const promises: Array<Promise<Array<T> | undefined>> = [];
 
         for (const type of allTypes()) {
           // If the doc is null, we want to search for parentId === null
@@ -590,7 +590,7 @@ export const database = {
           promises.push(promise);
         }
 
-        for (const more of await Promise.all<T[] | undefined>(promises)) {
+        for (const more of await Promise.all<Array<T> | undefined>(promises)) {
           foundDocs = [
             ...foundDocs,
             ...(more || []),
@@ -608,7 +608,7 @@ export const database = {
       return next(foundDocs);
     }
 
-    return next([doc]) as T[];
+    return next([doc]) as Array<T>;
   },
 };
 
@@ -642,11 +642,11 @@ type ChangeBufferEvent = [
   fromSync: boolean
 ];
 
-let changeBuffer: ChangeBufferEvent[] = [];
+let changeBuffer: Array<ChangeBufferEvent> = [];
 
 type ChangeListener = Function;
 
-let changeListeners: ChangeListener[] = [];
+let changeListeners: Array<ChangeListener> = [];
 
 async function notifyOfChange<T extends BaseModel>(event: string, doc: T, fromSync: boolean) {
   changeBuffer.push([event, doc, fromSync]);
@@ -665,7 +665,7 @@ type Patch = Record<string, any>;
 // ~~~~~~~ //
 // Helpers //
 // ~~~~~~~ //
-async function _send<T>(fnName: string, ...args: any[]) {
+async function _send<T>(fnName: string, ...args: Array<any>) {
   return new Promise<T>((resolve, reject) => {
     const replyChannel = `db.fn.reply:${uuid.v4()}`;
     electron.ipcRenderer.send('db.fn', fnName, replyChannel, ...args);

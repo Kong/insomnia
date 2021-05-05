@@ -43,17 +43,17 @@ interface Props {
   handleShowRequestSettings: Function;
   previewMode: string;
   filter: string;
-  filterHistory: string[];
+  filterHistory: Array<string>;
   disableHtmlPreviewJs: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   loadStartTime: number;
-  responses: Response[];
+  responses: Array<Response>;
   hotKeyRegistry: HotKeyRegistry;
   disableResponsePreviewLinks: boolean;
-  requestVersions: RequestVersion[];
+  requestVersions: Array<RequestVersion>;
   request?: Request | null;
   response?: Response | null;
   environment?: Environment | null;
@@ -99,7 +99,7 @@ class ResponsePane extends PureComponent<Props> {
     }
 
     const readStream = models.response.getBodyStream(response);
-    const dataBuffers: any[] = [];
+    const dataBuffers: Array<any> = [];
 
     if (readStream) {
       readStream.on('data', data => {

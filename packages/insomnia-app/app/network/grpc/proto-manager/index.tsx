@@ -28,7 +28,7 @@ export async function deleteFile(protoFile: ProtoFile, callback: (arg0: string) 
   });
 }
 
-export async function deleteDirectory(protoDirectory: ProtoDirectory, callback: (arg0: string[]) => void) {
+export async function deleteDirectory(protoDirectory: ProtoDirectory, callback: (arg0: Array<string>) => void) {
   showAlert({
     title: `Delete ${protoDirectory.name}`,
     message: (
@@ -48,7 +48,7 @@ export async function deleteDirectory(protoDirectory: ProtoDirectory, callback: 
 
 export async function addDirectory(workspaceId: string) {
   let rollback = false;
-  let createdIds: string[];
+  let createdIds: Array<string>;
   const bufferId = await db.bufferChangesIndefinitely();
 
   try {

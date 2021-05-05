@@ -473,7 +473,7 @@ export function createWindow() {
       },
     ],
   };
-  const template: MenuItemConstructorOptions[] = [];
+  const template: Array<MenuItemConstructorOptions> = [];
   template.push(applicationMenu);
   template.push(editMenu);
   template.push(viewMenu);

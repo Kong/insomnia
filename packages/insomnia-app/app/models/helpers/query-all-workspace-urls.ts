@@ -7,7 +7,7 @@ export const queryAllWorkspaceUrls = async (
   workspace: Workspace | null,
   reqType: typeof RequestType | typeof GrpcRequestType,
   reqId = 'n/a',
-): Promise<string[]> => {
+): Promise<Array<string>> => {
   const docs = await db.withDescendants(workspace, reqType);
   const urls = docs
     .filter(

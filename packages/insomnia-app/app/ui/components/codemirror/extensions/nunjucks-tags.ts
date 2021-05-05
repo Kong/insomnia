@@ -45,7 +45,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
   const renderString = text => render(text, renderCacheKey);
 
-  const activeMarks: CodeMirror.TextMarker[] = [];
+  const activeMarks: Array<CodeMirror.TextMarker> = [];
   const doc: CodeMirror.Doc = this.getDoc();
 
   // Only mark up Nunjucks tokens that are in the viewport
@@ -56,7 +56,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
     const tokens = line.filter(({ type }) => type && type.indexOf('nunjucks') >= 0);
 
     // Aggregate same tokens
-    const newTokens: Token[] = [];
+    const newTokens: Array<Token> = [];
     let currTok: Token | null = null;
 
     for (let i = 0; i < tokens.length; i++) {

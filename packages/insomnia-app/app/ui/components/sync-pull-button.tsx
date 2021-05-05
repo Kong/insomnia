@@ -7,7 +7,7 @@ import { showError } from './modals';
 interface Props {
   vcs: VCS;
   branch: string;
-  onPull: (...args: any[]) => any;
+  onPull: (...args: Array<any>) => any;
   disabled?: boolean;
   className?: string;
   children?: ReactNode;

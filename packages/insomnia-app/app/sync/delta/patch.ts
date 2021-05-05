@@ -1,6 +1,6 @@
 import type { Operation } from './diff';
 
-export function patch(a: string, operations: Operation[]) {
+export function patch(a: string, operations: Array<Operation>) {
   let result = '';
 
   for (const op of operations) {

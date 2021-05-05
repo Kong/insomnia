@@ -31,23 +31,23 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   defaultValue: string;
-  onChange: (...args: any[]) => any;
+  onChange: (...args: Array<any>) => any;
   workspace: Workspace;
 }
 
 interface State {
   activeTagData: NunjucksParsedTag | null;
   activeTagDefinition: NunjucksParsedTag | null;
-  tagDefinitions: NunjucksParsedTag[];
+  tagDefinitions: Array<NunjucksParsedTag>;
   loadingDocs: boolean;
-  allDocs: Record<string, BaseModel[]>;
+  allDocs: Record<string, Array<BaseModel>>;
   rendering: boolean;
   preview: string;
   error: string;
-  variables: {
+  variables: Array<{
     name: string;
     value: string;
-  }[];
+  }>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -114,8 +114,8 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  _sortRequests(_models: (Request | RequestGroup)[], parentId: string) {
-    let sortedModels: (Request | RequestGroup)[] = [];
+  _sortRequests(_models: Array<Request | RequestGroup>, parentId: string) {
+    let sortedModels: Array<Request | RequestGroup> = [];
 
     _models
       .filter(model => model.parentId === parentId)
@@ -333,7 +333,7 @@ class TagEditor extends PureComponent<Props, State> {
   }
 
   async _update(
-    tagDefinitions: NunjucksParsedTag[],
+    tagDefinitions: Array<NunjucksParsedTag>,
     tagDefinition: NunjucksParsedTag | null,
     tagData: NunjucksParsedTag | null,
     noCallback = false,
@@ -451,8 +451,8 @@ class TagEditor extends PureComponent<Props, State> {
   renderArgFile(
     value: string,
     argIndex: number,
-    itemTypes?: ('file' | 'directory')[],
-    extensions?: string[],
+    itemTypes?: Array<'file' | 'directory'>,
+    extensions?: Array<string>,
   ) {
     return (
       <FileInputButton
@@ -467,7 +467,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  renderArgEnum(value: string, options: PluginArgumentEnumOption[]) {
+  renderArgEnum(value: string, options: Array<PluginArgumentEnumOption>) {
     const argDatas = this.state.activeTagData ? this.state.activeTagData.args : [];
     let unsetOption: ReactNode = null;
 
@@ -499,7 +499,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: any[]) {
+  resolveRequestGroupPrefix(requestGroupId: string, allRequestGroups: Array<any>) {
     let prefix = '';
     let reqGroup: any;
 
@@ -563,7 +563,7 @@ class TagEditor extends PureComponent<Props, State> {
 
   renderArg(
     argDefinition: NunjucksParsedTagArg,
-    argDatas: NunjucksParsedTagArg[],
+    argDatas: Array<NunjucksParsedTagArg>,
     argIndex: number,
   ) {
     // Decide whether or not to show it
@@ -693,7 +693,7 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 
-  renderActions(actions: NunjucksActionTag[] = []) {
+  renderActions(actions: Array<NunjucksActionTag> = []) {
     return (
       <div className="form-row">
         <div className="form-control">

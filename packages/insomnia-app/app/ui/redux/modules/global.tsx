@@ -414,7 +414,7 @@ export function importFile(
   };
 }
 
-function handleImportResult(result: ImportResult, errorMessage: string): Workspace[] {
+function handleImportResult(result: ImportResult, errorMessage: string): Array<Workspace> {
   const { error, summary } = result;
 
   if (error) {
@@ -660,8 +660,8 @@ export function exportRequestsToFile(requestIds) {
     showSelectExportTypeModal(
       () => dispatch(loadStop()),
       async selectedFormat => {
-        const requests: (GrpcRequest | Request)[] = [];
-        const privateEnvironments: Environment[] = [];
+        const requests: Array<GrpcRequest | Request> = [];
+        const privateEnvironments: Array<Environment> = [];
         const workspaceLookup = {};
 
         for (const requestId of requestIds) {

@@ -10,7 +10,7 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
-  onChange: (...args: any[]) => any;
+  onChange: (...args: Array<any>) => any;
   password: string;
   disabled: boolean;
   isVariableUncovered: boolean;

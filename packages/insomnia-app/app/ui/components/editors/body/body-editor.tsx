@@ -36,7 +36,7 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 
 interface Props {
   onChange: (r: Request, body: RequestBody) => Promise<Request>;
-  onChangeHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  onChangeHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
@@ -62,13 +62,13 @@ class BodyEditor extends PureComponent<Props> {
     onChange(request, newBody);
   }
 
-  _handleFormUrlEncodedChange(parameters: RequestBodyParameter[]) {
+  _handleFormUrlEncodedChange(parameters: Array<RequestBodyParameter>) {
     const { onChange, request } = this.props;
     const newBody = newBodyFormUrlEncoded(parameters);
     onChange(request, newBody);
   }
 
-  _handleFormChange(parameters: RequestBodyParameter[]) {
+  _handleFormChange(parameters: Array<RequestBodyParameter>) {
     const { onChange, request } = this.props;
     const newBody = newBodyForm(parameters);
     onChange(request, newBody);

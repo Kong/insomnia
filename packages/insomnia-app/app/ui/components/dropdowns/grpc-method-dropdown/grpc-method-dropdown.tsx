@@ -13,7 +13,7 @@ import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
 
 interface Props {
   disabled?: boolean;
-  methods: GrpcMethodDefinition[];
+  methods: Array<GrpcMethodDefinition>;
   selectedMethod?: GrpcMethodDefinition;
   handleChange: (arg0: string) => Promise<void>;
   handleChangeProtoFile: (arg0: string) => Promise<void>;

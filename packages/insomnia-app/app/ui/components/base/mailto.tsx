@@ -15,7 +15,7 @@ interface Props {
 class Mailto extends PureComponent<Props> {
   render() {
     const { email, body, subject, children } = this.props;
-    const params: {name: string; value: string}[] = [];
+    const params: Array<{name: string; value: string}> = [];
 
     if (subject) {
       params.push({

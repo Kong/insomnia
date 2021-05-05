@@ -85,11 +85,11 @@ class HawkAuth extends PureComponent<Props> {
   renderSelectRow(
     label: string,
     property: string,
-    options: {
+    options: Array<{
       name: string;
       value: string;
-    }[],
-    onChange: (...args: any[]) => any,
+    }>,
+    onChange: (...args: Array<any>) => any,
     help: string | null = null,
   ) {
     const { authentication } = this.props.request;
@@ -124,7 +124,7 @@ class HawkAuth extends PureComponent<Props> {
   renderInputRow(
     label: string,
     property: string,
-    onChange: (...args: any[]) => any,
+    onChange: (...args: Array<any>) => any,
   ) {
     const {
       handleRender,

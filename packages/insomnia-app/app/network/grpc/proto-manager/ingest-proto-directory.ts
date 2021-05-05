@@ -5,12 +5,12 @@ import fs from 'fs';
 
 interface IngestResult {
   createdDir?: ProtoDirectory | null;
-  createdIds: string[];
+  createdIds: Array<string>;
   error?: Error | null;
 }
 
 class ProtoDirectoryLoader {
-  createdIds: string[] = [];
+  createdIds: Array<string> = [];
   rootDirPath: string;
   workspaceId: string;
 

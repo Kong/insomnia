@@ -2,7 +2,7 @@ export function deterministicStringify(value: any) {
   const t = Object.prototype.toString.call(value);
 
   if (t === '[object Object]') {
-    const pairs: string[] = [];
+    const pairs: Array<string> = [];
 
     for (const key of Object.keys(value).sort()) {
       const k = deterministicStringify(key);
@@ -15,7 +15,7 @@ export function deterministicStringify(value: any) {
 
     return `{${pairs.join(',')}}`;
   } else if (t === '[object Array]') {
-    const items: string[] = [];
+    const items: Array<string> = [];
 
     for (const v of value) {
       const vStr = deterministicStringify(v);

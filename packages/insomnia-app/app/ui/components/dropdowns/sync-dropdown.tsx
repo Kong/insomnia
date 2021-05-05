@@ -32,13 +32,13 @@ const DEFAULT_BRANCH_NAME = 'master';
 interface Props {
   workspace: Workspace;
   vcs: VCS;
-  syncItems: StatusCandidate[];
+  syncItems: Array<StatusCandidate>;
   className?: string;
 }
 
 interface State {
   currentBranch: string;
-  localBranches: string[];
+  localBranches: Array<string>;
   compare: {
     ahead: number;
     behind: number;
@@ -49,7 +49,7 @@ interface State {
   loadingPull: boolean;
   loadingProjectPull: boolean;
   loadingPush: boolean;
-  remoteProjects: Project[];
+  remoteProjects: Array<Project>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

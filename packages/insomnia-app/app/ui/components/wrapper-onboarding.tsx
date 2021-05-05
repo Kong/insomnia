@@ -37,7 +37,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     db.offChange(this._handleDbChange);
   }
 
-  _handleDbChange(changes: [string, BaseModel, boolean][]) {
+  _handleDbChange(changes: Array<[string, BaseModel, boolean]>) {
     for (const change of changes) {
       if (change[1].type === models.workspace.type) {
         setTimeout(() => {

@@ -27,7 +27,7 @@ interface Props {
 }
 
 interface State {
-  actionPlugins: DocumentAction[];
+  actionPlugins: Array<DocumentAction>;
   loadingActions: Record<string, boolean>;
 }
 

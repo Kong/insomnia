@@ -20,7 +20,7 @@ interface Props {
 
 interface State {
   branch: string;
-  history: Snapshot[];
+  history: Array<Snapshot>;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

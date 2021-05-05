@@ -12,8 +12,8 @@ import * as misc from '../../../common/misc';
 
 interface State {
   hotKeyRefId: string | null;
-  checkKeyCombinationDuplicate: (...args: any[]) => any;
-  onAddKeyCombination: (...args: any[]) => any;
+  checkKeyCombinationDuplicate: (...args: Array<any>) => any;
+  onAddKeyCombination: (...args: Array<any>) => any;
   pressedKeyCombination: KeyCombination | null;
 }
 
@@ -91,8 +91,8 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
 
   show(
     hotKeyRefId: string,
-    checkKeyCombinationDuplicate: (...args: any[]) => any,
-    onAddKeyCombination: (...args: any[]) => any,
+    checkKeyCombinationDuplicate: (...args: Array<any>) => any,
+    onAddKeyCombination: (...args: Array<any>) => any,
   ) {
     this.setState({
       hotKeyRefId: hotKeyRefId,

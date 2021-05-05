@@ -12,7 +12,7 @@ interface Multipart {
   contentLength: number;
 }
 
-export async function buildMultipart(params: RequestBodyParameter[]) {
+export async function buildMultipart(params: Array<RequestBodyParameter>) {
   return new Promise<Multipart>(async (resolve, reject) => {
     const filePath = path.join(electron.remote.app.getPath('temp'), Math.random() + '.body');
     const writeStream = fs.createWriteStream(filePath);

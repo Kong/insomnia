@@ -42,7 +42,7 @@ interface BaseResponse {
   bytesRead: number;
   bytesContent: number;
   elapsedTime: number;
-  headers: ResponseHeader[];
+  headers: Array<ResponseHeader>;
   bodyPath: string;
   // Actual bodies are stored on the filesystem
   timelinePath: string;
@@ -285,7 +285,7 @@ function getTimelineFromPath(timelinePath: string) {
 
   try {
     const rawBuffer = fs.readFileSync(timelinePath);
-    return JSON.parse(rawBuffer.toString()) as ResponseTimelineEntry[];
+    return JSON.parse(rawBuffer.toString()) as Array<ResponseTimelineEntry>;
   } catch (err) {
     console.warn('Failed to read response body', err.message);
     return [];
@@ -359,7 +359,7 @@ export async function cleanDeletedResponses() {
     return;
   }
 
-  const whitelistFiles: string[] = [];
+  const whitelistFiles: Array<string> = [];
 
   for (const r of (await db.all<Response>(type) || [])) {
     whitelistFiles.push(r.bodyPath.slice(responsesDir.length + 1));

@@ -12,7 +12,7 @@ export function routableFSClient(
   defaultFS: git.PromiseFsClient,
   otherFS: Record<string, git.PromiseFsClient>,
 ) {
-  const execMethod = async (method: string, filePath: string, ...args: any[]) => {
+  const execMethod = async (method: string, filePath: string, ...args: Array<any>) => {
     filePath = path.normalize(filePath);
 
     for (const prefix of Object.keys(otherFS)) {

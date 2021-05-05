@@ -17,7 +17,7 @@ const getProtoTempDirectoryName = ({ _id, modified }: ProtoDirectory): string =>
 
 interface WriteResult {
   filePath: string;
-  dirs: string[];
+  dirs: Array<string>;
 }
 
 const writeIndividualProtoFile = async (protoFile: ProtoFile): Promise<WriteResult> => {
@@ -54,8 +54,8 @@ const writeNestedProtoFile = async (protoFile: ProtoFile, dirPath: string) => {
 };
 
 const writeProtoFileTree = async (
-  ancestors: (ProtoDirectory | Workspace)[],
-): Promise<string[]> => {
+  ancestors: Array<ProtoDirectory | Workspace>,
+): Promise<Array<string>> => {
   // Find the ancestor workspace
   const ancestorWorkspace = ancestors.find(isWorkspace);
   // Find the root ancestor directory
@@ -80,9 +80,9 @@ const writeProtoFileTree = async (
 
 const recursiveWriteProtoDirectory = async (
   dir: ProtoDirectory,
-  descendants: BaseModel[],
+  descendants: Array<BaseModel>,
   currentDirPath: string,
-): Promise<string[]> => {
+): Promise<Array<string>> => {
   // Increment folder path
   const dirPath = path.join(currentDirPath, dir.name);
   mkdirp.sync(dirPath);

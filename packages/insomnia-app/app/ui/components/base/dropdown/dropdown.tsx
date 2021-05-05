@@ -29,7 +29,7 @@ interface State {
   dropUp: boolean,
   filter: string,
   filterVisible: boolean,
-  filterItems?: number[] | null,
+  filterItems?: Array<number> | null,
   filterActiveIndex: number,
   forcedPosition?: {x: number, y: number} | null,
   uniquenessKey: number,
@@ -80,7 +80,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     }
 
     // Filter the list items that are filterable (have data-filter-index property)
-    const filterItems: number[] = [];
+    const filterItems: Array<number> = [];
 
     // @ts-expect-error convert to array or use querySelectorAll().forEach
     for (const listItem of this._dropdownList.querySelectorAll('li')) {
@@ -256,7 +256,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
   }
 
   _getFlattenedChildren(children) {
-    let newChildren: ReactNode[] = [];
+    let newChildren: Array<ReactNode> = [];
     // Ensure children is an array
     children = Array.isArray(children) ? children : [children];
 
@@ -348,8 +348,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
       'dropdown__menu--up': dropUp,
       'dropdown__menu--right': right,
     });
-    const dropdownButtons: ReactNode[] = [];
-    const dropdownItems: ReactNode[] = [];
+    const dropdownButtons: Array<ReactNode> = [];
+    const dropdownItems: Array<ReactNode> = [];
 
     const allChildren = this._getFlattenedChildren(children);
 
