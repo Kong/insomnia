@@ -297,10 +297,8 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           url: r.url,
           method: r.method,
           headers: r.headers,
-          // @ts-expect-error insomnia-importers type difference
           body: r.body,
           authentication: r.authentication,
-          // @ts-expect-error insomnia-importers type difference
           parameters: r.parameters,
         });
       }

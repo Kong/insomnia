@@ -79,7 +79,7 @@ export function all() {
   return db.all<GrpcRequestMeta>(type);
 }
 
-function expectParentToBeGrpcRequest(parentId: string) {
+function expectParentToBeGrpcRequest(parentId: string | null) {
   if (!isGrpcRequestId(parentId)) {
     throw new Error('Expected the parent of GrpcRequestMeta to be a GrpcRequest');
   }

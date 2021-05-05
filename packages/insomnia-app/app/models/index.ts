@@ -27,7 +27,7 @@ import { generateId, pluralize } from '../common/misc';
 export interface BaseModel {
   _id: string;
   type: string;
-  parentId: string;
+  parentId: string | null;
   modified: number;
   created: number;
   isPrivate: boolean;
@@ -181,5 +181,6 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
     }
   }
 
+  // @ts-expect-error -- TSCONVERSION not sure why this error is occuring
   return migratedDoc;
 }

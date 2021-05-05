@@ -161,6 +161,7 @@ export function debounce<T extends Function>(
 ): T {
   // For regular debounce, just use a keyed debounce with a fixed key
   return keyedDebounce(results => {
+    // eslint-disable-next-line prefer-spread -- don't know if there was a "this binding" reason for this being this way so I'm leaving it alone
     callback.apply(null, results.__key__);
   }, milliseconds).bind(null, '__key__');
 }
@@ -356,10 +357,12 @@ export function getUserLanguage() {
 }
 export async function waitForStreamToFinish(stream: Readable | Writable) {
   return new Promise<void>(resolve => {
+    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
     if (stream._readableState?.finished) {
       return resolve();
     }
 
+    // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
     if (stream._writableState?.finished) {
       return resolve();
     }

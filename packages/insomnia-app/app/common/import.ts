@@ -1,4 +1,4 @@
-import { convert, ImportRequest } from 'insomnia-importers';
+import { convert, Insomnia4Data } from 'insomnia-importers';
 import clone from 'clone';
 import { database as db } from './database';
 import * as har from './har';
@@ -110,6 +110,7 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   if (error) {
     showError({
       title: 'Failed to import',
+      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       error: error.message,
       message: 'Import failed',
     });
@@ -335,7 +336,7 @@ export async function importRaw(
 async function updateWorkspaceScope(
   resource: Workspace,
   resultType: ConvertResultType,
-  getWorkspaceScope?: (arg0: string) => Promise<WorkspaceScope>,
+  getWorkspaceScope?: SetWorkspaceScopePrompt,
 ) {
   // Set the workspace scope if creating a new workspace
   //  IF is creating a new workspace
@@ -454,7 +455,8 @@ export async function exportRequestsData(
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  const data = {
+  const data: Insomnia4Data = {
+    // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
     _type: 'export',
     __export_format: EXPORT_FORMAT,
     __export_date: new Date(),
@@ -513,8 +515,11 @@ export async function exportRequestsData(
           isProtoFile(d) ||
           isProtoDirectory(d) ||
           isWorkspace(d) ||
+          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
           d.type === models.cookieJar.type ||
+          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
           d.type === models.environment.type ||
+          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
           d.type === models.apiSpec.type
         )
       ) {
@@ -526,29 +531,42 @@ export async function exportRequestsData(
     })
     .map(d => {
       if (isWorkspace(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_WORKSPACE;
       } else if (d.type === models.cookieJar.type) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_COOKIE_JAR;
       } else if (d.type === models.environment.type) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_ENVIRONMENT;
       } else if (d.type === models.unitTestSuite.type) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
       } else if (d.type === models.unitTest.type) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_UNIT_TEST;
       } else if (isRequestGroup(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_REQUEST_GROUP;
       } else if (isRequest(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_REQUEST;
       } else if (isGrpcRequest(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_GRPC_REQUEST;
       } else if (isProtoFile(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_PROTO_FILE;
       } else if (isProtoDirectory(d)) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_PROTO_DIRECTORY;
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
       } else if (d.type === models.apiSpec.type) {
+        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_API_SPEC;
       }
 
+      // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
       // Delete the things we don't want to export
       delete d.type;
       return d;

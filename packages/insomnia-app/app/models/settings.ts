@@ -144,7 +144,7 @@ export function migrate(doc: Settings) {
 export async function all() {
   const settings = await db.all<Settings>(type);
 
-  if (settings.length === 0) {
+  if (settings?.length === 0) {
     return [await getOrCreate()];
   } else {
     return settings;

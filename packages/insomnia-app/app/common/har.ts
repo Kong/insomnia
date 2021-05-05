@@ -288,6 +288,7 @@ export async function exportHarWithRequest(
   try {
     const renderResult = await getRenderedRequestAndContext(request, environmentId);
     const renderedRequest = await _applyRequestPluginHooks(
+      // @ts-expect-error -- TSCONVERSION need to udpate cookie jar
       renderResult.request,
       renderResult.context,
     );
@@ -382,21 +383,24 @@ function getRequestCookies(renderedRequest: RenderedRequest) {
 
 function getReponseCookies(response: ResponseModel) {
   const headers = response.headers.filter(Boolean) as HarCookie[];
-  return getSetCookieHeaders(headers)
-    .map(harCookie => {
-      let cookie: null | undefined | toughCookie = null;
+  const responseCookies = getSetCookieHeaders(headers)
+  .reduce((accumulator, harCookie) => {
+    let cookie: null | undefined | toughCookie = null;
 
-      try {
-        cookie = toughCookie.parse(harCookie.value || '');
-      } catch (error) {}
+    try {
+      cookie = toughCookie.parse(harCookie.value || '');
+    } catch (error) {}
 
-      if (cookie === null || cookie === undefined) {
-        return null;
-      }
+    if (cookie === null || cookie === undefined) {
+      return accumulator;
+    }
 
-      return mapCookie(cookie as unknown as Cookie);
-    })
-    .filter(Boolean);
+    return [
+      ...accumulator,
+      mapCookie(cookie as unknown as Cookie),
+    ];
+  }, [] as HarCookie[]);
+  return responseCookies;
 }
 
 function mapCookie(cookie: Cookie) {

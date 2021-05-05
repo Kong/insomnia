@@ -12,6 +12,7 @@ import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
 import { isRequestGroup } from '../models/helpers/is-model';
+
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
 export type RenderPurpose = 'send' | 'general' | 'no-render';
@@ -24,6 +25,7 @@ export type ExtraRenderInfo = {
   name: string;
   value: any;
 }[];
+
 export type RenderedRequest = Request & {
   cookies: {
     name: string;
@@ -32,8 +34,11 @@ export type RenderedRequest = Request & {
   }[];
   cookieJar: CookieJar;
 };
+
 export type RenderedGrpcRequest = GrpcRequest;
+
 export type RenderedGrpcRequestBody = GrpcRequestBody;
+
 export interface RenderContextAndKeys {
   context: Record<string, any>;
   keys: {
@@ -43,6 +48,7 @@ export interface RenderContextAndKeys {
 }
 
 export type HandleGetRenderContext = () => Promise<RenderContextAndKeys>;
+
 export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
 export async function buildRenderContext(
@@ -50,7 +56,7 @@ export async function buildRenderContext(
   rootEnvironment: Environment | null,
   subEnvironment: Environment | null,
   baseContext: Record<string, any> = {},
-): Promise<Record<string, any>> {
+) {
   const envObjects: Record<string, any>[] = [];
 
   // Get root environment keys in correct order
@@ -202,11 +208,11 @@ export async function render<T>(
   blacklistPathRegex: RegExp | null = null,
   errorMode: string = THROW_ON_ERROR,
   name = '',
-): Promise<T> {
+) {
   // Make a deep copy so no one gets mad :)
   const newObj = clone(obj);
 
-  async function next(x: any, path: string, first = false) {
+  async function next<T>(x: T, path: string, first = false) {
     if (blacklistPathRegex && path.match(blacklistPathRegex)) {
       return x;
     }
@@ -226,19 +232,16 @@ export async function render<T>(
       // Do nothing to these types
     } else if (typeof x === 'string') {
       try {
-        x = await templating.render(x, {
-          context,
-          path,
-        });
+        // @ts-expect-error -- TSCONVERSION
+        x = await templating.render(x, { context, path });
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
         //   {{ foo }} => {% uuid 'v4' %} => dd265685-16a3-4d76-a59c-e8264c16835a
+        // @ts-expect-error -- TSCONVERSION
         if (x.includes('{%')) {
-          x = await templating.render(x, {
-            context,
-            path,
-          });
+          // @ts-expect-error -- TSCONVERSION
+          x = await templating.render(x, { context, path });
         }
       } catch (err) {
         if (errorMode !== KEEP_ON_ERROR) {
@@ -252,6 +255,7 @@ export async function render<T>(
     } else if (typeof x === 'object' && x !== null) {
       // Don't even try rendering disabled objects
       // Note, this logic probably shouldn't be here, but w/e for now
+      // @ts-expect-error -- TSCONVERSION
       if (x.disabled) {
         return x;
       }
@@ -271,7 +275,7 @@ export async function render<T>(
     return x;
   }
 
-  return next(newObj, name, true);
+  return next<T>(newObj, name, true);
 }
 export async function getRenderContext(
   request: Request | GrpcRequest | null,

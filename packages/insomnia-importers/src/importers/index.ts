@@ -25,3 +25,8 @@ export const importers: Importer[] = [
   openapi3,
   wsdl,
 ];
+
+export { Insomnia1Data } from './insomnia-1';
+export { Insomnia2Data } from './insomnia-2';
+export { Insomnia3Data } from './insomnia-3';
+export { Insomnia4Data } from './insomnia-4';
