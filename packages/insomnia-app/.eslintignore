@@ -1,3 +1,6 @@
 build
 bin
 send-request
+webpack.config.*.js
+webpack.config.*.js.map
+webpack.config.*.d.ts

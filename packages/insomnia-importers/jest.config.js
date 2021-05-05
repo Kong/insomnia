@@ -1,6 +1,5 @@
-'use strict';
-
-module.exports = /** @type { import('@jest/types').Config.InitialOptions } */ ({
+/** @type { import('@jest/types').Config.InitialOptions } */
+module.exports = {
   globals: {
     'ts-jest': {
       isolatedModules: true,
@@ -15,4 +14,4 @@ module.exports = /** @type { import('@jest/types').Config.InitialOptions } */ ({
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   coverageReporters: ['text-summary', 'lcov'],
-});
+};

@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./build",
+    "outDir": "./dist",
     "rootDir": ".",
     "resolveJsonModule": true,
     "strict": false,
@@ -32,7 +32,7 @@
     "**/*.test.tsx",
     "**/__snapshots__",
     "**/__mocks__",
-    "build",
+    "dist",
     "app/network/ca-certs.js"
   ]
 }

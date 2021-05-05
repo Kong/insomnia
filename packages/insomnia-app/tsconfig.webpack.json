@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": ".",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "strict": false,
+    "module": "CommonJS",
+    "target": "ES5",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strictNullChecks": true,
+  },
+  "include": [
+    "webpack/*.ts",
+    "package.json"
+  ],
+  "exclude": [
+    "webpack/dist"
+  ]
+}

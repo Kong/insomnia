@@ -8,8 +8,8 @@ import path from 'path';
 import mkdirp from 'mkdirp';
 import { readFileSync, writeFileSync, promises } from 'fs';
 import { getBuildContext } from './getBuildContext';
-import productionWebpackConfig from '../webpack/webpack.config.production.babel';
-import electronWebpackConfig from '../webpack/webpack.config.electron.babel';
+import productionWebpackConfig from '../webpack/webpack.config.production';
+import electronWebpackConfig from '../webpack/webpack.config.electron';
 
 const { readFile, writeFile } = promises;
 

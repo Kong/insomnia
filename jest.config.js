@@ -1,7 +1,5 @@
-'use strict';
-
-// @ts-check
-module.exports = /** @type { import('@jest/types').Config.InitialOptions } */ {
+/** @type { import('@jest/types').Config.InitialOptions } */
+module.exports = {
   globals: {
     'ts-jest': {
       isolatedModules: true,

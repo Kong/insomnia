@@ -3,7 +3,6 @@
   "compilerOptions": {
     "composite": false,
     "rootDir": ".",
-    "outDir": "./dist"
   },
   "include": [
     "src",
@@ -12,5 +11,7 @@
     "package.json"
 
   ],
-  "exclude": []
+  "exclude": [
+    "dist"
+  ]
 }

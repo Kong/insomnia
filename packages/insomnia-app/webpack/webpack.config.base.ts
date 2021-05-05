@@ -1,13 +1,17 @@
-const webpack = require('webpack');
-const path = require('path');
-const pkg = require('../package.json');
+import { Configuration, DefinePlugin, optimize } from 'webpack';
+import path from 'path';
+import pkg from '../package.json';
 
-module.exports = {
+// recommended by the docs: https://webpack.js.org/configuration/configuration-languages/
+// just in case you run into any typescript error when configuring `devServer`
+import 'webpack-dev-server';
+
+const configuration: Configuration = {
   devtool: 'source-map',
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.ts', './renderer.html'],
   output: {
-    path: path.join(__dirname, '../build'),
+    path: path.join(__dirname, '../dist'),
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
   },
@@ -74,10 +78,12 @@ module.exports = {
     'system',
   ],
   plugins: [
-    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
-    new webpack.DefinePlugin({
+    new optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+    new DefinePlugin({
       'process.env.RELEASE_DATE': JSON.stringify(new Date()),
     }),
   ],
   target: 'electron-renderer',
 };
+
+export default configuration;

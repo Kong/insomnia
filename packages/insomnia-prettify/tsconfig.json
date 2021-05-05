@@ -9,5 +9,7 @@
     "jest.config.js",
     ".eslintrc.js"
   ],
-  "exclude": []
+  "exclude": [
+    "dist"
+  ]
 }

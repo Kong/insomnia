@@ -2,12 +2,13 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": false,
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "."
   },
   "include": [
     "src",
     "jest.config.js"
   ],
-  "exclude": []
+  "exclude": [
+    "dist"
+  ]
 }

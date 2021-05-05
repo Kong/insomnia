@@ -1,7 +1,7 @@
-const webpack = require('webpack');
-const baseConfig = require('./webpack.config.base.babel');
+import { Configuration, DefinePlugin } from 'webpack';
+import baseConfig from './webpack.config.base';
 
-module.exports = {
+const configuration: Configuration = {
   ...baseConfig,
   devtool: false,
   mode: 'production',
@@ -11,11 +11,13 @@ module.exports = {
     minimize: false,
   },
   plugins: [
-    ...baseConfig.plugins,
-    new webpack.DefinePlugin({
+    ...(baseConfig.plugins || []),
+    new DefinePlugin({
       __DEV__: false,
       'process.env.NODE_ENV': JSON.stringify('production'),
       'process.env.HOT': JSON.stringify(null),
     }),
   ],
 };
+
+export default configuration;

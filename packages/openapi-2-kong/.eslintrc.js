@@ -1,4 +1,5 @@
-module.exports = /** @type { import('eslint').Linter.Config } */ {
+/** @type { import('eslint').Linter.Config } */
+module.exports = {
   extends: '../../.eslintrc.js',
   rules: {
     camelcase: 'off',

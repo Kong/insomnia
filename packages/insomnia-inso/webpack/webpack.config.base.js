@@ -1,8 +1,8 @@
 const path = require('path');
-
 const nodeExternals = require('webpack-node-externals');
 
-module.exports = /** @type { import('webpack').Configuration } */ ({
+/** @type { import('webpack').Configuration } */
+module.exports = {
   entry: './src/index.ts',
   target: 'node',
   output: {
@@ -31,4 +31,4 @@ module.exports = /** @type { import('webpack').Configuration } */ ({
     'mocha',
     nodeExternals(),
   ],
-});
+};

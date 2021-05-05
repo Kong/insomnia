@@ -1,6 +1,7 @@
 const path = require('path');
 
-module.exports = /** @type { import('webpack').Configuration } */ ({
+/** @type { import('webpack').Configuration } */
+module.exports = {
   entry: { index: './src/index.ts' },
   target: 'node',
   mode: 'production',
@@ -31,4 +32,4 @@ module.exports = /** @type { import('webpack').Configuration } */ ({
     // If it's bundled in the Webpack build, it will try to use Webpack's require() function and fail to import the test file because it lives outside the bundle.
     'mocha',
   ],
-});
+};

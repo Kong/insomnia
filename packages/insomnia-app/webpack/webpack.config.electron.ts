@@ -1,13 +1,13 @@
-const webpack = require('webpack');
-const path = require('path');
-const productionConfig = require('./webpack.config.production.babel');
-const pkg = require('../package.json');
+import { Configuration, DefinePlugin } from 'webpack';
+import path from 'path';
+import productionConfig from './webpack.config.production';
+import packageJSON from '../package.json';
 
-const PORT = pkg.dev['dev-server-port'];
+const PORT = packageJSON.dev['dev-server-port'];
 
-let devtool;
-let plugins;
-const output = {
+let devtool: Configuration['devtool'];
+let plugins: Configuration['plugins'] = [];
+const output: Configuration['output'] = {
   libraryTarget: 'commonjs2',
   filename: 'main.min.js',
 };
@@ -16,7 +16,7 @@ if (process.env.NODE_ENV === 'development') {
   output.path = path.join(__dirname, '../app');
   devtool = 'eval-source-map';
   plugins = [
-    new webpack.DefinePlugin({
+    new DefinePlugin({
       'process.env.APP_RENDER_URL': JSON.stringify(`http://localhost:${PORT}/renderer.html`),
       'process.env.NODE_ENV': JSON.stringify('development'),
       'process.env.INSOMNIA_ENV': JSON.stringify('development'),
@@ -24,19 +24,21 @@ if (process.env.NODE_ENV === 'development') {
     }),
   ];
 } else {
-  output.path = path.join(__dirname, '../build');
+  output.path = path.join(__dirname, '../dist');
   devtool = productionConfig.devtool;
   plugins = productionConfig.plugins;
 }
 
-module.exports = {
+const configuration: Configuration = {
   ...productionConfig,
-  devtool: devtool,
+  devtool,
   entry: ['./main.development.ts'],
-  output: output,
+  output,
   node: {
     __dirname: false, // Use node.js __dirname
   },
   target: 'electron-main',
-  plugins: plugins,
+  plugins,
 };
+
+export default configuration;

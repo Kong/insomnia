@@ -1,10 +1,15 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "rootDir": "."
+  },
   "include": [
-    "webpack.config.js",
-    "jest.config.js",
+    "src",
     ".eslintrc.js",
-    "src"
+    "jest.config.js",
+    "webpack.config.js"
   ],
-  "exclude": []
+  "exclude": [
+    "dist"
+  ]
 }
