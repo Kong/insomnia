@@ -7,7 +7,7 @@
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
-    "lib": ["DOM", "ES2017"],
+    "lib": ["DOM", "ES2019"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitReturns": true,
@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ES2017",
+    "target": "ES2019",
     "types": ["node", "jest"]
   }
 }
