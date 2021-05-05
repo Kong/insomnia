@@ -51,16 +51,20 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import * as workspaceActions from '../redux/modules/workspace';
 import * as gitActions from '../redux/modules/git';
-import { GitCloneWorkspaceCallback } from '../redux/modules/workspace';
 import { MemClient } from '../../sync/git/mem-client';
+
+interface RenderedCard {
+  card: ReactNode;
+  lastModifiedTimestamp?: number | null;
+}
 
 interface Props {
   wrapperProps: WrapperProps;
   handleImportFile: HandleImportFileCallback;
   handleImportUri: HandleImportUriCallback;
   handleImportClipboard: HandleImportClipboardCallback;
-  handleCreateWorkspace: CreateWorkspaceCallback;
-  handleGitCloneWorkspace: GitCloneWorkspaceCallback;
+  handleCreateWorkspace: workspaceActions.CreateWorkspaceCallback;
+  handleGitCloneWorkspace: Function;
 }
 
 interface State {
@@ -150,12 +154,7 @@ class WrapperHome extends PureComponent<Props, State> {
     handleSetActiveWorkspace(id);
   }
 
-  renderCard(
-    workspace: Workspace,
-  ): {
-    card: ReactNode;
-    lastModifiedTimestamp: number;
-  } {
+  renderCard(workspace: Workspace) {
     const {
       apiSpecs,
       handleSetActiveWorkspace,
@@ -169,6 +168,7 @@ class WrapperHome extends PureComponent<Props, State> {
     let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
 
     try {
+      // @ts-expect-error -- TSCONVERSION appears to be genuine
       const result = parseApiSpec(apiSpec.contents);
       spec = result.contents;
       specFormat = result.format;
@@ -179,7 +179,7 @@ class WrapperHome extends PureComponent<Props, State> {
     }
 
     // Get cached branch from WorkspaceMeta
-    const workspaceMeta = workspaceMetas.find(wm => wm.parentId === workspace._id);
+    const workspaceMeta = workspaceMetas?.find(wm => wm.parentId === workspace._id);
     const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
     const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
     const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
@@ -199,12 +199,14 @@ class WrapperHome extends PureComponent<Props, State> {
     const lastModifiedTimestamp = lastModifiedFrom
       .filter(isNotNullOrUndefined)
       .sort(descendingNumberSort)[0];
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
     let branch = lastActiveBranch;
 
     if (
       workspace.scope === WorkspaceScopeKeys.design &&
       lastCommitTime &&
+      // @ts-expect-error -- TSCONVERSION appears to be genuine
       apiSpec?.modified > lastCommitTime
     ) {
       // Show locally unsaved changes for spec
@@ -253,7 +255,7 @@ class WrapperHome extends PureComponent<Props, State> {
       }
 
       defaultActivity = ACTIVITY_SPEC;
-      title = apiSpec.fileName || title;
+      title = apiSpec?.fileName || title;
     }
 
     // Filter the card by multiple different properties
@@ -269,17 +271,17 @@ class WrapperHome extends PureComponent<Props, State> {
 
     const card = (
       <Card
-        key={apiSpec._id}
-        docBranch={branch && <Highlight search={filter} text={branch} />}
-        docTitle={title && <Highlight search={filter} text={title} />}
-        docVersion={version && <Highlight search={filter} text={`v${version}`} />}
+        key={apiSpec?._id}
+        docBranch={branch ? <Highlight search={filter} text={branch} /> : undefined}
+        docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
+        docVersion={version ? <Highlight search={filter} text={`v${version}`} /> : undefined}
         tagLabel={
-          label && (
+          label ? (
             <>
               <span className="margin-right-xs">{labelIcon}</span>
               <Highlight search={filter} text={label} />
             </>
-          )
+          ) : undefined
         }
         docLog={log}
         docMenu={docMenu}
@@ -287,10 +289,11 @@ class WrapperHome extends PureComponent<Props, State> {
         onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
       />
     );
-    return {
+    const renderedCard: RenderedCard = {
       card,
       lastModifiedTimestamp,
     };
+    return renderedCard;
   }
 
   renderCreateMenu() {
@@ -361,8 +364,9 @@ class WrapperHome extends PureComponent<Props, State> {
     const cards = workspaces
       .map(this.renderCard)
       .filter(isNotNullOrUndefined)
-      .sort((a, b) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
-      .map(c => c.card);
+      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
+      .sort((a: RenderedCard, b: RenderedCard) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
+      .map(c => c?.card);
     const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
     return (
       <PageLayout

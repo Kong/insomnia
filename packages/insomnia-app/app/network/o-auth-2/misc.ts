@@ -1,6 +1,7 @@
 import electron from 'electron';
 import * as uuid from 'uuid';
 import querystring from 'querystring';
+
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 let authWindowSessionId;
 
@@ -16,6 +17,7 @@ export function initNewOAuthSession() {
   authWindowSessionId = `persist:oauth2_${uuid.v4()}`;
   window.localStorage.setItem(LOCALSTORAGE_KEY_SESSION_ID, authWindowSessionId);
 }
+
 export function responseToObject(body, keys, defaults = {}) {
   let data: querystring.ParsedUrlQuery | null = null;
 
@@ -50,6 +52,7 @@ export function responseToObject(body, keys, defaults = {}) {
 
   return results;
 }
+
 export function authorizeUserInWindow(
   url,
   urlSuccessRegex = /(code=).*/,

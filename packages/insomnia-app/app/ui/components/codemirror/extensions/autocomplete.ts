@@ -264,6 +264,7 @@ function hint(cm, options) {
       ) {
         // We're outside of a JSON key
         matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
+          // @ts-expect-error -- TSCONVERSION
           highPriorityMatches.push({ ...m, text: '"' + m.text + '": ' }),
         );
       }
@@ -292,6 +293,7 @@ function hint(cm, options) {
   // Autocomplete from longest matched segment
   const segment = highPriorityMatches.length ? nameSegmentLong : nameSegment;
   const uniqueMatches = matches.reduce(
+    // @ts-expect-error -- TSCONVERSION
     (arr, v) => (arr.find(a => a.text === v.text) ? arr : [...arr, v]),
     [], // Default value
   );
@@ -405,16 +407,25 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
 
     matches.push({
       // Custom Insomnia keys
+      // @ts-expect-error -- TSCONVERSION
       type,
+      // @ts-expect-error -- TSCONVERSION
       segment,
+      // @ts-expect-error -- TSCONVERSION
       displayValue,
+      // @ts-expect-error -- TSCONVERSION
       comment: value,
+      // @ts-expect-error -- TSCONVERSION
       score: name.length,
       // In case we want to sort by this
       // CodeMirror
+      // @ts-expect-error -- TSCONVERSION
       text: defaultFill,
+      // @ts-expect-error -- TSCONVERSION
       displayText: displayName,
+      // @ts-expect-error -- TSCONVERSION
       render: renderHintMatch,
+      // @ts-expect-error -- TSCONVERSION
       hint: replaceHintMatch,
     });
   }

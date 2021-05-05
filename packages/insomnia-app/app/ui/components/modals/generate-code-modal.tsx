@@ -49,10 +49,12 @@ class GenerateCodeModal extends PureComponent<Props, State> {
 
     // Load preferences from localStorage
     try {
+      // @ts-expect-error -- TSCONVERSION
       target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target'));
     } catch (e) {}
 
     try {
+      // @ts-expect-error -- TSCONVERSION
       client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client'));
     } catch (e) {}
 
@@ -88,6 +90,7 @@ class GenerateCodeModal extends PureComponent<Props, State> {
   _handleTargetChange(target) {
     const { target: currentTarget } = this.state;
 
+    // @ts-expect-error -- TSCONVERSION
     if (currentTarget.key === target.key) {
       // No change
       return;
@@ -131,7 +134,9 @@ class GenerateCodeModal extends PureComponent<Props, State> {
     // NOTE: Just some extra precautions in case the target is messed up
     let clients = [];
 
+    // @ts-expect-error -- TSCONVERSION
     if (target && Array.isArray(target.clients)) {
+      // @ts-expect-error -- TSCONVERSION
       clients = target.clients;
     }
 
@@ -148,7 +153,10 @@ class GenerateCodeModal extends PureComponent<Props, State> {
           <div className="pad">
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
-                {target ? target.title : 'n/a'}
+                {
+                  // @ts-expect-error -- TSCONVERSION
+                  target ? target.title : 'n/a'
+                }
                 <i className="fa fa-caret-down" />
               </DropdownButton>
               {targets.map(target => (
@@ -160,12 +168,24 @@ class GenerateCodeModal extends PureComponent<Props, State> {
             &nbsp;&nbsp;
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
-                {client ? client.title : 'n/a'}
+                {
+
+                  // @ts-expect-error -- TSCONVERSION
+                  client ? client.title : 'n/a'
+                }
                 <i className="fa fa-caret-down" />
               </DropdownButton>
               {clients.map(client => (
-                <DropdownItem key={client.key} onClick={this._handleClientChange} value={client}>
-                  {client.title}
+                <DropdownItem
+                  // @ts-expect-error -- TSCONVERSION
+                  key={client.key}
+                  onClick={this._handleClientChange}
+                  value={client}
+                >
+                  {
+                    // @ts-expect-error -- TSCONVERSION
+                    client.title
+                  }
                 </DropdownItem>
               ))}
             </Dropdown>
@@ -177,6 +197,7 @@ class GenerateCodeModal extends PureComponent<Props, State> {
             placeholder="Generating code snippet..."
             className="border-top"
             key={Date.now()}
+            // @ts-expect-error -- TSCONVERSION
             mode={MODE_MAP[target.key] || target.key}
             ref={this._setEditorRef}
             fontSize={editorFontSize}

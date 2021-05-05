@@ -288,7 +288,6 @@ export async function exportHarWithRequest(
   try {
     const renderResult = await getRenderedRequestAndContext(request, environmentId);
     const renderedRequest = await _applyRequestPluginHooks(
-      // @ts-expect-error -- TSCONVERSION need to udpate cookie jar
       renderResult.request,
       renderResult.context,
     );

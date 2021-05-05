@@ -41,7 +41,10 @@ class GraphQLExplorerField extends PureComponent<Props> {
               <li key={a.name}>
                 <span className="info">{a.name}</span>:{' '}
                 <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
-                <GraphQLDefaultValue field={a as Record<string, any>} />
+                <GraphQLDefaultValue
+                  // @ts-expect-error -- TSCONVERSION
+                  field={a}
+                />
                 {a.description && <MarkdownPreview markdown={a.description} />}
               </li>
             );

@@ -136,12 +136,12 @@ export interface WrapperProps {
   handleSetActiveResponse: Function;
   handleSetSidebarRef: Function;
   handleSidebarSort: (sortOrder: SortOrder) => void;
-  handleStartDragSidebar: Function;
-  handleResetDragSidebar: Function;
-  handleStartDragPaneHorizontal: Function;
-  handleStartDragPaneVertical: Function;
-  handleResetDragPaneHorizontal: Function;
-  handleResetDragPaneVertical: Function;
+  handleStartDragSidebar: React.MouseEventHandler;
+  handleResetDragSidebar: React.MouseEventHandler;
+  handleStartDragPaneHorizontal: React.MouseEventHandler;
+  handleStartDragPaneVertical: React.MouseEventHandler;
+  handleResetDragPaneHorizontal: React.MouseEventHandler;
+  handleResetDragPaneVertical: React.MouseEventHandler;
   handleSetRequestGroupCollapsed: Function;
   handleSetRequestPinned: Function;
   handleSendRequestWithEnvironment: Function;
@@ -193,6 +193,7 @@ export interface WrapperProps {
   oAuth2Token?: OAuth2Token | null;
   activeRequest?: Request | null;
   activeResponse?: Response | null;
+  workspaceMetas?: Array<WorkspaceMeta>;
 }
 
 export type HandleImportFileCallback = (options?: ImportOptions) => void;
@@ -297,8 +298,10 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           url: r.url,
           method: r.method,
           headers: r.headers,
+          // @ts-expect-error -- TSCONVERSION
           body: r.body,
           authentication: r.authentication,
+          // @ts-expect-error -- TSCONVERSION
           parameters: r.parameters,
         });
       }
@@ -836,6 +839,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_UNIT_TEST && (
             <WrapperUnitTest
               gitSyncDropdown={gitSyncDropdown}
+              // @ts-expect-error -- TSCONVERSION
               wrapperProps={this.props}
               handleActivityChange={this._handleWorkspaceActivityChange}
               children={sidebarChildren}

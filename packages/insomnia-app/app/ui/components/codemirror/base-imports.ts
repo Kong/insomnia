@@ -65,5 +65,7 @@ import '../../css/editor/index.less';
 import { parser as jsonlint } from 'jsonlint';
 // Make js-yaml available to the yaml-lint addon
 import * as jsYaml from 'js-yaml';
+
+// @ts-expect-error -- TSCONVERSION needs global augmentation
 global.jsonlint = jsonlint;
 global.jsyaml = jsYaml;

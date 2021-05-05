@@ -14,7 +14,7 @@ import { stringsPlural } from '../../../common/strings';
 
 interface Props {
   className?: string;
-  vcs?: VCS;
+  vcs?: VCS | null;
   workspaces: Array<Workspace>;
 }
 
@@ -92,7 +92,8 @@ class RemoteWorkspacesDropdown extends Component<Props, State> {
 
         const flushId = await db.bufferChanges();
 
-        for (const doc of await newVCS.allDocuments()) {
+        // @ts-expect-error -- TSCONVERSION
+        for (const doc of (await newVCS.allDocuments() || [])) {
           await db.upsert(doc);
         }
 
@@ -101,7 +102,8 @@ class RemoteWorkspacesDropdown extends Component<Props, State> {
 
       await this._refreshRemoteWorkspaces();
     } catch (err) {
-      this._dropdown && this._dropdown.hide();
+      // @ts-expect-error -- TSCONVERSION this appears to be a genuine error because there's no _dropdown assigned elsewhere in this class and it doesn't extend another class that has _dropdown and even if it did it's supposed to be private presumably so....
+      this._dropdown.hide();
       showAlert({
         title: 'Pull Error',
         message: `Failed to pull workspace. ${err.message}`,

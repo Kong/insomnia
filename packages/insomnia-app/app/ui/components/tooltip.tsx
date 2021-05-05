@@ -142,11 +142,14 @@ class Tooltip extends PureComponent<Props, State> {
     if (!container) {
       container = document.createElement('div');
       container.id = 'tooltips-container';
+      // @ts-expect-error -- TSCONVERSION
       container.style.zIndex = '1000000';
+      // @ts-expect-error -- TSCONVERSION
       container.style.position = 'relative';
       document.body && document.body.appendChild(container);
     }
 
+    // @ts-expect-error -- TSCONVERSION
     return container;
   }
 

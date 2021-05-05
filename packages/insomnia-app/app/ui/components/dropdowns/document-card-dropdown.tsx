@@ -42,12 +42,14 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
     const { apiSpec, workspace, handleSetActiveWorkspace } = this.props;
     showPrompt({
       title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      // @ts-expect-error -- TSCONVERSION
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async newName => {
         const newWorkspace = workspaceOperations.duplicate(workspace, newName);
+        // @ts-expect-error -- TSCONVERSION
         handleSetActiveWorkspace(newWorkspace._id);
       },
     });
@@ -57,11 +59,13 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
     const { apiSpec, workspace } = this.props;
     showPrompt({
       title: `Rename ${getWorkspaceLabel(workspace)}`,
+      // @ts-expect-error -- TSCONVERSION
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
       onComplete: async name => {
+        // @ts-expect-error -- TSCONVERSION
         await workspaceOperations.rename(workspace, apiSpec, name);
       },
     });
@@ -71,6 +75,7 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
     const { apiSpec, workspace, isLastWorkspace } = this.props;
     const label = getWorkspaceLabel(workspace);
     const messages = [
+      // @ts-expect-error -- TSCONVERSION
       `Do you really want to delete "${getWorkspaceName(workspace, apiSpec)}"?`,
       isLastWorkspace
         ? ` This is the only ${label.toLowerCase()} so a new one will be created for you.`
@@ -122,6 +127,7 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
         ...pluginContexts.data.init(),
         ...pluginContexts.store.init(p.plugin),
       };
+      // @ts-expect-error -- TSCONVERSION
       await p.action(context, parseApiSpec(apiSpec.contents));
     } catch (err) {
       showError({
@@ -133,7 +139,8 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: false },
     }));
-    this._dropdown && this._dropdown.hide();
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
+    this._dropdown?.hide();
   }
 
   render() {

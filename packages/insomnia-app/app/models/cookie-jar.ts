@@ -57,9 +57,8 @@ export async function create(patch: Partial<CookieJar>) {
 }
 
 export async function getOrCreateForParentId(parentId: string) {
-  const cookieJars = await db.find(type, { parentId });
+  const cookieJars = await db.find<CookieJar>(type, { parentId });
 
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   if (cookieJars.length === 0) {
     return create({
       parentId,
@@ -68,7 +67,6 @@ export async function getOrCreateForParentId(parentId: string) {
       _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
   } else {
-    // @ts-expect-error -- TSCONVERSION appears to be a genuine error
     return cookieJars[0];
   }
 }

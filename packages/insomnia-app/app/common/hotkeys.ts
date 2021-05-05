@@ -386,6 +386,7 @@ export function areKeyBindingsSameAsDefault(hotKeyRefId: string, keyBinds: KeyBi
       if (areSameKeyCombinations(keyComb, defKeyComb)) {
         return true;
       }
+      return false;
     });
 
     if (found == null) {

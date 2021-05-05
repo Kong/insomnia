@@ -3,13 +3,13 @@ import styled from 'styled-components';
 import { SvgIcon, IconEnum } from './svg-icon';
 
 export interface CardProps {
-  docBranch: string;
-  docLog: string;
-  docMenu: ReactNode;
-  docTitle: string;
-  docVersion: string;
-  tagLabel: string;
-  docFormat?: string;
+  docBranch?: ReactNode;
+  docLog?: ReactNode;
+  docMenu?: ReactNode;
+  docTitle?: ReactNode;
+  docVersion?: ReactNode;
+  tagLabel: ReactNode;
+  docFormat?: ReactNode;
   onChange?: (e: React.SyntheticEvent<HTMLInputElement>) => any;
   onClick?: (e: React.SyntheticEvent<HTMLDivElement>) => any;
   selectable?: boolean;

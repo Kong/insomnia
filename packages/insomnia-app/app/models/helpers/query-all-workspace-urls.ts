@@ -16,6 +16,7 @@ export const queryAllWorkspaceUrls = async (
         d._id !== reqId && // Not current request
         (d.url || ''), // Only ones with non-empty URLs
     )
+    // @ts-expect-error -- TSCONVERSION
     .map((r: Request | GrpcRequest) => (r.url || '').trim());
   return Array.from(new Set(urls));
 };

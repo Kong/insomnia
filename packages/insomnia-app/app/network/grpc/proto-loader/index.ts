@@ -3,6 +3,8 @@ import protoLoader, { AnyDefinition, EnumTypeDefinition, ServiceDefinition, Mess
 import * as models from '../../../models';
 import writeProtoFile from './write-proto-file';
 import { ProtoFile } from '../../../models/proto-file';
+import { GrpcRequest } from '../../../models/grpc-request';
+
 const GRPC_LOADER_OPTIONS = {
   keepCase: true,
   longs: String,
@@ -41,7 +43,9 @@ export const loadMethodsFromPath = async (
 //  or from the cache
 //  We can't send the method over IPC because of the following deprecation in Electron v9
 //  https://www.electronjs.org/docs/breaking-changes#behavior-changed-sending-non-js-objects-over-ipc-now-throws-an-exception
+// @ts-expect-error -- TSCONVERSION
 export const getSelectedMethod = async (request: GrpcRequest): GrpcMethodDefinition | undefined => {
+  // @ts-expect-error -- TSCONVERSION
   const protoFile = await models.protoFile.getById(request.protoFileId);
   const methods = await loadMethods(protoFile);
   return methods.find(c => c.path === request.protoMethodName);

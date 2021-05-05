@@ -81,7 +81,11 @@ class SyncHistoryModal extends PureComponent<Props, State> {
       return (
         <Fragment>
           {name}{' '}
-          <HelpTooltip info delay={500}>
+          <HelpTooltip
+            info
+            // @ts-expect-error -- TSCONVERSION
+            delay={500}
+          >
             {email}
           </HelpTooltip>
         </Fragment>

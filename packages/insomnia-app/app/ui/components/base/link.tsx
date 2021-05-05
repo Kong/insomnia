@@ -17,7 +17,7 @@ interface Props {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class Link extends PureComponent<Props> {
-  _handleClick(e: React.SyntheticEvent<HTMLAnchorElement>) {
+  _handleClick(e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) {
     e && e.preventDefault();
     const { href, onClick } = this.props;
     // Also call onClick that was passed to us if there was one
@@ -48,6 +48,7 @@ class Link extends PureComponent<Props> {
         className={classnames(className, {
           'theme--link': !noTheme,
         })}
+        // @ts-expect-error -- TSCONVERSION
         disabled={disabled}
         {...other}
       >

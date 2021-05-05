@@ -251,6 +251,7 @@ export const _unitTests = () => (
           item={test}
           key={test._id}
           onSetActiveRequest={_handleRequestSelected}
+          // @ts-expect-error -- TSCONVERSION
           selectableRequests={unitTestRequests}>
           <div
             style={{

@@ -1,5 +1,5 @@
 import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'react';
-import { ACTIVITY_HOME } from '../../common/constants';
+import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { strings } from '../../common/strings';
 import WorkspaceDropdown from './dropdowns/workspace-dropdown';
@@ -52,6 +52,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />
           <Breadcrumb
             className="breadcrumb"
+            // @ts-expect-error -- TSCONVERSION
             crumbs={[strings.home, <Fragment key="workspace-dd">{workspace}</Fragment>]}
             onClick={homeCallback}
           />

@@ -32,7 +32,12 @@ class RequestRow extends PureComponent<Props> {
             <input type="checkbox" checked={isSelected} onChange={this.handleSelect} />
           </div>
           <button className="wide">
-            {isGrpc ? <GrpcTag /> : <MethodTag method={request.method} />}
+            {isGrpc ? (
+              <GrpcTag />
+             ) : (
+               // @ts-expect-error -- TSCONVERSION
+               <MethodTag method={request.method} />
+             )}
             <span className="inline-block">{request.name}</span>
           </button>
         </div>

@@ -12,6 +12,7 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
 import MarkdownEditor from '../markdown-editor';
 import CopyButton from '../base/copy-button';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 const MODES = {
   'text/plain': 'Plain Text',
@@ -29,8 +30,8 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleGetRenderContext?: Function;
-  handleRender?: Function;
+  handleGetRenderContext?: HandleGetRenderContext;
+  handleRender?: HandleRender;
 }
 
 interface State {
@@ -164,7 +165,9 @@ class CodePromptModal extends PureComponent<Props, State> {
                 defaultValue={defaultValue}
                 placeholder={placeholder}
                 onChange={this._handleChange}
+                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
                 handleGetRenderContext={enableRender ? handleGetRenderContext : null}
+                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
                 handleRender={enableRender ? handleRender : null}
                 mode={mode}
                 keyMap={editorKeyMap}
@@ -187,7 +190,9 @@ class CodePromptModal extends PureComponent<Props, State> {
                   onChange={this._handleChange}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
+                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
                   getRenderContext={enableRender ? handleGetRenderContext : null}
+                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
                   render={enableRender ? handleRender : null}
                   mode={mode}
                   keyMap={editorKeyMap}

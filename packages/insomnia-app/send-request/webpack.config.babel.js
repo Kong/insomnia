@@ -31,7 +31,7 @@ module.exports = {
         },
       },
       {
-        test: require.resolve('../app/network/ca-certs.js'),
+        test: require.resolve('../app/network/ca-certs.ts'),
         use: [
           {
             loader: 'val-loader',

@@ -15,6 +15,7 @@ import { parseApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
+
 const spectral = new Spectral();
 
 interface Props {
@@ -96,7 +97,7 @@ class WrapperDesign extends PureComponent<Props, State> {
     editor.scrollToSelection(chStart, chEnd, lineStart, lineEnd);
   }
 
-  _handleLintClick(notice: {}) {
+  _handleLintClick(notice) {
     // TODO: Export Notice from insomnia-components and use here, instead of {}
     const { start, end } = notice._range;
 

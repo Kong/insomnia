@@ -3,6 +3,7 @@ import path from 'path';
 import mkdirp from 'mkdirp';
 import type { BaseDriver } from './base';
 
+// @ts-expect-error -- TSCONVERSION
 export default class FileSystemDriver implements BaseDriver {
   _directory: string;
 

@@ -115,6 +115,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     const { grpcDispatch } = this.props;
     return protoManager.updateFile(protoFile, async updatedId => {
       const action = await grpcActions.invalidateMany(updatedId);
+      // @ts-expect-error -- TSCONVERSION
       grpcDispatch(action);
       sendGrpcIpcMultiple(GrpcRequestEventEnum.cancelMultiple, action?.requestIds);
     });

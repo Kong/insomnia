@@ -76,6 +76,7 @@ class HawkAuth extends PureComponent<Props> {
     const ext = this.renderInputRow('Ext', 'ext', this._handleChangeExt);
     const payloadValidation = this.renderButtonRow(
       'Validate Payload',
+      // @ts-expect-error -- TSCONVERSION
       'validatePayload',
       this._handleChangePayloadValidation,
     );

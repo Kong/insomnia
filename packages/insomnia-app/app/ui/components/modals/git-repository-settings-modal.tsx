@@ -82,6 +82,7 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
     };
 
     if (this._onSubmitEdits) {
+      // @ts-expect-error -- TSCONVERSION
       this._onSubmitEdits({ ...gitRepository, ...patch });
     }
 
@@ -98,10 +99,15 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
 
     if (gitRepository) {
       const creds = gitRepository.credentials || {};
+      // @ts-expect-error -- TSCONVERSION
       inputs.token = typeof creds.token === 'string' ? creds.token : '';
+      // @ts-expect-error -- TSCONVERSION
       inputs.authorEmail = gitRepository.author.email;
+      // @ts-expect-error -- TSCONVERSION
       inputs.authorName = gitRepository.author.name;
+      // @ts-expect-error -- TSCONVERSION
       inputs.username = gitRepository.credentials?.username || '';
+      // @ts-expect-error -- TSCONVERSION
       inputs.uri = gitRepository.uri;
     }
 

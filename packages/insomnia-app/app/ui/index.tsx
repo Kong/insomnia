@@ -14,6 +14,7 @@ import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { initializeLogging } from '../common/log';
+
 initializeLogging();
 // Handy little helper
 document.body.setAttribute('data-platform', process.platform);
@@ -78,6 +79,7 @@ function showUpdateNotification() {
   new window.Notification('Insomnia Update Ready', {
     body: 'Relaunch the app for it to take effect',
     silent: true,
+    // @ts-expect-error -- TSCONVERSION
     sticky: true,
   });
 }

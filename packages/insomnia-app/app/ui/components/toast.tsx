@@ -122,6 +122,7 @@ class Toast extends PureComponent<{}, State> {
       console.warn('[toast] Failed to fetch user notifications', err);
     }
 
+    // @ts-expect-error -- TSCONVERSION
     this._handleNotification(notification);
   }
 
@@ -154,6 +155,7 @@ class Toast extends PureComponent<{}, State> {
 
   _loadSeen() {
     try {
+      // @ts-expect-error -- TSCONVERSION
       return JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY)) || {};
     } catch (e) {
       return {};

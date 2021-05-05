@@ -72,7 +72,9 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
       ));
       const requestGroups = docs.filter(d => d.type === models.requestGroup.type);
       await p.action(context, {
+        // @ts-expect-error -- TSCONVERSION
         requestGroups,
+        // @ts-expect-error -- TSCONVERSION
         requests,
         workspace: activeWorkspace,
       });
@@ -142,6 +144,7 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
           ref={this._setDropdownRef}
           className={classes}
           onOpen={this._handleDropdownOpen}
+          // @ts-expect-error -- TSCONVERSION appears to be genuine
           onHide={this._handleDropdownHide}
           {...(other as Record<string, any>)}>
           <DropdownButton className="row">

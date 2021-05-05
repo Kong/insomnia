@@ -79,7 +79,11 @@ class AuthDropdown extends PureComponent<Props> {
   render() {
     const { children, className } = this.props;
     return (
-      <Dropdown beside debug="true">
+      <Dropdown
+        beside
+        // @ts-expect-error -- TSCONVERSION appears to be genuine
+        debug="true"
+      >
         <DropdownDivider>Auth Types</DropdownDivider>
         <DropdownButton className={className}>{children}</DropdownButton>
         {this.renderAuthType(AUTH_BASIC)}

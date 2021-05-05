@@ -28,7 +28,9 @@ class Highlight extends PureComponent<Props> {
       <span
         {...otherProps}
         dangerouslySetInnerHTML={{
+          // @ts-expect-error -- TSCONVERSION
           __html: fuzzySort.highlight(
+            // @ts-expect-error -- TSCONVERSION
             result,
             '<strong style="font-style: italic; text-decoration: underline;">',
             '</strong>',

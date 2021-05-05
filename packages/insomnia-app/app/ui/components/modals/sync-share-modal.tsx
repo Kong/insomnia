@@ -125,6 +125,7 @@ class SyncShareModal extends PureComponent<Props, State> {
             <Dropdown outline>
               <DropdownDivider>Teams</DropdownDivider>
               {selectedTeam ? (
+                  // @ts-expect-error -- TSCONVERSION
                 <DropdownButton className="btn btn--clicky" disabled={loading}>
                   {loading ? (
                     <i className="fa fa-refresh fa-spin" />
@@ -135,6 +136,7 @@ class SyncShareModal extends PureComponent<Props, State> {
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
               ) : (
+                // @ts-expect-error -- TSCONVERSION
                 <DropdownButton className="btn btn--clicky" disabled={loading}>
                   {loading ? (
                     <i className="fa fa-refresh fa-spin" />
@@ -150,6 +152,7 @@ class SyncShareModal extends PureComponent<Props, State> {
                 </DropdownItem>
               ))}
               {teams.length === 0 && (
+                  // @ts-expect-error -- TSCONVERSION
                 <DropdownItem disabled>
                   <i className="fa fa-warning" /> You have no teams
                 </DropdownItem>
@@ -158,6 +161,7 @@ class SyncShareModal extends PureComponent<Props, State> {
               <DropdownItem
                 addIcon
                 buttonClass={PromptButton}
+                // @ts-expect-error -- TSCONVERSION
                 confirmMessage="Really make private?"
                 value={null}
                 onClick={this._handleChangeTeam}>

@@ -141,8 +141,12 @@ class General extends PureComponent<Props, State> {
         <label>
           {label}
           {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          {/* @ts-expect-error */}
-          <select value={settings[name] || '__NULL__'} name={name} onChange={onChange}>
+          <select
+            value={settings[name] || '__NULL__'}
+            name={name}
+            // @ts-expect-error -- TSCONVERSION
+            onChange={onChange}
+          >
             {values.map(({ name, value }) => (
               <option key={value} value={value}>
                 {name}
@@ -462,6 +466,7 @@ class General extends PureComponent<Props, State> {
             className="space-left txt-md"
             style={{
               maxWidth: '20rem',
+              // @ts-expect-error -- TSCONVERSION
               lineWrap: 'word',
             }}>
             Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM

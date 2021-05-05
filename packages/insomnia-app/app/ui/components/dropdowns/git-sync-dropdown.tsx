@@ -2,7 +2,8 @@ import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
 import type { Workspace } from '../../../models/workspace';
 import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
 import { showAlert, showError, showModal } from '../modals';
@@ -296,6 +297,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
       branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
     const isCurrentBranch = branch === currentBranch;
     return (
+      // @ts-expect-error -- TSCONVERSION
       <DropdownItem
         key={branch}
         onClick={isCurrentBranch ? null : () => this._handleCheckoutBranch(branch)}

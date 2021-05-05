@@ -51,6 +51,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
     let componentName = 'component';
 
     try {
+      // @ts-expect-error -- TSCONVERSION
       componentName = firstChild.type.name;
     } catch (err) {
       // It's okay
@@ -61,6 +62,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
         showError({
           error,
           title: 'Application Error',
+          // @ts-expect-error -- TSCONVERSION
           message: (
             <p>
               Failed to render {componentName}. Please send the following error to{' '}

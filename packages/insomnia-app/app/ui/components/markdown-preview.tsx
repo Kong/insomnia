@@ -6,10 +6,11 @@ import { AUTOBIND_CFG } from '../../common/constants';
 import highlight from 'highlight.js';
 import * as misc from '../../common/misc';
 import { markdownToHTML } from '../../common/markdown-to-html';
+import { HandleRender } from '../../common/render';
 
 interface Props {
   markdown: string,
-  handleRender?: Function,
+  handleRender?: HandleRender,
   className?: string,
   debounceMillis?: number,
   heading?: string,

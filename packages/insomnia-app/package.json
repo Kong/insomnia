@@ -261,7 +261,7 @@
     "source-map-loader": "^1.0.0",
     "spectron": "^11.1.0",
     "style-loader": "^0.23.1",
-    "ts-loader": "^8.0.18",
+    "ts-loader": "^8.2.0",
     "ts-node": "^9.1.1",
     "type-fest": "^1.0.2",
     "url-loader": "^1.1.2",

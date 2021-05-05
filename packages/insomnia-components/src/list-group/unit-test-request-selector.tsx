@@ -3,10 +3,10 @@ import styled from 'styled-components';
 
 export interface UnitTestRequestSelectorProps {
   onSetActiveRequest: () => void;
-  selectedRequestId?: string;
+  selectedRequestId?: string | null;
   selectableRequests: {
     name: string;
-    request: {
+    request: Request & {
       _id: string;
     };
   }[];

@@ -5,6 +5,7 @@ import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { isDesign } from '../../../models/helpers/is-model';
 import { showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveWorkspace } from './global';
+
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
 const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
@@ -23,8 +24,9 @@ const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateC
 
 export type CreateWorkspaceCallback = (arg0: {
   scope: WorkspaceScope;
-  onCreate: OnWorkspaceCreateCallback;
+  onCreate?: OnWorkspaceCreateCallback;
 }) => void;
+
 export const createWorkspace: CreateWorkspaceCallback = ({ scope, onCreate }) => {
   return dispatch => {
     const design = isDesign({

@@ -60,6 +60,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
     let result;
 
     try {
+      // @ts-expect-error -- TSCONVERSION
       result = await generatePlugin.generate(parseApiSpec(apiSpec.contents));
     } catch (err) {
       config.error = err.message;
@@ -72,7 +73,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
   }
 
   async show({ activeTabLabel, apiSpec }: ShowOptions) {
-    const configs = [];
+    const configs: Array<Config> = [];
 
     for (const p of await plugins.getConfigGenerators()) {
       configs.push(await this._generate(p, apiSpec));
@@ -110,6 +111,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
           lineWrapping={settings.editorLineWrapping}
           mode={config.mimeType}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          // @ts-expect-error -- TSCONVERSION appears to be genuine
           onChange={this._handleChange}
           readOnly
         />

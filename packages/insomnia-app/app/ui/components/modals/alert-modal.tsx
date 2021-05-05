@@ -25,6 +25,8 @@ class AlertModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   _cancel: HTMLButtonElement | null = null;
   _ok: HTMLButtonElement | null = null;
+  _okCallback: Function | null = null;
+  _okCallback2: Function | null = null;
 
   _setModalRef(m: Modal) {
     this.modal = m;
@@ -33,7 +35,7 @@ class AlertModal extends PureComponent<{}, State> {
   _handleOk() {
     this.hide();
 
-    this._okCallback();
+    this._okCallback?.();
 
     if (typeof this._okCallback2 === 'function') {
       this._okCallback2();
@@ -53,6 +55,7 @@ class AlertModal extends PureComponent<{}, State> {
   }
 
   show(options = {}) {
+    // @ts-expect-error -- TSCONVERSION
     const { title, message, addCancel, onConfirm, okLabel } = options;
     this.setState({
       title,

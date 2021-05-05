@@ -135,7 +135,7 @@ export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
-export const isWorkspaceActivity = (activity: GlobalActivity): boolean => {
+export const isWorkspaceActivity = (activity: string): activity is GlobalActivity => {
   switch (activity) {
     case ACTIVITY_SPEC:
     case ACTIVITY_DEBUG:
@@ -151,7 +151,7 @@ export const isWorkspaceActivity = (activity: GlobalActivity): boolean => {
   }
 };
 
-export const isValidActivity = (activity: GlobalActivity): boolean => {
+export const isValidActivity = (activity: string): activity is GlobalActivity => {
   switch (activity) {
     case ACTIVITY_SPEC:
     case ACTIVITY_DEBUG:

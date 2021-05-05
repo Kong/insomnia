@@ -7,6 +7,7 @@ import { escapeRegex } from '../../common/misc';
 import * as models from '../../models/index';
 import { sendWithSettings } from '../network';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
+
 export default async function(
   requestId: string,
   authorizeUrl: string,
@@ -228,6 +229,7 @@ async function _getToken(
     body: models.request.newBodyFormUrlEncoded(params),
   });
   const response = await models.response.create(responsePatch);
+  // @ts-expect-error -- TSCONVERSION
   const bodyBuffer = models.response.getBodyBuffer(response);
 
   if (!bodyBuffer) {
@@ -237,6 +239,7 @@ async function _getToken(
     };
   }
 
+  // @ts-expect-error -- TSCONVERSION
   const statusCode = response.statusCode || 0;
 
   if (statusCode < 200 || statusCode >= 300) {
@@ -264,7 +267,12 @@ async function _getToken(
 }
 
 function _base64UrlEncode(str: string) {
-  return str.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, ''); // The characters + / = are reserved for PKCE as per the RFC,
-  // so we replace them with unreserved characters
-  // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
+  // @ts-expect-error -- TSCONVERSION appears to be genuine
+  return str.toString('base64')
+    // The characters + / = are reserved for PKCE as per the RFC,
+    // so we replace them with unreserved characters
+    // Docs: https://tools.ietf.org/html/rfc7636#section-4.2
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 }

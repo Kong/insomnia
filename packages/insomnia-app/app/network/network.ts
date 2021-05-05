@@ -59,7 +59,7 @@ import {
 } from 'insomnia-url';
 import fs from 'fs';
 import { database as db } from '../common/database';
-import CACerts from './ca-certs';
+import * as caCerts from './ca-certs';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
 import { getAuthHeader } from './authentication';
@@ -452,7 +452,7 @@ export async function _actuallySend(
         // Doesn't exist yet, so write it
         mkdirp.sync(baseCAPath);
         // @ts-expect-error -- TSCONVERSION
-        fs.writeFileSync(fullCAPath, CACerts);
+        fs.writeFileSync(fullCAPath, caCerts);
         console.log('[net] Set CA to', fullCAPath);
       }
 

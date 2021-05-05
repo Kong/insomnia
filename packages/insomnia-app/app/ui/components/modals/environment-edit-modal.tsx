@@ -7,14 +7,15 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import { RequestGroup } from '../../../models/request-group';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   onChange: Function;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
-  render: Function;
-  getRenderContext: Function;
+  render: HandleRender;
+  getRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   lineWrapping: boolean;

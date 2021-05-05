@@ -64,7 +64,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     this.modal = ref;
   }
 
-  _setTextareaRef(ref: Modal) {
+  _setTextareaRef(ref: HTMLTextAreaElement) {
     this.textarea = ref;
   }
 
@@ -139,8 +139,9 @@ class GitStagingModal extends PureComponent<Props, State> {
 
   async getAllPaths(): Promise<Array<string>> {
     const { vcs } = this.props;
+    // @ts-expect-error -- TSCONVERSION
     const f = vcs.getFs().promises;
-    const fsPaths = [];
+    const fsPaths: Array<string> = [];
 
     for (const type of await f.readdir(GIT_INSOMNIA_DIR)) {
       const typeDir = path.join(GIT_INSOMNIA_DIR, type);
@@ -187,6 +188,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     this.statusNames = {};
 
     for (const doc of docs) {
+      // @ts-expect-error -- TSCONVERSION
       const name = (doc.type === models.apiSpec.type && doc.fileName) || doc.name || '';
       this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] = name;
       this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] = name;
@@ -211,6 +213,7 @@ class GitStagingModal extends PureComponent<Props, State> {
         }
 
         try {
+          // @ts-expect-error -- TSCONVERSION
           const doc = YAML.parse(docYML);
           this.statusNames[gitPath] = doc.name || '';
         } catch (err) {
@@ -221,6 +224,7 @@ class GitStagingModal extends PureComponent<Props, State> {
       // We know that type is in the path; extract it. If the model is not found, set to Unknown.
       let { type } = parseGitPath(gitPath);
 
+      // @ts-expect-error -- TSCONVERSION
       if (!models.types().includes(type)) {
         type = 'Unknown';
       }
@@ -353,6 +357,7 @@ class GitStagingModal extends PureComponent<Props, State> {
                   <span className="txt-md">
                     <IndeterminateCheckbox
                       className="space-right"
+                      // @ts-expect-error -- TSCONVERSION
                       type="checkbox"
                       checked={allStaged}
                       onChange={() => this._toggleAll(items, !allStaged)}
@@ -390,7 +395,7 @@ class GitStagingModal extends PureComponent<Props, State> {
         <div className="form-control form-control--outlined">
           <textarea
             ref={this._setTextareaRef}
-            rows="3"
+            rows={3}
             required
             placeholder="A descriptive message to describe changes made"
             defaultValue={message}

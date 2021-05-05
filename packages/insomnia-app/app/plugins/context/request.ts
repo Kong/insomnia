@@ -218,44 +218,46 @@ export function init(
     // removeCookie (name: string) {}
   };
 
+  /* eslint-disable @typescript-eslint/ban-ts-comment */
   if (readOnly) {
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setUrl;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setMethod;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setBodyText;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setCookie;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.settingSendCookies;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.settingStoreCookies;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.settingEncodeUrl;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.settingDisableRenderRequestBody;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.settingFollowRedirects;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.removeHeader;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setHeader;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.addHeader;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.removeParameter;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setParameter;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.addParameter;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.addParameter;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setAuthenticationParameter;
-    // @ts-expect-error -- needs a proper request type
+    // @ts-ignore -- TSCONVERSION something is wrong here, the build doesn't error here but vscode does
     delete request.setBody;
   }
+  /* eslint-enable @typescript-eslint/ban-ts-comment */
 
   return {
     request,

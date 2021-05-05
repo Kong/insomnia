@@ -1,14 +1,14 @@
 import React, { FunctionComponent } from 'react';
 import CodeEditor from '../codemirror/code-editor';
 import type { Settings } from '../../../models/settings';
-import { HandleGetRenderContext } from '../../../common/render';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   content?: string;
   handleChange?: (arg0: string) => void;
   settings: Settings;
   readOnly?: boolean;
-  handleRender?: (arg0: string) => Promise<string>;
+  handleRender?: HandleRender;
   isVariableUncovered?: boolean;
   handleGetRenderContext?: HandleGetRenderContext;
 }

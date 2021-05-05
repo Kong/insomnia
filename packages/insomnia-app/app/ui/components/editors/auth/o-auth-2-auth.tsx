@@ -586,6 +586,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
         </div>
       );
     }
+    return undefined;
   }
 
   render() {

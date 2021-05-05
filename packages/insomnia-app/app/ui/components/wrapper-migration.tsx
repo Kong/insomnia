@@ -72,7 +72,8 @@ const BooleanSetting = ({ handleChange, label, name, options, help }: BooleanSet
   return (
     <ToggleSwitch
       labelClassName="row margin-bottom wide"
-      checked={options[name]}
+      checked={Boolean(options[name])}
+      // @ts-expect-error -- TSCONVERSION
       id={name}
       label={labelNode}
       onChange={handleChange}

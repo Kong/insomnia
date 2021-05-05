@@ -47,6 +47,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
 
     try {
       const delta = await vcs.checkout(syncItems, branch);
+      // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       await this.refreshState();
     } catch (err) {
@@ -62,6 +63,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
     const delta = await vcs.merge(syncItems, branch);
 
     try {
+      // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       await this.refreshState();
     } catch (err) {
@@ -110,6 +112,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
       await vcs.fork(newBranchName);
       // Checkout new branch
       const delta = await vcs.checkout(syncItems, newBranchName);
+      // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       // Clear branch name and refresh things
       await this.refreshState({
@@ -123,16 +126,12 @@ class SyncBranchesModal extends PureComponent<Props, State> {
     }
   }
 
-  _updateNewBranchName(e: React.SyntheticEvent<HTMLTextAreaElement>) {
-    this.setState({
-      newBranchName: e.currentTarget.value,
-    });
+  _updateNewBranchName(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    this.setState({ newBranchName: e.currentTarget.value });
   }
 
   _handleClearError() {
-    this.setState({
-      error: '',
-    });
+    this.setState({ error: '' });
   }
 
   async refreshState(newState?: Record<string, any>) {

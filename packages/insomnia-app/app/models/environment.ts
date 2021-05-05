@@ -69,7 +69,6 @@ export async function getOrCreateForWorkspaceId(workspaceId: string) {
     parentId: workspaceId,
   });
 
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   if (!environments.length) {
     return create({
       parentId: workspaceId,
@@ -80,7 +79,6 @@ export async function getOrCreateForWorkspaceId(workspaceId: string) {
     });
   }
 
-  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   return environments[environments.length - 1];
 }
 

@@ -13,6 +13,7 @@ import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
 import { showModal } from '../modals/index';
 import { describeByteSize } from '../../../common/misc';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   onChange: Function,
@@ -37,8 +38,8 @@ interface Props {
   onBlurName?: Function,
   onBlurValue?: Function,
   onBlurDescription?: Function,
-  handleRender?: Function,
-  handleGetRenderContext?: Function,
+  handleRender?: HandleRender,
+  handleGetRenderContext?: HandleGetRenderContext,
   nunjucksPowerUserMode?: boolean,
   isVariableUncovered?: boolean,
   handleGetAutocompleteNameConstants?: Function,

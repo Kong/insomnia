@@ -1,6 +1,7 @@
 import * as c from './constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import { responseToObject, authorizeUserInWindow } from './misc';
+
 export default async function(
   _requestId: string,
   authorizationUrl: string,
@@ -30,6 +31,7 @@ export default async function(
     const nonce = Math.floor(Math.random() * 9999999999999) + 1;
     params.push({
       name: c.P_NONCE,
+      // @ts-expect-error -- TSCONVERSION
       value: nonce,
     });
   }

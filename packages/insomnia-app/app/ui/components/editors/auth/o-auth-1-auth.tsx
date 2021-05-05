@@ -364,6 +364,7 @@ class OAuth1Auth extends PureComponent<Props> {
     );
     const privateKey = this.renderPrivateKeyInput(
       'Private Key',
+      // @ts-expect-error -- TSCONVERSION
       'privateKey',
       this._handleChangePrivateKey,
     );

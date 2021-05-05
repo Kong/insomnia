@@ -17,12 +17,12 @@ export interface UnitTestItemProps {
   onDeleteTest?: () => void;
   onRunTest?: () => void;
   testNameEditable?: ReactNode;
-  testsRunning?: TestItem[];
+  testsRunning?: TestItem[] | null;
   onSetActiveRequest: () => void;
-  selectedRequestId?: string;
+  selectedRequestId?: string | null;
   selectableRequests: {
     name: string;
-    request: {
+    request: Request & {
       _id: string;
     };
   }[];

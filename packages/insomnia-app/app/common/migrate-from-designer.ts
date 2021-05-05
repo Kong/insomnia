@@ -105,7 +105,7 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   await removeDirs(pluginsToDelete, corePluginDir);
 }
 
-async function readDirs(srcDir: string): Array<string> {
+async function readDirs(srcDir: string) {
   if (existsAndIsDirectory(srcDir)) {
     return await fs.promises.readdir(srcDir);
   } else {
@@ -159,6 +159,7 @@ export default async function migrateFromDesigner({
 
   if (useDesignerSettings) {
     trackEvent('Data', 'Migration', 'Settings');
+    // @ts-expect-error -- TSCONVERSION
     modelTypesToMerge.push(models.settings.type);
     console.log('[db-merge] keeping settings from Insomnia Designer');
   } else {
@@ -167,6 +168,7 @@ export default async function migrateFromDesigner({
 
   if (copyWorkspaces) {
     trackEvent('Data', 'Migration', 'Workspaces');
+    // @ts-expect-error -- TSCONVERSION
     modelTypesToMerge.push(...workspaceModels);
   }
 

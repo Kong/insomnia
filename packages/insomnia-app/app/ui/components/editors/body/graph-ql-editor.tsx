@@ -222,6 +222,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
         className: 'cm-gql-disabled',
       });
     });
+
+    return null;
   }
 
   _handleViewResponse() {

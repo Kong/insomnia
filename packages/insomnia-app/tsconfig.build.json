@@ -25,11 +25,14 @@
     "config",
     "bin",
     "assets",
-    "**/@types/mocha/*",
+    "**/__tests__",
+    "**/__jest__",
+    "**/@types/mocha",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "**/__snapshots__/**",
-    "**/__mocks__/*",
-    "build"
+    "**/__snapshots__",
+    "**/__mocks__",
+    "build",
+    "app/network/ca-certs.js"
   ]
 }

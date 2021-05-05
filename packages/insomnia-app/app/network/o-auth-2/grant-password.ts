@@ -4,6 +4,7 @@ import { responseToObject } from './misc';
 import * as network from '../network';
 import * as models from '../../models/index';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
+
 export default async function(
   requestId: string,
   accessTokenUrl: string,
@@ -72,6 +73,7 @@ export default async function(
     body: models.request.newBodyFormUrlEncoded(params),
   });
   const response = await models.response.create(responsePatch);
+  // @ts-expect-error -- TSCONVERSION
   const bodyBuffer = models.response.getBodyBuffer(response);
 
   if (!bodyBuffer) {
@@ -81,6 +83,7 @@ export default async function(
     };
   }
 
+  // @ts-expect-error -- TSCONVERSION
   const statusCode = response.statusCode || 0;
 
   if (statusCode < 200 || statusCode >= 300) {

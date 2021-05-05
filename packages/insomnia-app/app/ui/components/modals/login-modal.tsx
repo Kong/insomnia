@@ -47,8 +47,8 @@ class LoginModal extends PureComponent<{}, State> {
       error: '',
       loading: true,
     });
-    const email = this._emailInput.value;
-    const password = this._passwordInput.value;
+    const email = this._emailInput?.value;
+    const password = this._passwordInput?.value;
 
     try {
       await session.login(email, password);
@@ -62,6 +62,7 @@ class LoginModal extends PureComponent<{}, State> {
   }
 
   show(options = {}) {
+    // @ts-expect-error -- TSCONVERSION
     const { title, message } = options;
     this.setState({
       error: '',
@@ -69,12 +70,12 @@ class LoginModal extends PureComponent<{}, State> {
       title,
       message,
     });
-    this.modal.show();
-    setTimeout(() => this._emailInput.focus(), 100);
+    this.modal?.show();
+    setTimeout(() => this._emailInput?.focus(), 100);
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -90,6 +91,7 @@ class LoginModal extends PureComponent<{}, State> {
                 Email
                 <input
                   type="email"
+                  // @ts-expect-error -- TSCONVERSION appears to be genuine
                   required="required"
                   placeholder="me@mydomain.com"
                   ref={this._setEmailInputRef}
@@ -101,6 +103,7 @@ class LoginModal extends PureComponent<{}, State> {
                 Password
                 <input
                   type="password"
+                  // @ts-expect-error -- TSCONVERSION appears to be genuine
                   required="required"
                   placeholder="•••••••••••••••••"
                   ref={this._setPasswordInputRef}

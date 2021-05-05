@@ -21,6 +21,7 @@ CodeMirror.defineExtension('makeLinksClickable', function(handleClick: CodeMirro
       return null;
     },
   });
+
   const el = this.getWrapperElement();
   let movedDuringClick = false;
   el.addEventListener('mousemove', () => {
@@ -29,7 +30,7 @@ CodeMirror.defineExtension('makeLinksClickable', function(handleClick: CodeMirro
   el.addEventListener('mousedown', () => {
     movedDuringClick = false;
   });
-  el.addEventListener('mouseup', () => {
+  el.addEventListener('mouseup', e => {
     if (movedDuringClick) {
       return;
     }

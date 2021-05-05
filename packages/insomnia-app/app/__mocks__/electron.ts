@@ -1,5 +1,5 @@
 import mkdirp from 'mkdirp';
-import events from 'events';
+import { EventEmitter } from 'events';
 import os from 'os';
 import path from 'path';
 const RANDOM_STRING = Math.random().toString().replace('.', '');
@@ -17,8 +17,9 @@ const remote = {
   },
   net: {
     request() {
-      const req = new events.EventEmitter();
+      const req = new EventEmitter();
 
+      // @ts-expect-error -- TSCONVERSION appears to be genuine
       req.end = function() {};
 
       return req;

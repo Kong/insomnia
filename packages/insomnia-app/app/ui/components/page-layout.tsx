@@ -18,10 +18,10 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class PageLayout extends PureComponent<Props> {
   // Special request updaters
-  _handleStartDragSidebar(e: Event) {
+  _handleStartDragSidebar(e: React.MouseEvent<HTMLDivElement>) {
     e.preventDefault();
     const { handleStartDragSidebar } = this.props.wrapperProps;
-    handleStartDragSidebar();
+    handleStartDragSidebar(e);
   }
 
   render() {
@@ -81,31 +81,32 @@ class PageLayout extends PureComponent<Props> {
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-top'
               ? '5px solid ' + activeEnvironment.color
-              : null,
+              : undefined,
           borderBottom:
             activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-bottom'
               ? '5px solid ' + activeEnvironment.color
-              : null,
+              : undefined,
           borderLeft:
             activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-left'
               ? '5px solid ' + activeEnvironment.color
-              : null,
+              : undefined,
           borderRight:
             activeEnvironment &&
             activeEnvironment.color &&
             settings.environmentHighlightColorStyle === 'window-right'
               ? '5px solid ' + activeEnvironment.color
-              : null,
+              : undefined,
         }}>
         {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader()}</ErrorBoundary>}
 
         {renderPageSidebar && (
           <ErrorBoundary showAlert>
             <Sidebar
+              // @ts-expect-error -- TSCONVERSION
               ref={handleSetSidebarRef}
               activeEnvironment={activeEnvironment}
               activeGitRepository={activeGitRepository}
@@ -116,6 +117,7 @@ class PageLayout extends PureComponent<Props> {
               hidden={sidebarHidden || false}
               hotKeyRegistry={settings.hotKeyRegistry}
               isLoading={isLoading}
+              // @ts-expect-error -- TSCONVERSION appears to be a genuine error, or is it that it comes from Wrapper?
               showEnvironmentsModal={this._handleShowEnvironmentsModal}
               unseenWorkspaces={unseenWorkspaces}
               gitVCS={gitVCS}
@@ -138,7 +140,11 @@ class PageLayout extends PureComponent<Props> {
           <>
             {renderPaneOne && (
               <ErrorBoundary showAlert>
-                <Pane position="one" ref={handleSetRequestPaneRef}>
+                <Pane
+                  position="one"
+                  // @ts-expect-error -- TSCONVERSION
+                  ref={handleSetRequestPaneRef}
+                >
                   {renderPaneOne()}
                 </Pane>
               </ErrorBoundary>
@@ -160,7 +166,11 @@ class PageLayout extends PureComponent<Props> {
                 </div>
 
                 <ErrorBoundary showAlert>
-                  <Pane position="two" ref={handleSetResponsePaneRef}>
+                  <Pane
+                    position="two"
+                    // @ts-expect-error -- TSCONVERSION
+                    ref={handleSetResponsePaneRef}
+                  >
                     {paneTwo}
                   </Pane>
                 </ErrorBoundary>
@@ -178,7 +188,12 @@ export default PageLayout;
 class Pane extends PureComponent {
   render() {
     return (
-      <section className={`pane-${this.props.position} theme--pane`}>{this.props.children}</section>
+      <section
+        // @ts-expect-error -- TSCONVERSION
+        className={`pane-${this.props.position} theme--pane`}
+      >
+        {this.props.children}
+      </section>
     );
   }
 }

@@ -35,7 +35,7 @@ class RequestParametersEditor extends PureComponent<Props> {
   }
 
   static _getParamsFromString(paramsString: string) {
-    const params = [];
+    const params: Array<{ name: string; value: string }> = [];
     const rows = paramsString.split(/\n+/);
 
     for (const row of rows) {

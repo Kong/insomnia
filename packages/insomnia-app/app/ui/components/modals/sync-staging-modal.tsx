@@ -177,6 +177,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
       };
     }
 
+    // @ts-expect-error -- TSCONVERSION
     this.setState({
       status,
       branch,
@@ -193,15 +194,17 @@ class SyncStagingModal extends PureComponent<Props, State> {
   async show(options: { onSnapshot?: () => any; handlePush: () => Promise<void> }) {
     const { vcs, syncItems } = this.props;
     this.modal && this.modal.show();
+    // @ts-expect-error -- TSCONVERSION
     this._onSnapshot = options.onSnapshot;
     this._handlePush = options.handlePush;
     // Reset state
     this.setState(_initialState);
     // Add everything to stage by default except new items
     const status: Status = await vcs.status(syncItems, {});
-    const toStage = [];
+    const toStage: Array<StageEntry> = [];
 
     for (const key of Object.keys(status.unstaged)) {
+      // @ts-expect-error -- TSCONVERSION
       if (status.unstaged[key].added) {
         // Don't automatically stage added resources
         continue;
@@ -329,12 +332,13 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
   render() {
     const { status, message, error, branch } = this.state;
-    const nonAddedKeys = [];
-    const addedKeys = [];
+    const nonAddedKeys: Array<string> = [];
+    const addedKeys: Array<string> = [];
     const allMap = { ...status.stage, ...status.unstaged };
     const allKeys = Object.keys(allMap);
 
     for (const key of allKeys) {
+      // @ts-expect-error -- TSCONVERSION
       if (allMap[key].added) {
         addedKeys.push(key);
       } else {

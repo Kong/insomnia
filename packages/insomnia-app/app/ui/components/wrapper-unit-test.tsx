@@ -17,7 +17,7 @@ import CodeEditor from './codemirror/code-editor';
 import type { WrapperProps } from './wrapper';
 import * as models from '../../models';
 import type { UnitTest } from '../../models/unit-test';
-import { generate, runTests } from 'insomnia-testing';
+import { generate, runTests, Test } from 'insomnia-testing';
 import { showAlert, showModal, showPrompt } from './modals';
 import Editable from './base/editable';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
@@ -32,7 +32,9 @@ interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
   handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
-  wrapperProps: WrapperProps;
+  wrapperProps: WrapperProps & {
+    activeUnitTestSuite: any;
+  };
 }
 
 interface State {
@@ -87,12 +89,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     );
   }
 
-  autocompleteSnippets(
-    unitTest: UnitTest,
-  ): Array<{
-    name: string;
-    value: () => Promise<string>;
-  }> {
+  autocompleteSnippets(unitTest: UnitTest) {
     return [
       {
         name: 'Send Current Request',
@@ -116,6 +113,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                 ...this.buildSelectableRequests().map(({ name, request }) => ({
                   name: name,
                   displayValue: '',
+                  // @ts-expect-error -- TSCONVERSION
                   value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
@@ -258,7 +256,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       testsRunning: unitTests,
       resultsError: null,
     });
-    const tests = [];
+    const tests: Array<Test> = [];
 
     for (const t of unitTests) {
       tests.push({
@@ -281,6 +279,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     try {
       results = await runTests(src, {
         requests,
+        // @ts-expect-error -- TSCONVERSION
         sendRequest,
       });
     } catch (err) {
@@ -413,8 +412,10 @@ class WrapperUnitTest extends PureComponent<Props, State> {
         onSetActiveRequest={this._handleSetActiveRequest.bind(this, unitTest)}
         onDeleteTest={this._handleDeleteTest.bind(this, unitTest)}
         onRunTest={this._handleRunTest.bind(this, unitTest)}
+
         testsRunning={testsRunning}
         selectedRequestId={unitTest.requestId}
+        // @ts-expect-error -- TSCONVERSION
         selectableRequests={selectableRequests}
         testNameEditable={
           <UnitTestEditable
@@ -434,6 +435,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+          // @ts-expect-error -- TSCONVERSION
           isVariableUncovered={settings.isVariableUncovered}
           mode="javascript"
           lineWrapping={settings.editorLineWrapping}
@@ -469,6 +471,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             bg="surprise"
             onClick={this._handleRunTests}
             size="default"
+            // @ts-expect-error -- TSCONVERSION
             disabled={testsRunning}
           >
             {testsRunning ? 'Running... ' : 'Run Tests'}
@@ -512,6 +515,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                   <DropdownItem
                     stayOpenAfterClick
                     onClick={this._handleRunTests}
+                    // @ts-expect-error -- TSCONVERSION
                     disabled={testsRunning}>
                     {testsRunning ? 'Running... ' : 'Run Tests'}
                   </DropdownItem>

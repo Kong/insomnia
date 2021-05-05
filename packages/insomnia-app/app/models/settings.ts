@@ -41,6 +41,7 @@ interface BaseSettings {
   hotKeyRegistry: hotkeys.HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
+  lineWrapping?: boolean;
   maxHistoryResponses: number;
   maxRedirects: number;
   maxTimelineDataSizeKB: number;

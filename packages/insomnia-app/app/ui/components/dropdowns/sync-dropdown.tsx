@@ -78,7 +78,7 @@ class SyncDropdown extends PureComponent<Props, State> {
     remoteProjects: [],
   }
 
-  async refreshMainAttributes(extraState?: Record<string, any> = {}) {
+  async refreshMainAttributes(extraState: Record<string, any> = {}) {
     const { vcs, syncItems, workspace } = this.props;
 
     if (!vcs.hasProject()) {
@@ -105,12 +105,14 @@ class SyncDropdown extends PureComponent<Props, State> {
     // Do the remote stuff
     if (session.isLoggedIn()) {
       try {
+        // @ts-expect-error -- TSCONVERSION
         newState.compare = await vcs.compareRemoteBranch();
       } catch (err) {
         console.log('Failed to compare remote branches', err.message);
       }
     }
 
+    // @ts-expect-error -- TSCONVERSION
     this.setState(newState);
   }
 
@@ -218,6 +220,7 @@ class SyncDropdown extends PureComponent<Props, State> {
 
     try {
       const delta = await vcs.pull(syncItems);
+      // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
     } catch (err) {
@@ -235,6 +238,7 @@ class SyncDropdown extends PureComponent<Props, State> {
   async _handleRollback(snapshot: Snapshot) {
     const { vcs, syncItems } = this.props;
     const delta = await vcs.rollback(snapshot.id, syncItems);
+    // @ts-expect-error -- TSCONVERSION
     await db.batchModifyDocs(delta);
     this.refreshOnNextSyncItems = true;
   }
@@ -244,6 +248,7 @@ class SyncDropdown extends PureComponent<Props, State> {
 
     try {
       const delta = await vcs.rollbackToLatest(syncItems);
+      // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
     } catch (err) {
       showModal(ErrorModal, {
@@ -303,6 +308,7 @@ class SyncDropdown extends PureComponent<Props, State> {
 
       const flushId = await db.bufferChanges();
 
+      // @ts-expect-error -- TSCONVERSION
       for (const doc of await vcs.allDocuments()) {
         await db.upsert(doc);
       }
@@ -329,10 +335,11 @@ class SyncDropdown extends PureComponent<Props, State> {
         // It will result in the workspace getting deleted
         // So we filter out the workspace from the delta to prevent this
         if (!defaultBranchHistoryCount && historyCount) {
-          delta.remove = delta.remove.filter(e => e.type !== models.workspace.type);
+          delta.remove = delta.remove.filter(e => e?.type !== models.workspace.type);
         }
       }
 
+      // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
     } catch (err) {
       showAlert({
@@ -355,6 +362,7 @@ class SyncDropdown extends PureComponent<Props, State> {
       branch === currentBranch ? <i className="fa fa-tag" /> : <i className="fa fa-empty" />;
     const isCurrentBranch = branch === currentBranch;
     return (
+      // @ts-expect-error -- TSCONVERSION
       <DropdownItem
         key={branch}
         onClick={isCurrentBranch ? null : () => this._handleSwitchBranch(branch)}

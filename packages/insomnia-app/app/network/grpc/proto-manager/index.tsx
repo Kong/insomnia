@@ -115,7 +115,9 @@ export async function addDirectory(workspaceId: string) {
     await db.flushChanges(bufferId, rollback);
 
     if (rollback) {
+      // @ts-expect-error -- TSCONVERSION
       await models.protoDirectory.batchRemoveIds(createdIds);
+      // @ts-expect-error -- TSCONVERSION
       await models.protoFile.batchRemoveIds(createdIds);
     }
   }
@@ -158,6 +160,7 @@ async function _readFile() {
       error: e,
     });
   }
+  return undefined;
 }
 
 export async function addFile(workspaceId: string, callback: (arg0: string) => void) {

@@ -99,6 +99,7 @@ class OneLineEditor extends PureComponent<Props, State> {
       return this._editor?.getSelectionStart();
     } else {
       console.warn('Tried to get selection start of one-line-editor when <input>');
+      // @ts-expect-error -- TSCONVERSION
       return this._input?.value.length;
     }
   }
@@ -108,6 +109,7 @@ class OneLineEditor extends PureComponent<Props, State> {
       return this._editor?.getSelectionEnd();
     } else {
       console.warn('Tried to get selection end of one-line-editor when <input>');
+      // @ts-expect-error -- TSCONVERSION
       return this._input?.value.length;
     }
   }
@@ -376,10 +378,14 @@ class OneLineEditor extends PureComponent<Props, State> {
             onKeyDown={this._handleKeyDown}
             onFocus={this._handleEditorFocus}
             onMouseLeave={this._handleEditorMouseLeave}
+            // @ts-expect-error -- TSCONVERSION
             onChange={onChange}
+            // @ts-expect-error -- TSCONVERSION
             render={render}
+            // @ts-expect-error -- TSCONVERSION
             getRenderContext={getRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
+            // @ts-expect-error -- TSCONVERSION
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}
@@ -391,6 +397,7 @@ class OneLineEditor extends PureComponent<Props, State> {
       return (
         <Input
           ref={this._setInputRef}
+          // @ts-expect-error -- TSCONVERSION
           id={id}
           type={type}
           className={className}

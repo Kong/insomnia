@@ -53,7 +53,13 @@ const AccountDropdown: FunctionComponent<Props> = ({ className }) => (
         </DropdownItem>
       )}
       {!session.isLoggedIn() && (
-        <DropdownItem key="invite" buttonClass={Link} href="https://insomnia.rest/pricing" button>
+        <DropdownItem
+          key="invite"
+          buttonClass={Link}
+          // @ts-expect-error -- TSCONVERSION appears to be genuine
+          href="https://insomnia.rest/pricing"
+          button
+        >
           <StyledIconContainer>
             <i className="fa fa-users" />
           </StyledIconContainer>{' '}

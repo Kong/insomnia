@@ -28,6 +28,7 @@ const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChan
   return (
     <MultiSwitch
       name="activity-toggle"
+      // @ts-expect-error -- TSCONVERSION
       onChange={a => handleActivityChange(workspace._id, a)}
       choices={choices}
       selectedValue={activity}
