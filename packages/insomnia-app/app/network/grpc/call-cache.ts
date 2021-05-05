@@ -1,8 +1,6 @@
-// The types of a call are defined in packages/insomnia-app/node_modules/@grpc/grpc-js/src/call.ts
-// These are TS types and too complex to translate entirely to flow types
-// A call can be a ClientUnaryCall, ClientReadableStream, ClientWritableStream, or ClientDuplexStream
+import { Call } from '@grpc/grpc-js';
+
 // A call can also emit 'metadata' and 'status' events
-export type Call = Record<string, any>;
 let _calls: Record<string, Call> = {};
 
 const activeCount = () => Object.keys(_calls).length;
@@ -22,6 +20,7 @@ const set = (requestId: string, call: Call): void => {
 };
 
 const _tryCloseChannel = (requestId: string) => {
+  // @ts-expect-error channel not found in call
   const channel = get(requestId)?.call?.call.channel;
 
   if (channel) {

@@ -9,14 +9,14 @@ import type {
   StatusAction,
 } from './grpc-actions';
 import { GrpcActionTypeEnum } from './grpc-actions';
-import type { GrpcStatusObject, ServiceError } from '../../../network/grpc/service-error';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
+import { ServiceError, StatusObject } from '@grpc/grpc-js';
 
 export interface GrpcRequestState {
   running: boolean;
   requestMessages: Array<GrpcMessage>;
   responseMessages: Array<GrpcMessage>;
-  status?: GrpcStatusObject;
+  status?: StatusObject;
   error?: ServiceError;
   methods: Array<GrpcMethodDefinition>;
   reloadMethods: boolean;

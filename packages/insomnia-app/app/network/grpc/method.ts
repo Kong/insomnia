@@ -1,14 +1,8 @@
+import { MethodDefinition } from '@grpc/grpc-js';
 import { ValueOf } from 'type-fest';
 
-// https://grpc.github.io/grpc/node/grpc.html#~MethodDefinition
-export interface GrpcMethodDefinition {
-  path: string;
-  originalName: string;
-  requestStream: boolean;
-  responseStream: boolean;
-  requestSerialize: (...args: Array<any>) => any;
-  responseDeserialize: (...args: Array<any>) => any;
-}
+// TODO(TSCONVERSION) remove this alias and type MethodDefinition correctly
+export type GrpcMethodDefinition = MethodDefinition<any, any>
 
 export const GrpcMethodTypeEnum = {
   unary: 'unary',

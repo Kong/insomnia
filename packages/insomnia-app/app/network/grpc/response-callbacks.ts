@@ -1,12 +1,12 @@
-import type { GrpcStatusObject, ServiceError } from './service-error';
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
 import { IpcMainEvent } from 'electron';
+import { ServiceError, StatusObject } from '@grpc/grpc-js';
 interface IResponseCallbacks {
   sendData(requestId: string, val: Record<string, any> | undefined): void;
   sendError(requestId: string, err: ServiceError): void;
   sendStart(requestId: string): void;
   sendEnd(requestId: string): void;
-  sendStatus(requestId: string, status: GrpcStatusObject): void;
+  sendStatus(requestId: string, status: StatusObject): void;
 }
 export class ResponseCallbacks implements IResponseCallbacks {
   _event: IpcMainEvent;

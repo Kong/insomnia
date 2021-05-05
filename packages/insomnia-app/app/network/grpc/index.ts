@@ -2,9 +2,6 @@ import * as grpc from '@grpc/grpc-js';
 import * as models from '../../models';
 import * as protoLoader from './proto-loader';
 import callCache from './call-cache';
-import type { ServiceError } from './service-error';
-import { GrpcStatusEnum } from './service-error';
-import type { Call } from './call-cache';
 import parseGrpcUrl from './parse-grpc-url';
 import type { GrpcIpcMessageParams, GrpcIpcRequestParams } from './prepare';
 import { ResponseCallbacks } from './response-callbacks';
@@ -12,11 +9,13 @@ import { getMethodType, GrpcMethodTypeEnum } from './method';
 import type { GrpcRequest } from '../../models/grpc-request';
 import type { GrpcMethodDefinition } from './method';
 import { trackSegmentEvent } from '../../common/analytics';
+import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
+import { Call, ServiceError } from '@grpc/grpc-js';
 
 const _createClient = (
   req: GrpcRequest,
   respond: ResponseCallbacks,
-): Record<string, any> | undefined => {
+): ServiceClient | undefined => {
   const { url, enableTls } = parseGrpcUrl(req.url);
 
   if (!url) {
@@ -26,6 +25,7 @@ const _createClient = (
 
   const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
   console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
+  // @ts-expect-error second argument should be provided, send an empty string? Needs testing
   const Client = grpc.makeGenericClientConstructor({});
   return new Client(url, credentials);
 };
@@ -118,7 +118,7 @@ const _makeBidiStreamRequest = ({
 interface RequestData {
   requestId: string;
   respond: ResponseCallbacks;
-  client: Record<string, any>;
+  client: ServiceClient;
   method: GrpcMethodDefinition;
 }
 
@@ -186,6 +186,7 @@ export const start = async (
   // Save call
   callCache.set(requestId, call);
 };
+
 export const sendMessage = (
   { body, requestId }: GrpcIpcMessageParams,
   respond: ResponseCallbacks,
@@ -200,9 +201,12 @@ export const sendMessage = (
   // this must happen in the next tick otherwise the stream does not flush correctly
   // Try removing it and using a bidi RPC and notice messages don't send consistently
   process.nextTick(() => {
+    // @ts-expect-error only write if the call is ClientWritableStream | ClientDuplexStream
     callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
   });
 };
+
+// @ts-expect-error only end if the call is ClientWritableStream | ClientDuplexStream
 export const commit = (requestId: string) => callCache.get(requestId)?.end();
 export const cancel = (requestId: string) => callCache.get(requestId)?.cancel();
 export const cancelMultiple = (requestIds: Array<string>) => requestIds.forEach(cancel);
@@ -214,11 +218,11 @@ const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCa
 const _setupServerStreamListeners = (call: Call, requestId: string, respond: ResponseCallbacks) => {
   call.on('data', data => respond.sendData(requestId, data));
   call.on('error', (error: ServiceError) => {
-    if (error && error.code !== GrpcStatusEnum.CANCELLED) {
+    if (error && error.code !== grpc.status.CANCELLED) {
       respond.sendError(requestId, error);
 
       // Taken through inspiration from other implementation, needs validation
-      if (error.code === GrpcStatusEnum.UNKNOWN || error.code === GrpcStatusEnum.UNAVAILABLE) {
+      if (error.code === grpc.status.UNKNOWN || error.code === grpc.status.UNAVAILABLE) {
         respond.sendEnd(requestId);
         callCache.clear(requestId);
       }
@@ -238,7 +242,7 @@ const _createUnaryCallback = (requestId: string, respond: ResponseCallbacks) => 
   if (err) {
     // Don't do anything if cancelled
     // TODO: test with other errors
-    if (err.code !== GrpcStatusEnum.CANCELLED) {
+    if (err.code !== grpc.status.CANCELLED) {
       respond.sendError(requestId, err);
     }
   } else {

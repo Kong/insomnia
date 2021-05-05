@@ -58,23 +58,34 @@ const writeProtoFileTree = async (
 ): Promise<Array<string>> => {
   // Find the ancestor workspace
   const ancestorWorkspace = ancestors.find(isWorkspace);
+
   // Find the root ancestor directory
   const rootAncestorProtoDirectory = ancestors.find(
+    // @ts-expect-error ancestor workspace can be undefined
     c => isProtoDirectory(c) && c.parentId === ancestorWorkspace._id,
   );
+
+  if (!ancestorWorkspace || !rootAncestorProtoDirectory) {
+    // should never happen
+    return [];
+  }
+
   // Find all descendants of the root ancestor directory
   const descendants = await db.withDescendants(rootAncestorProtoDirectory);
+
   // Recursively write the root ancestor directory children
   const tempDirPath = path.join(
     os.tmpdir(),
     'insomnia-grpc',
     getProtoTempDirectoryName(rootAncestorProtoDirectory),
   );
+
   const dirs = await recursiveWriteProtoDirectory(
     rootAncestorProtoDirectory,
     descendants,
     tempDirPath,
   );
+
   return dirs;
 };
 
@@ -87,7 +98,7 @@ const recursiveWriteProtoDirectory = async (
   const dirPath = path.join(currentDirPath, dir.name);
   mkdirp.sync(dirPath);
   // Get and write proto files
-  const files = descendants.filter(f => isProtoFile(f) && f.parentId === dir._id);
+  const files = descendants.filter(isProtoFile).filter(f => f.parentId === dir._id);
   await Promise.all(files.map(f => writeNestedProtoFile(f, dirPath)));
   // Get and write subdirectories
   const subDirs = descendants.filter(f => isProtoDirectory(f) && f.parentId === dir._id);

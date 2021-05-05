@@ -1,5 +1,5 @@
 import type { GrpcMethodDefinition } from '../method';
-import * as protoLoader from '@grpc/proto-loader';
+import protoLoader, { AnyDefinition, EnumTypeDefinition, ServiceDefinition, MessageTypeDefinition } from '@grpc/proto-loader';
 import * as models from '../../../models';
 import writeProtoFile from './write-proto-file';
 import { ProtoFile } from '../../../models/proto-file';
@@ -11,9 +11,9 @@ const GRPC_LOADER_OPTIONS = {
   oneofs: true,
 };
 
-const isTypeOrEnumDefinition = (obj: Record<string, any>) => 'format' in obj; // same check exists internally in the grpc library
+const isTypeOrEnumDefinition = (obj: AnyDefinition): obj is EnumTypeDefinition | MessageTypeDefinition => 'format' in obj; // same check exists internally in the grpc library
 
-const isServiceDefinition = (obj: Record<string, any>) => !isTypeOrEnumDefinition(obj);
+const isServiceDefinition = (obj: AnyDefinition): obj is ServiceDefinition => !isTypeOrEnumDefinition(obj);
 
 // TODO: The file path for protoLoader.load can also be a URL, so we can avoid
 //  writing to a file in those cases, but it becomes more important to cache
@@ -27,6 +27,7 @@ export const loadMethods = async (
   const { filePath, dirs } = await writeProtoFile(protoFile);
   return await loadMethodsFromPath(filePath, dirs);
 };
+
 export const loadMethodsFromPath = async (
   filePath: string,
   includeDirs?: Array<string>,
@@ -34,6 +35,7 @@ export const loadMethodsFromPath = async (
   const definition = await protoLoader.load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs });
   return Object.values(definition).filter(isServiceDefinition).flatMap(Object.values);
 };
+
 // TODO: instead of reloading the methods from the protoFile,
 //  just get it from what has already been loaded in the react component,
 //  or from the cache

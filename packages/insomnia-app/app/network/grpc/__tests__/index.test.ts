@@ -8,14 +8,17 @@ import { grpcMethodDefinitionSchema } from '../../../ui/context/grpc/__schemas__
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { grpcMocks } from '../../../__mocks__/@grpc/grpc-js';
 import callCache from '../call-cache';
-import { GrpcStatusEnum } from '../service-error';
+import * as grpcJs from '@grpc/grpc-js';
+
 jest.mock('../response-callbacks');
 jest.mock('../proto-loader');
 jest.mock('@grpc/grpc-js');
+
 const requestParamsBuilder = createBuilder(grpcIpcRequestParamsSchema);
 const messageParamsBuilder = createBuilder(grpcIpcMessageParamsSchema);
 const methodBuilder = createBuilder(grpcMethodDefinitionSchema);
 const respond = new ResponseCallbacksMock();
+
 describe('grpc', () => {
   beforeEach(() => {
     globalBeforeEach();
@@ -124,7 +127,7 @@ describe('grpc', () => {
       await grpc.start(params, respond);
       // Emit stats
       const status = {
-        code: GrpcStatusEnum.OK,
+        code: grpcJs.status.OK,
         details: 'OK',
       };
       grpcMocks.getMockCall().emit('status', status);
@@ -185,7 +188,7 @@ describe('grpc', () => {
         );
         // Trigger response
         const err = {
-          code: GrpcStatusEnum.DATA_LOSS,
+          code: grpcJs.status.DATA_LOSS,
         };
         const val = undefined;
         grpcMocks.mockMakeUnaryRequest.mock.calls[0][4](err, val);
@@ -287,7 +290,7 @@ describe('grpc', () => {
         grpcMocks.getMockCall().emit('data', val);
         // Trigger error response
         const err = {
-          code: GrpcStatusEnum.DATA_LOSS,
+          code: grpcJs.status.DATA_LOSS,
         };
         grpcMocks.getMockCall().emit('error', err);
         grpcMocks.getMockCall().emit('end');
@@ -321,7 +324,7 @@ describe('grpc', () => {
         );
         // Trigger response
         const err = {
-          code: GrpcStatusEnum.DATA_LOSS,
+          code: grpcJs.status.DATA_LOSS,
         };
         const val = undefined;
         grpcMocks.mockMakeClientStreamRequest.mock.calls[0][3](err, val);
@@ -391,7 +394,7 @@ describe('grpc', () => {
         grpcMocks.getMockCall().emit('data', val);
         // Trigger error response
         const err = {
-          code: GrpcStatusEnum.DATA_LOSS,
+          code: grpcJs.status.DATA_LOSS,
         };
         grpcMocks.getMockCall().emit('error', err);
         grpcMocks.getMockCall().emit('end');
