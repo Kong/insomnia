@@ -43,7 +43,7 @@ class SelectModal extends PureComponent<{}, State> {
     this._doneCallback && this._doneCallback(this.state.value);
   }
 
-  _handleSelectChange(e: React.SyntheticEvent<HTMLInputElement>) {
+  _handleSelectChange(e: React.SyntheticEvent<HTMLSelectElement>) {
     this.setState({
       value: e.currentTarget.value,
     });

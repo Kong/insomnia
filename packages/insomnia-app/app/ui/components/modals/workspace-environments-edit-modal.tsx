@@ -304,12 +304,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       const { selectedEnvironmentId } = this.state;
 
       for (const change of changes) {
-        const [
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          _,
-          doc,
-          fromSync,
-        ] = change;
+        const [, doc, fromSync] = change;
 
         // Force an editor refresh if any changes from sync come in
         if (doc._id === selectedEnvironmentId && fromSync) {

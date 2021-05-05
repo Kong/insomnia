@@ -19,7 +19,7 @@ import * as models from '../../../models/index';
 import { trackEvent } from '../../../common/analytics';
 import { showModal } from './index';
 import ProtoFilesModal from './proto-files-modal';
-
+import { Request } from '../../../models/request';
 interface RequestCreateModalOptions {
   parentId: string;
   onComplete: (arg0: string) => void;
@@ -27,7 +27,7 @@ interface RequestCreateModalOptions {
 
 interface State {
   selectedContentType: string | null;
-  selectedMethod: string | null;
+  selectedMethod: string;
   parentId: string | null;
 }
 
@@ -41,6 +41,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
 
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
+  private _onComplete: (arg0: string) => void;
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -68,6 +69,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
       showModal(ProtoFilesModal, {
         onSave: async (protoFileId: string) => {
           const createdRequest = await models.grpcRequest.create({
+            // @ts-expect-error should not reach here at all if parentId is undefined, it shouldn't even open the modal
             parentId,
             name: requestName,
             protoFileId,
@@ -77,13 +79,14 @@ class RequestCreateModal extends PureComponent<{}, State> {
         },
       });
     } else {
-      const request = await models.initModel(models.request.type, {
+      const request = await models.initModel<Request>(models.request.type, {
         parentId,
         name: requestName,
         method: selectedMethod,
       });
       const finalRequest = await models.request.updateMimeType(
         request,
+        // @ts-expect-error null not accepted
         this._shouldNotHaveBody() ? null : selectedContentType,
         true,
       );
@@ -95,7 +98,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
     trackEvent('Request', 'Create');
   }
 
-  _handleChangeSelectedContentType(selectedContentType) {
+  _handleChangeSelectedContentType(selectedContentType: string | null) {
     this.setState({
       selectedContentType,
     });
@@ -119,7 +122,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
   }
 
   hide() {
-    this.modal.hide();
+    this.modal?.hide();
   }
 
   show({ parentId, onComplete }: RequestCreateModalOptions) {
@@ -128,12 +131,12 @@ class RequestCreateModal extends PureComponent<{}, State> {
       selectedContentType: null,
       selectedMethod: METHOD_GET,
     });
-    this.modal.show();
+    this.modal?.show();
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
-      this._input.focus();
+      this._input?.focus();
 
-      this._input.select();
+      this._input?.select();
     }, 200);
     this._onComplete = onComplete;
   }
@@ -178,7 +181,6 @@ class RequestCreateModal extends PureComponent<{}, State> {
                     className="btn btn--clicky no-wrap"
                     right
                     contentType={selectedContentType}
-                    request={null}
                     onChange={this._handleChangeSelectedContentType}>
                     {getContentTypeName(selectedContentType) || 'No Body'}{' '}
                     <i className="fa fa-caret-down" />

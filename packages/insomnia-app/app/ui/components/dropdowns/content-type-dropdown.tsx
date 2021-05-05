@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactNode } from 'react';
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -18,11 +18,11 @@ import { showModal } from '../modals/index';
 import AlertModal from '../modals/alert-modal';
 import type { Request, RequestBody } from '../../../models/request';
 import { trackEvent } from '../../../common/analytics';
+import { DropdownProps } from '../base/dropdown/dropdown';
 
-interface Props {
-  onChange: (mimeType: string | null) => Promise<Request | null>;
+interface Props extends DropdownProps {
+  onChange: (mimeType: string | null) => void;
   contentType?: string | null;
-  children?: ReactNode | null;
   className?: string;
   request?: Request;
 }

@@ -49,7 +49,7 @@ class SettingsModal extends PureComponent<Props, State> {
     this.modal = n;
   }
 
-  async _handleUpdateSetting(key, value) {
+  async _handleUpdateSetting(key: string, value: any) {
     return models.settings.update(this.props.settings, {
       [key]: value,
     });
@@ -188,7 +188,6 @@ class SettingsModal extends PureComponent<Props, State> {
                 hideModal={this.hide}
                 handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
-                handleRootCssChange={this._handleRootCssChange}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">

@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
 import * as constants from '../../../common/constants';
 import { showPrompt } from '../modals/index';
 import { METHOD_GRPC, AUTOBIND_CFG } from '../../../common/constants';
@@ -12,13 +13,14 @@ interface Props {
   method: string,
   right?: boolean,
   showGrpc?: boolean,
+  className?: string,
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class MethodDropdown extends PureComponent<Props> {
-  _dropdown: typeof Dropdown | null = null;
+  _dropdown: Dropdown | null = null;
 
-  _setDropdownRef(n: typeof Dropdown) {
+  _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
 
@@ -27,6 +29,7 @@ class MethodDropdown extends PureComponent<Props> {
 
     try {
       const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
+      // @ts-expect-error don't try parse if no item found
       recentMethods = JSON.parse(v) || [];
     } catch (err) {
       recentMethods = [];
@@ -88,7 +91,7 @@ class MethodDropdown extends PureComponent<Props> {
     const buttonLabel = method === METHOD_GRPC ? GRPC_LABEL : method;
     return (
       <Dropdown ref={this._setDropdownRef} className="method-dropdown" right={right}>
-        <DropdownButton type="button" {...extraProps}>
+        <DropdownButton {...extraProps}>
           <span className={`http-method-${method}`}>{buttonLabel}</span>{' '}
           <i className="fa fa-caret-down space-left" />
         </DropdownButton>

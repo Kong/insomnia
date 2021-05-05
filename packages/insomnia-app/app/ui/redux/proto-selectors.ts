@@ -7,16 +7,19 @@ export interface ExpandedProtoDirectory {
   dir: ProtoDirectory | null;
   subDirs: Array<ExpandedProtoDirectory>;
 }
+
 const selectAllProtoFiles = createSelector(
   selectEntitiesLists,
     // @ts-expect-error -- TSCONVERSION
   entities => entities.protoFiles || [],
 );
+
 const selectAllProtoDirectories = createSelector(
   selectEntitiesLists,
     // @ts-expect-error -- TSCONVERSION
   entities => entities.protoDirectories || [],
 );
+
 export const selectExpandedActiveProtoDirectories = createSelector(
   selectActiveWorkspace,
   selectAllProtoFiles,

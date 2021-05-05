@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
@@ -80,7 +80,7 @@ class PromptModal extends PureComponent<{}, State> {
     });
   }
 
-  _handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+  _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
     e.preventDefault();
 
     if (this._input) {
@@ -216,15 +216,15 @@ class PromptModal extends PureComponent<{}, State> {
         onChange={this._handleChange}
         id="prompt-input"
         type={inputType === 'decimal' ? 'number' : inputType || 'text'}
-        step={inputType === 'decimal' ? '0.1' : null}
-        min={inputType === 'decimal' ? '0.5' : null}
+        step={inputType === 'decimal' ? '0.1' : undefined}
+        min={inputType === 'decimal' ? '0.5' : undefined}
         style={{
           textTransform: upperCase ? 'uppercase' : 'none',
         }}
         placeholder={placeholder || ''}
       />
     );
-    let sanitizedHints = [];
+    let sanitizedHints: Array<ReactNode> = [];
 
     if (Array.isArray(hints)) {
       sanitizedHints = hints.slice(0, 15).map(this._renderHintButton);
@@ -247,7 +247,7 @@ class PromptModal extends PureComponent<{}, State> {
       'form-control--outlined': inputType !== 'checkbox',
     });
     return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel}>
+      <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel || undefined}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">

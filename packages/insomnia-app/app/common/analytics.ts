@@ -50,7 +50,6 @@ export function trackEvent(
   value?: string | null,
 ) {
   process.nextTick(async () => {
-    // @ts-expect-error -- TSCONVERSION
     await _trackEvent(true, category, action, label, value);
   });
 }

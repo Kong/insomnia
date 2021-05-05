@@ -57,7 +57,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
   async show(options: ProtoFilesModalOptions) {
     this.onSave = options.onSave;
     this.setState({
-      selectedProtoFileId: options.preselectProtoFileId,
+      selectedProtoFileId: options.preselectProtoFileId || '',
     });
     this.modal && this.modal.show();
   }
@@ -66,7 +66,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     e.preventDefault();
     this.hide();
 
-    if (typeof this.onSave === 'function') {
+    if (typeof this.onSave === 'function' && this.state.selectedProtoFileId) {
       await this.onSave(this.state.selectedProtoFileId);
     }
   }
@@ -172,6 +172,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = (state, props) => {
+  // @ts-expect-error -- TSCONVERSION
   const protoDirectories = selectExpandedActiveProtoDirectories(state, props);
   return {
     protoDirectories,

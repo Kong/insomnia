@@ -82,6 +82,8 @@ export type GrpcActionMany = InvalidateManyAction;
 
 export type GrpcDispatch = (action: GrpcAction) => void;
 
+export type GrpcDispatch = (action?: GrpcAction) => void;
+
 const reset = (requestId: string): ResetAction => ({
   type: GrpcActionTypeEnum.reset,
   requestId,
@@ -157,6 +159,7 @@ const loadMethods = async (requestId: string, protoFileId: string) => {
   console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
   const protoFile = await models.protoFile.getById(protoFileId);
   const methods = await protoLoader.loadMethods(protoFile);
+
   return {
     type: GrpcActionTypeEnum.loadMethods,
     requestId,

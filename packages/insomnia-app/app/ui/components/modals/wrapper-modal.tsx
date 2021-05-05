@@ -60,7 +60,7 @@ class WrapperModal extends PureComponent<{}, State> {
     }
 
     return (
-      <Modal ref={this._setModalRef} tall={tall} skinny={skinny} wide={wide}>
+      <Modal ref={this._setModalRef} tall={tall ?? undefined} skinny={skinny ?? undefined} wide={wide ?? undefined}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
         <ModalBody>{finalBody}</ModalBody>
       </Modal>

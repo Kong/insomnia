@@ -17,7 +17,7 @@ interface Props extends ModalProps {
 
 interface State {
   requestGroup: RequestGroup | null;
-  selectedWorkspaceId: string | null;
+  selectedWorkspaceId?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -26,7 +26,7 @@ class MoveRequestGroupModal extends PureComponent<Props, State> {
 
   state: State = {
     requestGroup: null,
-    selectedWorkspaceId: null,
+    selectedWorkspaceId: undefined,
   }
 
   _setModalRef(n: Modal) {

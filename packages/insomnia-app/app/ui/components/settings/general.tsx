@@ -41,9 +41,8 @@ const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 interface Props {
   settings: Settings;
   hideModal: () => void;
-  updateSetting: (...args: Array<any>) => Settings;
-  handleToggleMenuBar: (...args: Array<any>) => any;
-  handleRootCssChange: (...args: Array<any>) => any;
+  updateSetting: (key: string, value: any) => Promise<Settings>;
+  handleToggleMenuBar: Function;
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
 }
 
