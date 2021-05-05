@@ -3,10 +3,11 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
 import CopyButton from './base/copy-button';
+import { HandleRender } from '../../common/render';
 
 interface Props {
   request: any,
-  handleRender: Function,
+  handleRender: HandleRender,
 }
 
 interface State {

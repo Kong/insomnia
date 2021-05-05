@@ -8,6 +8,7 @@ import CodePromptModal from '../../modals/code-prompt-modal';
 import Button from '../../base/button';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import { AUTOBIND_CFG } from '../../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -24,8 +25,8 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 
 interface Props {
   request: Request;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

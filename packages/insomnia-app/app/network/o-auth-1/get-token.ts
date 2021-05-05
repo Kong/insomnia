@@ -68,18 +68,22 @@ export default async function(
   };
 
   if (authentication.callback) {
+    // @ts-expect-error -- TSCONVERSION needs type widening
     requestData.data.oauth_callback = authentication.callback;
   }
 
   if (authentication.nonce) {
+    // @ts-expect-error -- TSCONVERSION needs type widening
     requestData.data.oauth_nonce = authentication.nonce;
   }
 
   if (authentication.timestamp) {
+    // @ts-expect-error -- TSCONVERSION needs type widening
     requestData.data.oauth_timestamp = authentication.timestamp;
   }
 
   if (authentication.verifier) {
+    // @ts-expect-error -- TSCONVERSION needs type widening
     requestData.data.oauth_verifier = authentication.verifier;
   }
 

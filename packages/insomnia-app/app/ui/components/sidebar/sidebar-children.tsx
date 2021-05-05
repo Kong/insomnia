@@ -12,6 +12,7 @@ import type { Environment } from '../../../models/environment';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
+import { HandleRender } from '../../../common/render';
 
 export interface Child {
   doc: Request | GrpcRequest | RequestGroup;
@@ -35,7 +36,7 @@ interface Props {
   handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleRender: Function;
+  handleRender: HandleRender;
   moveDoc: Function;
   childObjects: SidebarChildObjects;
   workspace: Workspace;

@@ -12,6 +12,8 @@ interface Props {
   tabIndex?: number,
   type?: ButtonHTMLAttributes<HTMLButtonElement>['type'],
   id?: string,
+  // TODO(TSCONVERSION) figure out why so many components pass this yet it isn't used
+  title?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

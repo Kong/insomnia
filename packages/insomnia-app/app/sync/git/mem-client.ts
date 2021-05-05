@@ -1,5 +1,8 @@
 import path from 'path';
 import Stat from './stat';
+import { SystemError } from './system-error';
+import { BufferEncoding } from './utils';
+
 interface FSFile {
   readonly type: 'file';
   readonly ino: number;
@@ -8,6 +11,7 @@ interface FSFile {
   readonly path: string;
   contents: string;
 }
+
 interface FSLink {
   readonly type: 'symlink';
   readonly ino: number;
@@ -16,6 +20,7 @@ interface FSLink {
   readonly path: string;
   readonly linkTo: string;
 }
+
 interface FSDir {
   readonly type: 'dir';
   readonly ino: number;
@@ -24,7 +29,9 @@ interface FSDir {
   readonly path: string;
   readonly children: (FSFile | FSDir | FSLink)[];
 }
+
 type FSEntry = FSDir | FSFile | FSLink;
+
 export class MemClient {
   __fs: FSEntry;
   __ino: 0;
@@ -79,11 +86,7 @@ export class MemClient {
 
   async readFile(
     filePath: string,
-    options?:
-      | buffer$Encoding
-      | {
-          encoding?: buffer$Encoding;
-        } = {},
+    options: BufferEncoding | { encoding?: BufferEncoding } = {},
   ) {
     filePath = path.normalize(filePath);
 
@@ -109,12 +112,7 @@ export class MemClient {
   async writeFile(
     filePath: string,
     data: Buffer | string,
-    options:
-      | buffer$Encoding
-      | {
-          encoding?: buffer$Encoding;
-          flag?: string;
-        },
+    options: BufferEncoding | { encoding?: BufferEncoding, flag?: string; } = {},
   ) {
     filePath = path.normalize(filePath);
 
@@ -160,12 +158,13 @@ export class MemClient {
       const contentsBuff: Buffer = Buffer.from(file.contents, 'base64');
       newContents = Buffer.concat([contentsBuff, dataBuff]);
     } else {
-      const e: ErrnoError = new Error('EBADF: bad file descriptor, write');
-      e.errno = -9;
-      e.code = 'EBADF';
-      e.syscall = 'write';
-      e.path = filePath;
-      throw e;
+      throw new SystemError({
+        code: 'EBADF',
+        errno: -9,
+        message: 'EBADF: bad file descriptor, write',
+        path: filePath,
+        syscall: 'write',
+      });
     }
 
     file.contents = newContents.toString('base64');
@@ -229,12 +228,13 @@ export class MemClient {
     const dirEntry = this._assertDir(dirPath);
 
     if (dirEntry.children.length > 0) {
-      const e: ErrnoError = new Error(`ENOTEMPTY: directory not empty, rmdir '${dirPath}'`);
-      e.errno = -66;
-      e.syscall = 'rmdir';
-      e.code = 'ENOTEMPTY';
-      e.path = dirPath;
-      throw e;
+      throw new SystemError({
+        code: 'ENOTEMPTY',
+        errno: -66,
+        message: `ENOTEMPTY: directory not empty, rmdir '${dirPath}'`,
+        path: dirPath,
+        syscall: 'rmdir',
+      });
     }
 
     this._remove(dirEntry);
@@ -286,6 +286,7 @@ export class MemClient {
     return new Stat({
       type: entry.type,
       mode: 0o777,
+      // @ts-expect-error -- TSCONVERSION
       size: entry.contents ? entry.contents.length : 0,
       ino: entry.ino,
       mtimeMs: entry.mtimeMs,
@@ -299,6 +300,7 @@ export class MemClient {
     const pathSegments = filePath.split(path.sep).filter(s => s !== '' && s !== '.');
 
     for (const expectedName of pathSegments) {
+      // @ts-expect-error -- TSCONVERSION
       const e = (current.children || []).find(c => c.name === expectedName);
 
       if (!e) {
@@ -316,12 +318,13 @@ export class MemClient {
     const entry = this._find(filePath);
 
     if (entry) {
-      const e: ErrnoError = new Error(`EEXIST: file already exists, open '${filePath}'`);
-      e.errno = -17;
-      e.code = 'EEXIST';
-      e.syscall = 'open';
-      e.path = filePath;
-      throw e;
+      throw new SystemError({
+        code: 'EEXIST',
+        errno: -17,
+        message: `EEXIST: file already exists, open '${filePath}'`,
+        path: filePath,
+        syscall: 'open',
+      });
     }
   }
 
@@ -329,12 +332,13 @@ export class MemClient {
     const entry = this._find(filePath);
 
     if (!entry) {
-      const e: ErrnoError = new Error(`ENOENT: no such file or directory, scandir '${filePath}'`);
-      e.errno = -2;
-      e.code = 'ENOENT';
-      e.syscall = 'scandir';
-      e.path = filePath;
-      throw e;
+      throw new SystemError({
+        code: 'ENOENT',
+        errno: -2,
+        message: `ENOENT: no such file or directory, scandir '${filePath}'`,
+        path: filePath,
+        syscall: 'scandir',
+      });
     }
 
     return entry;
@@ -342,12 +346,13 @@ export class MemClient {
 
   _assertDirEntry(entry: FSEntry) {
     if (entry.type !== 'dir') {
-      const e: ErrnoError = new Error(`ENOTDIR: not a directory, scandir '${entry.path}'`);
-      e.errno = -20;
-      e.code = 'ENOTDIR';
-      e.syscall = 'scandir';
-      e.path = entry.path;
-      throw e;
+      throw new SystemError({
+        code: 'ENOTDIR',
+        errno: -20,
+        message: `ENOTDIR: not a directory, scandir '${entry.path}'`,
+        path: entry.path,
+        syscall: 'scandir',
+      });
     }
 
     return entry;
@@ -361,12 +366,13 @@ export class MemClient {
 
   _assertSymlinkEntry(entry: FSEntry) {
     if (entry.type !== 'symlink') {
-      const e: ErrnoError = new Error(`ENOTDIR: not a simlink, scandir '${entry.path}'`);
-      e.errno = -20;
-      e.code = 'ENOTDIR';
-      e.syscall = 'scandir';
-      e.path = entry.path;
-      throw e;
+      throw new SystemError({
+        code: 'ENOTDIR',
+        errno: -20,
+        message: `ENOTDIR: not a simlink, scandir '${entry.path}'`,
+        path: entry.path,
+        syscall: 'scandir',
+      });
     }
 
     return entry;
@@ -397,12 +403,13 @@ export class MemClient {
     entry = this._resolveLinks(entry);
 
     if (entry.type === 'dir') {
-      const e: ErrnoError = new Error(`EISDIR: illegal operation on a directory '${entry.path}'`);
-      e.errno = -21;
-      e.code = 'EISDIR';
-      e.syscall = 'open';
-      e.path = entry.path;
-      throw e;
+      throw new SystemError({
+        code: 'EISDIR',
+        errno: -21,
+        message: `EISDIR: illegal operation on a directory '${entry.path}'`,
+        path: entry.path,
+        syscall: 'open',
+      });
     }
 
     return entry;

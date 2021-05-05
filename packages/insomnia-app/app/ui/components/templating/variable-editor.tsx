@@ -1,10 +1,11 @@
 import React, { createRef, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
-  handleRender: Function;
-  handleGetRenderContext: Function;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   defaultValue: string;
   onChange: Function;
 }

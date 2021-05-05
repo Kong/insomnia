@@ -20,6 +20,7 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { isGrpcRequest } from '../../../models/helpers/is-model';
 import { HotKeyRegistry } from '../../../common/hotkeys';
+import { HandleRender } from '../../../common/render';
 
 interface Props {
   activeEnvironment?: Environment | null;
@@ -28,7 +29,7 @@ interface Props {
   handleDuplicateRequest: Function;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
-  handleRender: Function;
+  handleRender: HandleRender;
   requestCreate: Function;
   moveDoc: Function;
   filter: string;

@@ -3,6 +3,7 @@ import { render, THROW_ON_ERROR } from '../common/render';
 import { getThemes } from './index';
 import type { Theme } from './index';
 import { getAppDefaultTheme } from '../common/constants';
+import { Settings } from '../models/settings';
 
 interface ThemeBlock {
   background?: {
@@ -108,6 +109,7 @@ export async function generateThemeCSS(theme: PluginTheme) {
     // Panes
     css += wrapStyles(n, '.theme--pane', getThemeBlockCSS(styles.pane));
     css += wrapStyles(n, '.theme--pane__header', getThemeBlockCSS(styles.paneHeader));
+    // @ts-expect-error -- TSCONVERSION
     css += wrapStyles(n, '.theme--app-header', getThemeBlockCSS(styles.appHeader));
     // Sidebar Styles
     css += wrapStyles(n, '.theme--sidebar', getThemeBlockCSS(styles.sidebar));

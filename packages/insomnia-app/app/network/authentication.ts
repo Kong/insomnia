@@ -13,14 +13,13 @@ import jwtAuthentication from 'jwt-authentication';
 import type { RenderedRequest } from '../common/render';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
+
 interface Header {
   name: string;
   value: string;
 }
-export async function getAuthHeader(
-  renderedRequest: RenderedRequest,
-  url: string,
-): Promise<Header | null> {
+
+export async function getAuthHeader(renderedRequest: RenderedRequest, url: string) {
   const { method, authentication, body } = renderedRequest;
   const requestId = renderedRequest._id;
 
@@ -124,7 +123,7 @@ export async function getAuthHeader(
       privateKey,
       kid: keyId,
     };
-    return new Promise((resolve, reject) => {
+    return new Promise<Header>((resolve, reject) => {
       generator.generateAuthorizationHeader(claims, options, (error, headerValue) => {
         if (error) {
           reject(error);
@@ -140,6 +139,7 @@ export async function getAuthHeader(
 
   return null;
 }
+
 export function _buildBearerHeader(accessToken: string, prefix: string) {
   if (!accessToken) {
     return null;

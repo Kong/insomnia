@@ -86,6 +86,7 @@ function _launchApp() {
   const window = windowUtils.createWindow();
   // Handle URLs sent via command line args
   ipcMain.once('window-ready', () => {
+    // @ts-expect-error -- TSCONVERSION
     commandLineArgs.length && window.send('run-command', commandLineArgs[0]);
   });
   // Called when second instance launched with args (Windows)
@@ -105,6 +106,7 @@ function _launchApp() {
   });
   // Handle URLs when app already open
   app.addListener('open-url', (_error, url) => {
+    // @ts-expect-error -- TSCONVERSION
     window.send('run-command', url);
     // Apparently a timeout is needed because Chrome steals back focus immediately
     // after opening the URL.
@@ -183,6 +185,7 @@ async function _trackStats() {
     // Wait a bit before showing the user because the app just launched.
     setTimeout(() => {
       for (const window of BrowserWindow.getAllWindows()) {
+        // @ts-expect-error -- TSCONVERSION
         window.send('show-notification', notification);
       }
     }, 5000);

@@ -13,10 +13,11 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import { cookieToString } from 'insomnia-cookies';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props extends ModalProps {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   workspace: Workspace;
@@ -79,6 +80,7 @@ class CookieModifyModal extends PureComponent<Props, State> {
 
       try {
         // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+        // @ts-expect-error -- TSCONVERSION
         cookie = toughCookie.Cookie.parse(value).toJSON();
       } catch (err) {
         console.warn(`Failed to parse cookie string "${value}"`, err);
@@ -131,7 +133,7 @@ class CookieModifyModal extends PureComponent<Props, State> {
     return cookie;
   }
 
-  _handleChange(field: string, eventOrValue: string | Event) {
+  _handleChange(field: string, eventOrValue: string | React.ChangeEvent<HTMLInputElement>) {
     const { cookie } = this.state;
     let value;
 

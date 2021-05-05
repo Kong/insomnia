@@ -12,6 +12,7 @@ import { RequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
 import { Environment } from '../../../models/environment';
 import { HotKeyRegistry } from '../../../common/hotkeys';
+import { HandleRender } from '../../../common/render';
 
 interface Props {
   handleSetRequestGroupCollapsed: Function;
@@ -21,7 +22,7 @@ interface Props {
   handleActivateRequest: Function;
   handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
-  handleRender: Function;
+  handleRender: HandleRender;
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;

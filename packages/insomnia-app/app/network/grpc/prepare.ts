@@ -7,13 +7,16 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
 import { canClientStream } from './method';
+
 export interface GrpcIpcRequestParams {
   request: RenderedGrpcRequest;
 }
+
 export interface GrpcIpcMessageParams {
   requestId: string;
   body: RenderedGrpcRequestBody;
 }
+
 export const prepareGrpcRequest = async (
   requestId: string,
   environmentId: string,
@@ -32,6 +35,7 @@ export const prepareGrpcRequest = async (
     request,
   };
 };
+
 export const prepareGrpcMessage = async (
   requestId: string,
   environmentId: string,

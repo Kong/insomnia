@@ -1,7 +1,8 @@
 import * as srp from 'srp-js';
 import * as crypt from './crypt';
 import * as fetch from './fetch';
-const loginCallbacks = [];
+
+const loginCallbacks: Function[] = [];
 
 function _callCallbacks() {
   const loggedIn = isLoggedIn();
@@ -14,7 +15,7 @@ function _callCallbacks() {
   }
 }
 
-export function onLoginLogout(callback) {
+export function onLoginLogout(callback: Function) {
   loginCallbacks.push(callback);
 }
 
@@ -38,6 +39,7 @@ export async function login(rawEmail, rawPassphrase) {
     Buffer.from(saltAuth, 'hex'),
     Buffer.from(email, 'utf8'),
     Buffer.from(authSecret, 'hex'),
+    // @ts-expect-error -- TSCONVERSION missing type from srpGenKey
     Buffer.from(secret1, 'hex'),
   );
   const srpA = c.computeA().toString('hex');
@@ -251,6 +253,9 @@ function _getSessionData() {
   }
 
   const dataStr = window.localStorage.getItem(_getSessionKey(sessionId));
+  if (dataStr === null) {
+    return null;
+  }
   return JSON.parse(dataStr);
 }
 

@@ -1,4 +1,5 @@
-import { $Values } from 'utility-types';
+import { ValueOf } from 'type-fest';
+
 // https://grpc.github.io/grpc/node/grpc.html#~MethodDefinition
 export interface GrpcMethodDefinition {
   path: string;
@@ -8,13 +9,16 @@ export interface GrpcMethodDefinition {
   requestSerialize: (...args: any[]) => any;
   responseDeserialize: (...args: any[]) => any;
 }
+
 export const GrpcMethodTypeEnum = {
   unary: 'unary',
   server: 'server',
   client: 'client',
   bidi: 'bidi',
-};
-export type GrpcMethodType = $Values<typeof GrpcMethodTypeEnum>;
+} as const;
+
+export type GrpcMethodType = ValueOf<typeof GrpcMethodTypeEnum>;
+
 export const getMethodType = ({
   requestStream,
   responseStream,
@@ -33,17 +37,20 @@ export const getMethodType = ({
     }
   }
 };
-export const GrpcMethodTypeName: Record<GrpcMethodType, string> = {
+
+export const GrpcMethodTypeName = {
   [GrpcMethodTypeEnum.unary]: 'Unary',
   [GrpcMethodTypeEnum.server]: 'Server Streaming',
   [GrpcMethodTypeEnum.client]: 'Client Streaming',
   [GrpcMethodTypeEnum.bidi]: 'Bi-directional Streaming',
-};
-export const GrpcMethodTypeAcronym: Record<GrpcMethodType, string> = {
+} as const;
+
+export const GrpcMethodTypeAcronym = {
   [GrpcMethodTypeEnum.unary]: 'U',
   [GrpcMethodTypeEnum.server]: 'SS',
   [GrpcMethodTypeEnum.client]: 'CS',
   [GrpcMethodTypeEnum.bidi]: 'BD',
-};
+} as const;
+
 export const canClientStream = (methodType?: GrpcMethodType) =>
   methodType === GrpcMethodTypeEnum.client || methodType === GrpcMethodTypeEnum.bidi;

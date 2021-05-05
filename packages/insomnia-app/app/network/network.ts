@@ -227,6 +227,7 @@ export async function _actuallySend(
     /** Helper function to set Curl options */
     function setOpt(opt: Parameters<typeof curl.setOpt>[0] | CurlOptionName, val: Parameters<typeof curl.setOpt>[1], optional = false) {
       try {
+        // @ts-expect-error -- TSCONVERSION
         curl.setOpt(opt, val);
       } catch (err) {
         const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
@@ -450,6 +451,7 @@ export async function _actuallySend(
       } catch (err) {
         // Doesn't exist yet, so write it
         mkdirp.sync(baseCAPath);
+        // @ts-expect-error -- TSCONVERSION
         fs.writeFileSync(fullCAPath, CACerts);
         console.log('[net] Set CA to', fullCAPath);
       }
@@ -521,7 +523,7 @@ export async function _actuallySend(
       // Set client certs if needed
       const clientCertificates = await models.clientCertificate.findByParentId(workspace._id);
 
-      for (const certificate of clientCertificates) {
+      for (const certificate of (clientCertificates || [])) {
         if (certificate.disabled) {
           continue;
         }
@@ -825,16 +827,18 @@ export async function _actuallySend(
         }
 
         // Return the response data
-        const responsePatch = {
+        const responsePatch: ResponsePatch = {
           contentType,
           headers,
           httpVersion,
           statusCode,
           statusMessage,
           bytesContent: responseBodyBytes,
+          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
           // @ts-expect-error -- TSCONVERSION appears to be a genuine error
           elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
+          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
           url: curl.getInfo(Curl.info.EFFECTIVE_URL),
         };
         // Close the request
@@ -907,6 +911,7 @@ export async function sendWithSettings(
   };
 
   try {
+    // @ts-expect-error -- TSCONVERSION cookie jar problem
     renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
@@ -976,6 +981,7 @@ export async function send(
 
   try {
     renderedRequest = await _applyRequestPluginHooks(
+      // @ts-expect-error -- TSCONVERSION cookie jar problem
       renderedRequestBeforePlugins,
       renderedContextBeforePlugins,
     );
@@ -1062,18 +1068,20 @@ async function _applyResponsePluginHooks(
   return newResponse;
 }
 
-export function _parseHeaders(
-  buffer: Buffer,
-): {
+interface HeaderResult {
   headers: ResponseHeader[];
   version: string;
   code: number;
   reason: string;
-}[] {
-  const results = [];
+}
+
+export function _parseHeaders(
+  buffer: Buffer,
+) {
+  const results: HeaderResult[] = [];
   const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
 
-  for (let i = 0, currentResult = null; i < lines.length; i++) {
+  for (let i = 0, currentResult: HeaderResult | null = null; i < lines.length; i++) {
     const line = lines[i];
     const isEmptyLine = line.trim() === '';
 

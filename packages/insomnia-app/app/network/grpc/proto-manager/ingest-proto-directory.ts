@@ -2,17 +2,21 @@ import * as models from '../../../models';
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import path from 'path';
 import fs from 'fs';
+
 interface IngestResult {
   createdDir?: ProtoDirectory | null;
   createdIds: string[];
-  error?: Error;
+  error?: Error | null;
 }
 
 class ProtoDirectoryLoader {
+  createdIds: string[] = [];
+  rootDirPath: string;
+  workspaceId: string;
+
   constructor(rootDirPath: string, workspaceId: string) {
     this.rootDirPath = rootDirPath;
     this.workspaceId = workspaceId;
-    this.createdIds = [];
   }
 
   async _parseDir(entryPath: string, parentId: string) {

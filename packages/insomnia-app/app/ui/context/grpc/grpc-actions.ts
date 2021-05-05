@@ -1,14 +1,16 @@
-import { $Values } from 'utility-types';
 import type { GrpcStatusObject, ServiceError } from '../../../network/grpc/service-error';
 import { generateId } from '../../../common/misc';
 import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 import * as models from '../../../models';
 import * as protoLoader from '../../../network/grpc/proto-loader';
+import { ValueOf } from 'type-fest';
+
 export interface GrpcMessage {
   id: string;
   text: string;
   created: number;
 }
+
 export const GrpcActionTypeEnum = {
   reset: 'reset',
   clear: 'clear',
@@ -21,32 +23,48 @@ export const GrpcActionTypeEnum = {
   invalidateMany: 'invalidateMany',
   loadMethods: 'loadMethods',
   status: 'status',
-};
-type GrpcActionType = $Values<typeof GrpcActionTypeEnum>;
+} as const;
+
+type GrpcActionType = ValueOf<typeof GrpcActionTypeEnum>;
+
 interface Action<T extends GrpcActionType> {
   type: T;
   requestId: string;
 }
+
 interface ActionMany<T extends GrpcActionType> {
   type: T;
   requestIds: string[];
 }
+
 interface Payload<T> {
   payload: T;
 }
+
 type ResetAction = Action<typeof GrpcActionTypeEnum.reset>;
+
 type ClearAction = Action<typeof GrpcActionTypeEnum.clear>;
+
 type StartAction = Action<typeof GrpcActionTypeEnum.start>;
+
 type StopAction = Action<typeof GrpcActionTypeEnum.stop>;
+
 type InvalidateAction = Action<typeof GrpcActionTypeEnum.invalidate>;
+
 export type RequestMessageAction = Action<typeof GrpcActionTypeEnum.requestMessage> & Payload<GrpcMessage>;
+
 export type ResponseMessageAction = Action<typeof GrpcActionTypeEnum.responseMessage> &
   Payload<GrpcMessage>;
+
 export type ErrorAction = Action<typeof GrpcActionTypeEnum.error> & Payload<ServiceError>;
+
 export type StatusAction = Action<typeof GrpcActionTypeEnum.status> & Payload<GrpcStatusObject>;
+
 export type LoadMethodsAction = Action<typeof GrpcActionTypeEnum.loadMethods> &
   Payload<GrpcMethodDefinition[]>;
+
 type InvalidateManyAction = ActionMany<typeof GrpcActionTypeEnum.invalidateMany>;
+
 export type GrpcAction =
   | ClearAction
   | ResetAction
@@ -59,7 +77,9 @@ export type GrpcAction =
   | InvalidateAction
   | InvalidateManyAction
   | LoadMethodsAction;
+
 export type GrpcActionMany = InvalidateManyAction;
+
 export type GrpcDispatch = (action: GrpcAction) => void;
 
 const reset = (requestId: string): ResetAction => ({
@@ -120,21 +140,21 @@ const invalidate = (requestId: string): InvalidateAction => ({
   requestId,
 });
 
-const invalidateMany = async (protoFileId: string): Promise<InvalidateManyAction | undefined> => {
+const invalidateMany = async (protoFileId: string) => {
   const impacted = await models.grpcRequest.findByProtoFileId(protoFileId);
 
   // skip invalidation if no requests are linked to the proto file
-  if (!impacted.length) {
+  if (!impacted?.length) {
     return undefined;
   }
 
   return {
     type: GrpcActionTypeEnum.invalidateMany,
     requestIds: impacted.map(g => g._id),
-  };
+  } as InvalidateManyAction;
 };
 
-const loadMethods = async (requestId: string, protoFileId: string): Promise<LoadMethodsAction> => {
+const loadMethods = async (requestId: string, protoFileId: string) => {
   console.log(`[gRPC] loading proto file methods pf=${protoFileId}`);
   const protoFile = await models.protoFile.getById(protoFileId);
   const methods = await protoLoader.loadMethods(protoFile);
@@ -142,7 +162,7 @@ const loadMethods = async (requestId: string, protoFileId: string): Promise<Load
     type: GrpcActionTypeEnum.loadMethods,
     requestId,
     payload: methods,
-  };
+  } as LoadMethodsAction;
 };
 
 export const grpcActions = {

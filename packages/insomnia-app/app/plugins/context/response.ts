@@ -1,7 +1,7 @@
 import type { ResponseHeader } from '../../models/response';
 import * as models from '../../models/index';
 import fs from 'fs';
-import { Readable } from 'stream';
+
 interface MaybeResponse {
   parentId?: string;
   statusCode?: number;
@@ -12,11 +12,8 @@ interface MaybeResponse {
   elapsedTime?: number;
   headers?: ResponseHeader[];
 }
-export function init(
-  response: MaybeResponse,
-): {
-  response: Record<string, any>;
-} {
+
+export function init(response?: MaybeResponse) {
   if (!response) {
     throw new Error('contexts.response initialized without response');
   }
@@ -28,6 +25,7 @@ export function init(
       // getId () {
       //   return response.parentId;
       // },
+
       getRequestId() {
         return response.parentId || '';
       },
@@ -48,11 +46,12 @@ export function init(
         return response.elapsedTime || 0;
       },
 
-      getBody(): Buffer | null {
+      getBody() {
         return models.response.getBodyBuffer(response);
       },
 
-      getBodyStream(): Readable | null {
+      getBodyStream() {
+        // @ts-expect-error -- TSCONVERSION
         return models.response.getBodyStream(response);
       },
 
@@ -79,11 +78,8 @@ export function init(
         }
       },
 
-      getHeaders(): {
-        name: string;
-        value: string;
-      }[] {
-        return response.headers.map(h => ({
+      getHeaders() {
+        return response.headers?.map(h => ({
           name: h.name,
           value: h.value,
         }));

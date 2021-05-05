@@ -1,4 +1,3 @@
-import { $Keys } from 'utility-types';
 import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
 import type { WrapperProps } from './wrapper';
 import { ToggleSwitch, Button } from 'insomnia-components';
@@ -13,11 +12,12 @@ import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';
 import HelpTooltip from './help-tooltip';
 import { trackEvent } from '../../common/analytics';
+
 type Step = 'options' | 'migrating' | 'results';
 
 interface SettingProps {
   label: string;
-  name: $Keys<MigrationOptions>;
+  name: keyof MigrationOptions;
   options: MigrationOptions;
 }
 
@@ -37,9 +37,10 @@ const TextSetting: FunctionComponent<TextSettingProps> = ({ handleChange, label,
       <label>
         {label}
         <input
-          className={hasError && 'input--error'}
+          className={hasError ? 'input--error' : ''}
           type="text"
           name={name}
+          // @ts-expect-error -- TSCONVERSION this is a genuine error.  booleans shoudl not be allowed here
           defaultValue={options[name]}
           onBlur={handleChange}
         />
@@ -154,14 +155,14 @@ const Options = ({ start, cancel }: OptionsProps) => {
             name="designerDataDir"
             options={options}
             handleChange={handleInputChange}
-            errorMessage={!designerExists && 'Directory does not exist'}
+            errorMessage={designerExists ? undefined : 'Directory does not exist'}
           />
           <TextSetting
             label="Insomnia Data Directory"
             name="coreDataDir"
             options={options}
             handleChange={handleInputChange}
-            errorMessage={!coreExists && 'Directory does not exist'}
+            errorMessage={coreExists ? undefined : 'Directory does not exist'}
           />
         </details>
       </div>
@@ -257,7 +258,7 @@ const Fail = ({ error }: FailProps) => (
 const MigrationBody = () => {
   // The migration step does not need to be in redux, but a loading state does need to exist there.
   const [step, setStep] = useState<Step>('options');
-  const [error, setError] = useState<Error>(null);
+  const [error, setError] = useState<Error | null>(null);
   const start = useCallback(async (options: MigrationOptions) => {
     setStep('migrating');
     const { error } = await migrateFromDesigner(options);

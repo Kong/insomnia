@@ -39,6 +39,7 @@ export default class BaseExtension {
 
   getLiveDisplayName() {
     return (
+      // @ts-expect-error -- TSCONVERSION
       this._ext?.liveDisplayName ||
       function() {
         return '';
@@ -63,6 +64,7 @@ export default class BaseExtension {
   }
 
   run(...args) {
+    // @ts-expect-error -- TSCONVERSION
     return this._ext?.run(...args);
   }
 
@@ -99,6 +101,7 @@ export default class BaseExtension {
     // Define a helper context with utils
     const helperContext = {
       ...pluginContexts.app.init(renderPurpose),
+      // @ts-expect-error -- TSCONVERSION
       ...pluginContexts.store.init(this._plugin),
       ...pluginContexts.network.init(environmentId),
       context: renderContext,

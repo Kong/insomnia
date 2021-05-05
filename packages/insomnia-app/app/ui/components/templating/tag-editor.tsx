@@ -25,10 +25,11 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import FileInputButton from '../base/file-input-button';
 import { getTemplateTags } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   defaultValue: string;
   onChange: (...args: any[]) => any;
   workspace: Workspace;

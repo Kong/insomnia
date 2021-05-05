@@ -6,6 +6,7 @@ interface StatObj {
   mtimeMs: number;
   ctimeMs?: number;
 }
+
 export default class Stat {
   type: 'file' | 'dir' | 'symlink';
   mode: number;

@@ -49,7 +49,8 @@ class Link extends PureComponent<Props> {
           'theme--link': !noTheme,
         })}
         disabled={disabled}
-        {...other}>
+        {...other}
+      >
         {children}
       </a>
     );

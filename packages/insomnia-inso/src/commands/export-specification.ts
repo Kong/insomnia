@@ -11,7 +11,7 @@ export type ExportSpecificationOptions = GlobalOptions & {
 export async function exportSpecification(
   identifier: string | null | undefined,
   { output, workingDir, appDataDir, ci }: ExportSpecificationOptions,
-): Promise<boolean> {
+) {
   const db = await loadDb({
     workingDir,
     appDataDir,

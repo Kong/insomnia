@@ -1,4 +1,5 @@
 import type { BaseDriver } from './base';
+
 export default class MemoryDriver implements BaseDriver {
   _db: Record<string, Buffer>;
 

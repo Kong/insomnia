@@ -1,6 +1,7 @@
 import type { PluginArgumentEnumOption } from './extensions';
 import objectPath from 'objectpath';
 import type { PluginStore } from '../plugins/context';
+
 export interface NunjucksParsedTagArg {
   type: 'string' | 'number' | 'boolean' | 'variable' | 'expression' | 'enum' | 'file' | 'model';
   encoding?: 'base64';
@@ -18,11 +19,13 @@ export interface NunjucksParsedTagArg {
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
 }
+
 export interface NunjucksActionTag {
   name: string;
   icon?: string;
   run: (context: PluginStore) => Promise<void>;
 }
+
 export interface NunjucksParsedTag {
   name: string;
   args: NunjucksParsedTagArg[];
@@ -72,10 +75,12 @@ export function getKeys(
 
   return allKeys;
 }
+
 export function forceBracketNotation(prefix: string, key: string | number) {
   // Prefix is already in bracket notation because getKeys is recursive
   return `${prefix}${objectPath.stringify([key], "'", true)}`;
 }
+
 export function normalizeToDotAndBracketNotation(prefix: string) {
   return objectPath.normalize(prefix);
 }
@@ -83,9 +88,8 @@ export function normalizeToDotAndBracketNotation(prefix: string) {
 /**
  * Parse a Nunjucks tag string into a usable abject
  * @param {string} tagStr - the template string for the tag
- * @return {object} parsed tag data
  */
-export function tokenizeTag(tagStr: string): NunjucksParsedTag {
+export function tokenizeTag(tagStr: string) {
   // ~~~~~~~~ //
   // Sanitize //
   // ~~~~~~~~ //
@@ -183,10 +187,11 @@ export function tokenizeTag(tagStr: string): NunjucksParsedTag {
     }
   }
 
-  return {
+  const parsedTag: NunjucksParsedTag = {
     name,
     args,
   };
+  return parsedTag;
 }
 
 /** Convert a tokenized tag back into a Nunjucks string */
@@ -239,6 +244,7 @@ export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
   });
   return `${name} ${stringArgs.join(', ')}`;
 }
+
 export function encodeEncoding(value: string, encoding: 'base64') {
   if (typeof value !== 'string') {
     return value;
@@ -251,6 +257,7 @@ export function encodeEncoding(value: string, encoding: 'base64') {
 
   return value;
 }
+
 export function decodeEncoding(value: string) {
   if (typeof value !== 'string') {
     return value;

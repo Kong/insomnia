@@ -96,7 +96,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       closeCharacters: COMPLETION_CLOSE_KEYS,
       completeSingle: false,
       extraKeys: {
-        Tab: (cm, widget) => {
+        Tab: (_cm, widget) => {
           // Override default behavior and don't select hint on Tab
           widget.close();
           return CodeMirror.Pass;
@@ -309,7 +309,7 @@ function hint(cm, options) {
  * @param self
  * @param data
  */
-async function replaceHintMatch(cm, self, data) {
+async function replaceHintMatch(cm, _self, data) {
   if (typeof data.text === 'function') {
     data.text = await data.text();
   }
@@ -446,7 +446,7 @@ function replaceWithSurround(text, find, prefix, suffix) {
  * @param self
  * @param data
  */
-function renderHintMatch(li, self, data) {
+function renderHintMatch(li, _self, data) {
   // Bold the matched text
   const { displayText, segment } = data;
   const markedName = replaceWithSurround(displayText, segment, '<strong>', '</strong>');

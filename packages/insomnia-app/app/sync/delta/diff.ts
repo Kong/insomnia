@@ -1,19 +1,24 @@
 import crypto from 'crypto';
+
 interface InsertOperation {
   type: 'INSERT';
   content: string;
 }
+
 interface CopyOperation {
   type: 'COPY';
   start: number;
   len: number;
 }
+
 export type Operation = InsertOperation | CopyOperation;
+
 interface Block {
   start: number;
   len: number;
   hash: string;
 }
+
 export function diff(source: string, target: string, blockSize: number): Operation[] {
   const operations: Operation[] = [];
   const sourceBlockMap = getBlockMap(source, blockSize);
@@ -24,6 +29,7 @@ export function diff(source: string, target: string, blockSize: number): Operati
     const targetBlock = getBlock(target, targetPosition, blockSize);
     const sourceBlocks = sourceBlockMap[targetBlock.hash] || [];
 
+    // @ts-expect-error -- TSCONVERSION appears to be a genuine error
     if (sourceBlocks.length === 0) {
       targetPosition++;
       continue;

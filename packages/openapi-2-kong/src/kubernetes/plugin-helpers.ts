@@ -74,7 +74,7 @@ export const ingressDoc = (
   plugins: string[],
   host: string,
   serviceName: string,
-  path: string | null | undefined,
+  path?: string | null,
 ) => {
   const backend = {
     serviceName,
@@ -117,7 +117,7 @@ export const ingressDocWithOverride = (
   override: string,
   host: string,
   serviceName: string,
-  path: string | null | undefined,
+  path?: string | null,
 ) => ({
   apiVersion: 'extensions/v1beta1',
   kind: 'Ingress',

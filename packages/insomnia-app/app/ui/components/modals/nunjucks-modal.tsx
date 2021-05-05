@@ -7,11 +7,12 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   uniqueKey: string;
-  handleRender: Function;
-  handleGetRenderContext: Function;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   workspace: any;
 }
 

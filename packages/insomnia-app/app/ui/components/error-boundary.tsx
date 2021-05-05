@@ -1,4 +1,3 @@
-import { $ReadOnly } from 'utility-types';
 import React, { PureComponent, ReactNode } from 'react';
 import { showError } from './modals/index';
 import Mailto from './base/mailto';
@@ -26,7 +25,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: $ReadOnly<Props>) {
+  UNSAFE_componentWillReceiveProps(nextProps: Props) {
     const { error, info } = this.state;
     const invalidationKeyChanged = nextProps.invalidationKey !== this.props.invalidationKey;
     const isErrored = error !== null || info !== null;

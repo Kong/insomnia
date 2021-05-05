@@ -96,7 +96,7 @@ export default class FileSystemDriver implements BaseDriver {
 
   async keys(prefix: string, recursive: boolean) {
     const next = dir => {
-      return new Promise<string>(async (resolve, reject) => {
+      return new Promise<string[]>(async (resolve, reject) => {
         let keys: string[] = [];
         let names: string[] = [];
 
@@ -132,7 +132,7 @@ export default class FileSystemDriver implements BaseDriver {
     };
 
     const rawKeys = await next(this._getKeyPath(prefix));
-    const keys = [];
+    const keys: string[] = [];
 
     for (const rawKey of rawKeys) {
       keys.push(rawKey.substring(this._directory.length));

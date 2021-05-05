@@ -142,7 +142,7 @@ const singleRequestReducer = (state: GrpcState, action: GrpcAction): GrpcState =
 
 export const grpcReducer = (
   state: GrpcState,
-  action: GrpcAction | GrpcActionMany | undefined,
+  action?: GrpcAction | GrpcActionMany,
 ): GrpcState => {
   if (!action) {
     return state;

@@ -9,7 +9,7 @@ export type CodeMirrorLinkClickCallback = (url: string) => void;
 CodeMirror.defineExtension('makeLinksClickable', function(handleClick: CodeMirrorLinkClickCallback) {
   // Only add the click mode if we have links to click
   this.addOverlay({
-    token: function(stream, state) {
+    token: function(stream) {
       if (stream.match(FLEXIBLE_URL_REGEX, true)) {
         return 'clickable';
       }
@@ -23,13 +23,13 @@ CodeMirror.defineExtension('makeLinksClickable', function(handleClick: CodeMirro
   });
   const el = this.getWrapperElement();
   let movedDuringClick = false;
-  el.addEventListener('mousemove', e => {
+  el.addEventListener('mousemove', () => {
     movedDuringClick = true;
   });
-  el.addEventListener('mousedown', e => {
+  el.addEventListener('mousedown', () => {
     movedDuringClick = false;
   });
-  el.addEventListener('mouseup', e => {
+  el.addEventListener('mouseup', () => {
     if (movedDuringClick) {
       return;
     }

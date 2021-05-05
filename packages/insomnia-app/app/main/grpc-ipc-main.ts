@@ -2,12 +2,14 @@ import * as grpc from '../network/grpc';
 import { ipcMain } from 'electron';
 import { GrpcRequestEventEnum } from '../common/grpc-events';
 import { ResponseCallbacks } from '../network/grpc/response-callbacks';
-import type { GrpcIpcRequestParams } from '../ui/context/grpc/prepare';
+import { GrpcIpcRequestParams } from '../network/grpc/prepare';
+
 export function init() {
   ipcMain.on(GrpcRequestEventEnum.start, (e, params: GrpcIpcRequestParams) =>
     grpc.start(params, new ResponseCallbacks(e)),
   );
   ipcMain.on(GrpcRequestEventEnum.sendMessage, (e, params: GrpcIpcRequestParams) =>
+    // @ts-expect-error -- TSCONVERSION
     grpc.sendMessage(params, new ResponseCallbacks(e)),
   );
   ipcMain.on(GrpcRequestEventEnum.commit, (_, requestId) => grpc.commit(requestId));

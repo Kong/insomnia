@@ -12,7 +12,7 @@ export type LintSpecificationOptions = GlobalOptions;
 export async function lintSpecification(
   identifier: string | null | undefined,
   { workingDir, appDataDir, ci }: LintSpecificationOptions,
-): Promise<boolean> {
+) {
   const db = await loadDb({
     workingDir,
     appDataDir,

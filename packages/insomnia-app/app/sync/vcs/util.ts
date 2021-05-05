@@ -15,6 +15,7 @@ import type {
 } from '../types';
 // Keys for VCS to ignore when computing changes
 const IGNORED_KEYS = ['modified'];
+
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
     return {};
@@ -22,6 +23,7 @@ export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotSta
 
   return generateStateMap(snapshot.state);
 }
+
 export function generateStateMap(state: SnapshotState | null): SnapshotStateMap {
   if (!state) {
     return {};
@@ -35,6 +37,7 @@ export function generateStateMap(state: SnapshotState | null): SnapshotStateMap 
 
   return map;
 }
+
 export function generateCandidateMap(candidates: StatusCandidate[]): StatusCandidateMap {
   const map = {};
 
@@ -44,6 +47,7 @@ export function generateCandidateMap(candidates: StatusCandidate[]): StatusCandi
 
   return map;
 }
+
 export function combinedMapKeys<T extends SnapshotStateMap | StatusCandidateMap>(
   ...maps: T[]
 ): DocumentKey[] {
@@ -57,6 +61,7 @@ export function combinedMapKeys<T extends SnapshotStateMap | StatusCandidateMap>
 
   return Object.keys(keyMap);
 }
+
 export function threeWayMerge(
   root: SnapshotState,
   trunk: SnapshotState,
@@ -230,6 +235,7 @@ export function threeWayMerge(
     conflicts: conflicts,
   };
 }
+
 export function compareBranches(
   a: Branch | null,
   b: Branch | null,
@@ -272,15 +278,18 @@ export function compareBranches(
   result.behind = snapshotsB.length - indexOfRootInB - 1;
   return result;
 }
-export function stateDelta(
-  base: SnapshotState,
-  desired: SnapshotState,
-): {
+
+export interface StateDelta {
   add: SnapshotStateEntry[];
   update: SnapshotStateEntry[];
   remove: SnapshotStateEntry[];
-} {
-  const result = {
+}
+
+export function stateDelta(
+  base: SnapshotState,
+  desired: SnapshotState,
+) {
+  const result: StateDelta = {
     add: [],
     update: [],
     remove: [],
@@ -310,14 +319,13 @@ export function stateDelta(
 
   return result;
 }
-export function getStagable(
-  state: SnapshotState,
-  candidates: StatusCandidate[],
-): StageEntry[] {
+
+export function getStagable(state: SnapshotState, candidates: StatusCandidate[]) {
   const stagable: StageEntry[] = [];
   const stateMap = generateStateMap(state);
   const candidateMap = generateCandidateMap(candidates);
 
+  // @ts-expect-error -- TSCONVERSION need to fix the index signatures
   for (const key of combinedMapKeys(stateMap, candidateMap)) {
     const entry = stateMap[key];
     const candidate = candidateMap[key];
@@ -366,6 +374,7 @@ export function getStagable(
 
   return stagable;
 }
+
 export function getRootSnapshot(a: Branch | null, b: Branch | null): string | null {
   const snapshotsA = a ? a.snapshots : [];
   const snapshotsB = b ? b.snapshots : [];
@@ -381,18 +390,14 @@ export function getRootSnapshot(a: Branch | null, b: Branch | null): string | nu
 
   return rootSnapshotId || null;
 }
+
 export function preMergeCheck(
   trunkState: SnapshotState,
   otherState: SnapshotState,
   candidates: StatusCandidate[],
-): {
-  conflicts: StatusCandidate[];
-  dirty: StatusCandidate[];
-} {
-  const result = {
-    conflicts: [],
-    dirty: [],
-  };
+) {
+  const conflicts: StatusCandidate[] = [];
+  const dirty: StatusCandidate[] = [];
   const trunkMap = generateStateMap(trunkState);
   const otherMap = generateStateMap(otherState);
 
@@ -403,7 +408,7 @@ export function preMergeCheck(
 
     // Candidate is not in trunk or other (not yet in version control)
     if (!trunk && !other) {
-      result.dirty.push(candidate);
+      dirty.push(candidate);
       continue;
     }
 
@@ -432,16 +437,20 @@ export function preMergeCheck(
       blobId !== other.blob &&
       blobId !== trunk.blob
     ) {
-      result.dirty.push(candidate);
+      dirty.push(candidate);
       continue;
     }
 
     // All other cases result in conflict
-    result.conflicts.push(candidate);
+    conflicts.push(candidate);
   }
 
-  return result;
+  return {
+    conflicts,
+    dirty,
+  };
 }
+
 export function hashDocument(
   doc: Record<string, any>,
 ): {
@@ -466,17 +475,15 @@ export function hashDocument(
     content,
   };
 }
-export function updateStateWithConflictResolutions(
-  state: SnapshotState,
-  conflicts: MergeConflict[],
-): SnapshotState {
+
+export function updateStateWithConflictResolutions(state: SnapshotState, conflicts: MergeConflict[]) {
   const newStateMap = generateStateMap(state);
 
   for (const { choose, key, name } of conflicts) {
     const stateEntry = state.find(e => e.key === key);
 
     // Not in the state, but we choose the conflict
-    if (!stateEntry && choose !== null) {
+    if (stateEntry !== undefined && choose !== null) {
       newStateMap[key] = {
         key,
         name,
@@ -487,7 +494,11 @@ export function updateStateWithConflictResolutions(
 
     // Add the conflict
     if (choose !== null) {
-      newStateMap[key] = { ...(stateEntry as Record<string, any>), blob: choose };
+      // @ts-expect-error -- TSCONVERSION need to decided how to reorder this
+      newStateMap[key] = {
+        ...stateEntry,
+        blob: choose,
+      };
       continue;
     }
 
@@ -497,6 +508,7 @@ export function updateStateWithConflictResolutions(
 
   return Object.keys(newStateMap).map(k => newStateMap[k]);
 }
+
 export function describeChanges(a: any, b: any): string[] {
   const aT = Object.prototype.toString.call(a);
   const bT = Object.prototype.toString.call(b);
@@ -505,7 +517,7 @@ export function describeChanges(a: any, b: any): string[] {
     return [];
   }
 
-  const changes = [];
+  const changes: string[] = [];
   const allKeys = [...Object.keys({ ...a, ...b })];
 
   for (const key of allKeys) {

@@ -48,7 +48,9 @@ document.title = getAppLongName();
 
 // Export some useful things for dev
 if (isDevelopment()) {
+  // @ts-expect-error -- TSCONVERSION needs window augmentation
   window.models = models;
+  // @ts-expect-error -- TSCONVERSION needs window augmentation
   window.db = db;
 }
 

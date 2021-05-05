@@ -26,10 +26,11 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Settings } from '../../../../models/settings';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

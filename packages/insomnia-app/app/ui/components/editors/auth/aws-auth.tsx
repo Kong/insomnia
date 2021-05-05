@@ -7,6 +7,7 @@ import HelpTooltip from '../../help-tooltip';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import { AUTOBIND_CFG } from '../../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
   request: Request;
@@ -14,8 +15,8 @@ interface Props {
   showPasswords: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
-  handleRender: (arg0: string) => Promise<string>;
-  handleGetRenderContext: () => Promise<Record<string, any>>;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
 }
 

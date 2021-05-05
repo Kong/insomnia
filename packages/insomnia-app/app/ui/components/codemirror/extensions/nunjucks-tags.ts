@@ -1,4 +1,4 @@
-import CodeMirror from 'codemirror';
+import CodeMirror, { Token } from 'codemirror';
 import * as misc from '../../../../common/misc';
 import NunjucksVariableModal from '../../modals/nunjucks-modal';
 import { showModal } from '../../modals/index';
@@ -45,8 +45,8 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
   const renderString = text => render(text, renderCacheKey);
 
-  const activeMarks = [];
-  const doc = this.getDoc();
+  const activeMarks: CodeMirror.TextMarker[] = [];
+  const doc: CodeMirror.Doc = this.getDoc();
 
   // Only mark up Nunjucks tokens that are in the viewport
   const vp = this.getViewport();
@@ -56,11 +56,8 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
     const tokens = line.filter(({ type }) => type && type.indexOf('nunjucks') >= 0);
 
     // Aggregate same tokens
-    const newTokens = [];
-    let currTok: {
-      end: string;
-      string: string;
-    } | null = null;
+    const newTokens: Token[] = [];
+    let currTok: Token | null = null;
 
     for (let i = 0; i < tokens.length; i++) {
       const nextTok = tokens[i];
@@ -105,13 +102,14 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       // See if we already have a mark for this
       let hasOwnMark = false;
 
-      for (const m of doc.findMarks(start, end)) {
+      for (const mark of doc.findMarks(start, end)) {
         // Only check marks we created
-        if (m.__nunjucks) {
+        // @ts-expect-error -- TSCONVERSION need to extend nunjucks
+        if (mark.__nunjucks) {
           hasOwnMark = true;
         }
 
-        activeMarks.push(m);
+        activeMarks.push(mark);
       }
 
       // Already have a mark for this, so leave it alone
@@ -186,12 +184,15 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       };
 
       // Set up the drag
-      el.addEventListener('dragstart', e => {
+      el.addEventListener('dragstart', event => {
         // Setup the drag contents
-        const template = e.target.getAttribute('data-template');
-        e.dataTransfer.setData('text/plain', template);
-        e.dataTransfer.effectAllowed = 'copyMove';
-        e.dataTransfer.dropEffect = 'move';
+        // @ts-expect-error -- TSCONVERSION
+        const template = event.target?.getAttribute('data-template');
+        event.dataTransfer?.setData('text/plain', template);
+        // @ts-expect-error -- TSCONVERSION
+        event.dataTransfer.effectAllowed = 'copyMove';
+        // @ts-expect-error -- TSCONVERSION
+        event.dataTransfer.dropEffect = 'move';
         // Add some listeners
         this.on('beforeChange', beforeChangeCb);
         this.on('drop', dropCb);
@@ -231,6 +232,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
   for (const mark of marksInViewport) {
     // Only check marks we created
+    // @ts-expect-error -- TSCONVERSION needs type extension for TextMarker for the extension
     if (!mark.__nunjucks) {
       continue;
     }
@@ -238,6 +240,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
     let inActiveMarks = false;
 
     for (const activeMark of activeMarks) {
+      // @ts-expect-error -- TSCONVERSION need to investigate in CodeMirror types
       if (activeMark.id === mark.id) {
         inActiveMarks = true;
       }
@@ -271,6 +274,7 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
 
       if (tagDefinition) {
         // Try rendering these so we can show errors if needed
+        // @ts-expect-error -- TSCONVERSION
         const liveDisplayName = tagDefinition.liveDisplayName(tagData.args);
         const firstArg = tagDefinition.args[0];
 
@@ -278,7 +282,9 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
           innerHTML = liveDisplayName;
         } else if (firstArg && firstArg.type === 'enum') {
           const argData = tagData.args[0];
+          // @ts-expect-error -- TSCONVERSION
           const foundOption = firstArg.options.find(d => d.value === argData.value);
+          // @ts-expect-error -- TSCONVERSION
           const option = foundOption || firstArg.options[0];
           innerHTML = `${tagDefinition.displayName} &rArr; ${option.displayName}`;
         } else {
@@ -286,6 +292,7 @@ async function _updateElementText(render, mark, text, renderContext, isVariableU
         }
 
         const preview = await render(text);
+        // @ts-expect-error -- TSCONVERSION
         title = tagDefinition.disablePreview(tagData.args) ? preview.replace(/./g, '*') : preview;
       } else {
         innerHTML = cleanedStr;

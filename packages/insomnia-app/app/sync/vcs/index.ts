@@ -15,7 +15,6 @@ import type {
   SnapshotState,
   Stage,
   StageEntry,
-  Status,
   StatusCandidate,
   Team,
 } from '../types';
@@ -169,7 +168,9 @@ export default class VCS {
       stage[entry.key] = entry;
 
       // Only store blobs if we're not deleting it
+      // @ts-expect-error -- TSCONVERSION type narrowing
       if (entry.added || entry.modified) {
+        // @ts-expect-error -- TSCONVERSION type narrowing
         blobsToStore[entry.blobId] = entry.blobContent;
       }
     }
@@ -252,13 +253,7 @@ export default class VCS {
     console.log(`[sync] Deleted local branch ${branchName}`);
   }
 
-  async checkout(
-    candidates: StatusCandidate[],
-    branchName: string,
-  ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
-  }> {
+  async checkout(candidates: StatusCandidate[], branchName: string) {
     const branchCurrent = await this._getCurrentBranch();
     const latestSnapshotCurrent: Snapshot | null = await this._getLatestSnapshot(
       branchCurrent.name,
@@ -318,12 +313,7 @@ export default class VCS {
     return this._getBlobs(snapshot.state.map(s => s.blob));
   }
 
-  async rollbackToLatest(
-    candidates: StatusCandidate[],
-  ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
-  }> {
+  async rollbackToLatest(candidates: StatusCandidate[]) {
     const branch = await this._getCurrentBranch();
     const latestSnapshot = await this._getLatestSnapshot(branch.name);
 
@@ -334,38 +324,33 @@ export default class VCS {
     return this.rollback(latestSnapshot.id, candidates);
   }
 
-  async rollback(
-    snapshotId: string,
-    candidates: StatusCandidate[],
-  ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
-  }> {
+  async rollback(snapshotId: string, candidates: StatusCandidate[]) {
     const rollbackSnapshot: Snapshot | null = await this._getSnapshot(snapshotId);
 
     if (rollbackSnapshot === null) {
       throw new Error(`Failed to find snapshot by id ${snapshotId}`);
     }
 
-    const potentialNewState: SnapshotState = candidates.map(c => ({
-      key: c.key,
-      blob: hashDocument(c.document).hash,
-      name: c.name,
+    const potentialNewState: SnapshotState = candidates.map(candidate => ({
+      key: candidate.key,
+      blob: hashDocument(candidate.document).hash,
+      name: candidate.name,
     }));
+
     const delta = stateDelta(potentialNewState, rollbackSnapshot.state);
-    // We need to treat removals of candidates differently because they may not
-    // yet have been stored as blobs.
-    const remove = [];
+    // We need to treat removals of candidates differently because they may not yet have been stored as blobs.
+    const remove: StatusCandidate[] = [];
 
-    for (const e of delta.remove) {
-      const c = candidates.find(c => c.key === e.key);
+    for (const entry of delta.remove) {
+      const candidate = candidates.find(candidate => candidate.key === entry.key);
 
-      if (!c) {
+      if (!candidate) {
         // Should never happen
         throw new Error('Failed to find removal in candidates');
       }
 
-      remove.push(c.document);
+      // @ts-expect-error -- TSCONVERSION not sure what this is actually supposed to be
+      remove.push(candidate.document);
     }
 
     console.log(`[sync] Rolled back to ${snapshotId}`);
@@ -378,7 +363,7 @@ export default class VCS {
 
   async getHistoryCount(branchName?: string) {
     const branch = branchName ? await this._getBranch(branchName) : await this._getCurrentBranch();
-    return branch.snapshots.length;
+    return branch?.snapshots.length;
   }
 
   async getHistory(count = 0) {
@@ -454,6 +439,7 @@ export default class VCS {
     for (const key of Object.keys(stage)) {
       const entry = stage[key];
 
+      // @ts-expect-error -- TSCONVERSION find out where this is coming from from the Stage union
       if (entry.deleted) {
         continue;
       }
@@ -470,12 +456,7 @@ export default class VCS {
     console.log(`[sync] Created snapshot ${snapshot.id} (${name})`);
   }
 
-  async pull(
-    candidates: StatusCandidate[],
-  ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
-  }> {
+  async pull(candidates: StatusCandidate[]) {
     await this._getOrCreateRemoteProject();
     const localBranch = await this._getCurrentBranch();
     const tmpBranchForRemote = await this._fetch(localBranch.name + '.hidden', localBranch.name);
@@ -500,7 +481,7 @@ export default class VCS {
     const { privateKey } = this._assertSession();
 
     const symmetricKey = crypt.decryptRSAWithJWK(privateKey, projectKey.encSymmetricKey);
-    const keys = [];
+    const keys: any[] = [];
 
     for (const { accountId, publicKey } of memberKeys) {
       const encSymmetricKey = crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKey);
@@ -553,8 +534,8 @@ export default class VCS {
     }
 
     // Gather a list of snapshot state entries to push
-    const allBlobIds = new Set();
-    const snapshots = [];
+    const allBlobIds = new Set<string>();
+    const snapshots: Snapshot[] = [];
 
     for (const id of snapshotIdsToPush) {
       const snapshot = await this._assertSnapshot(id);
@@ -590,7 +571,7 @@ export default class VCS {
     }
 
     // Find blobs to fetch
-    const blobsToFetch = new Set();
+    const blobsToFetch = new Set<string>();
     const snapshots = await this._querySnapshots(snapshotsToFetch);
 
     for (const snapshot of snapshots) {
@@ -625,10 +606,7 @@ export default class VCS {
     otherBranchName: string,
     snapshotMessage?: string,
     useOtherBranchHistory?: boolean,
-  ): Promise<{
-    upsert: Record<string, any>[];
-    remove: Record<string, any>[];
-  }> {
+  ) {
     const branchOther = await this._assertBranch(otherBranchName);
     const latestSnapshotOther: Snapshot | null = await this._getLatestSnapshot(branchOther.name);
     const branchTrunk = await this._assertBranch(trunkBranchName);
@@ -821,8 +799,8 @@ export default class VCS {
     return branch;
   }
 
-  async _querySnapshots(allIds: string[]): Promise<Snapshot[]> {
-    let allSnapshots = [];
+  async _querySnapshots(allIds: string[]) {
+    let allSnapshots: Snapshot[] = [];
 
     for (const ids of chunkArray(allIds, 20)) {
       const { snapshots } = await this._runGraphQL(
@@ -916,9 +894,9 @@ export default class VCS {
     }
   }
 
-  async _queryBlobs(allIds: string[]): Promise<Record<string, Buffer>> {
+  async _queryBlobs(allIds: string[]) {
     const symmetricKey = await this._getProjectSymmetricKey();
-    const result = {};
+    const result: Record<string, Buffer> = {};
 
     for (const ids of chunkArray(allIds, 50)) {
       const { blobs } = await this._runGraphQL(
@@ -977,7 +955,7 @@ export default class VCS {
 
     // Push each missing blob in batches of 2MB max
     let count = 0;
-    let batch = [];
+    let batch: { id: string; content: string }[] = [];
     let batchSizeBytes = 0;
     const maxBatchSize = 1024 * 1024 * 2; // 2 MB
 
@@ -1258,12 +1236,7 @@ export default class VCS {
     return this._getOrCreateBranch(head.branch);
   }
 
-  _assertSession(): {
-    accountId: string;
-    sessionId: string;
-    privateKey: Record<string, any>;
-    publicKey: Record<string, any>;
-  } {
+  _assertSession() {
     if (!session.isLoggedIn()) {
       throw new Error('Not logged in');
     }
@@ -1449,11 +1422,13 @@ export default class VCS {
   }
 
   async _storeSnapshots(snapshots: Snapshot[]) {
-    const promises = [];
+    const promises: Promise<Snapshot>[] = [];
 
     for (const snapshot of snapshots) {
       const p = paths.snapshot(this._projectId(), snapshot.id);
-      promises.push(this._store.setItem(p, snapshot));
+      const promise = this._store.setItem(p, snapshot);
+      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
+      promises.push(promise);
     }
 
     await Promise.all(promises);
@@ -1483,13 +1458,13 @@ export default class VCS {
     await this._store.setItem(paths.head(this._projectId()), head);
   }
 
-  async _getBlob(id: string): Promise<Record<string, any> | null> {
+  async _getBlob(id: string) {
     const p = paths.blob(this._projectId(), id);
-    return this._store.getItem(p);
+    return this._store.getItem(p) as Record<string, any> | null;
   }
 
   async _getBlobs(ids: string[]) {
-    const promises: Promise<Record<string, any>>[] = [];
+    const promises: Promise<Record<string, any> | null>[] = [];
 
     for (const id of ids) {
       promises.push(this._getBlob(id));
@@ -1503,7 +1478,7 @@ export default class VCS {
   }
 
   async _storeBlobs(map: Record<string, string>) {
-    const promises = [];
+    const promises: Promise<any>[] = [];
 
     for (const id of Object.keys(map)) {
       const buff = Buffer.from(map[id], 'utf8');
@@ -1514,7 +1489,7 @@ export default class VCS {
   }
 
   async _storeBlobsBuffer(map: Record<string, Buffer>) {
-    const promises = [];
+    const promises: Promise<any>[] = [];
 
     for (const id of Object.keys(map)) {
       const p = paths.blob(this._projectId(), id);

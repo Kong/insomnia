@@ -3,20 +3,25 @@ import { parse as urlParse } from 'url';
 import zlib from 'zlib';
 let _userAgent = '';
 let _baseUrl = '';
-const _commandListeners = [];
+const _commandListeners: Function[] = [];
+
 export function setup(userAgent, baseUrl) {
   _userAgent = userAgent;
   _baseUrl = baseUrl;
 }
-export function onCommand(callback) {
+
+export function onCommand(callback: Function) {
   _commandListeners.push(callback);
 }
+
 export async function post(path, obj, sessionId, compressBody = false) {
   return _fetch('POST', path, obj, sessionId, compressBody);
 }
+
 export async function put(path, obj, sessionId, compressBody = false) {
   return _fetch('PUT', path, obj, sessionId, compressBody);
 }
+
 export async function get(path, sessionId) {
   return _fetch('GET', path, null, sessionId);
 }
@@ -26,7 +31,11 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
     throw new Error(`No session ID provided to ${method}:${path}`);
   }
 
-  const config = {
+  const config: {
+    method: string;
+    headers: HeadersInit;
+    body?: string | Buffer;
+  } = {
     method: method,
     headers: {},
   };
@@ -72,6 +81,7 @@ async function _fetch(method, path, obj, sessionId, compressBody = false, retrie
   if (!response.ok) {
     const err = new Error(`Response ${response.status} for ${path}`);
     err.message = await response.text();
+    // @ts-expect-error -- TSCONVERSION
     err.statusCode = response.status;
     throw err;
   }

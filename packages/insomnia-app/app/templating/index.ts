@@ -91,13 +91,15 @@ export function reload() {
 /**
  * Get definitions of template tags
  */
-export async function getTagDefinitions(): Promise<NunjucksParsedTag[]> {
+export async function getTagDefinitions() {
   const env = await getNunjucks(RENDER_ALL);
+  // @ts-expect-error -- TSCONVERSION investigate why `extensions` isn't on Environment
   return Object.keys(env.extensions)
+    // @ts-expect-error -- TSCONVERSION investigate why `extensions` isn't on Environment
     .map(k => env.extensions[k])
     .filter(ext => !ext.isDeprecated())
     .sort((a, b) => (a.getPriority() > b.getPriority() ? 1 : -1))
-    .map(ext => ({
+    .map<NunjucksParsedTag>(ext => ({
       name: ext.getTag(),
       displayName: ext.getName(),
       liveDisplayName: ext.getLiveDisplayName(),
@@ -169,7 +171,9 @@ async function getNunjucks(renderMode: string) {
   for (let i = 0; i < allExtensions.length; i++) {
     const { templateTag, plugin } = allExtensions[i];
     templateTag.priority = templateTag.priority || i * 100;
+    // @ts-expect-error -- TSCONVERSION
     const instance = new BaseExtension(templateTag, plugin);
+    // @ts-expect-error -- TSCONVERSION
     nj.addExtension(instance.getTag(), instance);
     // Hidden helper filter to debug complicated things
     // eg. `{{ foo | urlencode | debug | upper }}`

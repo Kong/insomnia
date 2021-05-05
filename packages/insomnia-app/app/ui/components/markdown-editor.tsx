@@ -6,6 +6,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';
+import { HandleGetRenderContext, HandleRender } from '../../common/render';
 
 interface Props {
   onChange: Function,
@@ -14,8 +15,8 @@ interface Props {
   indentSize: number,
   keyMap: string,
   lineWrapping: boolean,
-  handleRender: Function,
-  handleGetRenderContext: Function,
+  handleRender: HandleRender,
+  handleGetRenderContext: HandleGetRenderContext,
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   placeholder?: string,

@@ -22,14 +22,14 @@ class CheckForUpdatesButton extends PureComponent<Props, State> {
     updateAvailable: false,
   }
 
-  _listenerCheckComplete(e: any, updateAvailable: true, status: string) {
+  _listenerCheckComplete(_e, updateAvailable: true, status: string) {
     this.setState({
       status,
       updateAvailable,
     });
   }
 
-  _listenerCheckStatus(e: any, status: string) {
+  _listenerCheckStatus(_e, status: string) {
     if (this.state.checking) {
       this.setState({
         status,

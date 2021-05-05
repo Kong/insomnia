@@ -10,11 +10,12 @@ import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
 import Button from '../../base/button';
 import type { Request, RequestAuthentication } from '../../../../models/request';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
   request: Request;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

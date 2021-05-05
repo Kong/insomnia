@@ -1,4 +1,5 @@
 import { GitVCS } from './git-vcs';
+
 export interface FileWithStatus {
   filePath: string;
   status: string;
@@ -14,6 +15,7 @@ export const gitRollback = async (vcs: GitVCS, files: FileWithStatus[]) => {
   const promises = addedFiles.map(async ({ filePath }) => {
     await vcs.remove(filePath);
     console.log(`[git-rollback] Delete relPath=${filePath}`);
+    // @ts-expect-error -- TSCONVERSION
     await vcs.getFs().promises.unlink(filePath);
   });
   // Rollback existing (versioned) files

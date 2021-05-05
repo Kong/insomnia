@@ -47,7 +47,7 @@ export const generateToFile = async (
 
 const generateSuiteLines = (
   n: number,
-  suite: TestSuite | null | undefined,
+  suite?: TestSuite | null,
 ) => {
   if (!suite) {
     return [];

@@ -14,6 +14,7 @@ import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';
 import { isGrpcRequest } from '../../../models/helpers/is-model';
 import * as requestOperations from '../../../models/helpers/request-operations';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   editorFontSize: number;
@@ -22,8 +23,8 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: Function;
-  handleGetRenderContext: Function;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   workspaces: Workspace[];
 }
 

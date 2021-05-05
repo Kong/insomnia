@@ -4,10 +4,11 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import Button from '../base/button';
 import OneLineEditor from '../codemirror/one-line-editor';
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   onChange: (...args: any[]) => any;
   password: string;

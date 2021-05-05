@@ -8,6 +8,7 @@ import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
 import type { Request, RequestHeader } from '../../../models/request';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
@@ -17,8 +18,8 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
 }
 
@@ -38,7 +39,7 @@ class RequestHeadersEditor extends PureComponent<Props> {
   }
 
   static _getHeadersFromString(headersString: string) {
-    const headers = [];
+    const headers: { name: string; value: string }[] = [];
     const rows = headersString.split(/\n+/);
 
     for (const row of rows) {

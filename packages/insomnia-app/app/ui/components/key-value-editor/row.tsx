@@ -252,6 +252,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       defaultValue: pair.value,
       onChange: this._handleValueChange,
       enableRender: handleRender || handleGetRenderContext,
+      // @ts-expect-error -- TSCONVERSION
       mode: pair.multiline || 'text/plain',
       onModeChange: mode => {
         this._handleTypeChange(
@@ -327,6 +328,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           onChange={this._handleFileNameChange}
         />
       );
+      // @ts-expect-error -- TSCONVERSION
     } else if (pair.type === 'text' && pair.multiline) {
       const bytes = Buffer.from(pair.value, 'utf8').length;
       return (
@@ -464,7 +466,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       );
     }
 
-    const row: ConnectDropTarget = (
+    const row = (
       <li className={classes}>
         {handle}
         <div className="key-value-editor__row">
@@ -541,6 +543,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       return row;
     } else {
       const dropTarget = connectDropTarget?.(row);
+      // @ts-expect-error -- TSCONVERSION investigate whether a cast is actually appropriate here
       return connectDragPreview?.(dropTarget);
     }
   }

@@ -3,6 +3,7 @@ import { setDefaultProtocol } from 'insomnia-url';
 import axios from 'axios';
 import * as models from '../models';
 import { isDevelopment } from '../common/constants';
+
 export async function axiosRequest(config) {
   const settings = await models.settings.getOrCreate();
   const isHttps = config.url.indexOf('https:') === 0;

@@ -12,6 +12,7 @@ import { DCPlugin } from '../types/declarative-config';
 import { Plugins, IndexIncrement, ServerPlugins, PathPlugins, OperationPlugins } from '../types/k8plugins';
 import { KubernetesPluginConfig } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem } from '../types/openapi3';
+
 export function flattenPluginDocuments(plugins: Plugins): KubernetesPluginConfig[] {
   const all: KubernetesPluginConfig[] = [];
   const { global, servers, paths } = plugins;
@@ -27,6 +28,7 @@ export function flattenPluginDocuments(plugins: Plugins): KubernetesPluginConfig
   });
   return all;
 }
+
 export function getPlugins(api: OpenApi3Spec): Plugins {
   let _iterator = 0;
 
@@ -46,6 +48,7 @@ export function getPlugins(api: OpenApi3Spec): Plugins {
     paths: getPathPlugins(paths, increment, api),
   };
 }
+
 // NOTE: It isn't great that we're relying on declarative-config stuff here but there's
 // not much we can do about it. If we end up needing this again, it should be factored
 // out to a higher-level.
@@ -71,6 +74,7 @@ export function mapDcPluginsToK8Plugins(
     return k8sPlugin;
   });
 }
+
 export function getGlobalPlugins(
   api: OpenApi3Spec,
   increment: IndexIncrement,
@@ -84,6 +88,7 @@ export function getGlobalPlugins(
   );
   return [...globalK8Plugins, ...securityPlugins];
 }
+
 export function getServerPlugins(
   servers: OA3Server[],
   increment: IndexIncrement,
@@ -93,6 +98,7 @@ export function getServerPlugins(
     plugins: generateK8PluginConfig(server, PluginNameSuffix.server, increment),
   }));
 }
+
 export function getPathPlugins(
   paths: OA3Paths,
   increment: IndexIncrement,
@@ -108,6 +114,7 @@ export function getPathPlugins(
   });
   return normalizePathPlugins(pathPlugins);
 }
+
 export function getOperationPlugins(
   pathItem: OA3PathItem,
   increment: IndexIncrement,
@@ -132,6 +139,7 @@ export function getOperationPlugins(
     });
   return normalizeOperationPlugins(operationPlugins);
 }
+
 // When a plugin name is generated during parsing, we suffix it with where it was sourced from and an index.
 // For example, the third plugin parsed may be on the path, so it would have the (zero-indexed) name add-key-auth-p2
 const PluginNameSuffix = {
@@ -139,8 +147,10 @@ const PluginNameSuffix = {
   server: 's',
   path: 'p',
   operation: 'm',
-};
+} as const;
+
 type PluginNameSuffixKeys = $Values<typeof PluginNameSuffix>;
+
 export function generateK8PluginConfig(
   obj: Record<string, any>,
   pluginNameSuffix: PluginNameSuffixKeys,
@@ -169,25 +179,30 @@ export function generateK8PluginConfig(
 
   return plugins;
 }
+
 const blankOperation = {
   method: null,
   plugins: [],
 };
+
 const blankPath = {
   path: '',
   plugins: [],
   operations: [blankOperation],
 };
+
 export function normalizePathPlugins(pathPlugins: PathPlugins): PathPlugins {
-  const pluginsExist = pathPlugins.some(
-    p => p.plugins.length || p.operations.some(o => o.plugins.length),
-  );
+  const pluginsExist = pathPlugins.some(p => (
+    p.plugins.length || p.operations.some(o => o.plugins.length)
+  ));
   return pluginsExist ? pathPlugins : [blankPath];
 }
+
 export function normalizeOperationPlugins(operationPlugins: OperationPlugins): OperationPlugins {
   const pluginsExist = operationPlugins.some(o => o.plugins.length);
   return pluginsExist ? operationPlugins : [blankOperation];
 }
+
 export function prioritizePlugins(
   global: KubernetesPluginConfig[],
   server: KubernetesPluginConfig[],

@@ -6,10 +6,11 @@ import OneLineEditor from '../../codemirror/one-line-editor';
 import Button from '../../base/button';
 import HelpTooltip from '../../help-tooltip';
 import type { Request, RequestAuthentication } from '../../../../models/request';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   request: Request;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

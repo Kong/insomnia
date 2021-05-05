@@ -23,12 +23,14 @@ interface Props {
   render?: Function;
   getRenderContext?: Function;
   nunjucksPowerUserMode?: boolean;
-  getAutocompleteConstants?: Function;
+  getAutocompleteConstants?: Function | null;
   placeholder?: string;
   className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
   isVariableUncovered?: boolean;
+  // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
+  disabled?: boolean;
 }
 
 interface State {

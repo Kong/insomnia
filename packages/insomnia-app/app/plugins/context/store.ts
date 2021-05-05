@@ -15,11 +15,7 @@ export interface PluginStore {
   >;
 }
 
-export function init(
-  plugin: Plugin,
-): {
-  store: PluginStore;
-} {
+export function init(plugin: Plugin) {
   return {
     store: {
       async hasItem(key: string) {
@@ -50,7 +46,7 @@ export function init(
           value: string;
         }[]
       > {
-        const docs = await models.pluginData.all(plugin.name);
+        const docs = await models.pluginData.all(plugin.name) || [];
         return docs.map(d => ({
           value: d.value,
           key: d.key,

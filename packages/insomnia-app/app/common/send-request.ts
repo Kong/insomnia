@@ -1,5 +1,5 @@
 import { database as db } from './database';
-import { types as modelTypes, stats } from '../models';
+import { types as modelTypes, stats, BaseModel } from '../models';
 import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 import * as plugins from '../plugins';
@@ -14,7 +14,7 @@ export async function getSendRequestCallbackMemDb(environmentId, memDB) {
     true,
     () => {},
   );
-  const docs: Record<string, any> = [];
+  const docs: BaseModel[] = [];
 
   for (const type of Object.keys(memDB)) {
     for (const doc of memDB[type]) {

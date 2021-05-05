@@ -36,8 +36,8 @@ const validateOptions = (
 };
 
 export const generateConfig = async (
-  identifier: string | null | undefined,
-  options: Partial<GenerateConfigOptions>,
+  identifier?: string | null,
+  options: Partial<GenerateConfigOptions> = {},
 ) => {
   if (!validateOptions(options)) {
     return false;

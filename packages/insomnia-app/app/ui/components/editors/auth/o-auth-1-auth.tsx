@@ -14,6 +14,7 @@ import {
 import CodePromptModal from '../../modals/code-prompt-modal';
 import { showModal } from '../../modals';
 import Button from '../../base/button';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -29,8 +30,8 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 `.trim();
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   showPasswords: boolean;
   isVariableUncovered: boolean;

@@ -1,4 +1,4 @@
-import { $Values } from 'utility-types';
+import { ValueOf } from 'type-fest';
 
 export const GrpcStatusEnum = {
   OK: 0,
@@ -18,9 +18,10 @@ export const GrpcStatusEnum = {
   UNAVAILABLE: 14,
   DATA_LOSS: 15,
   UNAUTHENTICATED: 16,
-};
+} as const;
 
-type GrpcStatus = $Values<typeof GrpcStatusEnum>;
+type GrpcStatus = ValueOf<typeof GrpcStatusEnum>;
+
 export interface GrpcStatusObject {
   code: GrpcStatus;
   details: string;

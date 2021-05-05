@@ -1,4 +1,4 @@
-import React, { HTMLAttributes, PureComponent, ReactNode } from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from './button';
@@ -22,6 +22,8 @@ interface Props {
   value?: any;
   tabIndex?: number;
   className?: string;
+  // TODO(TSCONVERSION) this is linked to Button not using title
+  title?: string;
 }
 
 interface State {

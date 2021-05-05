@@ -33,7 +33,9 @@ export default async function(
   let codeChallenge = '';
 
   if (usePkce) {
+    // @ts-expect-error -- TSCONVERSION
     codeVerifier = _base64UrlEncode(crypto.randomBytes(32));
+    // @ts-expect-error -- TSCONVERSION
     codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
   }
 

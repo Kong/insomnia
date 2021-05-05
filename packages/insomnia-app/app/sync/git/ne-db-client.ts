@@ -5,6 +5,9 @@ import YAML from 'yaml';
 import Stat from './stat';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
+import { BufferEncoding } from './utils';
+import { SystemError } from './system-error';
+
 export class NeDBClient {
   _workspaceId: string;
 
@@ -24,12 +27,8 @@ export class NeDBClient {
 
   async readFile(
     filePath: string,
-    options?:
-      | buffer$Encoding
-      | {
-          encoding?: buffer$Encoding;
-        },
-  ): Promise<Buffer | string> {
+    options?: BufferEncoding | { encoding?: BufferEncoding },
+  ) {
     filePath = path.normalize(filePath);
     options = options || {};
 
@@ -116,28 +115,41 @@ export class NeDBClient {
     let otherFolders = [];
 
     if (root === null && id === null && type === null) {
+      // @ts-expect-error -- TSCONVERSION
       otherFolders = [GIT_INSOMNIA_DIR_NAME];
     } else if (id === null && type === null) {
       otherFolders = [
+        // @ts-expect-error -- TSCONVERSION
         models.workspace.type,
+        // @ts-expect-error -- TSCONVERSION
         models.environment.type,
+        // @ts-expect-error -- TSCONVERSION
         models.requestGroup.type,
+        // @ts-expect-error -- TSCONVERSION
         models.request.type,
+        // @ts-expect-error -- TSCONVERSION
         models.apiSpec.type,
+        // @ts-expect-error -- TSCONVERSION
         models.unitTestSuite.type,
+        // @ts-expect-error -- TSCONVERSION
         models.unitTest.type,
+        // @ts-expect-error -- TSCONVERSION
         models.grpcRequest.type,
+        // @ts-expect-error -- TSCONVERSION
         models.protoFile.type,
+        // @ts-expect-error -- TSCONVERSION
         models.protoDirectory.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
+      // @ts-expect-error -- TSCONVERSION
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);
     }
 
+    // @ts-expect-error -- TSCONVERSION
     const ids = docs.map(d => `${d._id}.yml`);
     return [...ids, ...otherFolders].sort();
   }
@@ -208,11 +220,12 @@ export class NeDBClient {
   }
 
   _errMissing(filePath: string) {
-    const e: ErrnoError = new Error(`ENOENT: no such file or directory, scandir '${filePath}'`);
-    e.errno = -2;
-    e.code = 'ENOENT';
-    e.syscall = 'scandir';
-    e.path = filePath;
-    return e;
+    return new SystemError({
+      message: `ENOENT: no such file or directory, scandir '${filePath}'`,
+      errno: -2,
+      code: 'ENOENT',
+      syscall: 'scandir',
+      path: filePath,
+    });
   }
 }

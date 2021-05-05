@@ -58,8 +58,8 @@ export function trackEvent(
 export function trackNonInteractiveEvent(
   category: string,
   action: string,
-  label: string | null | undefined,
-  value: string | null | undefined,
+  label?: string | null,
+  value?: string | null,
 ) {
   process.nextTick(async () => {
     await _trackEvent(false, category, action, label, value, false);
@@ -81,8 +81,8 @@ export function trackNonInteractiveEvent(
 export function trackNonInteractiveEventQueueable(
   category: string,
   action: string,
-  label: string | null | undefined,
-  value: string | null | undefined,
+  label?: string | null,
+  value?: string | null,
 ) {
   process.nextTick(async () => {
     await _trackEvent(false, category, action, label, value, true);
@@ -113,7 +113,7 @@ export async function getDeviceId() {
 
 let segmentClient: Analytics | null = null;
 
-export async function trackSegmentEvent(event: String, properties?: Record<string, any>) {
+export async function trackSegmentEvent(event: string, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {
@@ -123,6 +123,7 @@ export async function trackSegmentEvent(event: String, properties?: Record<strin
   try {
     if (!segmentClient) {
       segmentClient = new Analytics(getSegmentWriteKey(), {
+      // @ts-expect-error -- TSCONVERSION
         axiosConfig: {
           // This is needed to ensure that we use the NodeJS adapter in the render process
           ...(global?.require && {
@@ -180,9 +181,9 @@ export async function _trackEvent(
   interactive: boolean,
   category: string,
   action: string,
-  label: string | null | undefined,
-  value: string | null | undefined,
-  queuable: boolean | null | undefined,
+  label?: string | null,
+  value?: string | null,
+  queuable?: boolean | null,
 ) {
   const prefix = interactive ? '[ga] Event' : '[ga] Non-interactive';
   console.log(prefix, [category, action, label, value].filter(Boolean).join(', '));
@@ -215,6 +216,7 @@ export async function _trackEvent(
       name: KEY_EVENT_VALUE,
       value: value,
     });
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   await _sendToGoogle(params, !!queuable);
 }
 
@@ -227,6 +229,7 @@ export async function _trackPageView(location: string) {
       value: 'pageview',
     },
   ];
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   await _sendToGoogle(params, false);
 }
 
@@ -322,7 +325,7 @@ db.onChange(async changes => {
   }
 });
 
-async function _sendToGoogle(params: RequestParameter[], queueable: boolean) {
+async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {
@@ -336,6 +339,7 @@ async function _sendToGoogle(params: RequestParameter[], queueable: boolean) {
   }
 
   const baseParams = await _getDefaultParams();
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const allParams = [...baseParams, ...params];
   const qs = buildQueryStringFromParams(allParams);
   const baseUrl = isDevelopment()
@@ -354,7 +358,7 @@ async function _sendToGoogle(params: RequestParameter[], queueable: boolean) {
       console.warn('[ga] Bad status code ' + statusCode);
     }
 
-    const chunks = [];
+    const chunks: Buffer[] = [];
     const [contentType] = response.headers['content-type'] || [];
 
     if (contentType !== 'application/json') {
@@ -395,7 +399,7 @@ async function _sendToGoogle(params: RequestParameter[], queueable: boolean) {
  * @returns {Promise<void>}
  * @private
  */
-let _queuedEvents = [];
+let _queuedEvents: RequestParameter[] = [];
 
 async function _flushQueuedEvents() {
   console.log(`[ga] Flushing ${_queuedEvents.length} queued events`);

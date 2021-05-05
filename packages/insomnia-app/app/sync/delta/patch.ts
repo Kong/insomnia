@@ -1,4 +1,5 @@
 import type { Operation } from './diff';
+
 export function patch(a: string, operations: Operation[]) {
   let result = '';
 

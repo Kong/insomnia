@@ -33,7 +33,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       dialog(
         title,
         body: HTMLElement,
-        options?: {
+        options: {
           onHide?: () => void;
           tall?: boolean;
           skinny?: boolean;
@@ -119,17 +119,19 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       /** @deprecated as it was never officially supported */
       showGenericModalDialog(
         title: string,
-        options?: {
-          html: string;
+        options: {
+          html?: string;
         } = {},
       ) {
         console.warn('app.showGenericModalDialog() is deprecated. Use app.dialog() instead.');
         // Create DOM node so we can adapt to the new dialog() method
         const body = document.createElement('div');
+        // @ts-expect-error -- TSCONVERSION
         body.innerHTML = options.html;
         return this.dialog(title, body);
       },
     },
+    // @ts-expect-error -- TSCONVERSION
     __private: {
       axios,
       analytics,

@@ -11,7 +11,7 @@ import * as git from 'isomorphic-git';
 export function routableFSClient(
   defaultFS: git.PromiseFsClient,
   otherFS: Record<string, git.PromiseFsClient>,
-): git.PromiseFsClient {
+) {
   const execMethod = async (method: string, filePath: string, ...args: any[]) => {
     filePath = path.normalize(filePath);
 

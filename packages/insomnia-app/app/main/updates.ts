@@ -67,16 +67,18 @@ async function getUpdateUrl(force: boolean): Promise<string | null> {
 function _sendUpdateStatus(status) {
   const windows = BrowserWindow.getAllWindows();
 
-  for (const w of windows) {
-    w.send('updater.check.status', status);
+  for (const window of windows) {
+    // @ts-expect-error -- TSCONVERSION seems to be a genuine error
+    window.send('updater.check.status', status);
   }
 }
 
 function _sendUpdateComplete(success: boolean, msg: string) {
   const windows = BrowserWindow.getAllWindows();
 
-  for (const w of windows) {
-    w.send('updater.check.complete', success, msg);
+  for (const window of windows) {
+    // @ts-expect-error -- TSCONVERSION seems to be a genuine error
+    window.send('updater.check.complete', success, msg);
   }
 }
 
@@ -155,6 +157,7 @@ async function _checkForUpdates(force: boolean) {
 
   try {
     console.log(`[updater] Checking for updates url=${updateUrl}`);
+    // @ts-expect-error -- TSCONVERSION appears to be a genuine error
     autoUpdater.setFeedURL(updateUrl);
     autoUpdater.checkForUpdates();
   } catch (err) {

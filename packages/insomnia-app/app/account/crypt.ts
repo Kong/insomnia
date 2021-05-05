@@ -1,6 +1,7 @@
 import HKDF from 'hkdf';
 import srp from 'srp-js';
 import forge from 'node-forge';
+
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000
 
@@ -38,12 +39,14 @@ export function encryptRSAWithJWK(publicKeyJWK, plaintext) {
 
   const e = _b64UrlToBigInt(publicKeyJWK.e);
 
+  // @ts-expect-error -- TSCONVERSION appears not to be exported for some reason
   const publicKey = forge.rsa.setPublicKey(n, e);
   const encrypted = publicKey.encrypt(encodedPlaintext, 'RSA-OAEP', {
     md: forge.md.sha256.create(),
   });
   return forge.util.bytesToHex(encrypted);
 }
+
 export function decryptRSAWithJWK(privateJWK, encryptedBlob) {
   const n = _b64UrlToBigInt(privateJWK.n);
 
@@ -61,6 +64,7 @@ export function decryptRSAWithJWK(privateJWK, encryptedBlob) {
 
   const qInv = _b64UrlToBigInt(privateJWK.qi);
 
+  // @ts-expect-error -- TSCONVERSION appears not to be exported for some reason
   const privateKey = forge.rsa.setPrivateKey(n, e, d, p, q, dP, dQ, qInv);
   const bytes = forge.util.hexToBytes(encryptedBlob);
   const decrypted = privateKey.decrypt(bytes, 'RSA-OAEP', {
@@ -92,8 +96,10 @@ export function encryptAESBuffer(jwkOrKey, buff, additionalData = '') {
   cipher.finish();
   return {
     iv: forge.util.bytesToHex(iv),
+      // @ts-expect-error -- TSCONVERSION needs to be converted to string
     t: forge.util.bytesToHex(cipher.mode.tag),
     ad: forge.util.bytesToHex(additionalData),
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     d: forge.util.bytesToHex(cipher.output),
   };
 }
@@ -123,8 +129,10 @@ export function encryptAES(jwkOrKey, plaintext, additionalData = '') {
   cipher.finish();
   return {
     iv: forge.util.bytesToHex(iv),
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     t: forge.util.bytesToHex(cipher.mode.tag),
     ad: forge.util.bytesToHex(additionalData),
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     d: forge.util.bytesToHex(cipher.output),
   };
 }
@@ -147,6 +155,7 @@ export function decryptAES(jwkOrKey, encryptedResult) {
   decipher.start({
     iv: forge.util.hexToBytes(encryptedResult.iv),
     tagLength: encryptedResult.t.length * 4,
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     tag: forge.util.hexToBytes(encryptedResult.t),
     additionalData: forge.util.hexToBytes(encryptedResult.ad),
   });
@@ -176,12 +185,14 @@ export function decryptAESToBuffer(jwkOrKey, encryptedResult) {
   decipher.start({
     iv: forge.util.hexToBytes(encryptedResult.iv),
     tagLength: encryptedResult.t.length * 4,
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     tag: forge.util.hexToBytes(encryptedResult.t),
     additionalData: forge.util.hexToBytes(encryptedResult.ad),
   });
   decipher.update(forge.util.createBuffer(forge.util.hexToBytes(encryptedResult.d)));
 
   if (decipher.finish()) {
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     return Buffer.from(forge.util.bytesToHex(decipher.output), 'hex');
   } else {
     throw new Error('Failed to decrypt data');
@@ -210,6 +221,7 @@ export function srpGenKey() {
  */
 export async function generateAES256Key() {
   const c = window.crypto;
+  // @ts-expect-error -- TSCONVERSION: likely needs a module augmentation for webkit
   const subtle = c ? c.subtle || c.webkitSubtle : null;
 
   if (subtle) {
@@ -329,11 +341,12 @@ function _hexToB64Url(h) {
   return window.btoa(bytes).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
-function _b64UrlToBigInt(s) {
+function _b64UrlToBigInt(s: string) {
+  // @ts-expect-error -- TSCONVERSION needs investigation in forge types
   return new forge.jsbn.BigInteger(_b64UrlToHex(s), 16);
 }
 
-function _b64UrlToHex(s) {
+function _b64UrlToHex(s: string) {
   const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
   return forge.util.bytesToHex(window.atob(b64));
 }

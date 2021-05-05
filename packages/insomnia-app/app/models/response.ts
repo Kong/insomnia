@@ -26,6 +26,7 @@ export interface ResponseHeader {
 
 export interface ResponseTimelineEntry {
   name: string;
+  timestamp: number;
   value: string;
 }
 

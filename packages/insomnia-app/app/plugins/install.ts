@@ -8,28 +8,44 @@ import path from 'path';
 
 const YARN_DEPRECATED_WARN = /(?<keyword>warning)(?<dependencies>[^>:].+[>:])(?<issue>.+)/;
 
+interface InsomniaPlugin {
+  insomnia: any;
+  name: string;
+  version: string;
+  dist: {
+    shasum: string;
+    tarball: string;
+  }
+}
+
 export default async function(lookupName: string) {
-  return new Promise(async (resolve, reject) => {
-    let info: Record<string, any> = {};
+  return new Promise<void>(async (resolve, reject) => {
+    let info: InsomniaPlugin | null = null;
 
     try {
       info = await _isInsomniaPlugin(lookupName);
       // Get actual module name without version suffixes and things
       const moduleName = info.name;
       const pluginDir = path.join(PLUGIN_PATH, moduleName);
+
       // Make plugin directory
       mkdirp.sync(pluginDir);
+
       // Download the module
       const request = electron.remote.net.request(info.dist.tarball);
       request.on('error', err => {
-        reject(new Error(`Failed to make plugin request ${info.dist.tarball}: ${err.message}`));
+        reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
       });
       const { tmpDir } = await _installPluginToTmpDir(lookupName);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
+
       // Move entire module to plugins folder
-      fsx.moveSync(path.join(tmpDir, moduleName), pluginDir, {
-        overwrite: true,
-      });
+      fsx.moveSync(
+        path.join(tmpDir, moduleName),
+        pluginDir,
+        { overwrite: true },
+      );
+
       // Move each dependency into node_modules folder
       const pluginModulesDir = path.join(pluginDir, 'node_modules');
       mkdirp.sync(pluginModulesDir);
@@ -56,7 +72,7 @@ export default async function(lookupName: string) {
 }
 
 async function _isInsomniaPlugin(lookupName: string) {
-  return new Promise((resolve, reject) => {
+  return new Promise<InsomniaPlugin>((resolve, reject) => {
     console.log('[plugins] Fetching module info from npm');
     childProcess.execFile(
       escape(process.execPath),
@@ -107,7 +123,7 @@ async function _isInsomniaPlugin(lookupName: string) {
         }
 
         console.log(`[plugins] Detected Insomnia plugin ${data.name}`);
-        resolve({
+        const insomniaPlugin: InsomniaPlugin = {
           insomnia: data.insomnia,
           name: data.name,
           version: data.version,
@@ -115,7 +131,8 @@ async function _isInsomniaPlugin(lookupName: string) {
             shasum: data.dist.shasum,
             tarball: data.dist.tarball,
           },
-        });
+        };
+        resolve(insomniaPlugin);
       },
     );
   });
@@ -194,7 +211,7 @@ export function containsOnlyDeprecationWarnings(stderr) {
  */
 export function isDeprecatedDependencies(str: string) {
   // The issue contains the message as it is without the dependency list
-  const message = YARN_DEPRECATED_WARN.exec(str)?.groups.issue;
+  const message = YARN_DEPRECATED_WARN.exec(str)?.groups?.issue;
   // Strict check, everything must be matched to be a false positive
   // !! is not a mistake, makes it returns boolean instead of undefined on error
   return !!(

@@ -31,7 +31,7 @@ const NUNJUCKS_CLOSE_STATES: {
  *
  * Code taken from jsonlint (http://zaa.ch/jsonlint/)
  */
-export const prettify = (json: string | undefined, indentChars = '\t', replaceUnicode = true) => {
+export const prettify = (json?: string, indentChars = '\t', replaceUnicode = true) => {
   if (!json) {
     return '';
   }

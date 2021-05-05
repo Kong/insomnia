@@ -414,8 +414,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
   _handleBodyChange(
     query: string,
-    variables: Record<string, any> | null | undefined,
-    operationName: string | null | undefined,
+    variables?: Record<string, any> | null,
+    operationName?: string | null,
   ) {
     this._setDocumentAST(query);
 

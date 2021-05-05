@@ -3,8 +3,9 @@ import { GIT_CLONE_DIR, GIT_INTERNAL_DIR } from './git-vcs';
 import type { GitRepository } from '../../models/git-repository';
 import { gitCallbacks } from './utils';
 import { httpClient } from './http-client';
+
 interface Options {
-  fsClient: Record<string, any>;
+  fsClient: git.FsClient;
   gitRepository: GitRepository;
 }
 
@@ -12,7 +13,7 @@ interface Options {
  * Create a shallow clone into the provided FS plugin.
  * */
 export const shallowClone = async ({ fsClient, gitRepository }: Options) => {
-  const cloneParams = {
+  await git.clone({
     ...gitCallbacks(gitRepository.credentials),
     fs: fsClient,
     http: httpClient,
@@ -21,6 +22,5 @@ export const shallowClone = async ({ fsClient, gitRepository }: Options) => {
     singleBranch: true,
     url: gitRepository.uri,
     depth: 1,
-  };
-  await git.clone(cloneParams);
+  });
 };

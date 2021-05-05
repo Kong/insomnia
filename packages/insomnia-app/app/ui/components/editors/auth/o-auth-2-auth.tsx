@@ -28,10 +28,11 @@ import ResponseDebugModal from '../../modals/response-debug-modal';
 import type { Settings } from '../../../../models/settings';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import { convertEpochToMilliseconds } from '../../../../common/misc';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (arg0: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

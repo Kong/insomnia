@@ -26,6 +26,8 @@ class AskModal extends PureComponent<{}, State> {
 
   modal: Modal | null = null;
   yesButton: HTMLButtonElement | null = null;
+  _doneCallback: Function = () => {};
+  _promiseCallback: Function = () => {};
 
   _setModalRef(m: Modal) {
     this.modal = m;
@@ -52,7 +54,7 @@ class AskModal extends PureComponent<{}, State> {
 
   _handleNo() {
     this.hide();
-    this._doneCallback && this._doneCallback(false);
+    this?._doneCallback(false);
 
     this._promiseCallback(false);
   }
@@ -61,7 +63,7 @@ class AskModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  show(options = {}) {
+  show(options: any = {}) {
     const { title, message, onDone, yesText, noText } = options;
     this._doneCallback = onDone;
     this.setState({
@@ -71,7 +73,7 @@ class AskModal extends PureComponent<{}, State> {
       noText: noText || 'No',
       loading: false,
     });
-    this.modal.show();
+    this.modal?.show();
     setTimeout(() => {
       this.yesButton && this.yesButton.focus();
     }, 100);
@@ -95,7 +97,8 @@ class AskModal extends PureComponent<{}, State> {
               ref={this._setYesButtonRef}
               className="btn"
               onClick={this._handleYes}
-              disabled={loading}>
+              disabled={loading}
+            >
               {loading && <i className="fa fa-refresh fa-spin" />} {yesText}
             </button>
           </div>

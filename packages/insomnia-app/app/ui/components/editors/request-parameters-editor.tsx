@@ -4,6 +4,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import KeyValueEditor from '../key-value-editor/editor';
 import CodeEditor from '../codemirror/code-editor';
 import type { Request, RequestParameter } from '../../../models/request';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
@@ -13,8 +14,8 @@ interface Props {
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: any[]) => any;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
   request: Request;
 }
 

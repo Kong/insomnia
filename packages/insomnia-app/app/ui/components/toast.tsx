@@ -184,7 +184,7 @@ class Toast extends PureComponent<{}, State> {
     }, 1000);
   }
 
-  _listenerShowNotification(e: any, notification: ToastNotification) {
+  _listenerShowNotification(_e, notification: ToastNotification) {
     console.log('[toast] Received notification ' + notification.key);
 
     this._handleNotification(notification);

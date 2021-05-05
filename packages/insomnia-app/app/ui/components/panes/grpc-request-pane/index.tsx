@@ -14,6 +14,7 @@ import useProtoFileReload from './use-proto-file-reload';
 import styled from 'styled-components';
 import useActionHandlers from './use-action-handlers';
 import useExistingGrpcUrls from './use-existing-grpc-urls';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
   forceRefreshKey: number;
@@ -22,9 +23,9 @@ interface Props {
   workspaceId: string;
   settings: Settings;
   // For variables
-  handleRender: (arg0: string) => Promise<string>;
+  handleRender: HandleRender;
   isVariableUncovered: boolean;
-  handleGetRenderContext: (...args: any[]) => any;
+  handleGetRenderContext: HandleGetRenderContext;
 }
 
 const StyledUrlBar = styled.div`

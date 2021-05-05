@@ -6,16 +6,13 @@ import {
 } from '../../common/import';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 import type { ImportRawConfig } from '../../common/import';
+
 interface PluginImportOptions {
   workspaceId?: string;
   scope?: WorkspaceScope;
 }
-export function init(): {
-  data: {
-    import: Record<string, any>;
-    export: Record<string, any>;
-  };
-} {
+
+export function init() {
   return {
     data: {
       import: {
@@ -58,7 +55,9 @@ export function init(): {
 function buildImportRawConfig(options: PluginImportOptions): ImportRawConfig {
   const getWorkspaceId = () => Promise.resolve(options.workspaceId || null);
 
-  const getWorkspaceScope = options.scope && (() => Promise.resolve(options.scope));
+  const getWorkspaceScope = options.scope && (() => (
+    Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
+  );
 
   return {
     getWorkspaceId,

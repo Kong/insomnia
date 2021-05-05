@@ -469,7 +469,8 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             bg="surprise"
             onClick={this._handleRunTests}
             size="default"
-            disabled={testsRunning}>
+            disabled={testsRunning}
+          >
             {testsRunning ? 'Running... ' : 'Run Tests'}
             <i className="fa fa-play space-left"></i>
           </Button>

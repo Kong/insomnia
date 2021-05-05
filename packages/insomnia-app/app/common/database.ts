@@ -291,7 +291,7 @@ export const database = {
 
   init: async (
     types: string[],
-    config: NeDB.DataStoreOptions,
+    config: NeDB.DataStoreOptions = {},
     forceReset = false,
     consoleLog: typeof console.log = console.log,
   ) => {
@@ -342,14 +342,10 @@ export const database = {
       }
     });
 
-    // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to
-    // hang indefinitely for some reason.
+    // NOTE: Only repair the DB if we're not running in memory. Repairing here causes tests to hang indefinitely for some reason.
     // TODO: Figure out why this makes tests hang
     if (!config.inMemoryOnly) {
       await _repairDatabase();
-    }
-
-    if (!config.inMemoryOnly) {
       consoleLog(`[db] Initialized DB at ${getDBFilePath('$TYPE')}`);
     }
 

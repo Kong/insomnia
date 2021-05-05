@@ -55,7 +55,7 @@ export function authorizeUserInWindow(
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/,
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     let finalUrl: string | null = null;
 
     function _parseUrl(currentUrl: string, source: string) {
