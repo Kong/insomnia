@@ -1,4 +1,4 @@
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
 import type { RequestGroup } from './request-group';

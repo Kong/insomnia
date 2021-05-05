@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
 
@@ -69,6 +69,7 @@ export async function getOrCreateForWorkspaceId(workspaceId: string) {
     parentId: workspaceId,
   });
 
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   if (!environments.length) {
     return create({
       parentId: workspaceId,
@@ -79,6 +80,7 @@ export async function getOrCreateForWorkspaceId(workspaceId: string) {
     });
   }
 
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   return environments[environments.length - 1];
 }
 
@@ -98,6 +100,7 @@ export async function duplicate(environment: Environment) {
       $gt: environment.metaSortKey,
     },
   };
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const [nextEnvironment] = await db.find<Environment>(type, q, { metaSortKey: 1 });
   const nextSortKey = nextEnvironment ? nextEnvironment.metaSortKey : environment.metaSortKey + 100;
   // Calculate new sort key

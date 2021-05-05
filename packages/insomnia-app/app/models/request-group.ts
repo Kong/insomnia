@@ -1,4 +1,4 @@
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Folder';
@@ -74,6 +74,7 @@ export async function duplicate(requestGroup: RequestGroup, patch: Partial<Reque
     },
   };
 
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const [nextRequestGroup] = await db.find<RequestGroup>(type, q, {
     metaSortKey: 1,
   });

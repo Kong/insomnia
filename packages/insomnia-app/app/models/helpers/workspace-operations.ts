@@ -1,5 +1,5 @@
 import * as models from '../index';
-import * as db from '../../common/database';
+import { database as db } from '../../common/database';
 import { isDesign } from './is-model';
 import type { Workspace } from '../workspace';
 import type { ApiSpec } from '../api-spec';

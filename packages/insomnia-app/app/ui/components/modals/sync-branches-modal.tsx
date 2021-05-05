@@ -7,7 +7,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
 import VCS from '../../../sync/vcs';
-import { batchModifyDocs } from '../../../common/database';
+import { database as db } from '../../../common/database';
 import type { StatusCandidate } from '../../../sync/types';
 import PromptButton from '../base/prompt-button';
 import SyncPullButton from '../sync-pull-button';
@@ -47,7 +47,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
 
     try {
       const delta = await vcs.checkout(syncItems, branch);
-      await batchModifyDocs(delta);
+      await db.batchModifyDocs(delta);
       await this.refreshState();
     } catch (err) {
       console.log('Failed to checkout', err.stack);
@@ -62,7 +62,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
     const delta = await vcs.merge(syncItems, branch);
 
     try {
-      await batchModifyDocs(delta);
+      await db.batchModifyDocs(delta);
       await this.refreshState();
     } catch (err) {
       console.log('Failed to merge', err.stack);
@@ -110,7 +110,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
       await vcs.fork(newBranchName);
       // Checkout new branch
       const delta = await vcs.checkout(syncItems, newBranchName);
-      await batchModifyDocs(delta);
+      await db.batchModifyDocs(delta);
       // Clear branch name and refresh things
       await this.refreshState({
         newBranchName: '',

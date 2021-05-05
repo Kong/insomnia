@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import App from './containers/app';
 import * as models from '../models';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import { init as initStore } from './redux/modules';
 import { init as initPlugins } from '../plugins';
 import './css/index.less';

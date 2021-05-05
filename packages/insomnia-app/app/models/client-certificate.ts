@@ -1,4 +1,4 @@
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Client Certificate';
@@ -62,9 +62,7 @@ export function getById(id: string) {
 }
 
 export function findByParentId(parentId: string) {
-  return db.find<ClientCertificate>(type, {
-    parentId,
-  });
+  return db.find<ClientCertificate>(type, { parentId });
 }
 
 export function remove(cert: ClientCertificate) {

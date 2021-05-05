@@ -2,7 +2,7 @@ import { bindActionCreators, combineReducers } from 'redux';
 import * as entities from './entities';
 import configureStore from '../create';
 import * as global from './global';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import { API_BASE_URL, getClientString } from '../../../common/constants';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
 import * as fetch from '../../../account/fetch';

@@ -58,7 +58,7 @@ import {
   smartEncodeUrl,
 } from 'insomnia-url';
 import fs from 'fs';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import CACerts from './ca-certs';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';

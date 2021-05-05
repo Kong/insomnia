@@ -6,7 +6,7 @@ import type { BaseModel } from '../../models';
 import * as models from '../../models';
 import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 import type { HandleImportFileCallback, HandleImportUriCallback, WrapperProps } from './wrapper';
-import * as db from '../../common/database';
+import { database as db } from '../../common/database';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import OnboardingContainer from './onboarding-container';
 import { WorkspaceScopeKeys } from '../../models/workspace';

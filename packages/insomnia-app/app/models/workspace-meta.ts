@@ -1,5 +1,5 @@
 import type { BaseModel } from './index';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import {
   DEFAULT_SIDEBAR_WIDTH,
   DEFAULT_PANE_WIDTH,
@@ -96,6 +96,7 @@ export async function getByParentId(parentId: string) {
 }
 
 export async function getByGitRepositoryId(gitRepositoryId: string) {
+  // @ts-expect-error -- TSCONVERSION needs generic for query
   return db.getWhere<WorkspaceMeta>(type, { gitRepositoryId });
 }
 

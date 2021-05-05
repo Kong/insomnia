@@ -34,7 +34,7 @@ import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import * as globalActions from '../redux/modules/global';
 import * as entitiesActions from '../redux/modules/entities';
-import * as db from '../../common/database';
+import { database as db } from '../../common/database';
 import * as models from '../../models';
 import {
   selectActiveCookieJar,

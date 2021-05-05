@@ -60,7 +60,7 @@ import RequestRenderErrorModal from './modals/request-render-error-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import CodePromptModal from './modals/code-prompt-modal';
-import * as db from '../../common/database';
+import { database as db } from '../../common/database';
 import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
 import type { CookieJar } from '../../models/cookie-jar';

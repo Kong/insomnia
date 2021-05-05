@@ -1,5 +1,5 @@
 import type { BaseModel } from './index';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import type { GitCredentials } from '../sync/git/git-vcs';
 
 export type GitRepository = BaseModel & BaseGitRepository;

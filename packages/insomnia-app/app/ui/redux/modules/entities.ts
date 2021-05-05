@@ -1,5 +1,5 @@
 import clone from 'clone';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { pluralize } from '../../../common/misc';
 const ENTITY_CHANGES = 'entities/changes';

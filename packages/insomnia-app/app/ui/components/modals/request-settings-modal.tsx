@@ -8,7 +8,7 @@ import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import type { GrpcRequest } from '../../../models/grpc-request';

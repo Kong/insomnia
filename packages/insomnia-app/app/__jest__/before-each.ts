@@ -1,4 +1,4 @@
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import * as models from '../models';
 import * as fetch from '../account/fetch';
 export async function globalBeforeEach() {

@@ -19,7 +19,7 @@ import type { Workspace } from '../../../../models/workspace';
 import type { Settings } from '../../../../models/settings';
 import TimeFromNow from '../../time-from-now';
 import * as models from '../../../../models/index';
-import * as db from '../../../../common/database';
+import { database as db } from '../../../../common/database';
 import { showModal } from '../../modals';
 import type { Request } from '../../../../models/request';
 import { newBodyRaw } from '../../../../models/request';

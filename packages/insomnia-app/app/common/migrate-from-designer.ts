@@ -3,7 +3,7 @@ import type { BaseModel } from '../models';
 import fsPath from 'path';
 import fs from 'fs';
 import * as models from '../models';
-import * as db from './database';
+import { database as db } from './database';
 import { getModelName } from '../models';
 import { difference } from 'lodash';
 import type { Workspace } from '../models/workspace';

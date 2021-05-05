@@ -1,6 +1,6 @@
 import deepEqual from 'deep-equal';
 import * as models from './index';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import type { BaseModel } from './index';
 import type { Request } from './request';

@@ -14,7 +14,7 @@ import * as models from '../../../models';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import SelectModal from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
-import * as db from '../../../common/database';
+import { database } from '../../../common/database';
 import { trackEvent } from '../../../common/analytics';
 import SettingsModal, {
   TAB_INDEX_PLUGINS,
@@ -672,7 +672,7 @@ export function exportRequestsToFile(requestIds) {
           }
 
           requests.push(request);
-          const ancestors = await db.withAncestors(request, [
+          const ancestors = await database.withAncestors(request, [
             models.workspace.type,
             models.requestGroup.type,
           ]);
@@ -683,7 +683,7 @@ export function exportRequestsToFile(requestIds) {
           }
 
           workspaceLookup[workspace._id] = true;
-          const descendants = await db.withDescendants(workspace);
+          const descendants = await database.withDescendants(workspace);
           const privateEnvs = descendants.filter(
             descendant => descendant.type === models.environment.type && descendant.isPrivate,
           );

@@ -19,7 +19,7 @@ import Tooltip from '../tooltip';
 import LoginModal from '../modals/login-modal';
 import * as session from '../../../account/session';
 import PromptButton from '../base/prompt-button';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';

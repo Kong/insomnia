@@ -1,4 +1,4 @@
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import { PREVIEW_MODE_FRIENDLY } from '../common/constants';
 import type { BaseModel } from './index';
 

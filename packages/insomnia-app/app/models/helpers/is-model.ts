@@ -15,8 +15,8 @@ import { RequestGroup } from '../request-group';
 import { Request } from '../request';
 import { GrpcRequest } from '../grpc-request';
 
-export const isGrpcRequestId = (id: string) => (
-  id.startsWith(`${grpcRequest.prefix}_`)
+export const isGrpcRequestId = (id: string | null) => (
+  id?.startsWith(`${grpcRequest.prefix}_`)
 );
 
 // TODO: Invalid until we can ensure all requests are prefixed by the id correctly INS-341

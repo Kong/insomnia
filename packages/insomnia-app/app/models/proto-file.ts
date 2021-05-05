@@ -1,4 +1,4 @@
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Proto File';

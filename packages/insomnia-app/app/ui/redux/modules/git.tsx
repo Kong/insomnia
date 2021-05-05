@@ -13,7 +13,7 @@ import { createGitRepository } from '../../../models/helpers/git-repository-oper
 import { strings } from '../../../common/strings';
 import { trackEvent } from '../../../common/analytics';
 import YAML from 'yaml';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import { createWorkspace } from './workspace';
 import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
 export type UpdateGitRepositoryCallback = (arg0: { gitRepository: GitRepository }) => void;

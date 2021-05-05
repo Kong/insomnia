@@ -16,7 +16,7 @@ import ModalFooter from '../base/modal-footer';
 import * as models from '../../../models';
 import type { Workspace } from '../../../models/workspace';
 import type { Environment } from '../../../models/environment';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
 import { docsTemplateTags } from '../../../common/documentation';

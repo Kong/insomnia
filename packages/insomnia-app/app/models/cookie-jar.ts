@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Cookie Jar';
@@ -57,10 +57,9 @@ export async function create(patch: Partial<CookieJar>) {
 }
 
 export async function getOrCreateForParentId(parentId: string) {
-  const cookieJars: CookieJar[] = await db.find(type, {
-    parentId,
-  });
+  const cookieJars = await db.find(type, { parentId });
 
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   if (cookieJars.length === 0) {
     return create({
       parentId,
@@ -69,6 +68,7 @@ export async function getOrCreateForParentId(parentId: string) {
       _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
   } else {
+    // @ts-expect-error -- TSCONVERSION appears to be a genuine error
     return cookieJars[0];
   }
 }

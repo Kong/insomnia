@@ -21,7 +21,7 @@ import {
   METHOD_GET,
   METHOD_POST,
 } from '../common/constants';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import { getContentTypeHeader } from '../common/misc';
 import { deconstructQueryStringToParams } from 'insomnia-url';
 import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
@@ -403,6 +403,7 @@ export async function duplicate(request: Request, patch: Partial<Request> = {}) 
     },
   };
 
+  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
   const [nextRequest] = await db.find<Request>(type, q, {
     metaSortKey: 1,
   });

@@ -8,7 +8,7 @@ import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomn
 import type { Workspace } from '../../../models/workspace';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import { showAlert } from '../modals';
 import { stringsPlural } from '../../../common/strings';
 

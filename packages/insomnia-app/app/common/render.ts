@@ -4,7 +4,7 @@ import { setDefaultProtocol } from 'insomnia-url';
 import clone from 'clone';
 import * as models from '../models';
 import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
-import * as db from './database';
+import { database as db } from './database';
 import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';

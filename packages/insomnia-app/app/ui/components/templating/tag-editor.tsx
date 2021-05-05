@@ -10,7 +10,7 @@ import type {
   NunjucksParsedTagArg,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 import { delay, fnOrString } from '../../../common/misc';

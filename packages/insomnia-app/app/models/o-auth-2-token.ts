@@ -1,5 +1,5 @@
 import type { BaseModel } from './index';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 
 export type OAuth2Token = BaseModel & BaseOAuth2Token;
 

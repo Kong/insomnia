@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
-import * as db from '../common/database';
+import { database as db, Query } from '../common/database';
 import { getDataDirectory } from '../common/misc';
 
 export const name = 'Response';
@@ -143,7 +143,7 @@ async function _findRecentForRequest(
   environmentId: string | null,
   limit: number,
 ) {
-  const query: db.Query = {
+  const query: Query = {
     parentId: requestId,
   };
 

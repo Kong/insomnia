@@ -16,7 +16,7 @@ import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Workspace } from '../../../models/workspace';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
@@ -25,6 +25,7 @@ import type { Environment } from '../../../models/environment';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { isDesign } from '../../../models/helpers/is-model';
+import { ApiSpec } from '../../../models/api-spec';
 
 interface Props {
   displayName: string;

@@ -1,6 +1,6 @@
 import { convert, ImportRequest } from 'insomnia-importers';
 import clone from 'clone';
-import * as db from './database';
+import { database as db } from './database';
 import * as har from './har';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
@@ -19,7 +19,7 @@ import {
   isRequestGroup,
   isWorkspace,
 } from '../models/helpers/is-model';
-import type { Workspace, WorkspaceScope } from '../models/workspace';
+import type { Workspace } from '../models/workspace';
 import type { ApiSpec } from '../models/api-spec';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
 
@@ -285,7 +285,7 @@ export async function importRaw(
       newDoc = await db.docUpdate(existingDoc, updateDoc);
     } else {
       if (isWorkspace(model)) {
-        await updateWorkspaceScope(resource, resultsType, getWorkspaceScope);
+        await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
       }
 
       newDoc = await db.docCreate(model.type, resource);
@@ -417,7 +417,7 @@ export async function exportRequestsHAR(
   requests = requests.sort((a: Record<string, any>, b: Record<string, any>) =>
     a.metaSortKey < b.metaSortKey ? -1 : 1,
   );
-  const harRequests: Record<string, any>[] = [];
+  const harRequests: har.ExportRequest[] = [];
 
   for (const request of requests) {
     const workspace = mapRequestIdToWorkspace[request._id];

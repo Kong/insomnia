@@ -4,7 +4,7 @@ import mkdirp from 'mkdirp';
 import fs from 'fs';
 import type { ProtoFile } from '../../../models/proto-file';
 import type { ProtoDirectory } from '../../../models/proto-directory';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { isProtoDirectory, isProtoFile, isWorkspace } from '../../../models/helpers/is-model';
 import type { BaseModel } from '../../../models';

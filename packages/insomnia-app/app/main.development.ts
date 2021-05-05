@@ -7,7 +7,7 @@ import * as updates from './main/updates';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
-import * as database from './common/database';
+import { database } from './common/database';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';

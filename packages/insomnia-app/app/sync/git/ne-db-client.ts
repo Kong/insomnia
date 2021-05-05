@@ -1,5 +1,5 @@
 import path from 'path';
-import * as db from '../../common/database';
+import { database as db } from '../../common/database';
 import * as models from '../../models';
 import YAML from 'yaml';
 import Stat from './stat';

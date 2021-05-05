@@ -1,6 +1,6 @@
 import type { BaseModel } from './index';
 import * as models from './index';
-import * as db from '../common/database';
+import { database as db } from '../common/database';
 import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
 import { ValueOf } from 'type-fest';

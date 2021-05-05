@@ -1,4 +1,4 @@
-import * as db from './database';
+import { database as db } from './database';
 import { types as modelTypes, stats } from '../models';
 import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';

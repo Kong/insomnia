@@ -7,7 +7,7 @@ import type { Workspace } from '../../../models/workspace';
 import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
 import { showAlert, showError, showModal } from '../modals';
 import GitStagingModal from '../modals/git-staging-modal';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import type { GitRepository } from '../../../models/git-repository';
 import GitLogModal from '../modals/git-log-modal';

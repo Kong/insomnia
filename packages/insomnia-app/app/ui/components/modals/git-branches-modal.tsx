@@ -7,7 +7,7 @@ import ModalHeader from '../base/modal-header';
 import { GitVCS } from '../../../sync/git/git-vcs';
 import classnames from 'classnames';
 import PromptButton from '../base/prompt-button';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import type { GitRepository } from '../../../models/git-repository';
 import ModalFooter from '../base/modal-footer';
 
