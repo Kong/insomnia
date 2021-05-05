@@ -41,21 +41,21 @@ const FORCED_MONO_FONT_REGEX = /^fixedsys /i;
 interface Props {
   settings: Settings;
   hideModal: () => void;
-  updateSetting: (...args: Array<any>) => Settings;
-  handleToggleMenuBar: (...args: Array<any>) => any;
-  handleRootCssChange: (...args: Array<any>) => any;
+  updateSetting: (...args: any[]) => Settings;
+  handleToggleMenuBar: (...args: any[]) => any;
+  handleRootCssChange: (...args: any[]) => any;
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
 }
 
 interface State {
-  fonts: Array<{
+  fonts: {
     family: string;
     monospace: boolean;
-  }> | null;
-  fontsMono: Array<{
+  }[] | null;
+  fontsMono: {
     family: string;
     monospace: boolean;
-  }> | null;
+  }[] | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -128,10 +128,10 @@ class General extends PureComponent<Props, State> {
   renderEnumSetting(
     label: string,
     name: string,
-    values: Array<{
+    values: {
       name: string;
       value: any;
-    }>,
+    }[],
     help: string,
     forceRestart?: boolean,
   ) {
@@ -399,10 +399,10 @@ class General extends PureComponent<Props, State> {
                 value: HttpVersions.V2_0,
               }, // Enable when our version of libcurl supports HTTP/3
               // { name: 'HTTP/3', value: HttpVersions.v3 },
-            ] as Array<{
+            ] as {
               name: string;
               value: HttpVersion;
-            }>,
+            }[],
             'Preferred HTTP version to use for requests which will fall back if it cannot be' +
             'negotiated',
           )}

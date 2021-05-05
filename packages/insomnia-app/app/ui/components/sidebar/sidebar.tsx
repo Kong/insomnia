@@ -14,15 +14,15 @@ interface Props {
   activeEnvironment: Environment | null;
   children: ReactNode;
   environmentHighlightColorStyle: string;
-  handleSetActiveEnvironment: (...args: Array<any>) => any;
-  handleSetActiveWorkspace: (...args: Array<any>) => any;
+  handleSetActiveEnvironment: (...args: any[]) => any;
+  handleSetActiveWorkspace: (...args: any[]) => any;
   hidden: boolean;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
-  showEnvironmentsModal: (...args: Array<any>) => any;
-  unseenWorkspaces: Array<Workspace>;
+  showEnvironmentsModal: (...args: any[]) => any;
+  unseenWorkspaces: Workspace[];
   width: number;
-  workspaces: Array<Workspace>;
+  workspaces: Workspace[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

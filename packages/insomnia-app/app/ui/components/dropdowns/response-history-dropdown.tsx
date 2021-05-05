@@ -23,8 +23,8 @@ interface Props {
   handleDeleteResponses: Function;
   handleDeleteResponse: Function;
   requestId: string;
-  responses: Array<Response>;
-  requestVersions: Array<RequestVersion>;
+  responses: Response[];
+  requestVersions: RequestVersion[];
   activeResponse: Response;
   activeEnvironment?: Environment | null;
   className?: string;
@@ -94,15 +94,15 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
     );
   }
 
-  renderPastResponses(responses: Array<Response>) {
+  renderPastResponses(responses: Response[]) {
     const now = moment();
     // Four arrays for four time groups
     const categories = {
-      minutes: [] as Array<Response>,
-      hours: [] as Array<Response>,
-      today: [] as Array<Response>,
-      week: [] as Array<Response>,
-      other: [] as Array<Response>,
+      minutes: [] as Response[],
+      hours: [] as Response[],
+      today: [] as Response[],
+      week: [] as Response[],
+      other: [] as Response[],
     };
 
     responses.forEach(response => {

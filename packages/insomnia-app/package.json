@@ -19,7 +19,7 @@
     "build:sr": "webpack --config send-request/webpack.config.babel.js",
     "package": "ts-node ./scripts/package.ts",
     "release": "ts-node ./scripts/release.ts",
-    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint": "eslint . --ext .js,.ts,.tsx --fix",
     "bootstrap": ""
   },
   "dev": {

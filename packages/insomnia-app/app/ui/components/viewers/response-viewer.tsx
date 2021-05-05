@@ -27,14 +27,14 @@ interface Props {
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
-  download: (...args: Array<any>) => any;
+  download: (...args: any[]) => any;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   filter: string;
-  filterHistory: Array<string>;
-  getBody: (...args: Array<any>) => any;
+  filterHistory: string[];
+  getBody: (...args: any[]) => any;
   previewMode: string;
   responseId: string;
   url: string;

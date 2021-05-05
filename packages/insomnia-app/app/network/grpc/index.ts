@@ -205,7 +205,7 @@ export const sendMessage = (
 };
 export const commit = (requestId: string) => callCache.get(requestId)?.end();
 export const cancel = (requestId: string) => callCache.get(requestId)?.cancel();
-export const cancelMultiple = (requestIds: Array<string>) => requestIds.forEach(cancel);
+export const cancelMultiple = (requestIds: string[]) => requestIds.forEach(cancel);
 
 const _setupStatusListener = (call: Call, requestId: string, respond: ResponseCallbacks) => {
   call.on('status', s => respond.sendStatus(requestId, s));

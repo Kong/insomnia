@@ -8,10 +8,10 @@ export interface PluginStore {
   removeItem(arg0: string): Promise<void>;
   clear(): Promise<void>;
   all(): Promise<
-    Array<{
+    {
       key: string;
       value: string;
-    }>
+    }[]
   >;
 }
 
@@ -45,10 +45,10 @@ export function init(
       },
 
       async all(): Promise<
-        Array<{
+        {
           key: string;
           value: string;
-        }>
+        }[]
       > {
         const docs = await models.pluginData.all(plugin.name);
         return docs.map(d => ({

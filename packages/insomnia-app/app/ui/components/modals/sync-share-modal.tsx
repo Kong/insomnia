@@ -25,7 +25,7 @@ interface Team {
 interface State {
   loading: boolean;
   selectedTeam: null | Team;
-  teams: Array<Team>;
+  teams: Team[];
   error: string;
 }
 

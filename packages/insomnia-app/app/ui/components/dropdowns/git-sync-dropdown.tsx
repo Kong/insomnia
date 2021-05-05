@@ -42,9 +42,9 @@ interface State {
   initializing: boolean;
   loadingPush: boolean;
   loadingPull: boolean;
-  log: Array<GitLogEntry>;
+  log: GitLogEntry[];
   branch: string;
-  branches: Array<string>;
+  branches: string[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

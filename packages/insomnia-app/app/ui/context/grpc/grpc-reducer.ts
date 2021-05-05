@@ -14,11 +14,11 @@ import type { GrpcMethodDefinition } from '../../../network/grpc/method';
 
 export interface GrpcRequestState {
   running: boolean;
-  requestMessages: Array<GrpcMessage>;
-  responseMessages: Array<GrpcMessage>;
+  requestMessages: GrpcMessage[];
+  responseMessages: GrpcMessage[];
   status?: GrpcStatusObject;
   error?: ServiceError;
-  methods: Array<GrpcMethodDefinition>;
+  methods: GrpcMethodDefinition[];
   reloadMethods: boolean;
 }
 

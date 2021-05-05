@@ -35,7 +35,7 @@ export interface GrpcMethodInfo {
   type: GrpcMethodType;
   fullPath: string;
 }
-type GroupedGrpcMethodInfo = Record<string, Array<GrpcMethodInfo>>;
+type GroupedGrpcMethodInfo = Record<string, GrpcMethodInfo[]>;
 export const NO_PACKAGE_KEY = 'no-package';
 
 const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
@@ -45,6 +45,6 @@ const getMethodInfo = (method: GrpcMethodDefinition): GrpcMethodInfo => ({
 });
 
 export const groupGrpcMethodsByPackage = (
-  methods: Array<GrpcMethodDefinition>,
+  methods: GrpcMethodDefinition[],
 ): GroupedGrpcMethodInfo =>
   groupBy(methods.map(getMethodInfo), m => m.segments.packageName || NO_PACKAGE_KEY);

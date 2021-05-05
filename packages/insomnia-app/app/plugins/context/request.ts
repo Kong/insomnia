@@ -52,7 +52,7 @@ export function init(
 
     getEnvironmentVariable(
       name: string,
-    ): string | number | boolean | Record<string, any> | Array<any> | null {
+    ): string | number | boolean | Record<string, any> | any[] | null {
       return renderedContext[name];
     },
 

@@ -6,15 +6,15 @@ import CodeEditor from '../codemirror/code-editor';
 import type { Request, RequestParameter } from '../../../models/request';
 
 interface Props {
-  onChange: (r: Request, parameters: Array<RequestParameter>) => Promise<Request>;
+  onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
   bulk: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorLineWrapping: boolean;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   request: Request;
 }
 
@@ -28,7 +28,7 @@ class RequestParametersEditor extends PureComponent<Props> {
     onChange(request, params);
   }
 
-  _handleKeyValueUpdate(parameters: Array<RequestParameter>) {
+  _handleKeyValueUpdate(parameters: RequestParameter[]) {
     const { onChange, request } = this.props;
     onChange(request, parameters);
   }

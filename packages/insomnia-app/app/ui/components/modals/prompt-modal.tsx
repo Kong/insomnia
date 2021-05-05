@@ -11,7 +11,7 @@ import PromptButton from '../base/prompt-button';
 
 interface State {
   title: string;
-  hints: Array<string>;
+  hints: string[];
   defaultValue?: string | null;
   submitName?: string | null;
   selectText?: boolean | null;
@@ -116,7 +116,7 @@ class PromptModal extends PureComponent<{}, State> {
     placeholder?: string;
     validate?: (arg0: string) => string;
     label?: string;
-    hints?: Array<string>;
+    hints?: string[];
     onComplete?: (arg0: string) => void;
     onDeleteHint?: (arg0: string) => void;
     onCancel?: () => void;

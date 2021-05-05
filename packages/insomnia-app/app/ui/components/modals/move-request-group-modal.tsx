@@ -11,7 +11,7 @@ import * as models from '../../../models';
 import HelpTooltip from '../help-tooltip';
 
 interface Props extends ModalProps {
-  workspaces: Array<Workspace>;
+  workspaces: Workspace[];
   activeWorkspace: Workspace;
 }
 

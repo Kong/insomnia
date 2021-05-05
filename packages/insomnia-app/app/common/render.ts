@@ -20,38 +20,38 @@ export const RENDER_PURPOSE_GENERAL: RenderPurpose = 'general';
 export const RENDER_PURPOSE_NO_RENDER: RenderPurpose = 'no-render';
 
 /** Key/value pairs to be provided to the render context */
-export type ExtraRenderInfo = Array<{
+export type ExtraRenderInfo = {
   name: string;
   value: any;
-}>;
+}[];
 export type RenderedRequest = Request & {
-  cookies: Array<{
+  cookies: {
     name: string;
     value: string;
     disabled?: boolean;
-  }>;
+  }[];
   cookieJar: CookieJar;
 };
 export type RenderedGrpcRequest = GrpcRequest;
 export type RenderedGrpcRequestBody = GrpcRequestBody;
 export interface RenderContextAndKeys {
   context: Record<string, any>;
-  keys: Array<{
+  keys: {
     name: string;
     value: any;
-  }>
+  }[]
 }
 
 export type HandleGetRenderContext = () => Promise<RenderContextAndKeys>;
 export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
 export async function buildRenderContext(
-  ancestors: Array<BaseModel> | null,
+  ancestors: BaseModel[] | null,
   rootEnvironment: Environment | null,
   subEnvironment: Environment | null,
   baseContext: Record<string, any> = {},
 ): Promise<Record<string, any>> {
-  const envObjects: Array<Record<string, any>> = [];
+  const envObjects: Record<string, any>[] = [];
 
   // Get root environment keys in correct order
   // Then get sub environment keys in correct order
@@ -276,7 +276,7 @@ export async function render<T>(
 export async function getRenderContext(
   request: Request | GrpcRequest | null,
   environmentId: string | null,
-  ancestors: Array<BaseModel> | null = null,
+  ancestors: BaseModel[] | null = null,
   purpose: RenderPurpose | null = null,
   extraInfo: ExtraRenderInfo | null = null,
 ): Promise<Record<string, any>> {
@@ -520,7 +520,7 @@ function _nunjucksSortValue(v) {
   return v && v.match && v.match(/({{|{%)/) ? 2 : 1;
 }
 
-function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): Array<string> {
+function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): string[] {
   return Object.keys(finalRenderContext).sort((k1, k2) => {
     const k1Sort = _nunjucksSortValue(finalRenderContext[k1]);
 
@@ -530,7 +530,7 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): Ar
   });
 }
 
-async function _getRequestAncestors(request: Request | GrpcRequest | null): Promise<Array<BaseModel>> {
+async function _getRequestAncestors(request: Request | GrpcRequest | null): Promise<BaseModel[]> {
   return await db.withAncestors(request, [
     models.request.type,
     models.grpcRequest.type,

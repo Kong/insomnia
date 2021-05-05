@@ -15,14 +15,14 @@ import { stringsPlural } from '../../../common/strings';
 interface Props {
   className?: string;
   vcs?: VCS;
-  workspaces: Array<Workspace>;
+  workspaces: Workspace[];
 }
 
 interface State {
   loading: boolean;
-  localProjects: Array<Project>;
+  localProjects: Project[];
   pullingProjects: Record<string, boolean>;
-  remoteProjects: Array<Project>;
+  remoteProjects: Project[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

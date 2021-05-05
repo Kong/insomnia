@@ -24,8 +24,8 @@ cJV+wRTs/Szp6LXAgMmTkKMJ+9XXErUIUgwbl27Y3Rv/9ox1p5VRg+A=
 
 interface Props {
   request: Request;
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;
@@ -75,7 +75,7 @@ class AsapAuth extends PureComponent<Props> {
     label: string,
     property: string,
     mode: string,
-    onChange: (...args: Array<any>) => any,
+    onChange: (...args: any[]) => any,
   ): ReactElement<any> {
     const {
       handleRender,

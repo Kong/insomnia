@@ -14,7 +14,7 @@ import { trackEvent } from './analytics';
 import { WorkspaceScopeKeys } from '../models/workspace';
 
 async function loadDesignerDb(
-  types: Array<string>,
+  types: string[],
   designerDataDir: string,
 ): Promise<Record<string, any>> {
   const designerDb = {};
@@ -38,12 +38,12 @@ async function loadDesignerDb(
           corruptAlertThreshold: 0.9,
         });
         // Find every entry and store in memory
-        collection.find({}, (err, docs: Array<BaseModel>) => {
+        collection.find({}, (err, docs: BaseModel[]) => {
           if (err) {
             return reject(err);
           }
 
-          (designerDb[type] as Array<Record<string, any>>).push(...docs);
+          (designerDb[type] as Record<string, any>[]).push(...docs);
           resolve();
         });
       }),
@@ -53,7 +53,7 @@ async function loadDesignerDb(
   return designerDb;
 }
 
-type DBType = Record<string, Array<BaseModel>>;
+type DBType = Record<string, BaseModel[]>;
 
 export interface MigrationOptions {
   useDesignerSettings: boolean;
@@ -67,7 +67,7 @@ export interface MigrationResult {
   error?: Error;
 }
 
-async function createCoreBackup(modelTypes: Array<string>, coreDataDir: string) {
+async function createCoreBackup(modelTypes: string[], coreDataDir: string) {
   console.log('[db-merge] creating backup');
   const backupDir = fsPath.join(coreDataDir, 'core-backup');
   await fsx.remove(backupDir);
@@ -105,7 +105,7 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   await removeDirs(pluginsToDelete, corePluginDir);
 }
 
-async function readDirs(srcDir: string): Array<string> {
+async function readDirs(srcDir: string): string[] {
   if (existsAndIsDirectory(srcDir)) {
     return await fs.promises.readdir(srcDir);
   } else {
@@ -113,7 +113,7 @@ async function readDirs(srcDir: string): Array<string> {
   }
 }
 
-async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
+async function copyDirs(dirs: string[], srcDir: string, destDir: string) {
   for (const dir of dirs.filter(c => c)) {
     const src = fsPath.join(srcDir, dir);
     const dest = fsPath.join(destDir, dir);
@@ -126,7 +126,7 @@ async function copyDirs(dirs: Array<string>, srcDir: string, destDir: string) {
   }
 }
 
-async function removeDirs(dirs: Array<string>, srcDir: string) {
+async function removeDirs(dirs: string[], srcDir: string) {
   for (const dir of dirs.filter(c => c)) {
     const dirToRemove = fsPath.join(srcDir, dir);
 

@@ -21,7 +21,7 @@ export interface Cookie {
   path: string;
   secure: boolean;
   httpOnly: boolean;
-  extensions?: Array<any>;
+  extensions?: any[];
   creation?: Date;
   creationIndex?: number;
   hostOnly?: boolean;
@@ -31,7 +31,7 @@ export interface Cookie {
 
 interface BaseCookieJar {
   name: string;
-  cookies: Array<Cookie>;
+  cookies: Cookie[];
 }
 
 export type CookieJar = BaseModel & BaseCookieJar;
@@ -57,7 +57,7 @@ export async function create(patch: Partial<CookieJar>) {
 }
 
 export async function getOrCreateForParentId(parentId: string) {
-  const cookieJars: Array<CookieJar> = await db.find(type, {
+  const cookieJars: CookieJar[] = await db.find(type, {
     parentId,
   });
 

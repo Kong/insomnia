@@ -37,8 +37,8 @@ interface Props {
 }
 
 interface State {
-  actionPlugins: Array<WorkspaceAction>;
-  configGeneratorPlugins: Array<ConfigGenerator>;
+  actionPlugins: WorkspaceAction[];
+  configGeneratorPlugins: ConfigGenerator[];
   loadingActions: Record<string, boolean>;
 }
 

@@ -28,7 +28,7 @@ interface Config {
 }
 
 interface State {
-  configs: Array<Config>;
+  configs: Config[];
   activeTab: number;
 }
 

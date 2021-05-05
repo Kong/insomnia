@@ -15,14 +15,14 @@ import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
 
 export interface Child {
   doc: Request | GrpcRequest | RequestGroup;
-  children: Array<Child>;
+  children: Child[];
   collapsed: boolean;
   hidden: boolean;
   pinned: boolean;
 }
 export interface SidebarChildObjects {
-  pinned: Array<Child>;
-  all: Array<Child>;
+  pinned: Child[];
+  all: Child[];
 }
 interface Props {
   handleActivateRequest: Function;
@@ -73,7 +73,7 @@ class SidebarChildren extends PureComponent<Props> {
     this._contextMenu = n;
   }
 
-  _renderChildren(children: Array<Child>, isInPinnedList: boolean) {
+  _renderChildren(children: Child[], isInPinnedList: boolean) {
     const {
       filter,
       handleCreateRequest,
@@ -166,7 +166,7 @@ class SidebarChildren extends PureComponent<Props> {
     });
   }
 
-  _renderList(children: Array<Child>, pinnedList: boolean) {
+  _renderList(children: Child[], pinnedList: boolean) {
     return (
       <ul
         className="sidebar__list sidebar__list-root theme--sidebar__list"

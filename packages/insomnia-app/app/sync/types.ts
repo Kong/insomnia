@@ -17,7 +17,7 @@ export interface SnapshotStateEntry {
   blob: BlobId;
   name: string;
 }
-export type SnapshotState = Array<SnapshotStateEntry>;
+export type SnapshotState = SnapshotStateEntry[];
 export type SnapshotStateMap = Record<DocumentKey, SnapshotStateEntry>;
 export type SnapshotId = string;
 export interface Snapshot {
@@ -27,7 +27,7 @@ export interface Snapshot {
   author: string;
   name: string;
   description: string;
-  state: Array<SnapshotStateEntry>;
+  state: SnapshotStateEntry[];
   // Only exists in Snapshots that are pulled from the server
   authorAccount?: {
     firstName: string;
@@ -39,7 +39,7 @@ export interface Branch {
   name: string;
   created: Date;
   modified: Date;
-  snapshots: Array<string>;
+  snapshots: string[];
 }
 export interface StageEntryDelete {
   deleted: true;

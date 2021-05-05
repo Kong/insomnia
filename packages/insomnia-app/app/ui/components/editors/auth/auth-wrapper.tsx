@@ -28,8 +28,8 @@ import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Settings } from '../../../../models/settings';
 
 interface Props {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

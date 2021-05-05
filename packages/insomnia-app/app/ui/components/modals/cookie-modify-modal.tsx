@@ -15,8 +15,8 @@ import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
 
 interface Props extends ModalProps {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   workspace: Workspace;

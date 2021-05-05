@@ -19,10 +19,10 @@ import PromptButton from '../base/prompt-button';
 
 interface Props {
   hotKeyRegistry: HotKeyRegistry;
-  handleUpdateKeyBindings: (...args: Array<any>) => any;
+  handleUpdateKeyBindings: (...args: any[]) => any;
 }
 
-const HOT_KEY_DEFS: Array<HotKeyDefinition> = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
+const HOT_KEY_DEFS: HotKeyDefinition[] = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class Shortcuts extends PureComponent<Props> {

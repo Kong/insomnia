@@ -39,7 +39,7 @@ export const selectSidebarChildren = createSelector(
     const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
 
     function next(parentId, pinnedChildren) {
-      const children: Array<SidebarModels> = (childrenMap[parentId] || [])
+      const children: SidebarModels[] = (childrenMap[parentId] || [])
         .filter(shouldShowInSidebar)
         .sort(sortByMetaKeyOrId);
 
@@ -66,7 +66,7 @@ export const selectSidebarChildren = createSelector(
       }
     }
 
-    function matchChildren(children, parentNames: Array<string> = []) {
+    function matchChildren(children, parentNames: string[] = []) {
       // Bail early if no filter defined
       if (!sidebarFilter) {
         return children;

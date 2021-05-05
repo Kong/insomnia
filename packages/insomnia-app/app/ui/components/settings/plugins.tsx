@@ -24,11 +24,11 @@ import { docsPlugins } from '../../../common/documentation';
 
 interface Props {
   settings: Settings;
-  updateSetting: (...args: Array<any>) => any;
+  updateSetting: (...args: any[]) => any;
 }
 
 interface State {
-  plugins: Array<Plugin>;
+  plugins: Plugin[];
   npmPluginValue: string;
   error: Error | null;
   installPluginErrMsg: string;

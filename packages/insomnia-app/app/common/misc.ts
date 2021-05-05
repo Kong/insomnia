@@ -18,9 +18,9 @@ interface Parameter {
 }
 
 export function filterParameters<T extends Parameter>(
-  parameters: Array<T>,
+  parameters: T[],
   name: string,
-): Array<T> {
+): T[] {
   if (!Array.isArray(parameters) || !name) {
     return [];
   }
@@ -28,7 +28,7 @@ export function filterParameters<T extends Parameter>(
   return parameters.filter(h => (!h || !h.name ? false : h.name === name));
 }
 
-export function filterHeaders<T extends Header>(headers: Array<T>, name?: string): Array<T> {
+export function filterHeaders<T extends Header>(headers: T[], name?: string): T[] {
   if (!Array.isArray(headers) || !name || typeof name !== 'string') {
     return [];
   }
@@ -43,60 +43,60 @@ export function filterHeaders<T extends Header>(headers: Array<T>, name?: string
   });
 }
 
-export function hasContentTypeHeader<T extends Header>(headers: Array<T>) {
+export function hasContentTypeHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'content-type').length > 0;
 }
 
-export function hasContentLengthHeader<T extends Header>(headers: Array<T>) {
+export function hasContentLengthHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'content-length').length > 0;
 }
 
-export function hasAuthHeader<T extends Header>(headers: Array<T>) {
+export function hasAuthHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'authorization').length > 0;
 }
 
-export function hasAcceptHeader<T extends Header>(headers: Array<T>) {
+export function hasAcceptHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept').length > 0;
 }
 
-export function hasUserAgentHeader<T extends Header>(headers: Array<T>) {
+export function hasUserAgentHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'user-agent').length > 0;
 }
 
-export function hasAcceptEncodingHeader<T extends Header>(headers: Array<T>) {
+export function hasAcceptEncodingHeader<T extends Header>(headers: T[]) {
   return filterHeaders(headers, 'accept-encoding').length > 0;
 }
 
-export function getSetCookieHeaders<T extends Header>(headers: Array<T>): Array<T> {
+export function getSetCookieHeaders<T extends Header>(headers: T[]): T[] {
   return filterHeaders(headers, 'set-cookie');
 }
 
-export function getLocationHeader<T extends Header>(headers: Array<T>): T | null {
+export function getLocationHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'location');
   return matches.length ? matches[0] : null;
 }
 
-export function getContentTypeHeader<T extends Header>(headers: Array<T>): T | null {
+export function getContentTypeHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'content-type');
   return matches.length ? matches[0] : null;
 }
 
-export function getMethodOverrideHeader<T extends Header>(headers: Array<T>): T | null {
+export function getMethodOverrideHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'x-http-method-override');
   return matches.length ? matches[0] : null;
 }
 
-export function getHostHeader<T extends Header>(headers: Array<T>): T | null {
+export function getHostHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'host');
   return matches.length ? matches[0] : null;
 }
 
-export function getContentDispositionHeader<T extends Header>(headers: Array<T>): T | null {
+export function getContentDispositionHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'content-disposition');
   return matches.length ? matches[0] : null;
 }
 
-export function getContentLengthHeader<T extends Header>(headers: Array<T>): T | null {
+export function getContentLengthHeader<T extends Header>(headers: T[]): T | null {
   const matches = filterHeaders(headers, 'content-length');
   return matches.length ? matches[0] : null;
 }
@@ -202,7 +202,7 @@ export function clickLink(href: string) {
   electron.shell.openExternal(href);
 }
 
-export function fnOrString(v: string | ((...args: Array<any>) => any), ...args: Array<any>) {
+export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
   } else {
@@ -264,14 +264,14 @@ export function fuzzyMatch(
   } = {},
 ): null | {
   score: number;
-  indexes: Array<number>;
+  indexes: number[];
 } {
   return fuzzyMatchAll(searchString, [text], options);
 }
 
 export function fuzzyMatchAll(
   searchString: string,
-  allText: Array<string>,
+  allText: string[],
   options: {
     splitSpace?: boolean;
     loose?: boolean;
@@ -284,7 +284,7 @@ export function fuzzyMatchAll(
   const words = searchString.split(' ').filter(w => w.trim());
   const terms = options.splitSpace ? [...words, searchString] : [searchString];
   let maxScore: number | null = null;
-  let indexes: Array<number> = [];
+  let indexes: number[] = [];
   let termsMatched = 0;
 
   for (const term of terms) {
@@ -383,8 +383,8 @@ export function getDataDirectory() {
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
 }
 
-export function chunkArray<T>(arr: Array<T>, chunkSize: number) {
-  const chunks: Array<Array<T>> = [];
+export function chunkArray<T>(arr: T[], chunkSize: number) {
+  const chunks: T[][] = [];
 
   for (let i = 0, j = arr.length; i < j; i += chunkSize) {
     chunks.push(arr.slice(i, i + chunkSize));

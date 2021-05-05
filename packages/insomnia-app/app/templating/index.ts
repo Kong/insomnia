@@ -91,7 +91,7 @@ export function reload() {
 /**
  * Get definitions of template tags
  */
-export async function getTagDefinitions(): Promise<Array<NunjucksParsedTag>> {
+export async function getTagDefinitions(): Promise<NunjucksParsedTag[]> {
   const env = await getNunjucks(RENDER_ALL);
   return Object.keys(env.extensions)
     .map(k => env.extensions[k])
@@ -155,7 +155,7 @@ async function getNunjucks(renderMode: string) {
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nj = nunjucks.configure(config);
-  let allTemplateTagPlugins: Array<TemplateTag>;
+  let allTemplateTagPlugins: TemplateTag[];
 
   try {
     plugins.ignorePlugin('insomnia-plugin-kong-bundle');

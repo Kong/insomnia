@@ -24,7 +24,7 @@ interface Props {
   isVariableUncovered: boolean;
   handleRender: Function;
   handleGetRenderContext: Function;
-  workspaces: Array<Workspace>;
+  workspaces: Workspace[];
 }
 
 interface State {
@@ -33,7 +33,7 @@ interface State {
   defaultPreviewMode: boolean;
   activeWorkspaceIdToCopyTo: string | null;
   workspace?: Workspace;
-  workspaces: Array<Workspace>;
+  workspaces: Workspace[];
   justCopied: boolean;
   justMoved: boolean;
 }

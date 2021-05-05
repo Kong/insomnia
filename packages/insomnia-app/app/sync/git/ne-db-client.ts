@@ -149,7 +149,7 @@ export class NeDBClient {
   async stat(filePath: string) {
     filePath = path.normalize(filePath);
     let fileBuff: Buffer | string | null = null;
-    let dir: Array<string> | null = null;
+    let dir: string[] | null = null;
 
     try {
       fileBuff = await this.readFile(filePath);
@@ -190,7 +190,7 @@ export class NeDBClient {
     }
   }
 
-  async readlink(filePath: string, ...x: Array<any>) {
+  async readlink(filePath: string, ...x: any[]) {
     return this.readFile(filePath, ...x);
   }
 

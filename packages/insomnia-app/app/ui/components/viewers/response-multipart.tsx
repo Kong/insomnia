@@ -24,18 +24,18 @@ interface Part {
   bytes: number;
   value: Buffer;
   filename: string | null;
-  headers: Array<ResponseHeader>;
+  headers: ResponseHeader[];
 }
 
 interface Props {
-  download: (...args: Array<any>) => any;
+  download: (...args: any[]) => any;
   responseId: string;
   bodyBuffer: Buffer | null;
   contentType: string;
   disableHtmlPreviewJs: boolean;
   disablePreviewLinks: boolean;
   filter: string;
-  filterHistory: Array<string>;
+  filterHistory: string[];
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
@@ -45,7 +45,7 @@ interface Props {
 
 interface State {
   activePart: number;
-  parts: Array<Part>;
+  parts: Part[];
   error: string | null;
 }
 
@@ -164,10 +164,10 @@ class ResponseMultipart extends PureComponent<Props, State> {
     }
   }
 
-  _getParts(): Promise<Array<Part>> {
+  _getParts(): Promise<Part[]> {
     return new Promise((resolve, reject) => {
       const { bodyBuffer, contentType } = this.props;
-      const parts: Array<Part> = [];
+      const parts: Part[] = [];
 
       if (!bodyBuffer) {
         return resolve(parts);
@@ -180,7 +180,7 @@ class ResponseMultipart extends PureComponent<Props, State> {
       };
       const form = new multiparty.Form();
       form.on('part', part => {
-        const dataBuffers: Array<any> = [];
+        const dataBuffers: any[] = [];
         part.on('data', data => {
           dataBuffers.push(data);
         });

@@ -20,7 +20,7 @@ import * as workspaceOperations from '../../../models/helpers/workspace-operatio
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
-  clientCertificates: Array<ClientCertificate>;
+  clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
   editorFontSize: number;

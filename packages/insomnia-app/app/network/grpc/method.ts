@@ -5,8 +5,8 @@ export interface GrpcMethodDefinition {
   originalName: string;
   requestStream: boolean;
   responseStream: boolean;
-  requestSerialize: (...args: Array<any>) => any;
-  responseDeserialize: (...args: Array<any>) => any;
+  requestSerialize: (...args: any[]) => any;
+  responseDeserialize: (...args: any[]) => any;
 }
 export const GrpcMethodTypeEnum = {
   unary: 'unary',

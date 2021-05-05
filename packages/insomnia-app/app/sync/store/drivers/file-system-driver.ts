@@ -97,8 +97,8 @@ export default class FileSystemDriver implements BaseDriver {
   async keys(prefix: string, recursive: boolean) {
     const next = dir => {
       return new Promise<string>(async (resolve, reject) => {
-        let keys: Array<string> = [];
-        let names: Array<string> = [];
+        let keys: string[] = [];
+        let names: string[] = [];
 
         try {
           names = fs.readdirSync(dir);

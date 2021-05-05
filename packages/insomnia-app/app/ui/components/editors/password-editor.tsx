@@ -6,10 +6,10 @@ import OneLineEditor from '../codemirror/one-line-editor';
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props {
-  handleRender: (...args: Array<any>) => any;
-  handleGetRenderContext: (...args: Array<any>) => any;
+  handleRender: (...args: any[]) => any;
+  handleGetRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
-  onChange: (...args: Array<any>) => any;
+  onChange: (...args: any[]) => any;
   password: string;
   disabled: boolean;
   isVariableUncovered: boolean;
