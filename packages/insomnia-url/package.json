@@ -14,6 +14,7 @@
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",

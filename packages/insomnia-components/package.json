@@ -14,6 +14,7 @@
     "convert-svg": "rimraf src/assets/svgr && svgr --config-file svgr.config.js --out-dir src/assets/svgr src/assets && rimraf src/assets/svgr/index.tsx",
     "jest:watch": "jest --watch",
     "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
     "postclean": "rimraf dist",
     "prepare": "npm run convert-svg && npm run build",
     "storybook": "start-storybook --port 3223",
