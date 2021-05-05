@@ -10,8 +10,8 @@
   },
   "homepage": "https://github.com/kong/insomnia#readme",
   "scripts": {
-    "lint": "lerna run lint --parallel --stream",
-    "lint:fix": "lerna run lint:fix --parallel --stream",
+    "lint": "lerna run lint --parallel --stream --no-bail",
+    "lint:fix": "lerna run lint:fix --parallel --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --parallel --stream bootstrap",
     "version": "lerna version --exact --preid beta --force-publish",
     "version:dry": "npm run version -- --no-git-tag-version",
@@ -35,7 +35,7 @@
     "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test"
   },
   "lint-staged": {
-    "{packages,plugins}/**/*.{js,json}": [
+    "{packages,plugins}/**/*.{js,json,ts,tsx}": [
       "eslint --fix"
     ]
   },
