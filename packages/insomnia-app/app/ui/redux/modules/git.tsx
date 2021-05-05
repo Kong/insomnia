@@ -16,6 +16,8 @@ import YAML from 'yaml';
 import { database as db } from '../../../common/database';
 import { createWorkspace } from './workspace';
 import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
+import * as git from 'isomorphic-git';
+
 export type UpdateGitRepositoryCallback = (arg0: { gitRepository: GitRepository }) => void;
 
 /**
@@ -32,7 +34,7 @@ export const updateGitRepository: UpdateGitRepositoryCallback = ({ gitRepository
   };
 };
 export type SetupGitRepositoryCallback = (arg0: {
-  createFsClient: () => Record<string, any>;
+  createFsClient: () => git.PromiseFsClient;
   workspace: Workspace;
 }) => void;
 
@@ -134,7 +136,7 @@ const noDocumentFound = (gitRepo: GitRepository) => {
 };
 
 export type CloneGitRepositoryCallback = (arg0: {
-  createFsClient: () => Record<string, any>;
+  createFsClient: () => git.PromiseFsClient;
 }) => void;
 
 /**

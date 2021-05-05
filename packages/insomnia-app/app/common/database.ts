@@ -172,7 +172,7 @@ export const database = {
     sort: Sort = { created: 1 },
   ) {
     if (db._empty) return _send<Array<T>>('find', ...arguments);
-    return new Promise<Array<T> | undefined>((resolve, reject) => {
+    return new Promise<Array<T>>((resolve, reject) => {
       db[type]
         .find(query)
         .sort(sort)

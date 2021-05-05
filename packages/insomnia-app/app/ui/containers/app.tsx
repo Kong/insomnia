@@ -1278,7 +1278,7 @@ class App extends PureComponent<Props, State> {
       const driver = new FileSystemDriver({
         directory,
       });
-      // @ts-expect-error -- TSCONVERSION
+
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
           showModal(SyncMergeModal, {

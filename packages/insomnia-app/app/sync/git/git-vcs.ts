@@ -50,7 +50,7 @@ export interface GitLogEntry {
 
 interface InitOptions {
   directory: string;
-  fs: git.CallbackFsClient | git.PromiseFsClient;
+  fs: git.FsClient;
   gitDirectory?: string;
 }
 
@@ -58,7 +58,7 @@ interface InitFromCloneOptions {
   url: string;
   gitCredentials?: GitCredentials | null;
   directory: string;
-  fs: git.CallbackFsClient | git.PromiseFsClient;
+  fs: git.FsClient;
   gitDirectory: string;
 }
 

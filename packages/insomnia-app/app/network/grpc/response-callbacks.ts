@@ -1,5 +1,6 @@
 import type { GrpcStatusObject, ServiceError } from './service-error';
 import { GrpcResponseEventEnum } from '../../common/grpc-events';
+import { IpcMainEvent } from 'electron';
 interface IResponseCallbacks {
   sendData(requestId: string, val: Record<string, any> | undefined): void;
   sendError(requestId: string, err: ServiceError): void;
@@ -8,7 +9,7 @@ interface IResponseCallbacks {
   sendStatus(requestId: string, status: GrpcStatusObject): void;
 }
 export class ResponseCallbacks implements IResponseCallbacks {
-  _event: IpcMainEvent = null;
+  _event: IpcMainEvent;
 
   constructor(e: IpcMainEvent) {
     this._event = e;

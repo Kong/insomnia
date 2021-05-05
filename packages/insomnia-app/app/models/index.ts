@@ -27,7 +27,7 @@ import { generateId, pluralize } from '../common/misc';
 export interface BaseModel {
   _id: string;
   type: string;
-  parentId: string | null;
+  parentId: string;
   modified: number;
   created: number;
   isPrivate: boolean;

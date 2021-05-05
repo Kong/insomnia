@@ -305,7 +305,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
       for (const change of changes) {
         const [
-          _, // eslint-disable-line @typescript-eslint/no-unused-vars
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          _,
           doc,
           fromSync,
         ] = change;

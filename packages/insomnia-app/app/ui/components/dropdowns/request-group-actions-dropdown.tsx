@@ -4,12 +4,12 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import PromptButton from '../base/prompt-button';
 import {
-  Dropdown,
   DropdownButton,
   DropdownDivider,
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
 import { showError, showModal, showPrompt } from '../modals';

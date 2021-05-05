@@ -123,10 +123,9 @@ const error = (requestId: string, error: ServiceError): ErrorAction => ({
   payload: error,
 });
 
-const status = (requestId: string, status: GrpcStatusObject): ErrorAction => ({
+const status = (requestId: string, status: GrpcStatusObject): StatusAction => ({
   type: GrpcActionTypeEnum.status,
   requestId,
-  // @ts-expect-error -- TSCONVERSION
   payload: status,
 });
 
