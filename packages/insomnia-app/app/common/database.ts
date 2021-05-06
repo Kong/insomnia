@@ -87,10 +87,10 @@ export const database = {
 
   CHANGE_REMOVE: 'remove',
 
-  count: async function(type: string, query: Query = {}) {
+  count: async function<T extends BaseModel>(type: string, query: Query = {}) {
     if (db._empty) return _send<number>('count', ...arguments);
     return new Promise<number>((resolve, reject) => {
-      db[type].count(query, (err, count) => {
+      (db[type] as NeDB<T>).count(query, (err, count) => {
         if (err) {
           return reject(err);
         }
@@ -176,7 +176,7 @@ export const database = {
   ) {
     if (db._empty) return _send<Array<T>>('find', ...arguments);
     return new Promise<Array<T>>((resolve, reject) => {
-      db[type]
+      (db[type] as NeDB<T>)
         .find(query)
         .sort(sort)
         .exec(async (err, rawDocs) => {
@@ -203,7 +203,7 @@ export const database = {
   ) {
     if (db._empty) return _send<Array<T>>('findMostRecentlyModified', ...arguments);
     return new Promise<Array<T>>(resolve => {
-      db[type]
+      (db[type] as NeDB<T>)
         .find(query)
         .sort({
           modified: -1,
@@ -424,7 +424,7 @@ export const database = {
         return reject(err);
       }
 
-      db[doc.type].insert(docWithDefaults, (err, newDoc: T) => {
+      (db[doc.type] as NeDB<T>).insert(docWithDefaults, (err, newDoc: T) => {
         if (err) {
           return reject(err);
         }
@@ -503,7 +503,7 @@ export const database = {
   unsafeRemove: async function<T extends BaseModel>(doc: T, fromSync = false) {
     if (db._empty) return _send<void>('unsafeRemove', ...arguments);
 
-    db[doc.type].remove({ _id: doc._id });
+    (db[doc.type] as NeDB<T>).remove({ _id: doc._id });
     notifyOfChange(database.CHANGE_REMOVE, doc, fromSync);
   },
 
@@ -519,7 +519,7 @@ export const database = {
         return reject(err);
       }
 
-      db[doc.type].update(
+      (db[doc.type] as NeDB<T>).update(
         { _id: docWithDefaults._id },
         docWithDefaults,
         // TODO(TSCONVERSION) see comment below, upsert can happen automatically as part of the update
@@ -629,15 +629,13 @@ export const database = {
 };
 
 interface DB {
-  // @ts-expect-error _empty doesn't match the index signature, use something other than _empty in future
-  _empty?: boolean;
   [index: string]: NeDB;
 }
 
 // @ts-expect-error _empty doesn't match the index signature, use something other than _empty in future
 const db: DB = {
   _empty: true,
-};
+} as DB;
 
 // ~~~~~~~ //
 // HELPERS //
