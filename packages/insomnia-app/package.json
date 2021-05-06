@@ -194,6 +194,7 @@
     "@types/papaparse": "^5.2.5",
     "@types/prop-types": "^15.7.3",
     "@types/react": "^16.14.5",
+    "@types/react-dom": "^16.9.12",
     "@types/react-redux": "^7.1.16",
     "@types/react-tabs": "^2.3.2",
     "@types/react-test-renderer": "^17.0.1",

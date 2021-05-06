@@ -76,10 +76,12 @@ class MarkdownPreview extends PureComponent<Props, State> {
 
     const el = ReactDOM.findDOMNode(this._preview);
 
+    // @ts-expect-error -- TSCONVERSION
     for (const block of el.querySelectorAll('pre > code')) {
       highlight.highlightBlock(block);
     }
 
+    // @ts-expect-error -- TSCONVERSION
     for (const a of el.querySelectorAll('a')) {
       a.title = `Open ${a.getAttribute('href')} in browser`;
       a.removeEventListener('click', this._handleClickLink);

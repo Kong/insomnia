@@ -607,6 +607,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
         reference={activeReference}
         handleClose={this._handleCloseExplorer}
       />,
+      // @ts-expect-error -- TSCONVERSION
       explorerContainer,
     );
     return (

@@ -14,7 +14,6 @@ import {
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
-import * as misc from '../common/misc';
 import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
 import * as os from 'os';
@@ -563,7 +562,7 @@ function getZoomFactor() {
 }
 
 function initLocalStorage() {
-  const localStoragePath = path.join(misc.getDataDirectory(), 'localStorage');
+  const localStoragePath = path.join(getDataDirectory(), 'localStorage');
   localStorage = new LocalStorage(localStoragePath);
 }
 

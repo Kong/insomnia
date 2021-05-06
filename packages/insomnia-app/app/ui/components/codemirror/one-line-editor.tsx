@@ -131,6 +131,7 @@ class OneLineEditor extends PureComponent<Props, State> {
     // a regular <input>
     // NOTE: Must be "mousedown", not "click" because "click" triggers on selection drags
     const node = ReactDOM.findDOMNode(this._editor);
+    // @ts-expect-error -- TSCONVERSION
     const clickWasOutsideOfComponent = !node.contains(e.target);
 
     if (clickWasOutsideOfComponent) {

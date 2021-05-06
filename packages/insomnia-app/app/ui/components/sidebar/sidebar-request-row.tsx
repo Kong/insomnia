@@ -317,6 +317,7 @@ const dragSource = {
 
 function isAbove(monitor, component) {
   const hoveredNode = ReactDOM.findDOMNode(component);
+  // @ts-expect-error -- TSCONVERSION
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
   const draggedTop = monitor.getSourceClientOffset().y;
   return hoveredTop > draggedTop;

@@ -560,7 +560,9 @@ const dragSource = {
 
 function isAbove(monitor, component) {
   const hoveredNode = ReactDOM.findDOMNode(component);
+  // @ts-expect-error -- TSCONVERSION
   const hoveredTop = hoveredNode.getBoundingClientRect().top;
+  // @ts-expect-error -- TSCONVERSION
   const height = hoveredNode.clientHeight;
   const draggedTop = monitor.getSourceClientOffset().y;
   // NOTE: Not quite sure why it's height / 3 (seems to work)

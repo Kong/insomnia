@@ -1010,10 +1010,15 @@ class App extends PureComponent<Props, State> {
         });
       }
 
+      // @ts-expect-error -- TSCONVERSION
       const requestPane = ReactDOM.findDOMNode(this._requestPane);
+      // @ts-expect-error -- TSCONVERSION
       const responsePane = ReactDOM.findDOMNode(this._responsePane);
+      // @ts-expect-error -- TSCONVERSION
       const requestPaneWidth = requestPane.offsetWidth;
+      // @ts-expect-error -- TSCONVERSION
       const responsePaneWidth = responsePane.offsetWidth;
+      // @ts-expect-error -- TSCONVERSION
       const pixelOffset = e.clientX - requestPane.offsetLeft;
       let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
       paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
@@ -1033,10 +1038,15 @@ class App extends PureComponent<Props, State> {
         });
       }
 
+      // @ts-expect-error -- TSCONVERSION
       const requestPane = ReactDOM.findDOMNode(this._requestPane);
+      // @ts-expect-error -- TSCONVERSION
       const responsePane = ReactDOM.findDOMNode(this._responsePane);
+      // @ts-expect-error -- TSCONVERSION
       const requestPaneHeight = requestPane.offsetHeight;
+      // @ts-expect-error -- TSCONVERSION
       const responsePaneHeight = responsePane.offsetHeight;
+      // @ts-expect-error -- TSCONVERSION
       const pixelOffset = e.clientY - requestPane.offsetTop;
       let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
       paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
@@ -1056,8 +1066,11 @@ class App extends PureComponent<Props, State> {
         });
       }
 
+      // @ts-expect-error -- TSCONVERSION
       const sidebar = ReactDOM.findDOMNode(this._sidebar);
+      // @ts-expect-error -- TSCONVERSION
       const currentPixelWidth = sidebar.offsetWidth;
+      // @ts-expect-error -- TSCONVERSION
       const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
       const width = this.state.sidebarWidth * ratio;
       let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
