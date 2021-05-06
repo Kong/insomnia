@@ -7,7 +7,7 @@ import path from 'path';
 import zlib from 'zlib';
 import mkdirp from 'mkdirp';
 import { database as db, Query } from '../common/database';
-import { getDataDirectory } from '../common/misc';
+import { getDataDirectory } from '../common/electron-helpers';
 
 export const name = 'Response';
 

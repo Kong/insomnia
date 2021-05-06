@@ -1,4 +1,5 @@
 import { containsOnlyDeprecationWarnings, isDeprecatedDependencies } from '../plugins/install';
+
 describe('install.js', () => {
   describe('containsOnlyDeprecationWarning', () => {
     it('should return true when all lines in stderr are deprecation warnings', () => {
@@ -33,6 +34,7 @@ describe('install.js', () => {
       expect(consoleWarnSpy).toHaveBeenCalledTimes(2);
     });
   });
+
   describe('isDeprecatedDependencies', () => {
     it('should not match when the message is falsy', () => {
       expect(isDeprecatedDependencies('')).toBe(false);

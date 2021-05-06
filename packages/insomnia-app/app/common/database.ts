@@ -6,7 +6,8 @@ import NeDB from 'nedb';
 import fsPath from 'path';
 import { DB_PERSIST_INTERVAL } from './constants';
 import * as uuid from 'uuid';
-import { generateId, getDataDirectory } from './misc';
+import { generateId } from './misc';
+import { getDataDirectory } from './electron-helpers';
 import { mustGetModel } from '../models';
 import type { Workspace } from '../models/workspace';
 import { GitRepository } from '../models/git-repository';
@@ -700,7 +701,7 @@ async function _send<T>(fnName: string, ...args: Array<any>) {
 /**
  * Run various database repair scripts
  */
-async function _repairDatabase() {
+export async function _repairDatabase() {
   console.log('[fix] Running database repairs');
 
   for (const workspace of await database.find<Workspace>(models.workspace.type)) {

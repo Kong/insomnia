@@ -1,5 +1,5 @@
 import mkdirp from 'mkdirp';
-import { appConfig } from '../../config';
+import appConfig from '../../config/config.json';
 import * as models from '../models';
 import fs from 'fs';
 import path from 'path';
@@ -226,7 +226,7 @@ export async function getPlugins(force = false): Promise<Array<Plugin>> {
       // "name": "module"
     };
 
-    for (const p of appConfig().plugins) {
+    for (const p of appConfig.plugins) {
       if (ignorePlugins.includes(p)) {
         continue;
       }

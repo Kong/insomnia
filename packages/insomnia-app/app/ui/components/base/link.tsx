@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import * as misc from '../../../common/misc';
+import { clickLink } from '../../../common/electron-helpers';
 
 interface Props {
   href: string;
@@ -22,7 +22,7 @@ class Link extends PureComponent<Props> {
     const { href, onClick } = this.props;
     // Also call onClick that was passed to us if there was one
     onClick && onClick(e);
-    misc.clickLink(href);
+    clickLink(href);
   }
 
   render() {

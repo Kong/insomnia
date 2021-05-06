@@ -2,6 +2,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { selectExpandedActiveProtoDirectories } from '../proto-selectors';
 import * as models from '../../../models';
 import reduxStateForTest from '../../../__jest__/redux-state-for-test';
+
 describe('selectExpandedActiveProtoDirectories', () => {
   beforeEach(globalBeforeEach);
 

@@ -5,6 +5,7 @@ import {
   sortByMetaKeyOrId,
 } from '../sidebar-selectors';
 import { difference } from 'lodash';
+
 describe('shouldShowInSidebar', () => {
   const allTypes = models.types();
   const supported = [models.request.type, models.requestGroup.type, models.grpcRequest.type];
@@ -26,6 +27,7 @@ describe('shouldShowInSidebar', () => {
     ).toBe(false);
   });
 });
+
 describe('shouldIgnoreChildrenOf', () => {
   it.each([models.request.type, models.grpcRequest.type])('should ignore children of %s', type => {
     expect(
@@ -43,6 +45,7 @@ describe('shouldIgnoreChildrenOf', () => {
     ).toBe(false);
   });
 });
+
 describe('sortByMetaKeyOrId', () => {
   it('sort by _id if meta keys are identical', () => {
     const a = {

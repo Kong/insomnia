@@ -1,6 +1,8 @@
 import path from 'path';
 import { convertToOsSep, convertToPosixSep } from '../path-sep';
+
 jest.mock('path');
+
 describe('convertToPosixSep()', () => {
   it('should handle empty string', () => {
     expect(convertToPosixSep('')).toBe('');
@@ -12,6 +14,7 @@ describe('convertToPosixSep()', () => {
     expect(convertToPosixSep(input)).toBe(posix);
   });
 });
+
 describe.each(['win32', 'posix'])('convertToOsSep() where os is %s', osType => {
   beforeAll(() => path.__mockPath(osType));
   afterAll(() => jest.restoreAllMocks());

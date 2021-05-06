@@ -1,5 +1,6 @@
 import { canClientStream, getMethodType, GrpcMethodTypeEnum, GrpcMethodTypeName } from '../method';
 import type { GrpcMethodType } from '../method';
+
 describe('getMethodType', () => {
   it('should return unary', () => {
     expect(
@@ -37,6 +38,7 @@ describe('getMethodType', () => {
     ).toBe(GrpcMethodTypeEnum.bidi);
   });
 });
+
 describe('GrpcMethodTypeName', () => {
   it.each([
     [GrpcMethodTypeEnum.unary, 'Unary'],
@@ -47,6 +49,7 @@ describe('GrpcMethodTypeName', () => {
     expect(GrpcMethodTypeName[type]).toBe(expectedString);
   });
 });
+
 describe('canClientStream', () => {
   it.each([
     GrpcMethodTypeEnum.unary,

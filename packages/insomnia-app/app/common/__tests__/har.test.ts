@@ -4,6 +4,7 @@ import * as render from '../render';
 import * as models from '../../models';
 import { AUTH_BASIC } from '../constants';
 import { globalBeforeEach } from '../../__jest__/before-each';
+
 describe('exportHar()', () => {
   beforeEach(globalBeforeEach);
 
@@ -295,6 +296,7 @@ describe('exportHar()', () => {
     });
   });
 });
+
 describe('exportHarResponse()', () => {
   beforeEach(globalBeforeEach);
 
@@ -376,6 +378,7 @@ describe('exportHarResponse()', () => {
     });
   });
 });
+
 describe('exportHarWithRequest()', () => {
   beforeEach(globalBeforeEach);
 

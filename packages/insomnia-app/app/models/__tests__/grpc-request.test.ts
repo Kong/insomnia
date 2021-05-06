@@ -1,5 +1,6 @@
 import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
+
 describe('init()', () => {
   beforeEach(globalBeforeEach);
 
@@ -15,10 +16,11 @@ describe('init()', () => {
         text: '{}',
       },
       metaSortKey: -1478795580200,
-      idPrivate: false,
+      isPrivate: false,
     });
   });
 });
+
 describe('create()', () => {
   beforeEach(globalBeforeEach);
 
@@ -42,7 +44,7 @@ describe('create()', () => {
         text: '{}',
       },
       metaSortKey: -1478795580200,
-      idPrivate: false,
+      isPrivate: false,
       type: 'GrpcRequest',
     };
     expect(request).toEqual(expected);

@@ -1,6 +1,7 @@
 import parseGitPath from '../parse-git-path';
 import { GIT_INSOMNIA_DIR } from '../git-vcs';
 import * as models from '../../../models';
+
 describe('parseGitPath', () => {
   it('should parse a git path into its root, type and id', () => {
     const gitPath = `${GIT_INSOMNIA_DIR}/${models.workspace.type}/wrk_1.yml`;

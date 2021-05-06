@@ -22,6 +22,7 @@ describe('VCS', () => {
     Date.now = jest.fn(() => ts++);
     await globalBeforeEach();
   });
+
   describe('status()', () => {
     it('returns status with no commits', async () => {
       const v = await vcs('master');
@@ -335,6 +336,7 @@ describe('VCS', () => {
       });
     });
   });
+
   describe('stage()', () => {
     it('stages entity', async () => {
       const v = await vcs('master');
@@ -401,6 +403,7 @@ describe('VCS', () => {
       });
     });
   });
+
   describe('takeSnapshot()', () => {
     it('commits basic entity', async () => {
       const v = await vcs('master');
@@ -500,6 +503,7 @@ describe('VCS', () => {
       ]);
     });
   });
+
   describe('getBranches()', () => {
     it('lists branches', async () => {
       const v = await vcs('master');
@@ -509,6 +513,7 @@ describe('VCS', () => {
       expect(branches).toEqual(['master', 'branch-1', 'branch-2']);
     });
   });
+
   describe('removeBranch()', () => {
     it('cannot remove empty branch', async () => {
       const v = await vcs('master');
@@ -560,6 +565,7 @@ describe('VCS', () => {
       expect(await v.getBranches()).toEqual(['master']);
     });
   });
+
   describe('fork()', () => {
     it('forks to a new branch', async () => {
       const v = await vcs('master');
@@ -600,6 +606,7 @@ describe('VCS', () => {
       ]);
     });
   });
+
   describe('merge()', () => {
     it('performs fast-forward merge', async () => {
       const v = await vcs('master');
@@ -817,6 +824,7 @@ describe('VCS', () => {
       ]);
     });
   });
+
   describe('describeChanges()', () => {
     it('works with same object structure', async () => {
       const a = {
@@ -864,6 +872,7 @@ describe('VCS', () => {
       expect(describeChanges(a, b)).toEqual([]);
     });
   });
+
   describe('getHistory()', () => {
     let v;
     beforeEach(async () => {

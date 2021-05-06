@@ -3,8 +3,11 @@ import useProtoFileReload from '../use-proto-file-reload';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { requestStateSchema } from '../../../../context/grpc/__schemas__';
 import { grpcActions } from '../../../../context/grpc';
+
 jest.mock('../../../../context/grpc');
+
 const requestStateBuilder = createBuilder(requestStateSchema);
+
 describe('useProtoFileReload', () => {
   beforeEach(() => {
     requestStateBuilder.reset();

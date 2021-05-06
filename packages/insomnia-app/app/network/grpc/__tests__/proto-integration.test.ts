@@ -6,10 +6,12 @@ import * as protoLoader from '../proto-loader';
 import * as models from '../../../models';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import selectFileOrFolder from '../../../common/select-file-or-folder';
+
 jest.mock('../../../common/select-file-or-folder', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
+
 describe('proto management integration test', () => {
   beforeEach(globalBeforeEach);
 

@@ -1,5 +1,5 @@
 import { checkIfRestartNeeded } from './main/squirrel-startup';
-import { appConfig } from '../config';
+import appConfig from '../config/config.json';
 import path from 'path';
 import * as electron from 'electron';
 import * as errorHandling from './main/error-handling';
@@ -29,7 +29,7 @@ log.info(`Running version ${getAppVersion()}`);
 // by accident.
 if (!isDevelopment()) {
   const defaultPath = app.getPath('userData');
-  const newPath = path.join(defaultPath, '../', appConfig().userDataFolder);
+  const newPath = path.join(defaultPath, '../', appConfig.userDataFolder);
   app.setPath('userData', newPath);
 }
 

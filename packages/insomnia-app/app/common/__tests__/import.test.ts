@@ -3,6 +3,7 @@ import * as importUtil from '../import';
 import { getAppVersion } from '../constants';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import YAML from 'yaml';
+
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(globalBeforeEach);
 
@@ -202,6 +203,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
     });
   });
 });
+
 describe('export', () => {
   beforeEach(globalBeforeEach);
 
@@ -468,6 +470,7 @@ describe('export', () => {
     });
   });
 });
+
 describe('isApiSpecImport()', () => {
   it.each(['swagger2', 'openapi3'])('should return true if spec id is %o', (id: string) => {
     expect(
@@ -486,6 +489,7 @@ describe('isApiSpecImport()', () => {
     ).toBe(false);
   });
 });
+
 describe('isInsomniaV4Import()', () => {
   it.each(['insomnia-4'])('should return true if spec id is %o', (id: string) => {
     expect(

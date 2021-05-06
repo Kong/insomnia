@@ -1,11 +1,12 @@
 import YAML from 'yaml';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import { assertAsyncError, setupDateMocks } from './util';
 import { NeDBClient } from '../ne-db-client';
 import path from 'path';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
+
 describe('NeDBClient', () => {
   afterAll(() => jest.restoreAllMocks());
   beforeEach(async () => {
@@ -30,6 +31,7 @@ describe('NeDBClient', () => {
       parentId: 'wrk_1',
     });
   });
+
   describe('readdir()', () => {
     it('reads model IDs from model type folders', async () => {
       const neDbClient = new NeDBClient('wrk_1');
@@ -52,6 +54,7 @@ describe('NeDBClient', () => {
       expect(await neDbClient.readdir(wrkDir)).toEqual(['wrk_1.yml']);
     });
   });
+
   describe('readFile()', () => {
     it('reads file from model/id folders', async () => {
       const wrk1Yml = path.join(GIT_INSOMNIA_DIR, models.workspace.type, 'wrk_1.yml');
@@ -73,6 +76,7 @@ describe('NeDBClient', () => {
       await assertAsyncError(pNeDB.readFile(reqXYml));
     });
   });
+
   describe('stat()', () => {
     it('stats a dir', async () => {
       // Assemble
@@ -94,6 +98,7 @@ describe('NeDBClient', () => {
       expect(await neDbClient.stat(path.join(reqDir, 'req_2.yml'))).toEqual(fileType);
     });
   });
+
   describe('writeFile()', () => {
     it('should ignore files not in GIT_INSOMNIA_DIR directory', async () => {
       // Assemble
@@ -170,6 +175,7 @@ describe('NeDBClient', () => {
       );
     });
   });
+
   describe('mkdir()', () => {
     it('should throw error', async () => {
       const workspaceId = 'wrk_1';

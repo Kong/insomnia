@@ -11,7 +11,9 @@ import { grpcActions } from '../grpc-actions';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import * as protoLoader from '../../../../network/grpc/proto-loader';
 import * as models from '../../../../models';
+
 jest.mock('../../../../network/grpc/proto-loader');
+
 const messageBuilder = createBuilder(grpcMessageSchema);
 const requestStateBuilder = createBuilder(requestStateSchema);
 const statusBuilder = createBuilder(grpcStatusObjectSchema);
@@ -25,6 +27,7 @@ const expectedInitialState: GrpcRequestState = {
   methods: [],
   reloadMethods: true,
 };
+
 describe('findGrpcRequestState', () => {
   it('should return the initial state if not found', () => {
     const state: GrpcState = {
@@ -40,15 +43,18 @@ describe('findGrpcRequestState', () => {
     expect(findGrpcRequestState(state, 'found')).toStrictEqual(state.found);
   });
 });
+
 describe('grpcReducer actions', () => {
   const mockDateNowResult = 1234;
   const _originalDateNow = Date.now;
   beforeEach(() => {
     Date.now = jest.fn().mockReturnValue(mockDateNowResult);
   });
+
   afterEach(() => {
     Date.now = _originalDateNow;
   });
+
   describe('reset', () => {
     it('should set the request state to be the initial state', () => {
       const state: GrpcState = {
@@ -67,6 +73,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('start', () => {
     it('should set running to true', () => {
       const state: GrpcState = {
@@ -81,6 +88,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('stop', () => {
     it('should set running to false', () => {
       const state: GrpcState = {
@@ -95,6 +103,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('requestMessage', () => {
     it('should append request message', () => {
       const existingMessage = messageBuilder.reset().build();
@@ -119,6 +128,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('responseMessage', () => {
     it('should append response message', () => {
       const existingMessage = messageBuilder.reset().build();
@@ -145,6 +155,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('error', () => {
     it('should set error', () => {
       const state: GrpcState = {
@@ -160,6 +171,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('status', () => {
     it('should set status', () => {
       const state: GrpcState = {
@@ -175,6 +187,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('invalidate', () => {
     it('should set reloadMethods to true', () => {
       const state: GrpcState = {
@@ -189,6 +202,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('invalidateMany', () => {
     beforeEach(() => {
       globalBeforeEach();
@@ -257,6 +271,7 @@ describe('grpcReducer actions', () => {
       expect(newState).toStrictEqual(originalState);
     });
   });
+
   describe('clear', () => {
     it('should clear per-run state', () => {
       const state: GrpcState = {
@@ -286,6 +301,7 @@ describe('grpcReducer actions', () => {
       });
     });
   });
+
   describe('loadMethods', () => {
     beforeEach(() => {
       globalBeforeEach();

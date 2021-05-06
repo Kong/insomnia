@@ -1,13 +1,12 @@
 import type { RenderedRequest } from '../../common/render';
 import type { RequestBody } from '../../models/request';
 import * as misc from '../../common/misc';
+
 export function init(
-  renderedRequest: RenderedRequest,
+  renderedRequest: RenderedRequest | null,
   renderedContext: Record<string, any>,
   readOnly = false,
-): {
-  request: Record<string, any>;
-} {
+) {
   if (!renderedRequest) {
     throw new Error('contexts.request initialized without request');
   }

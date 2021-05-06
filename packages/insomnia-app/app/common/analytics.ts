@@ -14,7 +14,7 @@ import {
   isDevelopment,
 } from './constants';
 import type { RequestParameter } from '../models/request';
-import { getScreenResolution, getUserLanguage, getViewportSize } from './misc';
+import { getScreenResolution, getUserLanguage, getViewportSize } from './electron-helpers';
 import Analytics from 'analytics-node';
 import { getAccountId } from '../account/session';
 

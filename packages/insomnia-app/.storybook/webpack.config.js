@@ -1,3 +1,4 @@
+/** @type { import('webpack').Configuration } */
 module.exports = ({ config }) => {
   config.module.rules.push({
     test: /\.less$/,

@@ -14,6 +14,7 @@ import { generateId } from '../../../common/misc';
 import { WorkspaceScopeKeys } from '../../workspace';
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);
+
 describe('isGrpcRequest', () => {
   const supported = [models.grpcRequest.type];
   const unsupported = difference(allTypes, supported);
@@ -34,6 +35,7 @@ describe('isGrpcRequest', () => {
     ).toBe(false);
   });
 });
+
 describe('isGrpcRequestId', () => {
   const supported = [models.grpcRequest.prefix];
   const unsupported = difference(allPrefixes, supported);
@@ -46,6 +48,7 @@ describe('isGrpcRequestId', () => {
     expect(isGrpcRequestId(generateId(prefix))).toBe(false);
   });
 });
+
 describe('isRequest', () => {
   const supported = [models.request.type];
   const unsupported = difference(allTypes, supported);
@@ -78,6 +81,7 @@ describe('isRequest', () => {
 //     expect(isRequestId(generateId(prefix))).toBe(false);
 //   });
 // });
+
 describe('isRequestGroup', () => {
   const supported = [models.requestGroup.type];
   const unsupported = difference(allTypes, supported);
@@ -98,6 +102,7 @@ describe('isRequestGroup', () => {
     ).toBe(false);
   });
 });
+
 describe('isProtoFile', () => {
   const supported = [models.protoFile.type];
   const unsupported = difference(allTypes, supported);
@@ -118,6 +123,7 @@ describe('isProtoFile', () => {
     ).toBe(false);
   });
 });
+
 describe('isProtoDirectory', () => {
   const supported = [models.protoDirectory.type];
   const unsupported = difference(allTypes, supported);
@@ -138,6 +144,7 @@ describe('isProtoDirectory', () => {
     ).toBe(false);
   });
 });
+
 describe('isWorkspace', () => {
   const supported = [models.workspace.type];
   const unsupported = difference(allTypes, supported);
@@ -158,6 +165,7 @@ describe('isWorkspace', () => {
     ).toBe(false);
   });
 });
+
 describe('isDesign', () => {
   it('should be true', () => {
     const w = models.workspace.init();

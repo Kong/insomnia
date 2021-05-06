@@ -3,6 +3,7 @@ import { setupDateMocks } from './util';
 import { MemClient } from '../mem-client';
 import path from 'path';
 import * as git from 'isomorphic-git';
+
 describe('Git-VCS', () => {
   let fooTxt = '';
   let barTxt = '';
@@ -142,6 +143,7 @@ First commit!
       expect((await vcs.log()).length).toBe(1);
     });
   });
+
   describe('push()', () => {
     it('should throw an exception when push response contains errors', async () => {
       git.push.mockReturnValue({
@@ -154,6 +156,7 @@ First commit!
       );
     });
   });
+
   describe('undoPendingChanges()', () => {
     it('should remove pending changes from all tracked files', async () => {
       const folder = path.join(GIT_INSOMNIA_DIR, 'folder');
@@ -224,6 +227,7 @@ First commit!
       expect((await fsClient.promises.readFile(foo3Txt)).toString()).toBe(changedContent);
     });
   });
+
   describe('readObjectFromTree()', () => {
     it('reads an object from tree', async () => {
       const fsClient = MemClient.createClient();

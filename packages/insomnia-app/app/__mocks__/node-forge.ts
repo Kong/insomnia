@@ -3,8 +3,9 @@
  * The reason it is needed is because the Forge module loader doesn't
  * play along with Jest.
  */
-const forge = require('../../node_modules/node-forge/lib/index');
+import forge from '../../node_modules/node-forge/lib/index';
 
+// WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
 module.exports = {
   jsbn: forge.jsbn,
   util: forge.util,
@@ -17,7 +18,7 @@ module.exports = {
   rsa: {
     setPublicKey() {
       return {
-        encrypt(str) {
+        encrypt(str: string) {
           return str;
         },
       };
@@ -25,14 +26,14 @@ module.exports = {
 
     setPrivateKey() {
       return {
-        decrypt(str) {
+        decrypt(str: string) {
           return str;
         },
       };
     },
   },
   random: {
-    getBytesSync(n) {
+    getBytesSync(n: number) {
       let s = '';
 
       for (let i = 0; i < n; i++) {

@@ -1,4 +1,5 @@
 import { shouldSave } from '../editable';
+
 describe('shouldSave', () => {
   it('should save if new and old are not the same', () => {
     expect(shouldSave('old', 'new')).toBe(true);

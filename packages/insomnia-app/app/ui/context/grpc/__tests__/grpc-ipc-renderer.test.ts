@@ -4,6 +4,7 @@ import { grpcStatusObjectSchema } from '../__schemas__';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { grpcIpcRenderer, sendGrpcIpcMultiple } from '../grpc-ipc-renderer';
 import { grpcActions } from '../grpc-actions';
+
 jest.mock('../grpc-actions', () => ({
   grpcActions: {
     start: jest.fn(),
@@ -13,6 +14,7 @@ jest.mock('../grpc-actions', () => ({
     status: jest.fn(),
   },
 }));
+
 describe('init', () => {
   const e = {};
   const id = 'abc';
@@ -75,6 +77,7 @@ describe('init', () => {
     expect(dispatch).toHaveBeenCalledTimes(1);
   });
 });
+
 describe('destroy', () => {
   it.each(Object.values(GrpcResponseEventEnum))(
     'should remove listeners for channel: %s',
@@ -84,6 +87,7 @@ describe('destroy', () => {
     },
   );
 });
+
 describe('sendGrpcIpcMultiple', () => {
   const channel = GrpcRequestEventEnum.cancelMultiple;
 

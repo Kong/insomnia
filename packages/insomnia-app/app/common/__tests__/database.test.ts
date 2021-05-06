@@ -1,24 +1,16 @@
 import * as models from '../../models';
-import * as db from '../database';
+import { database as db, _repairDatabase } from '../database';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { data as fixtures } from '../__fixtures__/nestedfolders';
 
-function loadFixture(name) {
-  const fixtures = require(`../__fixtures__/${name}`).data;
-
-  const promises = [];
-
+function loadFixture() {
+  const promises: Array<Promise<models.BaseModel>> = [];
   for (const type of Object.keys(fixtures)) {
     for (const doc of fixtures[type]) {
-      promises.push(
-        db.insert(
-          Object.assign({}, doc, {
-            type,
-          }),
-        ),
-      );
+      // @ts-expect-error -- TSCONVERSION
+      promises.push(db.insert<models.BaseModel>({ ...doc, type }));
     }
   }
-
   return Promise.all(promises);
 }
 
@@ -35,6 +27,7 @@ describe('init()', () => {
     expect((await db.all(models.request.type)).length).toBe(0);
   });
 });
+
 describe('onChange()', () => {
   beforeEach(globalBeforeEach);
 
@@ -44,7 +37,7 @@ describe('onChange()', () => {
       parentId: 'nothing',
       name: 'foo',
     };
-    const changesSeen = [];
+    const changesSeen: Array<Function> = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -65,6 +58,7 @@ describe('onChange()', () => {
     expect(changesSeen.length).toBe(2);
   });
 });
+
 describe('bufferChanges()', () => {
   beforeEach(globalBeforeEach);
 
@@ -74,7 +68,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen = [];
+    const changesSeen: Array<Function> = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -83,6 +77,7 @@ describe('bufferChanges()', () => {
     db.onChange(callback);
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc, true);
     // Assert no change seen before flush
     expect(changesSeen.length).toBe(0);
@@ -110,7 +105,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen = [];
+    const changesSeen: Array<Function> = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -119,6 +114,7 @@ describe('bufferChanges()', () => {
     db.onChange(callback);
     await db.bufferChanges();
     const newDoc = await models.request.create(doc);
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc, true);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -136,7 +132,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen = [];
+    const changesSeen: Array<Function> = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -145,6 +141,7 @@ describe('bufferChanges()', () => {
     db.onChange(callback);
     await db.bufferChanges(500);
     const newDoc = await models.request.create(doc);
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc, true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     expect(changesSeen).toEqual([
@@ -155,6 +152,7 @@ describe('bufferChanges()', () => {
     ]);
   });
 });
+
 describe('bufferChangesIndefinitely()', () => {
   beforeEach(globalBeforeEach);
 
@@ -164,7 +162,7 @@ describe('bufferChangesIndefinitely()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen = [];
+    const changesSeen: Array<Function> = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -173,6 +171,7 @@ describe('bufferChangesIndefinitely()', () => {
     db.onChange(callback);
     await db.bufferChangesIndefinitely();
     const newDoc = await models.request.create(doc);
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     const updatedDoc = await models.request.update(newDoc, true);
     // Default flush timeout is 1000ms after starting buffering
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -188,6 +187,7 @@ describe('bufferChangesIndefinitely()', () => {
     ]);
   });
 });
+
 describe('requestCreate()', () => {
   beforeEach(globalBeforeEach);
 
@@ -223,14 +223,20 @@ describe('requestCreate()', () => {
     expect(fn).toThrowError('New Requests missing `parentId`');
   });
 });
+
 describe('requestGroupDuplicate()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    await loadFixture('nestedfolders');
+    await loadFixture();
   });
 
   it('duplicates a RequestGroup', async () => {
     const requestGroup = await models.requestGroup.getById('fld_1');
+    expect(requestGroup).not.toEqual(null);
+    if (requestGroup === null) {
+      return;
+    }
+
     expect(requestGroup.name).toBe('Fld 1');
     const newRequestGroup = await models.requestGroup.duplicate(requestGroup);
     expect(newRequestGroup._id).not.toBe(requestGroup._id);
@@ -251,6 +257,7 @@ describe('requestGroupDuplicate()', () => {
     expect(newChildRequestGroups.length).toBe(1);
   });
 });
+
 describe('_repairDatabase()', () => {
   beforeEach(globalBeforeEach);
 
@@ -312,6 +319,7 @@ describe('_repairDatabase()', () => {
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
+      // @ts-expect-error -- TSCONVERSION appears to be genuine
       data: d.data || null,
     }));
     expect(descendants).toEqual([
@@ -337,7 +345,7 @@ describe('_repairDatabase()', () => {
         parentId: 'w1',
       },
       expect.objectContaining({
-        _id: spec._id,
+        _id: spec?._id,
         parentId: 'w1',
       }),
       {
@@ -369,12 +377,15 @@ describe('_repairDatabase()', () => {
         parentId: 'b2',
       },
     ]);
+
     // Run the fix algorithm
-    await db._repairDatabase();
+    await _repairDatabase();
+
     // Make sure things get adjusted
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
       parentId: d.parentId,
+      // @ts-expect-error -- TSCONVERSION appears to be genuine
       data: d.data || null,
     }));
     expect(descendants2).toEqual([
@@ -393,7 +404,7 @@ describe('_repairDatabase()', () => {
         parentId: 'w1',
       },
       expect.objectContaining({
-        _id: spec._id,
+        _id: spec?._id,
         parentId: 'w1',
       }), // Extra base environments should have been deleted
       // {_id: 'b2', data: {foo: 'bar'}, parentId: 'w1'},
@@ -441,11 +452,13 @@ describe('_repairDatabase()', () => {
       _id: 'j1',
       parentId: 'w1',
       cookies: [
+        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '1',
         },
+        // @ts-expect-error -- TSCONVERSION
         {
           id: 'j1_1',
           key: 'j1',
@@ -457,11 +470,13 @@ describe('_repairDatabase()', () => {
       _id: 'j2',
       parentId: 'w1',
       cookies: [
+        // @ts-expect-error -- TSCONVERSION
         {
           id: '1',
           key: 'foo',
           value: '2',
         },
+        // @ts-expect-error -- TSCONVERSION
         {
           id: 'j2_1',
           key: 'j2',
@@ -473,6 +488,7 @@ describe('_repairDatabase()', () => {
     expect((await db.withDescendants(workspace)).length).toBe(4);
     const descendants = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
+      // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -515,15 +531,16 @@ describe('_repairDatabase()', () => {
         ],
       },
       expect.objectContaining({
-        _id: spec._id,
+        _id: spec?._id,
         parentId: 'w1',
       }),
     ]);
     // Run the fix algorithm
-    await db._repairDatabase();
+    await _repairDatabase();
     // Make sure things get adjusted
     const descendants2 = (await db.withDescendants(workspace)).map(d => ({
       _id: d._id,
+      // @ts-expect-error -- TSCONVERSION
       cookies: d.cookies || null,
       parentId: d.parentId,
     }));
@@ -555,7 +572,7 @@ describe('_repairDatabase()', () => {
         ],
       },
       expect.objectContaining({
-        _id: spec._id,
+        _id: spec?._id,
         parentId: 'w1',
       }),
     ]);
@@ -585,17 +602,15 @@ describe('_repairDatabase()', () => {
       fileName: 'Unique name',
     });
     // Make sure we have everything
-    expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('');
-    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('New Document');
-    expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name');
+    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('');
+    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('New Document');
+    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name');
     // Run the fix algorithm
-    await db._repairDatabase();
+    await _repairDatabase();
     // Make sure things get adjusted
-    expect((await models.apiSpec.getByParentId(w1._id)).fileName).toBe('Workspace 1'); // Should fix
-
-    expect((await models.apiSpec.getByParentId(w2._id)).fileName).toBe('Workspace 2'); // Should fix
-
-    expect((await models.apiSpec.getByParentId(w3._id)).fileName).toBe('Unique name'); // should not fix
+    expect((await models.apiSpec.getByParentId(w1._id))?.fileName).toBe('Workspace 1'); // Should fix
+    expect((await models.apiSpec.getByParentId(w2._id))?.fileName).toBe('Workspace 2'); // Should fix
+    expect((await models.apiSpec.getByParentId(w3._id))?.fileName).toBe('Unique name'); // should not fix
   });
 
   it('fixes old git uris', async () => {
@@ -613,7 +628,7 @@ describe('_repairDatabase()', () => {
     const newRepoWithoutSuffix = await models.gitRepository.create({
       uri: 'https://github.com/foo/bar',
     });
-    await db._repairDatabase();
+    await _repairDatabase();
     expect(await db.get(models.gitRepository.type, oldRepoWithSuffix._id)).toEqual(
       expect.objectContaining({
         uri: 'https://github.com/foo/bar.git',
@@ -640,6 +655,7 @@ describe('_repairDatabase()', () => {
     );
   });
 });
+
 describe('duplicate()', () => {
   beforeEach(globalBeforeEach);
   afterEach(() => jest.restoreAllMocks());
@@ -656,7 +672,9 @@ describe('duplicate()', () => {
     });
     expect(duplicated._id).not.toEqual(workspace._id);
     expect(duplicated._id).toMatch(/^wrk_[a-z0-9]{32}$/);
+    // @ts-expect-error -- TSCONVERSION
     delete workspace._id;
+    // @ts-expect-error -- TSCONVERSION
     delete duplicated._id;
     expect(duplicated).toEqual({
       ...workspace,
@@ -676,6 +694,7 @@ describe('duplicate()', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 });
+
 describe('docCreate()', () => {
   beforeEach(globalBeforeEach);
   afterEach(() => jest.restoreAllMocks());
@@ -689,6 +708,7 @@ describe('docCreate()', () => {
     expect(spy).toHaveBeenCalled();
   });
 });
+
 describe('withAncestors()', () => {
   beforeEach(globalBeforeEach);
 

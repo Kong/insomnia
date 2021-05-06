@@ -2,6 +2,7 @@ import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { newBodyGraphQL } from '../request';
 import { CONTENT_TYPE_GRAPHQL } from '../../common/constants';
+
 describe('init()', () => {
   beforeEach(globalBeforeEach);
 
@@ -27,6 +28,7 @@ describe('init()', () => {
     });
   });
 });
+
 describe('create()', () => {
   beforeEach(globalBeforeEach);
 
@@ -73,6 +75,7 @@ describe('create()', () => {
     ).toThrow('New Requests missing `parentId`');
   });
 });
+
 describe('updateMimeType()', () => {
   beforeEach(globalBeforeEach);
 
@@ -194,6 +197,7 @@ describe('updateMimeType()', () => {
     expect(newRequest.body.text).toEqual('My Data');
   });
 });
+
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);
 
@@ -426,6 +430,7 @@ describe('migrate()', () => {
     expect(migrated).toEqual(expected);
   });
 });
+
 describe('newBodyGraphQL()', () => {
   it('strips \\\\n characters', () => {
     const input =

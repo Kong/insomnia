@@ -1,9 +1,10 @@
 import * as plugin from '../response';
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { getTempDir } from '../../../common/constants';
+import { getTempDir } from '../../../common/electron-helpers';
 import fs from 'fs';
 import path from 'path';
 import * as models from '../../../models/index';
+
 describe('init()', () => {
   beforeEach(globalBeforeEach);
 
@@ -29,6 +30,7 @@ describe('init()', () => {
     expect(() => plugin.init()).toThrowError('contexts.response initialized without response');
   });
 });
+
 describe('response.*', () => {
   beforeEach(globalBeforeEach);
 

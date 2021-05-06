@@ -1,5 +1,6 @@
 import { askToImportIntoWorkspace, ForceToWorkspaceKeys } from '../helpers';
 import * as modals from '../../../components/modals';
+
 describe('askToImportIntoWorkspace', () => {
   it('should return null if forcing to a new workspace', () => {
     const func = askToImportIntoWorkspace('id', ForceToWorkspaceKeys.new);

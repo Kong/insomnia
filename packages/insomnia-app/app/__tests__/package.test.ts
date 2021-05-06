@@ -1,5 +1,6 @@
 import * as globalPackage from '../../package.json';
 import { globalBeforeEach } from '../__jest__/before-each';
+
 describe('package.json', () => {
   beforeEach(globalBeforeEach);
 

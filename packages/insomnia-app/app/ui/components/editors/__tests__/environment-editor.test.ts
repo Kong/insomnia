@@ -1,5 +1,6 @@
 import { ensureKeyIsValid } from '../environment-editor';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../../templating';
+
 describe('ensureKeyIsValid', () => {
   it.each(['$', '$a', '$ab'])('%s should be invalid when as key begins with $', key => {
     expect(ensureKeyIsValid(key)).toBe(`"${key}" cannot begin with '$' or contain a '.'`);

@@ -8,11 +8,60 @@ import { CurlNetrc } from 'node-libcurl/dist/enum/CurlNetrc';
 import { CurlHttpVersion } from 'node-libcurl/dist/enum/CurlHttpVersion';
 
 class Curl extends EventEmitter {
-  constructor() {
-    super();
-    this._options = {};
-    this._meta = {};
-    this._features = {};
+  _options = {};
+  _meta = {};
+  _features = {};
+
+  // cannot include these from node-libcurl because they come from the native library
+  // and it's not possible to load it while testing (as it was built to run with Electron)
+  static info = {
+    COOKIELIST: 'COOKIELIST',
+    EFFECTIVE_URL: 'EFFECTIVE_URL',
+    SIZE_DOWNLOAD: 'SIZE_DOWNLOAD',
+    TOTAL_TIME: 'TOTAL_TIME',
+  }
+
+  static option = {
+    ACCEPT_ENCODING: 'ACCEPT_ENCODING',
+    CAINFO: 'CAINFO',
+    COOKIEFILE: 'COOKIEFILE',
+    COOKIELIST: 'COOKIELIST',
+    CUSTOMREQUEST: 'CUSTOMREQUEST',
+    DEBUGFUNCTION: 'DEBUGFUNCTION',
+    FOLLOWLOCATION: 'FOLLOWLOCATION',
+    HTTPAUTH: 'HTTPAUTH',
+    HTTPGET: 'HTTPGET',
+    HTTPHEADER: 'HTTPHEADER',
+    HTTPPOST: 'HTTPPOST',
+    HTTP_VERSION: 'HTTP_VERSION',
+    INFILESIZE_LARGE: 'INFILESIZE_LARGE',
+    KEYPASSWD: 'KEYPASSWD',
+    MAXREDIRS: 'MAXREDIRS',
+    NETRC: 'NETRC',
+    NOBODY: 'NOBODY',
+    NOPROGRESS: 'NOPROGRESS',
+    NOPROXY: 'NOPROXY',
+    PASSWORD: 'PASSWORD',
+    POST: 'POST',
+    POSTFIELDS: 'POSTFIELDS',
+    PROXY: 'PROXY',
+    PROXYAUTH: 'PROXYAUTH',
+    READDATA: 'READDATA',
+    READFUNCTION: 'READFUNCTION',
+    SSLCERT: 'SSLCERT',
+    SSLCERTTYPE: 'SSLCERTTYPE',
+    SSLKEY: 'SSLKEY',
+    SSL_VERIFYHOST: 'SSL_VERIFYHOST',
+    SSL_VERIFYPEER: 'SSL_VERIFYPEER',
+    TIMEOUT_MS: 'TIMEOUT_MS',
+    UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
+    UPLOAD: 'UPLOAD',
+    URL: 'URL',
+    USERAGENT: 'USERAGENT',
+    USERNAME: 'USERNAME',
+    VERBOSE: 'VERBOSE',
+    WRITEFUNCTION: 'WRITEFUNCTION',
+    XFERINFOFUNCTION: 'XFERINFOFUNCTION',
   }
 
   static getVersion() {
@@ -96,6 +145,7 @@ class Curl extends EventEmitter {
       );
       this.emit('data', data);
 
+      // @ts-expect-error -- TSCONVERSION
       this._options.WRITEFUNCTION(data);
 
       process.nextTick(() => {
@@ -115,63 +165,19 @@ class Curl extends EventEmitter {
   }
 
   close() {}
-} // cannot include these from node-libcurl because they come from the native library
-//  and it's not possible to load it while testing (as it was built to run with Electron)
+}
 
-Curl.info = {
-  COOKIELIST: 'COOKIELIST',
-  EFFECTIVE_URL: 'EFFECTIVE_URL',
-  SIZE_DOWNLOAD: 'SIZE_DOWNLOAD',
-  TOTAL_TIME: 'TOTAL_TIME',
-};
-Curl.option = {
-  ACCEPT_ENCODING: 'ACCEPT_ENCODING',
-  CAINFO: 'CAINFO',
-  COOKIEFILE: 'COOKIEFILE',
-  COOKIELIST: 'COOKIELIST',
-  CUSTOMREQUEST: 'CUSTOMREQUEST',
-  DEBUGFUNCTION: 'DEBUGFUNCTION',
-  FOLLOWLOCATION: 'FOLLOWLOCATION',
-  HTTPAUTH: 'HTTPAUTH',
-  HTTPGET: 'HTTPGET',
-  HTTPHEADER: 'HTTPHEADER',
-  HTTPPOST: 'HTTPPOST',
-  HTTP_VERSION: 'HTTP_VERSION',
-  INFILESIZE_LARGE: 'INFILESIZE_LARGE',
-  KEYPASSWD: 'KEYPASSWD',
-  MAXREDIRS: 'MAXREDIRS',
-  NETRC: 'NETRC',
-  NOBODY: 'NOBODY',
-  NOPROGRESS: 'NOPROGRESS',
-  NOPROXY: 'NOPROXY',
-  PASSWORD: 'PASSWORD',
-  POST: 'POST',
-  POSTFIELDS: 'POSTFIELDS',
-  PROXY: 'PROXY',
-  PROXYAUTH: 'PROXYAUTH',
-  READDATA: 'READDATA',
-  READFUNCTION: 'READFUNCTION',
-  SSLCERT: 'SSLCERT',
-  SSLCERTTYPE: 'SSLCERTTYPE',
-  SSLKEY: 'SSLKEY',
-  SSL_VERIFYHOST: 'SSL_VERIFYHOST',
-  SSL_VERIFYPEER: 'SSL_VERIFYPEER',
-  TIMEOUT_MS: 'TIMEOUT_MS',
-  UNIX_SOCKET_PATH: 'UNIX_SOCKET_PATH',
-  UPLOAD: 'UPLOAD',
-  URL: 'URL',
-  USERAGENT: 'USERAGENT',
-  USERNAME: 'USERNAME',
-  VERBOSE: 'VERBOSE',
-  WRITEFUNCTION: 'WRITEFUNCTION',
-  XFERINFOFUNCTION: 'XFERINFOFUNCTION',
-};
-
-// This is just to make it easier to test
-// node-libcurl Enum exports (CurlAuth, CurlCode, etc) are TypeScript enums, which are
-//  converted to an object with format:
-// { EnumKey: 0, 0: EnumKey }
-// We only want the named members (non-number ones)
+/**
+ * This is just to make it easier to test
+ * node-libcurl Enum exports (CurlAuth, CurlCode, etc) are TypeScript enums, which are converted to an object with format:
+ * ```ts
+ * const myEnum = {
+ *   EnumKey: 0,
+ *   0: EnumKey,
+ * }
+ * ```
+ * We only want the named members (non-number ones)
+ */
 const getTsEnumOnlyWithNamedMembers = enumObj => {
   let obj = {};
 
@@ -184,8 +190,9 @@ const getTsEnumOnlyWithNamedMembers = enumObj => {
   return obj;
 };
 
+// WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
 module.exports = {
-  Curl: Curl,
+  Curl,
   CurlAuth: getTsEnumOnlyWithNamedMembers(CurlAuth),
   CurlCode: getTsEnumOnlyWithNamedMembers(CurlCode),
   CurlInfoDebug: getTsEnumOnlyWithNamedMembers(CurlInfoDebug),

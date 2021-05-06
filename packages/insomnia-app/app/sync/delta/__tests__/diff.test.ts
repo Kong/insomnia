@@ -1,4 +1,5 @@
 import { diff, __internal } from '../diff';
+
 describe('diff()', () => {
   it('creates block map', () => {
     const result = __internal.getBlockMap('Hello World!!', 3);

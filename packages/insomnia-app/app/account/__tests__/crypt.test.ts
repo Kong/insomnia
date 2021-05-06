@@ -1,4 +1,5 @@
 import * as crypt from '../crypt';
+
 describe('crypt', () => {
   describe('deriveKey()', () => {
     it('derives a key properly', async () => {
@@ -7,6 +8,7 @@ describe('crypt', () => {
       expect(result).toBe(expected);
     });
   });
+
   describe('AES', () => {
     it('encrypts and decrypts', () => {
       const key = {
@@ -21,6 +23,7 @@ describe('crypt', () => {
       expect(resultDecrypted).toEqual('Hello World!');
     });
   });
+
   describe('AES Buffer', () => {
     it('encrypts and decrypts', () => {
       const key = {
@@ -35,6 +38,7 @@ describe('crypt', () => {
       expect(resultDecrypted).toEqual(Buffer.from('Hello World!', 'utf8'));
     });
   });
+
   describe('RSA', () => {
     it('encrypts and decrypts', () => {
       const privateKey = {

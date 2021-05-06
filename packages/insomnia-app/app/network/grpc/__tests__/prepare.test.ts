@@ -7,7 +7,9 @@ import {
   RENDER_PURPOSE_SEND,
 } from '../../../common/render';
 import { GrpcMethodTypeEnum } from '../method';
+
 jest.mock('../../../common/render');
+
 describe('prepareGrpcRequest', () => {
   beforeEach(globalBeforeEach);
 
@@ -61,6 +63,7 @@ describe('prepareGrpcRequest', () => {
     },
   );
 });
+
 describe('prepareGrpcMessage', () => {
   beforeEach(globalBeforeEach);
 

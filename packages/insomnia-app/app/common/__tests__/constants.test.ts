@@ -10,6 +10,7 @@ import {
   isValidActivity,
   isWorkspaceActivity,
 } from '../constants';
+
 describe('URL Regex', () => {
   it('matches valid URLs', () => {
     expect('https://google.com').toMatch(FLEXIBLE_URL_REGEX);
@@ -34,6 +35,7 @@ describe('URL Regex', () => {
     expect('[https://google.com]').not.toMatch(FLEXIBLE_URL_REGEX);
   });
 });
+
 describe('isWorkspaceActivity', () => {
   it('should return true', () => {
     expect(isWorkspaceActivity(ACTIVITY_SPEC)).toBe(true);
@@ -48,6 +50,7 @@ describe('isWorkspaceActivity', () => {
     expect(isWorkspaceActivity(ACTIVITY_ANALYTICS)).toBe(false);
   });
 });
+
 describe('isValidActivity', () => {
   it('should return true', () => {
     expect(isValidActivity(ACTIVITY_SPEC)).toBe(true);

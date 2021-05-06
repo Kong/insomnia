@@ -32,7 +32,6 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-  getTempDir,
   HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
@@ -40,7 +39,6 @@ import {
   delay,
   describeByteSize,
   getContentTypeHeader,
-  getDataDirectory,
   getHostHeader,
   getLocationHeader,
   getSetCookieHeaders,
@@ -51,6 +49,7 @@ import {
   hasUserAgentHeader,
   waitForStreamToFinish,
 } from '../common/misc';
+import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 import {
   buildQueryStringFromParams,
   joinUrlAndQueryString,

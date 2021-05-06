@@ -3,7 +3,9 @@ import { render, fireEvent } from '@testing-library/react';
 import GrpcMethodDropdown from '../grpc-method-dropdown';
 import { grpcMethodDefinitionSchema } from '../../../../context/grpc/__schemas__';
 import { createBuilder } from '@develohpanda/fluent-builder';
+
 const builder = createBuilder(grpcMethodDefinitionSchema);
+
 describe('<GrpcMethodDropdown />', () => {
   beforeEach(() => {
     builder.reset();
@@ -18,6 +20,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChangeProtoFile={jest.fn()}
       />,
     );
+
     // Open dropdown
     fireEvent.click(getByRole('button'));
     const nothingFound = queryByText('No methods found');
@@ -35,6 +38,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChangeProtoFile={handleChangeProtoFile}
       />,
     );
+
     // Open dropdown
     fireEvent.click(getByRole('button'));
     const clickToChange = queryByText('Click to change proto file');
@@ -52,6 +56,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChangeProtoFile={handleChangeProtoFile}
       />,
     );
+
     // Open dropdown
     fireEvent.click(getByRole('button'));
     fireEvent.click(getByText('Click to change proto file'));
@@ -68,6 +73,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChangeProtoFile={jest.fn()}
       />,
     );
+
     // Open dropdown
     fireEvent.click(getByRole('button'));
     // Should find two items - a dropdown item and a tooltip with the same text
@@ -89,6 +95,7 @@ describe('<GrpcMethodDropdown />', () => {
         handleChangeProtoFile={jest.fn()}
       />,
     );
+
     // Open dropdown
     fireEvent.click(getByRole('button'));
     expect(queryByText('pkg: package')).toBeTruthy();

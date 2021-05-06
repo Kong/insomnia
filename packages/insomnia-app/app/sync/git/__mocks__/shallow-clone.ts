@@ -1,3 +1,1 @@
-module.exports = {
-  shallowClone: jest.fn(),
-};
+export const shallowClone = jest.fn();

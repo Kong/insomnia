@@ -1,6 +1,7 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../index';
 import { queryAllWorkspaceUrls } from '../query-all-workspace-urls';
+
 describe('queryAllWorkspaceUrls', () => {
   beforeEach(globalBeforeEach);
 

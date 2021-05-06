@@ -15,6 +15,7 @@ import {
   MNEMONIC_SYM,
 } from '../common/constants';
 import * as misc from '../common/misc';
+import { clickLink, getDataDirectory } from '../common/electron-helpers';
 import * as log from '../common/log';
 import * as os from 'os';
 import { docsBase } from '../common/documentation';
@@ -150,7 +151,7 @@ export function createWindow() {
             return;
           }
 
-          misc.clickLink(changelogUrl());
+          clickLink(changelogUrl());
         },
       },
       {
@@ -338,7 +339,7 @@ export function createWindow() {
       {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
-          const directory = misc.getDataDirectory();
+          const directory = getDataDirectory();
           shell.showItemInFolder(directory);
         },
       },

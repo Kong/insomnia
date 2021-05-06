@@ -1,28 +1,26 @@
-import { appConfig } from '../../config';
-import * as electron from 'electron';
+import appConfig from '../../config/config.json';
 import path from 'path';
-import mkdirp from 'mkdirp';
-import { getDataDirectory } from './misc';
 import { ValueOf } from 'type-fest';
+import { getDataDirectory } from './electron-helpers';
 
 // App Stuff
-export const getAppVersion = () => appConfig().version;
-export const getAppLongName = () => appConfig().longName;
-export const getAppName = () => appConfig().productName;
-export const getAppDefaultTheme = () => appConfig().theme;
-export const getAppDefaultLightTheme = () => appConfig().lightTheme;
-export const getAppDefaultDarkTheme = () => appConfig().darkTheme;
-export const getAppSynopsis = () => appConfig().synopsis;
-export const getAppId = () => appConfig().appId;
-export const getGoogleAnalyticsId = () => appConfig().gaId;
-export const getGoogleAnalyticsLocation = () => appConfig().gaLocation;
+export const getAppVersion = () => appConfig.version;
+export const getAppLongName = () => appConfig.longName;
+export const getAppName = () => appConfig.productName;
+export const getAppDefaultTheme = () => appConfig.theme;
+export const getAppDefaultLightTheme = () => appConfig.lightTheme;
+export const getAppDefaultDarkTheme = () => appConfig.darkTheme;
+export const getAppSynopsis = () => appConfig.synopsis;
+export const getAppId = () => appConfig.appId;
+export const getGoogleAnalyticsId = () => appConfig.gaId;
+export const getGoogleAnalyticsLocation = () => appConfig.gaLocation;
 export const getAppPlatform = () => process.platform;
 export const isMac = () => getAppPlatform() === 'darwin';
 export const isLinux = () => getAppPlatform() === 'linux';
 export const isWindows = () => getAppPlatform() === 'win32';
 export const getAppEnvironment = () => process.env.INSOMNIA_ENV || 'production';
 export const isDevelopment = () => getAppEnvironment() === 'development';
-export const getSegmentWriteKey = () => appConfig().segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
+export const getSegmentWriteKey = () => appConfig.segmentWriteKeys[isDevelopment() ? 'development' : 'production'];
 export const getAppReleaseDate = () => new Date(process.env.RELEASE_DATE ?? '').toLocaleDateString();
 
 export const getBrowserUserAgent = () => encodeURIComponent(
@@ -30,14 +28,6 @@ export const getBrowserUserAgent = () => encodeURIComponent(
     .replace(new RegExp(`${getAppId()}\\/\\d+\\.\\d+\\.\\d+ `), '')
     .replace(/Electron\/\d+\.\d+\.\d+ /, ''),
 ).replace('%2C', ',');
-
-export function getTempDir() {
-  // NOTE: Using a fairly unique name here because "insomnia" is a common word
-  const { app } = electron.remote || electron;
-  const dir = path.join(app.getPath('temp'), `insomnia_${getAppVersion()}`);
-  mkdirp.sync(dir);
-  return dir;
-}
 
 export function updatesSupported() {
   // Updates are not supported on Linux
@@ -54,7 +44,7 @@ export function updatesSupported() {
 }
 
 export const getClientString = () => `${getAppEnvironment()}::${getAppPlatform()}::${getAppVersion()}`;
-export const changelogUrl = () => appConfig().changelogUrl;
+export const changelogUrl = () => appConfig.changelogUrl;
 
 // Global Stuff
 export const DB_PERSIST_INTERVAL = 1000 * 60 * 30; // Compact every once in a while

@@ -2,6 +2,7 @@ import * as plugin from '../request';
 import * as models from '../../../models';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
+
 const CONTEXT = {
   user_key: 'my_user_key',
   hello: 'world',
@@ -12,6 +13,7 @@ const CONTEXT = {
   },
   null_test: null,
 };
+
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
@@ -91,6 +93,7 @@ describe('init()', () => {
     expect(() => plugin.init()).toThrowError('contexts.request initialized without request');
   });
 });
+
 describe('request.*', () => {
   beforeEach(async () => {
     await globalBeforeEach();

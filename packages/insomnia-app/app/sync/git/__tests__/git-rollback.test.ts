@@ -4,12 +4,15 @@ import { setupDateMocks } from './util';
 import { MemClient } from '../mem-client';
 import type { FileWithStatus } from '../git-rollback';
 import { gitRollback } from '../git-rollback';
+
 describe('git rollback', () => {
   describe('mocked', () => {
-    const removeMock = jest.fn().mockResolvedValue();
-    const unlinkMock = jest.fn().mockResolvedValue();
-    const undoPendingChangesMock = jest.fn().mockResolvedValue();
+    const removeMock = jest.fn().mockResolvedValue(undefined);
+    const unlinkMock = jest.fn().mockResolvedValue(undefined);
+    const undoPendingChangesMock = jest.fn().mockResolvedValue(undefined);
+
     let vcs: Partial<GitVCS> = {};
+
     beforeEach(() => {
       jest.resetAllMocks();
       const fsMock = {
@@ -101,6 +104,7 @@ describe('git rollback', () => {
       expect(undoPendingChangesMock).toHaveBeenCalledWith(expect.arrayContaining([cTxt, dTxt]));
     });
   });
+
   describe('integration', () => {
     let fooTxt = '';
     let barTxt = '';

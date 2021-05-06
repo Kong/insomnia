@@ -15,6 +15,11 @@ export function registerModal(instance) {
   modals[instance.constructor.name] = instance;
 }
 
+export function showModal(modalCls, ...args) {
+  trackEvent('Modals', 'Show', modalCls.name);
+  return _getModal(modalCls).show(...args);
+}
+
 export function showPrompt(config) {
   return showModal(PromptModal, config);
 }
@@ -29,11 +34,6 @@ export function showError(config: ErrorModalOptions) {
   } catch (err) {
     console.log('[modal] Cannot show modal', err, config);
   }
-}
-
-export function showModal(modalCls, ...args) {
-  trackEvent('Modals', 'Show', modalCls.name);
-  return _getModal(modalCls).show(...args);
 }
 
 export function hideAllModals() {

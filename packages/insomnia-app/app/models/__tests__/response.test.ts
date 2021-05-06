@@ -3,13 +3,15 @@ import zlib from 'zlib';
 import fs from 'fs';
 import * as models from '../../models';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { getDataDirectory } from '../../common/misc';
+import { getDataDirectory } from '../../common/electron-helpers';
+
 describe('migrate()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     Date.now = jest.fn(() => 1234567890);
     jest.useFakeTimers();
   });
+
   afterEach(async () => {
     // Reset to real timers so that other test suites don't fail.
     jest.useRealTimers();
@@ -139,6 +141,7 @@ describe('migrate()', () => {
     ).toBe('zip');
   });
 });
+
 describe('cleanDeletedResponses()', function() {
   beforeEach(globalBeforeEach);
   afterEach(function() {

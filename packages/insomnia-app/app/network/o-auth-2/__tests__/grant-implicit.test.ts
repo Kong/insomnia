@@ -8,6 +8,7 @@ const REDIRECT_URI = 'https://foo.com/redirect';
 const AUDIENCE = 'https://foo.com/userinfo';
 const SCOPE = 'scope_123';
 const STATE = 'state_123';
+
 describe('implicit', () => {
   beforeEach(globalBeforeEach);
 

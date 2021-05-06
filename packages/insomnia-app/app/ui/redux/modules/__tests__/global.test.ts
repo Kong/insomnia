@@ -25,8 +25,10 @@ import {
 } from '../global';
 import * as models from '../../../../models';
 import fs from 'fs';
-import { getDesignerDataDir } from '../../../../common/misc';
+import { getDesignerDataDir } from '../../../../common/electron-helpers';
+
 jest.mock('../../../../common/analytics');
+
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
@@ -50,6 +52,7 @@ describe('global', () => {
     global.localStorage.clear();
     fsExistsSyncSpy = jest.spyOn(fs, 'existsSync');
   });
+
   describe('setActiveActivity', () => {
     it.each([
       ACTIVITY_SPEC,
@@ -98,6 +101,7 @@ describe('global', () => {
       expect(settings.hasPromptedOnboarding).toBe(false);
     });
   });
+
   describe('setActiveWorkspace', () => {
     it('should update local storage', () => {
       const workspaceId = 'id';
@@ -111,6 +115,7 @@ describe('global', () => {
       );
     });
   });
+
   describe('goToNextActivity', () => {
     it('should go from onboarding to home', async () => {
       const settings = createSettings(false, false, true);
@@ -209,6 +214,7 @@ describe('global', () => {
       },
     );
   });
+
   describe('initActiveWorkspace', () => {
     it('should initialize from local storage', () => {
       const workspaceId = 'id';
@@ -223,6 +229,7 @@ describe('global', () => {
       expect(initActiveWorkspace()).toStrictEqual(expectedEvent);
     });
   });
+
   describe('initActiveActivity', () => {
     it.each([
       ACTIVITY_SPEC,

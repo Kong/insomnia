@@ -3,22 +3,28 @@ import path from 'path';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import selectFileOrFolder from '../../../../common/select-file-or-folder';
 import * as protoManager from '../index';
-import * as protoLoader from '../../proto-loader';
+import { loadMethods as _loadMethods, loadMethodsFromPath as _loadMethodsFromPath } from '../../proto-loader';
 import * as models from '../../../../models';
 import * as modals from '../../../../ui/components/modals';
-import * as db from '../../../../common/database';
+import { database as db } from '../../../../common/database';
+
+const loadMethods = _loadMethods as jest.Mock;
+const loadMethodsFromPath = _loadMethodsFromPath as jest.Mock;
+
 jest.mock('../../../../common/select-file-or-folder', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
 jest.mock('../../../../ui/components/modals');
 jest.mock('../../proto-loader');
+
 describe('protoManager', () => {
-  const selectFileOrFolderMock: JestMockFn<any, any> = selectFileOrFolder;
+  const selectFileOrFolderMock = selectFileOrFolder as jest.Mock;
   beforeEach(() => {
     globalBeforeEach();
     jest.resetAllMocks();
   });
+
   describe('addFile', () => {
     it('should not create database entry if file loading canceled', async () => {
       // Arrange
@@ -27,8 +33,10 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         canceled: true,
       });
+
       // Act
       await protoManager.addFile(w._id, cbMock);
+
       // Assert
       expect(cbMock).not.toHaveBeenCalled();
       const pf = await models.protoFile.getByParentId(w._id);
@@ -45,8 +53,10 @@ describe('protoManager', () => {
       const w = await models.workspace.create();
       const error = new Error();
       selectFileOrFolderMock.mockRejectedValue(error);
+
       // Act
       await protoManager.addFile(w._id, cbMock);
+
       // Assert
       expect(cbMock).not.toHaveBeenCalled();
       const pf = await models.protoFile.getByParentId(w._id);
@@ -65,9 +75,11 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
-      protoLoader.loadMethodsFromPath.mockRejectedValue(error);
+      loadMethodsFromPath.mockRejectedValue(error);
+
       // Act
       await protoManager.addFile(w._id, cbMock);
+
       // Assert
       expect(cbMock).not.toHaveBeenCalled();
       const pf = await models.protoFile.getByParentId(w._id);
@@ -87,12 +99,14 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
-      protoLoader.loadMethodsFromPath.mockResolvedValue();
+      loadMethodsFromPath.mockResolvedValue(undefined);
       const fsReadFileSpy = jest.spyOn(fs.promises, 'readFile');
       const contents = 'contents';
       fsReadFileSpy.mockResolvedValue(contents);
+
       // Act
       await protoManager.addFile(w._id, cbMock);
+
       // Assert
       const pf = await models.protoFile.getByParentId(w._id);
       expect(cbMock).toHaveBeenCalledWith(pf._id);
@@ -100,6 +114,7 @@ describe('protoManager', () => {
       expect(pf.protoText).toBe(contents);
     });
   });
+
   describe('updateFile', () => {
     it('should update database entry', async () => {
       // Arrange
@@ -112,12 +127,14 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
-      protoLoader.loadMethodsFromPath.mockResolvedValue();
+      loadMethodsFromPath.mockResolvedValue(undefined);
       const fsReadFileSpy = jest.spyOn(fs.promises, 'readFile');
       const contents = 'contents';
       fsReadFileSpy.mockResolvedValue(contents);
+
       // Act
       await protoManager.updateFile(pf, cbMock);
+
       // Assert
       expect(cbMock).toHaveBeenCalledWith(pf._id);
       const updatedPf = await models.protoFile.getById(pf._id);
@@ -125,6 +142,7 @@ describe('protoManager', () => {
       expect(updatedPf.protoText).toBe(contents);
     });
   });
+
   describe('renameFile', () => {
     it('should rename the file', async () => {
       // Arrange
@@ -133,14 +151,17 @@ describe('protoManager', () => {
         parentId: w._id,
         name: 'original',
       });
+
       // Act
       const updatedName = 'updated';
       await protoManager.renameFile(pf, updatedName);
+
       // Assert
       const updatedPf = await models.protoFile.getById(pf._id);
       expect(updatedPf.name).toBe(updatedName);
     });
   });
+
   describe('deleteFile', () => {
     it('should alert the user before deleting a file', async () => {
       // Arrange
@@ -150,16 +171,19 @@ describe('protoManager', () => {
         name: 'pfName.proto',
       });
       const cbMock = jest.fn();
+
       // Act
       await protoManager.deleteFile(pf, cbMock);
-      const showAlertCallArg = (modals.showAlert as JestMockFn).mock.calls[0][0];
+      const showAlertCallArg = (modals.showAlert as jest.Mock).mock.calls[0][0];
       expect(showAlertCallArg.title).toBe('Delete pfName.proto');
       await showAlertCallArg.onConfirm();
+
       // Assert
       expect(cbMock).toHaveBeenCalledWith(pf._id);
       await expect(models.protoFile.getById(pf._id)).resolves.toBeNull();
     });
   });
+
   describe('deleteDirectory', () => {
     it('should alert the user before deleting a directory', async () => {
       // Arrange
@@ -177,11 +201,13 @@ describe('protoManager', () => {
         name: 'pfName2.proto',
       });
       const cbMock = jest.fn();
+
       // Act
       await protoManager.deleteDirectory(pd, cbMock);
-      const showAlertCallArg = (modals.showAlert as JestMockFn).mock.calls[0][0];
+      const showAlertCallArg = (modals.showAlert as jest.Mock).mock.calls[0][0];
       expect(showAlertCallArg.title).toBe('Delete pdName');
       await showAlertCallArg.onConfirm();
+
       // Assert
       expect(cbMock).toHaveBeenCalledWith(expect.arrayContaining([pf1._id, pf2._id]));
       await expect(models.protoDirectory.getById(pd._id)).resolves.toBeNull();
@@ -189,9 +215,10 @@ describe('protoManager', () => {
       await expect(models.protoFile.getById(pf2._id)).resolves.toBeNull();
     });
   });
+
   describe('addDirectory', () => {
-    let dbBufferChangesIndefinitelySpy: any | JestMockFn<any, any>;
-    let dbFlushChangesSpy: any | JestMockFn<any, any>;
+    let dbBufferChangesIndefinitelySpy: any | jest.Mock<any, any>;
+    let dbFlushChangesSpy: any | jest.Mock<any, any>;
     beforeEach(() => {
       dbBufferChangesIndefinitelySpy = jest.spyOn(db, 'bufferChangesIndefinitely');
       dbFlushChangesSpy = jest.spyOn(db, 'flushChanges');
@@ -209,8 +236,10 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         canceled: true,
       });
+
       // Act
       await protoManager.addDirectory(w._id);
+
       // Assert
       await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
@@ -221,8 +250,10 @@ describe('protoManager', () => {
       const w = await models.workspace.create();
       const error = new Error();
       selectFileOrFolderMock.mockRejectedValue(error);
+
       // Act
       await protoManager.addDirectory(w._id);
+
       // Assert
       await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
@@ -239,8 +270,10 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
+
       // Act
       await protoManager.addDirectory(w._id);
+
       // Assert
       await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
@@ -257,6 +290,7 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
+
       // Should error when loading the 6th file
       const error = new Error('should-error.proto could not be loaded');
       const fsPromisesReadFileSpy = jest.spyOn(fs.promises, 'readFile');
@@ -267,11 +301,14 @@ describe('protoManager', () => {
         .mockResolvedValueOnce('contents of 4.proto')
         .mockResolvedValueOnce('contents of 5.proto')
         .mockRejectedValueOnce(error);
+
       // Act
       await protoManager.addDirectory(w._id);
+
       // Assert
       await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
+
       // Expect rollback
       expect(dbFlushChangesSpy).toHaveBeenCalledWith(expect.any(Number), true);
       expect(modals.showError).toHaveBeenCalledWith({
@@ -290,9 +327,11 @@ describe('protoManager', () => {
         filePath,
       });
       const error = new Error('error');
-      protoLoader.loadMethods.mockRejectedValue(error);
+      loadMethods.mockRejectedValue(error);
+
       // Act
       await protoManager.addDirectory(w._id);
+
       // Assert
       await expect(models.protoDirectory.all()).resolves.toHaveLength(0);
       await expect(models.protoFile.all()).resolves.toHaveLength(0);
@@ -311,8 +350,10 @@ describe('protoManager', () => {
       selectFileOrFolderMock.mockResolvedValue({
         filePath,
       });
+
       // Act
       await protoManager.addDirectory(w._id);
+
       // Assert
       await expect(models.protoDirectory.all()).resolves.toHaveLength(3);
       await expect(models.protoFile.all()).resolves.toHaveLength(3); // Each individual entry is not validated here because it is

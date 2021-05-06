@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import LocalStorage from '../../main/local-storage';
 import { globalBeforeEach } from '../../__jest__/before-each';
+
 describe('LocalStorage()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
@@ -9,6 +10,7 @@ describe('LocalStorage()', () => {
     // There has to be a better way to reset this...
     setTimeout.mock.calls = [];
   });
+
   afterEach(() => {
     jest.clearAllTimers();
   });

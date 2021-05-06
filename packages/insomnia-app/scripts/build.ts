@@ -1,4 +1,4 @@
-import { appConfig } from '../config';
+import appConfig from '../config/config.json';
 import childProcess from 'child_process';
 import webpack from 'webpack';
 import licenseChecker from 'license-checker';
@@ -139,12 +139,11 @@ const generatePackageJson = async (relBasePkg: string, relOutPkg: string) => {
   const inputFile = String(await readFile(basePath));
   const basePkg = JSON.parse(inputFile);
 
-  const app = appConfig();
   const appPkg = {
-    name: app.name,
-    version: app.version,
-    productName: app.productName,
-    longName: app.longName,
+    name: appConfig.name,
+    version: appConfig.version,
+    productName: appConfig.productName,
+    longName: appConfig.longName,
     description: basePkg.description,
     license: basePkg.license,
     homepage: basePkg.homepage,
@@ -198,8 +197,8 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
       process.exit(0);
     }
 
-    if (appConfig().version !== version) {
-      const tags = `${appConfig().version} != ${version}`;
+    if (appConfig.version !== version) {
+      const tags = `${appConfig.version} != ${version}`;
       console.log(`[build] App version mismatch with Git tag ${tags}`);
       process.exit(1);
     }

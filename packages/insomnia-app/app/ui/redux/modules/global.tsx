@@ -38,7 +38,7 @@ import {
   isValidActivity,
 } from '../../../common/constants';
 import { selectSettings } from '../selectors';
-import { getDesignerDataDir } from '../../../common/misc';
+import { getDesignerDataDir } from '../../../common/electron-helpers';
 import { Settings } from '../../../models/settings';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';

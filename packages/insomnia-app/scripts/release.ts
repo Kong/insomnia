@@ -1,4 +1,4 @@
-import { appConfig } from '../config';
+import appConfig from '../config/config.json';
 import glob from 'fast-glob';
 import { promises } from 'fs';
 import { basename, posix } from 'path';
@@ -14,12 +14,12 @@ const octokit = new Octokit({
 
 const getOrCreateRelease = (app: string, version: string) => {
   const tag = `${app}@${version}`;
-  const releaseName = `${appConfig().productName} ${version} 📦`;
+  const releaseName = `${appConfig.productName} ${version} 📦`;
 
   try {
     return octokit.repos.getReleaseByTag({
-      owner: appConfig().githubOrg,
-      repo: appConfig().githubRepo,
+      owner: appConfig.githubOrg,
+      repo: appConfig.githubRepo,
       tag,
     });
   } catch (err) {
@@ -27,12 +27,12 @@ const getOrCreateRelease = (app: string, version: string) => {
   }
 
   return octokit.repos.createRelease({
-    owner: appConfig().githubOrg,
-    repo: appConfig().githubRepo,
+    owner: appConfig.githubOrg,
+    repo: appConfig.githubRepo,
     // eslint-disable-next-line camelcase -- part of the octokit API
     tag_name: tag,
     name: releaseName,
-    body: `Full changelog ⇒ ${appConfig().changelogUrl}`,
+    body: `Full changelog ⇒ ${appConfig.changelogUrl}`,
     draft: false,
     prerelease: true,
   });
@@ -76,8 +76,8 @@ const start = async (app?: string | null, version?: string | null) => {
       url: 'https://uploads.github.com/repos/:owner/:repo/releases/:id/assets{?name,label}"',
       id: data.id,
       name,
-      owner: appConfig().githubOrg,
-      repo: appConfig().githubRepo,
+      owner: appConfig.githubOrg,
+      repo: appConfig.githubRepo,
       headers: {
         'Content-Type': 'application/octet-stream',
       },

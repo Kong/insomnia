@@ -1,5 +1,7 @@
 let v1Counter = 0;
+
 let v4Counter = 0;
+
 const v1UUIDs = [
   'f7272c80-f493-11e6-bc64-92361f002671',
   'f7272f0a-f493-11e6-bc64-92361f002671',
@@ -12,6 +14,7 @@ const v1UUIDs = [
   'f7273f7c-f493-11e6-bc64-92361f002671',
   'f7274300-f493-11e6-bc64-92361f002671',
 ];
+
 const v4UUIDs = [
   'cc1dd2ca-4275-747a-a881-99e8efd42403',
   'dd2ccc1a-2745-477a-881a-9e8ef9d42403',
@@ -190,7 +193,7 @@ const v4UUIDs = [
   '966e9995-938a-4a5e-813c-de3691dddb3a',
 ];
 
-function v1() {
+export const v1 = () => {
   const uuid = v1UUIDs[v1Counter++];
 
   if (!uuid) {
@@ -198,9 +201,9 @@ function v1() {
   }
 
   return uuid;
-}
+};
 
-function v4() {
+export const v4 = () => {
   const uuid = v4UUIDs[v4Counter++];
 
   if (!uuid) {
@@ -208,10 +211,6 @@ function v4() {
   }
 
   return uuid;
-}
+};
 
-module.exports = () => v4();
-
-module.exports.v4 = () => v4();
-
-module.exports.v1 = () => v1();
+export default v4;

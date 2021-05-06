@@ -700,6 +700,7 @@ describe('actuallySend()', () => {
     expect(networkUtils.hasCancelFunctionForId(request2._id)).toBe(false);
   });
 });
+
 describe('_getAwsAuthHeaders', () => {
   beforeEach(globalBeforeEach);
 
@@ -781,6 +782,7 @@ describe('_getAwsAuthHeaders', () => {
     expect(filterHeaders(headers, 'content-type')).toEqual([]);
   });
 });
+
 describe('_parseHeaders', () => {
   const basicHeaders = [
     'HTTP/1.1 301 Moved Permanently',

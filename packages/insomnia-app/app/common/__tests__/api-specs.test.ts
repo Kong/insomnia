@@ -1,6 +1,7 @@
 import YAML from 'yaml';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { parseApiSpec } from '../api-specs';
+
 describe('parseApiSpec()', () => {
   beforeEach(globalBeforeEach);
 

@@ -6,6 +6,7 @@ const PLUGIN = {
   directory: '/plugins/my-plugin',
   module: {},
 };
+
 describe('init()', () => {
   beforeEach(globalBeforeEach);
 
@@ -23,6 +24,7 @@ describe('init()', () => {
     ]);
   });
 });
+
 describe('store.*', () => {
   beforeEach(globalBeforeEach);
 

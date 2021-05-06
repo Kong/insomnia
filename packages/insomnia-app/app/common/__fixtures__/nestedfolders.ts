@@ -1,12 +1,13 @@
-import * as models from '../../models';
-export const data = {
-  [models.workspace.type]: [
+import { workspace, requestGroup, request, BaseModel } from '../../models';
+
+export const data: Record<string, Partial<BaseModel>[]> = {
+  [workspace.type]: [
     {
       _id: 'wrk_1',
       name: 'Wrk 1',
     },
   ],
-  [models.requestGroup.type]: [
+  [requestGroup.type]: [
     {
       _id: 'fld_1',
       parentId: 'wrk_1',
@@ -23,7 +24,7 @@ export const data = {
       name: 'Fld 3',
     },
   ],
-  [models.request.type]: [
+  [request.type]: [
     {
       _id: 'req_1',
       parentId: 'fld_1',

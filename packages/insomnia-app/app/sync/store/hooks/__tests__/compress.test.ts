@@ -1,4 +1,5 @@
 import hook from '../compress';
+
 describe('compress hook', () => {
   it('compresses non-extension keys', async () => {
     const compressed = await hook.write('', 'hello');

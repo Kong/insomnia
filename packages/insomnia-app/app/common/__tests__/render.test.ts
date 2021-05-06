@@ -1,7 +1,9 @@
 import * as renderUtils from '../render';
 import * as models from '../../models';
 import { globalBeforeEach } from '../../__jest__/before-each';
+
 jest.mock('electron');
+
 describe('render()', () => {
   beforeEach(globalBeforeEach);
 
@@ -70,6 +72,7 @@ describe('render()', () => {
     expect(renderExpression).toBe('cat');
   });
 });
+
 describe('buildRenderContext()', () => {
   beforeEach(globalBeforeEach);
 
@@ -590,6 +593,7 @@ describe('buildRenderContext()', () => {
     expect(context).toEqual({});
   });
 });
+
 describe('render()', () => {
   beforeEach(globalBeforeEach);
 
@@ -720,6 +724,7 @@ describe('render()', () => {
     }
   });
 });
+
 describe('getRenderedGrpcRequestMessage()', () => {
   beforeEach(globalBeforeEach);
 
@@ -749,6 +754,7 @@ describe('getRenderedGrpcRequestMessage()', () => {
     );
   });
 });
+
 describe('getRenderedGrpcRequest()', () => {
   let w1, env;
   beforeEach(async () => {

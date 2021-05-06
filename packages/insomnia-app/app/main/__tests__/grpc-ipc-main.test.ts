@@ -3,7 +3,9 @@ import * as grpc from '../../network/grpc';
 import { ipcMain } from 'electron';
 import { GrpcRequestEventEnum } from '../../common/grpc-events';
 import { ResponseCallbacks } from '../../network/grpc/response-callbacks';
+
 jest.mock('../../network/grpc');
+
 describe('grpcIpcMain', () => {
   const event = {
     reply: jest.fn(),

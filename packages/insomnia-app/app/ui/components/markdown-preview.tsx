@@ -4,9 +4,9 @@ import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import highlight from 'highlight.js';
-import * as misc from '../../common/misc';
 import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
+import { clickLink } from '../../common/electron-helpers';
 
 interface Props {
   markdown: string,
@@ -66,7 +66,7 @@ class MarkdownPreview extends PureComponent<Props, State> {
 
   _handleClickLink(e) {
     e.preventDefault();
-    misc.clickLink(e.target.getAttribute('href'));
+    clickLink(e.target.getAttribute('href'));
   }
 
   _highlightCodeBlocks() {

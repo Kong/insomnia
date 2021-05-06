@@ -1,7 +1,12 @@
 import { EventEmitter } from 'events';
+
 const mockCallWrite = jest.fn();
 const mockCallEnd = jest.fn();
 const mockCallCancel = jest.fn();
+
+export const status = {
+  OK: 0,
+};
 
 class MockCall extends EventEmitter {
   write(...args) {
@@ -32,6 +37,7 @@ const mockMakeServerStreamRequest = jest.fn();
 const mockMakeBidiStreamRequest = jest.fn();
 const mockCreateInsecure = jest.fn();
 const mockCreateSsl = jest.fn();
+
 export const grpcMocks = {
   getMockCall,
   mockConstructor,
@@ -79,6 +85,7 @@ class MockGrpcClient {
 export function makeGenericClientConstructor() {
   return MockGrpcClient;
 }
+
 export const credentials = {
   createInsecure: mockCreateInsecure,
   createSsl: mockCreateSsl,

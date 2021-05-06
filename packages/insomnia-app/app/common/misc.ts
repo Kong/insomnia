@@ -1,10 +1,10 @@
-import * as electron from 'electron';
 import { Readable, Writable } from 'stream';
 import fuzzysort from 'fuzzysort';
 import * as uuid from 'uuid';
 import zlib from 'zlib';
 import { join as pathJoin } from 'path';
 import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
 interface Header {
@@ -199,10 +199,6 @@ export function preventDefault(e: Event) {
   e.preventDefault();
 }
 
-export function clickLink(href: string) {
-  electron.shell.openExternal(href);
-}
-
 export function fnOrString(v: string | ((...args: Array<any>) => any), ...args: Array<any>) {
   if (typeof v === 'string') {
     return v;
@@ -332,29 +328,6 @@ export function fuzzyMatchAll(
   };
 }
 
-export function getViewportSize(): string | null {
-  const { BrowserWindow } = electron.remote || electron;
-  const w = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
-
-  if (w) {
-    const { width, height } = w.getContentBounds();
-    return `${width}x${height}`;
-  } else {
-    // No windows open
-    return null;
-  }
-}
-
-export function getScreenResolution() {
-  const { screen } = electron.remote || electron;
-  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-  return `${width}x${height}`;
-}
-
-export function getUserLanguage() {
-  const { app } = electron.remote || electron;
-  return app.getLocale();
-}
 export async function waitForStreamToFinish(stream: Readable | Writable) {
   return new Promise<void>(resolve => {
     // @ts-expect-error -- access of internal values that are intended to be private.  We should _not_ do this.
@@ -374,16 +347,6 @@ export async function waitForStreamToFinish(stream: Readable | Writable) {
       resolve();
     });
   });
-}
-
-export function getDesignerDataDir() {
-  const { app } = electron.remote || electron;
-  return process.env.DESIGNER_DATA_PATH || pathJoin(app.getPath('appData'), 'Insomnia Designer');
-}
-
-export function getDataDirectory() {
-  const { app } = electron.remote || electron;
-  return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
 }
 
 export function chunkArray<T>(arr: Array<T>, chunkSize: number) {

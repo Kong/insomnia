@@ -3,7 +3,8 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import path from 'path';
 import fs from 'fs';
 import * as network from '../../network';
-import { getTempDir } from '../../../common/constants';
+import { getTempDir } from '../../../common/electron-helpers';
+
 // Mock some test things
 const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
 const CLIENT_ID = 'client_123';
@@ -11,6 +12,7 @@ const CLIENT_SECRET = 'secret_12345456677756343';
 const SCOPE = 'scope_123';
 const AUDIENCE = 'https://foo.com/userinfo';
 const RESOURCE = 'https://foo.com/resource';
+
 describe('client_credentials', () => {
   beforeEach(globalBeforeEach);
 

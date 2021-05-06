@@ -1,4 +1,5 @@
 import parseGrpcUrl from '../parse-grpc-url';
+
 describe('parseGrpcUrl', () => {
   it.each([
     ['grpcb.in:9000', 'grpcb.in:9000'],

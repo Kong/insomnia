@@ -27,6 +27,7 @@ describe('grpc', () => {
     messageParamsBuilder.reset();
     methodBuilder.reset();
   });
+
   describe('grpc.start', () => {
     afterEach(() => {
       // Call cache should always be clear at the end of each test
@@ -234,6 +235,7 @@ describe('grpc', () => {
         expect(respond.sendEnd).toHaveBeenCalledWith(params.request._id);
       });
     });
+
     describe('server streaming', () => {
       it('should make no request if invalid body', async () => {
         // Arrange
@@ -301,6 +303,7 @@ describe('grpc', () => {
         expect(respond.sendEnd).toHaveBeenCalledWith(params.request._id);
       });
     });
+
     describe('client streaming', () => {
       it('should make client streaming request with error response', async () => {
         // Arrange
@@ -366,6 +369,7 @@ describe('grpc', () => {
         expect(respond.sendEnd).toHaveBeenCalledWith(params.request._id);
       });
     });
+
     describe('bidi streaming', () => {
       it('should make bidi streaming request with valid and error response', async () => {
         // Arrange
@@ -406,6 +410,7 @@ describe('grpc', () => {
       });
     });
   });
+
   describe('grpc.sendMessage', () => {
     const _makeClient = async () => {
       const params = requestParamsBuilder
@@ -466,6 +471,7 @@ describe('grpc', () => {
       });
     });
   });
+
   describe('grpc.commit', () => {
     const _makeClient = async () => {
       const params = requestParamsBuilder
@@ -496,6 +502,7 @@ describe('grpc', () => {
       expect(grpcMocks.mockCallEnd).not.toHaveBeenCalled();
     });
   });
+
   describe('grpc.cancel', () => {
     const _makeClient = async () => {
       const params = requestParamsBuilder

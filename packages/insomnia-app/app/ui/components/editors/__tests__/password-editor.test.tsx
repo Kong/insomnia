@@ -5,6 +5,7 @@ const props = {
   password: 'password',
   disabled: false,
 };
+
 describe('<PasswordEditor />', () => {
   it('should able to render the component', () => {
     const { getByRole, getByDisplayValue } = render(<PasswordEditor {...props} />);

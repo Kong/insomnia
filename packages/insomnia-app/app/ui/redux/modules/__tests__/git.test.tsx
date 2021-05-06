@@ -19,11 +19,14 @@ import {
   getAndClearShowPromptMockArgs,
 } from '../../../../test-utils';
 import { shallowClone } from '../../../../sync/git/shallow-clone';
+
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');
 jest.mock('../../../../common/analytics');
+
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
+
 describe('git', () => {
   let store;
   beforeEach(async () => {
@@ -41,6 +44,7 @@ describe('git', () => {
     const stopActionIndex = actions.findIndex(({ type }) => type === LOAD_STOP);
     expect(stopActionIndex).toBeGreaterThan(startActionIndex);
   });
+
   describe('cloneGitRepository', () => {
     const dispatchCloneAndSubmitSettings = async (memClient: Record<string, any>, uri?: string) => {
       const createFsClientMock = jest.fn().mockReturnValue(memClient);
@@ -189,7 +193,7 @@ describe('git', () => {
     it('should fail if exception during clone and not try again if uri ends with .git', async () => {
       const memClient = MemClient.createClient();
       const err = new Error('some error');
-      (shallowClone as JestMockFn).mockRejectedValue(err);
+      (shallowClone as jest.Mock).mockRejectedValue(err);
       await dispatchCloneAndSubmitSettings(memClient, 'https://git.com.git');
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Error Cloning Repository');
@@ -208,9 +212,9 @@ describe('git', () => {
     it('should show combined error if clone with and without .git suffix fails', async () => {
       const memClient = MemClient.createClient();
       const firstError = new Error('first error');
-      (shallowClone as JestMockFn).mockRejectedValueOnce(firstError);
+      (shallowClone as jest.Mock).mockRejectedValueOnce(firstError);
       const secondError = new Error('second error');
-      (shallowClone as JestMockFn).mockRejectedValueOnce(secondError);
+      (shallowClone as jest.Mock).mockRejectedValueOnce(secondError);
       const uri = 'https://git.com';
       const dotGitUri = `${uri}.git`;
       await dispatchCloneAndSubmitSettings(memClient, uri);
@@ -277,8 +281,8 @@ describe('git', () => {
       const { workspace } = await createValidRepoFiles(memClient);
       // Mock clone
       const err = new Error('some error');
-      (shallowClone as JestMockFn).mockRejectedValueOnce(err);
-      (shallowClone as JestMockFn).mockResolvedValueOnce();
+      (shallowClone as jest.Mock).mockRejectedValueOnce(err);
+      (shallowClone as jest.Mock).mockResolvedValueOnce();
       // Dispatch
       const uri = 'https://git.com/abc/def';
       const { createFsClientMock, repoSettings } = await dispatchCloneAndSubmitSettings(
@@ -351,6 +355,7 @@ describe('git', () => {
       ]);
     });
   });
+
   describe('setupGitRepository', () => {
     const dispatchSetupAndSubmitSettings = async (
       memClient: Record<string, any>,
@@ -377,7 +382,7 @@ describe('git', () => {
         scope: WorkspaceScopeKeys.design,
       });
       const err = new Error('some error');
-      (shallowClone as JestMockFn).mockRejectedValue(err);
+      (shallowClone as jest.Mock).mockRejectedValue(err);
       await dispatchSetupAndSubmitSettings(memClient, workspace);
       const errorArgs = getAndClearShowErrorMockArgs();
       expect(errorArgs.title).toBe('Error Cloning Repository');

@@ -2,7 +2,9 @@ import mkdirp from 'mkdirp';
 import { EventEmitter } from 'events';
 import os from 'os';
 import path from 'path';
+
 const RANDOM_STRING = Math.random().toString().replace('.', '');
+
 const remote = {
   app: {
     getPath(name) {
@@ -52,9 +54,10 @@ const remote = {
     },
   },
 };
-module.exports = {
+
+const electron = {
   ...remote,
-  remote: remote,
+  remote,
   ipcMain: {
     on: jest.fn(),
 
@@ -69,3 +72,6 @@ module.exports = {
     send: jest.fn(),
   },
 };
+
+// WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
+module.exports = electron;

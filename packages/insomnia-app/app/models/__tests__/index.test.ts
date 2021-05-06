@@ -1,6 +1,7 @@
 import { globalBeforeEach } from '../../__jest__/before-each';
 import { getModel, mustGetModel } from '../index';
 import * as models from '../index';
+
 describe('index', () => {
   beforeEach(globalBeforeEach);
   describe('getModel()', () => {
@@ -12,6 +13,7 @@ describe('index', () => {
       expect(getModel('UNKNOWN')).toBeNull();
     });
   });
+
   describe('mustGetModel()', () => {
     it('should get model if found', () => {
       expect(mustGetModel(models.workspace.type)).not.toBeNull();

@@ -50,9 +50,9 @@
     "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
     "jest": "^26.6.3",
-    "react": "^16.8.6",
+    "react": "^16.8.3",
     "react-docgen-typescript": "^1.22.0",
-    "react-dom": "^16.8.6",
+    "react-dom": "^16.8.3",
     "react-use": "^17.2.4",
     "storybook-addon-designs": "^5.4.1",
     "styled-components": "^5.2.3",
@@ -70,8 +70,8 @@
     "react-switch": "^5.0.1"
   },
   "peerDependencies": {
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
     "styled-components": "^5.2.3"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"

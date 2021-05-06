@@ -1,6 +1,7 @@
 import * as models from '../../../models';
 import getWorkspaceName from '../get-workspace-name';
 import { WorkspaceScopeKeys } from '../../workspace';
+
 describe('getWorkspaceName', () => {
   it('returns workspace name', () => {
     const w = models.workspace.init();

@@ -1,5 +1,6 @@
 import { diff } from '../diff';
 import { patch } from '../patch';
+
 describe('patch()', () => {
   it('works on many examples', () => {
     const things = [

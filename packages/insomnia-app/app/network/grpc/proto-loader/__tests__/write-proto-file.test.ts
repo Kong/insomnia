@@ -5,31 +5,32 @@ import * as models from '../../../../models';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import writeProtoFile from '../write-proto-file';
 import mkdirp from 'mkdirp';
+
 describe('writeProtoFile', () => {
-  let mkdirpSyncSpy: any | JestMockFn<any, any>;
-  let tmpDirSpy: any | JestMockFn<any, any>;
-  let existsSyncSpy: any | JestMockFn<any, any>;
-  let writeFileSpy: any | JestMockFn<any, Promise<any>>;
+  let existsSyncSpy: jest.SpyInstance<any, any>;
+  let mkdirpSyncSpy: jest.SpyInstance<any, any>;
+  let tmpDirSpy: jest.SpyInstance<any, any>;
+  let writeFileSpy: jest.SpyInstance<any, any>;
 
   const _setupSpies = () => {
-    tmpDirSpy = jest.spyOn(os, 'tmpdir');
     existsSyncSpy = jest.spyOn(fs, 'existsSync');
     mkdirpSyncSpy = jest.spyOn(mkdirp, 'sync');
+    tmpDirSpy = jest.spyOn(os, 'tmpdir');
     writeFileSpy = jest.spyOn(fs.promises, 'writeFile');
   };
 
   const _configureSpies = (tmpDir: string, exists: boolean) => {
-    mkdirpSyncSpy.mockImplementation(() => {});
-    writeFileSpy.mockResolvedValue();
-    tmpDirSpy.mockReturnValue(tmpDir);
     existsSyncSpy.mockReturnValue(exists);
+    mkdirpSyncSpy.mockImplementation(() => {});
+    tmpDirSpy.mockReturnValue(tmpDir);
+    writeFileSpy.mockResolvedValue(undefined);
   };
 
   const _restoreSpies = () => {
-    tmpDirSpy.mockRestore();
     existsSyncSpy.mockRestore();
-    writeFileSpy.mockRestore();
     mkdirpSyncSpy.mockRestore();
+    tmpDirSpy.mockRestore();
+    writeFileSpy.mockRestore();
   };
 
   beforeEach(async () => {
@@ -38,11 +39,13 @@ describe('writeProtoFile', () => {
     // Spies should be setup AFTER globalBeforeEach()
     _setupSpies();
   });
+
   afterEach(() => {
     _restoreSpies();
 
     jest.resetAllMocks();
   });
+
   describe('individual files', () => {
     it('can write individual file', async () => {
       // Arrange
@@ -92,6 +95,7 @@ describe('writeProtoFile', () => {
       expect(writeFileSpy).not.toHaveBeenCalled();
     });
   });
+
   describe('nested files', () => {
     it('can write file contained in a single folder', async () => {
       // Arrange

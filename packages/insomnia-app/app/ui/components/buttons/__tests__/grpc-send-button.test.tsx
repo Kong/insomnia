@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import GrpcSendButton from '../grpc-send-button';
 import { GrpcMethodTypeEnum } from '../../../../network/grpc/method';
+
 describe('<GrpcSendButton />', () => {
   it('should render as disabled if no method is selected', () => {
     const { getByRole } = render(

@@ -7,6 +7,7 @@ import {
   snapNumberToLimits,
   convertEpochToMilliseconds,
 } from '../misc';
+
 describe('hasAuthHeader()', () => {
   beforeEach(globalBeforeEach);
 
@@ -38,6 +39,7 @@ describe('hasAuthHeader()', () => {
     expect(yes).toEqual(true);
   });
 });
+
 describe('generateId()', () => {
   beforeEach(globalBeforeEach);
 
@@ -51,6 +53,7 @@ describe('generateId()', () => {
     expect(id).toMatch(/^[a-z0-9]{32}$/);
   });
 });
+
 describe('filterHeaders()', () => {
   beforeEach(globalBeforeEach);
 
@@ -122,6 +125,7 @@ describe('filterHeaders()', () => {
     ]);
   });
 });
+
 describe('keyedDebounce()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
@@ -150,6 +154,7 @@ describe('keyedDebounce()', () => {
     ]);
   });
 });
+
 describe('debounce()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
@@ -172,6 +177,7 @@ describe('debounce()', () => {
     expect(resultList).toEqual([['foo', 'bar3']]);
   });
 });
+
 describe('fuzzyMatch()', () => {
   beforeEach(globalBeforeEach);
 
@@ -193,6 +199,7 @@ describe('fuzzyMatch()', () => {
     expect(misc.fuzzyMatch('foo', 'bar')).toBeNull();
   });
 });
+
 describe('fuzzyMatchAll()', () => {
   beforeEach(globalBeforeEach);
 
@@ -237,6 +244,7 @@ describe('fuzzyMatchAll()', () => {
     expect(misc.fuzzyMatchAll('wrong this ou', ['testing', 'this', 'out'])).toEqual(null);
   });
 });
+
 describe('chunkArray()', () => {
   it('works with exact divisor', () => {
     const chunks = misc.chunkArray([1, 2, 3, 4, 5, 6], 3);
@@ -264,6 +272,7 @@ describe('chunkArray()', () => {
     expect(chunks).toEqual([[1, 2]]);
   });
 });
+
 describe('pluralize()', () => {
   it('should not change pluralization', () => {
     expect(pluralize('Requests')).toBe('Requests');
@@ -277,6 +286,7 @@ describe('pluralize()', () => {
     expect(pluralize('Directory')).toBe('Directories');
   });
 });
+
 describe('diffPatchObj()', () => {
   const a = {
     x: 1,
@@ -339,6 +349,7 @@ describe('diffPatchObj()', () => {
     });
   });
 });
+
 describe('convertEpochToMilliseconds()', () => {
   it('should convert microseconds to milliseconds', () => {
     expect(convertEpochToMilliseconds(1617616858412123)).toBe(1617616858412);
@@ -352,6 +363,7 @@ describe('convertEpochToMilliseconds()', () => {
     expect(convertEpochToMilliseconds(1617617141412)).toBe(1617617141412);
   });
 });
+
 describe('snapNumberToLimits()', () => {
   it('should return value', () => {
     expect(snapNumberToLimits(2)).toBe(2);
@@ -375,6 +387,7 @@ describe('snapNumberToLimits()', () => {
     expect(snapNumberToLimits(5, NaN, 3)).toBe(3);
   });
 });
+
 describe('isNotNullOrUndefined', () => {
   it('should return correctly', () => {
     expect(isNotNullOrUndefined(0)).toBe(true);

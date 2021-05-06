@@ -8,10 +8,13 @@ import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../../common/constants';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
+
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
+
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
+
 describe('workspace', () => {
   beforeEach(globalBeforeEach);
   describe('createWorkspace', () => {

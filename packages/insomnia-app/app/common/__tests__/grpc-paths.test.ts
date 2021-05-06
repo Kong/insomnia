@@ -7,6 +7,7 @@ import {
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { grpcMethodDefinitionSchema } from '../../ui/context/grpc/__schemas__';
 import { GrpcMethodTypeEnum } from '../../network/grpc/method';
+
 describe('getGrpcPathSegments', () => {
   it.each([
     ['package', 'service', 'method'],
@@ -35,6 +36,7 @@ describe('getGrpcPathSegments', () => {
     },
   );
 });
+
 describe('getShortGrpcPath', () => {
   it('should return shortened path', () => {
     const packageName = 'package';
@@ -69,6 +71,7 @@ describe('getShortGrpcPath', () => {
   });
 });
 const methodBuilder = createBuilder(grpcMethodDefinitionSchema);
+
 describe('groupGrpcMethodsByPackage', () => {
   it('should group methods by package', () => {
     const packageMethod1 = methodBuilder

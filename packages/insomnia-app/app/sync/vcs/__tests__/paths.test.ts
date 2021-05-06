@@ -1,4 +1,5 @@
 import * as paths from '../paths';
+
 describe('paths', () => {
   it('successes', async () => {
     expect(paths.projectBase('p1')).toBe('/projects/p1/');

@@ -12,6 +12,7 @@ import {
   getGoogleAnalyticsId,
   getGoogleAnalyticsLocation,
 } from '../constants';
+
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();

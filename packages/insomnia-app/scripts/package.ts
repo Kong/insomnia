@@ -1,4 +1,4 @@
-import { appConfig } from '../config';
+import appConfig from '../config/config.json';
 import electronBuilderConfig from '../config/electronbuilder.json';
 import electronBuilder from 'electron-builder';
 import path from 'path';
@@ -26,17 +26,25 @@ if (require.main === module) {
 
 const pkg = () => {
   const { BUILD_TARGETS } = process.env;
-  const app = appConfig();
+  const {
+    appId,
+    binaryPrefix,
+    executableName,
+    githubOrg,
+    githubRepo,
+    icon,
+    synopsis,
+  } = appConfig;
 
   // Replace some things
   const rawConfig = JSON.stringify(electronBuilderConfig, null, 2)
-    .replace(/__APP_ID__/g, app.appId)
-    .replace(/__BINARY_PREFIX__/g, app.binaryPrefix)
-    .replace(/__EXECUTABLE_NAME__/g, app.executableName)
-    .replace(/__GITHUB_OWNER__/g, app.githubOrg)
-    .replace(/__GITHUB_REPO__/g, app.githubRepo)
-    .replace(/__ICON_URL__/g, app.icon)
-    .replace(/__SYNOPSIS__/g, app.synopsis);
+    .replace(/__APP_ID__/g, appId)
+    .replace(/__BINARY_PREFIX__/g, binaryPrefix)
+    .replace(/__EXECUTABLE_NAME__/g, executableName)
+    .replace(/__GITHUB_OWNER__/g, githubOrg)
+    .replace(/__GITHUB_REPO__/g, githubRepo)
+    .replace(/__ICON_URL__/g, icon)
+    .replace(/__SYNOPSIS__/g, synopsis);
 
   const config = JSON.parse(rawConfig);
   const targetPlatform = PLATFORM_MAP[process.platform];

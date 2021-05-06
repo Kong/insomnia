@@ -21,6 +21,7 @@ import {
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
 } from '../constants';
+
 describe('Sorting methods', () => {
   it('sorts by name', () => {
     const ascendingNameSort = sortMethodMap[SORT_NAME_ASC];

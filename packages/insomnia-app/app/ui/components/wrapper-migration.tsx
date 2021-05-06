@@ -6,7 +6,7 @@ import migrateFromDesigner, {
   existsAndIsDirectory,
   restartApp,
 } from '../../common/migrate-from-designer';
-import { getDataDirectory, getDesignerDataDir } from '../../common/misc';
+import { getDataDirectory, getDesignerDataDir } from '../../common/electron-helpers';
 import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';

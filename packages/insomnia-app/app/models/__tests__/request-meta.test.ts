@@ -1,5 +1,6 @@
 import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
+
 describe('create()', () => {
   beforeEach(globalBeforeEach);
 

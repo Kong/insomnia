@@ -29,42 +29,6 @@
   "dev": {
     "dev-server-port": 3334
   },
-  "jest": {
-    "setupFiles": [
-      "./__jest__/setup.js"
-    ],
-    "setupFilesAfterEnv": [
-      "./__jest__/setup-after-env.js"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|less|png)$": "<rootDir>/__mocks__/dummy.js",
-      "^worker-loader!": "<rootDir>/__mocks__/dummy.js"
-    },
-    "modulePathIgnorePatterns": [
-      "<rootDir>/network/.*/__mocks__"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.js?(x)"
-    ],
-    "rootDir": "app",
-    "verbose": false,
-    "resetMocks": true,
-    "resetModules": true,
-    "collectCoverage": false,
-    "collectCoverageFrom": [
-      "**/*.js",
-      "!**/*.min.js",
-      "!**/main.development.js",
-      "!**/static/**",
-      "!**/ui/components/**",
-      "!**/__fixtures__/**",
-      "!**/__schemas__/**",
-      "!**/__tests__/**",
-      "!**/__jest__/**",
-      "!**/__mocks__/**",
-      "!**/node_modules/**"
-    ]
-  },
   "packedDependencies": [
     "class-autobind-decorator",
     "classnames",
@@ -168,7 +132,8 @@
     "openapi-2-kong": "2.2.35",
     "papaparse": "^5.2.0",
     "pdfjs-dist": "^2.5.207",
-    "react": "^16.8.6",
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
     "react-animated-tree": "^1.0.10",
     "react-dnd": "^7.4.5",
     "react-dnd-html5-backend": "^7.4.4",
@@ -201,8 +166,8 @@
     "@storybook/react": "^5.2.6",
     "@testing-library/dom": "^7.28.1",
     "@testing-library/jest-dom": "^5.11.5",
-    "@testing-library/react": "^11.1.1",
-    "@testing-library/react-hooks": "^3.4.2",
+    "@testing-library/react": "^11.2.6",
+    "@testing-library/react-hooks": "^5.1.2",
     "@types/analytics-node": "^3.1.4",
     "@types/aws4": "^1.5.1",
     "@types/clone": "^2.1.0",
@@ -254,7 +219,7 @@
     "electron-notarize": "^0.3.0",
     "fast-glob": "^3.1.0",
     "file-loader": "^3.0.1",
-    "jest": "^26.0.1",
+    "jest": "^26.6.3",
     "less": "^3.8.1",
     "less-loader": "^4.1.0",
     "license-checker": "^25.0.1",

@@ -32,7 +32,6 @@
     "**/*.test.tsx",
     "**/__snapshots__",
     "**/__mocks__",
-    "dist",
-    "app/network/ca-certs.js"
+    "dist"
   ]
 }

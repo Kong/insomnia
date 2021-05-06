@@ -1,6 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import GrpcMethodDropdownButton from '../grpc-method-dropdown-button';
+
 describe('<GrpcMethodDropdownButton />', () => {
   it('should show "Select Method" when nothing is selected', () => {
     const { getByRole, queryByRole } = render(<GrpcMethodDropdownButton />);
@@ -11,11 +12,7 @@ describe('<GrpcMethodDropdownButton />', () => {
   it('should show path if selection exists', () => {
     const { getByRole } = render(<GrpcMethodDropdownButton fullPath={'/pkg.svc/mthd'} />);
     expect(getByRole('button')).toHaveTextContent('/svc/mthd');
-    expect(
-      getByRole('tooltip', {
-        hidden: true,
-      }),
-    ).toHaveTextContent('/pkg.svc/mthd');
+    expect(getByRole('tooltip', { hidden: true })).toHaveTextContent('/pkg.svc/mthd');
   });
 
   it('should show path if selection exists and clear if method selection is removed', () => {

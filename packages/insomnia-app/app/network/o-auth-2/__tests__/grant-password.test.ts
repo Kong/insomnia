@@ -1,9 +1,10 @@
 import getToken from '../grant-password';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as network from '../../network';
-import { getTempDir } from '../../../common/constants';
+import { getTempDir } from '../../../common/electron-helpers';
 import path from 'path';
 import fs from 'fs';
+
 // Mock some test things
 const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
 const CLIENT_ID = 'client_123';
@@ -12,6 +13,7 @@ const USERNAME = 'user';
 const PASSWORD = 'password';
 const SCOPE = 'scope_123';
 const AUDIENCE = 'https://foo.com/userinfo';
+
 describe('password', () => {
   beforeEach(globalBeforeEach);
 

@@ -1,6 +1,7 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../index';
 import { createGitRepository, deleteGitRepository } from '../git-repository-operations';
+
 describe('gitRepositoryOperations', () => {
   beforeEach(globalBeforeEach);
   describe('createGitRepository', () => {
@@ -17,6 +18,7 @@ describe('gitRepositoryOperations', () => {
       expect(wMeta.gitRepositoryId).toBe(repoId);
     });
   });
+
   describe('deleteGitRepository', () => {
     it('should delete', async () => {
       const repo = await models.gitRepository.create();

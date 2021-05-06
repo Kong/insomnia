@@ -1,5 +1,6 @@
 import { _buildBearerHeader, getAuthHeader } from '../authentication';
 import { AUTH_OAUTH_1 } from '../../common/constants';
+
 describe('OAuth 1.0', () => {
   it('Does OAuth 1.0', async () => {
     const authentication = {
@@ -111,6 +112,7 @@ describe('OAuth 1.0', () => {
     );
   });
 });
+
 describe('_buildBearerHeader()', () => {
   it('uses default prefix', () => {
     const result = _buildBearerHeader('token', '');

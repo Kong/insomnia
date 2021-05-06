@@ -4,7 +4,8 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as network from '../../network';
 import fs from 'fs';
 import path from 'path';
-import { getTempDir } from '../../../common/constants';
+import { getTempDir } from '../../../common/electron-helpers';
+
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
 const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
@@ -15,6 +16,7 @@ const SCOPE = 'scope_123';
 const STATE = 'state_123';
 const AUDIENCE = 'https://foo.com/resource';
 const RESOURCE = 'foo.com';
+
 describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
 

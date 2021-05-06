@@ -1,4 +1,5 @@
 import { deterministicStringify } from '../deterministicStringify';
+
 describe('deterministicStringify()', () => {
   it('sorts object keys', () => {
     const result = deterministicStringify({

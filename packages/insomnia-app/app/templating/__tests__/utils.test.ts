@@ -1,5 +1,6 @@
 import * as utils from '../utils';
 import { globalBeforeEach } from '../../__jest__/before-each';
+
 describe('getKeys()', () => {
   beforeEach(globalBeforeEach);
 
@@ -84,6 +85,7 @@ describe('getKeys()', () => {
     ]);
   });
 });
+
 describe('tokenizeTag()', () => {
   beforeEach(globalBeforeEach);
 
@@ -218,6 +220,7 @@ describe('tokenizeTag()', () => {
     expect(actual).toEqual(expected);
   });
 });
+
 describe('unTokenizeTag()', () => {
   beforeEach(globalBeforeEach);
 
@@ -290,6 +293,7 @@ describe('unTokenizeTag()', () => {
     expect(result).toEqual("{% name 'foo/bar/baz', 'foo' %}");
   });
 });
+
 describe('encodeEncoding()', () => {
   beforeEach(globalBeforeEach);
 
@@ -301,6 +305,7 @@ describe('encodeEncoding()', () => {
     expect(utils.encodeEncoding('hello', 'utf8')).toBe('hello');
   });
 });
+
 describe('decodeEncoding()', () => {
   beforeEach(globalBeforeEach);
 

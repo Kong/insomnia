@@ -11,6 +11,7 @@ import {
   threeWayMerge,
   updateStateWithConflictResolutions,
 } from '../util';
+
 describe('util', () => {
   describe('generateSnapshotStateMap()', () => {
     it('generates from simple states', async () => {
@@ -38,6 +39,7 @@ describe('util', () => {
       expect(map).toEqual({});
     });
   });
+
   describe('generateCandidateMap()', () => {
     it('generates from simple candidates', async () => {
       const candidates = [
@@ -49,6 +51,7 @@ describe('util', () => {
       expect(Object.keys(map).sort()).toEqual(['doc_1', 'doc_2']);
     });
   });
+
   describe('combineMapKeys()', () => {
     it('generates from simple states', async () => {
       const map1 = generateSnapshotStateMap(
@@ -62,6 +65,7 @@ describe('util', () => {
       expect(keys.sort()).toEqual(['doc_1', 'doc_2', 'doc_4']);
     });
   });
+
   describe('threeWayMerge()', () => {
     const A1 = {
       key: 'a',
@@ -267,6 +271,7 @@ describe('util', () => {
       });
     });
   });
+
   describe('stateDelta()', () => {
     const A1 = {
       key: 'a',
@@ -344,6 +349,7 @@ describe('util', () => {
       });
     });
   });
+
   describe('getStagable()', () => {
     const A1 = {
       key: 'a',
@@ -499,6 +505,7 @@ describe('util', () => {
       ]);
     });
   });
+
   describe('getRootSnapshot()', () => {
     it('works with empty states', () => {
       const a = newBranch([]);
@@ -539,6 +546,7 @@ describe('util', () => {
       expect(getRootSnapshot(b, a)).toBe('s3');
     });
   });
+
   describe('updateStateWithConflictResolutions()', () => {
     const A1 = {
       key: 'a',
@@ -611,6 +619,7 @@ describe('util', () => {
       expect(updateStateWithConflictResolutions(state, conflicts)).toEqual([A1, E1, F1, C1]);
     });
   });
+
   describe('preMergeCheck()', () => {
     const A1 = {
       key: 'a',
@@ -765,6 +774,7 @@ describe('util', () => {
       });
     });
   });
+
   describe('compareBranches()', () => {
     it('empty states are the same', () => {
       const a = newBranch([]);
@@ -874,6 +884,7 @@ describe('util', () => {
       });
     });
   });
+
   describe('hashDocument()', () => {
     it('ignore object key order', () => {
       const result1 = hashDocument({

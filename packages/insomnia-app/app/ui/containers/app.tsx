@@ -67,8 +67,8 @@ import {
   debounce,
   generateId,
   getContentDispositionHeader,
-  getDataDirectory,
 } from '../../common/misc';
+import { getDataDirectory } from '../../common/electron-helpers';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';

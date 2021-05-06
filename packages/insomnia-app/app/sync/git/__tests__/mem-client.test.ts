@@ -2,6 +2,7 @@ import { assertAsyncError, setupDateMocks } from './util';
 import { MemClient } from '../mem-client';
 import path from 'path';
 import { GIT_CLONE_DIR } from '../git-vcs';
+
 describe('MemClient', () => {
   afterAll(() => jest.restoreAllMocks());
   beforeEach(setupDateMocks);
@@ -19,6 +20,7 @@ describe('MemClient', () => {
       expect((await fsClient.readFile(fooTxt)).toString()).toBe('Hello World!');
     });
   });
+
   describe('writeFile()', () => {
     it('fails to write over directory', async () => {
       const fsClient = new MemClient();
@@ -93,6 +95,7 @@ describe('MemClient', () => {
       expect((await fsClient.readFile(fooTxt)).toString()).toBe('Hello World!xxx');
     });
   });
+
   describe('unlink()', () => {
     it('unlinks file', async () => {
       const fsClient = new MemClient();
@@ -106,6 +109,7 @@ describe('MemClient', () => {
       await assertAsyncError(fsClient.unlink(path.join('not', 'exist.txt')), 'ENOENT');
     });
   });
+
   describe('readdir()', () => {
     it('lists dir', async () => {
       const fsClient = new MemClient();
@@ -128,6 +132,7 @@ describe('MemClient', () => {
       await assertAsyncError(fsClient.readdir(path.join('/', 'invalid')), 'ENOENT');
     });
   });
+
   describe('mkdir()', () => {
     const fooDir = 'foo';
     const fooBarDir = path.join(fooDir, 'bar');
@@ -165,6 +170,7 @@ describe('MemClient', () => {
       await assertAsyncError(fsClient.mkdir(cloneFooBarBazDir), 'ENOENT');
     });
   });
+
   describe('rmdir()', () => {
     const abDir = path.join('a', 'b');
     const abcDir = path.join('a', 'b', 'c');
@@ -195,6 +201,7 @@ describe('MemClient', () => {
       await assertAsyncError(fsClient.rmdir(fooTxt), 'ENOTDIR');
     });
   });
+
   describe('stat()', () => {
     it('stats root dir', async () => {
       const fsClient = new MemClient();
