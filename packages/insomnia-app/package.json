@@ -17,13 +17,14 @@
     "start": "concurrently -n dev,app --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
     "storybook": "start-storybook --port 3222",
     "prebuild": "npm run clean",
-    "build": "ts-node ./scripts/build.ts --noErrorTruncation",
-    "build:sr": "webpack --config send-request/webpack.config.babel.js",
+    "build": "npm run build:sr && npm run build:app",
+    "build:app": "ts-node ./scripts/build.ts --noErrorTruncation",
+    "build:sr": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --config webpack/webpack.config.sr.ts",
     "package": "ts-node scripts/package.ts",
     "release": "ts-node scripts/release.ts",
     "lint": "eslint . --ext .js,.ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
-    "bootstrap": ""
+    "bootstrap": "npm run build:sr"
   },
   "dev": {
     "dev-server-port": 3334

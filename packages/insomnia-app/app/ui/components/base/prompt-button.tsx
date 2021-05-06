@@ -48,13 +48,15 @@ class PromptButton extends PureComponent<Props> {
     // @ts-expect-error -- TSCONVERSION
     this.props.onClick?.(...args);
     // Set the state to done (but delay a bit to not alarm user)
-    this._doneTimeout = setTimeout(() => {
+    // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+    this._doneTimeout = global.setTimeout(() => {
       this.setState({
         state: STATE_DONE,
       });
     }, 100);
     // Set a timeout to hide the confirmation
-    this._triggerTimeout = setTimeout(() => {
+    // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+    this._triggerTimeout = global.setTimeout(() => {
       this.setState({
         state: STATE_DEFAULT,
       });
@@ -71,7 +73,8 @@ class PromptButton extends PureComponent<Props> {
       state: STATE_ASK,
     });
     // Set a timeout to hide the confirmation
-    this._triggerTimeout = setTimeout(() => {
+    // using global.setTimeout to force use of the Node timeout rather than DOM timeout
+    this._triggerTimeout = global.setTimeout(() => {
       this.setState({
         state: STATE_DEFAULT,
       });

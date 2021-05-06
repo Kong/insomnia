@@ -2,6 +2,7 @@
   "extends": "./tsconfig.build.json",
   "include": [
     "app",
+    "send-request",
     "package.json",
     "jest.config.js",
     ".babelrc.js",

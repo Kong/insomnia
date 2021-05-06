@@ -1,11 +1,11 @@
-const path = require('path');
-const webpack = require('webpack');
-const pkg = require('../package.json');
+import { Configuration, ProvidePlugin } from 'webpack';
+import path from 'path';
+import pkg from '../package.json';
 
-module.exports = {
-  context: __dirname,
+const configuration: Configuration = {
+  context: path.join(__dirname, '../send-request'),
   entry: {
-    index: './index.js',
+    index: './index.ts',
   },
   target: 'node',
   mode: 'production',
@@ -14,7 +14,7 @@ module.exports = {
     minimize: false,
   },
   output: {
-    filename: 'index.js',
+    filename: '[name].js',
     library: 'insomniasendrequest',
     libraryTarget: 'commonjs2',
 
@@ -24,14 +24,15 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        exclude: [/node_modules/],
+        options: {
+          configFile: 'tsconfig.build.sr.json',
         },
       },
       {
-        test: require.resolve('../app/network/ca-certs.ts'),
+        test: require.resolve('../app/network/ca-certs.js'),
         use: [
           {
             loader: 'val-loader',
@@ -48,10 +49,13 @@ module.exports = {
     alias: {
       // Replace electron with a minimal polyfill that contains just enough to get
       // the things in this bundle working
-      electron: path.resolve(path.join(__dirname, './electron')),
+      electron: path.resolve(path.join(__dirname, '../send-request/electron')),
     },
+    extensions: ['.js', '.json', '.ts', '.tsx'],
   },
   plugins: [
-    new webpack.ProvidePlugin({ window: path.resolve(path.join(__dirname, './window-shim')) }),
+    new ProvidePlugin({ window: path.resolve(path.join(__dirname, '../send-request/window-shim')) }),
   ],
 };
+
+export default configuration;
