@@ -40,21 +40,21 @@ export type ModelQuery<T extends BaseModel> = Partial<Record<keyof T, SpecificQu
 export const database = {
   all: async function<T extends BaseModel>(type: string) {
     if (db._empty) return _send<Array<T>>('all', ...arguments);
-    return database.find?.<T>(type);
+    return database.find<T>(type);
   },
 
   batchModifyDocs: async function(operation: Operation) {
     if (db._empty) return _send<void>('batchModifyDocs', ...arguments);
     const flushId = await database.bufferChanges();
-    const promisesUpserted: Array<Promise<any>> = [];
-    const promisesDeleted: Array<Promise<any>> = [];
+    const promisesUpserted: Array<Promise<BaseModel>> = [];
+    const promisesDeleted: Array<Promise<void>> = [];
 
-    // @ts-expect-error -- need real type for Operation properties
+    // @ts-expect-error upsert operations are optional
     for (const doc of operation.upsert) {
       promisesUpserted.push(database.upsert(doc, true));
     }
 
-    // @ts-expect-error -- need real type for Operation properties
+    // @ts-expect-error remove operations are optional
     for (const doc of operation.remove) {
       promisesDeleted.push(database.unsafeRemove(doc, true));
     }
@@ -70,7 +70,7 @@ export const database = {
   bufferChanges: async function(millis = 1000) {
     if (db._empty) return _send<number>('bufferChanges', ...arguments);
     bufferingChanges = true;
-    setTimeout(timeout => { database.flushChanges?.(timeout); }, millis);
+    setTimeout(database.flushChanges, millis);
     return ++bufferChangesId;
   },
 
@@ -100,35 +100,38 @@ export const database = {
     });
   },
 
-  docCreate: async <T extends BaseModel>(type: string, ...patches: Array<Patch>) => {
+  docCreate: async <T extends BaseModel>(type: string, ...patches: Array<Patch<T>>) => {
     const doc = await models.initModel<T>(
       type,
-      ...patches, // Fields that the user can't touch
+      ...patches,
+      // Fields that the user can't touch
       {
         type: type,
       },
     );
-    return database.insert?.<T>(doc);
+    return database.insert<T>(doc);
   },
 
-  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Array<Patch>) => {
+  docUpdate: async <T extends BaseModel>(originalDoc: T, ...patches: Array<Patch<T>>) => {
     // No need to re-initialize the model during update; originalDoc will be in a valid state by virtue of loading
     const doc = await models.initModel<T>(
       originalDoc.type,
-      originalDoc, // NOTE: This is before `patch` because we want `patch.modified` to win if it has it
+      originalDoc,
+
+      // NOTE: This is before `patches` because we want `patch.modified` to win if it has it
       {
         modified: Date.now(),
       },
       ...patches,
     );
-    return database.update?.<T>(doc);
+    return database.update<T>(doc);
   },
 
-  duplicate: async function<T extends BaseModel>(originalDoc: T, patch: Patch = {}) {
+  duplicate: async function<T extends BaseModel>(originalDoc: T, patch: Patch<T> = {}) {
     if (db._empty) return _send<T>('duplicate', ...arguments);
-    const flushId = await database.bufferChanges?.();
+    const flushId = await database.bufferChanges();
 
-    async function next<T extends BaseModel>(docToCopy: T, patch: Patch) {
+    async function next<T extends BaseModel>(docToCopy: T, patch: Patch<T>) {
       const model = mustGetModel(docToCopy.type);
       const overrides = {
         _id: generateId(model.prefix),
@@ -141,7 +144,7 @@ export const database = {
       const newDoc = Object.assign({}, docToCopy, patch, overrides);
 
       // Don't initialize the model during insert, and simply duplicate
-      const createdDoc = await database.insert?.(newDoc, false, false) as T;
+      const createdDoc = await database.insert(newDoc, false, false);
 
       // 2. Get all the children
       for (const type of allTypes()) {
@@ -151,9 +154,9 @@ export const database = {
         }
 
         const parentId = docToCopy._id;
-        const children = await database.find?.(type, { parentId });
+        const children = await database.find(type, { parentId });
 
-        for (const doc of children || []) {
+        for (const doc of children) {
           await next(doc, { parentId: createdDoc._id });
         }
       }
@@ -162,7 +165,7 @@ export const database = {
     }
 
     const createdDoc = await next(originalDoc, patch);
-    await database.flushChanges?.(flushId);
+    await database.flushChanges(flushId);
     return createdDoc;
   },
 
@@ -205,6 +208,7 @@ export const database = {
         .sort({
           modified: -1,
         })
+        // @ts-expect-error limit shouldn't be applied if it's null, or default to something that means no-limit
         .limit(limit)
         .exec(async (err, rawDocs) => {
           if (err) {
@@ -261,32 +265,32 @@ export const database = {
 
   flushChangesAsync: async (fake = false) => {
     process.nextTick(async () => {
-      await database.flushChanges?.(0, fake);
+      await database.flushChanges(0, fake);
     });
   },
 
-  get: async function<T extends BaseModel>(type: string, id?: string | null) {
+  get: async function<T extends BaseModel>(type: string, id: string) {
     if (db._empty) return _send<T>('get', ...arguments);
 
     // Short circuit IDs used to represent nothing
     if (!id || id === 'n/a') {
       return null;
     } else {
-      return database.getWhere?.<T>(type, { _id: id });
+      return database.getWhere<T>(type, { _id: id });
     }
   },
 
   getMostRecentlyModified: async function<T extends BaseModel>(type: string, query: Query = {}) {
     if (db._empty) return _send<T>('getMostRecentlyModified', ...arguments);
-    const docs = await database.findMostRecentlyModified?.<T>(type, query, 1);
-    return docs?.length ? docs[0] : null;
+    const docs = await database.findMostRecentlyModified<T>(type, query, 1);
+    return docs.length ? docs[0] : null;
   },
 
   getWhere: async function<T extends BaseModel>(type: string, query: ModelQuery<T> | Query) {
     if (db._empty) return _send<T>('getWhere', ...arguments);
     // @ts-expect-error -- TSCONVERSION type narrowing needed
-    const docs = await database.find?.<T>(type, query);
-    return docs?.length ? docs[0] : null;
+    const docs = await database.find<T>(type, query);
+    return docs.length ? docs[0] : null;
   },
 
   init: async (
@@ -353,6 +357,8 @@ export const database = {
     // Listen for response deletions and delete corresponding response body files
     database.onChange(async changes => {
       for (const [type, doc] of changes) {
+        // TODO(TSCONVERSION) what's returned here is the entire model implementation, not just a model
+        // The type definition will be a little confusing
         const m: Record<string, any> | null = models.getModel(doc.type);
 
         if (!m) {
@@ -406,11 +412,11 @@ export const database = {
   insert: async function<T extends BaseModel>(doc: T, fromSync = false, initializeModel = true) {
     if (db._empty) return _send<T>('insert', ...arguments);
     return new Promise<T>(async (resolve, reject) => {
-      let docWithDefaults: BaseModel | null = null;
+      let docWithDefaults: T | null = null;
 
       try {
         if (initializeModel) {
-          docWithDefaults = await models.initModel(doc.type, doc);
+          docWithDefaults = await models.initModel<T>(doc.type, doc);
         } else {
           docWithDefaults = doc;
         }
@@ -440,10 +446,13 @@ export const database = {
 
   remove: async function<T extends BaseModel>(doc: T, fromSync = false) {
     if (db._empty) return _send<void>('remove', ...arguments);
-    const flushId = await database.bufferChanges?.();
-    const docs = await database.withDescendants?.(doc);
-    const docIds = docs?.map(d => d._id);
-    const types = [...new Set(docs?.map(d => d.type))];
+
+    const flushId = await database.bufferChanges();
+
+    const docs = await database.withDescendants(doc);
+    const docIds = docs.map(d => d._id);
+    const types = [...new Set(docs.map(d => d.type))];
+
     // Don't really need to wait for this to be over;
     types.map(t =>
       db[t].remove(
@@ -457,18 +466,20 @@ export const database = {
         },
       ),
     );
-    docs?.map(d => notifyOfChange(database.CHANGE_REMOVE, d, fromSync));
-    await database.flushChanges?.(flushId);
+
+    docs.map(d => notifyOfChange(database.CHANGE_REMOVE, d, fromSync));
+    await database.flushChanges(flushId);
   },
 
   removeWhere: async function<T extends BaseModel>(type: string, query: Query) {
     if (db._empty) return _send<void>('removeWhere', ...arguments);
-    const flushId = await database.bufferChanges?.();
+    const flushId = await database.bufferChanges();
 
-    for (const doc of (await database.find?.<T>(type, query) || [])) {
-      const docs = await database.withDescendants?.(doc);
+    for (const doc of await database.find<T>(type, query)) {
+      const docs = await database.withDescendants(doc);
       const docIds = docs.map(d => d._id);
       const types = [...new Set(docs.map(d => d.type))];
+
       // Don't really need to wait for this to be over;
       types.map(t =>
         db[t].remove(
@@ -485,18 +496,20 @@ export const database = {
       docs.map(d => notifyOfChange(database.CHANGE_REMOVE, d, false));
     }
 
-    await database.flushChanges?.(flushId);
+    await database.flushChanges(flushId);
   },
 
   /** Removes entries without removing their children */
   unsafeRemove: async function<T extends BaseModel>(doc: T, fromSync = false) {
     if (db._empty) return _send<void>('unsafeRemove', ...arguments);
+
     db[doc.type].remove({ _id: doc._id });
     notifyOfChange(database.CHANGE_REMOVE, doc, fromSync);
   },
 
   update: async function<T extends BaseModel>(doc: T, fromSync = false) {
     if (db._empty) return _send<T>('update', ...arguments);
+
     return new Promise<T>(async (resolve, reject) => {
       let docWithDefaults: T;
 
@@ -509,6 +522,8 @@ export const database = {
       db[doc.type].update(
         { _id: docWithDefaults._id },
         docWithDefaults,
+        // TODO(TSCONVERSION) see comment below, upsert can happen automatically as part of the update
+        // @ts-expect-error expects 4 args but only sent 3. Need to validate what UpdateOptions should be.
         err => {
           if (err) {
             return reject(err);
@@ -522,14 +537,15 @@ export const database = {
     });
   },
 
+  // TODO(TSCONVERSION) the update method above can now take an upsert property
   upsert: async function<T extends BaseModel>(doc: T, fromSync = false) {
     if (db._empty) return _send<T>('upsert', ...arguments);
-    const existingDoc = await database.get?.<T>(doc.type, doc._id);
+    const existingDoc = await database.get<T>(doc.type, doc._id);
 
     if (existingDoc) {
-      return database.update?.<T>(doc, fromSync);
+      return database.update<T>(doc, fromSync);
     } else {
-      return database.insert?.<T>(doc, fromSync);
+      return database.insert<T>(doc, fromSync);
     }
   },
 
@@ -540,7 +556,7 @@ export const database = {
       return [];
     }
 
-    let docsToReturn: Array<T | null> = doc ? [doc] : [];
+    let docsToReturn: Array<T> = doc ? [doc] : [];
 
     async function next(docs: Array<T>) {
       const foundDocs: Array<T> = [];
@@ -548,7 +564,7 @@ export const database = {
       for (const d of docs) {
         for (const type of types) {
           // If the doc is null, we want to search for parentId === null
-          const another = await database.get?.<T>(type, d.parentId);
+          const another = await database.get<T>(type, d.parentId);
           another && foundDocs.push(another);
         }
       }
@@ -563,17 +579,17 @@ export const database = {
         ...docsToReturn,
         ...foundDocs,
       ];
-      return next(foundDocs) as Array<T>;
+      return next(foundDocs);
     }
 
-    return next([doc]) as Array<T>;
+    return next([doc]);
   },
 
   withDescendants: async function<T extends BaseModel>(doc: T | null, stopType: string | null = null) {
     if (db._empty) return _send<Array<T>>('withDescendants', ...arguments);
     let docsToReturn = doc ? [doc] : [];
 
-    async function next(docs: Array<T | null>) {
+    async function next(docs: Array<T | null>): Promise<Array<T>> {
       let foundDocs: Array<T> = [];
 
       for (const doc of docs) {
@@ -581,19 +597,19 @@ export const database = {
           continue;
         }
 
-        const promises: Array<Promise<Array<T> | undefined>> = [];
+        const promises: Array<Promise<Array<T>>> = [];
 
         for (const type of allTypes()) {
           // If the doc is null, we want to search for parentId === null
           const parentId = doc ? doc._id : null;
-          const promise = database.find?.<T>(type, { parentId });
+          const promise = database.find<T>(type, { parentId });
           promises.push(promise);
         }
 
-        for (const more of await Promise.all<Array<T> | undefined>(promises)) {
+        for (const more of await Promise.all(promises)) {
           foundDocs = [
             ...foundDocs,
-            ...(more || []),
+            ...more,
           ];
         }
       }
@@ -608,14 +624,17 @@ export const database = {
       return next(foundDocs);
     }
 
-    return next([doc]) as Array<T>;
+    return next([doc]);
   },
 };
 
 interface DB {
+  // @ts-expect-error _empty doesn't match the index signature, use something other than _empty in future
   _empty?: boolean;
+  [index: string]: NeDB;
 }
 
+// @ts-expect-error _empty doesn't match the index signature, use something other than _empty in future
 const db: DB = {
   _empty: true,
 };
@@ -653,14 +672,15 @@ async function notifyOfChange<T extends BaseModel>(event: string, doc: T, fromSy
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {
-    await database.flushChanges?.();
+    await database.flushChanges();
   }
 }
 
 // ~~~~~~~~~~~~~~~~~~~ //
 // DEFAULT MODEL STUFF //
 // ~~~~~~~~~~~~~~~~~~~ //
-type Patch = Record<string, any>;
+
+type Patch<T> = Partial<T>;
 
 // ~~~~~~~ //
 // Helpers //
@@ -685,13 +705,13 @@ async function _send<T>(fnName: string, ...args: Array<any>) {
 async function _repairDatabase() {
   console.log('[fix] Running database repairs');
 
-  for (const workspace of (await database.find<Workspace>(models.workspace.type) || [])) {
+  for (const workspace of await database.find<Workspace>(models.workspace.type)) {
     await _repairBaseEnvironments(workspace);
     await _fixMultipleCookieJars(workspace);
     await _applyApiSpecName(workspace);
   }
 
-  for (const gitRepository of (await database.find<GitRepository>(models.gitRepository.type) || [])) {
+  for (const gitRepository of await database.find<GitRepository>(models.gitRepository.type)) {
     await _fixOldGitURIs(gitRepository);
   }
 }
@@ -725,7 +745,7 @@ async function _repairBaseEnvironments(workspace: Workspace) {
   });
 
   // Nothing to do here
-  if (baseEnvironments === undefined || baseEnvironments.length <= 1) {
+  if (baseEnvironments.length <= 1) {
     return;
   }
 
@@ -741,7 +761,7 @@ async function _repairBaseEnvironments(workspace: Workspace) {
       parentId: baseEnvironment._id,
     });
 
-    for (const subEnvironment of (subEnvironments || [])) {
+    for (const subEnvironment of subEnvironments) {
       await database.docUpdate(subEnvironment, {
         parentId: chosenBase._id,
       });
@@ -767,7 +787,7 @@ async function _fixMultipleCookieJars(workspace: Workspace) {
   });
 
   // Nothing to do here
-  if (cookieJars === undefined || cookieJars.length <= 1) {
+  if (cookieJars.length <= 1) {
     return;
   }
 
