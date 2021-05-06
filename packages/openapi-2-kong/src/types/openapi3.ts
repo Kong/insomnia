@@ -1,5 +1,5 @@
 import { DCRoute } from './declarative-config';
-import { K8sPath } from './kubernetes-config';
+import { K8sIngressRule } from './kubernetes-config';
 
 export interface XKongName {
   'x-kong-name'?: string;
@@ -7,6 +7,32 @@ export interface XKongName {
 
 export interface XKongRouteDefaults {
   'x-kong-route-defaults'?: DCRoute;
+}
+
+export interface XKongPluginRequestValidator {
+  'x-kong-plugin-request-validator'?: {
+    enabled: boolean;
+    config: {
+      verbose_response: boolean,
+    }
+  }
+}
+
+export type XKongPluginUnknown<Config = any> = Record<`x-kong-plugin-${string}`, {
+  enabled?: boolean;
+  name?: string;
+  config: Record<string, Config>;
+}>
+
+export interface XKongPluginKeyAuth {
+  'x-kong-plugin-key-auth'?: {
+    name: 'key-auth';
+    config: {
+      key_names: string[];
+      key_in_body?: boolean;
+      hide_credentials?: boolean;
+    };
+  };
 }
 
 export interface StripPath {
@@ -63,12 +89,7 @@ export interface OA3Reference {
 }
 
 export interface OA3ServerKubernetesTLS {
-  'x-kubernetes-tls'?: {
-    host: K8sPath[];
-    tls: {
-      secretName: string;
-    }
-  }
+  'x-kubernetes-tls'?: K8sIngressRule
 }
 
 export interface OA3ServerKubernetesBackend {
@@ -91,25 +112,19 @@ export interface OA3ServerKubernetesService {
   };
 }
 
-export type OA3ServerKubernetesProperties =
-  & OA3ServerKubernetesTLS
-  & OA3ServerKubernetesBackend
-  & OA3ServerKubernetesService;
-
-export type OA3Variables = Record<
-  string,
-  {
-    default: string;
-    enum?: string[];
-    description?: string;
-  }
->;
+export type OA3Variables = Record<string, {
+  default: string;
+  enum?: string[];
+  description?: string;
+}>;
 
 export type OA3Server = {
   url: string;
   description?: string;
   variables?: OA3Variables;
-} & OA3ServerKubernetesProperties;
+} & OA3ServerKubernetesTLS
+  & OA3ServerKubernetesBackend
+  & OA3ServerKubernetesService;
 
 export type OA3Operation = {
   description?: string;
@@ -122,7 +137,9 @@ export type OA3Operation = {
   deprecated?: boolean;
   security?: OA3SecurityRequirement[];
   servers?: OA3Server[];
-} & XKongName;
+} & XKongName
+  & XKongPluginKeyAuth
+  ;
 
 export type OA3PathItem = {
   $ref?: string;
@@ -138,10 +155,14 @@ export type OA3PathItem = {
   head?: OA3Operation;
   patch?: OA3Operation;
   trace?: OA3Operation;
-} & XKongName &
-  XKongRouteDefaults;
+} & XKongName
+  & XKongRouteDefaults
+  ;
 
-export type OA3Paths = Record<string, OA3PathItem> & StripPath & XKongRouteDefaults;
+export type OA3Paths = Record<string, OA3PathItem>
+  & StripPath
+  & XKongRouteDefaults
+  ;
 
 export interface OA3SecuritySchemeApiKey {
   type: 'apiKey';
@@ -219,18 +240,9 @@ export type OpenApi3Spec = {
   security?: OA3SecurityRequirement[];
   tags?: string[];
   externalDocs?: OA3ExternalDocs;
-} & XKongName &
-  XKongRouteDefaults;
-
-const HttpMethod = {
-  get: 'GET',
-  put: 'PUT',
-  post: 'POST',
-  delete: 'DELETE',
-  options: 'OPTIONS',
-  head: 'HEAD',
-  patch: 'PATCH',
-  trace: 'TRACE',
-};
-
-export type HttpMethodType = typeof HttpMethod[keyof typeof HttpMethod];
+} & XKongName
+  & XKongPluginKeyAuth
+  & XKongPluginRequestValidator
+  & XKongPluginUnknown
+  & XKongRouteDefaults
+  ;

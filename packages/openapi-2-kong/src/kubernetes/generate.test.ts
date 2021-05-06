@@ -37,12 +37,12 @@ describe('index', () => {
   };
   describe('getSpecName()', () => {
     it('with info.title', async () => {
-      const api: OpenApi3Spec = await parseSpec({ ...spec });
+      const api = await parseSpec({ ...spec });
       expect(getSpecName(api)).toBe('my-api');
     });
 
     it('no name', async () => {
-      const api: OpenApi3Spec = await parseSpec({ ...spec, info: undefined });
+      const api = await parseSpec({ ...spec, info: undefined });
       expect(getSpecName(api)).toBe('openapi');
     });
 
@@ -52,7 +52,7 @@ describe('index', () => {
     });
 
     it('with x-kubernetes-ingress-metadata.name', async () => {
-      const api: OpenApi3Spec = await parseSpec({
+      const api = await parseSpec({
         ...spec,
         'x-kong-name': 'Kong Name',
         info: {
@@ -66,7 +66,7 @@ describe('index', () => {
   });
   describe('generateMetadataAnnotations()', () => {
     it('gets annotations from x-kubernetes-ingress-metadata', async () => {
-      const api: OpenApi3Spec = await parseSpec({
+      const api = await parseSpec({
         ...spec,
         info: {
           'x-kubernetes-ingress-metadata': {
@@ -189,7 +189,7 @@ describe('index', () => {
     });
 
     it('uses default 443 when tls configured ', () => {
-      const server = {
+      const server: OA3Server = {
         url: 'https://api.insomnia.rest',
         'x-kubernetes-tls': {
           secretName: 'tls-secret',
@@ -498,8 +498,8 @@ describe('index', () => {
   });
   describe('generateKongForKubernetesConfigFromSpec()', () => {
     it('handles global plugins', async () => {
-      const api: OpenApi3Spec = await parseSpec({ ...spec, ...pluginKeyAuth, ...pluginDummy });
-      const result = generateKongForKubernetesConfigFromSpec(api, []);
+      const api = await parseSpec({ ...spec, ...pluginKeyAuth, ...pluginDummy });
+      const result = generateKongForKubernetesConfigFromSpec(api);
       expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         dummyPluginDoc('g1'),
@@ -513,7 +513,7 @@ describe('index', () => {
     });
 
     it('handles global and server plugins', async () => {
-      const api: OpenApi3Spec = await parseSpec({
+      const api = await parseSpec({
         ...spec,
         ...pluginKeyAuth,
         servers: [
@@ -531,7 +531,7 @@ describe('index', () => {
           },
         ],
       });
-      const result = generateKongForKubernetesConfigFromSpec(api, []);
+      const result = generateKongForKubernetesConfigFromSpec(api);
       expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('s1'),
@@ -549,7 +549,7 @@ describe('index', () => {
     });
 
     it('handles global and path plugins', async () => {
-      const api: OpenApi3Spec = await parseSpec({
+      const api = await parseSpec({
         ...spec,
         ...pluginKeyAuth,
         paths: {
@@ -558,7 +558,7 @@ describe('index', () => {
           '/plugin-1': { ...pluginKeyAuth, ...pluginDummy },
         },
       });
-      const result = generateKongForKubernetesConfigFromSpec(api, []);
+      const result = generateKongForKubernetesConfigFromSpec(api);
       expect(result.documents).toStrictEqual([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('p1'),
@@ -577,7 +577,7 @@ describe('index', () => {
     });
 
     it('handles global and method plugins', async () => {
-      const api: OpenApi3Spec = await parseSpec({
+      const api = await parseSpec({
         ...spec,
         ...pluginKeyAuth,
         paths: {
@@ -588,7 +588,7 @@ describe('index', () => {
           },
         },
       });
-      const result = generateKongForKubernetesConfigFromSpec(api, []);
+      const result = generateKongForKubernetesConfigFromSpec(api);
       expect(result.documents).toStrictEqual([
         methodDoc('get'),
         methodDoc('put'),

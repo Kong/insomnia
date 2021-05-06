@@ -1,10 +1,10 @@
-import { getMethodAnnotationName, getName, parseUrl } from '../common';
+import { getMethodAnnotationName, getName, HttpMethodType, parseUrl } from '../common';
 import urlJoin from 'url-join';
 import { flattenPluginDocuments, getPlugins, prioritizePlugins } from './plugins';
 import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
 import { IndexIncrement } from '../types/k8plugins';
 import { KubernetesConfig, KubernetesMethodConfig, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sPath } from '../types/kubernetes-config';
-import { OpenApi3Spec, HttpMethodType, OA3Server } from '../types/openapi3';
+import { OpenApi3Spec, OA3Server } from '../types/openapi3';
 import { KongForKubernetesResult } from '../types/outputs';
 
 interface CustomAnnotations {
@@ -180,6 +180,7 @@ export function generateRulesForServer(
   if (tlsConfig) {
     return {
       host: hostname,
+      // @ts-expect-error -- TSCONVERSION This appears broken.  sometimes `tls` contains the secretName and sometimes it's one level up.
       tls: {
         paths: k8sPaths,
         ...tlsConfig,

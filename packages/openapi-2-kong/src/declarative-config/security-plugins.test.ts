@@ -22,6 +22,7 @@ describe('security-plugins', () => {
 
     it('generates apikey plugin with funny casing', async () => {
       const scheme: OA3SecurityScheme = {
+        // @ts-expect-error -- this is intentionally using strange casing.  Yes, technically speaking the type of OA3SecurityScheme['type'] should be `string`, but we really only support strange casing like this for backwards compat.  We want the types to reflect the API we're aiming for, even though we're technically a bit more permissive.
         type: 'ApIKeY',
         in: 'header',
         name: 'x-api-key',

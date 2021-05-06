@@ -1,5 +1,5 @@
 import { generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
-import { OpenApi3Spec, OA3Operation } from '../types/openapi3';
+import { OpenApi3Spec, OA3Operation, OA3Parameter } from '../types/openapi3';
 
 const tags = ['Tag'];
 
@@ -19,6 +19,7 @@ describe('plugins', () => {
             verbose_response: true,
           },
         },
+        // @ts-expect-error -- TSCONVERSION needs work for generic for XKongPluginUnknown
         'x-kong-plugin-abcd': {
           config: {
             some_config: ['something'],
@@ -153,7 +154,7 @@ describe('plugins', () => {
         const plugin = {
           config: {},
         };
-        const param = {
+        const param: OA3Parameter = {
           in: 'query',
           explode: true,
           required: false,
@@ -213,8 +214,7 @@ describe('plugins', () => {
       });
 
       it('should ignore parameters without schema', () => {
-        const plugin = {};
-        const paramWithSchema = {
+        const paramWithSchema: OA3Parameter = {
           in: 'query',
           explode: true,
           required: false,
@@ -228,14 +228,17 @@ describe('plugins', () => {
           },
           style: 'form',
         };
-        const paramWithoutSchema = {
+        const paramWithoutSchema: OA3Parameter = {
           in: 'query',
           name: 'some_name',
         };
         const operation: OA3Operation = {
-          parameters: [paramWithSchema, paramWithoutSchema],
+          parameters: [
+            paramWithSchema,
+            paramWithoutSchema,
+          ],
         };
-        const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+        const generated = generateRequestValidatorPlugin({}, operation, tags);
         expect(generated.config).toStrictEqual({
           version: 'draft4',
           parameter_schema: [

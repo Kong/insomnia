@@ -1,6 +1,13 @@
 import url from 'url';
 import slugify from 'slugify';
-import { OpenApi3Spec, OA3PathItem, OA3Server, OA3Paths, OA3Operation, OA3SecurityRequirement, HttpMethodType } from './types/openapi3';
+import {
+  OpenApi3Spec,
+  OA3PathItem,
+  OA3Server,
+  OA3Paths,
+  OA3Operation,
+  OA3SecurityRequirement,
+} from './types/openapi3';
 
 export function getServers(obj: OpenApi3Spec | OA3PathItem): OA3Server[] {
   return obj.servers || [];
@@ -86,11 +93,13 @@ export const HttpMethod = {
   head: 'HEAD',
   patch: 'PATCH',
   trace: 'TRACE',
-};
+} as const;
 
-export function isHttpMethodKey(key: string): boolean {
+export type HttpMethodType = typeof HttpMethod[keyof typeof HttpMethod];
+
+export function isHttpMethodKey(key: string): key is HttpMethodType {
   const uppercaseKey = key.toUpperCase();
-  return Object.values(HttpMethod).some(m => m === uppercaseKey);
+  return Object.values(HttpMethod).some(method => method === uppercaseKey);
 }
 
 export function getMethodAnnotationName(method: HttpMethodType): string {

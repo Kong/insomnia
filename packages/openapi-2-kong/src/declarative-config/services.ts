@@ -1,4 +1,3 @@
-import { $Keys } from 'utility-types';
 import {
   fillServerVariables,
   generateSlug,
@@ -17,7 +16,8 @@ import {
 } from './plugins';
 import { DCService, DCRoute } from '../types/declarative-config';
 import { OpenApi3Spec, OA3Server, OA3PathItem, OA3Operation } from '../types/openapi3';
-export function generateServices(api: OpenApi3Spec, tags: string[]): DCService[] {
+
+export function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);
 
   if (servers.length === 0) {
@@ -28,11 +28,8 @@ export function generateServices(api: OpenApi3Spec, tags: string[]): DCService[]
   const service = generateService(servers[0], api, tags);
   return [service];
 }
-export function generateService(
-  server: OA3Server,
-  api: OpenApi3Spec,
-  tags: string[],
-): DCService {
+
+export function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
@@ -147,11 +144,12 @@ export function generateService(
 
   return service;
 }
+
 export function generateRouteName(
   api: OpenApi3Spec,
   routePath: string,
-  method: $Keys<typeof HttpMethod>,
-): string {
+  method: keyof typeof HttpMethod,
+) {
   const name = getName(api);
   const pathItem = api.paths[routePath];
 

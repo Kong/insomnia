@@ -1,26 +1,27 @@
+import { HttpMethodType } from '../common';
 import { KubernetesPluginConfig } from './kubernetes-config';
-import { HttpMethodType, OA3Server } from './openapi3';
+import { OA3Server } from './openapi3';
 
-export type OperationPlugins = {
+export interface OperationPlugin {
   method?: HttpMethodType | null;
   plugins: KubernetesPluginConfig[];
-}[];
+}
 
-export type PathPlugins = {
+export interface PathPlugin {
   path: string;
   plugins: KubernetesPluginConfig[];
-  operations: OperationPlugins;
-}[];
+  operations: OperationPlugin[];
+}
 
-export type ServerPlugins = {
+export interface ServerPlugin {
   server: OA3Server;
   plugins: KubernetesPluginConfig[];
-}[];
+}
 
 export interface Plugins {
   global: KubernetesPluginConfig[];
-  servers: ServerPlugins;
-  paths: PathPlugins;
+  servers: ServerPlugin[];
+  paths: PathPlugin[];
 }
 
 export type IndexIncrement = () => number;

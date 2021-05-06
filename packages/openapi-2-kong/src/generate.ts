@@ -13,8 +13,8 @@ export async function generate(
   specPath: string,
   type: ConversionResultType,
   tags: string[] = [],
-): Promise<ConversionResult> {
-  return new Promise((resolve, reject) => {
+) {
+  return new Promise<ConversionResult>((resolve, reject) => {
     fs.readFile(path.resolve(specPath), 'utf8', (err, contents) => {
       if (err != null) {
         reject(err);
@@ -32,8 +32,8 @@ export async function generateFromString(
   specStr: string,
   type: ConversionResultType,
   tags: string[] = [],
-): Promise<ConversionResult> {
-  const api: OpenApi3Spec = await parseSpec(specStr);
+) {
+  const api = await parseSpec(specStr);
   return generateFromSpec(api, type, tags);
 }
 
@@ -41,7 +41,7 @@ export function generateFromSpec(
   api: OpenApi3Spec,
   type: ConversionResultType,
   tags: string[] = [],
-): ConversionResult {
+) {
   const allTags = [...defaultTags, ...tags];
 
   switch (type) {
@@ -56,7 +56,7 @@ export function generateFromSpec(
   }
 }
 
-export async function parseSpec(spec: string | Record<string, any>): Promise<OpenApi3Spec> {
+export async function parseSpec(spec: string | Record<string, any>) {
   let api: OpenApi3Spec;
 
   if (typeof spec === 'string') {
@@ -79,5 +79,5 @@ export async function parseSpec(spec: string | Record<string, any>): Promise<Ope
   }
 
   // @ts-expect-error -- TSCONVERSION
-  return SwaggerParser.dereference(api);
+  return SwaggerParser.dereference(api) as Promise<OpenApi3Spec>;
 }

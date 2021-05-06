@@ -1,5 +1,7 @@
+import { KubernetesPluginConfig } from '../types/kubernetes-config';
+import { XKongPluginKeyAuth, XKongPluginUnknown } from '../types/openapi3';
 
-export const pluginKeyAuth = {
+export const pluginKeyAuth: XKongPluginKeyAuth = {
   'x-kong-plugin-key-auth': {
     name: 'key-auth',
     config: {
@@ -10,7 +12,7 @@ export const pluginKeyAuth = {
   },
 };
 
-export const pluginDummy = {
+export const pluginDummy: XKongPluginUnknown<{ foo: 'bar' }> = {
   'x-kong-plugin-dummy-thing': {
     name: 'dummy-thing',
     config: {
@@ -19,7 +21,7 @@ export const pluginDummy = {
   },
 };
 
-export const pluginDocWithName = (name: string, pluginType: string) => ({
+export const pluginDocWithName = (name: string, pluginType: string): KubernetesPluginConfig => ({
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongPlugin',
   metadata: {
@@ -42,7 +44,7 @@ export const keyAuthPluginDoc = (suffix: string) => ({
   plugin: 'key-auth',
 });
 
-export const dummyPluginDoc = (suffix: string) => ({
+export const dummyPluginDoc = (suffix: string): KubernetesPluginConfig => ({
   apiVersion: 'configuration.konghq.com/v1',
   config: {
     foo: 'bar',

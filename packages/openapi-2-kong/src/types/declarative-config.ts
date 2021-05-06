@@ -50,7 +50,6 @@ export interface DCUpstream {
 }
 
 export interface DeclarativeConfig {
-  // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
   _format_version: '1.1';
   services: DCService[];
   upstreams: DCUpstream[];

@@ -8,13 +8,14 @@ import {
   getPluginNameFromKey,
   getSecurity,
   getServers,
+  HttpMethodType,
   isHttpMethodKey,
   isPluginKey,
   parseUrl,
   pathVariablesToRegex,
 } from './common';
 import { parseSpec } from './generate';
-import { OpenApi3Spec, OA3Operation } from './types/openapi3';
+import { OpenApi3Spec, OA3Operation, OA3Server } from './types/openapi3';
 
 describe('common', () => {
   const spec: OpenApi3Spec = {
@@ -30,6 +31,7 @@ describe('common', () => {
     ],
     paths: {},
   };
+
   describe('getPaths()', () => {
     it('should return api paths', () => {
       const paths = {
@@ -42,6 +44,7 @@ describe('common', () => {
       expect(result).toBe(paths);
     });
   });
+
   describe('getServers()', () => {
     const spec = {
       openapi: '3.0.0',
@@ -85,6 +88,7 @@ describe('common', () => {
       ]);
     });
   });
+
   describe('getSecurity()', () => {
     it('returns security from operation', () => {
       const operation: OA3Operation = {
@@ -93,6 +97,7 @@ describe('common', () => {
             petstoreAuth: [],
           },
         ],
+        // @ts-expect-error -- TSCONVERSION not sure, but this appears to be wrong maybe?
         responses: {},
       };
       const result = getSecurity(operation);
@@ -155,6 +160,7 @@ describe('common', () => {
       ]);
     });
   });
+
   describe('getName()', () => {
     const spec = {
       openapi: '3.0.0',
@@ -204,6 +210,7 @@ describe('common', () => {
       expect(result).toBe('this?needs?slugify');
     });
   });
+
   describe('generateSlug()', () => {
     it('passes basic cases', () => {
       expect(generateSlug('foo')).toBe('foo');
@@ -222,6 +229,7 @@ describe('common', () => {
       ).toBe('foo_bar');
     });
   });
+
   describe('fillServerVariables()', () => {
     it('parses basic url', () => {
       const server = {
@@ -243,9 +251,10 @@ describe('common', () => {
     });
 
     it('fails with no default value', () => {
-      const server: Record<string, any> = {
+      const server: OA3Server = {
         url: 'https://{subdomain}.swagger.io/v1',
         variables: {
+          // @ts-expect-error intentionally missing a required value
           subdomain: {
             enum: ['petstore'],
           },
@@ -257,6 +266,7 @@ describe('common', () => {
       expect(fn).toThrowError('Server variable "subdomain" missing default value');
     });
   });
+
   describe('pathVariablesToRegex()', () => {
     it('converts variables to regex path', () => {
       expect(pathVariablesToRegex('/foo/{bar}/{baz}')).toBe(
@@ -268,11 +278,13 @@ describe('common', () => {
       expect(pathVariablesToRegex('/foo/bar/baz')).toBe('/foo/bar/baz$');
     });
   });
+
   describe('getPluginNameFromKey()', () => {
     it('should remove x-kong-plugin- prefix to extract name', () => {
       expect(getPluginNameFromKey('x-kong-plugin-name')).toBe('name');
     });
   });
+
   describe('isPluginKey()', () => {
     it('should be true if key is prefixed by x-kong-plugin-', () => {
       expect(isPluginKey('x-kong-plugin-name')).toBe(true);
@@ -282,7 +294,18 @@ describe('common', () => {
       expect(isPluginKey('x-kong-name')).toBe(false);
     });
   });
-  const methods = ['get', 'put', 'post', 'options', 'delete', 'head', 'patch', 'trace'];
+
+  const methods: HttpMethodType[] = [
+    'GET',
+    'PUT',
+    'POST',
+    'DELETE',
+    'OPTIONS',
+    'HEAD',
+    'PATCH',
+    'TRACE',
+  ];
+
   describe('isHttpMethodKey()', () => {
     it.each(methods)('should be true for %o', method => {
       expect(isHttpMethodKey(method)).toBe(true);
@@ -292,11 +315,13 @@ describe('common', () => {
       expect(isHttpMethodKey('test')).toBe(false);
     });
   });
+
   describe('getMethodAnnotationName', () => {
     it.each(methods)('should suffix with -method and lowercase: %o', method => {
       expect(getMethodAnnotationName(method)).toBe(`${method}-method`.toLowerCase());
     });
   });
+
   describe('parseUrl()', () => {
     it('returns / for pathname if no path', () => {
       const result = parseUrl('http://api.insomnia.rest');
@@ -323,6 +348,7 @@ describe('common', () => {
       expect(result.pathname).toBe('/api/v1');
     });
   });
+
   describe('distinctByProperty()', () => {
     it('returns empty array if no truthy items', () => {
       expect(distinctByProperty([], i => i)).toHaveLength(0);

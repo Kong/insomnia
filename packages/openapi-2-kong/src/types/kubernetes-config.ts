@@ -1,4 +1,4 @@
-import { HttpMethodType } from './openapi3';
+import { HttpMethodType } from '../common';
 
 export interface K8sAnnotations {
   'kubernetes.io/ingress.class': 'kong';
@@ -24,7 +24,7 @@ export interface K8sIngressRule {
   host: string;
   tls?: {
     paths: K8sPath[];
-    tls: {
+    tls?: {
       secretName: string;
     };
   };
@@ -33,10 +33,8 @@ export interface K8sIngressRule {
   };
 }
 
-export type K8sIngressRules = K8sIngressRule[];
-
 export interface K8sSpec {
-  rules: K8sIngressRules;
+  rules: K8sIngressRule[];
 }
 
 export interface KubernetesMethodConfig {

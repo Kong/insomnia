@@ -1,6 +1,7 @@
 import { parseSpec } from '../..';
 import { generateUpstreams } from './upstreams';
 import { getSpec } from './utils';
+
 const xKongUpstreamDefaults = 'x-kong-upstream-defaults';
 
 const getSpecResult = () =>

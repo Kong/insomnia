@@ -8,6 +8,7 @@ describe('index', () => {
     it('generates DC from file', async () => {
       const p = path.join(__dirname, './fixtures/uspto.yaml');
       const {
+        // @ts-expect-error -- TSCONVERSION
         documents: [dc],
       } = await generate(p, 'kong-declarative-config');
       expect(dc._format_version).toBe('1.1');
@@ -25,6 +26,7 @@ describe('index', () => {
       expect(dc.services[0].tags).toEqual(['OAS3_import', 'OAS3file_uspto.yaml', 'MyTag']);
     });
   });
+
   describe('generateFromString()', () => {
     it('generates DC from string', async () => {
       const s = fs.readFileSync(path.join(__dirname, './fixtures/uspto.yaml'), 'utf8');
@@ -34,6 +36,7 @@ describe('index', () => {
       expect(dc._format_version).toBe('1.1');
     });
   });
+
   describe('generateFromSpec()', () => {
     it('generates DC from spec', async () => {
       const s = YAML.parse(
@@ -45,6 +48,7 @@ describe('index', () => {
       expect(dc._format_version).toBe('1.1');
     });
   });
+
   describe('parseSpec()', () => {
     const spec = {
       openapi: '3.0',

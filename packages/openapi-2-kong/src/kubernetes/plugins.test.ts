@@ -18,8 +18,8 @@ import {
   pluginDummy,
   pluginKeyAuth,
 } from './plugin-helpers';
-import { PathPlugins, OperationPlugins } from '../types/k8plugins';
-import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem } from '../types/openapi3';
+import { PathPlugin, OperationPlugin } from '../types/k8plugins';
+import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Components } from '../types/openapi3';
 
 describe('plugins', () => {
   let _iterator = 0;
@@ -51,8 +51,9 @@ describe('plugins', () => {
     paths: {},
   };
 
-  const components = {
+  const components: OA3Components = {
     securitySchemes: {
+      // @ts-expect-error -- TSCONVERSION
       really_basic: {
         type: 'http',
         scheme: 'basic',
@@ -69,6 +70,7 @@ describe('plugins', () => {
       },
       petstore_oauth2: {
         type: 'oauth2',
+        // @ts-expect-error -- TSCONVERSION
         flows: {
           clientCredentials: {
             tokenUrl: 'http://example.org/api/oauth/dialog',
@@ -79,6 +81,7 @@ describe('plugins', () => {
           },
         },
       },
+      // @ts-expect-error -- TSCONVERSION
       petstore_openid: {
         type: 'openIdConnect',
         openIdConnectUrl: 'http://example.org/oid-discovery',
@@ -115,7 +118,12 @@ describe('plugins', () => {
           },
         ],
         paths: {
-          '/path': { ...pluginKeyAuth, get: { ...pluginKeyAuth } },
+          '/path': {
+            ...pluginKeyAuth,
+            get: {
+              ...pluginKeyAuth,
+            },
+          },
         },
       };
       const result = getPlugins(api);
@@ -135,6 +143,7 @@ describe('plugins', () => {
       expect(action).toThrowError('Failed to generate spec: no servers defined in spec.');
     });
   });
+
   describe('getGlobalPlugins()', () => {
     it('returns empty array if no global plugins found on spec', async () => {
       const result = getGlobalPlugins(spec, increment);
@@ -196,8 +205,12 @@ describe('plugins', () => {
           },
         },
       };
-      // TODO: Cannot be typed as OpenApi3Spec because the security schemes types don't align to the data in components
-      const api: Record<string, any> = { ...spec, ...pluginDummy, ...pluginSecurity, components };
+      const api: OpenApi3Spec = {
+        ...spec,
+        ...pluginDummy,
+        ...pluginSecurity,
+        components,
+      };
       const result = getGlobalPlugins(api, increment);
       expect(result).toEqual([
         dummyPluginDoc('g0'),
@@ -223,6 +236,7 @@ describe('plugins', () => {
       ]);
     });
   });
+
   describe('getServerPlugins()', () => {
     const server0: OA3Server = {
       url: 'http://api-0.insomnia.rest',
@@ -246,6 +260,7 @@ describe('plugins', () => {
       expect(result[1].plugins).toEqual([keyAuthPluginDoc('s0'), dummyPluginDoc('s1')]);
     });
   });
+
   describe('getPathPlugins()', () => {
     it('should return normalized result if no paths', () => {
       const paths: OA3Paths = {};
@@ -327,6 +342,7 @@ describe('plugins', () => {
       expect(path1.operations).toEqual([blankOperation]);
     });
   });
+
   describe('getOperationPlugins()', () => {
     it('should return normalized result if no plugins', () => {
       const pathItem = {
@@ -337,7 +353,8 @@ describe('plugins', () => {
     });
 
     it('should return plugins for all operations on path', () => {
-      const pathItem = {
+      const pathItem: OA3PathItem = {
+        // @ts-expect-error -- TSCONVERSION appears to be a genuine error.  this actually passes 'GET' but I think 'get' is expected.
         [HttpMethod.get]: {},
         [HttpMethod.put]: { ...pluginKeyAuth, ...pluginDummy },
         [HttpMethod.post]: { ...pluginDummy },
@@ -370,9 +387,9 @@ describe('plugins', () => {
     );
 
     it('should return security plugin from operation', () => {
-      // TODO: Cannot be typed as OpenApi3Spec because the security schemes types don't align to the data in components
-      const api: Record<string, any> = { ...spec, components };
+      const api: OpenApi3Spec = { ...spec, components };
       const pathItem: OA3PathItem = {
+        // @ts-expect-error -- TSCONVERSION appears to be a genuine error.  this actually passes 'GET' but I think 'get' is expected.
         [HttpMethod.get]: {
           security: [
             {
@@ -406,6 +423,7 @@ describe('plugins', () => {
       ]);
     });
   });
+
   describe('generateK8PluginConfig()', () => {
     it('should return empty array if no plugin keys found and not increment', () => {
       const incrementMock = jest.fn().mockReturnValue(0);
@@ -416,14 +434,16 @@ describe('plugins', () => {
 
     it('should attach config onto plugin if it exists and increment', () => {
       const incrementMock = jest.fn().mockReturnValue(0);
+      // @ts-expect-error -- TSCONVERSION not sure, but this is intentionally different maybe?
       const result = generateK8PluginConfig({ ...spec, ...pluginKeyAuth }, 'greg', incrementMock);
       expect(result).toEqual([keyAuthPluginDoc('greg0')]);
       expect(incrementMock).toHaveBeenCalledTimes(1);
     });
   });
+
   describe('normalizePathPlugins()', () => {
     it('should return source array if a path with plugins exists', () => {
-      const source: PathPlugins = [
+      const source: PathPlugin[] = [
         {
           path: '/path-with-plugin',
           plugins: [dummyPluginDoc('p0')],
@@ -439,7 +459,7 @@ describe('plugins', () => {
     });
 
     it('should return source array if an operation with plugins exist', () => {
-      const source: PathPlugins = [
+      const source: PathPlugin[] = [
         {
           path: '/path',
           plugins: [],
@@ -459,7 +479,7 @@ describe('plugins', () => {
     });
 
     it('should return blank path if no plugins exist on path or operations', () => {
-      const source: PathPlugins = [
+      const source: PathPlugin[] = [
         {
           path: '/path-0',
           plugins: [],
@@ -474,9 +494,10 @@ describe('plugins', () => {
       expect(normalizePathPlugins(source)).toEqual([blankPath]);
     });
   });
+
   describe('normalizeOperationPlugins()', () => {
     it('should return source array if operation plugins exist', () => {
-      const source: OperationPlugins = [
+      const source: OperationPlugin[] = [
         {
           method: HttpMethod.get,
           plugins: [],
@@ -490,7 +511,7 @@ describe('plugins', () => {
     });
 
     it('should return blank operation if no plugins exist on operations', () => {
-      const source: OperationPlugins = [
+      const source: OperationPlugin[] = [
         {
           method: HttpMethod.get,
           plugins: [],
@@ -503,6 +524,7 @@ describe('plugins', () => {
       expect(normalizeOperationPlugins(source)).toEqual([blankOperation]);
     });
   });
+
   describe('flattenPluginDocuments()', () => {
     it('should return a flat array with all plugin documents', () => {
       const api: OpenApi3Spec = {
@@ -528,6 +550,7 @@ describe('plugins', () => {
       ]);
     });
   });
+
   describe('prioritizePlugins', () => {
     it('should return empty array if no plugins', () => {
       const global = [];
