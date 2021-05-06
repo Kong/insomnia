@@ -840,7 +840,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_UNIT_TEST && (
             <WrapperUnitTest
               gitSyncDropdown={gitSyncDropdown}
-              // @ts-expect-error -- TSCONVERSION
               wrapperProps={this.props}
               handleActivityChange={this._handleWorkspaceActivityChange}
               children={sidebarChildren}

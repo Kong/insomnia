@@ -269,7 +269,7 @@ export const database = {
     });
   },
 
-  get: async function<T extends BaseModel>(type: string, id: string) {
+  get: async function<T extends BaseModel>(type: string, id?: string) {
     if (db._empty) return _send<T>('get', ...arguments);
 
     // Short circuit IDs used to represent nothing

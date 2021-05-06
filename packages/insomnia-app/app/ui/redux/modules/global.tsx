@@ -687,7 +687,6 @@ export function exportRequestsToFile(requestIds) {
           const privateEnvs = descendants.filter(
             descendant => descendant.type === models.environment.type && descendant.isPrivate,
           );
-          // @ts-expect-error privateEnvs should be an array of Environment
           privateEnvironments.push(...privateEnvs);
         }
 
