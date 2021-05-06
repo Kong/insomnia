@@ -428,7 +428,7 @@ export function isObject(obj: unknown) {
 */
 export function convertEpochToMilliseconds(epoch: number) {
   const expDigitCount = epoch.toString().length;
-  return epoch * 10 ** (13 - expDigitCount);
+  return parseInt(String(epoch * 10 ** (13 - expDigitCount)), 10);
 }
 
 export function snapNumberToLimits(value: number, min?: number, max?: number) {

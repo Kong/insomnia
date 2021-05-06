@@ -483,7 +483,7 @@ export function updateStateWithConflictResolutions(state: SnapshotState, conflic
     const stateEntry = state.find(e => e.key === key);
 
     // Not in the state, but we choose the conflict
-    if (stateEntry !== undefined && choose !== null) {
+    if (!stateEntry && choose !== null) {
       newStateMap[key] = {
         key,
         name,
