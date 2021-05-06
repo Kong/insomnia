@@ -11,7 +11,7 @@ const configuration: Configuration = {
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.ts', './renderer.html'],
   output: {
-    path: path.join(__dirname, '../dist'),
+    path: path.join(__dirname, '../build'),
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
   },
