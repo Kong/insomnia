@@ -10,7 +10,7 @@
   "scripts": {
     "clean": "tsc --build tsconfig.webpack.json --clean && tsc --build tsconfig.build.json --clean",
     "test": "npm run test:jest",
-    "test:jest": "cross-env NODE_ENV=test jest --silent",
+    "test:jest": "cross-env NODE_ENV=test jest --silent DELETE-ME",
     "test-appveyor": "npm run test -- --maxWorkers 1",
     "start:electron": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" cross-env NODE_ENV=development webpack --config webpack/webpack.config.electron.ts && electron .",
     "start:dev-server": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack-dev-server --config webpack/webpack.config.development.ts",
