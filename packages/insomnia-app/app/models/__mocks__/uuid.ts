@@ -193,24 +193,25 @@ const v4UUIDs = [
   '966e9995-938a-4a5e-813c-de3691dddb3a',
 ];
 
-export const v1 = () => {
+function v1() {
   const uuid = v1UUIDs[v1Counter++];
-
   if (!uuid) {
     throw new Error('Not enough mocked v1 UUIDs to go around');
   }
 
   return uuid;
-};
+}
 
-export const v4 = () => {
+function v4() {
   const uuid = v4UUIDs[v4Counter++];
-
   if (!uuid) {
     throw new Error('Not enough mocked v4 UUIDs to go around');
   }
 
   return uuid;
-};
+}
 
-export default v4;
+// WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.
+module.exports = () => v4();
+module.exports.v4 = () => v4();
+module.exports.v1 = () => v1();
