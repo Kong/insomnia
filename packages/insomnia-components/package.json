@@ -8,9 +8,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --build tsconfig.build.json",
+    "build": "webpack --config webpack/webpack.prod.js --display errors-only",
     "build-storybook": "build-storybook --quiet",
-    "clean": "tsc --build tsconfig.build.json --clean",
+    "clean": "",
     "convert-svg": "rimraf src/assets/svgr && svgr --config-file svgr.config.js --out-dir src/assets/svgr src/assets && rimraf src/assets/svgr/index.tsx",
     "jest:watch": "jest --watch",
     "lint": "eslint . --ext .js,.ts,.tsx",
@@ -19,7 +19,7 @@
     "prepare": "npm run convert-svg && npm run build",
     "storybook": "start-storybook --port 3223",
     "test": "jest",
-    "watch": "tsc --build tsconfig.build.json --watch"
+    "watch": "webpack --config webpack/webpack.dev.js --watch"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
@@ -56,6 +56,7 @@
     "react-use": "^17.2.4",
     "storybook-addon-designs": "^5.4.1",
     "styled-components": "^5.2.3",
+    "ts-loader": "^8.2.0",
     "type-fest": "^1.0.2",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11",
