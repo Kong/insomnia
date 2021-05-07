@@ -60,7 +60,7 @@
     "type-fest": "^1.0.2",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11",
-    "webpack-merge": "^4.2.2"
+    "webpack-merge": "^5.0.7"
   },
   "dependencies": {
     "class-autobind-decorator": "^3.0.1",
