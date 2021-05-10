@@ -1,7 +1,7 @@
 import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
-import electronPath from '../../insomnia-app/node_modules/electron';
+import electronPath from '../../../insomnia-app/node_modules/electron';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 
@@ -14,7 +14,7 @@ export const isBuild = () => process.env.BUNDLE === 'build';
 export const isPackage = () => process.env.BUNDLE === 'package';
 
 const spectronConfig = (
-  designerDataPath = path.join(__dirname, '..', 'fixtures', 'doesnt-exist'),
+  designerDataPath = path.join(__dirname, '..', '..', 'fixtures', 'doesnt-exist'),
 ) => {
   let packagePathSuffix = '';
   if (isWindows()) {
@@ -25,8 +25,8 @@ const spectronConfig = (
     packagePathSuffix = ''; // TODO: find out what this is
   }
 
-  const buildPath = path.join(__dirname, '../../insomnia-app/build');
-  const packagePath = path.join(__dirname, '../../insomnia-app/dist', packagePathSuffix);
+  const buildPath = path.join(__dirname, '../../../insomnia-app/build');
+  const packagePath = path.join(__dirname, '../../../insomnia-app/dist', packagePathSuffix);
   const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Date.now()}`);
   const env = { INSOMNIA_DATA_PATH: dataPath };
 

@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "resolveJsonModule": true,
+    "esModuleInterop": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/jest",
+    "**/*.test.ts"
+  ]
+}

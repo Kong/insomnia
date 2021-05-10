@@ -1,5 +1,5 @@
-import * as dropdown from '../modules/dropdown';
-import * as modal from '../modules/modal';
+import * as dropdown from './dropdown';
+import * as modal from './modal';
 import findAsync from './find-async';
 import * as debug from './debug';
 import faker from 'faker';
