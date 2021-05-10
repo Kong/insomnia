@@ -14,7 +14,11 @@ interface Props {
  */
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class HtmlElementWrapper extends Component<Props> {
-  _setRef(n: HTMLDivElement) {
+  _setRef(n: HTMLDivElement | null | undefined) {
+    if (!n) {
+      return;
+    }
+
     // Add the element directly to the React ref
     n.innerHTML = '';
     n.appendChild(this.props.el);
