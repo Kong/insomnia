@@ -1,4 +1,5 @@
 import { logger } from './logger';
+
 export class InsoError extends Error {
   cause?: Error | null;
 

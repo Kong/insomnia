@@ -3,6 +3,7 @@ import path from 'path';
 import mkdirp from 'mkdirp';
 import rimraf from 'rimraf';
 import { PLUGIN_PATH } from '../common/constants';
+
 export async function createPlugin(
   moduleName: string,
   version: string,

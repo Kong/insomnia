@@ -1,12 +1,15 @@
 import React from 'react';
 import '../../../.storybook/index.less';
 import Notice from './notice';
+
 export default {
   title: 'Notice',
 };
+
 export const _default = () => (
   <Notice>This is a notice. It is a bright block of text, meant to stand out from the rest!</Notice>
 );
+
 export const colors = () => (
   <div>
     <Notice color="surprise">

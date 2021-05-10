@@ -2,6 +2,7 @@ import path from 'path';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { InsoError } from './errors';
+
 export async function writeFileWithCliOptions(
   output: string,
   contents: string,

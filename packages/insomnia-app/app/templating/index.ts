@@ -3,6 +3,7 @@ import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
 import * as plugins from '../plugins/index';
 import type { TemplateTag } from '../plugins/index';
+
 export class RenderError extends Error {
   message: string;
   path: string | null;
@@ -14,11 +15,13 @@ export class RenderError extends Error {
   type: string;
   reason: string;
 }
+
 // Some constants
 export const RENDER_ALL = 'all';
 export const RENDER_VARS = 'variables';
 export const RENDER_TAGS = 'tags';
 export const NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME = '_';
+
 // Cached globals
 let nunjucksVariablesOnly: nunjucks.Environment | null = null;
 let nunjucksTagsOnly: nunjucks.Environment | null = null;

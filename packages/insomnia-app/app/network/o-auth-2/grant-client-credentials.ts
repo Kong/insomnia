@@ -4,6 +4,7 @@ import { responseToObject } from './misc';
 import { sendWithSettings } from '../network';
 import * as models from '../../models/index';
 import { getBasicAuthHeader } from '../basic-auth/get-header';
+
 export default async function(
   requestId: string,
   accessTokenUrl: string,

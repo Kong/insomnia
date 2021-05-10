@@ -43,6 +43,7 @@ import { Settings } from '../../../models/settings';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { Environment } from '../../../models/environment';
+
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
 export const LOAD_START = 'global/load-start';

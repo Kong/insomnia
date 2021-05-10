@@ -1,9 +1,11 @@
 import React from 'react';
 import '../../../.storybook/index.less';
 import IndeterminateCheckbox from './base/indeterminate-checkbox';
+
 export default {
   title: 'Forms',
 };
+
 export const input = () => (
   <form>
     <div className="form-control form-control--outlined">
@@ -11,6 +13,7 @@ export const input = () => (
     </div>
   </form>
 );
+
 export const inputWithLabel = () => (
   <form>
     <div className="form-control form-control--outlined">
@@ -21,6 +24,7 @@ export const inputWithLabel = () => (
     </div>
   </form>
 );
+
 export const selectWithLabel = () => (
   <form>
     <div className="form-control form-control--outlined">
@@ -34,6 +38,7 @@ export const selectWithLabel = () => (
     </div>
   </form>
 );
+
 export const checkboxWithLabel = () => (
   <form>
     <div className="form-control form-control--thin">
@@ -50,6 +55,7 @@ export const checkboxWithLabel = () => (
     </div>
   </form>
 );
+
 export const intermediaryCheckbox = () => (
   <form>
     <div className="form-control form-control--thin">
@@ -60,6 +66,7 @@ export const intermediaryCheckbox = () => (
     </div>
   </form>
 );
+
 export const exampleForm = () => (
   <form className="storybook-skinny">
     <div className="form-row">

@@ -1,7 +1,9 @@
 import type { BaseModel } from './types';
 import { InsoError } from '../../errors';
+
 export const matchIdIsh = ({ _id }: BaseModel, identifier: string) =>
     _id.startsWith(identifier);
+
 export const generateIdIsh = ({ _id }: BaseModel, length = 10) =>
     _id.substr(0, length);
 
@@ -27,6 +29,7 @@ export const getDbChoice = (
     value: `${message} - ${idIsh}`,
     hint: config.hint || `${idIsh}`,
 });
+
 export const ensureSingleOrNone = <T>(
     items: Array<T>,
     entity: string,
