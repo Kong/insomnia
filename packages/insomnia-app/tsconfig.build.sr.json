@@ -4,8 +4,8 @@
     "outDir": "../insomnia-send-request/dist"
   },
   "include": [
-    "send-request",
+    "**/*.d.ts",
     "package.json",
-    "**/*.d.ts"
+    "send-request"
   ]
 }

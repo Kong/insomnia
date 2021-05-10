@@ -18,6 +18,7 @@
     "webpack",
     "bin",
     "assets",
+    
     "**/@types/mocha/*",
     "**/*.test.ts",
     "**/__snapshots__/**",

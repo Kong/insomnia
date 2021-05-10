@@ -53,13 +53,13 @@ class Theme extends PureComponent<Props, State> {
           disabled={disabled}
           onClick={() => handleChangeTheme(theme.theme.name, 'default')}
           className={isActive ? 'active' : ''}>
-          {/* @ts-expect-error */}
+          {/* @ts-expect-error -- TSCONVERSION */}
           <svg theme={theme.theme.name} width="100%" height="100%" viewBox="0 0 500 300">
             {/*
               A WORD TO THE WISE: If you, dear traveler from the future, are here for the purpose of theming things due to changes in the app structure, please remember to add `--sub` to your classes or else the selected class' theme variables will apply to all theme previews.  Search your codebase for `--sub` to see more.
                         */}
 
-            {/* @ts-expect-error */}
+            {/* @ts-expect-error -- TSCONVERSION */}
             <g subtheme={theme.theme.name}>
               {/* App Header */}
               <g className="theme--app-header--sub">

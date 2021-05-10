@@ -1,20 +1,21 @@
 {
   "extends": "./tsconfig.build.json",
   "include": [
-    "app",
-    "send-request",
-    "package.json",
-    "jest.config.js",
     ".babelrc.js",
     ".eslintrc.js",
+    "app",
     "config",
-    "webpack",
-    "scripts"
+    "jest.config.js",
+    "package.json",
+    "scripts",
+    "send-request",
+    "webpack"
   ],
   "exclude": [
-    "node_modules",
-    "dist",
+    "**/@types/mocha",
+    "**/main.min.js",
     "bin",
-    "config"
+    "config",
+    "node_modules"
   ]
 }

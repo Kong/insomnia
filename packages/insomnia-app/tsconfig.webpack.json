@@ -12,10 +12,8 @@
     "strictNullChecks": true,
   },
   "include": [
-    "webpack/*.ts",
-    "package.json"
+    "package.json",
+    "webpack"
   ],
-  "exclude": [
-    "webpack/dist"
-  ]
+  "exclude": []
 }

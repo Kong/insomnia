@@ -567,5 +567,6 @@ function initLocalStorage() {
 }
 
 function initContextMenus() {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   require('electron-context-menu')({});
 }

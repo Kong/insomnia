@@ -1,7 +1,7 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
-import { WorkspaceScopeKeys } from '../../../../models/workspace';
+import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
 import * as models from '../../../../models';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_SPEC } from '../../../../common/constants';

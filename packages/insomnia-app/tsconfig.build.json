@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "./build",
     "rootDir": ".",
     "resolveJsonModule": true,
     "strict": false,
@@ -10,28 +10,27 @@
     "experimentalDecorators": true
   },
   "include": [
+    "**/*.d.ts",
     "app",
-    "package.json",
-    "**/*.d.ts"
+    "package.json"
   ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "__jest__",
-    ".babelrc.js",
-    "jest.config.js",
-    "webpack",
-    "scripts",
-    "config",
-    "bin",
-    "assets",
-    "**/__tests__",
-    "**/__jest__",
-    "**/@types/mocha",
     "**/*.test.ts",
     "**/*.test.tsx",
-    "**/__snapshots__",
+    "**/@types/mocha",
+    "**/__jest__",
     "**/__mocks__",
-    "dist"
+    "**/__snapshots__",
+    "**/__tests__",
+    "**/main.min.js",
+    ".babelrc.js",
+    "__jest__",
+    "assets",
+    "bin",
+    "config",
+    "jest.config.js",
+    "node_modules",
+    "scripts",
+    "webpack"
   ]
 }

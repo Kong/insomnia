@@ -14,6 +14,7 @@ import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
 import { initNewOAuthSession } from '../network/o-auth-2/misc';
 import { initializeLogging } from '../common/log';
+import { ipcRenderer } from 'electron';
 
 initializeLogging();
 // Handy little helper
@@ -83,8 +84,6 @@ function showUpdateNotification() {
     sticky: true,
   });
 }
-
-const { ipcRenderer } = require('electron');
 
 ipcRenderer.on('update-available', () => {
   // Give it a few seconds before showing this. Sometimes, when
