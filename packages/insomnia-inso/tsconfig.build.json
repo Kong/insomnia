@@ -12,7 +12,7 @@
   "exclude": [
     "node_modules",
     "dist",
-    "jest",
+    "src/jest",
     ".babelrc.js",
     "jest.config.js",
     "webpack",
