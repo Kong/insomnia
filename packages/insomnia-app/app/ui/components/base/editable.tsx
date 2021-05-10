@@ -3,7 +3,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import KeydownBinder from '../keydown-binder';
 
-export const shouldSave = (oldValue, newValue, preventBlank) => {
+export const shouldSave = (oldValue, newValue, preventBlank = false) => {
   // Should not save if length = 0 and we want to prevent blank
   if (preventBlank && !newValue.length) {
     return false;

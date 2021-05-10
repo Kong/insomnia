@@ -1,4 +1,5 @@
-export const load = jest.fn();
-export const loadMethods = jest.fn();
-export const loadMethodsFromPath = jest.fn();
-export const getSelectedMethod = jest.fn();
+module.exports = {
+  loadMethods: jest.fn(),
+  loadMethodsFromPath: jest.fn(),
+  getSelectedMethod: jest.fn(),
+};

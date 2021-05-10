@@ -1,5 +1,6 @@
 import type { GrpcMethodDefinition } from '../method';
-import protoLoader, { AnyDefinition, EnumTypeDefinition, ServiceDefinition, MessageTypeDefinition } from '@grpc/proto-loader';
+import * as protoLoader from '@grpc/proto-loader';
+import { AnyDefinition, EnumTypeDefinition, ServiceDefinition, MessageTypeDefinition } from '@grpc/proto-loader';
 import * as models from '../../../models';
 import writeProtoFile from './write-proto-file';
 import { ProtoFile } from '../../../models/proto-file';
