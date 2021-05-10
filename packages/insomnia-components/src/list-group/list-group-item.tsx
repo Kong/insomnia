@@ -1,12 +1,13 @@
+import React from 'react';
 import styled, { css } from 'styled-components';
 
-export interface ListGroupItemProps {
+export interface ListGroupItemProps extends React.LiHTMLAttributes<HTMLLIElement> {
   isSelected?: boolean;
   selectable?: boolean;
   indentLevel?: number;
 }
 
-export const ListGroupItem = styled.li<ListGroupItemProps>`
+const StyledListGroupItem = styled.li<ListGroupItemProps>`
   border-bottom: 1px solid var(--hl-xs);
   padding: var(--padding-sm) var(--padding-sm);
 
@@ -31,3 +32,5 @@ export const ListGroupItem = styled.li<ListGroupItemProps>`
       padding-left: calc(var(--padding-sm) + var(--padding-md) * ${indentLevel});
     `};
 `;
+
+export const ListGroupItem: React.FC<ListGroupItemProps> = props => <StyledListGroupItem {...props} />;

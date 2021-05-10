@@ -18,6 +18,7 @@ const StyledBadge = styled.span`
   text-transform: capitalize;
 `;
 
+// @ts-expect-error https://github.com/microsoft/TypeScript/issues/37597
 const StyledFailedBadge = styled(StyledBadge)`
   border-color: var(--color-danger);
   color: var(--color-danger);
