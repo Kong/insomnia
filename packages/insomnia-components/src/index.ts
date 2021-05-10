@@ -12,6 +12,7 @@ export { NoticeTable, NoticeTableProps } from './notice-table';
 export { RadioButtonGroup, RadioButtonGroupProps } from './radio-button-group';
 export { SvgIcon, SvgIconProps, IconEnum, ThemeEnum, IconId } from './svg-icon';
 export { Switch, SwitchProps, SwitchItem } from './switch';
+export { BasicComponent } from './basic-component';
 export {
   Table,
   TableProps,
