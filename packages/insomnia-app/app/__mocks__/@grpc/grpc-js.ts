@@ -1,12 +1,11 @@
 import { EventEmitter } from 'events';
+const grpcJs = jest.requireActual('@grpc/grpc-js');
 
 const mockCallWrite = jest.fn();
 const mockCallEnd = jest.fn();
 const mockCallCancel = jest.fn();
 
-export const status = {
-  OK: 0,
-};
+export const status = grpcJs.status;
 
 class MockCall extends EventEmitter {
   write(...args) {
