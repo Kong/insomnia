@@ -18,7 +18,6 @@
     "version:dry": "npm run version -- --no-git-tag-version",
     "publish": "lerna publish from-git --pre-dist-tag beta",
     "clean": "lerna clean --yes && rimraf node_modules",
-    "typecheck": "lerna run --parallel --stream typecheck",
     "test": "lerna run --stream --parallel test",
     "test:pre-release": "npm run test --prefix packages/insomnia-app",
     "inso-start": "npm start --prefix packages/insomnia-inso",
