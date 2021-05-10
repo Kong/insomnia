@@ -3,6 +3,6 @@
 export type UNKNOWN = any;
 
 /** TypeScript version of "TODO" but for Objects */
-export type UNKNOWN_OBJ = {
+export interface UNKNOWN_OBJ {
   [key: string]: UNKNOWN;
-};
+}

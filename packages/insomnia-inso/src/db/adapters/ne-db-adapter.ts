@@ -21,7 +21,7 @@ const neDbAdapter: DbAdapter = async (dir, filterTypes) => {
         filename: filePath,
         corruptAlertThreshold: 0.9,
       });
-      collection.find({}, (err: UNKNOWN, docs: Array<BaseModel>) => {
+      collection.find({}, (err: UNKNOWN, docs: BaseModel[]) => {
         if (err) {
           return reject(err);
         }

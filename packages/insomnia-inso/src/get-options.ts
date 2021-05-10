@@ -2,13 +2,13 @@ import { cosmiconfigSync } from 'cosmiconfig';
 import { GenerateConfigOptions } from './commands/generate-config';
 import { UNKNOWN_OBJ } from './types';
 
-type ConfigFileOptions = {
+interface ConfigFileOptions {
   __configFile?: {
     options?: UNKNOWN_OBJ;
     scripts?: UNKNOWN_OBJ;
     filePath: string;
   };
-};
+}
 
 export type GlobalOptions = {
   appDataDir?: string;
@@ -60,7 +60,7 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
   return {};
 };
 
-type CommandObj = {
+interface CommandObj {
   parent?: CommandObj;
   opts: () => GenerateConfigOptions
 }

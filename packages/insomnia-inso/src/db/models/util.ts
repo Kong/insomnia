@@ -31,7 +31,7 @@ export const getDbChoice = (
 });
 
 export const ensureSingleOrNone = <T>(
-    items: Array<T>,
+    items: T[],
     entity: string,
 ): T | null | undefined => {
     if (items.length === 1) {
@@ -46,7 +46,7 @@ export const ensureSingleOrNone = <T>(
         `Expected single or no ${entity} in the data store, but found multiple (${items.length}).`,
     );
 };
-export const ensureSingle = <T>(items: Array<T>, entity: string): T => {
+export const ensureSingle = <T>(items: T[], entity: string): T => {
     if (items.length === 1) {
         return items[0];
     }

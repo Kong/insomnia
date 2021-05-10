@@ -3,7 +3,7 @@ import axios, { Method } from 'axios';
 // @ts-expect-error we're pulling straight out of the lib here in a way that is not intended, but axios does not directly expose this adapter
 import httpAdapter from 'axios/lib/adapters/http';
 
-export type Request = {
+export interface Request {
   _id: string;
   url?: string;
   method?: string;
@@ -16,9 +16,9 @@ export type Request = {
     description?: string;
     disabled?: boolean;
   }[];
-};
+}
 
-export type Response = {
+export interface Response {
   status: number;
   statusText: string;
   data: {
@@ -27,17 +27,17 @@ export type Response = {
   headers: {
     [key: string]: string;
   };
-};
+}
 
 export type SendRequestCallback = (requestId: string) => Promise<Response>;
 
-export type InsomniaOptions = {
+export interface InsomniaOptions {
   requests?: Request[];
   sendRequest?: SendRequestCallback;
   bail?: boolean;
   keepFile?: boolean;
   testFilter?: string;
-};
+}
 
 /**
  * An instance of Insomnia will be exposed as a global variable during

@@ -1,9 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is a temporary hold-me-over while we get the types into better condition
 export type UNKNOWN = any;
 
-export type UNKNOWN_OBJ = {
+export interface UNKNOWN_OBJ {
   [key: string]: UNKNOWN;
-};
+}
 
 export interface Comment {
   comment?: UNKNOWN;

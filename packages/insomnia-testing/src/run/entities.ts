@@ -1,6 +1,6 @@
 import { Stats } from 'mocha';
 
-type TestErr = {
+interface TestErr {
   generatedMessage: boolean;
   name: string;
   code: string;
@@ -9,12 +9,12 @@ type TestErr = {
   operator: string;
 }
 
-type NodeErr = {
+interface NodeErr {
   message: string;
   stack: string;
 }
 
-export type TestResult = {
+export interface TestResult {
   title: string;
   fullTitle: string;
   file?: string;
@@ -23,7 +23,7 @@ export type TestResult = {
   err: TestErr | NodeErr | {};
 }
 
-export type TestResults = {
+export interface TestResults {
   failures: TestResult[];
   passes: TestResult[];
   pending: TestResult[];

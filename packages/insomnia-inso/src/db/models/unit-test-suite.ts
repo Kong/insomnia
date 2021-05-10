@@ -31,7 +31,7 @@ export const loadUnitTestSuite = (
 export const loadTestSuites = (
   db: Database,
   identifier: string,
-): Array<UnitTestSuite> => {
+): UnitTestSuite[] => {
   const apiSpec = loadApiSpec(db, identifier);
   const workspace = loadWorkspace(db, apiSpec?.parentId || identifier); // if identifier is for an apiSpec or a workspace, return all suites for that workspace
 
@@ -45,7 +45,7 @@ export const loadTestSuites = (
 export const promptTestSuites = async (
   db: Database,
   ci: boolean,
-): Promise<Array<UnitTestSuite>> => {
+): Promise<UnitTestSuite[]> => {
   if (ci) {
     return [];
   }

@@ -2,14 +2,14 @@
 
 declare module 'openapi-2-kong' {
   /** TODO(TSCONVERSION) this can be taken from the official types OpenAPIV3.Document */
-  type OpenAPI3Document = {
+  interface OpenAPI3Document {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [todo: string]: any;
   }
 
   export type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes'
 
-  export type DeclarativeConfigResult = {
+  export interface DeclarativeConfigResult {
     type: 'kong-declarative-config',
     label: string,
     documents: Object,
@@ -20,9 +20,9 @@ declare module 'openapi-2-kong' {
         /* TODO */
       },
     }[],
-  };
+  }
 
-  export type KongForKubernetesResult = {
+  export interface KongForKubernetesResult {
     type: 'kong-for-kubernetes',
     label: string,
     documents: Object[],
@@ -33,7 +33,7 @@ declare module 'openapi-2-kong' {
         /* TODO */
       },
     }[],
-  };
+  }
 
   export type ConversionResult = DeclarativeConfigResult | KongForKubernetesResult;
 

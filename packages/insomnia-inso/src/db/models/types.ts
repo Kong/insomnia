@@ -1,11 +1,11 @@
 // Simplified and extracted from insomnia-app/app/models/*
-export type BaseModel = {
+export interface BaseModel {
     _id: string
     type: string
     parentId: string
 }
 
-type BaseApiSpec = {
+interface BaseApiSpec {
     fileName: string
     contentType: 'json' | 'yaml'
     contents: string
@@ -13,13 +13,13 @@ type BaseApiSpec = {
 
 export type ApiSpec = BaseModel & BaseApiSpec
 
-type BaseUnitTestSuite = {
+interface BaseUnitTestSuite {
     name: string
 }
 
 export type UnitTestSuite = BaseModel & BaseUnitTestSuite
 
-type BaseUnitTest = {
+interface BaseUnitTest {
     name: string
     code: string
     requestId: string | null
@@ -27,14 +27,14 @@ type BaseUnitTest = {
 
 export type UnitTest = BaseModel & BaseUnitTest
 
-type BaseEnvironment = {
+interface BaseEnvironment {
     name: string
     metaSortKey: number
 }
 
 export type Environment = BaseModel & BaseEnvironment
 
-type BaseWorkspace = {
+interface BaseWorkspace {
     name: string
     description: string
 }

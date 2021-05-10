@@ -17,7 +17,7 @@ jest.unmock('cosmiconfig');
 jest.mock('./util');
 
 const initInso = () => {
-  return (...args: Array<string>): void => {
+  return (...args: string[]): void => {
     const cliArgs = parseArgsStringToArgv(`node test ${args.join(' ')}`);
     return cli.go(cliArgs, true);
   };

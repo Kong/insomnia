@@ -1,8 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- this is a temporary hold-me-over while we get the types into better condition
 type UNKNOWN = any;
-type UNKNOWN_OBJ = {
+interface UNKNOWN_OBJ {
   [key: string]: UNKNOWN;
-};
+}
 
 type WSDL = UNKNOWN;
 
@@ -15,11 +15,11 @@ interface ServiceData {
   services: Service[];
 }
 
-type WSDLEntry = {
+interface WSDLEntry {
   serviceJSON: UNKNOWN;
   fullName: string;
   filename: string;
-};
+}
 
 declare module 'apiconnect-wsdl' {
   export function getJsonForWSDL(
