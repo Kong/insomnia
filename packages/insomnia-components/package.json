@@ -47,7 +47,6 @@
     "@types/testing-library__react-hooks": "^4.0.0",
     "@types/webpack": "^5.28.0",
     "@types/webpack-merge": "^5.0.0",
-    "babel-loader": "^8.0.6",
     "babel-plugin-inline-react-svg": "^1.1.1",
     "jest": "^26.6.3",
     "react": "^16.8.3",
