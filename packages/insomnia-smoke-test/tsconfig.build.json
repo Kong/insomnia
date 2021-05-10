@@ -6,13 +6,13 @@
     "rootDir": "src",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "strict": true
+    "skipLibCheck": true, // this is required because spectron depends on electron but it is not locatable by typescript for the purpose of types
   },
   "include": [
-    "src"
+    "src",
   ],
   "exclude": [
     "src/jest",
-    "**/*.test.ts"
+    "**/*.test.ts",
   ]
 }

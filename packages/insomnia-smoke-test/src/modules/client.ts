@@ -4,7 +4,9 @@ export const correctlyLaunched = async (app: Application) => {
   // @ts-expect-error -- TSCONVERSION appears to be genuine
   await expect(app.browserWindow.isDevToolsOpened()).resolves.toBe(false);
   await expect(app.client.getWindowCount()).resolves.toBe(1);
+  // @ts-expect-error -- TSCONVERSION
   await expect(app.browserWindow.isMinimized()).resolves.toBe(false);
+  // @ts-expect-error -- TSCONVERSION
   await expect(app.browserWindow.isFocused()).resolves.toBe(true);
 };
 

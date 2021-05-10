@@ -1,11 +1,11 @@
 import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
-// @ts-expect-error -- TSCONVERSION appears to be genuine
-import electronPath from '../../../insomnia-app/node_modules/electron';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { Config } from '../entities';
+
+const electronPath = '../../../insomnia-app/node_modules/electron';
 
 const getAppPlatform = () => process.platform;
 const isMac = () => getAppPlatform() === 'darwin';
@@ -70,7 +70,9 @@ const launch = async (config?: Config) => {
     // Windows spawns two terminal windows when running spectron, and the only workaround
     // is to focus the window on start.
     // https://github.com/electron-userland/spectron/issues/60
+    // @ts-expect-error -- TSCONVERSION
     await app.browserWindow.focus();
+    // @ts-expect-error -- TSCONVERSION
     await app.browserWindow.setAlwaysOnTop(true);
 
     // Set the implicit wait timeout to 0 (webdriver default)
@@ -80,6 +82,7 @@ const launch = async (config?: Config) => {
     await app.client.setTimeout({ implicit: 0 });
 
     // Set bounds to default size
+    // @ts-expect-error -- TSCONVERSION
     await app.browserWindow.setSize(1280, 700);
   });
   return app;
@@ -93,7 +96,6 @@ export const launchApp = async (designerDataPath?: string) => {
 export const takeScreenshot = async (app: Application, name: string) => {
   mkdirp.sync('screenshots');
   const buffer = await app.browserWindow.capturePage();
-  // @ts-expect-error -- TSCONVERSION appears to be genuine
   await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
 };
 
