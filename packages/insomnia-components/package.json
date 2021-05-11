@@ -57,6 +57,7 @@
     "styled-components": "^4.4.1",
     "ts-loader": "^8.2.0",
     "type-fest": "^1.0.2",
+    "typescript-plugin-styled-components": "^1.5.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.11",
     "webpack-merge": "^5.0.7"

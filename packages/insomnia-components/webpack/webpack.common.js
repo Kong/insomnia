@@ -1,4 +1,6 @@
 const path = require('path');
+const createStyledComponentsTransformer = require('typescript-plugin-styled-components').default;
+const styledComponentsTransformer = createStyledComponentsTransformer();
 
 /** @type { import('webpack').Configuration } */
 module.exports = {
@@ -19,6 +21,7 @@ module.exports = {
         exclude: [/node_modules/],
         options: {
           configFile: 'tsconfig.build.json',
+          getCustomTransformers: () => ({ before: [styledComponentsTransformer] }),
         },
       },
     ],
