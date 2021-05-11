@@ -185,7 +185,7 @@ class Plugins extends PureComponent<Props, State> {
   renderToggleSwitch(plugin: Plugin) {
     return (
       <ToggleSwitch
-        // @ts-expect-error should this be labelClassName or switchClassName?
+        // @ts-expect-error -- TSCONVERSION should this be labelClassName or switchClassName?
         className="valign-middle"
         checked={!plugin.config.disabled}
         disabled={this.state.isRefreshingPlugins}

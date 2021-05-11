@@ -88,7 +88,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
     const totalRequests = children
       .map(child => child.totalRequests)
       .reduce((acc, totalRequests) => acc + totalRequests, 0);
-    // @ts-expect-error missing property
+    // @ts-expect-error -- TSCONVERSION missing property
     const rootFolder: RequestGroup = Object.assign({}, models.requestGroup.init(), {
       _id: 'all',
       type: models.requestGroup.type,

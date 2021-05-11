@@ -353,7 +353,7 @@ class RequestPane extends PureComponent<Props> {
             {request.description ? (
               <div>
                 <div className="pull-right pad bg-default">
-                  {/* @ts-expect-error the click handler expects a boolean prop... */}
+                  {/* @ts-expect-error -- TSCONVERSION the click handler expects a boolean prop... */}
                   <button className="btn btn--clicky" onClick={this._handleEditDescription}>
                     Edit
                   </button>

@@ -50,12 +50,12 @@ export const database = {
     const promisesUpserted: Array<Promise<BaseModel>> = [];
     const promisesDeleted: Array<Promise<void>> = [];
 
-    // @ts-expect-error upsert operations are optional
+    // @ts-expect-error -- TSCONVERSION upsert operations are optional
     for (const doc of operation.upsert) {
       promisesUpserted.push(database.upsert(doc, true));
     }
 
-    // @ts-expect-error remove operations are optional
+    // @ts-expect-error -- TSCONVERSION remove operations are optional
     for (const doc of operation.remove) {
       promisesDeleted.push(database.unsafeRemove(doc, true));
     }
@@ -209,7 +209,7 @@ export const database = {
         .sort({
           modified: -1,
         })
-        // @ts-expect-error limit shouldn't be applied if it's null, or default to something that means no-limit
+        // @ts-expect-error -- TSCONVERSION limit shouldn't be applied if it's null, or default to something that means no-limit
         .limit(limit)
         .exec(async (err, rawDocs) => {
           if (err) {
@@ -524,7 +524,7 @@ export const database = {
         { _id: docWithDefaults._id },
         docWithDefaults,
         // TODO(TSCONVERSION) see comment below, upsert can happen automatically as part of the update
-        // @ts-expect-error expects 4 args but only sent 3. Need to validate what UpdateOptions should be.
+        // @ts-expect-error -- TSCONVERSION expects 4 args but only sent 3. Need to validate what UpdateOptions should be.
         err => {
           if (err) {
             return reject(err);
@@ -633,7 +633,7 @@ interface DB {
   [index: string]: NeDB;
 }
 
-// @ts-expect-error _empty doesn't match the index signature, use something other than _empty in future
+// @ts-expect-error -- TSCONVERSION _empty doesn't match the index signature, use something other than _empty in future
 const db: DB = {
   _empty: true,
 } as DB;

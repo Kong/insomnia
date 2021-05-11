@@ -30,9 +30,7 @@ class ResponseTimer extends PureComponent<Props, State> {
     const { loadStartTime } = this.props;
     const millis = Date.now() - loadStartTime - 200;
     const elapsedTime = millis / 1000;
-    this.setState({
-      elapsedTime,
-    });
+    this.setState({ elapsedTime });
   }
 
   componentDidUpdate() {
@@ -46,12 +44,11 @@ class ResponseTimer extends PureComponent<Props, State> {
     }
 
     if (this._interval !== null) {
+      // Just to be sure
       clearInterval(this._interval);
     }
 
-    // Just to be sure
     this._interval = setInterval(this._handleUpdateElapsedTime, 100);
-
     this._handleUpdateElapsedTime();
   }
 

@@ -59,9 +59,9 @@ class ResponseViewer extends Component<Props, State> {
   }
 
   refresh() {
-    // @ts-expect-error refresh only exists on a code-editor, not response-raw
+    // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw
     if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
-      // @ts-expect-error refresh only exists on a code-editor, not response-raw
+      // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw
       this._selectableView.refresh();
     }
   }

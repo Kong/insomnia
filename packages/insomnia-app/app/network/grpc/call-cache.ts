@@ -20,7 +20,7 @@ const set = (requestId: string, call: Call): void => {
 };
 
 const _tryCloseChannel = (requestId: string) => {
-  // @ts-expect-error channel not found in call
+  // @ts-expect-error -- TSCONVERSION channel not found in call
   const channel = get(requestId)?.call?.call.channel;
 
   if (channel) {

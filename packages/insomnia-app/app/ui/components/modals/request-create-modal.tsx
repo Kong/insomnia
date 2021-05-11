@@ -69,7 +69,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
       showModal(ProtoFilesModal, {
         onSave: async (protoFileId: string) => {
           const createdRequest = await models.grpcRequest.create({
-            // @ts-expect-error should not reach here at all if parentId is undefined, it shouldn't even open the modal
+            // @ts-expect-error -- TSCONVERSION should not reach here at all if parentId is undefined, it shouldn't even open the modal
             parentId,
             name: requestName,
             protoFileId,
@@ -86,7 +86,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
       });
       const finalRequest = await models.request.updateMimeType(
         request,
-        // @ts-expect-error null not accepted
+        // @ts-expect-error -- TSCONVERSION null not accepted
         this._shouldNotHaveBody() ? null : selectedContentType,
         true,
       );

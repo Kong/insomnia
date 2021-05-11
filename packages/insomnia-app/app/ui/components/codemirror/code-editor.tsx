@@ -38,7 +38,7 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   placeholder: 'Start Typing...',
   foldGutter: true,
   height: 'auto',
-  // @ts-expect-error should be autoRefresh: { delay: 2000 }
+  // @ts-expect-error -- TSCONVERSION should be autoRefresh: { delay: 2000 }
   autoRefresh: 2000,
   lineWrapping: true,
   scrollbarStyle: 'native',
@@ -167,7 +167,7 @@ class CodeEditor extends Component<Props, State> {
   componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
-      // @ts-expect-error this comes from a custom extension
+      // @ts-expect-error -- TSCONVERSION this comes from a custom extension
       this.codeMirror.closeHintDropdown();
     }
   }
@@ -352,7 +352,7 @@ class CodeEditor extends Component<Props, State> {
 
   clearSelection() {
     // Never do this if dropdown is open
-    // @ts-expect-error this comes from a custom extension
+    // @ts-expect-error -- TSCONVERSION this comes from a custom extension
     if (this.codeMirror.isHintDropdownActive()) {
       return;
     }
@@ -413,12 +413,12 @@ class CodeEditor extends Component<Props, State> {
   _restoreState() {
     const { uniquenessKey } = this.props;
 
-    // @ts-expect-error only try access if uniquenessKey is defined
+    // @ts-expect-error -- TSCONVERSION only try access if uniquenessKey is defined
     if (!editorStates.hasOwnProperty(uniquenessKey)) {
       return;
     }
 
-    // @ts-expect-error only try access if uniquenessKey is defined
+    // @ts-expect-error -- TSCONVERSION only try access if uniquenessKey is defined
     const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
     // @ts-expect-error -- TSCONVERSION
     this.codeMirror.scrollTo(scroll.left, scroll.top);
@@ -541,7 +541,7 @@ class CodeEditor extends Component<Props, State> {
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        // @ts-expect-error this comes from a custom extension
+        // @ts-expect-error -- TSCONVERSION this comes from a custom extension
         this.codeMirror.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
@@ -551,7 +551,7 @@ class CodeEditor extends Component<Props, State> {
 
       // Make URLs clickable
       if (this.props.onClickLink) {
-        // @ts-expect-error this comes from a custom extension
+        // @ts-expect-error -- TSCONVERSION this comes from a custom extension
         this.codeMirror.makeLinksClickable(this.props.onClickLink);
       }
 
@@ -810,7 +810,7 @@ class CodeEditor extends Component<Props, State> {
             }
 
             for (const option of firstArg.options || []) {
-              // @ts-expect-error option.name doesn't exist
+              // @ts-expect-error -- TSCONVERSION option.name doesn't exist
               const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
               const newDef = clone(tagDef);
               newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;

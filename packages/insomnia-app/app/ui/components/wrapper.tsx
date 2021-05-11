@@ -587,7 +587,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
         <GitSyncDropdown
           className="margin-left"
           workspace={activeWorkspace}
-          // @ts-expect-error this prop is unused
+          // @ts-expect-error -- TSCONVERSION this prop is unused
           dropdownButtonClassName="btn--clicky-small btn-sync btn-utility"
           gitRepository={activeGitRepository}
           vcs={gitVCS}

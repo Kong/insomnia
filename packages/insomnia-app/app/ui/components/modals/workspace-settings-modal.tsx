@@ -307,7 +307,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
               <label>
                 Name
                 <DebouncedInput
-                  // @ts-expect-error props are spread into an input element
+                  // @ts-expect-error -- TSCONVERSION props are spread into an input element
                   type="text"
                   delay={500}
                   placeholder="Awesome API"
@@ -475,7 +475,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                     </HelpTooltip>
                     <input
                       type="checkbox"
-                      // @ts-expect-error boolean not valid
+                      // @ts-expect-error -- TSCONVERSION boolean not valid
                       value={isPrivate}
                       onChange={this._handleCreateIsPrivateChange}
                     />

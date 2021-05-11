@@ -25,7 +25,7 @@ const _createClient = (
 
   const credentials = enableTls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
   console.log(`[gRPC] connecting to url=${url} ${enableTls ? 'with' : 'without'} TLS`);
-  // @ts-expect-error second argument should be provided, send an empty string? Needs testing
+  // @ts-expect-error -- TSCONVERSION second argument should be provided, send an empty string? Needs testing
   const Client = grpc.makeGenericClientConstructor({});
   return new Client(url, credentials);
 };
@@ -201,12 +201,12 @@ export const sendMessage = (
   // this must happen in the next tick otherwise the stream does not flush correctly
   // Try removing it and using a bidi RPC and notice messages don't send consistently
   process.nextTick(() => {
-    // @ts-expect-error only write if the call is ClientWritableStream | ClientDuplexStream
+    // @ts-expect-error -- TSCONVERSION only write if the call is ClientWritableStream | ClientDuplexStream
     callCache.get(requestId)?.write(messageBody, _streamWriteCallback);
   });
 };
 
-// @ts-expect-error only end if the call is ClientWritableStream | ClientDuplexStream
+// @ts-expect-error -- TSCONVERSION only end if the call is ClientWritableStream | ClientDuplexStream
 export const commit = (requestId: string) => callCache.get(requestId)?.end();
 export const cancel = (requestId: string) => callCache.get(requestId)?.cancel();
 export const cancelMultiple = (requestIds: Array<string>) => requestIds.forEach(cancel);

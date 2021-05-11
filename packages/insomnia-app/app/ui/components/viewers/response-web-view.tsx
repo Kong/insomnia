@@ -31,7 +31,7 @@ class ResponseWebView extends PureComponent<Props> {
     this._webview.removeEventListener('dom-ready', this._handleDOMReady);
 
     contextMenu({
-      // @ts-expect-error type mismatch
+      // @ts-expect-error -- TSCONVERSION type mismatch
       window: this._webview,
     });
 
@@ -47,7 +47,7 @@ class ResponseWebView extends PureComponent<Props> {
 
     const { body, contentType, url } = this.props;
     const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
-    // @ts-expect-error type mismatch
+    // @ts-expect-error -- TSCONVERSION type mismatch
     webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
     // NOTE: We *should* be setting the base URL by specifying the baseURLForDataURL
     // option, but there is a bug in baseURLForDataURL since Electron 6 (still exists
@@ -63,9 +63,9 @@ class ResponseWebView extends PureComponent<Props> {
     // });
     // This is kind of hacky but electron-context-menu fails to save images if
     // this isn't here.
-    // @ts-expect-error type mismatch
+    // @ts-expect-error -- TSCONVERSION type mismatch
     webview.webContents = webview;
-    // @ts-expect-error type mismatch
+    // @ts-expect-error -- TSCONVERSION type mismatch
     webview.webContents.session = new EventEmitter();
   }
 

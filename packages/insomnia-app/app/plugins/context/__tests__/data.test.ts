@@ -40,7 +40,7 @@ describe('app.import.*', () => {
   });
 
   it('uri', async () => {
-    // @ts-expect-error mocking with jest function
+    // @ts-expect-error -- TSCONVERSION mocking with jest function
     modals.showModal = jest.fn();
     const workspace = await models.workspace.getById('wrk_1');
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
@@ -91,7 +91,7 @@ describe('app.import.*', () => {
   });
 
   it('importRaw', async () => {
-    // @ts-expect-error mocking with jest function
+    // @ts-expect-error -- TSCONVERSION mocking with jest function
     modals.showModal = jest.fn();
     const workspace = await models.workspace.getById('wrk_1');
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
@@ -167,7 +167,7 @@ describe('app.export.*', () => {
   });
 
   it('insomnia', async () => {
-    // @ts-expect-error mocking with jest function
+    // @ts-expect-error -- TSCONVERSION mocking with jest function
     modals.showModal = jest.fn();
     // @ts-expect-error -- TSCONVERSION genuine, plugin.init doesn't take any arguments
     const { data } = plugin.init(PLUGIN);
@@ -219,7 +219,7 @@ describe('app.export.*', () => {
   });
 
   it('har', async () => {
-    // @ts-expect-error mocking with jest function
+    // @ts-expect-error -- TSCONVERSION mocking with jest function
     modals.showModal = jest.fn();
     // @ts-expect-error -- TSCONVERSION genuine, plugin.init doesn't take any arguments
     const { data } = plugin.init(PLUGIN);

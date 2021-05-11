@@ -355,7 +355,7 @@ class App extends PureComponent<Props, State> {
       [
         hotKeyRefs.REQUEST_TOGGLE_PIN,
         async () => {
-          // @ts-expect-error apparently entities doesn't exist on props
+          // @ts-expect-error -- TSCONVERSION apparently entities doesn't exist on props
           const { activeRequest, entities } = this.props;
 
           if (!activeRequest) {
@@ -439,7 +439,7 @@ class App extends PureComponent<Props, State> {
 
   async _recalculateMetaSortKey(docs: Array<RequestGroup | Request | GrpcRequest>) {
     function __updateDoc(doc, metaSortKey) {
-      // @ts-expect-error the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
+      // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
       // Which all have the .update method. How do we better filter types?
       return models.getModel(doc.type)?.update(doc, {
         metaSortKey,
@@ -518,15 +518,15 @@ class App extends PureComponent<Props, State> {
     const workspace = this.props.workspaces.find(w => w._id === workspaceId);
     const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
     showPrompt({
-      // @ts-expect-error workspace can be null
+      // @ts-expect-error -- TSCONVERSION workspace can be null
       title: `Duplicate ${getWorkspaceLabel(workspace)}`,
-      // @ts-expect-error workspace can be null
+      // @ts-expect-error -- TSCONVERSION workspace can be null
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
       onComplete: async name => {
-        // @ts-expect-error workspace can be null
+        // @ts-expect-error -- TSCONVERSION workspace can be null
         const newWorkspace = await workspaceOperations.duplicate(workspace, name);
         await this.props.handleSetActiveWorkspace(newWorkspace._id);
         callback();
@@ -546,7 +546,7 @@ class App extends PureComponent<Props, State> {
       models.requestGroup.type,
       models.workspace.type,
     ]);
-    // @ts-expect-error null vs undefined :(
+    // @ts-expect-error -- TSCONVERSION null vs undefined :(
     return render.getRenderContext(activeRequest, environmentId, ancestors);
   }
 
@@ -568,23 +568,23 @@ class App extends PureComponent<Props, State> {
    * @private
    */
   async _handleRenderText<T>(obj: T, contextCacheKey = null) {
-    // @ts-expect-error contextCacheKey being null used as object index
+    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
-      // @ts-expect-error contextCacheKey being null used as object index
+      // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
       this._getRenderContextPromiseCache[contextCacheKey] = this._fetchRenderContext();
     }
 
     // Set timeout to delete the key eventually
-    // @ts-expect-error contextCacheKey being null used as object index
+    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
     setTimeout(() => delete this._getRenderContextPromiseCache[contextCacheKey], 5000);
-    // @ts-expect-error contextCacheKey being null used as object index
+    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
     const context = await this._getRenderContextPromiseCache[contextCacheKey];
     return render.render(obj, context);
   }
 
   _handleGenerateCodeForActiveRequest() {
-    // @ts-expect-error should skip this if active request is grpc request
+    // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
     App._handleGenerateCode(this.props.activeRequest);
   }
 
@@ -727,7 +727,7 @@ class App extends PureComponent<Props, State> {
     }
     this._responseFilterHistorySaveTimeout = setTimeout(async () => {
       const meta = await models.requestMeta.getByParentId(requestId);
-      // @ts-expect-error meta can be null
+      // @ts-expect-error -- TSCONVERSION meta can be null
       const responseFilterHistory = meta.responseFilterHistory.slice(0, 10);
 
       // Already in history?
@@ -765,7 +765,7 @@ class App extends PureComponent<Props, State> {
     await models.requestMeta.update(requestMeta, {
       savedRequestBody: saveValue,
     });
-    // @ts-expect-error should skip this if active request is grpc request
+    // @ts-expect-error -- TSCONVERSION should skip this if active request is grpc request
     const newRequest = await updateMimeType(this.props.activeRequest, mimeType, false, savedBody);
     // Force it to update, because other editor components (header editor)
     // needs to change. Need to wait a delay so the next render can finish
@@ -790,7 +790,7 @@ class App extends PureComponent<Props, State> {
     }
 
     const { filePath } = await remote.dialog.showSaveDialog(options);
-    // @ts-expect-error don't set item if filePath is undefined
+    // @ts-expect-error -- TSCONVERSION don't set item if filePath is undefined
     window.localStorage.setItem('insomnia.sendAndDownloadLocation', filePath);
     return filePath || null;
   }
@@ -821,7 +821,7 @@ class App extends PureComponent<Props, State> {
         responsePatch.statusCode >= 200 &&
         responsePatch.statusCode < 300
       ) {
-        // @ts-expect-error contentType can be undefined
+        // @ts-expect-error -- TSCONVERSION contentType can be undefined
         const extension = mime.extension(responsePatch.contentType) || 'unknown';
         const name =
           nameFromHeader || `${request.name.replace(/\s/g, '-').toLowerCase()}.${extension}`;
@@ -937,16 +937,16 @@ class App extends PureComponent<Props, State> {
     let response: Response;
 
     if (activeResponseId) {
-      // @ts-expect-error can return null if not found
+      // @ts-expect-error -- TSCONVERSION can return null if not found
       response = await models.response.getById(activeResponseId);
     } else {
       const environmentId = activeEnvironment ? activeEnvironment._id : null;
-      // @ts-expect-error can return null if not found
+      // @ts-expect-error -- TSCONVERSION can return null if not found
       response = await models.response.getLatestForRequest(requestId, environmentId);
     }
 
     const requestVersionId = response ? response.requestVersionId : 'n/a';
-    // @ts-expect-error the above line should be response?.requestVersionId ?? 'n/a'
+    // @ts-expect-error -- TSCONVERSION the above line should be response?.requestVersionId ?? 'n/a'
     const request = await models.requestVersion.restore(requestVersionId);
 
     if (request) {
@@ -1475,13 +1475,13 @@ class App extends PureComponent<Props, State> {
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    // @ts-expect-error this function doesn't even accept props but should it?
+    // @ts-expect-error -- TSCONVERSION this function doesn't even accept props but should it?
     this._ensureWorkspaceChildren(nextProps);
   }
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
-    // @ts-expect-error this function doesn't even accept props but should it?
+    // @ts-expect-error -- TSCONVERSION this function doesn't even accept props but should it?
     this._ensureWorkspaceChildren(this.props);
   }
 
@@ -1508,7 +1508,7 @@ class App extends PureComponent<Props, State> {
         <GrpcProvider>
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
-              {/* @ts-expect-error expected props are not recieved likely because of the this.props expansion */}
+              {/* @ts-expect-error -- TSCONVERSION expected props are not recieved likely because of the this.props expansion */}
               <Wrapper
                 {...this.props}
                 ref={this._setWrapperRef}
@@ -1578,7 +1578,7 @@ function mapStateToProps(state, props) {
   const { entities, global } = state;
   const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = global;
   // Entities
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const entitiesLists = selectEntitiesLists(state, props);
   const {
     // @ts-expect-error -- TSCONVERSION
@@ -1603,13 +1603,13 @@ function mapStateToProps(state, props) {
   // @ts-expect-error -- TSCONVERSION
   const settings = entitiesLists.settings[0];
   // Workspace stuff
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspace = selectActiveWorkspace(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeGitRepository = selectActiveGitRepository(state, props);
   const safeMeta = activeWorkspaceMeta || {};
   const sidebarHidden = safeMeta.sidebarHidden || false;
@@ -1618,49 +1618,49 @@ function mapStateToProps(state, props) {
   const paneWidth = safeMeta.paneWidth || DEFAULT_PANE_WIDTH;
   const paneHeight = safeMeta.paneHeight || DEFAULT_PANE_HEIGHT;
   // Request stuff
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const requestMeta = selectActiveRequestMeta(state, props) || {};
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeRequest = selectActiveRequest(state, props);
   const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
   const responseFilter = requestMeta.responseFilter || '';
   const responseFilterHistory = requestMeta.responseFilterHistory || [];
   const responseDownloadPath = requestMeta.downloadPath || null;
   // Cookie Jar
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeCookieJar = selectActiveCookieJar(state, props);
   // Response stuff
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeRequestResponses = selectActiveRequestResponses(state, props) || [];
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeResponse = selectActiveResponse(state, props) || null;
   // Environment stuff
   const activeEnvironmentId = safeMeta.activeEnvironmentId;
   const activeEnvironment = entities.environments[activeEnvironmentId];
   // OAuth2Token stuff
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const oAuth2Token = selectActiveOAuth2Token(state, props);
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const sidebarChildren = selectSidebarChildren(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const unseenWorkspaces = selectUnseenWorkspaces(state, props);
   // Sync stuff
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const syncItems = selectSyncItems(state, props);
   // Api spec stuff
   const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
   // Test stuff
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTests = selectActiveUnitTests(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTestSuite = selectActiveUnitTestSuite(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
-  // @ts-expect-error https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTestResult = selectActiveUnitTestResult(state, props);
   return Object.assign({}, state, {
     activity: activeActivity,

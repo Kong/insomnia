@@ -25,7 +25,7 @@ export const prepareGrpcRequest = async (
   const req = await models.grpcRequest.getById(requestId);
   const environment = await models.environment.getById(environmentId || 'n/a');
   const request = await getRenderedGrpcRequest(
-    // @ts-expect-error req can be null but should not try to render if it is null
+    // @ts-expect-error -- TSCONVERSION req can be null but should not try to render if it is null
     req,
     environment,
     RENDER_PURPOSE_SEND,
@@ -44,7 +44,7 @@ export const prepareGrpcMessage = async (
   const req = await models.grpcRequest.getById(requestId);
   const environment = await models.environment.getById(environmentId || 'n/a');
   const requestBody = await getRenderedGrpcRequestMessage(
-    // @ts-expect-error req can be null but should not try to render if it is null
+    // @ts-expect-error -- TSCONVERSION req can be null but should not try to render if it is null
     req,
     environment,
     RENDER_PURPOSE_SEND,
@@ -52,7 +52,7 @@ export const prepareGrpcMessage = async (
   );
   return {
     body: requestBody,
-    // @ts-expect-error req can be null
+    // @ts-expect-error -- TSCONVERSION req can be null
     requestId: req._id,
   };
 };

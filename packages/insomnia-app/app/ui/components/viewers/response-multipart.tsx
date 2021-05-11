@@ -157,7 +157,7 @@ class ResponseMultipart extends PureComponent<Props, State> {
 
     // Save the file
     try {
-      // @ts-expect-error if filePath is undefined, don't try to write anything
+      // @ts-expect-error -- TSCONVERSION if filePath is undefined, don't try to write anything
       await fs.promises.writeFile(filePath, part.value);
     } catch (err) {
       console.warn('Failed to save multipart to file', err);

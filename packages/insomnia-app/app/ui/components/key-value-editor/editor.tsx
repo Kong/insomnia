@@ -54,7 +54,7 @@ interface State {
 class Editor extends PureComponent<Props, State> {
   _focusedPairId: string | null = null;
   _focusedField: string | null = NAME;
-  // @ts-expect-error being imported as a value but should be usable as a type
+  // @ts-expect-error -- TSCONVERSION being imported as a value but should be usable as a type
   private _rows: Array<KeyValueEditorRow> = [];
   _triggerTimeout: NodeJS.Timeout | null = null;
 
@@ -76,7 +76,7 @@ class Editor extends PureComponent<Props, State> {
     };
   }
 
-  // @ts-expect-error being imported as a value but should be usable as a type
+  // @ts-expect-error -- TSCONVERSION being imported as a value but should be usable as a type
   private _setRowRef(n?: KeyValueEditorRow) {
     // NOTE: We're not handling unmounting (may lead to a bug)
     if (n) {
@@ -510,7 +510,7 @@ class Editor extends PureComponent<Props, State> {
               onFocusDescription={this._handleAddFromDescription}
               allowMultiline={allowMultiline}
               allowFile={allowFile}
-              // @ts-expect-error missing defaults
+              // @ts-expect-error -- TSCONVERSION missing defaults
               pair={{
                 name: '',
                 value: '',

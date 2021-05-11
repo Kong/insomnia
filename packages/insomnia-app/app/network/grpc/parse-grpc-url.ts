@@ -11,14 +11,14 @@ const parseGrpcUrl = (
   switch (protocol) {
     case 'grpcs:':
       return {
-        // @ts-expect-error host can be undefined
+        // @ts-expect-error -- TSCONVERSION host can be undefined
         url: host,
         enableTls: true,
       };
 
     case 'grpc:':
       return {
-        // @ts-expect-error host can be undefined
+        // @ts-expect-error -- TSCONVERSION host can be undefined
         url: host,
         enableTls: false,
       };

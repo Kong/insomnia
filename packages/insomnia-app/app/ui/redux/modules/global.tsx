@@ -755,7 +755,7 @@ export function initActiveWorkspace() {
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
     const item = window.localStorage.getItem(key);
-    // @ts-expect-error don't parse item if it's null
+    // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     workspaceId = JSON.parse(item);
   } catch (e) {
     // Nothing here...
@@ -795,7 +795,7 @@ export function initActiveActivity() {
     try {
       const key = `${LOCALSTORAGE_PREFIX}::activity`;
       const item = window.localStorage.getItem(key);
-      // @ts-expect-error don't parse item if it's null
+      // @ts-expect-error -- TSCONVERSION don't parse item if it's null
       activeActivity = JSON.parse(item);
     } catch (e) {
       // Nothing here...

@@ -294,7 +294,7 @@ function getTimelineFromPath(timelinePath: string) {
 
 async function migrateBodyToFileSystem(doc: Response) {
   if (doc.hasOwnProperty('body') && doc._id && !doc.bodyPath) {
-    // @ts-expect-error previously doc.body and doc.encoding did exist but are now removed, and if they exist we want to migrate away from them
+    // @ts-expect-error -- TSCONVERSION previously doc.body and doc.encoding did exist but are now removed, and if they exist we want to migrate away from them
     const bodyBuffer = Buffer.from(doc.body, doc.encoding || 'utf8');
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);
@@ -332,7 +332,7 @@ async function migrateTimelineToFileSystem(doc: Response) {
   if (doc.hasOwnProperty('timeline') && doc._id && !doc.timelinePath) {
     const dir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(dir);
-    // @ts-expect-error previously doc.timeline did exist but is now removed, and if it exists we want to migrate away from it
+    // @ts-expect-error -- TSCONVERSION previously doc.timeline did exist but is now removed, and if it exists we want to migrate away from it
     const timelineStr = JSON.stringify(doc.timeline, null, '\t');
     const fsPath = doc.bodyPath + '.timeline';
 

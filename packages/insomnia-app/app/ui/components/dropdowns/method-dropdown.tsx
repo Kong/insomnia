@@ -29,7 +29,7 @@ class MethodDropdown extends PureComponent<Props> {
 
     try {
       const v = window.localStorage.getItem(LOCALSTORAGE_KEY);
-      // @ts-expect-error don't try parse if no item found
+      // @ts-expect-error -- TSCONVERSION don't try parse if no item found
       recentMethods = JSON.parse(v) || [];
     } catch (err) {
       recentMethods = [];

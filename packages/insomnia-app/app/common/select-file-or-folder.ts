@@ -28,7 +28,7 @@ const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<F
   const options: OpenDialogOptions = {
     title: title,
     buttonLabel: 'Select',
-    // @ts-expect-error we should update this to accept other properties types as well, which flow all the way up to plugins
+    // @ts-expect-error -- TSCONVERSION we should update this to accept other properties types as well, which flow all the way up to plugins
     properties: types.map(type => {
       if (type === 'file') {
         return 'openFile';

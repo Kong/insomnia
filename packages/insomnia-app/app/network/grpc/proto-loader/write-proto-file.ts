@@ -61,7 +61,7 @@ const writeProtoFileTree = async (
 
   // Find the root ancestor directory
   const rootAncestorProtoDirectory = ancestors.find(
-    // @ts-expect-error ancestor workspace can be undefined
+    // @ts-expect-error -- TSCONVERSION ancestor workspace can be undefined
     c => isProtoDirectory(c) && c.parentId === ancestorWorkspace._id,
   );
 

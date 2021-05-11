@@ -82,7 +82,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     // Filter the list items that are filterable (have data-filter-index property)
     const filterItems: Array<number> = [];
 
-    // @ts-expect-error convert to array or use querySelectorAll().forEach
+    // @ts-expect-error -- TSCONVERSION convert to array or use querySelectorAll().forEach
     for (const listItem of this._dropdownList.querySelectorAll('li')) {
       if (!listItem.hasAttribute('data-filter-index')) {
         continue;
@@ -114,7 +114,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
       const items = filterItems || [];
 
       if (!filterItems) {
-        // @ts-expect-error convert to array or use querySelectorAll().forEach
+        // @ts-expect-error -- TSCONVERSION convert to array or use querySelectorAll().forEach
         for (const li of this._dropdownList.querySelectorAll('li')) {
           if (li.hasAttribute('data-filter-index')) {
             const filterIndex = li.getAttribute('data-filter-index');
@@ -164,7 +164,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     const dropdownList = this._dropdownList;
 
     // Compute the size of all the menus
-    // @ts-expect-error should exit if node is not defined
+    // @ts-expect-error -- TSCONVERSION should exit if node is not defined
     let dropdownBtnRect = this._node.getBoundingClientRect();
 
     const bodyRect = document.body.getBoundingClientRect();
@@ -172,7 +172,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     const { forcedPosition } = this.state;
 
     if (forcedPosition) {
-      // @ts-expect-error missing properties
+      // @ts-expect-error -- TSCONVERSION missing properties
       dropdownBtnRect = {
         left: forcedPosition.x,
         right: bodyRect.width - forcedPosition.x,
@@ -299,7 +299,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
   show(filterVisible = false, forcedPosition: { x: number; y: number } | null = null) {
     const bodyHeight = document.body.getBoundingClientRect().height;
 
-    // @ts-expect-error _node can be undefined
+    // @ts-expect-error -- TSCONVERSION _node can be undefined
     const dropdownTop = this._node.getBoundingClientRect().top;
 
     const dropUp = dropdownTop > bodyHeight - 200;
@@ -354,7 +354,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
-      // @ts-expect-error this should cater for all types that ReactNode can be
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
       if (child.type.name !== DropdownItem.name) {
         return true;
       }
@@ -366,10 +366,10 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];
 
-      // @ts-expect-error this should cater for all types that ReactNode can be
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
       if (child.type.name === DropdownButton.name) {
         dropdownButtons.push(child);
-      // @ts-expect-error this should cater for all types that ReactNode can be
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
       } else if (child.type.name === DropdownItem.name) {
         const active = i === filterActiveIndex;
         const hide = !visibleChildren.includes(child);
@@ -384,13 +384,13 @@ class Dropdown extends PureComponent<DropdownProps, State> {
             {child}
           </li>,
         );
-      // @ts-expect-error this should cater for all types that ReactNode can be
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
       } else if (child.type.name === DropdownDivider.name) {
         const currentIndex = visibleChildren.indexOf(child);
         const nextChild = visibleChildren[currentIndex + 1];
 
         // Only show the divider if the next child is a DropdownItem
-        // @ts-expect-error this should cater for all types that ReactNode can be
+        // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
         if (nextChild && nextChild.type.name === DropdownItem.name) {
           dropdownItems.push(<li key={i}>{child}</li>);
         }

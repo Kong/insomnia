@@ -128,7 +128,7 @@ class WrapperDebug extends PureComponent<Props> {
             environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
             hotKeyRegistry={settings.hotKeyRegistry}
           />
-          {/* @ts-expect-error onClick event doesn't matter */}
+          {/* @ts-expect-error -- TSCONVERSION onClick event doesn't matter */}
           <button className="btn btn--super-compact" onClick={handleShowCookiesModal}>
             <div className="sidebar__menu__thing">
               <span>Cookies</span>
@@ -160,7 +160,7 @@ class WrapperDebug extends PureComponent<Props> {
           handleCopyAsCurl={handleCopyAsCurl}
           handleRender={handleRender}
           moveDoc={handleMoveDoc}
-          // @ts-expect-error this prop isn't sent
+          // @ts-expect-error -- TSCONVERSION this prop isn't sent
           hidden={sidebarHidden}
           width={sidebarWidth}
           workspace={activeWorkspace}

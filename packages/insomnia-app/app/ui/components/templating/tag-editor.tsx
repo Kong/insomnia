@@ -277,7 +277,7 @@ class TagEditor extends PureComponent<Props, State> {
     if (e.currentTarget.type === 'number') {
       return this._updateArg(parseFloat(e.currentTarget.value), argIndex);
     } else if (e.currentTarget.type === 'checkbox') {
-      // @ts-expect-error .checked doesn't exist on HTMLSelectElement
+      // @ts-expect-error -- TSCONVERSION .checked doesn't exist on HTMLSelectElement
       return this._updateArg(e.currentTarget.checked, argIndex);
     } else {
       return this._updateArg(e.currentTarget.value, argIndex);
@@ -308,7 +308,7 @@ class TagEditor extends PureComponent<Props, State> {
     const activeTemplateTag = templateTags.find(({ templateTag }) => {
       return templateTag.name === this.state.activeTagData?.name;
     });
-    // @ts-expect-error activeTemplateTag can be undefined
+    // @ts-expect-error -- TSCONVERSION activeTemplateTag can be undefined
     const helperContext: pluginContexts.PluginStore = { ...pluginContexts.store.init(activeTemplateTag.plugin) };
     await action.run(helperContext);
     return this._handleRefresh();
@@ -489,7 +489,7 @@ class TagEditor extends PureComponent<Props, State> {
           }
 
           return (
-            // @ts-expect-error boolean not accepted by option
+            // @ts-expect-error -- TSCONVERSION boolean not accepted by option
             <option key={option.value.toString()} value={option.value}>
               {label}
             </option>

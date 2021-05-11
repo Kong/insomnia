@@ -54,9 +54,9 @@ class VariableEditor extends PureComponent<Props, State> {
   _resize() {
     setTimeout(() => {
       const element = this.textAreaRef.current;
-      // @ts-expect-error null coalesce
+      // @ts-expect-error -- TSCONVERSION null coalesce
       element.style.cssText = 'height:auto';
-      // @ts-expect-error null coalesce
+      // @ts-expect-error -- TSCONVERSION null coalesce
       element.style.cssText = `height:${element.scrollHeight}px;overflow:hidden`;
     }, 200);
   }

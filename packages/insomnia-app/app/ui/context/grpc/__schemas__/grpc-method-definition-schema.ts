@@ -6,7 +6,7 @@ export const grpcMethodDefinitionSchema: Schema<GrpcMethodDefinition> = {
   originalName: () => 'method',
   responseStream: () => false,
   requestStream: () => true,
-  // @ts-expect-error unexpected return type
+  // @ts-expect-error -- TSCONVERSION unexpected return type
   requestSerialize: () => () => {}, // not using jest.fn to avoid the overhead
   responseDeserialize: () => () => {}, // not using jest.fn to avoid the overhead
 };

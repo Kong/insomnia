@@ -93,7 +93,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     let automaticFetch;
 
     try {
-      // @ts-expect-error don't parse if the read item is not defined
+      // @ts-expect-error -- TSCONVERSION don't parse if the read item is not defined
       automaticFetch = JSON.parse(window.localStorage.getItem('graphql.automaticFetch'));
     } catch (err) {
       automaticFetch = true;
@@ -248,7 +248,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
   _handleQueryEditorInit(codeMirror: EditorFromTextArea) {
     this._queryEditor = codeMirror;
-    // @ts-expect-error window.cm doesn't exist
+    // @ts-expect-error -- TSCONVERSION window.cm doesn't exist
     window.cm = this._queryEditor;
     const { query, variables, operationName } = this.state.body;
 
@@ -380,7 +380,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     this.setState({
       automaticFetch,
     });
-    // @ts-expect-error convert boolean to string when setting
+    // @ts-expect-error -- TSCONVERSION convert boolean to string when setting
     window.localStorage.setItem('graphql.automaticFetch', automaticFetch);
   }
 

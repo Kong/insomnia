@@ -318,7 +318,7 @@ export function createWindow() {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
-        // @ts-expect-error TSCONVERSION `Accelerator` type from electron is needed here as a cas but is not exported as of the 9.3.5 types
+        // @ts-expect-error -- TSCONVERSION TSCONVERSION `Accelerator` type from electron is needed here as a cast but is not exported as of the 9.3.5 types
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
           shell.openExternal(docsBase);

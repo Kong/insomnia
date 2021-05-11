@@ -30,7 +30,7 @@ const useSelectedMethod = (
 
     const selectedMethod = methods.find(c => c.path === protoMethodName);
     const methodType = selectedMethod && getMethodType(selectedMethod);
-    // @ts-expect-error undefined as index
+    // @ts-expect-error -- TSCONVERSION undefined as index
     const methodTypeLabel = GrpcMethodTypeName[methodType];
     const enableClientStream = canClientStream(methodType);
     setSelection({

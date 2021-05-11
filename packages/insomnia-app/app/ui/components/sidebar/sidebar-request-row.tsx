@@ -84,7 +84,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     const patch = {
       name,
     };
-    // @ts-expect-error skip this if request is undefined
+    // @ts-expect-error -- TSCONVERSION skip this if request is undefined
     await requestOperations.update(request, patch);
     this.setState({
       isEditing: false,
@@ -103,7 +103,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
       return;
     }
 
-    // @ts-expect-error skip this if request is undefined
+    // @ts-expect-error -- TSCONVERSION skip this if request is undefined
     handleActivateRequest(request._id);
   }
 
@@ -115,7 +115,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
 
   _getMethodOverrideHeaderValue() {
     const { request } = this.props;
-    // @ts-expect-error skip this if request is undefined or grpc
+    // @ts-expect-error -- TSCONVERSION skip this if request is undefined or grpc
     const header = getMethodOverrideHeader(request.headers);
 
     if (header) {
@@ -123,7 +123,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     }
 
     // If no override, use GraphQL as override if it's a gql request
-    // @ts-expect-error skip this if request is undefined or grpc
+    // @ts-expect-error -- TSCONVERSION skip this if request is undefined or grpc
     if (request.body && request.body.mimeType === CONTENT_TYPE_GRAPHQL) {
       return 'GQL';
     }
@@ -144,13 +144,13 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     let renderedUrl;
 
     try {
-      // @ts-expect-error skip this if request is undefined or grpc
+      // @ts-expect-error -- TSCONVERSION skip this if request is undefined or grpc
       renderedUrl = await props.handleRender(props.request.url);
     } catch (e) {
       // Certain things, such as invalid variable tags and Prompts
       // without titles will result in a failure to parse. Can't do
       // much else, so let's just give them the unrendered URL
-      // @ts-expect-error skip this if request is undefined
+      // @ts-expect-error -- TSCONVERSION skip this if request is undefined
       renderedUrl = props.request.url;
     }
 

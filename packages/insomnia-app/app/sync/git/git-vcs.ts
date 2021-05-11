@@ -87,7 +87,7 @@ interface BaseOpts {
 }
 
 export class GitVCS {
-  // @ts-expect-error not initialized with required properties
+  // @ts-expect-error -- TSCONVERSION not initialized with required properties
   _baseOpts: BaseOpts = gitCallbacks();
 
   initialized: boolean;
@@ -272,10 +272,10 @@ export class GitVCS {
       force,
     });
 
-    // @ts-expect-error git errors are not handled correctly
+    // @ts-expect-error -- TSCONVERSION git errors are not handled correctly
     if (response.errors?.length) {
       console.log('[git] Push rejected', response);
-      // @ts-expect-error git errors are not handled correctly
+      // @ts-expect-error -- TSCONVERSION git errors are not handled correctly
       const errorsString = JSON.stringify(response.errors);
       throw new Error(
         `Push rejected with errors: ${errorsString}.\n\nGo to View > Toggle DevTools > Console for more information.`,
@@ -336,7 +336,7 @@ export class GitVCS {
 
   async branch(branch: string, checkout = false) {
     trackEvent('Git', 'Create Branch');
-    // @ts-expect-error remote doesn't exist as an option
+    // @ts-expect-error -- TSCONVERSION remote doesn't exist as an option
     await git.branch({ ...this._baseOpts, ref: branch, checkout, remote: 'origin' });
   }
 

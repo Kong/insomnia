@@ -53,7 +53,7 @@ class EnvironmentsDropdown extends PureComponent<Props> {
         <i
           className="fa fa-random"
           style={{
-            // @ts-expect-error don't set color if undefined
+            // @ts-expect-error -- TSCONVERSION don't set color if undefined
             color: environment.color,
           }}
         />

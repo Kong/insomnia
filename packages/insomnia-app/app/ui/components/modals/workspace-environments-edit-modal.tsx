@@ -265,7 +265,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       clearTimeout(this.colorChangeTimeout);
     }
     this.colorChangeTimeout = setTimeout(async () => {
-      // @ts-expect-error environment can be null
+      // @ts-expect-error -- TSCONVERSION environment can be null
       await this._updateEnvironment(environment, {
         color,
       });
@@ -361,7 +361,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   _handleInputColorChange(event: FormEvent<HTMLInputElement>) {
     this._handleChangeEnvironmentColor(
       this._getActiveEnvironment(),
-      // @ts-expect-error what? apparently value doesn't exist on the target
+      // @ts-expect-error -- TSCONVERSION what? apparently value doesn't exist on the target
       event.target && event.target.value,
     );
   }
@@ -473,7 +473,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                     className="wide"
                     onSubmit={name =>
                       activeEnvironment &&
-                      // @ts-expect-error only set name if defined
+                      // @ts-expect-error -- TSCONVERSION only set name if defined
                       this._handleChangeEnvironmentName(activeEnvironment, name)
                     }
                     value={activeEnvironment ? activeEnvironment.name : ''}
@@ -508,7 +508,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                       <i
                         className="fa fa-circle"
                         style={{
-                          // @ts-expect-error don't set color if undefined
+                          // @ts-expect-error -- TSCONVERSION don't set color if undefined
                           color: activeEnvironment.color,
                         }}
                       />

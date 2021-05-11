@@ -30,7 +30,7 @@ export function routableFSClient(
     return result;
   };
 
-  // @ts-expect-error declare and initialize together to avoid an error
+  // @ts-expect-error -- TSCONVERSION declare and initialize together to avoid an error
   const methods: git.CallbackFsClient = {};
   methods.readFile = execMethod.bind(methods, 'readFile');
   methods.writeFile = execMethod.bind(methods, 'writeFile');

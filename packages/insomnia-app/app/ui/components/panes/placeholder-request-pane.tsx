@@ -59,7 +59,7 @@ const PlaceholderRequestPane: FunctionComponent<Props> = ({
         </table>
 
         <div className="text-center pane__body--placeholder__cta">
-          {/* @ts-expect-error event not used */}
+          {/* @ts-expect-error -- TSCONVERSION event not used */}
           <button className="btn inline-block btn--clicky" onClick={handleImportFile}>
             Import from File
           </button>
