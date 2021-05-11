@@ -40,9 +40,12 @@ global.window = global.window || undefined;
 app.on('ready', async () => {
   // Enable react dev tools if development
   if (isDevelopment()) {
-    installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
-      .then((name) => console.log(`Added Extension:  ${name}`))
-      .catch((err) => console.log('An error occurred: ', err));
+    try {
+      const names = await installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS]);
+      console.log(`[electron-extensions] Added Extension:  ${names}`);
+    } catch (err) {
+      console.log('[electron-extensions] An error occurred: ', err);
+    }
   }
 
   // Init some important things first
