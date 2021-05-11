@@ -45,7 +45,7 @@ describe('Application launch', function() {
   });
 
   it.each([true, false])(
-    'imports swagger 2 and sends request: new workspace=%s ',
+    'imports swagger 2 and sends request - new workspace=%s ',
     async newWorkspace => {
       await client.correctlyLaunched(app);
       await onboarding.skipOnboardingFlow(app);
