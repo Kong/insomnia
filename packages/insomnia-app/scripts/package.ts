@@ -1,6 +1,6 @@
 import appConfig from '../config/config.json';
 import electronBuilderConfig from '../config/electronbuilder.json';
-import electronBuilder from 'electron-builder';
+import * as electronBuilder from 'electron-builder';
 import path from 'path';
 import rimraf from 'rimraf';
 import { start as build } from './build';

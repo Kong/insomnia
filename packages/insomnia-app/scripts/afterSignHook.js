@@ -20,13 +20,6 @@ module.exports = async function(params) {
     throw new Error(`Cannot find application at: ${appName}`);
   }
 
-  const args = {
-    appBundleId: appId,
-    appPath: appPath,
-    appleId: process.env.APPLE_ID,
-    appleIdPassword: process.env.APPLE_ID_PASSWORD,
-  };
-
   if (!process.env.APPLE_ID) {
     console.log('[aftersign] APPLE_ID env variable not set. Skipping notarization');
     return;
@@ -36,6 +29,13 @@ module.exports = async function(params) {
     console.log('[aftersign] APPLE_ID env variable not set. Skipping notarization');
     return;
   }
+
+  const args = {
+    appBundleId: appId,
+    appPath: appPath,
+    appleId: process.env.APPLE_ID,
+    appleIdPassword: process.env.APPLE_ID_PASSWORD,
+  };
 
   console.log(`[afterSign] Notarizing ${appName} (${appId})`);
 
