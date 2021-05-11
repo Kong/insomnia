@@ -23,7 +23,6 @@
     "**/__snapshots__",
     "**/__tests__",
     "**/main.min.js",
-    ".babelrc.js",
     "__jest__",
     "assets",
     "bin",

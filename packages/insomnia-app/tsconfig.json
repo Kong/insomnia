@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.build.json",
   "include": [
-    ".babelrc.js",
     ".eslintrc.js",
     "app",
     "config",

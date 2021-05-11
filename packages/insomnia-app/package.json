@@ -155,8 +155,6 @@
     "zprint-clj": "0.2.0"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.4.0",
-    "@babel/plugin-proposal-optional-chaining": "^7.9.0",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
