@@ -13,6 +13,7 @@
   ],
   "exclude": [
     "**/*.test.ts",
+    "bin",
     "dist"
   ]
 }

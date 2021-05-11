@@ -12,6 +12,7 @@
 
   ],
   "exclude": [
+    "bin",
     "dist"
   ]
 }
