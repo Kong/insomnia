@@ -213,6 +213,7 @@
     "electron": "9.3.5",
     "electron-builder": "^22.5.1",
     "electron-builder-squirrel-windows": "^22.5.1",
+    "electron-devtools-installer": "^3.2.0",
     "electron-notarize": "^0.3.0",
     "fast-glob": "^3.1.0",
     "file-loader": "^3.0.1",

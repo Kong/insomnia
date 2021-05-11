@@ -13,6 +13,7 @@ import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import log, { initializeLogging } from './common/log';
+import installExtension, { REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -37,6 +38,13 @@ if (!isDevelopment()) {
 global.window = global.window || undefined;
 // When the app is first launched
 app.on('ready', async () => {
+  // Enable react dev tools if development
+  if (isDevelopment()) {
+    installExtension([REDUX_DEVTOOLS, REACT_DEVELOPER_TOOLS])
+      .then((name) => console.log(`Added Extension:  ${name}`))
+      .catch((err) => console.log('An error occurred: ', err));
+  }
+
   // Init some important things first
   await database.init(models.types());
   await _createModelInstances();
