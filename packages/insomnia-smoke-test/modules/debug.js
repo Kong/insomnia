@@ -170,6 +170,7 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   const usernameEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'username' },
   });
+  await usernameEditor.waitForExist();
   await usernameEditor.click();
 
   // Wait for the username editor field to update
@@ -183,6 +184,7 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   const passwordEditor = await app.client.react$('OneLineEditor', {
     props: { id: 'password' },
   });
+  await passwordEditor.waitForExist();
   await passwordEditor.click();
 
   // Allow username changes to persist and wait for
