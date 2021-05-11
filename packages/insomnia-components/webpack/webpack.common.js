@@ -13,6 +13,11 @@ module.exports = {
     library: 'insomniaComponents',
     libraryTarget: 'commonjs2',
   },
+  optimization: {
+    // Disable minification for now, otherwise smoke tests fail
+    // Note, minification is disabled in insomnia-app as well
+    minimize: false,
+  },
   module: {
     rules: [
       {
