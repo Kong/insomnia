@@ -1,11 +1,13 @@
 import type { GraphQLSchema, GraphQLType } from 'graphql';
 import React, { Fragment, PureComponent } from 'react';
-
+import GraphQLExplorerSearchResults from './graph-ql-explorer-search-results';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 
 interface Props {
   onNavigateType: (type: GraphQLType) => void;
+  onNavigateField: (field: Record<string, any>) => void;
   schema: GraphQLSchema;
+  filter: string;
 }
 
 class GraphQLExplorerSchema extends PureComponent<Props> {
@@ -58,15 +60,27 @@ class GraphQLExplorerSchema extends PureComponent<Props> {
   }
 
   render() {
+    const { filter, schema, onNavigateType, onNavigateField } = this.props;
     return (
       <div className="graphql-explorer__schema">
-        <p>A GraphQL schema provides a root type for each kind of operation.</p>
-        <h2 className="graphql-explorer__subheading">Root Types</h2>
-        <ul className="graphql-explorer__defs">
-          <li>{this.renderQueryType()}</li>
-          <li>{this.renderMutationType()}</li>
-          <li>{this.renderSubscriptionType()}</li>
-        </ul>
+        {filter ? (
+          <GraphQLExplorerSearchResults
+            schema={schema}
+            filter={filter}
+            onNavigateType={onNavigateType}
+            onNavigateField={onNavigateField}
+          />
+        ) : (
+          <>
+            <p>A GraphQL schema provides a root type for each kind of operation.</p>
+            <h2 className="graphql-explorer__subheading">Root Types</h2>
+            <ul className="graphql-explorer__defs">
+              <li>{this.renderQueryType()}</li>
+              <li>{this.renderMutationType()}</li>
+              <li>{this.renderSubscriptionType()}</li>
+            </ul>
+          </>
+        )}
       </div>
     );
   }

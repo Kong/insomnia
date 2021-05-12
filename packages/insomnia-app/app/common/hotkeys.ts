@@ -129,6 +129,10 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
   ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
+  GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey(
+    'graphql_explorer_focus_filter',
+    'Focus GraphQL Explorer Filter',
+  ),
   // Designer-specific
   SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
   SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
@@ -273,6 +277,10 @@ const defaultRegistry: HotKeyRegistry = {
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
   ),
+  [hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.f.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.f.keyCode),
+  ),
   [hotKeyRefs.SHOW_SPEC_EDITOR.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.s.keyCode),
     keyComb(true, false, true, false, keyboardKeys.s.keyCode),
@@ -353,10 +361,7 @@ export function getPlatformKeyCombinations(bindings: KeyBindings): KeyCombinatio
  * @param keyComb2
  * @returns {boolean}
  */
-export function areSameKeyCombinations(
-  keyComb1: KeyCombination,
-  keyComb2: KeyCombination,
-) {
+export function areSameKeyCombinations(keyComb1: KeyCombination, keyComb2: KeyCombination) {
   return (
     keyComb1.alt === keyComb2.alt &&
     keyComb1.shift === keyComb2.shift &&
@@ -449,10 +454,7 @@ export function isModifierKeyCode(keyCode: number) {
  * @returns the constructed string, if keyCode is null and the characters are joint with "+",
  * it will have a dangling "+" as the last character, e.g., "Alt+Ctrl+".
  */
-export function constructKeyCombinationDisplay(
-  keyComb: KeyCombination,
-  mustUsePlus: boolean,
-) {
+export function constructKeyCombinationDisplay(keyComb: KeyCombination, mustUsePlus: boolean) {
   const { ctrl, alt, shift, meta, keyCode } = keyComb;
   const chars: string[] = [];
   alt && chars.push(ALT_SYM);

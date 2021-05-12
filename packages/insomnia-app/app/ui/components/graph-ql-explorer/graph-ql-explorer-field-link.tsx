@@ -7,6 +7,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 interface Props {
   onNavigate: (type: Record<string, any>) => void;
   field: GraphQLField<any, any>;
+  parentName?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -18,11 +19,14 @@ class GraphQLExplorerFieldLink extends PureComponent<Props> {
   }
 
   render() {
-    const { field } = this.props;
+    const { field, parentName } = this.props;
     return (
-      <a href="#" onClick={this._handleClick} className="success">
-        {field.name}
-      </a>
+      <>
+        {parentName && <span>{parentName}.</span>}
+        <a href="#" onClick={this._handleClick} className="success">
+          {field.name}
+        </a>
+      </>
     );
   }
 }

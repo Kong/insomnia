@@ -18,6 +18,10 @@ interface Props {
   schema: GraphQLSchema | null;
 }
 
+export interface GraphQLFieldWithParentName extends GraphQLField<any, any> {
+  parentName?: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLExplorerType extends PureComponent<Props> {
   _handleNavigateType(type: Record<string, any>) {
@@ -75,8 +79,71 @@ class GraphQLExplorerType extends PureComponent<Props> {
     );
   }
 
+  static renderFieldsList(
+    fields: Array<GraphQLFieldWithParentName>,
+    onNavigateType: (type: Record<string, any>) => void,
+    onNavigateField: (field: Record<string, any>) => void,
+  ) {
+    return (
+      <ul className="graphql-explorer__defs">
+        {fields.map(field => {
+          let argLinks: JSX.Element | null = null;
+          const { args } = field;
+
+          if (args && args.length) {
+            argLinks = (
+              <Fragment>
+                (
+                {args.map(a => (
+                  <div key={a.name} className="graphql-explorer__defs__arg">
+                    <span className="info">{a.name}</span>:{' '}
+                    <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
+                  </div>
+                ))}
+                )
+              </Fragment>
+            );
+          }
+
+          const fieldLink = (
+            <GraphQLExplorerFieldLink
+              onNavigate={onNavigateField}
+              field={field}
+              parentName={field.parentName}
+            />
+          );
+          const typeLink = (
+            <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={field.type} />
+          );
+          const isDeprecated = field.isDeprecated;
+          const description = field.description;
+          return (
+            <li key={field.name + field.parentName}>
+              {fieldLink}
+              {argLinks}: {typeLink} <GraphQLDefaultValue field={field} />
+              {isDeprecated && (
+                <Tooltip
+                  message={`The field "${field.name}" is deprecated. ${field.deprecationReason}`}
+                  position="bottom"
+                  delay={1000}
+                >
+                  <SvgIcon icon="warning" />
+                </Tooltip>
+              )}
+              {description && (
+                <div className="graphql-explorer__defs__description">
+                  <MarkdownPreview markdown={description} />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+
   renderFieldsMaybe() {
-    const { type, onNavigateType } = this.props;
+    const { type } = this.props;
 
     // @ts-expect-error -- TSCONVERSION
     if (typeof type.getFields !== 'function') {
@@ -84,62 +151,16 @@ class GraphQLExplorerType extends PureComponent<Props> {
     }
 
     // @ts-expect-error -- TSCONVERSION
-    const fields = type.getFields();
-    const fieldKeys = Object.keys(fields).sort((a, b) => a.localeCompare(b));
+    const fields: Array<GraphQLField<any, any>> = type.getFields();
+    const sortedFields = Object.values(fields).sort((a, b) => a.name.localeCompare(b.name));
     return (
       <Fragment>
         <h2 className="graphql-explorer__subheading">Fields</h2>
-        <ul className="graphql-explorer__defs">
-          {fieldKeys.map(key => {
-            const field: GraphQLField<any, any> = fields[key] as any;
-            let argLinks: JSX.Element | null = null;
-            const { args } = field;
-
-            if (args && args.length) {
-              argLinks = (
-                <Fragment>
-                  (
-                  {args.map(a => (
-                    <div key={a.name} className="graphql-explorer__defs__arg">
-                      <span className="info">{a.name}</span>:{' '}
-                      <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={a.type} />
-                    </div>
-                  ))}
-                  )
-                </Fragment>
-              );
-            }
-
-            const fieldLink = (
-              <GraphQLExplorerFieldLink onNavigate={this._handleNavigateField} field={field} />
-            );
-            const typeLink = (
-              <GraphQLExplorerTypeLink onNavigate={this._handleNavigateType} type={field.type} />
-            );
-            const isDeprecated = field.isDeprecated;
-            const description = field.description;
-            return (
-              <li key={key}>
-                {fieldLink}
-                {argLinks}: {typeLink} <GraphQLDefaultValue field={field} />
-                {isDeprecated && (
-                  <Tooltip
-                    message={`The field "${field.name}" is deprecated. ${field.deprecationReason}`}
-                    position="bottom"
-                    delay={1000}
-                  >
-                    <SvgIcon icon="warning" />
-                  </Tooltip>
-                )}
-                {description && (
-                  <div className="graphql-explorer__defs__description">
-                    <MarkdownPreview markdown={description} />
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        {GraphQLExplorerType.renderFieldsList(
+          sortedFields,
+          this._handleNavigateType,
+          this._handleNavigateField,
+        )}
       </Fragment>
     );
   }
