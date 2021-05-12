@@ -1,9 +1,11 @@
 import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
+// @ts-expect-error -- TSCONVERSION appears to be genuine
 import electronPath from '../../../insomnia-app/node_modules/electron';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
+import { Config } from '../entities';
 
 const getAppPlatform = () => process.platform;
 const isMac = () => getAppPlatform() === 'darwin';
@@ -28,21 +30,20 @@ const spectronConfig = (
   const buildPath = path.join(__dirname, '../../../insomnia-app/build');
   const packagePath = path.join(__dirname, '../../../insomnia-app/dist', packagePathSuffix);
   const dataPath = path.join(os.tmpdir(), 'insomnia-smoke-test', `${Date.now()}`);
-  const env = { INSOMNIA_DATA_PATH: dataPath };
+  const env: {
+    DESIGNER_DATA_PATH?: string;
+    INSOMNIA_DATA_PATH: string;
+  } = { INSOMNIA_DATA_PATH: dataPath };
 
   if (designerDataPath) {
     env.DESIGNER_DATA_PATH = designerDataPath;
   }
 
-  return { buildPath, packagePath, env };
+  const config: Config = { buildPath, packagePath, env };
+  return config;
 };
 
-export const launchApp = async designerDataPath => {
-  const config = spectronConfig(designerDataPath);
-  return await launch(config);
-};
-
-const getLaunchPath = config =>
+const getLaunchPath = (config: Config) =>
   isPackage()
     ? { path: config.packagePath }
     : {
@@ -50,7 +51,7 @@ const getLaunchPath = config =>
         args: [config.buildPath],
       };
 
-const launch = async config => {
+const launch = async (config?: Config) => {
   if (!config) {
     throw new Error('Spectron config could not be loaded.');
   }
@@ -84,22 +85,30 @@ const launch = async config => {
   return app;
 };
 
-export const stop = async app => {
-  await takeScreenshotOnFailure(app);
-
-  if (app && app.isRunning()) {
-    await app.stop();
-  }
+export const launchApp = async (designerDataPath?: string) => {
+  const config = spectronConfig(designerDataPath);
+  return await launch(config);
 };
 
-const takeScreenshotOnFailure = async app => {
+export const takeScreenshot = async (app: Application, name: string) => {
+  mkdirp.sync('screenshots');
+  const buffer = await app.browserWindow.capturePage();
+  // @ts-expect-error -- TSCONVERSION appears to be genuine
+  await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
+};
+
+const takeScreenshotOnFailure = async (app: Application) => {
+  // @ts-expect-error -- TSCONVERSION
   if (jasmine.currentTest.failedExpectations.length) {
+    // @ts-expect-error -- TSCONVERSION
     await takeScreenshot(app, jasmine.currentTest.fullName.replace(/ /g, '_'));
   }
 };
 
-export const takeScreenshot = async (app, name) => {
-  mkdirp.sync('screenshots');
-  const buffer = await app.browserWindow.capturePage();
-  await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
+export const stop = async (app: Application) => {
+  await takeScreenshotOnFailure(app);
+
+  if (app?.isRunning()) {
+    await app.stop();
+  }
 };

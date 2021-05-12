@@ -2,18 +2,20 @@ import { clickTabByText } from './tabs';
 import { mapAccelerator } from 'spectron-keys';
 import * as modal from './modal';
 import * as dropdown from './dropdown';
+import { Application } from 'spectron';
 
-export const openWithKeyboardShortcut = async app => {
+export const openWithKeyboardShortcut = async (app: Application) => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));
 
+  // @ts-expect-error -- TSCONVERSION
   await modal.waitUntilOpened(app, { modalName: 'SettingsModal' });
 };
 
-export const closeModal = async app => {
+export const closeModal = async (app: Application) => {
   await modal.close(app, 'SettingsModal');
 };
 
-export const goToPlugins = async app => {
+export const goToPlugins = async (app: Application) => {
   // Click on the plugins tab
   await app.client.react$('SettingsModal').then(e => clickTabByText(e, 'Plugins'));
 
@@ -21,7 +23,7 @@ export const goToPlugins = async app => {
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
 };
 
-export const importFromClipboard = async (app, newWorkspace = false) => {
+export const importFromClipboard = async (app: Application, newWorkspace = false) => {
   const importExport = await app.client.react$('ImportExport');
   await importExport.waitForDisplayed();
 
@@ -36,7 +38,7 @@ export const importFromClipboard = async (app, newWorkspace = false) => {
   }
 };
 
-export const installPlugin = async (app, pluginName) => {
+export const installPlugin = async (app: Application, pluginName: string) => {
   const plugins = await app.client.react$('SettingsModal').then(e => e.react$('Plugins'));
 
   // Find text input and install button

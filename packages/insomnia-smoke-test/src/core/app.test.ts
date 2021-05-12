@@ -8,10 +8,12 @@ import { basicAuthCreds } from '../fixtures/constants';
 import * as onboarding from '../modules/onboarding';
 import * as home from '../modules/home';
 import * as modal from '../modules/modal';
+import { Application } from 'spectron';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
-  let app = null;
+  // @ts-expect-error -- TSCONVERSION need to do the null check or find some other mechanism for non null here
+  let app: Application = null;
 
   beforeEach(async () => {
     app = await launchApp();
@@ -138,8 +140,10 @@ describe('Application launch', function() {
     // Click the "Deploy to Portal" button, installed from that plugin
     await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Portal');
 
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     // Ensure a modal opens, then close it - the rest is plugin behavior
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     await modal.close(app);
   });
 
@@ -160,6 +164,7 @@ describe('Application launch', function() {
 
     // Import from clipboard as collection
     await home.importFromClipboard(app);
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     await modal.waitUntilOpened(app, { title: 'Import As' });
     await modal.clickModalFooterByText(app, 'Request Collection');
     await home.expectTotalDocuments(app, 2);
@@ -171,12 +176,14 @@ describe('Application launch', function() {
     // Delete the collection
     await home.openDocumentMenuDropdown(collCard);
     await dropdown.clickDropdownItemByText(collCard, 'Delete');
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     await modal.waitUntilOpened(app, { title: 'Delete Collection' });
     await modal.clickModalFooterByText(app, 'Yes');
     await home.expectTotalDocuments(app, 1);
 
     // Import from clipboard as document
     await home.importFromClipboard(app);
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     await modal.waitUntilOpened(app, { title: 'Import As' });
     await modal.clickModalFooterByText(app, 'Design Document');
     await home.expectTotalDocuments(app, 2);

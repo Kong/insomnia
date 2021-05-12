@@ -1,25 +1,53 @@
 import faker from 'faker';
-import spectronKeys from 'spectron-keys';
+import { Application } from 'spectron';
+import { mapAccelerator } from 'spectron-keys';
 
-export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
+// @ts-expect-error -- TSCONVERSION
+export const expectText = async (element, text: string) => {
+  await expect(element.getText()).resolves.toBe(text);
+};
+
+// @ts-expect-error -- TSCONVERSION
+export const expectContainsText = async (element, text: string) => {
+  await expect(element.getText()).resolves.toContain(text);
+};
+
+// @ts-expect-error -- TSCONVERSION
+export const expectNotContainsText = async (element, text: string) => {
+  await expect(element.getText()).resolves.not.toContain(text);
+};
+
+export const selectAll = async (app: Application) => {
+  await app.client.keys(mapAccelerator('CommandOrControl+A'));
+};
+
+export const workspaceDropdownExists = async (app: Application, workspaceName = 'Insomnia') => {
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
 
-export const pageDisplayed = async app => {
+export const pageDisplayed = async (app: Application) => {
   await app.client.react$('WrapperDebug').then(e => e.waitForDisplayed());
 };
 
-export const clickWorkspaceDropdown = async app => {
+export const clickWorkspaceDropdown = async (app: Application) => {
   const dropdown = await app.client.react$('WorkspaceDropdown');
   await dropdown.click();
   return dropdown;
 };
 
-export const goToDashboard = async app => {
+export const goToDashboard = async (app: Application) => {
   await app.client.$('.header_left a').then(e => e.click());
 };
 
-export const createNewRequest = async (app, name) => {
+const waitUntilRequestIsActive = async (app: Application, name: string) => {
+  const request = await app.client.react$('SidebarRequestRow', {
+    props: { isActive: true, request: { name } },
+  });
+
+  await request.waitForDisplayed();
+};
+
+export const createNewRequest = async (app: Application, name: string) => {
   await app.client.$('.sidebar .dropdown .fa-plus-circle').then(e => e.click());
 
   await app.client
@@ -35,6 +63,7 @@ export const createNewRequest = async (app, name) => {
 
   const requestName = `${name}-${faker.lorem.slug()}`;
   await input.waitUntil(() => input.isFocused());
+  // @ts-expect-error -- TSCONVERSION appears to be genuine
   await input.keys(requestName);
 
   await app.client
@@ -45,15 +74,7 @@ export const createNewRequest = async (app, name) => {
   await waitUntilRequestIsActive(app, requestName);
 };
 
-const waitUntilRequestIsActive = async (app, name) => {
-  const request = await app.client.react$('SidebarRequestRow', {
-    props: { isActive: true, request: { name } },
-  });
-
-  await request.waitForDisplayed();
-};
-
-export const clickFolderByName = async (app, name) => {
+export const clickFolderByName = async (app: Application, name: string) => {
   const folder = await app.client.react$('SidebarRequestGroupRow', {
     props: { requestGroup: { name } },
   });
@@ -62,7 +83,7 @@ export const clickFolderByName = async (app, name) => {
   await folder.click();
 };
 
-export const clickRequestByName = async (app, name) => {
+export const clickRequestByName = async (app: Application, name: string) => {
   const folder = await app.client.react$('SidebarRequestRow', {
     props: { request: { name } },
   });
@@ -71,14 +92,15 @@ export const clickRequestByName = async (app, name) => {
   await folder.click();
 };
 
-export const typeInUrlBar = async (app, url) => {
+export const typeInUrlBar = async (app: Application, url: string) => {
   const urlEditor = await app.client.react$('RequestUrlBar');
   await urlEditor.waitForExist();
   await urlEditor.click();
+  // @ts-expect-error -- TSCONVERSION appears to be genuine
   await urlEditor.keys(url);
 };
 
-export const clickSendRequest = async app => {
+export const clickSendRequest = async (app: Application) => {
   await app.client
     .react$('RequestUrlBar')
     .then(e => e.$('.urlbar__send-btn'))
@@ -92,38 +114,38 @@ export const clickSendRequest = async app => {
   await spinner.waitForDisplayed({ reverse: true });
 };
 
-export const expect200 = async app => {
+export const expect200 = async (app: Application) => {
   const tag = await app.client.$('.response-pane .pane__header .tag.bg-success');
   await tag.waitForDisplayed();
   await expectText(tag, '200 OK');
 };
 
-export const expect401 = async app => {
+export const expect401 = async (app: Application) => {
   const tag = await app.client.$('.response-pane .pane__header .tag.bg-warning');
   await tag.waitForDisplayed();
   await expectText(tag, '401 Unauthorized');
 };
 
-export const getResponseViewer = async app => {
+export const getResponseViewer = async (app: Application) => {
   // app.client.react$('ResponseViewer') doesn't seem to work because ResponseViewer is not a PureComponent
   const codeEditor = await app.client.$('.response-pane .editor');
   await codeEditor.waitForDisplayed();
   return codeEditor;
 };
 
-export const getTimelineViewer = async app => {
+export const getTimelineViewer = async (app: Application) => {
   const codeEditor = await app.client.react$('ResponseTimelineViewer');
   await codeEditor.waitForDisplayed();
   return codeEditor;
 };
 
-export const getCsvViewer = async app => {
+export const getCsvViewer = async (app: Application) => {
   const csvViewer = await app.client.react$('ResponseCSVViewer');
   await csvViewer.waitForDisplayed();
   return csvViewer;
 };
 
-export const getPdfCanvas = async app => {
+export const getPdfCanvas = async (app: Application) => {
   const pdfViewer = await app.client.react$('ResponsePDFViewer');
   await pdfViewer.waitForDisplayed();
   const canvas = await pdfViewer.$('.S-PDF-ID canvas');
@@ -131,14 +153,14 @@ export const getPdfCanvas = async app => {
   return canvas;
 };
 
-export const clickRequestAuthDropdown = async app => {
+export const clickRequestAuthDropdown = async (app: Application) => {
   await app.client
     .react$('AuthDropdown')
     .then(e => e.react$('DropdownButton'))
     .then(e => e.click());
 };
 
-export const clickRequestAuthTab = async app => {
+export const clickRequestAuthTab = async (app: Application) => {
   await app.client
     .react$('RequestPane')
     .then(e => e.$('#react-tabs-2'))
@@ -147,7 +169,7 @@ export const clickRequestAuthTab = async app => {
 
 const basicAuthPause = 300;
 
-export const clickBasicAuth = async app => {
+export const clickBasicAuth = async (app: Application) => {
   await app.client
     .react$('AuthDropdown')
     .then(e => e.react$('DropdownItem', { props: { value: 'basic' } }))
@@ -157,13 +179,18 @@ export const clickBasicAuth = async app => {
   await app.client.pause(basicAuthPause);
 };
 
-export const expectNoAuthSelected = async app => {
+export const expectNoAuthSelected = async (app: Application) => {
   const wrapper = await app.client.react$('RequestPane').then(e => e.react$('AuthWrapper'));
   await wrapper.waitForDisplayed();
   await expectText(wrapper, 'Select an auth type from above');
 };
 
-export const typeBasicAuthUsernameAndPassword = async (app, username, password, clear = false) => {
+export const typeBasicAuthUsernameAndPassword = async (
+  app: Application,
+  username: string,
+  password: string,
+  clear = false,
+) => {
   const basicAuth = await app.client.react$('BasicAuth');
   await basicAuth.waitForExist();
 
@@ -179,6 +206,7 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   if (clear) {
     await selectAll(app);
   }
+  // @ts-expect-error -- TSCONVERSION appears to be genuine
   await usernameEditor.keys(username);
 
   const passwordEditor = await app.client.react$('OneLineEditor', {
@@ -194,13 +222,14 @@ export const typeBasicAuthUsernameAndPassword = async (app, username, password, 
   if (clear) {
     await selectAll(app);
   }
+  // @ts-expect-error -- TSCONVERSION appears to be genuine
   await passwordEditor.keys(password);
 
   // Allow password changes to persist
   await app.client.pause(basicAuthPause);
 };
 
-export const toggleBasicAuthEnabled = async app => {
+export const toggleBasicAuthEnabled = async (app: Application) => {
   await app.client
     .react$('BasicAuth')
     .then(e => e.$('button#enabled'))
@@ -209,7 +238,7 @@ export const toggleBasicAuthEnabled = async app => {
   await app.client.pause(basicAuthPause);
 };
 
-export const toggleBasicAuthEncoding = async app => {
+export const toggleBasicAuthEncoding = async (app: Application) => {
   await app.client
     .react$('BasicAuth')
     .then(e => e.$('button#use-iso-8859-1'))
@@ -219,19 +248,7 @@ export const toggleBasicAuthEncoding = async app => {
   await app.client.pause(basicAuthPause);
 };
 
-export const expectText = async (element, text) => {
-  await expect(element.getText()).resolves.toBe(text);
-};
-
-export const expectContainsText = async (element, text) => {
-  await expect(element.getText()).resolves.toContain(text);
-};
-
-export const expectNotContainsText = async (element, text) => {
-  await expect(element.getText()).resolves.not.toContain(text);
-};
-
-export const clickTimelineTab = async app => {
+export const clickTimelineTab = async (app: Application) => {
   await app.client
     .$('.response-pane')
     .then(e => e.$('#react-tabs-16'))
@@ -239,9 +256,6 @@ export const clickTimelineTab = async app => {
 
   // Wait until some text shows
   const codeEditor = await getTimelineViewer(app);
+  // @ts-expect-error -- TSCONVERSION appears to be genuine
   await app.client.waitUntil(() => codeEditor.getText());
-};
-
-export const selectAll = async app => {
-  await app.client.keys(spectronKeys.mapAccelerator('CommandOrControl+A'));
 };

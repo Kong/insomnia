@@ -2,8 +2,7 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "composite": false,
-    "rootDir": ".",
-    "esModuleInterop": true
+    "rootDir": "."
   },
   "include": [
     "src",

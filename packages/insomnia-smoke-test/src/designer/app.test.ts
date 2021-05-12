@@ -5,13 +5,16 @@ import * as modal from '../modules/modal';
 import * as dropdown from '../modules/dropdown';
 
 import { isPackage, launchApp, stop } from '../modules/application';
+import { Application } from 'spectron';
 
-const itIf = condition => (condition ? it : it.skip);
+const itIf = (condition: boolean) => (condition ? it : it.skip);
+// @ts-expect-error -- TSCONVERSION need to augment jest
 it.if = itIf;
 
 xdescribe('Application launch', function() {
   jest.setTimeout(50000);
-  let app = null;
+  // @ts-expect-error -- TSCONVERSION
+  let app: Application = null;
 
   beforeEach(async () => {
     app = await launchApp();
@@ -21,6 +24,7 @@ xdescribe('Application launch', function() {
     await stop(app);
   });
 
+  // @ts-expect-error -- TSCONVERSION need to augment jest
   xit.if(isPackage())('can install and consume a plugin', async () => {
     await client.correctlyLaunched(app);
     await home.documentListingShown(app);
@@ -38,7 +42,9 @@ xdescribe('Application launch', function() {
     await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
+    // @ts-expect-error -- TSCONVERSION appears to be genuine
     await modal.close(app);
   });
 });

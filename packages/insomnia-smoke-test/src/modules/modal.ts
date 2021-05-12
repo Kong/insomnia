@@ -1,6 +1,7 @@
-import findAsync from './find-async';
+import { Application } from 'spectron';
+import { findAsync } from './find-async';
 
-export const waitUntilOpened = async (app, { modalName, title }) => {
+export const waitUntilOpened = async (app: Application, { modalName, title }: { modalName: string, title: string }) => {
   if (modalName) {
     const modal = await app.client.react$(modalName);
     await modal.waitForDisplayed();
@@ -9,7 +10,7 @@ export const waitUntilOpened = async (app, { modalName, title }) => {
   }
 };
 
-export const close = async (app, modalName) => {
+export const close = async (app: Application, modalName: string) => {
   let modal;
   if (modalName) {
     modal = await app.client.react$(modalName);
@@ -21,7 +22,7 @@ export const close = async (app, modalName) => {
   await modal.$('button.modal__close-btn').then(e => e.click());
 };
 
-export const clickModalFooterByText = async (app, text) => {
+export const clickModalFooterByText = async (app: Application, text: string) => {
   const btn = await app.client
     .$('.modal[aria-hidden=false] .modal__footer')
     .then(e => e.$(`button*=${text}`));
@@ -29,8 +30,9 @@ export const clickModalFooterByText = async (app, text) => {
   await btn.click();
 };
 
-export const typeIntoModalInput = async (app, text) => {
+export const typeIntoModalInput = async (app: Application, text: string) => {
   const input = await app.client.$('.modal input');
   await input.waitUntil(() => input.isFocused());
+  // @ts-expect-error -- TSCONVERSION
   await input.keys(text);
 };
