@@ -9,7 +9,6 @@ import { difference } from 'lodash';
 import type { Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import fsx from 'fs-extra';
-import * as electron from 'electron';
 import { trackEvent } from './analytics';
 import { WorkspaceScopeKeys } from '../models/workspace';
 
@@ -139,6 +138,7 @@ async function removeDirs(dirs: Array<string>, srcDir: string) {
 export function existsAndIsDirectory(name: string) {
   return fs.existsSync(name) && fs.statSync(name).isDirectory();
 }
+
 export default async function migrateFromDesigner({
   useDesignerSettings,
   designerDataDir,
@@ -242,6 +242,7 @@ export default async function migrateFromDesigner({
     } as MigrationResult;
   }
 }
+
 export async function restoreCoreBackup(backupDir: string, coreDataDir: string) {
   if (!backupDir) {
     console.log('[db-merge] nothing to restore; no backup was created');
@@ -257,9 +258,4 @@ export async function restoreCoreBackup(backupDir: string, coreDataDir: string) 
   await removeDirs(['plugins', 'responses', 'version-control'], coreDataDir);
   await fsx.copy(backupDir, coreDataDir);
   console.log('[db-merge] restored from backup');
-}
-export function restartApp() {
-  const { app } = electron.remote || electron;
-  app.relaunch();
-  app.exit();
 }

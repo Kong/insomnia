@@ -1,6 +1,5 @@
 import React, { Fragment, PureComponent } from 'react';
 import * as fontScanner from 'font-scanner';
-import * as electron from 'electron';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   ACTIVITY_MIGRATION,
@@ -32,6 +31,7 @@ import * as globalActions from '../../redux/modules/global';
 import { connect } from 'react-redux';
 import { stringsPlural } from '../../../common/strings';
 import { snapNumberToLimits } from '../../../common/misc';
+import { restartApp } from '../../../common/electron-helpers';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -104,9 +104,7 @@ class General extends PureComponent<Props, State> {
 
   async _handleUpdateSettingAndRestart(e: React.SyntheticEvent<HTMLInputElement>) {
     await this._handleUpdateSetting(e);
-    const { app } = electron.remote || electron;
-    app.relaunch();
-    app.exit();
+    restartApp();
   }
 
   async _handleFontSizeChange(el: React.SyntheticEvent<HTMLInputElement>) {

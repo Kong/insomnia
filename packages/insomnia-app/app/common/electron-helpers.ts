@@ -4,7 +4,11 @@ import appConfig from '../../config/config.json';
 import mkdirp from 'mkdirp';
 
 export function clickLink(href: string) {
-  electron.shell.openExternal(href);
+  const { protocol } = new URL(href);
+  if (protocol === 'http:' || protocol === 'https:') {
+    // eslint-disable-next-line no-restricted-properties -- this is, other than tests, what _should be_ the one and only place in this project where this is called.
+    electron.shell.openExternal(href);
+  }
 }
 
 export function getDesignerDataDir() {
@@ -47,4 +51,10 @@ export function getTempDir() {
   const dir = join(app.getPath('temp'), `insomnia_${appConfig.version}`);
   mkdirp.sync(dir);
   return dir;
+}
+
+export function restartApp() {
+  const { app } = electron.remote || electron;
+  app.relaunch();
+  app.exit();
 }
