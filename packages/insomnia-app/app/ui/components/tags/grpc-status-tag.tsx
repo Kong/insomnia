@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import classnames from 'classnames';
 import Tooltip from '../tooltip';
-import grpc from '@grpc/grpc-js';
+import { status } from '@grpc/grpc-js';
 
 interface Props {
   statusCode?: number;
@@ -13,8 +13,8 @@ interface Props {
 class GrpcStatusTag extends PureComponent<Props> {
   render() {
     const { statusMessage, statusCode, small, tooltipDelay } = this.props;
-    const colorClass = statusCode === grpc.status.OK ? 'bg-success' : 'bg-danger';
-    const message = statusCode === grpc.status.OK ? 'OK' : statusMessage;
+    const colorClass = statusCode === status.OK ? 'bg-success' : 'bg-danger';
+    const message = statusCode === status.OK ? 'OK' : statusMessage;
     return (
       <div
         className={classnames('tag', colorClass, {
