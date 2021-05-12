@@ -16,6 +16,7 @@ import {
 } from './plugins';
 import { DCService, DCRoute } from '../types/declarative-config';
 import { OpenApi3Spec, OA3Server, OA3PathItem, OA3Operation } from '../types/openapi3';
+import { reorderService, reorderRoute, reorderPlugins } from './common';
 
 export function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);
@@ -53,7 +54,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
     // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
     path: parsedUrl.pathname,
-    plugins: globalPlugins.plugins,
+    plugins: reorderPlugins(globalPlugins.plugins),
     routes: [],
     tags,
   };
@@ -135,14 +136,14 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
 
       // Add plugins if there are any
       if (plugins.length) {
-        route.plugins = plugins;
+        route.plugins = reorderPlugins(plugins);
       }
 
-      service.routes.push(route);
+      service.routes.push(reorderRoute(route));
     }
   }
 
-  return service;
+  return reorderService(service);
 }
 
 export function generateRouteName(

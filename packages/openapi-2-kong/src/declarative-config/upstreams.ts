@@ -1,6 +1,7 @@
 import { getName, parseUrl, fillServerVariables } from '../common';
 import { DCUpstream } from '../types/declarative-config';
 import { OpenApi3Spec } from '../types/openapi3';
+import { reorderUpstream } from './common';
 
 export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
   const servers = api.servers || [];
@@ -36,5 +37,5 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
     }
   }
 
-  return [upstream];
+  return [reorderUpstream(upstream)];
 }
