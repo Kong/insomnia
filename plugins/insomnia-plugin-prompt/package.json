@@ -1,7 +1,7 @@
 {
   "name": "insomnia-plugin-prompt",
   "version": "2.2.35",
-  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "author": "Kong <office@konghq.com>",
   "description": "Insomnia prompt template tag",
   "license": "MIT",
   "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-prompt",

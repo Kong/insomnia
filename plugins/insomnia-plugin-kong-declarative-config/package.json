@@ -2,6 +2,7 @@
   "name": "insomnia-plugin-kong-declarative-config",
   "version": "2.2.35",
   "main": "index.js",
+  "author": "Kong <office@konghq.com>",
   "insomnia": {
     "name": "kong-declarative-config",
     "description": "Generate Kong Declarative Config"

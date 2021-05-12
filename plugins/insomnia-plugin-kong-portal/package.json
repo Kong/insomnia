@@ -2,6 +2,7 @@
   "name": "insomnia-plugin-kong-portal",
   "version": "2.2.35",
   "main": "dist/index.js",
+  "author": "Kong <office@konghq.com>",
   "scripts": {
     "build": "webpack --config webpack.config.js --display errors-only",
     "watch": "webpack --config webpack.config.js --watch",
