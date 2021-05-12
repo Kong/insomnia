@@ -2,6 +2,12 @@
   "name": "insomnia-plugin-cookie-jar",
   "version": "2.2.35",
   "author": "Kong <office@konghq.com>",
+  "contributors": [
+    {
+      "name": "Preston Alvarado",
+      "email": "pjalva1@hotmail.com"
+    }
+  ],
   "description": "Insomnia cookie jar template tag",
   "license": "MIT",
   "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-cookie-jar",
