@@ -1,29 +1,8 @@
 /** @type { import('@jest/types').Config.InitialOptions } */
 module.exports = {
-  globals: {
-    'ts-jest': {
-      isolatedModules: true,
-    },
-  },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testEnvironment: 'node',
-  transform: {
-    '^.+\\.tsx?$': 'ts-jest',
-  },
-  testMatch: [
-    '**/*.test.ts',
-  ],
-  verbose: false,
-  resetMocks: true,
-  resetModules: true,
-
-  setupFiles: [
-    './src/jest/setup.ts',
-  ],
+  preset: '../../jest-preset.js',
   collectCoverage: true,
-  coveragePathIgnorePatterns: [
-    '/node_modules/',
-  ],
+  coveragePathIgnorePatterns: ['/node_modules/'],
   coverageThreshold: {
     global: {
       branches: 88,
@@ -32,4 +11,5 @@ module.exports = {
       statements: 95,
     },
   },
+  setupFiles: ['./src/jest/setup.ts'],
 };
