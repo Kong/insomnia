@@ -14,7 +14,7 @@ import {
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
-import { clickLink, getDataDirectory } from '../common/electron-helpers';
+import { clickLink, getDataDirectory, restartApp } from '../common/electron-helpers';
 import * as log from '../common/log';
 import * as os from 'os';
 import { docsBase } from '../common/documentation';
@@ -448,11 +448,7 @@ export function createWindow() {
       },
       {
         label: `${MNEMONIC_SYM}Restart`,
-        click: function() {
-          const { app } = electron.remote || electron;
-          app.relaunch();
-          app.exit();
-        },
+        click: restartApp,
       },
     ],
   };

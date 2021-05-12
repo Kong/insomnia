@@ -52,3 +52,9 @@ export function getTempDir() {
   mkdirp.sync(dir);
   return dir;
 }
+
+export function restartApp() {
+  const { app } = electron.remote || electron;
+  app.relaunch();
+  app.exit();
+}

@@ -2,11 +2,8 @@ import React, { FunctionComponent, useCallback, useMemo, useState } from 'react'
 import type { WrapperProps } from './wrapper';
 import { ToggleSwitch, Button } from 'insomnia-components';
 import type { MigrationOptions } from '../../common/migrate-from-designer';
-import migrateFromDesigner, {
-  existsAndIsDirectory,
-  restartApp,
-} from '../../common/migrate-from-designer';
-import { getDataDirectory, getDesignerDataDir } from '../../common/electron-helpers';
+import migrateFromDesigner, { existsAndIsDirectory } from '../../common/migrate-from-designer';
+import { getDataDirectory, getDesignerDataDir, restartApp } from '../../common/electron-helpers';
 import { useDispatch } from 'react-redux';
 import OnboardingContainer from './onboarding-container';
 import { goToNextActivity } from '../redux/modules/global';
