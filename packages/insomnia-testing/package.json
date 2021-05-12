@@ -3,35 +3,32 @@
   "license": "Apache-2.0",
   "version": "2.2.35",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "typecheck": "flow check",
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
     "test": "jest",
     "build": "webpack --config webpack.config.js --display errors-only",
     "watch": "npm run build -- --watch",
-    "bootstrap": "npm run build",
     "prepublish": "npm run build"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/__tests__/**/*.test.js"
-    ],
-    "verbose": false,
-    "resetMocks": true,
-    "resetModules": true
-  },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-proposal-optional-chaining": "^7.9.0",
-    "jest": "^26.0.1",
+    "@types/mkdirp": "^1.0.1",
+    "@types/chai": "^4.2.15",
+    "@types/mocha": "^8.2.1",
+    "@types/webpack": "^4.41.26",
+    "ts-loader": "^8.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "chai": "^4.2.0",
     "mkdirp": "^1.0.4",
-    "mocha": "^8.0.1"
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }

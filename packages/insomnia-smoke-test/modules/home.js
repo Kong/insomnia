@@ -16,10 +16,10 @@ export const expectDocumentWithTitle = async (app, title) => {
 export const findCardWithTitle = async (app, text) => {
   let card;
   await app.client.waitUntil(async () => {
-    const items = await app.client.$$('.document-listing__body div[class^=card__StyledCard]');
+    const cards = await app.client.react$$('Card');
     card = await findAsync(
-      items,
-      async i => (await i.$('div[class^=card__CardBody] .title').then(e => e.getText())) === text,
+      cards,
+      async i => (await i.react$('CardBody').then(e => e.$('.title')).then(e => e.getText())) === text,
     );
     return !!card;
   });
@@ -58,7 +58,7 @@ const openCreateDropdown = async app => {
 export const createNewCollection = async (app, prefix = 'coll') => {
   await openCreateDropdown(app);
 
-  await dropdown.clickDropdownItemByText(app.client, 'Request Collection', true);
+  await dropdown.clickDropdownItemByText(app.client, 'Request Collection');
 
   const collectionName = `${prefix}-${faker.lorem.slug()}`;
   await modal.waitUntilOpened(app, { title: 'Create New Request Collection' });
@@ -70,7 +70,7 @@ export const createNewCollection = async (app, prefix = 'coll') => {
 export const createNewDocument = async (app, prefix = 'doc') => {
   await openCreateDropdown(app);
 
-  await dropdown.clickDropdownItemByText(app.client, 'Design Document', true);
+  await dropdown.clickDropdownItemByText(app.client, 'Design Document');
 
   const documentName = `${prefix}-${faker.lorem.slug()}`;
   await modal.waitUntilOpened(app, { title: 'Create New Design Document' });
@@ -82,5 +82,5 @@ export const createNewDocument = async (app, prefix = 'doc') => {
 export const importFromClipboard = async app => {
   await openCreateDropdown(app);
 
-  await dropdown.clickDropdownItemByText(app.client, 'Clipboard', true);
+  await dropdown.clickDropdownItemByText(app.client, 'Clipboard');
 };

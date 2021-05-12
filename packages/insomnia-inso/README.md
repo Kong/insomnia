@@ -9,7 +9,7 @@
     <br />
   </h1>
   <h3>A CLI for <a href="https://insomnia.rest">Insomnia Designer</a></h3>
-  <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
+  <pre>npm install --global <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
   <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/demo.gif" alt=""/>
   <br />
 </div>
@@ -74,7 +74,7 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -114,7 +114,7 @@ Designer has the ability to lint and validate your OpenAPI specification as you 
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -140,14 +140,14 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 |Option|Alias|Description|
 |- |- |- |
 | `--env <identifier>` | `-e` |the environment to use - an environment name or id |
-| `--reporter <value>` | `-r` |reporter to use, options are `dot, list, spec, min and progress` (default: `spec` )|
+| `--reporter <value>` | `-r` |reporter to use, options are `dot, list, min, progress, spec` (default: `spec` )|
 | `--testNamePattern <regex>` | `-t` | run tests that match the regex|
 | `--bail` | `-b` | abort ("bail") after the first test failure|
 | `--keepFile` | | do not delete the generated test file (useful for debugging)|
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -190,7 +190,7 @@ This command will extract and export the raw OpenAPI specification from the data
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -218,7 +218,7 @@ The `inso` [config file](#configuration) supports scripts, akin to NPM scripts d
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory, with the following inso config file.
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory, with the following inso config file.
 
 ``` yaml
 # .insorc.yaml
@@ -326,7 +326,7 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v1
       - name: Install inso
-        run: npm install -g insomnia-inso
+        run: npm install --global insomnia-inso
       - name: Lint
         run: inso lint spec "Designer Demo" --ci
       - name: Run test suites
