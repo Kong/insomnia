@@ -3,6 +3,14 @@
   "license": "Apache-2.0",
   "version": "2.2.35",
   "author": "Kong <office@konghq.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-testing"
+  },
+  "bugs": {
+    "url": "https://github.com/Kong/insomnia/issues"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

@@ -3,6 +3,15 @@
   "version": "2.2.35",
   "main": "dist/index.js",
   "author": "Kong <office@konghq.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "plugins/insomnia-plugin-kong-portal"
+  },
+  "bugs": {
+    "url": "https://github.com/Kong/insomnia/issues"
+  },
   "scripts": {
     "build": "webpack --config webpack.config.js --display errors-only",
     "watch": "webpack --config webpack.config.js --watch",

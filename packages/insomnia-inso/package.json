@@ -5,9 +5,13 @@
   "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
-  "repository": "https://github.com/kong/insomnia/tree/develop/packages/insomnia-inso",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-inso"
+  },
   "bugs": {
-    "url": "https://github.com/kong/insomnia"
+    "url": "https://github.com/kong/insomnia/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
