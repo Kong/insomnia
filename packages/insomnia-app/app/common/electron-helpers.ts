@@ -5,6 +5,7 @@ import mkdirp from 'mkdirp';
 
 export function clickLink(href: string) {
   if (href.startsWith('http')) {
+    // eslint-disable-next-line no-restricted-properties -- this is, other than tests, what _should be_ the one and only place in this project where this is called.
     electron.shell.openExternal(href);
   }
 }

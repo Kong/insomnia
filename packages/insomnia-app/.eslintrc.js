@@ -7,6 +7,9 @@ module.exports = {
     '@typescript-eslint/array-type': ['error', { default: 'generic', readonly: 'generic' }],
     '@typescript-eslint/no-use-before-define': 'off', // TSCONVERSION
     '@typescript-eslint/no-explicit-any': 'off', // TSCONVERSION
-    // 'padding-line-between-statements': ['error', { blankLine: "always", prev: ["*"], next: "export"}],
+    'no-restricted-properties': ['error', {
+      property: 'openExternal',
+      message: 'use the `clickLink` function in `electron-helpers.ts` instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
+    }],
   },
 };
