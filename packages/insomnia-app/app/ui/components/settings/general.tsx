@@ -412,10 +412,10 @@ class General extends PureComponent<Props, State> {
         </div>
 
         <div className="form-row pad-top-sm">
-          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinite', {
+          {this.renderNumberSetting('Maximum Redirects', 'maxRedirects', '-1 for infinity', {
             min: -1,
           })}
-          {this.renderNumberSetting('Request Timeout', 'timeout', '-1 for infinite', {
+          {this.renderNumberSetting('Request Timeout', 'timeout', '-1 for infinity', {
             min: -1,
           })}
         </div>
