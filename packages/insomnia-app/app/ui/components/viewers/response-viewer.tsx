@@ -8,7 +8,6 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
-import { shell } from 'electron';
 import PDFViewer from './response-pdf-viewer';
 import CSVViewer from './response-csv-viewer';
 import CodeEditor from '../codemirror/code-editor';
@@ -19,6 +18,7 @@ import ResponseError from './response-error';
 import KeydownBinder from '../keydown-binder';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../../common/hotkeys';
+import { clickLink } from '../../../common/electron-helpers';
 
 let alwaysShowLargeResponses = false;
 
@@ -73,10 +73,6 @@ class ResponseViewer extends Component<Props, State> {
       console.warn('[response] Failed to decode body', err);
       return bodyBuffer.toString();
     }
-  }
-
-  _handleOpenLink(link: string) {
-    shell.openExternal(link);
   }
 
   _handleDismissBlocker() {
@@ -422,7 +418,7 @@ class ResponseViewer extends Component<Props, State> {
           lineWrapping={editorLineWrapping}
           mode={mode}
           noMatchBrackets
-          onClickLink={disablePreviewLinks ? undefined : this._handleOpenLink}
+          onClickLink={disablePreviewLinks ? undefined : clickLink}
           placeholder="..."
           readOnly
           uniquenessKey={responseId}

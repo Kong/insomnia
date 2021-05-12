@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
-import { shell } from 'electron';
 import CodeEditor from '../codemirror/code-editor';
 import * as models from '../../../models';
 import { Response } from '../../../models/response';
+import { clickLink } from '../../../common/electron-helpers';
 
 interface Props {
   response: Response,
@@ -21,10 +21,6 @@ class ResponseTimelineViewer extends PureComponent<Props, State> {
     timeline: [],
     timelineKey: '',
   };
-
-  static _handleClickLink(link) {
-    shell.openExternal(link);
-  }
 
   componentDidMount() {
     this.refreshTimeline();
@@ -112,7 +108,7 @@ class ResponseTimelineViewer extends PureComponent<Props, State> {
         key={timelineKey}
         hideLineNumbers
         readOnly
-        onClickLink={ResponseTimelineViewer._handleClickLink}
+        onClickLink={clickLink}
         defaultValue={rows}
         fontSize={editorFontSize}
         indentSize={editorIndentSize}

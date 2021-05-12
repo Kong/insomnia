@@ -115,7 +115,7 @@ export function createWindow() {
 
     console.log('[app] Navigate to ' + url);
     e.preventDefault();
-    electron.shell.openExternal(url);
+    clickLink(url);
   });
   // Load the html of the app.
   const url = process.env.APP_RENDER_URL;
@@ -321,7 +321,7 @@ export function createWindow() {
         // @ts-expect-error -- TSCONVERSION TSCONVERSION `Accelerator` type from electron is needed here as a cast but is not exported as of the 9.3.5 types
         accelerator: !isMac() ? 'F1' : null,
         click: () => {
-          shell.openExternal(docsBase);
+          clickLink(docsBase);
         },
       },
       {
@@ -359,7 +359,7 @@ export function createWindow() {
       {
         label: 'Show Software License',
         click: () => {
-          shell.openExternal('https://insomnia.rest/license');
+          clickLink('https://insomnia.rest/license');
         },
       },
     ],

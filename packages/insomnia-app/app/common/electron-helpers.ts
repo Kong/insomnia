@@ -4,7 +4,9 @@ import appConfig from '../../config/config.json';
 import mkdirp from 'mkdirp';
 
 export function clickLink(href: string) {
-  electron.shell.openExternal(href);
+  if (href.startsWith('http')) {
+    electron.shell.openExternal(href);
+  }
 }
 
 export function getDesignerDataDir() {
