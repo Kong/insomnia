@@ -14,7 +14,7 @@ import vkBeautify from 'vkbeautify';
 import { showModal } from '../modals/index';
 import FilterHelpModal from '../modals/filter-help-modal';
 import * as misc from '../../../common/misc';
-import prettify from 'insomnia-prettify';
+import { json as jsonPrettify } from 'insomnia-prettify';
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import './base-imports';
 import { getTagDefinitions } from '../../../templating/index';
@@ -646,7 +646,7 @@ class CodeEditor extends Component<Props, State> {
         }
       }
 
-      return prettify.json(jsonString, this._indentChars(), this.props.autoPrettify);
+      return jsonPrettify(jsonString, this._indentChars(), this.props.autoPrettify);
     } catch (e) {
       // That's Ok, just leave it
       return code;

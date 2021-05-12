@@ -12,7 +12,7 @@ import CodeEditor from '../../codemirror/code-editor';
 import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';
 import { CONTENT_TYPE_JSON, DEBOUNCE_MILLIS, AUTOBIND_CFG } from '../../../../common/constants';
-import prettify from 'insomnia-prettify';
+import { json as jsonPrettify } from 'insomnia-prettify';
 import type { ResponsePatch } from '../../../../network/network';
 import * as network from '../../../../network/network';
 import type { Workspace } from '../../../../models/workspace';
@@ -388,7 +388,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     const { body } = this.state;
     const { variables, query } = body;
     const prettyQuery = query && print(parse(query));
-    const prettyVariables = variables && JSON.parse(prettify.json(JSON.stringify(variables)));
+    const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
 
@@ -594,7 +594,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
     const { query, variables: variablesObject } = GraphQLEditor._stringToGraphQL(content);
 
-    const variables = prettify.json(JSON.stringify(variablesObject));
+    const variables = jsonPrettify(JSON.stringify(variablesObject));
 
     const variableTypes = this._buildVariableTypes(schema);
 
