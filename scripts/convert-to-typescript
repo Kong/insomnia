@@ -1,0 +1,64 @@
+#! /bin/bash
+export INSOMNIA_ROOT="$HOME/src/github.com/Kong/insomnia"
+export CODE_LOCATION="$INSOMNIA_ROOT/packages/insomnia-app/app"
+
+echo "
+**/bin/*
+**/build/*
+**/dist/*
+**/__fixtures__/*
+**/flow-typed/*
+*.md
+**/__snapshots__/
+**/*.less
+**/*.css
+" > "$INSOMNIA_ROOT/.prettierignore"
+
+echo '
+{
+  "bracketSpacing": true,
+  "jsxBracketSameLine": true,
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "arrowParens": "avoid",
+  "trailingComma": "all",
+  "printWidth": 100
+}
+' > "$INSOMNIA_ROOT/.prettierrc"
+
+cd "$INSOMNIA_ROOT" || return
+
+npm install --save-dev typescript@4.2.3
+
+# run flow-to-ts, which messes up formatting
+npx @khanacademy/flow-to-ts@0.5.1 \
+  --prettier=off \ # flow-to-ts uses pretter 2.2 and our codebase has been using prettier 1.5 \
+  --write \
+  --delete-source "$CODE_LOCATION/*.js" \
+  "$CODE_LOCATION/**/**/**/**/**/**/*.js"
+  
+# run prettier
+npx prettier@2.2.1 \
+  --config="$INSOMNIA_ROOT/.prettierrc" \
+  --ignore-path="$INSOMNIA_ROOT/.prettierignore" \
+  --write \
+  "$CODE_LOCATION/**"
+rm .prettierignore
+rm .prettierrc
+
+# then run eslint to try and fix some of the things in the previous step.
+npm install --save-dev eslint-plugin-jest-formatting
+export ESLINTRC="$INSOMNIA_ROOT/.eslintrc.js"
+export ESLINT="$INSOMNIA_ROOT/node_modules/.bin/eslint \
+  --ext .ts,.tsx,.js \
+  --fix \
+  --plugin filenames
+  --plugin jest-formatting
+  --no-eslintrc \
+  --parser=@typescript-eslint/parser \
+  $CODE_LOCATION"
+
+$ESLINT --rule 'space-before-function-paren: ["error", { "anonymous": "never", "named": "never", "asyncArrow": "always" }]'
+
+$ESLINT --rule 'jest-formatting/padding-around-test-blocks: "error"'

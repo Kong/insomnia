@@ -1,4 +1,5 @@
-module.exports = async function({ config, mode }) {
+/** @type { import('webpack').Configuration } */
+module.exports = ({ config }) => {
   config.module.rules.push({
     test: /\.less$/,
     use: [

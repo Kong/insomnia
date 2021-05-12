@@ -9,64 +9,56 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia"
   },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "inso": "bin/inso"
   },
   "scripts": {
-    "typecheck": "",
-    "test": "jest",
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
+    "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:snapshots": "npm run build && jest -u",
-    "build": "webpack --config webpack/webpack.config.development.js --display errors-only",
+    "prebuild": "npm run clean",
+    "build": "webpack --config webpack/webpack.config.development.js",
     "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
     "start": "npm run build -- --watch",
-    "bootstrap": "npm run build",
-    "prepare": "npm run build:production"
-  },
-  "jest": {
-    "setupFiles": [
-      "./__jest__/setup.js"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*.test.js"
-    ],
-    "verbose": false,
-    "resetMocks": true,
-    "resetModules": true,
-    "collectCoverage": true,
-    "coveragePathIgnorePatterns": [
-      "/node_modules/"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 90,
-        "functions": 100,
-        "lines": 95,
-        "statements": 95
-      }
-    }
+    "prepare-temp-disabled": "npm run build:production"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@babel/plugin-proposal-optional-chaining": "^7.9.0",
     "@babel/preset-env": "^7.10.2",
     "@babel/preset-flow": "^7.10.1",
-    "execa": "^4.0.2",
-    "flow-bin": "^0.126.1",
+    "@types/babel__core": "^7.1.12",
+    "@types/babel__preset-env": "^7.9.1",
+    "@types/lodash.flattendeep": "^4.4.6",
+    "@types/mkdirp": "^1.0.1",
+    "@types/nedb": "^1.8.11",
+    "@types/node": "^14.14.32",
+    "@types/rimraf": "^3.0.0",
+    "@types/webpack-node-externals": "^2.5.0",
+    "@types/yaml": "^1.9.7",
+    "execa": "^5.0.0",
     "get-bin-path": "^5.1.0",
-    "jest": "^26.0.1",
+    "node-loader": "1.0.2",
     "rimraf": "^3.0.2",
-    "webpack": "^4.44.1",
+    "ts-loader": "^8.2.0",
+    "webpack": "4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-merge": "^5.0.7",
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
-    "@stoplight/spectral": "^5.4.0",
+    "@stoplight/spectral": "5.4.0",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",
-    "enquirer": "^2.3.5",
+    "enquirer": "^2.3.6",
     "insomnia-plugin-base64": "2.2.35",
     "insomnia-plugin-cookie-jar": "2.2.35",
     "insomnia-plugin-core-themes": "2.2.35",

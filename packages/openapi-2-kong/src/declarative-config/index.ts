@@ -1,0 +1,1 @@
+export { generateDeclarativeConfigFromSpec } from './generate';

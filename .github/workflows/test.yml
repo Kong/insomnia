@@ -28,6 +28,8 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
+      - name: Lint
+        run: npm run lint
       - name: Run tests
         run: npm test
       - name: Build for smoke tests
