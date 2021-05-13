@@ -167,7 +167,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
           className={classnames('sidebar__list', {
             'sidebar__list--collapsed': isCollapsed,
           })}>
-          {!isCollapsed && children ? (
+          {!isCollapsed && React.Children.count(children) > 0 ? (
             children
           ) : (
             <SidebarRequestRow

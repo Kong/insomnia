@@ -4,6 +4,14 @@
   "author": "Kong <office@konghq.com>",
   "description": "Cookie utilities",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-cookies"
+  },
+  "bugs": {
+    "url": "https://github.com/Kong/insomnia/issues"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
