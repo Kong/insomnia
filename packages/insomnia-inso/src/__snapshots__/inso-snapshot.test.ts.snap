@@ -92,6 +92,7 @@ Generate configuration from an api spec.
 Options:
   -t, --type <value>   type of configuration to generate, options are
                        [kubernetes, declarative] (default: declarative)
+  --tags <tags>        comma separated list of tags to apply to each entity
   -o, --output <path>  save the generated config to a file
   -h, --help           display help for command"
 `;

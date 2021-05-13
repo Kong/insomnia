@@ -1,13 +1,13 @@
 import * as cli from './cli';
-import { generateConfig } from './commands/generate-config';
-import { lintSpecification } from './commands/lint-specification';
-import { runInsomniaTests } from './commands/run-tests';
-import { exportSpecification } from './commands/export-specification';
+import { generateConfig as _generateConfig } from './commands/generate-config';
+import { lintSpecification as _lintSpecification } from './commands/lint-specification';
+import { runInsomniaTests as _runInsomniaTests } from './commands/run-tests';
+import { exportSpecification as _exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import * as packageJson from '../package.json';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { exit } from './util';
+import { exit as _exit } from './util';
 
 jest.mock('./commands/generate-config');
 jest.mock('./commands/lint-specification');
@@ -22,6 +22,12 @@ const initInso = () => {
     return cli.go(cliArgs, true);
   };
 };
+
+const generateConfig = _generateConfig as jest.MockedFunction<typeof _generateConfig>;
+const lintSpecification = _lintSpecification as jest.MockedFunction<typeof _lintSpecification>;
+const runInsomniaTests = _runInsomniaTests as jest.MockedFunction<typeof _runInsomniaTests>;
+const exportSpecification = _exportSpecification as jest.MockedFunction<typeof _exportSpecification>;
+const exit = _exit as jest.MockedFunction<typeof _exit>;
 
 describe('cli', () => {
   beforeAll(() => {
@@ -52,11 +58,13 @@ describe('cli', () => {
     it('should throw error if working dir argument is missing', () => {
       expect(() => inso('-w')).toThrowError();
     });
+
     it.each(['-v', '--version'])('inso %s should print version from package.json', args => {
       logger.wrapAll();
       expect(() => inso(args)).toThrowError(packageJson.version);
       logger.restoreAll();
     });
+
     it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
       const oldNodeEnv = process.env.NODE_ENV;
       process.env.NODE_ENV = 'development';
@@ -95,6 +103,10 @@ describe('cli', () => {
       expect(() => inso('generate config -o')).toThrowError();
     });
 
+    it('should throw error if tags argument is missing', () => {
+      expect(() => inso('generate config --tags')).toThrowError();
+    });
+
     it('should call generateConfig with undefined output argument', () => {
       inso('generate config -t declarative file.yaml');
       expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
@@ -103,12 +115,13 @@ describe('cli', () => {
     });
 
     it('should call generateConfig with all expected arguments', () => {
-      inso('generate config -t kubernetes -o output.yaml file.yaml');
+      inso('generate config -t kubernetes -o output.yaml --tags "a,b,c" file.yaml');
       expect(generateConfig).toHaveBeenCalledWith(
         'file.yaml',
         expect.objectContaining({
           type: 'kubernetes',
           output: 'output.yaml',
+          tags: 'a,b,c',
         }),
       );
     });
@@ -219,7 +232,7 @@ describe('cli', () => {
 
     const expectExitWith = async (result: boolean): Promise<void> =>
       expect(
-        (exit as jest.Mock).mock.calls[0][0],
+        exit.mock.calls[0][0],
       ).resolves.toBe(result);
 
     it('should call script command by default', () => {

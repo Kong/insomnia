@@ -7,7 +7,7 @@ import { loadEnvironment, promptEnvironment } from './environment';
 import { globalBeforeAll, globalBeforeEach } from '../../jest/before';
 
 jest.mock('enquirer');
-const enquirer = _enquirer as unknown as jest.Mock & {
+const enquirer = _enquirer as jest.MockedClass<typeof _enquirer> & {
   __mockPromptRun: (str: string) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- missing types from enquirer
   __constructorMock: jest.Mock;

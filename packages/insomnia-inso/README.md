@@ -71,6 +71,7 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 |- |- |- |
 | `--type <type>` | `-t` |type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative` ) |
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
+| `--tags <tags>` | |comma separated list of tags to apply to each entity|
 
 ### Examples
 
@@ -97,10 +98,16 @@ inso generate config spec.yaml --workingDir another/dir
 
 ```
 
+Add tags
+```sh
+inso generate config spec.yaml --tags first
+inso generate config spec.yaml --tags "first,second"
+```
+
 Output to file
 
 ``` sh
-inso generate config spc_46c5a4 --output output.yaml 
+inso generate config spc_46c5a4 --output output.yaml
 inso generate config spc_46c5a4 > output.yaml
 ```
 
@@ -208,7 +215,7 @@ inso export spec "Sample Specification"
 Output to file
 
 ``` sh
-inso export spec spc_46c5a4 --output output.yaml 
+inso export spec spc_46c5a4 --output output.yaml
 inso export spec spc_46c5a4 > output.yaml
 ```
 
@@ -270,7 +277,7 @@ Alternatively, you can use the `--config <file>` global option to specify an exa
 
 Options from the config file are combined with option defaults and any explicit overrides specified in script or command invocations. This combination is in priority order: command options > config file options > default options.
 
-Any options specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command. 
+Any options specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command.
 
 Only [global options](#global-options) can be set in the config file.
 
@@ -290,7 +297,7 @@ scripts:
   test-spec:200s: inso testSpec --testNamePattern 200
   test-spec:404s: inso testSpec --testNamePattern 404
 
-  test-math-suites: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env DemoEnv 
+  test-math-suites: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env DemoEnv
   test-request-suite: inso run test uts_bce4af --env DemoEnv --bail
 
   lint: inso lint spec Demo # must be invoked as `inso script lint`
@@ -303,7 +310,7 @@ scripts:
 
 Git Bash on Windows is not interactive and therefore prompts from `inso` will not work as expected. You may choose to specify the identifiers for each command explicitly, or run `inso` using `winpty` :
 
-``` 
+```
 winpty inso.cmd generate config
 ```
 
