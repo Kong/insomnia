@@ -20,7 +20,7 @@ describe('generateConfig()', () => {
     globalBeforeEach();
   });
 
-  const mock = (mockFn: UNKNOWN) => mockFn;
+  const mock = (mockFn: UNKNOWN): jest.Mock => mockFn;
 
   afterEach(() => {
     jest.restoreAllMocks();
@@ -44,7 +44,7 @@ describe('generateConfig()', () => {
 
     await generateConfig(filePath, { type: 'kubernetes', tags: ['tag'] });
 
-    expect(o2k.generate).toHaveBeenCalledWith(filePath, ConversionTypeMap.kubernetes, ['tag']);
+    expect(o2k.generate).toHaveBeenCalledWith(filePath, conversionTypeMap.kubernetes, ['tag']);
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);
   });
 
@@ -60,7 +60,7 @@ describe('generateConfig()', () => {
 
     expect(o2k.generateFromString).toHaveBeenCalledWith(
       expect.stringMatching(/.+/),
-      ConversionTypeMap.kubernetes,
+      conversionTypeMap.kubernetes,
       ['tag'],
     );
     expect(logger.__getLogs().log).toEqual(['a\n---\nb\n']);

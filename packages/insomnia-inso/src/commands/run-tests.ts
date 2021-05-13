@@ -49,7 +49,7 @@ const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite
 export async function runInsomniaTests(
   identifier: string | null | undefined,
   options: Partial<RunTestsOptions>,
-) {
+): Promise<boolean> {
   if (!validateOptions(options)) {
     return false;
   }
