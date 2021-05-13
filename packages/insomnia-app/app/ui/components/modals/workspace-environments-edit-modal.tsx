@@ -2,10 +2,10 @@ import React, { FormEvent, Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
-import { SortableContainer, SortableElement, arrayMove } from 'react-sortable-hoc/dist/es6';
+import { SortableContainer, SortableElement, arrayMove, SortEndHandler } from 'react-sortable-hoc';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
-import Button from '../base/button';
+import Button, { ButtonProps } from '../base/button';
 import Link from '../base/link';
 import EnvironmentEditor from '../editors/environment-editor';
 import Editable from '../base/editable';
@@ -44,7 +44,15 @@ interface State {
   selectedEnvironmentId: string | null;
 }
 
-const SidebarListItem = SortableElement(({
+interface SidebarListItemProps extends Pick<Props, 'activeEnvironmentId'> {
+  changeEnvironmentName: (environment: Environment, name?: string) => void;
+  environment: Environment;
+  handleActivateEnvironment: ButtonProps<Environment>['onClick'];
+  selectedEnvironment: Environment | null;
+  showEnvironment: ButtonProps<Environment>['onClick'];
+}
+
+const SidebarListItem = SortableElement<SidebarListItemProps>(({
   activeEnvironmentId,
   changeEnvironmentName,
   environment,
@@ -99,7 +107,11 @@ const SidebarListItem = SortableElement(({
   },
 );
 
-const SidebarList = SortableContainer(
+interface SidebarListProps extends Omit<SidebarListItemProps, 'environment'> {
+  environments: Array<Environment>;
+}
+
+const SidebarList = SortableContainer<SidebarListProps>(
   ({
     activeEnvironmentId,
     changeEnvironmentName,
@@ -218,7 +230,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     await this._load(workspace, environment);
   }
 
-  async _handleShowEnvironment(environment: Environment) {
+  _handleShowEnvironment(environment: Environment) {
     // Don't allow switching if the current one has errors
     if (this.environmentEditorRef && !this.environmentEditorRef.isValid()) {
       return;
@@ -229,7 +241,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     }
 
     const { workspace } = this.state;
-    await this._load(workspace, environment);
+    this._load(workspace, environment);
   }
 
   async _handleDuplicateEnvironment(environment: Environment) {
@@ -249,7 +261,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
     // Unset active environment if it's being deleted
     if (activeEnvironmentId === environment._id) {
-      await handleChangeEnvironment(null);
+      handleChangeEnvironment(null);
     }
 
     // Delete the current one
@@ -339,11 +351,10 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSortEnd(results: {
+  _handleSortEnd: SortEndHandler = (results: {
     oldIndex: number;
     newIndex: number;
-    collection: Array<Environment>;
-  }) {
+  }) => {
     const { oldIndex, newIndex } = results;
 
     if (newIndex === oldIndex) {
@@ -358,25 +369,20 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     // Do this last so we don't block the sorting
     db.bufferChanges();
 
-    for (let i = 0; i < newSubEnvironments.length; i++) {
-      const environment = newSubEnvironments[i];
-      await this._updateEnvironment(
-        environment,
-        {
-          metaSortKey: i,
-        },
-        false,
-      );
-    }
-
-    db.flushChanges();
+    Promise.all(newSubEnvironments.map(environment => this._updateEnvironment(
+      environment,
+      { metaSortKey: 1 },
+      false,
+    ))).then(() => {
+      db.flushChanges();
+    });
   }
 
   async _handleClickColorChange(environment: Environment) {
     const color = environment.color || '#7d69cb';
 
     if (!environment.color) {
-      await this._handleChangeEnvironmentColor(environment, color);
+      this._handleChangeEnvironmentColor(environment, color);
     }
 
     this.environmentColorInputRef?.click();
@@ -421,15 +427,15 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     }
   }
 
-  async _handleActivateEnvironment(environment: Environment) {
+  _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (environment: Environment) => {
     const { handleChangeEnvironment, activeEnvironmentId } = this.props;
 
     if (environment._id === activeEnvironmentId) {
       return;
     }
 
-    await handleChangeEnvironment(environment._id);
-    await this._handleShowEnvironment(environment);
+    handleChangeEnvironment(environment._id);
+    this._handleShowEnvironment(environment);
   }
 
   render() {
