@@ -19,6 +19,7 @@ import {
   CurlInfoDebug,
   CurlFeature,
   CurlNetrc,
+  CurlOptionName,
   CurlHttpVersion,
 } from 'node-libcurl';
 import { join as pathJoin } from 'path';
@@ -67,7 +68,6 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 import type { Environment } from '../models/environment';
-import { CurlOptionName } from 'node-libcurl/dist/generated/CurlOption';
 
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;

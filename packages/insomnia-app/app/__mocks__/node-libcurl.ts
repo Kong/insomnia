@@ -1,11 +1,13 @@
 import { EventEmitter } from 'events';
 import fs from 'fs';
-import { CurlAuth } from 'node-libcurl/dist/enum/CurlAuth';
-import { CurlCode } from 'node-libcurl/dist/enum/CurlCode';
-import { CurlInfoDebug } from 'node-libcurl/dist/enum/CurlInfoDebug';
-import { CurlFeature } from 'node-libcurl/dist/enum/CurlFeature';
-import { CurlNetrc } from 'node-libcurl/dist/enum/CurlNetrc';
-import { CurlHttpVersion } from 'node-libcurl/dist/enum/CurlHttpVersion';
+import {
+  CurlAuth,
+  CurlCode,
+  CurlInfoDebug,
+  CurlFeature,
+  CurlNetrc,
+  CurlHttpVersion,
+} from 'node-libcurl';
 
 class Curl extends EventEmitter {
   _options = {};
