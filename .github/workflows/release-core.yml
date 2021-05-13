@@ -46,7 +46,11 @@ jobs:
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - run: npm run bootstrap
-      - run: npm run publish
+      - run: |
+          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+          npm run publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
   Windows:
     needs: [ npm ]
     name: Windows
