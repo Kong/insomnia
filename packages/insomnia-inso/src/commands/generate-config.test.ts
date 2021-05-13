@@ -118,6 +118,7 @@ describe('generateConfig()', () => {
     expect(o2k.generate).toHaveBeenCalledWith(
       path.normalize('test/dir/file.yaml'),
       conversionTypeMap.kubernetes,
+      undefined,
     );
     expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
   });
@@ -134,9 +135,10 @@ describe('generateConfig()', () => {
       workingDir: 'test/dir',
       output: 'output.yaml',
     });
-    expect(result).toBe(true); // Read from workingDir
+    expect(result).toBe(true);
 
-    expect(o2k.generate).toHaveBeenCalledWith(absolutePath, conversionTypeMap.kubernetes);
+    // Read from workingDir
+    expect(o2k.generate).toHaveBeenCalledWith(absolutePath, conversionTypeMap.kubernetes, undefined);
     expect(logger.__getLogs().log).toEqual([`Configuration generated to "${outputPath}".`]);
   });
 

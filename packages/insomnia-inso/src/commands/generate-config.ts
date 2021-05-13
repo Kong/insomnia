@@ -56,7 +56,7 @@ export const generateConfig = async (
   // try get from db
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
-  const generationTags = tags || [];
+  const generationTags = tags;
 
   try {
     if (specFromDb?.contents) {
