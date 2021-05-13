@@ -3,6 +3,14 @@
   "name": "insomnia-smoke-test",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-smoke-test"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
   "version": "2.2.35",
   "type": "module",
   "scripts": {
