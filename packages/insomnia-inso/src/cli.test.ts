@@ -1,13 +1,13 @@
 import * as cli from './cli';
-import { generateConfig } from './commands/generate-config';
-import { lintSpecification } from './commands/lint-specification';
-import { runInsomniaTests } from './commands/run-tests';
-import { exportSpecification } from './commands/export-specification';
+import { generateConfig as _generateConfig } from './commands/generate-config';
+import { lintSpecification as _lintSpecification } from './commands/lint-specification';
+import { runInsomniaTests as _runInsomniaTests } from './commands/run-tests';
+import { exportSpecification as _exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';
 import * as packageJson from '../package.json';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { exit } from './util';
+import { exit as _exit } from './util';
 
 jest.mock('./commands/generate-config');
 jest.mock('./commands/lint-specification');
@@ -23,10 +23,11 @@ const initInso = () => {
   };
 };
 
-const mockedGenerateConfig = generateConfig as jest.Mock;
-const mockedLintSpecification = lintSpecification as jest.Mock;
-const mockedRunInsomniaTests = runInsomniaTests as jest.Mock;
-const mockedExportSpecification = exportSpecification as jest.Mock;
+const generateConfig = _generateConfig as jest.MockedFunction<typeof _generateConfig>;
+const lintSpecification = _lintSpecification as jest.MockedFunction<typeof _lintSpecification>;
+const runInsomniaTests = _runInsomniaTests as jest.MockedFunction<typeof _runInsomniaTests>;
+const exportSpecification = _exportSpecification as jest.MockedFunction<typeof _exportSpecification>;
+const exit = _exit as jest.MockedFunction<typeof _exit>;
 
 describe('cli', () => {
   beforeAll(() => {
@@ -39,10 +40,10 @@ describe('cli', () => {
     globalBeforeEach();
     inso = initInso();
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    mockedGenerateConfig.mockResolvedValue(true);
-    mockedLintSpecification.mockResolvedValue(true);
-    mockedRunInsomniaTests.mockResolvedValue(true);
-    mockedExportSpecification.mockResolvedValue(true);
+    generateConfig.mockResolvedValue(true);
+    lintSpecification.mockResolvedValue(true);
+    runInsomniaTests.mockResolvedValue(true);
+    exportSpecification.mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -89,7 +90,7 @@ describe('cli', () => {
   describe('generate config', () => {
     it('should call generateConfig with no arg and default type', () => {
       inso('generate config');
-      expect(mockedGenerateConfig).toHaveBeenCalledWith(undefined, {
+      expect(generateConfig).toHaveBeenCalledWith(undefined, {
         type: 'declarative',
       });
     });
@@ -108,14 +109,14 @@ describe('cli', () => {
 
     it('should call generateConfig with undefined output argument', () => {
       inso('generate config -t declarative file.yaml');
-      expect(mockedGenerateConfig).toHaveBeenCalledWith('file.yaml', {
+      expect(generateConfig).toHaveBeenCalledWith('file.yaml', {
         type: 'declarative',
       });
     });
 
     it('should call generateConfig with all expected arguments', () => {
       inso('generate config -t kubernetes -o output.yaml --tags "a,b,c" file.yaml');
-      expect(mockedGenerateConfig).toHaveBeenCalledWith(
+      expect(generateConfig).toHaveBeenCalledWith(
         'file.yaml',
         expect.objectContaining({
           type: 'kubernetes',
@@ -127,7 +128,7 @@ describe('cli', () => {
 
     it('should call generateConfig with global options', () => {
       inso('generate config -t kubernetes -w testing/dir file.yaml');
-      expect(mockedGenerateConfig).toHaveBeenCalledWith(
+      expect(generateConfig).toHaveBeenCalledWith(
         'file.yaml',
         expect.objectContaining({
           type: 'kubernetes',
@@ -140,17 +141,17 @@ describe('cli', () => {
   describe('lint specification', () => {
     it('should call lintSpecification with no arg', () => {
       inso('lint spec');
-      expect(mockedLintSpecification).toHaveBeenCalledWith(undefined, {});
+      expect(lintSpecification).toHaveBeenCalledWith(undefined, {});
     });
 
     it('should call lintSpecification with expected options', () => {
       inso('lint spec file.yaml');
-      expect(mockedLintSpecification).toHaveBeenCalledWith('file.yaml', {});
+      expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {});
     });
 
     it('should call generateConfig with global options', () => {
       inso('lint spec file.yaml -w dir1 -a dir2 --ci');
-      expect(mockedLintSpecification).toHaveBeenCalledWith('file.yaml', {
+      expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {
         workingDir: 'dir1',
         appDataDir: 'dir2',
         ci: true,
@@ -161,7 +162,7 @@ describe('cli', () => {
   describe('run test', () => {
     it('should call runInsomniaTests with no arg and default reporter', () => {
       inso('run test');
-      expect(mockedRunInsomniaTests).toHaveBeenCalledWith(undefined, {
+      expect(runInsomniaTests).toHaveBeenCalledWith(undefined, {
         reporter: 'spec',
       });
     });
@@ -180,7 +181,7 @@ describe('cli', () => {
 
     it('should call runInsomniaTests with expected options', () => {
       inso('run test uts_123 -e env_123 -t name -r min -b --keepFile');
-      expect(mockedRunInsomniaTests).toHaveBeenCalledWith('uts_123', {
+      expect(runInsomniaTests).toHaveBeenCalledWith('uts_123', {
         reporter: 'min',
         keepFile: true,
         bail: true,
@@ -191,7 +192,7 @@ describe('cli', () => {
 
     it('should call runInsomniaTests with global options', () => {
       inso('run test uts_123 -w dir1 -a dir2 --ci');
-      expect(mockedRunInsomniaTests).toHaveBeenCalledWith(
+      expect(runInsomniaTests).toHaveBeenCalledWith(
         'uts_123',
         expect.objectContaining({
           workingDir: 'dir1',
@@ -205,19 +206,19 @@ describe('cli', () => {
   describe('export spec', () => {
     it('should call exportSpec with no arg', () => {
       inso('export spec');
-      expect(mockedExportSpecification).toHaveBeenCalledWith(undefined, {});
+      expect(exportSpecification).toHaveBeenCalledWith(undefined, {});
     });
 
     it('should call exportSpec with all expected arguments', () => {
       inso('export spec spc_123 -o output.yaml');
-      expect(mockedExportSpecification).toHaveBeenCalledWith('spc_123', {
+      expect(exportSpecification).toHaveBeenCalledWith('spc_123', {
         output: 'output.yaml',
       });
     });
 
     it('should call generateConfig with global options', () => {
       inso('export spec spc_123 -w testing/dir');
-      expect(mockedExportSpecification).toHaveBeenCalledWith(
+      expect(exportSpecification).toHaveBeenCalledWith(
         'spc_123',
         expect.objectContaining({
           workingDir: 'testing/dir',
@@ -231,12 +232,12 @@ describe('cli', () => {
 
     const expectExitWith = async (result: boolean): Promise<void> =>
       expect(
-        (exit as jest.Mock).mock.calls[0][0],
+        exit.mock.calls[0][0],
       ).resolves.toBe(result);
 
     it('should call script command by default', () => {
       inso('gen-conf', insorcFilePath);
-      expect(mockedGenerateConfig).toHaveBeenCalledWith(
+      expect(generateConfig).toHaveBeenCalledWith(
         'Designer Demo',
         expect.objectContaining({
           type: 'declarative',
@@ -246,7 +247,7 @@ describe('cli', () => {
 
     it('should call script command', () => {
       inso('script gen-conf', insorcFilePath);
-      expect(mockedGenerateConfig).toHaveBeenCalledWith(
+      expect(generateConfig).toHaveBeenCalledWith(
         'Designer Demo',
         expect.objectContaining({
           type: 'declarative',
@@ -260,13 +261,13 @@ describe('cli', () => {
       const logs = logger.__getLogs();
 
       expect(logs.fatal).toContain('Tasks in a script should start with `inso`.');
-      expect(mockedGenerateConfig).not.toHaveBeenCalledWith();
+      expect(generateConfig).not.toHaveBeenCalledWith();
       await expectExitWith(false);
     });
 
     it('should call nested command', async () => {
       inso('gen-conf:k8s', insorcFilePath);
-      expect(mockedGenerateConfig).toHaveBeenCalledWith(
+      expect(generateConfig).toHaveBeenCalledWith(
         'Designer Demo',
         expect.objectContaining({
           type: 'kubernetes',
@@ -284,7 +285,7 @@ describe('cli', () => {
 
     it('should call nested command and pass through props', async () => {
       inso('gen-conf:k8s --type declarative', insorcFilePath);
-      expect(mockedGenerateConfig).toHaveBeenCalledWith(
+      expect(generateConfig).toHaveBeenCalledWith(
         'Designer Demo',
         expect.objectContaining({
           type: 'declarative',
@@ -295,7 +296,7 @@ describe('cli', () => {
 
     it('should override env setting from command', async () => {
       inso('test:200s --env NewEnv', insorcFilePath);
-      expect(mockedRunInsomniaTests).toHaveBeenCalledWith(
+      expect(runInsomniaTests).toHaveBeenCalledWith(
         'Designer Demo',
         expect.objectContaining({
           env: 'NewEnv',
