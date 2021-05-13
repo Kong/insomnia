@@ -44,8 +44,14 @@ interface State {
   selectedEnvironmentId: string | null;
 }
 
-const SidebarListItem = SortableElement(
-  ({ environment, activeEnvironment, showEnvironment, changeEnvironmentName }) => {
+const SidebarListItem = SortableElement(({
+  activeEnvironmentId,
+  changeEnvironmentName,
+  environment,
+  handleActivateEnvironment,
+  activeEnvironment,
+  showEnvironment,
+}) => {
     const classes = classnames({
       'env-modal__sidebar-item': true,
       'env-modal__sidebar-item--active': activeEnvironment === environment,
@@ -79,22 +85,40 @@ const SidebarListItem = SortableElement(
             value={environment.name}
           />
         </Button>
+        <div className="env-status">
+          {environment._id === activeEnvironmentId ? (
+            <i className="fa fa-square active" title="Active Environment" />
+          ) : (
+            <Button onClick={handleActivateEnvironment} value={environment}>
+              <i className="fa fa-square-o inactive" title="Click to activate Environment" />
+            </Button>
+          )}
+        </div>
       </li>
     );
   },
 );
 
 const SidebarList = SortableContainer(
-  ({ environments, activeEnvironment, showEnvironment, changeEnvironmentName }) => (
+  ({
+    activeEnvironmentId,
+    changeEnvironmentName,
+    environments,
+    handleActivateEnvironment,
+    activeEnvironment,
+    showEnvironment,
+  }) => (
     <ul>
-      {environments.map((e, i) => (
+      {environments.map((environment, index) => (
         <SidebarListItem
-          key={e._id}
-          environment={e}
-          index={i}
+          activeEnvironmentId={activeEnvironmentId}
+          changeEnvironmentName={changeEnvironmentName}
+          environment={environment}
+          handleActivateEnvironment={handleActivateEnvironment}
+          index={index}
+          key={environment._id}
           activeEnvironment={activeEnvironment}
           showEnvironment={showEnvironment}
-          changeEnvironmentName={changeEnvironmentName}
         />
       ))}
     </ul>
@@ -397,16 +421,28 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     }
   }
 
+  async _handleActivateEnvironment(environment: Environment) {
+    const { handleChangeEnvironment, activeEnvironmentId } = this.props;
+
+    if (environment._id === activeEnvironmentId) {
+      return;
+    }
+
+    await handleChangeEnvironment(environment._id);
+    await this._handleShowEnvironment(environment);
+  }
+
   render() {
     const {
+      activeEnvironmentId,
       editorFontSize,
       editorIndentSize,
       editorKeyMap,
-      lineWrapping,
-      render,
       getRenderContext,
-      nunjucksPowerUserMode,
       isVariableUncovered,
+      lineWrapping,
+      nunjucksPowerUserMode,
+      render,
     } = this.props;
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
@@ -416,6 +452,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       object: activeEnvironment ? activeEnvironment.data : {},
       propertyOrder: activeEnvironment && activeEnvironment.dataPropertyOrder,
     };
+
     return (
       <Modal ref={this._setModalRef} wide tall {...this.props}>
         <ModalHeader>Manage Environments</ModalHeader>
@@ -452,6 +489,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
               </Dropdown>
             </div>
             <SidebarList
+              activeEnvironmentId={activeEnvironmentId}
+              handleActivateEnvironment={this._handleActivateEnvironment}
               environments={subEnvironments}
               activeEnvironment={activeEnvironment}
               showEnvironment={this._handleShowEnvironment}
