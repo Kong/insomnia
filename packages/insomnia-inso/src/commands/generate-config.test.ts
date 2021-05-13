@@ -1,5 +1,5 @@
 import { conversionTypeMap, generateConfig, GenerateConfigOptions } from './generate-config';
-import o2k from 'openapi-2-kong';
+import { ConversionResult, generate as _generate, generateFromString as _generateFromString } from 'openapi-2-kong';
 import path from 'path';
 import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
@@ -10,9 +10,16 @@ import os from 'os';
 jest.mock('openapi-2-kong');
 jest.mock('../write-file');
 
-const generate = o2k.generate as jest.MockedFunction<typeof o2k.generate>;
-const generateFromString = o2k.generateFromString as jest.MockedFunction<typeof o2k.generateFromString>;
+const generate = _generate as jest.MockedFunction<typeof _generate>;
+const generateFromString = _generateFromString as jest.MockedFunction<typeof _generateFromString>;
 const writeFileWithCliOptions = _writeFileWithCliOptions as jest.MockedFunction<typeof _writeFileWithCliOptions>;
+
+const mockConversionResult: ConversionResult = {
+  documents: ['a', 'b'],
+  type: 'kong-for-kubernetes',
+  label: '',
+  warnings: [],
+};
 
 describe('generateConfig()', () => {
   beforeAll(() => {
@@ -41,7 +48,7 @@ describe('generateConfig()', () => {
   });
 
   it('should print conversion documents to console', async () => {
-    generate.mockResolvedValue({ documents: ['a', 'b'] });
+    generate.mockResolvedValue(mockConversionResult);
 
     await generateConfig(filePath, { type: 'kubernetes', tags: 'tag' });
 
@@ -50,7 +57,7 @@ describe('generateConfig()', () => {
   });
 
   it('should load identifier from database', async () => {
-    generateFromString.mockResolvedValue({ documents: ['a', 'b'] });
+    generateFromString.mockResolvedValue(mockConversionResult);
     await generateConfig('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
       type: 'kubernetes',
       workingDir: 'src/db/fixtures/git-repo',
@@ -66,7 +73,7 @@ describe('generateConfig()', () => {
   });
 
   it('should output generated document to a file', async () => {
-    generate.mockResolvedValue({ documents: ['a', 'b'] });
+    generate.mockResolvedValue(mockConversionResult);
     const outputPath = 'this-is-the-output-path';
     writeFileWithCliOptions.mockResolvedValue(outputPath);
     const options: Partial<GenerateConfigOptions> = {
@@ -85,7 +92,7 @@ describe('generateConfig()', () => {
   });
 
   it('should return false if failed to write file', async () => {
-    generate.mockResolvedValue({ documents: ['a', 'b'] });
+    generate.mockResolvedValue(mockConversionResult);
     const error = new Error('error message');
     writeFileWithCliOptions.mockRejectedValue(error);
     const options: Partial<GenerateConfigOptions> = {
@@ -98,7 +105,7 @@ describe('generateConfig()', () => {
   });
 
   it('should generate documents using workingDir', async () => {
-    generate.mockResolvedValue({ documents: ['a', 'b'] });
+    generate.mockResolvedValue(mockConversionResult);
     const outputPath = 'this-is-the-output-path';
     writeFileWithCliOptions.mockResolvedValue(outputPath);
     const result = await generateConfig('file.yaml', {
@@ -117,7 +124,7 @@ describe('generateConfig()', () => {
   });
 
   it('should generate documents using absolute path', async () => {
-    generate.mockResolvedValue({ documents: ['a', 'b'] });
+    generate.mockResolvedValue(mockConversionResult);
     const outputPath = 'this-is-the-output-path';
     writeFileWithCliOptions.mockResolvedValue(outputPath);
     const absolutePath = path.join(os.tmpdir(), 'dev', 'file.yaml');
