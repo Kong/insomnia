@@ -21,7 +21,7 @@ export const conversionTypes: ConversionResultType[] = [
 export type GenerateConfigOptions = GlobalOptions & {
   type: keyof (typeof conversionTypeMap);
   output?: string;
-  tags?: string[],
+  tags?: string,
 };
 
 const validateOptions = (
@@ -56,7 +56,7 @@ export const generateConfig = async (
   // try get from db
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
-  const generationTags = tags;
+  const generationTags = tags?.split(',');
 
   try {
     if (specFromDb?.contents) {

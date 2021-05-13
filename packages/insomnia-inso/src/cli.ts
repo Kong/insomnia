@@ -34,7 +34,7 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
       '-t, --type <value>',
       `type of configuration to generate, options are [${Object.keys(conversionTypeMap).join(', ')}] (default: ${defaultType})`,
     )
-    .option('--tags <tags...>', 'add tags to generated entities')
+    .option('--tags <tags>', 'comma separated list of tags to apply to each entity')
     .option('-o, --output <path>', 'save the generated config to a file')
     .action((identifier, cmd) => {
       let options = getOptions<GenerateConfigOptions>(cmd, {

@@ -71,7 +71,7 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 |- |- |- |
 | `--type <type>` | `-t` |type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative` ) |
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
-| `--tags <tag...>` | |add tags to generated entities|
+| `--tags <tags>` | |comma separated list of tags to apply to each entity|
 
 ### Examples
 
@@ -98,10 +98,10 @@ inso generate config spec.yaml --workingDir another/dir
 
 ```
 
-Add tags: the `--tags` option is variadic, meaning it can be specified multiple times or provided multiple values
+Add tags
 ```sh
-inso generate config spec.yaml --tags first second --type declarative
-inso generate config spec.yaml --tags first --tags second --type declarative
+inso generate config spec.yaml --tags first
+inso generate config spec.yaml --tags "first,second"
 ```
 
 Output to file
