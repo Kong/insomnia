@@ -36,16 +36,12 @@ export class ResponseTimer extends PureComponent<Props, State> {
   componentDidUpdate() {
     const { loadStartTime } = this.props;
 
-    if (loadStartTime <= 0) {
-      if (this.interval !== null) {
-        clearInterval(this.interval);
-      }
-      return;
+    if (this.interval !== null) {
+      clearInterval(this.interval);
     }
 
-    if (this.interval !== null) {
-      // Just to be sure
-      clearInterval(this.interval);
+    if (loadStartTime <= 0) {
+      return;
     }
 
     this.interval = setInterval(this.handleUpdateElapsedTime, 100);
