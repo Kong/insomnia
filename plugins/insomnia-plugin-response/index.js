@@ -157,7 +157,6 @@ module.exports.templateTags = [
         console.log('[response tag] Resending dependency');
         requestChain.push(request._id)
         response = await context.network.sendRequest(request, [
-          { name: 'fromResponseTag', value: true },
           { name: 'requestChain', value: requestChain }
         ]);
       }

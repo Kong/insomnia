@@ -542,19 +542,11 @@ describe('Response tag', () => {
 
     it('does not resend recursive', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
-
       const responses = [];
+      const context = _genTestContext(requests, responses);
 
-      const context = _genTestContext(requests, responses, { fromResponseTag: true });
-
-      try {
-        await tag.run(context, 'raw', 'req_1', '', 'always');
-      } catch (err) {
-        expect(err.message).toBe('No responses for request');
-        return;
-      }
-
-      throw new Error('Running tag should have thrown exception');
+      const response = await tag.run(context, 'raw', 'req_1', '', 'always');
+      expect(response).toBe('Response res_1')
     });
   });
 
