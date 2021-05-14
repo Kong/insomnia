@@ -1,21 +1,20 @@
 import { EventEmitter } from 'events';
 import fs from 'fs';
-import {
-  CurlAuth,
-  CurlCode,
-  CurlInfoDebug,
-  CurlFeature,
-  CurlNetrc,
-  CurlHttpVersion,
-} from 'node-libcurl';
+
+// Note: we cannot import these from `node-libcurl` like normal because they come from the native library and it's not possible to load it while testing because it was built to run with Electron.
+// That applies to these Enum type imports, but also applies to the members of the class below.
+import { CurlAuth } from 'node-libcurl/dist/enum/CurlAuth';
+import { CurlCode } from 'node-libcurl/dist/enum/CurlCode';
+import { CurlInfoDebug } from 'node-libcurl/dist/enum/CurlInfoDebug';
+import { CurlFeature } from 'node-libcurl/dist/enum/CurlFeature';
+import { CurlNetrc } from 'node-libcurl/dist/enum/CurlNetrc';
+import { CurlHttpVersion } from 'node-libcurl/dist/enum/CurlHttpVersion';
 
 class Curl extends EventEmitter {
   _options = {};
   _meta = {};
   _features = {};
 
-  // cannot include these from node-libcurl because they come from the native library
-  // and it's not possible to load it while testing (as it was built to run with Electron)
   static info = {
     COOKIELIST: 'COOKIELIST',
     EFFECTIVE_URL: 'EFFECTIVE_URL',

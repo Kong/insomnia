@@ -645,6 +645,7 @@ describe('actuallySend()', () => {
     });
     const responseInvalid = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
       ...settings,
+      // @ts-expect-error intentionally invalid
       preferredHttpVersion: 'blah',
     });
     const r = models.response;

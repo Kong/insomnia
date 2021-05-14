@@ -138,7 +138,7 @@ export async function _actuallySend(
   renderContext: Record<string, any>,
   workspace: Workspace,
   settings: Settings,
-  environment: Environment | null,
+  environment?: Environment | null,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: Array<ResponseTimelineEntry> = [];
