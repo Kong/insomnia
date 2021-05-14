@@ -14,7 +14,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStar
     let interval: NodeJS.Timeout | null = null;
     if (isLoading) {
       interval = setInterval(() => {
-        const milliseconds = Date.now() - loadStartTime - 200;
+        const milliseconds = Date.now() - loadStartTime;
         setSeconds(milliseconds / 1000);
       }, 100);
     }
