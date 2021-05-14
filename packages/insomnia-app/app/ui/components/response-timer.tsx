@@ -2,12 +2,13 @@ import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 're
 import { REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
 
 interface Props {
-  handleCancel: DOMAttributes<HTMLButtonElement>['onClick'],
-  loadStartTime: number,
+  handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
+  loadStartTime: number;
+  responseTime?: number;
 }
 
-export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStartTime }) => {
-  const [seconds, setSeconds] = useState(0);
+export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStartTime, responseTime = 0 }) => {
+  const [milliseconds, setMilliseconds] = useState(0);
   const isLoading = loadStartTime > 0;
 
   useEffect(() => {
@@ -15,21 +16,30 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStar
     if (isLoading) {
       interval = setInterval(() => {
         const milliseconds = Date.now() - loadStartTime;
-        setSeconds(milliseconds / 1000);
+        setMilliseconds(milliseconds);
       }, 100);
     }
     return () => {
-      setSeconds(0);
       if (interval !== null) {
+        setMilliseconds(milliseconds => {
+          if (milliseconds > 0) {
+            console.info(`[ResponseTimer] lag measured to be ${Math.floor(milliseconds - responseTime)}ms`, {
+              wallTime: milliseconds,
+              responseTime,
+            });
+          }
+          return 0;
+        });
         clearInterval(interval);
       }
     };
-  }, [loadStartTime, setSeconds, isLoading]);
+  }, [loadStartTime, setMilliseconds, isLoading, responseTime]);
 
   if (!isLoading) {
     return null;
   }
 
+  const seconds = milliseconds / 1000;
   return (
     <div className="overlay theme--transparent-overlay">
       <h2>
