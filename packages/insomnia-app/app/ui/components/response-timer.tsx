@@ -55,14 +55,13 @@ export class ResponseTimer extends PureComponent<Props, State> {
   render() {
     const { handleCancel, loadStartTime } = this.props;
     const { elapsedTime } = this.state;
-    const show = loadStartTime > 0;
 
-    if (!show) {
+    if (loadStartTime <= 0) {
       return null;
     }
 
     return (
-      <div className="overlay theme--transparent-overlay" aria-hidden={!show}>
+      <div className="overlay theme--transparent-overlay">
         {elapsedTime >= REQUEST_TIME_TO_SHOW_COUNTER ? (
           <h2>{elapsedTime.toFixed(1)} seconds...</h2>
         ) : (
