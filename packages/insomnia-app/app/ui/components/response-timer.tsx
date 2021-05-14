@@ -12,7 +12,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseTimer extends PureComponent<Props, State> {
+export class ResponseTimer extends PureComponent<Props, State> {
   _interval: NodeJS.Timeout | null = null;
 
   state: State = {
@@ -80,5 +80,3 @@ class ResponseTimer extends PureComponent<Props, State> {
     );
   }
 }
-
-export default ResponseTimer;
