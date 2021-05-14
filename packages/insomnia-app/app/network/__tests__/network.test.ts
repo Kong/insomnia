@@ -97,7 +97,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -172,7 +172,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -272,7 +272,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -332,7 +332,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -412,7 +412,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -473,7 +473,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -513,7 +513,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -552,7 +552,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -592,7 +592,7 @@ describe('actuallySend()', () => {
       settings,
     );
     const bodyBuffer = models.response.getBodyBuffer(response);
-    const body = JSON.parse(bodyBuffer);
+    const body = JSON.parse(String(bodyBuffer));
     expect(body).toEqual({
       meta: {},
       features: {
@@ -648,12 +648,12 @@ describe('actuallySend()', () => {
       preferredHttpVersion: 'blah',
     });
     const r = models.response;
-    expect(JSON.parse(r.getBodyBuffer(responseV1)).options.HTTP_VERSION).toBe('V1_0');
-    expect(JSON.parse(r.getBodyBuffer(responseV11)).options.HTTP_VERSION).toBe('V1_1');
-    expect(JSON.parse(r.getBodyBuffer(responseV2)).options.HTTP_VERSION).toBe('V2_0');
-    expect(JSON.parse(r.getBodyBuffer(responseV3)).options.HTTP_VERSION).toBe('v3');
-    expect(JSON.parse(r.getBodyBuffer(responseDefault)).options.HTTP_VERSION).toBe(undefined);
-    expect(JSON.parse(r.getBodyBuffer(responseInvalid)).options.HTTP_VERSION).toBe(undefined);
+    expect(JSON.parse(String(r.getBodyBuffer(responseV1))).options.HTTP_VERSION).toBe('V1_0');
+    expect(JSON.parse(String(r.getBodyBuffer(responseV11))).options.HTTP_VERSION).toBe('V1_1');
+    expect(JSON.parse(String(r.getBodyBuffer(responseV2))).options.HTTP_VERSION).toBe('V2_0');
+    expect(JSON.parse(String(r.getBodyBuffer(responseV3))).options.HTTP_VERSION).toBe('v3');
+    expect(JSON.parse(String(r.getBodyBuffer(responseDefault))).options.HTTP_VERSION).toBe(undefined);
+    expect(JSON.parse(String(r.getBodyBuffer(responseInvalid))).options.HTTP_VERSION).toBe(undefined);
   });
 
   it('requests can be cancelled by requestId', async () => {
