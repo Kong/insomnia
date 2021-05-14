@@ -1,77 +1,51 @@
-import React, { DOMAttributes, PureComponent } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { REQUEST_TIME_TO_SHOW_COUNTER, AUTOBIND_CFG } from '../../common/constants';
+import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 'react';
+import { REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
 
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'],
   loadStartTime: number,
 }
 
-interface State {
-  elapsedTime: number;
-  interval: NodeJS.Timeout | null;
-}
+export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStartTime }) => {
+  const [seconds, setSeconds] = useState(0);
+  const isLoading = loadStartTime > 0;
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseTimer extends PureComponent<Props, State> {
-  state: State = {
-    elapsedTime: 0,
-    interval: null,
-  };
-
-  componentWillUnmount() {
-    if (this.state.interval !== null) {
-      clearInterval(this.state.interval);
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (isLoading) {
+      interval = setInterval(() => {
+        const milliseconds = Date.now() - loadStartTime - 200;
+        setSeconds(milliseconds / 1000);
+      }, 100);
     }
-  }
-
-  componentDidUpdate() {
-    const { loadStartTime } = this.props;
-
-    if (this.state.interval !== null) {
-      clearInterval(this.state.interval);
-    }
-
-    if (loadStartTime <= 0) {
-      return;
-    }
-
-    const handleUpdateElapsedTime = () => {
-      const { loadStartTime } = this.props;
-      const millis = Date.now() - loadStartTime - 200;
-      const elapsedTime = millis / 1000;
-      this.setState({ elapsedTime });
+    return () => {
+      setSeconds(0);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
     };
+  }, [loadStartTime, setSeconds, isLoading]);
 
-    const interval = setInterval(handleUpdateElapsedTime, 100);
-    this.setState({ interval });
-    handleUpdateElapsedTime();
+  if (!isLoading) {
+    return null;
   }
 
-  render() {
-    const { handleCancel, loadStartTime } = this.props;
-    const { elapsedTime } = this.state;
-
-    if (loadStartTime <= 0) {
-      return null;
-    }
-
-    return (
-      <div className="overlay theme--transparent-overlay">
-        {elapsedTime >= REQUEST_TIME_TO_SHOW_COUNTER ? (
-          <h2>{elapsedTime.toFixed(1)} seconds...</h2>
-        ) : (
-          <h2>Loading...</h2>
-        )}
-        <div className="pad">
-          <i className="fa fa-refresh fa-spin" />
-        </div>
-        <div className="pad">
-          <button className="btn btn--clicky" onClick={handleCancel}>
-            Cancel Request
-          </button>
-        </div>
+  return (
+    <div className="overlay theme--transparent-overlay">
+      <h2>
+        {seconds >= REQUEST_TIME_TO_SHOW_COUNTER ? `${seconds.toFixed(1)} seconds` : 'Loading'}...
+      </h2>
+      <div className="pad">
+        <i className="fa fa-refresh fa-spin" />
       </div>
-    );
-  }
-}
+      <div className="pad">
+        <button
+          className="btn btn--clicky"
+          onClick={handleCancel}
+        >
+          Cancel Request
+        </button>
+      </div>
+    </div>
+  );
+};
