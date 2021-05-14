@@ -238,10 +238,6 @@ export async function _actuallySend(
       }
     }
 
-    function enable(feature: number) {
-      curl.enable(feature);
-    }
-
     try {
       // Setup the cancellation logic
       cancelRequestFunctionMap[renderedRequest._id] = async () => {
@@ -272,7 +268,7 @@ export async function _actuallySend(
       setOpt(Curl.option.ACCEPT_ENCODING, '');
 
       // Auto decode everything
-      enable(CurlFeature.Raw);
+      curl.enable(CurlFeature.Raw);
 
       // Set follow redirects setting
       switch (renderedRequest.settingFollowRedirects) {
