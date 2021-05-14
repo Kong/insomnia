@@ -9,43 +9,43 @@ interface Props {
 
 interface State {
   elapsedTime: number;
+  interval: NodeJS.Timeout | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class ResponseTimer extends PureComponent<Props, State> {
-  interval: NodeJS.Timeout | null = null;
-
   state: State = {
     elapsedTime: 0,
+    interval: null,
   };
 
   componentWillUnmount() {
-    if (this.interval === null) {
-      return;
+    if (this.state.interval !== null) {
+      clearInterval(this.state.interval);
     }
-    clearInterval(this.interval);
-  }
-
-  handleUpdateElapsedTime() {
-    const { loadStartTime } = this.props;
-    const millis = Date.now() - loadStartTime - 200;
-    const elapsedTime = millis / 1000;
-    this.setState({ elapsedTime });
   }
 
   componentDidUpdate() {
     const { loadStartTime } = this.props;
 
-    if (this.interval !== null) {
-      clearInterval(this.interval);
+    if (this.state.interval !== null) {
+      clearInterval(this.state.interval);
     }
 
     if (loadStartTime <= 0) {
       return;
     }
 
-    this.interval = setInterval(this.handleUpdateElapsedTime, 100);
-    this.handleUpdateElapsedTime();
+    const handleUpdateElapsedTime = () => {
+      const { loadStartTime } = this.props;
+      const millis = Date.now() - loadStartTime - 200;
+      const elapsedTime = millis / 1000;
+      this.setState({ elapsedTime });
+    };
+
+    const interval = setInterval(handleUpdateElapsedTime, 100);
+    this.setState({ interval });
+    handleUpdateElapsedTime();
   }
 
   render() {
