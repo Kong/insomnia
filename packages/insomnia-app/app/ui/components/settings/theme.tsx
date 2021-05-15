@@ -40,7 +40,7 @@ class Theme extends PureComponent<Props, State> {
   renderThemePreview(themeName: string) {
     return (
       /* @ts-expect-error -- TSCONVERSION */
-      <svg theme={themeName} width="100%" height="100%" viewBox="0 0 500 300" key={Math.random()}>
+      <svg theme={themeName} width="100%" height="100%" viewBox="0 0 500 300">
         {/*
           A WORD TO THE WISE: If you, dear traveler from the future, are here
           for the purpose of theming things due to changes in the app structure,
@@ -152,7 +152,6 @@ class Theme extends PureComponent<Props, State> {
     const { themes } = this.state;
     const activeColorTheme =
       scheme === 'light' ? activeLightTheme : activeDarkTheme;
-    let selectedThemeName = activeColorTheme;
     return (
       <div>
         <div className="form-control form-control--outlined">
@@ -163,10 +162,7 @@ class Theme extends PureComponent<Props, State> {
             </HelpTooltip>
             <select
               value={activeColorTheme}
-              onChange={(e) => {
-                handleChangeTheme(e.target.value, scheme);
-                selectedThemeName = e.target.value;
-              }}
+              onChange={(e) => handleChangeTheme(e.target.value, scheme)}
             >
               {themes.map((theme) => (
                 <option key={theme.theme.name} value={theme.theme.name}>
@@ -179,7 +175,7 @@ class Theme extends PureComponent<Props, State> {
         <div className="themes select__preview">
           <div className="themes__theme" style={{ maxWidth: '50%' }}>
             <Button disabled={!autoDetectColorScheme}>
-              {this.renderThemePreview(selectedThemeName)}
+              {this.renderThemePreview(activeColorTheme)}
             </Button>
           </div>
         </div>
