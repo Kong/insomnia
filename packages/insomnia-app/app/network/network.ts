@@ -67,7 +67,6 @@ import { urlMatchesCertHost } from './url-matches-cert-host';
 import aws4 from 'aws4';
 import { buildMultipart } from './multipart';
 import type { Environment } from '../models/environment';
-import { CurlOptionName } from 'node-libcurl/dist/generated/CurlOption';
 
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
@@ -139,7 +138,7 @@ export async function _actuallySend(
   renderContext: Record<string, any>,
   workspace: Workspace,
   settings: Settings,
-  environment: Environment | null,
+  environment?: Environment | null,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: Array<ResponseTimelineEntry> = [];
@@ -224,23 +223,14 @@ export async function _actuallySend(
     }
 
     /** Helper function to set Curl options */
-    function setOpt(opt: Parameters<typeof curl.setOpt>[0] | CurlOptionName, val: Parameters<typeof curl.setOpt>[1], optional = false) {
+    const setOpt: typeof curl.setOpt = (opt: any, val: any) => {
       try {
-        // @ts-expect-error -- TSCONVERSION
-        curl.setOpt(opt, val);
+        return curl.setOpt(opt, val);
       } catch (err) {
         const name = Object.keys(Curl.option).find(name => Curl.option[name] === opt);
-        if (!optional) {
-          throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
-        } else {
-          console.warn(`Failed to set optional Curl opt (${opt} ${name || 'n/a'})`);
-        }
+        throw new Error(`${err.message} (${opt} ${name || 'n/a'})`);
       }
-    }
-
-    function enable(feature: number) {
-      curl.enable(feature);
-    }
+    };
 
     try {
       // Setup the cancellation logic
@@ -272,7 +262,7 @@ export async function _actuallySend(
       setOpt(Curl.option.ACCEPT_ENCODING, '');
 
       // Auto decode everything
-      enable(CurlFeature.Raw);
+      curl.enable(CurlFeature.Raw);
 
       // Set follow redirects setting
       switch (renderedRequest.settingFollowRedirects) {
@@ -320,19 +310,16 @@ export async function _actuallySend(
           break;
       }
 
-      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       // Setup debug handler
-      setOpt(Curl.option.DEBUGFUNCTION, (infoType: string, contentBuffer: Buffer) => {
+      setOpt(Curl.option.DEBUGFUNCTION, (infoType, contentBuffer) => {
         const content = contentBuffer.toString('utf8');
         const rawName = Object.keys(CurlInfoDebug).find(k => CurlInfoDebug[k] === infoType) || '';
         const name = LIBCURL_DEBUG_MIGRATION_MAP[rawName] || rawName;
 
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         if (infoType === CurlInfoDebug.SslDataIn || infoType === CurlInfoDebug.SslDataOut) {
           return 0;
         }
 
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         // Ignore the possibly large data messages
         if (infoType === CurlInfoDebug.DataOut) {
           if (contentBuffer.length === 0) {
@@ -346,13 +333,11 @@ export async function _actuallySend(
           return 0;
         }
 
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         if (infoType === CurlInfoDebug.DataIn) {
           addTimelineText(`Received ${describeByteSize(contentBuffer.length)} chunk`);
           return 0;
         }
 
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error
         // Don't show cookie setting because this will display every domain in the jar
         if (infoType === CurlInfoDebug.Text && content.indexOf('Added cookie') === 0) {
           return 0;
@@ -461,7 +446,7 @@ export async function _actuallySend(
       if (renderedRequest.settingSendCookies) {
         // Tell Curl to store cookies that it receives. This is only important if we receive
         // a cookie on a redirect that needs to be sent on the next request in the chain.
-        curl.setOpt(Curl.option.COOKIEFILE, '');
+        setOpt(Curl.option.COOKIEFILE, '');
         const cookies = renderedRequest.cookieJar.cookies || [];
 
         for (const cookie of cookies) {
@@ -750,7 +735,6 @@ export async function _actuallySend(
             return `${h.name}: ${value}`;
           }
         });
-      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       setOpt(Curl.option.HTTPHEADER, headerStrings);
       let responseBodyBytes = 0;
       const responsesDir = pathJoin(getDataDirectory(), 'responses');
@@ -759,8 +743,7 @@ export async function _actuallySend(
       const responseBodyWriteStream = fs.createWriteStream(responseBodyPath);
       curl.on('end', () => responseBodyWriteStream.end());
       curl.on('error', () => responseBodyWriteStream.end());
-      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-      setOpt(Curl.option.WRITEFUNCTION, (buff: Buffer) => {
+      setOpt(Curl.option.WRITEFUNCTION, buff => {
         responseBodyBytes += buff.length;
         responseBodyWriteStream.write(buff);
         return buff.length;
