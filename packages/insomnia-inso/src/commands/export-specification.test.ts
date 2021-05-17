@@ -1,10 +1,11 @@
 import { exportSpecification } from './export-specification';
-import { writeFileWithCliOptions } from '../write-file';
+import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
-import { UNKNOWN } from '../types';
 
 jest.mock('../write-file');
+
+const writeFileWithCliOptions = _writeFileWithCliOptions as jest.MockedFunction<typeof _writeFileWithCliOptions>;
 
 describe('exportSpecification()', () => {
   beforeAll(() => {
@@ -14,8 +15,6 @@ describe('exportSpecification()', () => {
   beforeEach(() => {
     globalBeforeEach();
   });
-
-  const mock = (mockFn: UNKNOWN) => mockFn;
 
   afterEach(() => {
     jest.restoreAllMocks();
@@ -32,7 +31,7 @@ describe('exportSpecification()', () => {
 
   it('should output document to a file', async () => {
     const outputPath = 'this-is-the-output-path';
-    mock(writeFileWithCliOptions).mockResolvedValue(outputPath);
+    writeFileWithCliOptions.mockResolvedValue(outputPath);
     const options = {
       output: 'output.yaml',
       workingDir: 'src/db/fixtures/git-repo',
@@ -49,7 +48,7 @@ describe('exportSpecification()', () => {
 
   it('should throw if writing file returns error', async () => {
     const error = new Error('error message');
-    mock(writeFileWithCliOptions).mockRejectedValue(error);
+    writeFileWithCliOptions.mockRejectedValue(error);
     const options = {
       output: 'output.yaml',
       workingDir: 'src/db/fixtures/git-repo',

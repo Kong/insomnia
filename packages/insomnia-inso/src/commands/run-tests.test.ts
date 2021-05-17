@@ -7,8 +7,8 @@ import { GenerateConfigOptions } from './generate-config';
 jest.mock('insomnia-testing');
 jest.mock('insomnia-send-request');
 
-const generate = _generate as jest.Mock;
-const runTestsCli = _runTestsCli as jest.Mock;
+const generate = _generate as jest.MockedFunction<typeof _generate>;
+const runTestsCli = _runTestsCli as jest.MockedFunction<typeof _runTestsCli>;
 
 describe('runInsomniaTests()', () => {
   beforeAll(() => {

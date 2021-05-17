@@ -1,13 +1,15 @@
 import { emptyDb, loadDb } from './index';
-import gitAdapter from './adapters/git-adapter';
-import neDbAdapter from './adapters/ne-db-adapter';
+import _gitAdapter from './adapters/git-adapter';
+import _neDbAdapter from './adapters/ne-db-adapter';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import path from 'path';
-import { UNKNOWN } from '../types';
 
 jest.mock('./adapters/git-adapter');
 jest.mock('./adapters/ne-db-adapter');
+
+const gitAdapter = _gitAdapter as jest.MockedFunction<typeof _gitAdapter>;
+const neDbAdapter = _neDbAdapter as jest.MockedFunction<typeof _neDbAdapter>;
 
 describe('loadDb()', () => {
   beforeAll(() => {
@@ -19,10 +21,8 @@ describe('loadDb()', () => {
     globalBeforeEach();
   });
 
-  const mock = (mockFn: UNKNOWN) => mockFn;
-
   it('should default to current directory if working dir not defined', async () => {
-    mock(gitAdapter).mockResolvedValue(emptyDb());
+    gitAdapter.mockResolvedValue(emptyDb());
     await loadDb({
       workingDir: undefined,
     });
@@ -34,7 +34,7 @@ describe('loadDb()', () => {
   });
 
   it('should load git data from working directory', async () => {
-    mock(gitAdapter).mockResolvedValue(emptyDb());
+    gitAdapter.mockResolvedValue(emptyDb());
     await loadDb({
       workingDir: 'dir',
       filterTypes: ['Environment'],
@@ -47,8 +47,8 @@ describe('loadDb()', () => {
   });
 
   it('should load nedb from appDataDir', async () => {
-    mock(gitAdapter).mockResolvedValue(emptyDb());
-    mock(neDbAdapter).mockResolvedValue(emptyDb());
+    gitAdapter.mockResolvedValue(emptyDb());
+    neDbAdapter.mockResolvedValue(emptyDb());
     await loadDb({
       appDataDir: 'dir',
       filterTypes: ['Environment'],
@@ -61,7 +61,7 @@ describe('loadDb()', () => {
   });
 
   it('should not load from git if appDataDir is defined', async () => {
-    mock(neDbAdapter).mockResolvedValue(emptyDb());
+    neDbAdapter.mockResolvedValue(emptyDb());
     await loadDb({
       appDataDir: 'dir',
     });
@@ -73,8 +73,8 @@ describe('loadDb()', () => {
   });
 
   it('should load from neDb if not loaded from git', async () => {
-    mock(gitAdapter).mockResolvedValue(null);
-    mock(neDbAdapter).mockResolvedValue(emptyDb());
+    gitAdapter.mockResolvedValue(null);
+    neDbAdapter.mockResolvedValue(emptyDb());
     await loadDb(); // Cannot assert the full path because it is application data
 
     expect(logger.__getLogs().debug).toEqual([
@@ -85,8 +85,8 @@ describe('loadDb()', () => {
   });
 
   it('should warn and return empty db if nothing loaded from git or nedb', async () => {
-    mock(gitAdapter).mockResolvedValue(null);
-    mock(neDbAdapter).mockResolvedValue(null);
+    gitAdapter.mockResolvedValue(null);
+    neDbAdapter.mockResolvedValue(null);
     const db = await loadDb();
     expect(logger.__getLogs().warn).toEqual([
       'No git or app data store found, re-run `inso` with `--verbose` to see tracing information',

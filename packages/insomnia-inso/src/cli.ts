@@ -24,8 +24,9 @@ type CreateCommand = (command: string) => commander.Command
 const makeGenerateCommand = (commandCreator: CreateCommand) => {
   // inso generate
   const command = commandCreator('generate').description('Code generation utilities');
-  const defaultType = 'declarative'; // inso generate config -t kubernetes config.yaml
+  const defaultType: keyof typeof conversionTypeMap = 'declarative';
 
+  // inso generate config -t kubernetes config.yaml
   command
     .command('config [identifier]')
     .description('Generate configuration from an api spec.')
@@ -33,6 +34,7 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
       '-t, --type <value>',
       `type of configuration to generate, options are [${Object.keys(conversionTypeMap).join(', ')}] (default: ${defaultType})`,
     )
+    .option('--tags <tags>', 'comma separated list of tags to apply to each entity')
     .option('-o, --output <path>', 'save the generated config to a file')
     .action((identifier, cmd) => {
       let options = getOptions<GenerateConfigOptions>(cmd, {
@@ -47,8 +49,9 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
 const makeTestCommand = (commandCreator: CreateCommand) => {
   // inso run
   const run = commandCreator('run').description('Execution utilities');
-  const defaultReporter: TestReporter = 'spec'; // inso run tests
+  const defaultReporter: TestReporter = 'spec';
 
+  // inso run tests
   run
     .command('test [identifier]')
     .description('Run Insomnia unit test suites')
@@ -72,8 +75,9 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
 
 const makeLintCommand = (commandCreator: CreateCommand) => {
   // inso lint
-  const lint = commandCreator('lint').description('Linting utilities'); // inso lint spec
+  const lint = commandCreator('lint').description('Linting utilities');
 
+  // inso lint spec
   lint
     .command('spec [identifier]')
     .description('Lint an API Specification')
@@ -87,8 +91,9 @@ const makeLintCommand = (commandCreator: CreateCommand) => {
 
 const makeExportCommand = (commandCreator: CreateCommand) => {
   // inso export
-  const exportCmd = commandCreator('export').description('Export data from insomnia models'); // inso export spec
+  const exportCmd = commandCreator('export').description('Export data from insomnia models');
 
+  // inso export spec
   exportCmd
     .command('spec [identifier]')
     .description('Export an API Specification to a file')
