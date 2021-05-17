@@ -502,11 +502,12 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                   <Editable
                     singleClick
                     className="wide"
-                    onSubmit={name =>
-                      selectedEnvironment &&
-                      // @ts-expect-error -- TSCONVERSION only set name if defined
-                      this._handleChangeEnvironmentName(selectedEnvironment, name)
-                    }
+                    onSubmit={name => {
+                      if (!selectedEnvironment || !name) {
+                        return;
+                      }
+                      this._handleChangeEnvironmentName(selectedEnvironment, name);
+                    }}
                     value={selectedEnvironment ? selectedEnvironment.name : ''}
                   />
                 )}
@@ -540,8 +541,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                       <i
                         className="fa fa-circle"
                         style={{
-                          // @ts-expect-error -- TSCONVERSION don't set color if undefined
-                          color: selectedEnvironment.color,
+                          ...(selectedEnvironment.color ? { color: selectedEnvironment.color } : {}),
                         }}
                       />
                       {selectedEnvironment.color ? 'Change Color' : 'Assign Color'}
