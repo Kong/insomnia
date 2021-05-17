@@ -23,7 +23,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStar
         clearInterval(interval);
       }
     };
-  }, [loadStartTime, setMilliseconds, isLoading]);
+  }, [loadStartTime, isLoading]);
 
   if (!isLoading) {
     return null;
