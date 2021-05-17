@@ -4,11 +4,21 @@ import { generateDeclarativeConfigFromSpec } from './declarative-config';
 import { generateKongForKubernetesConfigFromSpec } from './kubernetes';
 import SwaggerParser from 'swagger-parser';
 import { OpenApi3Spec } from './types/openapi3';
-import { ConversionResultType, ConversionResult } from './types/outputs';
+import { ConversionResultType, ConversionResult, DeclarativeConfigResult, KongForKubernetesResult } from './types/outputs';
 import YAML from 'yaml';
 
 const defaultTags = ['OAS3_import'];
 
+export async function generate(
+  specPath: string,
+  type: 'kong-declarative-config',
+  tags?: string[],
+): Promise<DeclarativeConfigResult>
+export async function generate(
+  specPath: string,
+  type: 'kong-for-kubernetes',
+  tags?: string[],
+): Promise<KongForKubernetesResult>
 export async function generate(
   specPath: string,
   type: ConversionResultType,
@@ -23,6 +33,7 @@ export async function generate(
 
       const fileSlug = path.basename(specPath);
       const allTags = [`OAS3file_${fileSlug}`, ...tags];
+      // @ts-expect-error -- To avoid this error (inherent to overloads), we must simply change the call signature to accept a single object with properties for each parameter.
       resolve(generateFromString(contents, type, allTags));
     });
   });
@@ -30,13 +41,34 @@ export async function generate(
 
 export async function generateFromString(
   specStr: string,
+  type: 'kong-declarative-config',
+  tags?: string[],
+): Promise<DeclarativeConfigResult>
+export async function generateFromString(
+  specStr: string,
+  type: 'kong-for-kubernetes',
+  tags?: string[],
+): Promise<KongForKubernetesResult>
+export async function generateFromString(
+  specStr: string,
   type: ConversionResultType,
   tags: string[] = [],
 ) {
   const api = await parseSpec(specStr);
+  // @ts-expect-error -- To avoid this error (inherent to overloads), we must simply change the call signature to accept a single object with properties for each parameter.
   return generateFromSpec(api, type, tags);
 }
 
+export function generateFromSpec(
+  api: OpenApi3Spec,
+  type: 'kong-declarative-config',
+  tags?: string[],
+): DeclarativeConfigResult
+export function generateFromSpec(
+  api: OpenApi3Spec,
+  type: 'kong-for-kubernetes',
+  tags?: string[],
+): KongForKubernetesResult
 export function generateFromSpec(
   api: OpenApi3Spec,
   type: ConversionResultType,
