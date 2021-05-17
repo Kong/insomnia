@@ -1,5 +1,5 @@
 import React, { DOMAttributes, FunctionComponent, useEffect, useState } from 'react';
-import { REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
+import { REQUEST_SETUP_TEARDOWN_COMPENSATION, REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
 
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
@@ -14,7 +14,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStar
     let interval: NodeJS.Timeout | null = null;
     if (isLoading) {
       interval = setInterval(() => {
-        setMilliseconds(Date.now() - loadStartTime);
+        setMilliseconds(Date.now() - loadStartTime - REQUEST_SETUP_TEARDOWN_COMPENSATION);
       }, 100);
     }
     return () => {
