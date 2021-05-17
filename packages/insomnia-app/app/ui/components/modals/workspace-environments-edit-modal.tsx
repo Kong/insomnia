@@ -378,7 +378,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleClickColorChange(environment: Environment) {
+  _handleClickColorChange(environment: Environment) {
     const color = environment.color || '#7d69cb';
 
     if (!environment.color) {
