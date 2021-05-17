@@ -49,12 +49,12 @@ const SidebarListItem = SortableElement(({
   changeEnvironmentName,
   environment,
   handleActivateEnvironment,
-  activeEnvironment,
+  selectedEnvironment,
   showEnvironment,
 }) => {
     const classes = classnames({
       'env-modal__sidebar-item': true,
-      'env-modal__sidebar-item--active': activeEnvironment === environment,
+      'env-modal__sidebar-item--active': selectedEnvironment === environment,
       // Specify theme because dragging will pull it out to <body>
       'theme--dialog': true,
     });
@@ -105,7 +105,7 @@ const SidebarList = SortableContainer(
     changeEnvironmentName,
     environments,
     handleActivateEnvironment,
-    activeEnvironment,
+    selectedEnvironment,
     showEnvironment,
   }) => (
     <ul>
@@ -117,7 +117,7 @@ const SidebarList = SortableContainer(
           handleActivateEnvironment={handleActivateEnvironment}
           index={index}
           key={environment._id}
-          activeEnvironment={activeEnvironment}
+          selectedEnvironment={selectedEnvironment}
           showEnvironment={showEnvironment}
         />
       ))}
@@ -224,7 +224,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       return;
     }
 
-    if (environment === this._getActiveEnvironment()) {
+    if (environment === this._getSelectedEnvironment()) {
       return;
     }
 
@@ -309,7 +309,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     }
   }
 
-  _getActiveEnvironment(): Environment | null {
+  _getSelectedEnvironment(): Environment | null {
     const { selectedEnvironmentId, subEnvironments, rootEnvironment } = this.state;
 
     if (rootEnvironment && rootEnvironment._id === selectedEnvironmentId) {
@@ -384,7 +384,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
   _handleInputColorChange(event: FormEvent<HTMLInputElement>) {
     this._handleChangeEnvironmentColor(
-      this._getActiveEnvironment(),
+      this._getSelectedEnvironment(),
       // @ts-expect-error -- TSCONVERSION what? apparently value doesn't exist on the target
       event.target && event.target.value,
     );
@@ -409,14 +409,14 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       return;
     }
 
-    const activeEnvironment = this._getActiveEnvironment();
+    const selectedEnvironment = this._getSelectedEnvironment();
 
-    if (activeEnvironment) {
+    if (selectedEnvironment) {
       if (this.saveTimeout !== null) {
         clearTimeout(this.saveTimeout);
       }
       this.saveTimeout = setTimeout(async () => {
-        await this._updateEnvironment(activeEnvironment, patch);
+        await this._updateEnvironment(selectedEnvironment, patch);
       }, DEBOUNCE_MILLIS * 4);
     }
   }
@@ -446,11 +446,11 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     } = this.props;
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
-    const activeEnvironment = this._getActiveEnvironment();
+    const selectedEnvironment = this._getSelectedEnvironment();
 
     const environmentInfo = {
-      object: activeEnvironment ? activeEnvironment.data : {},
-      propertyOrder: activeEnvironment && activeEnvironment.dataPropertyOrder,
+      object: selectedEnvironment ? selectedEnvironment.data : {},
+      propertyOrder: selectedEnvironment && selectedEnvironment.dataPropertyOrder,
     };
 
     return (
@@ -460,7 +460,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
           <div className="env-modal__sidebar">
             <li
               className={classnames('env-modal__sidebar-root-item', {
-                'env-modal__sidebar-item--active': activeEnvironment === rootEnvironment,
+                'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
               })}>
               <Button onClick={this._handleShowEnvironment} value={rootEnvironment}>
                 {ROOT_ENVIRONMENT_NAME}
@@ -492,7 +492,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
               activeEnvironmentId={activeEnvironmentId}
               handleActivateEnvironment={this._handleActivateEnvironment}
               environments={subEnvironments}
-              activeEnvironment={activeEnvironment}
+              selectedEnvironment={selectedEnvironment}
               showEnvironment={this._handleShowEnvironment}
               changeEnvironmentName={this._handleChangeEnvironmentName}
               onSortEnd={this._handleSortEnd}
@@ -504,74 +504,74 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
           <div className="env-modal__main">
             <div className="env-modal__main__header">
               <h1>
-                {rootEnvironment === activeEnvironment ? (
+                {rootEnvironment === selectedEnvironment ? (
                   ROOT_ENVIRONMENT_NAME
                 ) : (
                   <Editable
                     singleClick
                     className="wide"
                     onSubmit={name =>
-                      activeEnvironment &&
+                      selectedEnvironment &&
                       // @ts-expect-error -- TSCONVERSION only set name if defined
-                      this._handleChangeEnvironmentName(activeEnvironment, name)
+                      this._handleChangeEnvironmentName(selectedEnvironment, name)
                     }
-                    value={activeEnvironment ? activeEnvironment.name : ''}
+                    value={selectedEnvironment ? selectedEnvironment.name : ''}
                   />
                 )}
               </h1>
 
-              {activeEnvironment && rootEnvironment !== activeEnvironment ? (
+              {selectedEnvironment && rootEnvironment !== selectedEnvironment ? (
                 <Fragment>
                   <input
                     className="hidden"
                     type="color"
-                    value={activeEnvironment.color || undefined}
+                    value={selectedEnvironment.color || undefined}
                     ref={this._setInputColorRef}
                     onInput={this._handleInputColorChange}
                   />
 
                   <Dropdown className="space-right" right>
                     <DropdownButton className="btn btn--clicky">
-                      {activeEnvironment.color && (
+                      {selectedEnvironment.color && (
                         <i
                           className="fa fa-circle space-right"
                           style={{
-                            color: activeEnvironment.color,
+                            color: selectedEnvironment.color,
                           }}
                         />
                       )}
                       Color <i className="fa fa-caret-down" />
                     </DropdownButton>
 
-                    <DropdownItem value={activeEnvironment} onClick={this._handleClickColorChange}>
+                    <DropdownItem value={selectedEnvironment} onClick={this._handleClickColorChange}>
                       <i
                         className="fa fa-circle"
                         style={{
                           // @ts-expect-error -- TSCONVERSION don't set color if undefined
-                          color: activeEnvironment.color,
+                          color: selectedEnvironment.color,
                         }}
                       />
-                      {activeEnvironment.color ? 'Change Color' : 'Assign Color'}
+                      {selectedEnvironment.color ? 'Change Color' : 'Assign Color'}
                     </DropdownItem>
 
                     <DropdownItem
-                      value={activeEnvironment}
+                      value={selectedEnvironment}
                       onClick={this._handleUnsetColor}
-                      disabled={!activeEnvironment.color}>
+                      disabled={!selectedEnvironment.color}>
                       <i className="fa fa-minus-circle" />
                       Unset Color
                     </DropdownItem>
                   </Dropdown>
 
                   <Button
-                    value={activeEnvironment}
+                    value={selectedEnvironment}
                     onClick={this._handleDuplicateEnvironment}
                     className="btn btn--clicky space-right">
                     <i className="fa fa-copy" /> Duplicate
                   </Button>
 
                   <PromptButton
-                    value={activeEnvironment}
+                    value={selectedEnvironment}
                     onClick={this._handleDeleteEnvironment}
                     className="btn btn--clicky">
                     <i className="fa fa-trash-o" />
@@ -586,7 +586,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                 editorKeyMap={editorKeyMap}
                 lineWrapping={lineWrapping}
                 ref={this._setEditorRef}
-                key={`${this.editorKey}::${activeEnvironment ? activeEnvironment._id : 'n/a'}`}
+                key={`${this.editorKey}::${selectedEnvironment ? selectedEnvironment._id : 'n/a'}`}
                 environmentInfo={environmentInfo}
                 didChange={this._didChange}
                 render={render}
