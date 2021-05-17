@@ -4,10 +4,9 @@ import { REQUEST_TIME_TO_SHOW_COUNTER } from '../../common/constants';
 interface Props {
   handleCancel: DOMAttributes<HTMLButtonElement>['onClick'];
   loadStartTime: number;
-  responseTime?: number;
 }
 
-export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStartTime, responseTime = 0 }) => {
+export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStartTime }) => {
   const [milliseconds, setMilliseconds] = useState(0);
   const isLoading = loadStartTime > 0;
 
@@ -21,19 +20,11 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStar
     }
     return () => {
       if (interval !== null) {
-        setMilliseconds(milliseconds => {
-          if (milliseconds > 0) {
-            console.info(`[ResponseTimer] lag measured to be ${Math.floor(milliseconds - responseTime)}ms`, {
-              wallTime: milliseconds,
-              responseTime,
-            });
-          }
-          return 0;
-        });
+        setMilliseconds(0);
         clearInterval(interval);
       }
     };
-  }, [loadStartTime, setMilliseconds, isLoading, responseTime]);
+  }, [loadStartTime, setMilliseconds, isLoading]);
 
   if (!isLoading) {
     return null;

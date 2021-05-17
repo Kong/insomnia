@@ -334,7 +334,6 @@ class ResponsePane extends PureComponent<Props> {
           <ResponseTimer
             handleCancel={() => cancelRequestById(request._id)}
             loadStartTime={loadStartTime}
-            responseTime={response.elapsedTime}
           />
         </ErrorBoundary>
       </Pane>
