@@ -277,6 +277,7 @@ export async function render<T>(
 
   return next<T>(newObj, name, true);
 }
+
 export async function getRenderContext(
   request: Request | GrpcRequest | null,
   environmentId: string | null,
@@ -373,6 +374,7 @@ export async function getRenderContext(
   // Generate the context we need to render
   return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
 }
+
 export async function getRenderedGrpcRequest(
   request: GrpcRequest,
   environmentId: string | null,
@@ -419,9 +421,10 @@ export async function getRenderedGrpcRequestMessage(
   const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
   return renderedBody;
 }
+
 export async function getRenderedRequestAndContext(
   request: Request,
-  environmentId: string | null,
+  environmentId?: string | null,
   purpose?: RenderPurpose,
   extraInfo?: ExtraRenderInfo,
 ) {
@@ -431,7 +434,7 @@ export async function getRenderedRequestAndContext(
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
   const renderContext = await getRenderContext(
     request,
-    environmentId,
+    environmentId || null,
     ancestors,
     purpose,
     extraInfo || null,
