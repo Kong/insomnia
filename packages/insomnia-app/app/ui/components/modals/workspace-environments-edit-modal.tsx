@@ -270,10 +270,14 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   }
 
   async _updateEnvironment(
-    environment: Environment,
+    environment: Environment | null,
     patch: Partial<Environment>,
     refresh = true,
   ) {
+    if (environment === null) {
+      return;
+    }
+
     const { workspace } = this.state;
     // NOTE: Fetch the environment first because it might not be up to date.
     // For example, editing the body updates silently.
@@ -301,7 +305,6 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       clearTimeout(this.colorChangeTimeout);
     }
     this.colorChangeTimeout = setTimeout(async () => {
-      // @ts-expect-error -- TSCONVERSION environment can be null
       await this._updateEnvironment(environment, {
         color,
       });
