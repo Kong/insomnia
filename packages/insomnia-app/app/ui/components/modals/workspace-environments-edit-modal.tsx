@@ -379,9 +379,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   }
 
   _handleClickColorChange(environment: Environment) {
-    const color = environment.color || '#7d69cb';
-
     if (!environment.color) {
+      // TODO: fix magic-number. Currently this is the `suprise` background color for the default theme, but we should be grabbing the actual value from the user's actual theme instead.
+      const color = environment.color || '#7d69cb';
       this._handleChangeEnvironmentColor(environment, color);
     }
 
