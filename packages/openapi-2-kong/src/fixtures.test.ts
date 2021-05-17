@@ -15,11 +15,10 @@ describe('fixtures', () => {
 
     it(`converts ${fileBase}`, async () => {
       const result = await generate(inputPath, 'kong-declarative-config');
-      // @ts-expect-error -- TSCONVERSION
       expect(result.documents.length).toBe(1);
       const document = result.documents[0];
 
-      const expectedObj = JSON.parse(expected) as DeclarativeConfig;
+      const expectedObj: DeclarativeConfig = JSON.parse(expected);
 
       // Make matching friendlier
       for (const service of expectedObj.services || []) {

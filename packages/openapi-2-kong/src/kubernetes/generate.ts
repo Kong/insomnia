@@ -12,15 +12,15 @@ interface CustomAnnotations {
   overrideName?: string;
 }
 
-export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec): KongForKubernetesResult {
+export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec) {
   const specName = getSpecName(api);
 
   // Extract global, server, and path plugins upfront
   const plugins = getPlugins(api);
 
   // Initialize document collections
-  const ingressDocuments = [];
-  const methodsThatNeedKongIngressDocuments: Set<HttpMethodType> = new Set<HttpMethodType>();
+  const ingressDocuments: KubernetesConfig[] = [];
+  const methodsThatNeedKongIngressDocuments = new Set<HttpMethodType>();
   let _iterator = 0;
 
   const increment = (): number => _iterator++;
@@ -68,12 +68,13 @@ export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec): Kong
 
   const documents = [...methodDocuments, ...pluginDocuments, ...ingressDocuments];
 
-  return {
+  const result: KongForKubernetesResult = {
     type: 'kong-for-kubernetes',
     label: 'Kong for Kubernetes',
     documents,
     warnings: [],
-  } as KongForKubernetesResult;
+  };
+  return result;
 }
 
 function generateK8sMethodDocuments(method: HttpMethodType): KubernetesMethodConfig {
@@ -116,7 +117,7 @@ export function getSpecName(api: OpenApi3Spec): string {
 export function generateMetadataAnnotations(
   api: OpenApi3Spec,
   { pluginNames, overrideName }: CustomAnnotations,
-): K8sAnnotations {
+) {
   // This annotation is required by kong-ingress-controller
   // https://github.com/Kong/kubernetes-ingress-controller/blob/main/docs/references/annotations.md#kubernetesioingressclass
   const coreAnnotations: K8sAnnotations = {
@@ -126,7 +127,7 @@ export function generateMetadataAnnotations(
 
   // Only continue if metadata annotations, or plugins, or overrides exist
   if (metadata?.annotations || pluginNames.length || overrideName) {
-    const customAnnotations = {};
+    const customAnnotations: K8sAnnotations = {};
 
     if (pluginNames.length) {
       customAnnotations['konghq.com/plugins'] = pluginNames.join(', ');
