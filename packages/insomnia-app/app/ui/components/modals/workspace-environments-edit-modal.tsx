@@ -140,7 +140,7 @@ const SidebarList = SortableContainer<SidebarListProps>(
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   environmentEditorRef: EnvironmentEditor | null = null;
-  environmentColorInputRef: HTMLInputElement;
+  environmentColorInputRef: HTMLInputElement | null = null;
   saveTimeout: NodeJS.Timeout | null = null;
   modal: Modal | null = null;
   editorKey = 0;
