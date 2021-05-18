@@ -1,6 +1,6 @@
 {
   "name": "insomnia-prettify",
-  "version": "2.2.35",
+  "version": "2.3.0-beta.0",
   "author": "Kong <office@konghq.com>",
   "description": "Prettification utilities for Insomnia",
   "license": "MIT",

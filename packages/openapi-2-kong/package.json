@@ -1,7 +1,7 @@
 {
   "name": "openapi-2-kong",
   "license": "Apache-2.0",
-  "version": "2.2.35",
+  "version": "2.3.0-beta.0",
   "author": "Kong <office@konghq.com>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,8 +25,8 @@
   "devDependencies": {
     "@types/url-join": "^4.0.0",
     "@types/yaml": "^1.9.7",
-    "type-fest": "^1.0.2",
-    "jest": "^26.6.3"
+    "jest": "^26.6.3",
+    "type-fest": "^1.0.2"
   },
   "repository": {
     "type": "git",
