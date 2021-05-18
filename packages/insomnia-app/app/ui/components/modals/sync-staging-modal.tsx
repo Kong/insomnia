@@ -16,7 +16,7 @@ import { strings } from '../../../common/strings';
 
 interface Props {
   workspace: Workspace;
-  syncItems: Array<StatusCandidate>;
+  syncItems: StatusCandidate[];
   vcs: VCS;
 }
 
@@ -29,7 +29,7 @@ interface State {
     string,
     {
       entry: StageEntry;
-      changes: null | Array<string>;
+      changes: null | string[];
       type: string;
       checked: boolean;
     }
@@ -83,13 +83,13 @@ class SyncStagingModal extends PureComponent<Props, State> {
     await this.refreshMainAttributes({}, newStage);
   }
 
-  async _handleAllToggle(keys: Array<DocumentKey>, doStage: boolean) {
+  async _handleAllToggle(keys: DocumentKey[], doStage: boolean) {
     const { vcs } = this.props;
     const { status } = this.state;
     let stage;
 
     if (doStage) {
-      const entries: Array<StageEntry> = [];
+      const entries: StageEntry[] = [];
 
       for (const k of Object.keys(status.unstaged)) {
         if (keys.includes(k)) {
@@ -99,7 +99,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
       stage = await vcs.stage(status.stage, entries);
     } else {
-      const entries: Array<StageEntry> = [];
+      const entries: StageEntry[] = [];
 
       for (const k of Object.keys(status.stage)) {
         if (keys.includes(k)) {
@@ -163,7 +163,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
         continue;
       }
 
-      let changes: Array<string> | null = null;
+      let changes: string[] | null = null;
 
       if (item && item.document && oldDoc) {
         changes = describeChanges(item.document, oldDoc);
@@ -201,7 +201,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     this.setState(_initialState);
     // Add everything to stage by default except new items
     const status: Status = await vcs.status(syncItems, {});
-    const toStage: Array<StageEntry> = [];
+    const toStage: StageEntry[] = [];
 
     for (const key of Object.keys(status.unstaged)) {
       // @ts-expect-error -- TSCONVERSION
@@ -218,7 +218,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     this.textarea && this.textarea.focus();
   }
 
-  static renderOperation(entry: StageEntry, type: string, changes: Array<string>) {
+  static renderOperation(entry: StageEntry, type: string, changes: string[]) {
     let child: JSX.Element | null = null;
     let message = '';
 
@@ -252,7 +252,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     );
   }
 
-  renderTable(keys: Array<DocumentKey>, title: ReactNode) {
+  renderTable(keys: DocumentKey[], title: ReactNode) {
     const { status, lookupMap } = this.state;
 
     if (keys.length === 0) {
@@ -332,8 +332,8 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
   render() {
     const { status, message, error, branch } = this.state;
-    const nonAddedKeys: Array<string> = [];
-    const addedKeys: Array<string> = [];
+    const nonAddedKeys: string[] = [];
+    const addedKeys: string[] = [];
     const allMap = { ...status.stage, ...status.unstaged };
     const allKeys = Object.keys(allMap);
 

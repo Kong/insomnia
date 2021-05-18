@@ -301,9 +301,9 @@ class OAuth2Auth extends PureComponent<Props, State> {
   renderInputRow(
     label: string,
     property: string,
-    onChange: (...args: Array<any>) => any,
+    onChange: (...args: any[]) => any,
     help: string | null = null,
-    handleAutocomplete: ((...args: Array<any>) => any) | null = null,
+    handleAutocomplete: ((...args: any[]) => any) | null = null,
   ) {
     const {
       handleRender,
@@ -348,11 +348,11 @@ class OAuth2Auth extends PureComponent<Props, State> {
   renderSelectRow(
     label: string,
     property: string,
-    options: Array<{
+    options: {
       name: string;
       value: string;
-    }>,
-    onChange: (...args: Array<any>) => any,
+    }[],
+    onChange: (...args: any[]) => any,
     help: string | null = null,
   ) {
     const { request } = this.props;
@@ -388,8 +388,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
   }
 
   renderGrantTypeFields(grantType: string) {
-    let basicFields: Array<JSX.Element> = [];
-    let advancedFields: Array<JSX.Element> = [];
+    let basicFields: JSX.Element[] = [];
+    let advancedFields: JSX.Element[] = [];
     const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
     const clientSecret = this.renderInputRow(
       'Client Secret',

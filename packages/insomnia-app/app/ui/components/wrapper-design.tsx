@@ -27,11 +27,11 @@ interface Props {
 
 interface State {
   previewHidden: boolean;
-  lintMessages: Array<{
+  lintMessages: {
     message: string;
     line: number;
     type: 'error' | 'warning';
-  }>;
+  }[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

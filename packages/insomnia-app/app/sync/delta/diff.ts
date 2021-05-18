@@ -19,8 +19,8 @@ interface Block {
   hash: string;
 }
 
-export function diff(source: string, target: string, blockSize: number): Array<Operation> {
-  const operations: Array<Operation> = [];
+export function diff(source: string, target: string, blockSize: number): Operation[] {
+  const operations: Operation[] = [];
   const sourceBlockMap = getBlockMap(source, blockSize);
   // Iterate over source blocks in order and match them to target
   let lastTargetMatch = 0;

@@ -9,8 +9,8 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 
 interface Props {
   root?: Node | null;
-  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
-  handleSetItemSelected: (...args: Array<any>) => any;
+  handleSetRequestGroupCollapsed: (...args: any[]) => any;
+  handleSetItemSelected: (...args: any[]) => any;
 }
 
 class Tree extends PureComponent<Props> {

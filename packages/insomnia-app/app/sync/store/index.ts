@@ -13,9 +13,9 @@ export interface Hook {
 
 export default class Store {
   _driver: BaseDriver;
-  _hooks: Array<Hook>;
+  _hooks: Hook[];
 
-  constructor(driver: BaseDriver, hooks?: Array<Hook>) {
+  constructor(driver: BaseDriver, hooks?: Hook[]) {
     this._driver = driver;
     this._hooks = hooks || [];
   }

@@ -30,7 +30,7 @@ describe('git rollback', () => {
     it('should remove and delete added and *added files', async () => {
       const aTxt = 'a.txt';
       const bTxt = 'b.txt';
-      const files: Array<FileWithStatus> = [
+      const files: FileWithStatus[] = [
         {
           filePath: aTxt,
           status: 'added',
@@ -53,7 +53,7 @@ describe('git rollback', () => {
     it('should undo pending changes for non-added files', async () => {
       const aTxt = 'a.txt';
       const bTxt = 'b.txt';
-      const files: Array<FileWithStatus> = [
+      const files: FileWithStatus[] = [
         {
           filePath: aTxt,
           status: 'modified',
@@ -75,7 +75,7 @@ describe('git rollback', () => {
       const bTxt = 'b.txt';
       const cTxt = 'c.txt';
       const dTxt = 'd.txt';
-      const files: Array<FileWithStatus> = [
+      const files: FileWithStatus[] = [
         {
           filePath: aTxt,
           status: 'added',
@@ -143,7 +143,7 @@ describe('git rollback', () => {
       expect(fooStatus).toBe('*added');
       expect(barStatus).toBe('added');
       expect(bazStatus).toBe('*modified');
-      const files: Array<FileWithStatus> = [
+      const files: FileWithStatus[] = [
         {
           filePath: fooTxt,
           status: fooStatus,

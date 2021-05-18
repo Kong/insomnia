@@ -28,7 +28,7 @@ interface Config {
 }
 
 interface State {
-  configs: Array<Config>;
+  configs: Config[];
   activeTab: number;
 }
 
@@ -73,7 +73,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
   }
 
   async show({ activeTabLabel, apiSpec }: ShowOptions) {
-    const configs: Array<Config> = [];
+    const configs: Config[] = [];
 
     for (const p of await plugins.getConfigGenerators()) {
       configs.push(await this._generate(p, apiSpec));

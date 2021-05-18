@@ -8,7 +8,7 @@ import { isGrpcRequest } from '../../../models/helpers/is-model';
 import GrpcTag from '../tags/grpc-tag';
 
 interface Props {
-  handleSetItemSelected: (...args: Array<any>) => any;
+  handleSetItemSelected: (...args: any[]) => any;
   isSelected: boolean;
   request: Request | GrpcRequest;
 }

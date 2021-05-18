@@ -8,20 +8,20 @@ import ModalFooter from '../base/modal-footer';
 
 interface State {
   title: string;
-  options: Array<{
+  options: {
     name: string;
     value: string;
-  }>;
+  }[];
   value: string;
   message: string;
-  onCancel?: (...args: Array<any>) => any;
+  onCancel?: (...args: any[]) => any;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class SelectModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   doneButton: HTMLButtonElement | null = null;
-  _doneCallback: ((...args: Array<any>) => any) | null = null;
+  _doneCallback: ((...args: any[]) => any) | null = null;
 
   state: State = {
     title: '',

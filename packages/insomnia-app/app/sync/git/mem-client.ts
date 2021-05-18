@@ -27,7 +27,7 @@ interface FSDir {
   readonly mtimeMs: number;
   readonly name: string;
   readonly path: string;
-  readonly children: Array<FSFile | FSDir | FSLink>;
+  readonly children: (FSFile | FSDir | FSLink)[];
 }
 
 type FSEntry = FSDir | FSFile | FSLink;

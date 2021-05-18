@@ -47,14 +47,14 @@ interface Props {
 }
 
 interface State {
-  fonts: Array<{
+  fonts: {
     family: string;
     monospace: boolean;
-  }> | null;
-  fontsMono: Array<{
+  }[] | null;
+  fontsMono: {
     family: string;
     monospace: boolean;
-  }> | null;
+  }[] | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -125,10 +125,10 @@ class General extends PureComponent<Props, State> {
   renderEnumSetting(
     label: string,
     name: string,
-    values: Array<{
+    values: {
       name: string;
       value: any;
-    }>,
+    }[],
     help: string,
     forceRestart?: boolean,
   ) {
@@ -400,10 +400,10 @@ class General extends PureComponent<Props, State> {
                 value: HttpVersions.V2_0,
               }, // Enable when our version of libcurl supports HTTP/3
               // { name: 'HTTP/3', value: HttpVersions.v3 },
-            ] as Array<{
+            ] as {
               name: string;
               value: HttpVersion;
-            }>,
+            }[],
             'Preferred HTTP version to use for requests which will fall back if it cannot be' +
             'negotiated',
           )}

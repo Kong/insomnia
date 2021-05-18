@@ -7,7 +7,7 @@ interface Props {
   showCookiesModal: Function;
   cookiesSent?: boolean | null;
   cookiesStored?: boolean | null;
-  headers: Array<any>;
+  headers: any[];
   handleShowRequestSettings: Function;
 }
 

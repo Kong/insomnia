@@ -6,7 +6,7 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 
 interface Props {
   onChange: Function,
-  parameters: Array<any>,
+  parameters: any[],
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   handleRender?: HandleRender,

@@ -12,17 +12,17 @@ import ModalFooter from '../base/modal-footer';
 interface Props {
   workspace: Workspace;
   vcs: VCS;
-  syncItems: Array<StatusCandidate>;
+  syncItems: StatusCandidate[];
 }
 
 interface State {
-  conflicts: Array<MergeConflict>;
+  conflicts: MergeConflict[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class SyncMergeModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
-  _handleDone: (arg0: Array<MergeConflict>) => void;
+  _handleDone: (arg0: MergeConflict[]) => void;
 
   state: State = {
     conflicts: [],
@@ -52,8 +52,8 @@ class SyncMergeModal extends PureComponent<Props, State> {
   }
 
   async show(options: {
-    conflicts: Array<MergeConflict>;
-    handleDone: (arg0: Array<MergeConflict>) => void;
+    conflicts: MergeConflict[];
+    handleDone: (arg0: MergeConflict[]) => void;
   }) {
     this.modal && this.modal.show();
     this._handleDone = options.handleDone;
