@@ -5,7 +5,7 @@ import { generateKongForKubernetesConfigFromSpec } from './kubernetes';
 import SwaggerParser from 'swagger-parser';
 import { OpenApi3Spec } from './types/openapi3';
 import { ConversionResultType, ConversionResult } from './types/outputs';
-import { parse as YAMLparse } from 'yaml';
+import YAML from 'yaml';
 
 const defaultTags = ['OAS3_import'];
 
@@ -63,7 +63,7 @@ export async function parseSpec(spec: string | Record<string, any>) {
     try {
       api = JSON.parse(spec);
     } catch (err) {
-      api = YAMLparse(spec);
+      api = YAML.parse(spec);
     }
   } else {
     api = JSON.parse(JSON.stringify(spec));
