@@ -2,7 +2,7 @@ import { getMethodAnnotationName, getName, HttpMethodType, parseUrl } from '../c
 import urlJoin from 'url-join';
 import { flattenPluginDocuments, getPlugins, prioritizePlugins } from './plugins';
 import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
-import { IndexIncrement } from '../types/k8plugins';
+import { IndexIncrement } from '../types/k8splugins';
 import { KubernetesConfig, KubernetesMethodConfig, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sPath } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server } from '../types/openapi3';
 import { KongForKubernetesResult } from '../types/outputs';
