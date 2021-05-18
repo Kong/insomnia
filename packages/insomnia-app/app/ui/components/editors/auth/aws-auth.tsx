@@ -52,7 +52,7 @@ class AWSAuth extends PureComponent<Props> {
     onChange(request, { ...request.authentication, sessionToken: value });
   }
 
-  renderRow(key: string, label: string, onChange: (...args: Array<any>) => any, help?: string) {
+  renderRow(key: string, label: string, onChange: (...args: any[]) => any, help?: string) {
     const {
       request,
       nunjucksPowerUserMode,

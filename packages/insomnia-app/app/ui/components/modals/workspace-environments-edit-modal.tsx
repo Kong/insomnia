@@ -39,7 +39,7 @@ interface Props extends ModalProps {
 interface State {
   workspace: Workspace | null;
   isValid: boolean;
-  subEnvironments: Array<Environment>;
+  subEnvironments: Environment[];
   rootEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
 }
@@ -318,7 +318,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   async _handleSortEnd(results: {
     oldIndex: number;
     newIndex: number;
-    collection: Array<Environment>;
+    collection: Environment[];
   }) {
     const { oldIndex, newIndex } = results;
 

@@ -77,7 +77,7 @@ export interface ResponsePatch {
   elapsedTime?: number;
   environmentId?: string | null;
   error?: string;
-  headers?: Array<ResponseHeader>;
+  headers?: ResponseHeader[];
   httpVersion?: string;
   message?: string;
   parentId?: string;
@@ -141,7 +141,7 @@ export async function _actuallySend(
   environment?: Environment | null,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
-    const timeline: Array<ResponseTimelineEntry> = [];
+    const timeline: ResponseTimelineEntry[] = [];
 
     function addTimeline(name, value) {
       timeline.push({
@@ -765,7 +765,7 @@ export async function _actuallySend(
         const contentType = contentTypeHeader ? contentTypeHeader.value : '';
         // Update Cookie Jar
         let currentUrl = finalUrl;
-        let setCookieStrings: Array<string> = [];
+        let setCookieStrings: string[] = [];
         const jar = jarFromCookies(renderedRequest.cookieJar.cookies);
 
         for (const { headers } of allCurlHeadersObjects) {
@@ -1049,7 +1049,7 @@ async function _applyResponsePluginHooks(
 }
 
 interface HeaderResult {
-  headers: Array<ResponseHeader>;
+  headers: ResponseHeader[];
   version: string;
   code: number;
   reason: string;
@@ -1058,7 +1058,7 @@ interface HeaderResult {
 export function _parseHeaders(
   buffer: Buffer,
 ) {
-  const results: Array<HeaderResult> = [];
+  const results: HeaderResult[] = [];
   const lines = buffer.toString('utf8').split(/\r?\n|\r/g);
 
   for (let i = 0, currentResult: HeaderResult | null = null; i < lines.length; i++) {
@@ -1100,18 +1100,18 @@ export function _getAwsAuthHeaders(
     secretAccessKey: string;
     sessionToken: string;
   },
-  headers: Array<RequestHeader>,
+  headers: RequestHeader[],
   body: string,
   url: string,
   method: string,
   region?: string,
   service?: string,
-): Array<{
+): {
   name: string;
   value: string;
   description?: string;
   disabled?: boolean;
-}> {
+}[] {
   const parsedUrl = urlParse(url);
   const contentTypeHeader = getContentTypeHeader(headers);
   // AWS uses host header for signing so prioritize that if the user set it manually
@@ -1139,7 +1139,7 @@ export function _getAwsAuthHeaders(
     }));
 }
 
-function storeTimeline(timeline: Array<ResponseTimelineEntry>) {
+function storeTimeline(timeline: ResponseTimelineEntry[]) {
   return new Promise<string>((resolve, reject) => {
     const timelineStr = JSON.stringify(timeline, null, '\t');
     const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');

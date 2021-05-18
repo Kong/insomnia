@@ -11,7 +11,7 @@ import type { Request, RequestHeader } from '../../../models/request';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
-  onChange: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   bulk: boolean;
   editorFontSize: number;
   editorIndentSize: number;
@@ -33,13 +33,13 @@ class RequestHeadersEditor extends PureComponent<Props> {
     onChange(request, headers);
   }
 
-  _handleKeyValueUpdate(headers: Array<RequestHeader>) {
+  _handleKeyValueUpdate(headers: RequestHeader[]) {
     const { onChange, request } = this.props;
     onChange(request, headers);
   }
 
   static _getHeadersFromString(headersString: string) {
-    const headers: Array<{ name: string; value: string }> = [];
+    const headers: { name: string; value: string }[] = [];
     const rows = headersString.split(/\n+/);
 
     for (const row of rows) {

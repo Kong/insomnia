@@ -21,7 +21,7 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 interface Props {
   handleChangeEnvironment: Function;
   workspace: Workspace;
-  environments: Array<Environment>;
+  environments: Environment[];
   environmentHighlightColorStyle: string;
   hotKeyRegistry: HotKeyRegistry;
   className?: string;

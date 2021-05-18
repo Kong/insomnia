@@ -38,7 +38,7 @@ export function generateStateMap(state: SnapshotState | null): SnapshotStateMap 
   return map;
 }
 
-export function generateCandidateMap(candidates: Array<StatusCandidate>): StatusCandidateMap {
+export function generateCandidateMap(candidates: StatusCandidate[]): StatusCandidateMap {
   const map = {};
 
   for (const candidate of candidates) {
@@ -49,8 +49,8 @@ export function generateCandidateMap(candidates: Array<StatusCandidate>): Status
 }
 
 export function combinedMapKeys<T extends SnapshotStateMap | StatusCandidateMap>(
-  ...maps: Array<T>
-): Array<DocumentKey> {
+  ...maps: T[]
+): DocumentKey[] {
   const keyMap = {};
 
   for (const map of maps) {
@@ -68,14 +68,14 @@ export function threeWayMerge(
   other: SnapshotState,
 ): {
   state: SnapshotState;
-  conflicts: Array<MergeConflict>;
+  conflicts: MergeConflict[];
 } {
   const stateRoot = generateStateMap(root);
   const stateTrunk = generateStateMap(trunk);
   const stateOther = generateStateMap(other);
   const allKeys = combinedMapKeys(stateRoot, stateTrunk, stateOther);
   const newState: SnapshotState = [];
-  const conflicts: Array<MergeConflict> = [];
+  const conflicts: MergeConflict[] = [];
 
   for (const key of allKeys) {
     const root = stateRoot[key] || null;
@@ -280,9 +280,9 @@ export function compareBranches(
 }
 
 export interface StateDelta {
-  add: Array<SnapshotStateEntry>;
-  update: Array<SnapshotStateEntry>;
-  remove: Array<SnapshotStateEntry>;
+  add: SnapshotStateEntry[];
+  update: SnapshotStateEntry[];
+  remove: SnapshotStateEntry[];
 }
 
 export function stateDelta(
@@ -320,8 +320,8 @@ export function stateDelta(
   return result;
 }
 
-export function getStagable(state: SnapshotState, candidates: Array<StatusCandidate>) {
-  const stagable: Array<StageEntry> = [];
+export function getStagable(state: SnapshotState, candidates: StatusCandidate[]) {
+  const stagable: StageEntry[] = [];
   const stateMap = generateStateMap(state);
   const candidateMap = generateCandidateMap(candidates);
 
@@ -394,10 +394,10 @@ export function getRootSnapshot(a: Branch | null, b: Branch | null): string | nu
 export function preMergeCheck(
   trunkState: SnapshotState,
   otherState: SnapshotState,
-  candidates: Array<StatusCandidate>,
+  candidates: StatusCandidate[],
 ) {
-  const conflicts: Array<StatusCandidate> = [];
-  const dirty: Array<StatusCandidate> = [];
+  const conflicts: StatusCandidate[] = [];
+  const dirty: StatusCandidate[] = [];
   const trunkMap = generateStateMap(trunkState);
   const otherMap = generateStateMap(otherState);
 
@@ -476,7 +476,7 @@ export function hashDocument(
   };
 }
 
-export function updateStateWithConflictResolutions(state: SnapshotState, conflicts: Array<MergeConflict>) {
+export function updateStateWithConflictResolutions(state: SnapshotState, conflicts: MergeConflict[]) {
   const newStateMap = generateStateMap(state);
 
   for (const { choose, key, name } of conflicts) {
@@ -509,7 +509,7 @@ export function updateStateWithConflictResolutions(state: SnapshotState, conflic
   return Object.keys(newStateMap).map(k => newStateMap[k]);
 }
 
-export function describeChanges(a: any, b: any): Array<string> {
+export function describeChanges(a: any, b: any): string[] {
   const aT = Object.prototype.toString.call(a);
   const bT = Object.prototype.toString.call(b);
 
@@ -517,7 +517,7 @@ export function describeChanges(a: any, b: any): Array<string> {
     return [];
   }
 
-  const changes: Array<string> = [];
+  const changes: string[] = [];
   const allKeys = [...Object.keys({ ...a, ...b })];
 
   for (const key of allKeys) {

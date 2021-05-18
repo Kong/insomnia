@@ -7,7 +7,7 @@ import type { Request, RequestParameter } from '../../../models/request';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
-  onChange: (r: Request, parameters: Array<RequestParameter>) => Promise<Request>;
+  onChange: (r: Request, parameters: RequestParameter[]) => Promise<Request>;
   bulk: boolean;
   editorFontSize: number;
   editorIndentSize: number;
@@ -29,13 +29,13 @@ class RequestParametersEditor extends PureComponent<Props> {
     onChange(request, params);
   }
 
-  _handleKeyValueUpdate(parameters: Array<RequestParameter>) {
+  _handleKeyValueUpdate(parameters: RequestParameter[]) {
     const { onChange, request } = this.props;
     onChange(request, parameters);
   }
 
   static _getParamsFromString(paramsString: string) {
-    const params: Array<{ name: string; value: string }> = [];
+    const params: { name: string; value: string }[] = [];
     const rows = paramsString.split(/\n+/);
 
     for (const row of rows) {

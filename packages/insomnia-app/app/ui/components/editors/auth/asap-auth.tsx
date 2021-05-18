@@ -76,7 +76,7 @@ class AsapAuth extends PureComponent<Props> {
     label: string,
     property: string,
     mode: string,
-    onChange: (...args: Array<any>) => any,
+    onChange: (...args: any[]) => any,
   ): ReactElement<any> {
     const {
       handleRender,

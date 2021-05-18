@@ -14,11 +14,11 @@ import { ServiceError, StatusObject } from '@grpc/grpc-js';
 
 export interface GrpcRequestState {
   running: boolean;
-  requestMessages: Array<GrpcMessage>;
-  responseMessages: Array<GrpcMessage>;
+  requestMessages: GrpcMessage[];
+  responseMessages: GrpcMessage[];
   status?: StatusObject;
   error?: ServiceError;
-  methods: Array<GrpcMethodDefinition>;
+  methods: GrpcMethodDefinition[];
   reloadMethods: boolean;
 }
 

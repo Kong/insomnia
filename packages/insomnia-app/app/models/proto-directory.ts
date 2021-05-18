@@ -52,7 +52,7 @@ export function remove(obj: ProtoDirectory) {
   return db.remove(obj);
 }
 
-export async function batchRemoveIds(ids: Array<string>) {
+export async function batchRemoveIds(ids: string[]) {
   const dirs = await db.find(type, {
     _id: {
       $in: ids,

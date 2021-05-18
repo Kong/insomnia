@@ -5,8 +5,8 @@ import classnames from 'classnames';
 import type { RequestGroup } from '../../../models/request-group';
 
 interface Props {
-  handleSetRequestGroupCollapsed: (...args: Array<any>) => any;
-  handleSetItemSelected: (...args: Array<any>) => any;
+  handleSetRequestGroupCollapsed: (...args: any[]) => any;
+  handleSetItemSelected: (...args: any[]) => any;
   isCollapsed: boolean;
   totalRequests: number;
   selectedRequests: number;
