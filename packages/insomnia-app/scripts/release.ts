@@ -12,12 +12,13 @@ const octokit = new Octokit({
   auth: process.env.GH_TOKEN,
 });
 
-const getOrCreateRelease = (app: string, version: string) => {
+const getOrCreateRelease = async (app: string, version: string) => {
   const tag = `${app}@${version}`;
   const releaseName = `${appConfig.productName} ${version} 📦`;
 
+  // Try get a release by the tag; if we can't create one
   try {
-    return octokit.repos.getReleaseByTag({
+    return await octokit.repos.getReleaseByTag({
       owner: appConfig.githubOrg,
       repo: appConfig.githubRepo,
       tag,
@@ -26,7 +27,7 @@ const getOrCreateRelease = (app: string, version: string) => {
     // Doesn't exist
   }
 
-  return octokit.repos.createRelease({
+  return await octokit.repos.createRelease({
     owner: appConfig.githubOrg,
     repo: appConfig.githubRepo,
     // eslint-disable-next-line camelcase -- part of the octokit API
