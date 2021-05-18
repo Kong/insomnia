@@ -79,6 +79,6 @@ export interface KubernetesConfig {
   spec: K8sSpec;
 }
 
-export type KubernetesDocument = KubernetesConfig
+export type KubernetesManifest = KubernetesConfig
   | KubernetesPluginConfig
   | KubernetesMethodConfig;
