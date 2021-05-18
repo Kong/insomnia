@@ -17,7 +17,7 @@
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version --exact --preid beta",
     "version:dry": "npm run version -- --no-git-tag-version",
-    "publish": "lerna publish from-git --pre-dist-tag beta --yes",
+    "publish": "lerna publish from-git --pre-dist-tag beta --no-verify-access --yes",
     "clean": "lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
     "test:pre-release": "npm run test --prefix packages/insomnia-app",
