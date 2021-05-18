@@ -38,3 +38,10 @@ app.use('/auth/basic', basicAuthRouter);
 app.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`);
 });
+
+app.get('/delay/seconds/:duration', (req, res) => {
+  const delaySec = Number.parseInt(req.params.duration || 2);
+  setTimeout(function () {
+      res.send(`Delayed by ${delaySec} seconds`);
+  }, delaySec * 1000);
+})
