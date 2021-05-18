@@ -109,7 +109,7 @@ describe('generateConfig()', () => {
     generate.mockResolvedValue(mockConversionResult);
     const outputPath = 'this-is-the-output-path';
     writeFileWithCliOptions.mockResolvedValue(outputPath);
-    const result = await generateConfig('file.yaml', {
+    const result = await generateConfig(filePath, {
       type: 'kubernetes',
       workingDir: 'test/dir',
       output: 'output.yaml',
@@ -128,7 +128,7 @@ describe('generateConfig()', () => {
     generate.mockResolvedValue(mockConversionResult);
     const outputPath = 'this-is-the-output-path';
     writeFileWithCliOptions.mockResolvedValue(outputPath);
-    const absolutePath = path.join(os.tmpdir(), 'dev', 'file.yaml');
+    const absolutePath = path.join(os.tmpdir(), 'dev', filePath);
     const result = await generateConfig(absolutePath, {
       type: 'kubernetes',
       workingDir: 'test/dir',
@@ -144,7 +144,7 @@ describe('generateConfig()', () => {
   it('should throw InsoError if there is an error thrown by openapi-2-kong', async () => {
     const error = new Error('err');
     generate.mockRejectedValue(error);
-    const promise = generateConfig('file.yaml', { type: 'kubernetes' });
+    const promise = generateConfig(filePath, { type: 'kubernetes' });
     await expect(promise).rejects.toThrowError(
       new InsoError('There was an error while generating configuration', error),
     );
@@ -153,7 +153,7 @@ describe('generateConfig()', () => {
   it('should warn if no valid spec can be found', async () => {
     // @ts-expect-error intentionally passing in a bad value
     generate.mockResolvedValue({});
-    const result = await generateConfig('file.yaml', { type: 'kubernetes' });
+    const result = await generateConfig(filePath, { type: 'kubernetes' });
     expect(result).toBe(false);
     expect(logger.__getLogs().log).toEqual([
       'Could not find a valid specification to generate configuration.',
