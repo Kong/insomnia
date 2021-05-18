@@ -4,7 +4,7 @@
   "includeMergedTags": true,
   "command": {
     "version": {
-      "message": "publish npm packages %s"
+      "message": "version packages %s"
     }
   },
   "packages": [
