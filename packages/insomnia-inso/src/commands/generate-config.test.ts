@@ -1,5 +1,5 @@
 import { conversionTypeMap, generateConfig, GenerateConfigOptions } from './generate-config';
-import { ConversionResult, generate as _generate, generateFromString as _generateFromString } from 'openapi-2-kong';
+import { generate as _generate, generateFromString as _generateFromString, KongForKubernetesResult } from 'openapi-2-kong';
 import path from 'path';
 import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
@@ -14,7 +14,8 @@ const generate = _generate as jest.MockedFunction<typeof _generate>;
 const generateFromString = _generateFromString as jest.MockedFunction<typeof _generateFromString>;
 const writeFileWithCliOptions = _writeFileWithCliOptions as jest.MockedFunction<typeof _writeFileWithCliOptions>;
 
-const mockConversionResult: ConversionResult = {
+const mockConversionResult: KongForKubernetesResult = {
+  // @ts-expect-error -- TSCONVERSION the tests seem to suggest that this is valid, yet it is not allowed by the types.
   documents: ['a', 'b'],
   type: 'kong-for-kubernetes',
   label: '',
