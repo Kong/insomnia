@@ -1,6 +1,7 @@
 import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
+// @ts-expect-error TSCONVERSION
 import electronPath from '../../insomnia-app/node_modules/electron';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
@@ -31,13 +32,14 @@ const spectronConfig = (
   const env = { INSOMNIA_DATA_PATH: dataPath };
 
   if (designerDataPath) {
+    // @ts-expect-error TSCONVERSION
     env.DESIGNER_DATA_PATH = designerDataPath;
   }
 
   return { buildPath, packagePath, env };
 };
 
-export const launchApp = async designerDataPath => {
+export const launchApp = async (designerDataPath?: string) => {
   const config = spectronConfig(designerDataPath);
   return await launch(config);
 };
@@ -93,7 +95,9 @@ export const stop = async app => {
 };
 
 const takeScreenshotOnFailure = async app => {
+  // @ts-expect-error TSCONVERSION
   if (jasmine.currentTest.failedExpectations.length) {
+    // @ts-expect-error TSCONVERSION
     await takeScreenshot(app, jasmine.currentTest.fullName.replace(/ /g, '_'));
   }
 };

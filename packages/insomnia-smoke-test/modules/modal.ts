@@ -1,6 +1,8 @@
+import { Application } from 'spectron';
 import findAsync from './find-async';
 
-export const waitUntilOpened = async (app, { modalName, title }) => {
+interface WaitUntilOpenedOptions {modalName?: string, title?: string}
+export const waitUntilOpened = async (app, { modalName, title }: WaitUntilOpenedOptions) => {
   if (modalName) {
     const modal = await app.client.react$(modalName);
     await modal.waitForDisplayed();
@@ -9,7 +11,7 @@ export const waitUntilOpened = async (app, { modalName, title }) => {
   }
 };
 
-export const close = async (app, modalName) => {
+export const close = async (app: Application, modalName?: string) => {
   let modal;
   if (modalName) {
     modal = await app.client.react$(modalName);
