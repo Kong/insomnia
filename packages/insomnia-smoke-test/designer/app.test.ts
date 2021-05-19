@@ -5,6 +5,7 @@ import * as modal from '../modules/modal';
 import * as dropdown from '../modules/dropdown';
 
 import { isPackage, launchApp, stop } from '../modules/application';
+import { Application } from 'spectron';
 
 const itIf = condition => (condition ? it : it.skip);
 // @ts-expect-error TSCONVERSION
@@ -12,7 +13,7 @@ it.if = itIf;
 
 xdescribe('Application launch', function() {
   jest.setTimeout(50000);
-  let app = null;
+  let app: Application;
 
   beforeEach(async () => {
     app = await launchApp();
@@ -40,7 +41,6 @@ xdescribe('Application launch', function() {
     await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
-    // @ts-expect-error TSCONVERSION
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
     await modal.close(app);
   });
