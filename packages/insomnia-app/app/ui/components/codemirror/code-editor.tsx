@@ -249,7 +249,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  setSelection(chStart, chEnd, lineStart, lineEnd) {
+  setSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         {
@@ -262,14 +262,13 @@ class CodeEditor extends Component<Props, State> {
         },
       );
       this.codeMirror.scrollIntoView({
-        // @ts-expect-error -- TSCONVERSION
         line: lineStart,
-        char: chStart,
+        ch: chStart,
       });
     }
   }
 
-  scrollToSelection(chStart, chEnd, lineStart, lineEnd) {
+  scrollToSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
     const selectionFocusPos = window.innerHeight / 2 - 100;
 
     if (this.codeMirror) {
@@ -285,9 +284,8 @@ class CodeEditor extends Component<Props, State> {
       );
       this.codeMirror.scrollIntoView(
         {
-          // @ts-expect-error -- TSCONVERSION
           line: lineStart,
-          char: chStart,
+          ch: chStart,
         }, // If sizing permits, position selection just above center
         selectionFocusPos,
       );
