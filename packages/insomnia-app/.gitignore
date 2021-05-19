@@ -1,5 +1,5 @@
 dist
 build
 
-# Was the old location of the build artifact. While this line is no longer strictly needed, it's being left here for developer experience reasons, at least for the rest of 2021.
+# Generated
 app/main.min.js

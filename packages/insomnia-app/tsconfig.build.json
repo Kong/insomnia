@@ -22,6 +22,7 @@
     "**/__mocks__",
     "**/__snapshots__",
     "**/__tests__",
+    "**/main.min.js",
     "__jest__",
     "assets",
     "bin",

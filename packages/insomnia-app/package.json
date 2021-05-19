@@ -6,7 +6,7 @@
   "description": "The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
   "license": "MIT",
-  "main": "build/main.min.js",
+  "main": "app/main.min.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/insomnia.git",

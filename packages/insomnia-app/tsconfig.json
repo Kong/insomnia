@@ -12,6 +12,7 @@
   ],
   "exclude": [
     "**/@types/mocha",
+    "**/main.min.js",
     "bin",
     "config",
     "node_modules"
