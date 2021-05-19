@@ -1,4 +1,4 @@
-import React, { FormEvent, Fragment, PureComponent } from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
@@ -163,10 +163,6 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     this.environmentEditorRef = n;
   }
 
-  _setInputColorRef(ref: HTMLInputElement) {
-    this.environmentColorInputRef = ref;
-  }
-
   _setModalRef(n: Modal) {
     this.modal = n;
   }
@@ -305,9 +301,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       clearTimeout(this.colorChangeTimeout);
     }
     this.colorChangeTimeout = setTimeout(async () => {
-      await this._updateEnvironment(environment, {
-        color,
-      });
+      await this._updateEnvironment(environment, { color });
     }, DEBOUNCE_MILLIS);
   }
 
@@ -332,10 +326,6 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     } else {
       return subEnvironments.find(e => e._id === selectedEnvironmentId) || null;
     }
-  }
-
-  _handleUnsetColor(environment: Environment) {
-    this._handleChangeEnvironmentColor(environment, null);
   }
 
   componentDidMount() {
@@ -386,14 +376,6 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     }
 
     this.environmentColorInputRef?.click();
-  }
-
-  _handleInputColorChange(event: FormEvent<HTMLInputElement>) {
-    this._handleChangeEnvironmentColor(
-      this._getSelectedEnvironment(),
-      // @ts-expect-error -- TSCONVERSION what? apparently value doesn't exist on the target
-      event.target && event.target.value,
-    );
   }
 
   _saveChanges() {
@@ -453,6 +435,10 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     const { subEnvironments, rootEnvironment, isValid } = this.state;
 
     const selectedEnvironment = this._getSelectedEnvironment();
+
+    if (this.environmentColorInputRef !== null) {
+      this.environmentColorInputRef.value = selectedEnvironment?.color || '';
+    }
 
     const environmentInfo = {
       object: selectedEnvironment ? selectedEnvironment.data : {},
@@ -531,9 +517,10 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                   <input
                     className="hidden"
                     type="color"
-                    value={selectedEnvironment.color || undefined}
-                    ref={this._setInputColorRef}
-                    onInput={this._handleInputColorChange}
+                    ref={ref => { this.environmentColorInputRef = ref; }}
+                    onChange={event => {
+                      this._handleChangeEnvironmentColor(selectedEnvironment, event.target.value);
+                    }}
                   />
 
                   <Dropdown className="space-right" right>
@@ -562,7 +549,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
                     <DropdownItem
                       value={selectedEnvironment}
-                      onClick={this._handleUnsetColor}
+                      onClick={() => {
+                        this._handleChangeEnvironmentColor(selectedEnvironment, null);
+                      }}
                       disabled={!selectedEnvironment.color}>
                       <i className="fa fa-minus-circle" />
                       Unset Color
