@@ -17,6 +17,7 @@
   },
   "scripts": {
     "clean": "tsc --build tsconfig.webpack.json --clean && tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf build",
     "test": "jest",
     "test-appveyor": "npm run test -- --maxWorkers 1",
     "start:electron": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" cross-env NODE_ENV=development webpack --config webpack/webpack.config.electron.ts && electron .",
