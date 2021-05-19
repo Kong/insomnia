@@ -39,7 +39,7 @@ const spectronConfig = (
   return { buildPath, packagePath, env };
 };
 
-export const launchApp = async designerDataPath => {
+export const launchApp = async (designerDataPath?: string) => {
   const config = spectronConfig(designerDataPath);
   return await launch(config);
 };
