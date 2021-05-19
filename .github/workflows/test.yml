@@ -32,11 +32,11 @@ jobs:
         run: npm run lint
       - name: Run tests
         run: npm test
-      - name: Build for smoke tests
-        run: npm run app-build:smoke
+      - name: Package for smoke tests
+        run: npm run app-package:smoke
       - name: Run smoke tests
         timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
-        run: npm run test:smoke:build
+        run: npm run test:smoke:package
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v2
         if: always()
