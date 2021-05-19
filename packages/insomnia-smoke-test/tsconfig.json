@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "allowJs": true,
+    "noImplicitAny": false
+  },
+  "include": [
+    "cli",
+    "core",
+    "designer",
+    "fixtures",
+    "modules",
+    "server",
+    "jest.config.js",
+    ".eslintrc.js"
+  ],
+  "exclude": [
+    "dist"
+  ]
+}

@@ -23,11 +23,6 @@
     "test:build": "npm run with-mock \"npm run spectron:build\"",
     "test:package": "npm run with-mock \"npm run spectron:package\""
   },
-  "jest": {
-    "setupFilesAfterEnv": [
-      "./__jest__/setup.js"
-    ]
-  },
   "devDependencies": {
     "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
