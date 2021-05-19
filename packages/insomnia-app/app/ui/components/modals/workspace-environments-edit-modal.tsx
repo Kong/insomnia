@@ -370,9 +370,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
   _handleClickColorChange(environment: Environment) {
     if (!environment.color) {
-      // TODO: fix magic-number. Currently this is the `suprise` background color for the default theme, but we should be grabbing the actual value from the user's actual theme instead.
-      const color = environment.color || '#7d69cb';
-      this._handleChangeEnvironmentColor(environment, color);
+      // TODO: fix magic-number. Currently this is the `surprise` background color for the default theme, but we should be grabbing the actual value from the user's actual theme instead.
+      this._handleChangeEnvironmentColor(environment, '#7d69cb');
     }
 
     this.environmentColorInputRef?.click();
@@ -407,6 +406,14 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
         await this._updateEnvironment(selectedEnvironment, patch);
       }, DEBOUNCE_MILLIS * 4);
     }
+  }
+
+  handleInputColorChage(event: React.ChangeEvent<HTMLInputElement>) {
+    this._handleChangeEnvironmentColor(this._getSelectedEnvironment(), event.target.value);
+  }
+
+  unsetColor(environment: Environment) {
+    this._handleChangeEnvironmentColor(environment, null);
   }
 
   _handleActivateEnvironment: ButtonProps<Environment>['onClick'] = (environment: Environment) => {
@@ -519,9 +526,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                     className="hidden"
                     type="color"
                     ref={ref => { this.environmentColorInputRef = ref; }}
-                    onChange={event => {
-                      this._handleChangeEnvironmentColor(selectedEnvironment, event.target.value);
-                    }}
+                    onChange={this.handleInputColorChage}
                   />
 
                   <Dropdown className="space-right" right>
@@ -549,9 +554,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
                     <DropdownItem
                       value={selectedEnvironment}
-                      onClick={() => {
-                        this._handleChangeEnvironmentColor(selectedEnvironment, null);
-                      }}
+                      onClick={this.unsetColor}
                       disabled={!selectedEnvironment.color}>
                       <i className="fa fa-minus-circle" />
                       Unset Color
