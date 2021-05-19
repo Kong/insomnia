@@ -7,7 +7,6 @@ import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from '
 import { parse, print, typeFromAST } from 'graphql';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
-// import type { CodeMirror, TextMarker } from 'codemirror';
 import CodeEditor from '../../codemirror/code-editor';
 import { jsonParseOr } from '../../../../common/misc';
 import HelpTooltip from '../../help-tooltip';

@@ -167,7 +167,6 @@ class CodeEditor extends Component<Props, State> {
   componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
-      // @ts-expect-error -- TSCONVERSION this comes from a custom extension
       this.codeMirror.closeHintDropdown();
     }
   }
@@ -350,8 +349,7 @@ class CodeEditor extends Component<Props, State> {
 
   clearSelection() {
     // Never do this if dropdown is open
-    // @ts-expect-error -- TSCONVERSION this comes from a custom extension
-    if (this.codeMirror.isHintDropdownActive()) {
+    if (this.codeMirror?.isHintDropdownActive()) {
       return;
     }
 
@@ -501,7 +499,9 @@ class CodeEditor extends Component<Props, State> {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
     this.codeMirror.on('scroll', this._codemirrorScroll);
+    // @ts-expect-error this event does indeed exist, but is not present on the CodeMirror types and declaration merging doesn't seem to want to allow adding it
     this.codeMirror.on('fold', this._codemirrorToggleFold);
+    // @ts-expect-error this event does indeed exist, but is not present on the CodeMirror types and declaration merging doesn't seem to want to allow adding it
     this.codeMirror.on('unfold', this._codemirrorToggleFold);
     this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
     // Prevent these things if we're type === "password"
@@ -906,7 +906,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  async _codemirrorKeyDown(doc, e) {
+  async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
@@ -1035,7 +1035,6 @@ class CodeEditor extends Component<Props, State> {
     if (shouldLint !== existingLint) {
       const { lintOptions } = this.props;
       const lint = shouldLint ? lintOptions || true : false;
-
       this._codemirrorSmartSetOption('lint', lint);
     }
 

@@ -53,7 +53,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return;
   }
 
-  async function completeAfter(cm, fn, showAllOnNoMatch = false) {
+  async function completeAfter(cm: CodeMirror.Editor, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
       return;
@@ -68,7 +68,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    let hintsContainer = document.querySelector('#hints-container');
+    let hintsContainer = document.querySelector<HTMLElement>('#hints-container');
 
     if (!hintsContainer) {
       const el = document.createElement('div');
@@ -85,6 +85,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     // Actually show the hint
     cm.showHint({
       // Insomnia-specific options
+      // @ts-expect-error -- TSCONVERSION needs investigation
       constants: constants || [],
       variables: variables || [],
       snippets: snippets || [],
