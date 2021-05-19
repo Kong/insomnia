@@ -7,7 +7,7 @@ const basicAuthRouter = express.Router();
 const port = 4010;
 
 // Artificially slow each request down
-app.use((req, res, next) => {
+app.use((_req, _res, next) => {
   setTimeout(next, 500);
 });
 
@@ -41,7 +41,7 @@ app.listen(port, () => {
 
 app.get('/delay/seconds/:duration', (req, res) => {
   const delaySec = Number.parseInt(req.params.duration || 2);
-  setTimeout(function () {
+  setTimeout(function() {
       res.send(`Delayed by ${delaySec} seconds`);
   }, delaySec * 1000);
-})
+});

@@ -8,10 +8,11 @@ import { basicAuthCreds } from '../fixtures/constants';
 import * as onboarding from '../modules/onboarding';
 import * as home from '../modules/home';
 import * as modal from '../modules/modal';
+import { Application } from 'spectron';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
-  let app = null;
+  let app: Application;
 
   beforeEach(async () => {
     app = await launchApp();

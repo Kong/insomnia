@@ -2,7 +2,7 @@ import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
 // @ts-expect-error TSCONVERSION
-import electronPath from '../../insomnia-app/node_modules/electron';
+import electronPath from '../../insomnia-app/node_modules/electron/electron';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 
@@ -32,6 +32,7 @@ const spectronConfig = (
   const env = { INSOMNIA_DATA_PATH: dataPath };
 
   if (designerDataPath) {
+    // @ts-expect-error TSCONVERSION
     env.DESIGNER_DATA_PATH = designerDataPath;
   }
 

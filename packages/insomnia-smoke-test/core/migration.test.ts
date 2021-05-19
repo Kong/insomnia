@@ -4,10 +4,11 @@ import * as onboarding from '../modules/onboarding';
 import * as migration from '../modules/migration';
 import * as home from '../modules/home';
 import path from 'path';
+import { Application } from 'spectron';
 
 describe('Migration', function() {
   jest.setTimeout(50000);
-  let app = null;
+  let app: Application;
 
   beforeEach(async () => {
     app = await launchApp(path.join(__dirname, '..', 'fixtures', 'basic-designer'));

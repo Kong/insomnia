@@ -4,10 +4,10 @@
     "composite": false,
     "rootDir": ".",
     "outDir": "dist",
-    "allowJs": true,
     "noImplicitAny": false
   },
   "include": [
+    "__jest__",
     "cli",
     "core",
     "designer",
