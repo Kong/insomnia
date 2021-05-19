@@ -139,6 +139,7 @@ describe('Application launch', function() {
     await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
+    // @ts-expect-error TSCONVERSION
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
     await modal.close(app);
   });
@@ -160,6 +161,7 @@ describe('Application launch', function() {
 
     // Import from clipboard as collection
     await home.importFromClipboard(app);
+    // @ts-expect-error TSCONVERSION
     await modal.waitUntilOpened(app, { title: 'Import As' });
     await modal.clickModalFooterByText(app, 'Request Collection');
     await home.expectTotalDocuments(app, 2);
@@ -171,12 +173,14 @@ describe('Application launch', function() {
     // Delete the collection
     await home.openDocumentMenuDropdown(collCard);
     await dropdown.clickDropdownItemByText(collCard, 'Delete');
+    // @ts-expect-error TSCONVERSION
     await modal.waitUntilOpened(app, { title: 'Delete Collection' });
     await modal.clickModalFooterByText(app, 'Yes');
     await home.expectTotalDocuments(app, 1);
 
     // Import from clipboard as document
     await home.importFromClipboard(app);
+    // @ts-expect-error TSCONVERSION
     await modal.waitUntilOpened(app, { title: 'Import As' });
     await modal.clickModalFooterByText(app, 'Design Document');
     await home.expectTotalDocuments(app, 2);

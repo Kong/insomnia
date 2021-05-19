@@ -1,6 +1,7 @@
 import { Application } from 'spectron';
 import path from 'path';
 import os from 'os';
+// @ts-expect-error TSCONVERSION
 import electronPath from '../../insomnia-app/node_modules/electron';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
@@ -93,7 +94,9 @@ export const stop = async app => {
 };
 
 const takeScreenshotOnFailure = async app => {
+  // @ts-expect-error TSCONVERSION
   if (jasmine.currentTest.failedExpectations.length) {
+    // @ts-expect-error TSCONVERSION
     await takeScreenshot(app, jasmine.currentTest.fullName.replace(/ /g, '_'));
   }
 };

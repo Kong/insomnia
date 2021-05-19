@@ -7,6 +7,7 @@ import * as dropdown from '../modules/dropdown';
 import { isPackage, launchApp, stop } from '../modules/application';
 
 const itIf = condition => (condition ? it : it.skip);
+// @ts-expect-error TSCONVERSION
 it.if = itIf;
 
 xdescribe('Application launch', function() {
@@ -21,6 +22,7 @@ xdescribe('Application launch', function() {
     await stop(app);
   });
 
+  // @ts-expect-error TSCONVERSION
   xit.if(isPackage())('can install and consume a plugin', async () => {
     await client.correctlyLaunched(app);
     await home.documentListingShown(app);
@@ -38,6 +40,7 @@ xdescribe('Application launch', function() {
     await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
+    // @ts-expect-error TSCONVERSION
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
     await modal.close(app);
   });

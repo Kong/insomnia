@@ -61,6 +61,7 @@ export const createNewCollection = async (app, prefix = 'coll') => {
   await dropdown.clickDropdownItemByText(app.client, 'Request Collection');
 
   const collectionName = `${prefix}-${faker.lorem.slug()}`;
+  // @ts-expect-error TSCONVERSION
   await modal.waitUntilOpened(app, { title: 'Create New Request Collection' });
   await modal.typeIntoModalInput(app, collectionName);
   await modal.clickModalFooterByText(app, 'Create');
@@ -73,6 +74,7 @@ export const createNewDocument = async (app, prefix = 'doc') => {
   await dropdown.clickDropdownItemByText(app.client, 'Design Document');
 
   const documentName = `${prefix}-${faker.lorem.slug()}`;
+  // @ts-expect-error TSCONVERSION
   await modal.waitUntilOpened(app, { title: 'Create New Design Document' });
   await modal.typeIntoModalInput(app, documentName);
   await modal.clickModalFooterByText(app, 'Create');

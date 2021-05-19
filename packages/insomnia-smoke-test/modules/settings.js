@@ -6,6 +6,7 @@ import * as dropdown from './dropdown';
 export const openWithKeyboardShortcut = async app => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));
 
+  // @ts-expect-error TSCONVERSION
   await modal.waitUntilOpened(app, { modalName: 'SettingsModal' });
 };
 
