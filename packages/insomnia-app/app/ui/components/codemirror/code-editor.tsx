@@ -125,7 +125,7 @@ interface Props {
   readOnly?: boolean,
   type?: string,
   filter?: string,
-  filterHistory?: Array<string>,
+  filterHistory?: string[],
   singleLine?: boolean,
   debounceMillis?: number,
   dynamicHeight?: boolean,
@@ -787,8 +787,8 @@ class CodeEditor extends Component<Props, State> {
 
     // Setup the hint options
     if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
-      let getVariables: (() => Promise<Array<Object>>) | undefined;
-      let getTags: (() => Promise<Array<NunjucksParsedTag>>) | undefined;
+      let getVariables: (() => Promise<Object[]>) | undefined;
+      let getTags: (() => Promise<NunjucksParsedTag[]>) | undefined;
 
       if (getRenderContext) {
         getVariables = async () => {
@@ -799,7 +799,7 @@ class CodeEditor extends Component<Props, State> {
 
         // Only allow tags if we have variables too
         getTags = async () => {
-          const expandedTags: Array<NunjucksParsedTag> = [];
+          const expandedTags: NunjucksParsedTag[] = [];
 
           for (const tagDef of await getTagDefinitions()) {
             const firstArg = tagDef.args[0];
@@ -1140,7 +1140,7 @@ class CodeEditor extends Component<Props, State> {
       'editor--readonly': readOnly,
       'raw-editor': raw,
     });
-    const toolbarChildren: Array<ReactNode> = [];
+    const toolbarChildren: ReactNode[] = [];
 
     if (this.props.updateFilter && (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode))) {
       toolbarChildren.push(

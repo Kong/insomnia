@@ -15,7 +15,7 @@ export interface ModalProps {
   skinny?: boolean,
   noEscape?: boolean,
   dontFocus?: boolean,
-  closeOnKeyCodes?: Array<any>,
+  closeOnKeyCodes?: any[],
   onHide?: Function,
   onCancel?: Function,
   onKeyDown?: Function,

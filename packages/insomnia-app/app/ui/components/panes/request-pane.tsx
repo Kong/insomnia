@@ -36,7 +36,7 @@ import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 interface Props {
   // Functions
   forceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  forceUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  forceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleSend: () => void;
   handleSendAndDownload: (filepath?: string) => Promise<void>;
   handleCreateRequest: () => void;
@@ -47,9 +47,9 @@ interface Props {
   updateRequestUrl: (r: Request, url: string) => Promise<Request>;
   updateRequestMethod: (r: Request, method: string) => Promise<Request>;
   updateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  updateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>;
+  updateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
   updateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
-  updateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  updateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   updateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   updateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   updateSettingsUseBulkHeaderEditor: Function;
@@ -80,7 +80,7 @@ class RequestPane extends PureComponent<Props> {
     });
   }
 
-  _autocompleteUrls(): Promise<Array<string>> {
+  _autocompleteUrls(): Promise<string[]> {
     const { workspace, request } = this.props;
     return queryAllWorkspaceUrls(workspace, models.request.type, request?._id);
   }

@@ -4,7 +4,7 @@ import { globalBeforeEach } from '../../__jest__/before-each';
 import { data as fixtures } from '../__fixtures__/nestedfolders';
 
 function loadFixture() {
-  const promises: Array<Promise<models.BaseModel>> = [];
+  const promises: Promise<models.BaseModel>[] = [];
   for (const type of Object.keys(fixtures)) {
     for (const doc of fixtures[type]) {
       // @ts-expect-error -- TSCONVERSION
@@ -37,7 +37,7 @@ describe('onChange()', () => {
       parentId: 'nothing',
       name: 'foo',
     };
-    const changesSeen: Array<Function> = [];
+    const changesSeen: Function[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -68,7 +68,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Array<Function> = [];
+    const changesSeen: Function[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -105,7 +105,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Array<Function> = [];
+    const changesSeen: Function[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -132,7 +132,7 @@ describe('bufferChanges()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Array<Function> = [];
+    const changesSeen: Function[] = [];
 
     const callback = change => {
       changesSeen.push(change);
@@ -162,7 +162,7 @@ describe('bufferChangesIndefinitely()', () => {
       parentId: 'n/a',
       name: 'foo',
     };
-    const changesSeen: Array<Function> = [];
+    const changesSeen: Function[] = [];
 
     const callback = change => {
       changesSeen.push(change);

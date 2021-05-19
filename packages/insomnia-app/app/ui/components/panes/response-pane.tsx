@@ -14,7 +14,7 @@ import Button from '../base/button';
 import PreviewModeDropdown from '../dropdowns/preview-mode-dropdown';
 import ResponseViewer from '../viewers/response-viewer';
 import ResponseHistoryDropdown from '../dropdowns/response-history-dropdown';
-import ResponseTimer from '../response-timer';
+import { ResponseTimer } from '../response-timer';
 import ResponseTimelineViewer from '../viewers/response-timeline-viewer';
 import ResponseHeadersViewer from '../viewers/response-headers-viewer';
 import ResponseCookiesViewer from '../viewers/response-cookies-viewer';
@@ -43,17 +43,17 @@ interface Props {
   handleShowRequestSettings: Function;
   previewMode: string;
   filter: string;
-  filterHistory: Array<string>;
+  filterHistory: string[];
   disableHtmlPreviewJs: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
   editorLineWrapping: boolean;
   loadStartTime: number;
-  responses: Array<Response>;
+  responses: Response[];
   hotKeyRegistry: HotKeyRegistry;
   disableResponsePreviewLinks: boolean;
-  requestVersions: Array<RequestVersion>;
+  requestVersions: RequestVersion[];
   request?: Request | null;
   response?: Response | null;
   environment?: Environment | null;
@@ -99,7 +99,7 @@ class ResponsePane extends PureComponent<Props> {
     }
 
     const readStream = models.response.getBodyStream(response);
-    const dataBuffers: Array<any> = [];
+    const dataBuffers: any[] = [];
 
     if (readStream) {
       readStream.on('data', data => {

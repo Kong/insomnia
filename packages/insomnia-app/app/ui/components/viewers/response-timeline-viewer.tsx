@@ -12,7 +12,7 @@ interface Props {
 }
 
 interface State {
-  timeline: Array<any>;
+  timeline: any[];
   timelineKey: string;
 }
 

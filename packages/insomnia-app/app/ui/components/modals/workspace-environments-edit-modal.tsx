@@ -39,7 +39,7 @@ interface Props extends ModalProps {
 interface State {
   workspace: Workspace | null;
   isValid: boolean;
-  subEnvironments: Array<Environment>;
+  subEnvironments: Environment[];
   rootEnvironment: Environment | null;
   selectedEnvironmentId: string | null;
 }
@@ -108,7 +108,7 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
 );
 
 interface SidebarListProps extends Omit<SidebarListItemProps, 'environment'> {
-  environments: Array<Environment>;
+  environments: Environment[];
 }
 
 const SidebarList = SortableContainer<SidebarListProps>(
@@ -351,10 +351,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleSortEnd: SortEndHandler = (results: {
-    oldIndex: number;
-    newIndex: number;
-  }) => {
+  _handleSortEnd: SortEndHandler = (results) => {
     const { oldIndex, newIndex } = results;
 
     if (newIndex === oldIndex) {

@@ -26,12 +26,12 @@ export interface EnvironmentInfo {
 
 interface Props {
   environmentInfo: EnvironmentInfo;
-  didChange: (...args: Array<any>) => any;
+  didChange: (...args: any[]) => any;
   editorFontSize: number;
   editorIndentSize: number;
   editorKeyMap: string;
-  render: (...args: Array<any>) => any;
-  getRenderContext: (...args: Array<any>) => any;
+  render: (...args: any[]) => any;
+  getRenderContext: (...args: any[]) => any;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   lineWrapping: boolean;

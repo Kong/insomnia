@@ -22,7 +22,7 @@ const isServiceDefinition = (obj: AnyDefinition): obj is ServiceDefinition => !i
 //  writing to a file in those cases, but it becomes more important to cache
 export const loadMethods = async (
   protoFile?: ProtoFile | null,
-): Promise<Array<GrpcMethodDefinition>> => {
+): Promise<GrpcMethodDefinition[]> => {
   if (!protoFile?.protoText) {
     return [];
   }
@@ -33,8 +33,8 @@ export const loadMethods = async (
 
 export const loadMethodsFromPath = async (
   filePath: string,
-  includeDirs?: Array<string>,
-): Promise<Array<GrpcMethodDefinition>> => {
+  includeDirs?: string[],
+): Promise<GrpcMethodDefinition[]> => {
   const definition = await protoLoader.load(filePath, { ...GRPC_LOADER_OPTIONS, includeDirs });
   return Object.values(definition).filter(isServiceDefinition).flatMap(Object.values);
 };

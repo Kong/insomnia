@@ -91,7 +91,7 @@ export const setupGitRepository: SetupGitRepositoryCallback = ({ createFsClient,
 };
 
 const containsInsomniaDir = async (fsClient: Record<string, any>): Promise<boolean> => {
-  const rootDirs: Array<string> = await fsClient.promises.readdir(GIT_CLONE_DIR);
+  const rootDirs: string[] = await fsClient.promises.readdir(GIT_CLONE_DIR);
   return rootDirs.includes(GIT_INSOMNIA_DIR_NAME);
 };
 
@@ -100,7 +100,7 @@ const containsInsomniaWorkspaceDir = async (fsClient: Record<string, any>): Prom
     return false;
   }
 
-  const rootDirs: Array<string> = await fsClient.promises.readdir(GIT_INSOMNIA_DIR);
+  const rootDirs: string[] = await fsClient.promises.readdir(GIT_INSOMNIA_DIR);
   return rootDirs.includes(models.workspace.type);
 };
 

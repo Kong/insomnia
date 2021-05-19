@@ -21,7 +21,7 @@ export interface Cookie {
   path: string;
   secure: boolean;
   httpOnly: boolean;
-  extensions?: Array<any>;
+  extensions?: any[];
   creation?: Date;
   creationIndex?: number;
   hostOnly?: boolean;
@@ -31,7 +31,7 @@ export interface Cookie {
 
 interface BaseCookieJar {
   name: string;
-  cookies: Array<Cookie>;
+  cookies: Cookie[];
 }
 
 export type CookieJar = BaseModel & BaseCookieJar;

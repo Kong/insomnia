@@ -29,7 +29,7 @@ interface Props {
   handleDeleteResponse: Function;
   handleDeleteResponses: Function;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
-  handleForceUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
   handleImportFile: HandleImportFileCallback;
   handleRequestCreate: () => void;
@@ -44,9 +44,9 @@ interface Props {
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleUpdateRequestAuthentication: (r: Request, auth: RequestAuthentication) => Promise<Request>;
   handleUpdateRequestBody: (r: Request, body: RequestBody) => Promise<Request>;
-  handleUpdateRequestHeaders: (r: Request, headers: Array<RequestHeader>) => Promise<Request>;
+  handleUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleUpdateRequestMethod: (r: Request, method: string) => Promise<Request>;
-  handleUpdateRequestParameters: (r: Request, params: Array<RequestParameter>) => Promise<Request>;
+  handleUpdateRequestParameters: (r: Request, params: RequestParameter[]) => Promise<Request>;
   handleUpdateRequestUrl: (r: Request, url: string) => Promise<Request>;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   handleUpdateSettingsUseBulkHeaderEditor: Function;

@@ -160,7 +160,7 @@ async function getNunjucks(renderMode: string) {
   // Create Env with Extensions //
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~ //
   const nj = nunjucks.configure(config);
-  let allTemplateTagPlugins: Array<TemplateTag>;
+  let allTemplateTagPlugins: TemplateTag[];
 
   try {
     plugins.ignorePlugin('insomnia-plugin-kong-bundle');

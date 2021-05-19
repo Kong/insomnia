@@ -79,7 +79,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLEditor extends PureComponent<Props, State> {
-  _disabledOperationMarkers: Array<TextMarker> = [];
+  _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | Record<string, any> = null;
   _isMounted = false;
   _queryEditor: null | EditorFromTextArea = null;
@@ -132,7 +132,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     const cursorIndex = _queryEditor.indexFromPos(cursor);
 
     let operationName: string | null = null;
-    const allOperationNames: Array<string | null> = [];
+    const allOperationNames: (string | null)[] = [];
 
     // Loop through all operations to see if one contains the cursor.
     for (let i = 0; i < operations.length; i++) {
@@ -398,7 +398,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     }
   }
 
-  _getOperations(): Array<any> {
+  _getOperations(): any[] {
     if (!this._documentAST) {
       return [];
     }

@@ -141,7 +141,7 @@ export function getModelName(type: string, count = 1) {
   }
 }
 
-export async function initModel<T extends BaseModel>(type: string, ...sources: Array<Record<string, any>>): Promise<T> {
+export async function initModel<T extends BaseModel>(type: string, ...sources: Record<string, any>[]): Promise<T> {
   const model = getModel(type);
 
   if (!model) {

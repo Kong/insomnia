@@ -13,7 +13,7 @@ export type UpdateProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
 export type RenameProtoFileHandler = (protoFile: ProtoFile, name: string) => Promise<void>;
 
 interface Props {
-  protoDirectories: Array<ExpandedProtoDirectory>;
+  protoDirectories: ExpandedProtoDirectory[];
   selectedId?: string;
   handleSelect: SelectProtoFileHandler;
   handleDelete: DeleteProtoFileHandler;
