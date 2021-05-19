@@ -198,7 +198,7 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
         console.log(`[build] git ref \`${gitRef}\` found`);
       }
       console.log('[build] Skipping build because no version was found (the version is derived from the git ref)');
-      process.exit(0);
+      process.exit(1);
     }
 
     if (appConfig.version !== version) {
