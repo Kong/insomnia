@@ -18,7 +18,7 @@
     "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "spectron:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
-    "serve": "ts-node server/index.js",
+    "serve": "ts-node server/index.ts",
     "with-mock": "concurrently --names server,app --success first --kill-others \"npm run serve\"",
     "test:cli": "npm run with-mock \"npm run cli\"",
     "test:build": "npm run with-mock \"npm run spectron:build\"",

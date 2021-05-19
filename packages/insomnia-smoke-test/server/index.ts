@@ -1,6 +1,6 @@
 import express from 'express';
 import basicAuth from 'express-basic-auth';
-import { basicAuthCreds } from '../fixtures/constants.js';
+import { basicAuthCreds } from '../fixtures/constants';
 
 const app = express();
 const basicAuthRouter = express.Router();
