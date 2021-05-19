@@ -109,7 +109,7 @@ const buildLicenseList = (relSource: string, relDest: string) => new Promise<voi
   );
 });
 
-const install = (relDir: string) => new Promise<void>(resolve => {
+const install = (relDir: string) => new Promise<void>((resolve, reject) => {
   const prefix = path.resolve(__dirname, relDir);
 
   const p = childProcess.spawn('npm', ['install', '--production', '--no-optional'], {
@@ -127,7 +127,11 @@ const install = (relDir: string) => new Promise<void>(resolve => {
 
   p.on('exit', code => {
     console.log(`child process exited with code ${code}`);
-    resolve();
+    if (code === 0) {
+      resolve();
+    } else {
+      reject(new Error('[build] failed to install dependencies'));
+    }
   });
 });
 
