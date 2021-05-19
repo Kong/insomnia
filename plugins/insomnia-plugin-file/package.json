@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-file",
-  "version": "2.3.0-beta.0",
+  "version": "2.3.0-beta.2",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia file templte tag",
   "license": "MIT",

@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "2.3.0-beta.0",
+  "version": "2.3.0-beta.2",
   "type": "module",
   "scripts": {
     "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
