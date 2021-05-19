@@ -430,7 +430,7 @@ class CodeEditor extends Component<Props, State> {
       scroll: false,
     });
     // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.setSelections(selections, null, {
+    this.codeMirror.setSelection(selections, null, {
       scroll: false,
     });
 
