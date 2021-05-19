@@ -3,7 +3,7 @@ import { K8sManifest } from './kubernetes-config';
 
 export type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
 
-export interface Warnings {
+export interface Warning {
   severity: number;
   message: string;
   range: {};
@@ -13,14 +13,14 @@ export interface DeclarativeConfigResult {
   type: 'kong-declarative-config';
   label: string;
   documents: DeclarativeConfig[];
-  warnings: Warnings[];
+  warnings: Warning[];
 }
 
 export interface KongForKubernetesResult {
   type: 'kong-for-kubernetes';
   label: string;
   documents: K8sManifest[];
-  warnings: Warnings[];
+  warnings: Warning[];
 }
 
 export type ConversionResult = DeclarativeConfigResult | KongForKubernetesResult;
