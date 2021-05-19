@@ -63,6 +63,7 @@ const launch = async config => {
     chromeDriverArgs: ['remote-debugging-port=9222'],
 
     env: config.env,
+    waitTimeout: 10000,
   });
 
   await app.start().then(async () => {
