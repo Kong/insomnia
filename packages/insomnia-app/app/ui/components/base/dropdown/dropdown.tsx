@@ -71,8 +71,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     }
   }
 
-  _handleChangeFilter(e) {
-    const newFilter = e.target.value;
+  _handleChangeFilter(event: React.ChangeEvent<HTMLInputElement>) {
+    const newFilter = event.target.value;
 
     // Nothing to do if the filter didn't change
     if (newFilter === this.state.filter) {
@@ -424,7 +424,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
                 <i className="fa fa-search" />
                 <input
                   type="text"
-                  onInput={this._handleChangeFilter}
+                  onChange={this._handleChangeFilter}
                   ref={this._addFilterRef}
                   onKeyPress={this._handleCheckFilterSubmit}
                 />
