@@ -19,7 +19,6 @@
     "clean": "tsc --build tsconfig.build.json --clean",
     "postclean": "rimraf dist",
     "build": "tsc --build tsconfig.build.json",
-
     "spectron:build": "cross-env BUNDLE=build xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "spectron:package": "cross-env BUNDLE=package xvfb-maybe jest --detectOpenHandles --testPathPattern core",
     "cli": "jest --detectOpenHandles --testPathPattern cli",
@@ -30,6 +29,10 @@
     "test:package": "npm run with-mock \"npm run spectron:package\""
   },
   "devDependencies": {
+    "@types/concurrently": "^6.0.1",
+    "@types/express": "^4.17.11",
+    "@types/faker": "^5.5.5",
+    "@types/mkdirp": "^1.0.1",
     "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
     "execa": "^5.0.0",
