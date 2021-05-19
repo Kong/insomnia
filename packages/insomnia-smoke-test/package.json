@@ -12,7 +12,6 @@
     "url": "https://github.com/kong/insomnia/issues"
   },
   "version": "2.2.35",
-  "type": "module",
   "scripts": {
     "lint": "eslint . --ext .js,.ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
