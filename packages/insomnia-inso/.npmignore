@@ -4,4 +4,4 @@
 *
 
 # Don't ignore dist folder
-!dist/*
+!dist/**
