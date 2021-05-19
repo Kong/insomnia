@@ -35,16 +35,6 @@
     "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test",
     "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test"
   },
-  "lint-staged": {
-    "{packages,plugins}/**/*.{js,json,ts,tsx}": [
-      "eslint --fix"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
     "@babel/plugin-proposal-class-properties": "^7.7.4",
@@ -79,10 +69,8 @@
     "eslint-plugin-react": "^7.19.0",
     "eslint-plugin-react-hooks": "^4.0.4",
     "eslint-plugin-standard": "^4.0.1",
-    "husky": "^4.2.5",
     "jest": "^26.6.3",
     "lerna": "^3.22.0",
-    "lint-staged": "^10.2.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.6",
     "type-fest": "^1.0.2",
