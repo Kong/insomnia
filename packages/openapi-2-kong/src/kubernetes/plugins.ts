@@ -9,12 +9,12 @@ import {
 import { generateSecurityPlugins } from '../declarative-config/security-plugins';
 import { DCPlugin } from '../types/declarative-config';
 import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8splugins';
-import { KubernetesPluginConfig } from '../types/kubernetes-config';
+import { K8sPluginConfig } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem } from '../types/openapi3';
 import { ValueOf } from 'type-fest';
 
-export function flattenPluginDocuments(plugins: Plugins): KubernetesPluginConfig[] {
-  const all: KubernetesPluginConfig[] = [];
+export function flattenPluginDocuments(plugins: Plugins): K8sPluginConfig[] {
+  const all: K8sPluginConfig[] = [];
   const { global, servers, paths } = plugins;
   all.push(...global);
   servers.forEach(s => {
@@ -58,7 +58,7 @@ export function mapDcPluginsToK8sPlugins(
   increment: IndexIncrement,
 ) {
   return dcPlugins.map(dcPlugin => {
-    const k8sPlugin: KubernetesPluginConfig = {
+    const k8sPlugin: K8sPluginConfig = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
@@ -149,12 +149,12 @@ export function generateK8sPluginConfig(
   pluginNameSuffix: PluginNameSuffixKeys,
   increment: IndexIncrement,
 ) {
-  const plugins: KubernetesPluginConfig[] = [];
+  const plugins: K8sPluginConfig[] = [];
 
   for (const key of Object.keys(obj).filter(isPluginKey)) {
     const pData = obj[key];
     const name = pData.name || getPluginNameFromKey(key);
-    const p: KubernetesPluginConfig = {
+    const p: K8sPluginConfig = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
@@ -197,13 +197,13 @@ export function normalizeOperationPlugins(operationPlugins: OperationPlugin[]) {
 }
 
 export function prioritizePlugins(
-  global: KubernetesPluginConfig[],
-  server: KubernetesPluginConfig[],
-  path: KubernetesPluginConfig[],
-  operation: KubernetesPluginConfig[],
+  global: K8sPluginConfig[],
+  server: K8sPluginConfig[],
+  path: K8sPluginConfig[],
+  operation: K8sPluginConfig[],
 ) {
   // Order in priority: operation > path > server > global
-  const plugins: KubernetesPluginConfig[] = [...operation, ...path, ...server, ...global];
+  const plugins: K8sPluginConfig[] = [...operation, ...path, ...server, ...global];
   // Select first of each type of plugin
   return distinctByProperty(plugins, p => p.plugin);
 }

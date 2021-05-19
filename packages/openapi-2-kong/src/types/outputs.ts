@@ -1,5 +1,5 @@
 import { DeclarativeConfig } from './declarative-config';
-import { KubernetesManifest } from './kubernetes-config';
+import { K8sManifest } from './kubernetes-config';
 
 export type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
 
@@ -19,7 +19,7 @@ export interface DeclarativeConfigResult {
 export interface KongForKubernetesResult {
   type: 'kong-for-kubernetes';
   label: string;
-  documents: KubernetesManifest[];
+  documents: K8sManifest[];
   warnings: Warnings[];
 }
 

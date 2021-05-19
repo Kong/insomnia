@@ -1,4 +1,4 @@
-import { ConversionResult, ConversionResultType, DeclarativeConfig, generate, generateFromString, KubernetesManifest } from 'openapi-2-kong';
+import { ConversionResult, ConversionResultType, DeclarativeConfig, generate, generateFromString, K8sManifest } from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
 import type { GlobalOptions } from '../get-options';
@@ -85,7 +85,7 @@ export const generateConfig = async (
     return false;
   }
 
-  const yamlDocs = result.documents.map((document: DeclarativeConfig | KubernetesManifest) => YAML.stringify(document));
+  const yamlDocs = result.documents.map((document: DeclarativeConfig | K8sManifest) => YAML.stringify(document));
   // Join the YAML docs with "---" and strip any extra newlines surrounding them
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
