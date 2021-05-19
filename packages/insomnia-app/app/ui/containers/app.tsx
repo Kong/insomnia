@@ -139,12 +139,12 @@ interface Props {
   activeEnvironment?: Environment,
   isVariableUncovered: boolean,
   sidebarHidden: boolean,
-  workspaces: Array<Workspace>,
-  apiSpecs: Array<ApiSpec>,
+  workspaces: Workspace[],
+  apiSpecs: ApiSpec[],
   activeWorkspaceMeta: WorkspaceMeta,
   activeGitRepository: GitRepository,
   activeCookieJar: CookieJar,
-  environments: Array<Environment>,
+  environments: Environment[],
   handleStartLoading: Function,
   handleStopLoading: Function
   handleImportUriToWorkspace: Function,
@@ -437,7 +437,7 @@ class App extends PureComponent<Props, State> {
     });
   }
 
-  async _recalculateMetaSortKey(docs: Array<RequestGroup | Request | GrpcRequest>) {
+  async _recalculateMetaSortKey(docs: (RequestGroup | Request | GrpcRequest)[]) {
     function __updateDoc(doc, metaSortKey) {
       // @ts-expect-error -- TSCONVERSION the fetched model will only ever be a RequestGroup, Request, or GrpcRequest
       // Which all have the .update method. How do we better filter types?

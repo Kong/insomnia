@@ -1,7 +1,7 @@
 import { OpenDialogOptions, remote } from 'electron';
 interface Options {
-  itemTypes?: Array<'file' | 'directory'>;
-  extensions?: Array<string>;
+  itemTypes?: ('file' | 'directory')[];
+  extensions?: string[];
 }
 interface FileSelection {
   filePath: string;

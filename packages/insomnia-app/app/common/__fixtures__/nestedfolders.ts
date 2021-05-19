@@ -1,6 +1,6 @@
 import { workspace, requestGroup, request, BaseModel } from '../../models';
 
-export const data: Record<string, Array<Partial<BaseModel>>> = {
+export const data: Record<string, Partial<BaseModel>[]> = {
   [workspace.type]: [
     {
       _id: 'wrk_1',

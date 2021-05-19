@@ -2,7 +2,7 @@ import * as srp from 'srp-js';
 import * as crypt from './crypt';
 import * as fetch from './fetch';
 
-const loginCallbacks: Array<Function> = [];
+const loginCallbacks: Function[] = [];
 
 function _callCallbacks() {
   const loggedIn = isLoggedIn();

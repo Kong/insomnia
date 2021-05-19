@@ -22,7 +22,7 @@ interface Props extends ModalProps {
 
 interface State {
   filter: string;
-  visibleCookieIndexes: Array<number> | null;
+  visibleCookieIndexes: number[] | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -90,8 +90,8 @@ class CookiesModal extends PureComponent<Props, State> {
     }
   }
 
-  async _applyFilter(filter: string, cookies: Array<Cookie>) {
-    const renderedCookies: Array<Cookie> = [];
+  async _applyFilter(filter: string, cookies: Cookie[]) {
+    const renderedCookies: Cookie[] = [];
 
     for (const cookie of cookies) {
       try {
@@ -128,7 +128,7 @@ class CookiesModal extends PureComponent<Props, State> {
     });
   }
 
-  _getVisibleCookies(): Array<Cookie> {
+  _getVisibleCookies(): Cookie[] {
     const { cookieJar } = this.props;
     const { visibleCookieIndexes } = this.state;
 

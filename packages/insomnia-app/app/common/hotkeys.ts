@@ -26,9 +26,9 @@ export interface KeyCombination {
  * The collection of a hotkey's key combinations for each platforms.
  */
 export interface KeyBindings {
-  macKeys: Array<KeyCombination>;
+  macKeys: KeyCombination[];
   // The key combinations for both Windows and Linux.
-  winLinuxKeys: Array<KeyCombination>;
+  winLinuxKeys: KeyCombination[];
 }
 
 /**
@@ -61,8 +61,8 @@ function keyComb(
 }
 
 function keyBinds(
-  mac: KeyCombination | Array<KeyCombination>,
-  winLinux: KeyCombination | Array<KeyCombination>,
+  mac: KeyCombination | KeyCombination[],
+  winLinux: KeyCombination | KeyCombination[],
 ): KeyBindings {
   if (!Array.isArray(mac)) {
     mac = [mac];
@@ -295,8 +295,8 @@ const defaultRegistry: HotKeyRegistry = {
   ),
 };
 
-function copyKeyCombs(sources: Array<KeyCombination>): Array<KeyCombination> {
-  const targets: Array<KeyCombination> = [];
+function copyKeyCombs(sources: KeyCombination[]): KeyCombination[] {
+  const targets: KeyCombination[] = [];
   sources.forEach(keyComb => {
     targets.push(Object.assign({}, keyComb));
   });
@@ -339,7 +339,7 @@ export function newDefaultRegistry(): HotKeyRegistry {
  * @param bindings
  * @returns {Array<KeyCombination>}
  */
-export function getPlatformKeyCombinations(bindings: KeyBindings): Array<KeyCombination> {
+export function getPlatformKeyCombinations(bindings: KeyBindings): KeyCombination[] {
   if (isMac()) {
     return bindings.macKeys;
   }
@@ -415,7 +415,7 @@ export function getChar(keyCode: number) {
   return char || 'unknown';
 }
 
-function joinHotKeys(mustUsePlus: boolean, keys: Array<string>) {
+function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
   if (!mustUsePlus && isMac()) {
     return keys.join('');
   }
@@ -454,7 +454,7 @@ export function constructKeyCombinationDisplay(
   mustUsePlus: boolean,
 ) {
   const { ctrl, alt, shift, meta, keyCode } = keyComb;
-  const chars: Array<string> = [];
+  const chars: string[] = [];
   alt && chars.push(ALT_SYM);
   shift && chars.push(SHIFT_SYM);
   ctrl && chars.push(CTRL_SYM);
@@ -492,7 +492,7 @@ export function getHotKeyDisplay(
     return '';
   }
 
-  const keyCombs: Array<KeyCombination> = getPlatformKeyCombinations(hotKey);
+  const keyCombs: KeyCombination[] = getPlatformKeyCombinations(hotKey);
 
   if (keyCombs.length === 0) {
     return '';

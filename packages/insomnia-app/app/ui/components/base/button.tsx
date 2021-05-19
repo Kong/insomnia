@@ -2,12 +2,12 @@ import React, { ButtonHTMLAttributes, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 
-interface Props {
+export interface ButtonProps<T> {
   children: ReactNode,
-  value?: any,
+  value?: T,
   className?: string,
-  onDisabledClick?: Function,
-  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: any, e: React.MouseEvent<HTMLButtonElement>) => void),
+  onDisabledClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void),
+  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void),
   disabled?: boolean,
   tabIndex?: number,
   type?: ButtonHTMLAttributes<HTMLButtonElement>['type'],
@@ -17,15 +17,17 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Button extends PureComponent<Props> {
+class Button<T> extends PureComponent<ButtonProps<T>> {
   _handleClick(e: React.MouseEvent<HTMLButtonElement>) {
-    const { onClick, onDisabledClick, disabled } = this.props;
+    const { onClick, onDisabledClick, disabled, value } = this.props;
     const fn = disabled ? onDisabledClick : onClick;
 
     if (this.props.hasOwnProperty('value')) {
-      fn && fn(this.props.value, e);
+      // @ts-expect-error -- TSCONVERSION we really need to make the `value` argument come second
+      fn?.(value, e);
     } else {
-      fn && fn(e);
+      // @ts-expect-error -- TSCONVERSION we really need to make the `value` argument come second
+      fn?.(e);
     }
   }
 

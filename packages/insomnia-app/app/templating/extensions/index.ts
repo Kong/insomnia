@@ -5,13 +5,13 @@ import type { PluginStore } from '../../plugins/context';
 
 export type PluginArgumentValue = string | number | boolean;
 
-type DisplayName = string | ((args: Array<NunjucksParsedTagArg>) => string);
+type DisplayName = string | ((args: NunjucksParsedTagArg[]) => string);
 
 interface PluginArgumentBase {
   displayName: DisplayName;
   description?: string;
   help?: string;
-  hide?: (args: Array<NunjucksParsedTagArg>) => boolean;
+  hide?: (args: NunjucksParsedTagArg[]) => boolean;
 }
 
 export interface PluginArgumentEnumOption {
@@ -23,7 +23,7 @@ export interface PluginArgumentEnumOption {
 
 export type PluginArgumentEnum = PluginArgumentBase & {
   type: 'enum';
-  options: Array<PluginArgumentEnumOption>;
+  options: PluginArgumentEnumOption[];
   defaultValue?: PluginArgumentValue;
 };
 
@@ -87,13 +87,13 @@ export interface PluginTemplateTagAction {
 }
 
 export interface PluginTemplateTag {
-  args: Array<PluginArgument>;
+  args: PluginArgument[];
   name: string;
   displayName: DisplayName;
   disablePreview: () => boolean;
   description: string;
-  actions: Array<PluginTemplateTagAction>;
-  run: (context: PluginTemplateTagContext, ...arg: Array<any>) => Promise<any> | any;
+  actions: PluginTemplateTagAction[];
+  run: (context: PluginTemplateTagContext, ...arg: any[]) => Promise<any> | any;
   deprecated?: boolean;
   validate?: (value: any) => string | null;
   priority?: number;

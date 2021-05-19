@@ -232,7 +232,7 @@ export async function _trackPageView(location: string) {
   await _sendToGoogle(params, false);
 }
 
-async function _getDefaultParams(): Promise<Array<RequestParameter>> {
+async function _getDefaultParams(): Promise<RequestParameter[]> {
   const deviceId = await getDeviceId();
   // Prepping user agent string prior to sending to GA due to Electron base UA not being GA friendly.
   const ua = String(window?.navigator?.userAgent)
@@ -357,7 +357,7 @@ async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
       console.warn('[ga] Bad status code ' + statusCode);
     }
 
-    const chunks: Array<Buffer> = [];
+    const chunks: Buffer[] = [];
     const [contentType] = response.headers['content-type'] || [];
 
     if (contentType !== 'application/json') {
@@ -398,7 +398,7 @@ async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
  * @returns {Promise<void>}
  * @private
  */
-let _queuedEvents: Array<RequestParameter> = [];
+let _queuedEvents: RequestParameter[] = [];
 
 async function _flushQueuedEvents() {
   console.log(`[ga] Flushing ${_queuedEvents.length} queued events`);

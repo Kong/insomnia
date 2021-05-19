@@ -152,49 +152,49 @@ export interface WrapperProps {
   handleGoToNextActivity: () => void;
   // Properties
   activity: GlobalActivity;
-  apiSpecs: Array<ApiSpec>;
+  apiSpecs: ApiSpec[];
   loadStartTime: number;
   isLoading: boolean;
   paneWidth: number;
   paneHeight: number;
   responsePreviewMode: string;
   responseFilter: string;
-  responseFilterHistory: Array<string>;
+  responseFilterHistory: string[];
   responseDownloadPath: string | null;
   sidebarWidth: number;
   sidebarHidden: boolean;
   sidebarFilter: string;
   sidebarChildren: SidebarChildObjects;
   settings: Settings;
-  workspaces: Array<Workspace>;
-  requestMetas: Array<RequestMeta>;
-  requests: Array<Request>;
-  requestVersions: Array<RequestVersion>;
-  unseenWorkspaces: Array<Workspace>;
-  workspaceChildren: Array<Request | RequestGroup>;
+  workspaces: Workspace[];
+  requestMetas: RequestMeta[];
+  requests: Request[];
+  requestVersions: RequestVersion[];
+  unseenWorkspaces: Workspace[];
+  workspaceChildren: (Request | RequestGroup)[];
   activeWorkspaceMeta: WorkspaceMeta;
-  environments: Array<Environment>;
+  environments: Environment[];
   activeApiSpec: ApiSpec;
   activeUnitTestSuite: UnitTestSuite | null;
-  activeRequestResponses: Array<Response>;
+  activeRequestResponses: Response[];
   activeWorkspace: Workspace;
   activeCookieJar: CookieJar;
   activeEnvironment: Environment | null;
   activeGitRepository: GitRepository | null;
   activeUnitTestResult: UnitTestResult | null;
-  activeUnitTestSuites: Array<UnitTestSuite>;
-  activeUnitTests: Array<UnitTest>;
-  activeWorkspaceClientCertificates: Array<ClientCertificate>;
+  activeUnitTestSuites: UnitTestSuite[];
+  activeUnitTests: UnitTest[];
+  activeWorkspaceClientCertificates: ClientCertificate[];
   headerEditorKey: string;
   isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  gitRepositories: Array<GitRepository>;
-  syncItems: Array<StatusCandidate>;
+  gitRepositories: GitRepository[];
+  syncItems: StatusCandidate[];
   oAuth2Token?: OAuth2Token | null;
   activeRequest?: Request | null;
   activeResponse?: Response | null;
-  workspaceMetas?: Array<WorkspaceMeta>;
+  workspaceMetas?: WorkspaceMeta[];
 }
 
 export type HandleImportFileCallback = (options?: ImportOptions) => void;
@@ -206,7 +206,7 @@ interface State {
   activeGitBranch: string;
 }
 
-const rUpdate = (request, ...args: Array<Partial<Request>>) => {
+const rUpdate = (request, ...args: Partial<Request>[]) => {
   if (!request) {
     throw new Error('Tried to update null request');
   }
@@ -234,7 +234,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     return newRequest;
   }
 
-  _handleForceUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>) {
+  _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return this._handleForceUpdateRequest(r, {
       headers,
     });
@@ -250,7 +250,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  static _handleUpdateRequestParameters(r: Request, parameters: Array<RequestParameter>) {
+  static _handleUpdateRequestParameters(r: Request, parameters: RequestParameter[]) {
     return rUpdate(r, {
       parameters,
     });
@@ -262,7 +262,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     });
   }
 
-  static _handleUpdateRequestHeaders(r: Request, headers: Array<RequestHeader>) {
+  static _handleUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
     return rUpdate(r, {
       headers,
     });

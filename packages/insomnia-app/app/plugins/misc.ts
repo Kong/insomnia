@@ -262,7 +262,7 @@ export async function setTheme(themeName: string) {
     return;
   }
 
-  const themes: Array<Theme> = await getThemes();
+  const themes: Theme[] = await getThemes();
 
   // If theme isn't installed for some reason, set to the default
   if (!themes.find(t => t.theme.name === themeName)) {
