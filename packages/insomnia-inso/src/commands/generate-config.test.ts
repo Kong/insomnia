@@ -44,7 +44,7 @@ describe('generateConfig()', () => {
     });
     expect(generate).not.toHaveBeenCalled();
     expect(logger.__getLogs().fatal).toEqual([
-      'Config type "invalid" not unrecognized. Options are [kubernetes, declarative].',
+      'Config type "invalid" not unrecognized. Options are [declarative, kubernetes].',
     ]);
   });
 

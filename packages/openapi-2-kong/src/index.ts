@@ -1,4 +1,5 @@
 export {
+  conversionTypes,
   generate,
   generateFromString,
   generateFromSpec,

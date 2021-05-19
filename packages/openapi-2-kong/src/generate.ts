@@ -9,6 +9,11 @@ import YAML from 'yaml';
 
 const defaultTags = ['OAS3_import'];
 
+export const conversionTypes: ConversionResultType[] = [
+  'kong-declarative-config',
+  'kong-for-kubernetes',
+];
+
 export async function generate(
   specPath: string,
   type: 'kong-declarative-config',
