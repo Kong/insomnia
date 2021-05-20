@@ -11,7 +11,7 @@ import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
 import previewIcon from '../images/icn-eye.svg';
 import * as models from '../../models/index';
-import { parseApiSpec } from '../../common/api-specs';
+import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
@@ -178,7 +178,7 @@ class WrapperDesign extends PureComponent<Props, State> {
       return null;
     }
 
-    let swaggerUiSpec;
+    let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
 
     try {
       swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
