@@ -189,13 +189,12 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       // Set up the drag
       el.addEventListener('dragstart', event => {
         // Setup the drag contents
-        // @ts-expect-error -- TSCONVERSION
-        const template = event.target?.getAttribute('data-template');
-        event.dataTransfer?.setData('text/plain', template);
-        // @ts-expect-error -- TSCONVERSION
-        event.dataTransfer.effectAllowed = 'copyMove';
-        // @ts-expect-error -- TSCONVERSION
-        event.dataTransfer.dropEffect = 'move';
+        if (event.dataTransfer) {
+          const template = (event.target as typeof el)?.getAttribute('data-template') || '';
+          event.dataTransfer.setData('text/plain', template);
+          event.dataTransfer.effectAllowed = 'copyMove';
+          event.dataTransfer.dropEffect = 'move';
+        }
         // Add some listeners
         this.on('beforeChange', beforeChangeCb);
         this.on('drop', dropCb);
