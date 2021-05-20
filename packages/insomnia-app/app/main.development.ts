@@ -61,8 +61,15 @@ app.on('ready', async () => {
   await updates.init();
   grpcIpcMain.init();
 });
+
 // Set as default protocol
-app.setAsDefaultProtocolClient(`insomnia${isDevelopment() ? 'dev' : ''}`);
+const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
+const defaultProtocolSuccessful = app.setAsDefaultProtocolClient(defaultProtocol);
+if (defaultProtocolSuccessful) {
+  console.log(`[electron] successfully set default protocol '${defaultProtocol}://'`);
+} else {
+  console.error(`[electron] FAILED to set default protocol '${defaultProtocol}://'`);
+}
 
 function _addUrlToOpen(e, url) {
   e.preventDefault();
