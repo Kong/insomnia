@@ -31,7 +31,7 @@
     "build": "webpack --config webpack/webpack.config.development.js",
     "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
     "start": "npm run build -- --watch",
-    "prepare-temp-disabled": "npm run build:production"
+    "prepare": "npm run build:production"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -58,7 +58,7 @@
     "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
-    "@stoplight/spectral": "5.4.0",
+    "@stoplight/spectral": "^5.4.0",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",
