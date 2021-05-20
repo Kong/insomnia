@@ -26,7 +26,6 @@ interface Props {
 }
 
 interface State {
-  previewHidden: boolean;
   lintMessages: {
     message: string;
     line: number;
@@ -42,7 +41,6 @@ class WrapperDesign extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      previewHidden: props.wrapperProps.activeWorkspaceMeta?.previewHidden || false,
       lintMessages: [],
     };
   }
@@ -57,19 +55,10 @@ class WrapperDesign extends PureComponent<Props, State> {
     this.editor = n;
   }
 
-  _handleTogglePreview() {
-    this.setState(
-      prevState => ({
-        previewHidden: !prevState.previewHidden,
-      }),
-      async () => {
-        const workspaceId = this.props.wrapperProps.activeWorkspace._id;
-        const previewHidden = this.state.previewHidden;
-        await models.workspaceMeta.updateByParentId(workspaceId, {
-          previewHidden,
-        });
-      },
-    );
+  async _handleTogglePreview() {
+    const workspaceId = this.props.wrapperProps.activeWorkspace._id;
+    const previewHidden = Boolean(this.props.wrapperProps.activeWorkspaceMeta?.previewHidden);
+    await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
   }
 
   _handleOnChange(v: string) {
@@ -171,10 +160,9 @@ class WrapperDesign extends PureComponent<Props, State> {
   }
 
   _renderPreview() {
-    const { activeApiSpec } = this.props.wrapperProps;
-    const { previewHidden } = this.state;
+    const { activeApiSpec, activeWorkspaceMeta } = this.props.wrapperProps;
 
-    if (previewHidden) {
+    if (activeWorkspaceMeta?.previewHidden) {
       return null;
     }
 
@@ -221,7 +209,7 @@ class WrapperDesign extends PureComponent<Props, State> {
 
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { previewHidden } = this.state;
+    const previewHidden = Boolean(wrapperProps.activeWorkspaceMeta?.previewHidden);
     return (
       <WorkspacePageHeader
         wrapperProps={wrapperProps}
