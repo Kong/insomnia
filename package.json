@@ -17,7 +17,7 @@
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version --exact --preid beta --force-publish",
     "version:dry": "npm run version -- --no-git-tag-version",
-    "publish": "lerna publish from-git --pre-dist-tag beta",
+    "release": "lerna publish from-git --pre-dist-tag beta",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
     "inso-start": "npm start --prefix packages/insomnia-inso",

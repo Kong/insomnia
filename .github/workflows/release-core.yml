@@ -48,7 +48,7 @@ jobs:
       - run: npm run bootstrap
       - run: |
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm run publish
+          npm run release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
   Windows:
