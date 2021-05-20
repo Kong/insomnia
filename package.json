@@ -20,7 +20,6 @@
     "publish": "lerna publish from-git --pre-dist-tag beta",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
-    "test:pre-release": "npm run test --prefix packages/insomnia-app",
     "inso-start": "npm start --prefix packages/insomnia-inso",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
