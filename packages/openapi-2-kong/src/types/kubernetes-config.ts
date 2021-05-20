@@ -19,39 +19,49 @@ export type K8sAnnotations =
   & Record<string, string>
   ;
 
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta */
 export interface K8sMetadata {
   name: string;
   annotations: K8sAnnotations;
 }
 
-export interface K8sBackend {
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressbackend-v1beta1-extensions */
+export interface K8sIngressBackend {
   serviceName: string;
   servicePort: number;
 }
 
-export interface K8sPath {
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#httpingresspath-v1beta1-extensions */
+export interface K8sHTTPIngressPath {
   path?: string;
-  backend: K8sBackend;
+  backend: K8sIngressBackend;
 }
 
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#httpingressrulevalue-v1beta1-extensions */
+export interface K8sHTTPIngressRuleValue {
+  paths: K8sHTTPIngressPath[];
+}
+
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressrule-v1beta1-extensions */
 export interface K8sIngressRule {
   host: string;
-  tls?: {
-    paths: K8sPath[];
-    tls?: {
-      secretName: string;
-    };
-  };
-  http?: {
-    paths: K8sPath[];
-  };
+  http?: K8sHTTPIngressRuleValue;
 }
 
-export interface K8sSpec {
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingresstls-v1beta1-extensions */
+export interface K8sIngressTLS {
+  hosts: string[];
+  secretName: string;
+}
+
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressspec-v1beta1-extensions */
+export interface K8sIngressSpec {
+  backend?: K8sIngressBackend;
   rules: K8sIngressRule[];
+  tls?: K8sIngressTLS[];
 }
 
-export interface K8sMethodConfig {
+export interface K8sKongIngress {
   apiVersion: 'configuration.konghq.com/v1';
   kind: 'KongIngress';
   metadata: {
@@ -62,7 +72,7 @@ export interface K8sMethodConfig {
   };
 }
 
-export interface K8sPluginConfig {
+export interface K8sKongPlugin {
   apiVersion: 'configuration.konghq.com/v1';
   kind: 'KongPlugin';
   metadata: {
@@ -73,15 +83,16 @@ export interface K8sPluginConfig {
   plugin: string;
 }
 
-export interface K8sConfig {
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingress-v1beta1-extensions */
+export interface K8sIngress {
   apiVersion: 'extensions/v1beta1';
   kind: 'Ingress';
   metadata: K8sMetadata;
-  spec: K8sSpec;
+  spec: K8sIngressSpec;
 }
 
 export type K8sManifest =
-  | K8sConfig
-  | K8sMethodConfig
-  | K8sPluginConfig
+  | K8sIngress
+  | K8sKongIngress
+  | K8sKongPlugin
   ;

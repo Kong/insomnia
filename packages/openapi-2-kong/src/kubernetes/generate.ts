@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { flattenPluginDocuments, getPlugins, prioritizePlugins } from './plugins';
 import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
 import { IndexIncrement } from '../types/k8splugins';
-import { K8sConfig, K8sMethodConfig, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sPath } from '../types/kubernetes-config';
+import { K8sIngress, K8sKongIngress, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sHTTPIngressPath } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server } from '../types/openapi3';
 import { KongForKubernetesResult } from '../types/outputs';
 
@@ -19,7 +19,7 @@ export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec) {
   const plugins = getPlugins(api);
 
   // Initialize document collections
-  const ingressDocuments: K8sConfig[] = [];
+  const ingressDocuments: K8sIngress[] = [];
   const methodsThatNeedKongIngressDocuments = new Set<HttpMethodType>();
   let _iterator = 0;
 
@@ -47,7 +47,7 @@ export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec) {
         // Create metadata
         const metadata = generateMetadata(api, annotations, increment, specName);
         // Generate Kong ingress document for a server and path in the doc
-        const doc: K8sConfig = {
+        const doc: K8sIngress = {
           apiVersion: 'extensions/v1beta1',
           kind: 'Ingress',
           metadata,
@@ -77,7 +77,7 @@ export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec) {
   return result;
 }
 
-function generateK8sMethodDocuments(method: HttpMethodType): K8sMethodConfig {
+function generateK8sMethodDocuments(method: HttpMethodType): K8sKongIngress {
   return {
     apiVersion: 'configuration.konghq.com/v1',
     kind: 'KongIngress',
@@ -165,7 +165,7 @@ export function generateRulesForServer(
   };
   const pathsToUse: string[] = (paths?.length && paths) || ['']; // Make flow happy
 
-  const k8sPaths: K8sPath[] = pathsToUse.map(p => {
+  const k8sPaths: K8sHTTPIngressPath[] = pathsToUse.map(p => {
     const path = generateServicePath(pathname, p);
     return path
       ? {
