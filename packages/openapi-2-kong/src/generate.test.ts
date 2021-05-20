@@ -8,7 +8,6 @@ describe('index', () => {
     it('generates DC from file', async () => {
       const p = path.join(__dirname, './fixtures/uspto.yaml');
       const {
-        // @ts-expect-error -- TSCONVERSION
         documents: [dc],
       } = await generate(p, 'kong-declarative-config');
       expect(dc._format_version).toBe('1.1');

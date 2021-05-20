@@ -97,5 +97,7 @@ module.exports = {
     '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
     'no-use-before-define': 'off',
     '@typescript-eslint/no-use-before-define': 'error',
+    'no-redeclare': 'off',
+    '@typescript-eslint/no-redeclare': 'error',
   },
 };

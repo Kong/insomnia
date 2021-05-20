@@ -8,13 +8,13 @@ import {
 } from '../common';
 import { generateSecurityPlugins } from '../declarative-config/security-plugins';
 import { DCPlugin } from '../types/declarative-config';
-import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8plugins';
-import { KubernetesPluginConfig } from '../types/kubernetes-config';
+import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8splugins';
+import { K8sPluginConfig } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem } from '../types/openapi3';
 import { ValueOf } from 'type-fest';
 
-export function flattenPluginDocuments(plugins: Plugins): KubernetesPluginConfig[] {
-  const all: KubernetesPluginConfig[] = [];
+export function flattenPluginDocuments(plugins: Plugins): K8sPluginConfig[] {
+  const all: K8sPluginConfig[] = [];
   const { global, servers, paths } = plugins;
   all.push(...global);
   servers.forEach(s => {
@@ -52,13 +52,13 @@ export function getPlugins(api: OpenApi3Spec): Plugins {
 // NOTE: It isn't great that we're relying on declarative-config stuff here but there's
 // not much we can do about it. If we end up needing this again, it should be factored
 // out to a higher-level.
-export function mapDcPluginsToK8Plugins(
+export function mapDcPluginsToK8sPlugins(
   dcPlugins: DCPlugin[],
   suffix: string,
   increment: IndexIncrement,
 ) {
   return dcPlugins.map(dcPlugin => {
-    const k8sPlugin: KubernetesPluginConfig = {
+    const k8sPlugin: K8sPluginConfig = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
@@ -77,13 +77,13 @@ export function mapDcPluginsToK8Plugins(
 
 export function getGlobalPlugins(api: OpenApi3Spec, increment: IndexIncrement) {
   const pluginNameSuffix = PluginNameSuffix.global;
-  const globalK8Plugins = generateK8PluginConfig(api, pluginNameSuffix, increment);
-  const securityPlugins = mapDcPluginsToK8Plugins(
+  const globalK8sPlugins = generateK8sPluginConfig(api, pluginNameSuffix, increment);
+  const securityPlugins = mapDcPluginsToK8sPlugins(
     generateSecurityPlugins(null, api, []),
     pluginNameSuffix,
     increment,
   );
-  return [...globalK8Plugins, ...securityPlugins];
+  return [...globalK8sPlugins, ...securityPlugins];
 }
 
 export function getServerPlugins(
@@ -92,7 +92,7 @@ export function getServerPlugins(
 ) {
   return servers.map<ServerPlugin>(server => ({
     server,
-    plugins: generateK8PluginConfig(server, PluginNameSuffix.server, increment),
+    plugins: generateK8sPluginConfig(server, PluginNameSuffix.server, increment),
   }));
 }
 
@@ -101,7 +101,7 @@ export function getPathPlugins(paths: OA3Paths, increment: IndexIncrement, api: 
     const pathItem = paths[path];
     return {
       path,
-      plugins: generateK8PluginConfig(pathItem, PluginNameSuffix.path, increment),
+      plugins: generateK8sPluginConfig(pathItem, PluginNameSuffix.path, increment),
       operations: normalizeOperationPlugins(getOperationPlugins(pathItem, increment, api)),
     };
   });
@@ -119,8 +119,8 @@ export function getOperationPlugins(
       // We know this will always, only be OA3Operation (because of the filter above), but Flow doesn't know that...
       const operation: Record<string, any> = pathItem[key];
       const pluginNameSuffix = PluginNameSuffix.operation;
-      const opPlugins = generateK8PluginConfig(operation, pluginNameSuffix, increment);
-      const securityPlugins = mapDcPluginsToK8Plugins(
+      const opPlugins = generateK8sPluginConfig(operation, pluginNameSuffix, increment);
+      const securityPlugins = mapDcPluginsToK8sPlugins(
         generateSecurityPlugins(operation, api, []),
         pluginNameSuffix,
         increment,
@@ -144,17 +144,17 @@ const PluginNameSuffix = {
 
 type PluginNameSuffixKeys = ValueOf<typeof PluginNameSuffix>;
 
-export function generateK8PluginConfig(
+export function generateK8sPluginConfig(
   obj: Record<string, any>,
   pluginNameSuffix: PluginNameSuffixKeys,
   increment: IndexIncrement,
 ) {
-  const plugins: KubernetesPluginConfig[] = [];
+  const plugins: K8sPluginConfig[] = [];
 
   for (const key of Object.keys(obj).filter(isPluginKey)) {
     const pData = obj[key];
     const name = pData.name || getPluginNameFromKey(key);
-    const p: KubernetesPluginConfig = {
+    const p: K8sPluginConfig = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
@@ -197,13 +197,13 @@ export function normalizeOperationPlugins(operationPlugins: OperationPlugin[]) {
 }
 
 export function prioritizePlugins(
-  global: KubernetesPluginConfig[],
-  server: KubernetesPluginConfig[],
-  path: KubernetesPluginConfig[],
-  operation: KubernetesPluginConfig[],
+  global: K8sPluginConfig[],
+  server: K8sPluginConfig[],
+  path: K8sPluginConfig[],
+  operation: K8sPluginConfig[],
 ) {
   // Order in priority: operation > path > server > global
-  const plugins: KubernetesPluginConfig[] = [...operation, ...path, ...server, ...global];
+  const plugins: K8sPluginConfig[] = [...operation, ...path, ...server, ...global];
   // Select first of each type of plugin
   return distinctByProperty(plugins, p => p.plugin);
 }

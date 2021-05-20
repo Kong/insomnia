@@ -1,9 +1,23 @@
 import { HttpMethodType } from '../common';
 
-export interface K8sAnnotations {
-  'kubernetes.io/ingress.class': 'kong';
-  [key: string]: string;
+export interface K8sIngressClassAnnotation {
+  'kubernetes.io/ingress.class'?: 'kong';
 }
+
+export interface K8sPluginsAnnotation {
+  'konghq.com/plugins'?: string;
+}
+
+export interface K8sOverrideAnnotation {
+  'konghq.com/override'?: string;
+}
+
+export type K8sAnnotations =
+  & K8sIngressClassAnnotation
+  & K8sOverrideAnnotation
+  & K8sPluginsAnnotation
+  & Record<string, string>
+  ;
 
 export interface K8sMetadata {
   name: string;
@@ -37,7 +51,7 @@ export interface K8sSpec {
   rules: K8sIngressRule[];
 }
 
-export interface KubernetesMethodConfig {
+export interface K8sMethodConfig {
   apiVersion: 'configuration.konghq.com/v1';
   kind: 'KongIngress';
   metadata: {
@@ -48,7 +62,7 @@ export interface KubernetesMethodConfig {
   };
 }
 
-export interface KubernetesPluginConfig {
+export interface K8sPluginConfig {
   apiVersion: 'configuration.konghq.com/v1';
   kind: 'KongPlugin';
   metadata: {
@@ -59,9 +73,15 @@ export interface KubernetesPluginConfig {
   plugin: string;
 }
 
-export interface KubernetesConfig {
+export interface K8sConfig {
   apiVersion: 'extensions/v1beta1';
   kind: 'Ingress';
   metadata: K8sMetadata;
   spec: K8sSpec;
 }
+
+export type K8sManifest =
+  | K8sConfig
+  | K8sMethodConfig
+  | K8sPluginConfig
+  ;

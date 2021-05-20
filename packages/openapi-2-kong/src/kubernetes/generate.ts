@@ -2,8 +2,8 @@ import { getMethodAnnotationName, getName, HttpMethodType, parseUrl } from '../c
 import urlJoin from 'url-join';
 import { flattenPluginDocuments, getPlugins, prioritizePlugins } from './plugins';
 import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
-import { IndexIncrement } from '../types/k8plugins';
-import { KubernetesConfig, KubernetesMethodConfig, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sPath } from '../types/kubernetes-config';
+import { IndexIncrement } from '../types/k8splugins';
+import { K8sConfig, K8sMethodConfig, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sPath } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server } from '../types/openapi3';
 import { KongForKubernetesResult } from '../types/outputs';
 
@@ -12,15 +12,15 @@ interface CustomAnnotations {
   overrideName?: string;
 }
 
-export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec): KongForKubernetesResult {
+export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec) {
   const specName = getSpecName(api);
 
   // Extract global, server, and path plugins upfront
   const plugins = getPlugins(api);
 
   // Initialize document collections
-  const ingressDocuments = [];
-  const methodsThatNeedKongIngressDocuments: Set<HttpMethodType> = new Set<HttpMethodType>();
+  const ingressDocuments: K8sConfig[] = [];
+  const methodsThatNeedKongIngressDocuments = new Set<HttpMethodType>();
   let _iterator = 0;
 
   const increment = (): number => _iterator++;
@@ -47,7 +47,7 @@ export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec): Kong
         // Create metadata
         const metadata = generateMetadata(api, annotations, increment, specName);
         // Generate Kong ingress document for a server and path in the doc
-        const doc: KubernetesConfig = {
+        const doc: K8sConfig = {
           apiVersion: 'extensions/v1beta1',
           kind: 'Ingress',
           metadata,
@@ -68,15 +68,16 @@ export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec): Kong
 
   const documents = [...methodDocuments, ...pluginDocuments, ...ingressDocuments];
 
-  return {
+  const result: KongForKubernetesResult = {
     type: 'kong-for-kubernetes',
     label: 'Kong for Kubernetes',
     documents,
     warnings: [],
-  } as KongForKubernetesResult;
+  };
+  return result;
 }
 
-function generateK8sMethodDocuments(method: HttpMethodType): KubernetesMethodConfig {
+function generateK8sMethodDocuments(method: HttpMethodType): K8sMethodConfig {
   return {
     apiVersion: 'configuration.konghq.com/v1',
     kind: 'KongIngress',
@@ -116,7 +117,7 @@ export function getSpecName(api: OpenApi3Spec): string {
 export function generateMetadataAnnotations(
   api: OpenApi3Spec,
   { pluginNames, overrideName }: CustomAnnotations,
-): K8sAnnotations {
+) {
   // This annotation is required by kong-ingress-controller
   // https://github.com/Kong/kubernetes-ingress-controller/blob/main/docs/references/annotations.md#kubernetesioingressclass
   const coreAnnotations: K8sAnnotations = {
@@ -126,7 +127,7 @@ export function generateMetadataAnnotations(
 
   // Only continue if metadata annotations, or plugins, or overrides exist
   if (metadata?.annotations || pluginNames.length || overrideName) {
-    const customAnnotations = {};
+    const customAnnotations: K8sAnnotations = {};
 
     if (pluginNames.length) {
       customAnnotations['konghq.com/plugins'] = pluginNames.join(', ');

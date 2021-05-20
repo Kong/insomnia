@@ -1,4 +1,4 @@
-import { conversionTypeMap, generateConfig } from './commands/generate-config';
+import { ConversionOption, conversionOptions, generateConfig } from './commands/generate-config';
 import { getVersion, logErrorExit1, exit } from './util';
 import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
@@ -24,7 +24,7 @@ type CreateCommand = (command: string) => commander.Command
 const makeGenerateCommand = (commandCreator: CreateCommand) => {
   // inso generate
   const command = commandCreator('generate').description('Code generation utilities');
-  const defaultType: keyof typeof conversionTypeMap = 'declarative';
+  const defaultType: ConversionOption = 'declarative';
 
   // inso generate config -t kubernetes config.yaml
   command
@@ -32,7 +32,7 @@ const makeGenerateCommand = (commandCreator: CreateCommand) => {
     .description('Generate configuration from an api spec.')
     .option(
       '-t, --type <value>',
-      `type of configuration to generate, options are [${Object.keys(conversionTypeMap).join(', ')}] (default: ${defaultType})`,
+      `type of configuration to generate, options are [${conversionOptions.join(', ')}] (default: ${defaultType})`,
     )
     .option('--tags <tags>', 'comma separated list of tags to apply to each entity')
     .option('-o, --output <path>', 'save the generated config to a file')

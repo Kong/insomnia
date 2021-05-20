@@ -1,4 +1,4 @@
-import { ConversionResult, ConversionResultType, generate, generateFromString } from 'openapi-2-kong';
+import { ConversionResult, ConversionResultType, DeclarativeConfig, generate, generateFromString, K8sManifest } from 'openapi-2-kong';
 import YAML from 'yaml';
 import path from 'path';
 import type { GlobalOptions } from '../get-options';
@@ -8,18 +8,20 @@ import { writeFileWithCliOptions } from '../write-file';
 import { logger } from '../logger';
 import { InsoError } from '../errors';
 
-export const conversionTypeMap = {
+export type ConversionOption = 'kubernetes' | 'declarative';
+
+export const conversionOptions: ConversionOption[] = [
+  'declarative',
+  'kubernetes',
+];
+
+export const conversionTypeMap: Record<ConversionOption, ConversionResultType> = {
   kubernetes: 'kong-for-kubernetes',
   declarative: 'kong-declarative-config',
 } as const;
 
-export const conversionTypes: ConversionResultType[] = [
-  'kong-declarative-config',
-  'kong-for-kubernetes',
-];
-
 export type GenerateConfigOptions = GlobalOptions & {
-  type: keyof (typeof conversionTypeMap);
+  type: ConversionOption;
   output?: string;
   tags?: string,
 };
@@ -29,7 +31,7 @@ const validateOptions = (
 ): options is Partial<GenerateConfigOptions> & Pick<GenerateConfigOptions, 'type'> => {
   const { type } = options;
   if (!type || !conversionTypeMap[type]) {
-    logger.fatal(`Config type "${type}" not unrecognized. Options are [${Object.keys(conversionTypeMap).join(', ')}].`);
+    logger.fatal(`Config type "${type}" not unrecognized. Options are [${conversionOptions.join(', ')}].`);
     return false;
   }
 
@@ -57,13 +59,13 @@ export const generateConfig = async (
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 
   const generationTags = tags?.split(',');
-
+  const conversionType = conversionTypeMap[type];
   try {
     if (specFromDb?.contents) {
       logger.trace('Generating config from database contents');
       result = await generateFromString(
         specFromDb.contents,
-        conversionTypeMap[type],
+        conversionType,
         generationTags,
       );
     } else if (identifier) {
@@ -72,7 +74,7 @@ export const generateConfig = async (
         ? identifier
         : path.join(workingDir || '.', identifier);
       logger.trace(`Generating config from file \`${fileName}\``);
-      result = await generate(fileName, conversionTypeMap[type], generationTags);
+      result = await generate(fileName, conversionType, generationTags);
     }
   } catch (e) {
     throw new InsoError('There was an error while generating configuration', e);
@@ -83,7 +85,7 @@ export const generateConfig = async (
     return false;
   }
 
-  const yamlDocs = result.documents.map(document => YAML.stringify(document));
+  const yamlDocs = result.documents.map((document: DeclarativeConfig | K8sManifest) => YAML.stringify(document));
   // Join the YAML docs with "---" and strip any extra newlines surrounding them
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 

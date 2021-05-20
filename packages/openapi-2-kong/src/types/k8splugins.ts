@@ -1,25 +1,25 @@
 import { HttpMethodType } from '../common';
-import { KubernetesPluginConfig } from './kubernetes-config';
+import { K8sPluginConfig } from './kubernetes-config';
 import { OA3Server } from './openapi3';
 
 export interface OperationPlugin {
   method?: HttpMethodType | null;
-  plugins: KubernetesPluginConfig[];
+  plugins: K8sPluginConfig[];
 }
 
 export interface PathPlugin {
   path: string;
-  plugins: KubernetesPluginConfig[];
+  plugins: K8sPluginConfig[];
   operations: OperationPlugin[];
 }
 
 export interface ServerPlugin {
   server: OA3Server;
-  plugins: KubernetesPluginConfig[];
+  plugins: K8sPluginConfig[];
 }
 
 export interface Plugins {
-  global: KubernetesPluginConfig[];
+  global: K8sPluginConfig[];
   servers: ServerPlugin[];
   paths: PathPlugin[];
 }

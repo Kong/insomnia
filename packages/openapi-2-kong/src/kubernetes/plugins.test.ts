@@ -1,6 +1,6 @@
 import {
   flattenPluginDocuments,
-  generateK8PluginConfig,
+  generateK8sPluginConfig,
   getGlobalPlugins,
   getOperationPlugins,
   getPathPlugins,
@@ -18,7 +18,7 @@ import {
   pluginDummy,
   pluginKeyAuth,
 } from './plugin-helpers';
-import { PathPlugin, OperationPlugin } from '../types/k8plugins';
+import { PathPlugin, OperationPlugin } from '../types/k8splugins';
 import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Components } from '../types/openapi3';
 
 describe('plugins', () => {
@@ -424,10 +424,10 @@ describe('plugins', () => {
     });
   });
 
-  describe('generateK8PluginConfig()', () => {
+  describe('generateK8sPluginConfig()', () => {
     it('should return empty array if no plugin keys found and not increment', () => {
       const incrementMock = jest.fn().mockReturnValue(0);
-      const result = generateK8PluginConfig(spec, 's', incrementMock);
+      const result = generateK8sPluginConfig(spec, 's', incrementMock);
       expect(result).toHaveLength(0);
       expect(incrementMock).not.toHaveBeenCalled();
     });
@@ -435,7 +435,7 @@ describe('plugins', () => {
     it('should attach config onto plugin if it exists and increment', () => {
       const incrementMock = jest.fn().mockReturnValue(0);
       // @ts-expect-error -- TSCONVERSION not sure, but this is intentionally different maybe?
-      const result = generateK8PluginConfig({ ...spec, ...pluginKeyAuth }, 'greg', incrementMock);
+      const result = generateK8sPluginConfig({ ...spec, ...pluginKeyAuth }, 'greg', incrementMock);
       expect(result).toEqual([keyAuthPluginDoc('greg0')]);
       expect(incrementMock).toHaveBeenCalledTimes(1);
     });
