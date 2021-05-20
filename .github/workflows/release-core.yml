@@ -38,15 +38,18 @@ jobs:
     name: npm
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout branch
+        uses: actions/checkout@v1
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - run: npm run bootstrap
-      - run: |
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Release NPM packages
+        run: |
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
           npm run release
         env:
@@ -56,15 +59,18 @@ jobs:
     name: Windows
     runs-on: windows-2016
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout branch
+        uses: actions/checkout@v1
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - run: npm run bootstrap
-      - run: npm run app-release
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Release app
+        run: npm run app-release
         env:
           CSC_LINK: ${{ secrets.CORE_WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CORE_WINDOWS_CSC_KEY_PASSWORD }}
@@ -73,15 +79,18 @@ jobs:
     name: Mac
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout branch
+        uses: actions/checkout@v1
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - run: npm run bootstrap
-      - run: npm run app-release
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Release app
+        run: npm run app-release
         env:
           APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
@@ -92,17 +101,21 @@ jobs:
     name: Linux
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Install Snapcraft
+        run: |
           sudo snap install snapcraft --classic
           echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
-      - uses: actions/checkout@v1
+      - name: Checkout branch
+        uses: actions/checkout@v1
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - run: npm run bootstrap
-      - run: npm run app-release
+      - name: Bootstrap packages
+        run: npm run bootstrap
+      - name: Release app
+        run: npm run app-release
         env:
           BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
