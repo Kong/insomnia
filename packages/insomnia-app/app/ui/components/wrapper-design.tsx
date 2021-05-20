@@ -42,7 +42,7 @@ class WrapperDesign extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      previewHidden: props.wrapperProps.activeWorkspaceMeta.previewHidden || false,
+      previewHidden: props.wrapperProps.activeWorkspaceMeta?.previewHidden || false,
       lintMessages: [],
     };
   }
@@ -57,8 +57,8 @@ class WrapperDesign extends PureComponent<Props, State> {
     this.editor = n;
   }
 
-  async _handleTogglePreview() {
-    await this.setState(
+  _handleTogglePreview() {
+    this.setState(
       prevState => ({
         previewHidden: !prevState.previewHidden,
       }),
