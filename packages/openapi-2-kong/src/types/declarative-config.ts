@@ -1,13 +1,16 @@
+import { OA3Parameter } from './openapi3';
+
 export interface DCPluginConfig {
-  allowed_content_types?: string;
+  allowed_content_types?: string[];
   auth_methods?: string[];
   body_schema?: string;
   issuer?: string;
   key_names?: string[];
-  parameter_schema?: string;
+  parameter_schema?: OA3Parameter[];
   scopes_required?: string[];
   verbose_response?: boolean;
-  version?: 'draft4',
+  version?: 'draft4';
+  [key: string]: any;
 }
 
 export interface DCPlugin {
@@ -29,10 +32,10 @@ export interface DCRoute {
 
 export interface DCService {
   name: string;
-  protocol: string;
+  protocol: string | undefined;
   host: string;
   port: number;
-  path: string;
+  path: string | null;
   routes: DCRoute[];
   tags: string[];
   plugins?: DCPlugin[];

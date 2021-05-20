@@ -1,12 +1,12 @@
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
-import { OA3Operation, OpenApi3Spec, OA3PathItem } from '../types/openapi3';
+import { OA3Operation, OpenApi3Spec, OA3PathItem, OA3RequestBody, OA3Parameter } from '../types/openapi3';
 
 export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
 }
 
-export function generatePlugins(item: Record<string, any>, tags: string[]): DCPlugin[] {
+export function generatePlugins(item: Record<string, any>, tags?: string[]): DCPlugin[] {
   // When generating plugins, ignore the request validator plugin because it is handled at the operation level
   const pluginFilter = ([key]: [string, any]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
 
@@ -16,10 +16,7 @@ export function generatePlugins(item: Record<string, any>, tags: string[]): DCPl
     .map(e => generatePlugin(e, tags));
 }
 
-function generatePlugin(
-  [key, value]: [string, Record<string, any>],
-  tags: string[],
-): DCPlugin {
+function generatePlugin([key, value]: [string, Record<string, any>], tags?: string[]) {
   const plugin: DCPlugin = {
     name: value.name || getPluginNameFromKey(key),
   };
@@ -29,7 +26,7 @@ function generatePlugin(
   }
 
   // Add tags to plugins while appending defaults tags
-  plugin.tags = [...tags, ...(value.tags ?? [])];
+  plugin.tags = [...(tags || []), ...(value.tags ?? [])];
   return plugin;
 }
 
@@ -46,59 +43,50 @@ const DEFAULT_PARAM_STYLE = {
   path: 'simple',
 };
 
-function generateParameterSchema(
-  operation?: OA3Operation,
-): Record<string, any>[] | undefined {
-  let parameterSchema;
+const generateParameterSchema = (operation?: OA3Operation) => {
+  if (!operation?.parameters?.length) {
+    return undefined;
+  }
 
-  if (operation?.parameters?.length) {
-    parameterSchema = [];
+  const parameterSchema: OA3Parameter[] = [];
+  for (const parameter of operation.parameters as OA3Parameter[]) {
+    // The following is valid config to allow all content to pass, in the case where schema is not defined
+    let schema = '';
 
-    for (const p of operation.parameters) {
-      // The following is valid config to allow all content to pass, in the case where schema is not defined
-      let schema;
-
-      if ((p as Record<string, any>).schema) {
-        schema = JSON.stringify((p as Record<string, any>).schema);
-      } else if ((p as Record<string, any>).content) {
-        // only parameters defined with a schema (not content) are supported
-        schema = ALLOW_ALL_SCHEMA;
-      } else {
-        // no schema or content property on a parameter is in violation with the OpenAPI spec
-        schema = ALLOW_ALL_SCHEMA;
-      }
-
-      const paramStyle =
-        (p as Record<string, any>).style ?? DEFAULT_PARAM_STYLE[(p as Record<string, any>).in];
-
-      if (typeof paramStyle === 'undefined') {
-        const name = (p as Record<string, any>).name;
-        throw new Error(`invalid 'in' property (parameter '${name}')`);
-      }
-
-      parameterSchema.push({
-        in: (p as Record<string, any>).in,
-        explode: !!(p as Record<string, any>).explode,
-        required: !!(p as Record<string, any>).required,
-        name: (p as Record<string, any>).name,
-        schema,
-        style: paramStyle,
-      });
+    if (parameter.schema) {
+      schema = JSON.stringify(parameter.schema);
+    } else if (parameter.content) {
+      // only parameters defined with a schema (not content) are supported
+      schema = ALLOW_ALL_SCHEMA;
+    } else {
+      // no schema or content property on a parameter is in violation with the OpenAPI spec
+      schema = ALLOW_ALL_SCHEMA;
     }
+
+    const paramStyle = parameter.style ?? DEFAULT_PARAM_STYLE[parameter.in];
+
+    if (typeof paramStyle === 'undefined') {
+      const name = parameter.name;
+      throw new Error(`invalid 'in' property (parameter '${name}')`);
+    }
+
+    parameterSchema.push({
+      in: parameter.in,
+      explode: !!parameter.explode,
+      required: !!parameter.required,
+      name: parameter.name,
+      schema,
+      style: paramStyle,
+    });
   }
 
   return parameterSchema;
-}
+};
 
-function generateBodyOptions(
-  operation?: OA3Operation,
-): {
-  bodySchema: string | typeof undefined;
-  allowedContentTypes: string[] | typeof undefined;
-} {
+function generateBodyOptions(operation?: OA3Operation) {
   let bodySchema;
   let allowedContentTypes;
-  const bodyContent = (operation?.requestBody as Record<string, any>)?.content;
+  const bodyContent = (operation?.requestBody as OA3RequestBody)?.content;
 
   if (bodyContent) {
     const jsonContentType = 'application/json';
@@ -118,9 +106,9 @@ function generateBodyOptions(
 
 export function generateRequestValidatorPlugin(
   plugin: Record<string, any>,
-  operation: OA3Operation | typeof undefined,
-  tags: string[],
-): DCPlugin {
+  operation?: OA3Operation,
+  tags?: string[],
+) {
   const config: DCPluginConfig = {
     version: 'draft4', // Fixed version
   };
@@ -160,21 +148,19 @@ export function generateRequestValidatorPlugin(
     config.verbose_response = Boolean(pluginConfig.verbose_response);
   }
 
-  return {
+  const dcPlugin: DCPlugin = {
     config,
-    tags: [...tags, ...(plugin.tags ?? [])],
+    tags: [...(tags ?? []), ...(plugin.tags ?? [])],
     enabled: Boolean(plugin.enabled ?? true),
     name: 'request-validator',
   };
+  return dcPlugin;
 }
 
 export function generateGlobalPlugins(
   api: OpenApi3Spec,
   tags: string[],
-): {
-  plugins: DCPlugin[];
-  requestValidatorPlugin?: Record<string, any>;
-} {
+) {
   const globalPlugins = generatePlugins(api, tags);
   const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
 
@@ -196,9 +182,9 @@ export function generatePathPlugins(pathItem: OA3PathItem, tags: string[]): DCPl
 export function generateOperationPlugins(
   operation: OA3Operation,
   pathPlugins: DCPlugin[],
-  parentValidatorPlugin?: Record<string, any>,
+  parentValidatorPlugin?: Record<string, any> | null,
   tags?: string[],
-): DCPlugin[] {
+) {
   const operationPlugins: DCPlugin[] = generatePlugins(operation, tags);
   // Check if validator plugin exists on the operation
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
@@ -213,10 +199,8 @@ export function generateOperationPlugins(
   return distinctByProperty<DCPlugin>([...operationPlugins, ...pathPlugins], plugin => plugin.name);
 }
 
-export function getRequestValidatorPluginDirective(
-  obj: Record<string, any>,
-): Record<string, any> | null {
+export function getRequestValidatorPluginDirective(obj: Record<string, any>) {
   const key = Object.keys(obj).filter(isPluginKey).find(isRequestValidatorPluginKey);
   // If the key is defined but is blank (therefore should be fully generated) then default to {}
-  return key ? obj[key] || {} : null;
+  return key ? (obj[key] || {}) as Record<string, any> : null;
 }

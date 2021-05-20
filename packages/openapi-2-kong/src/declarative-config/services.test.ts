@@ -1,12 +1,13 @@
 import { generateServices } from './services';
 import { parseSpec } from '../generate';
 import { getSpec } from './utils';
+import { DCRoute, DCService } from '../types/declarative-config';
 
 const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
 const xKongRouteDefaults = 'x-kong-route-defaults';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
-const getSpecResult = () =>
+const getSpecResult = (): DCService =>
   JSON.parse(
     JSON.stringify({
       host: 'My_API',
@@ -436,7 +437,7 @@ describe('services', () => {
           strip_path: true,
         };
         const specResult = getSpecResult();
-        const cats = specResult.routes.find(route => route.paths[0] === '/cats$');
+        const cats = specResult.routes.find(route => route.paths[0] === '/cats$') as DCRoute;
         cats.strip_path = true;
         const api = await parseSpec(spec);
         expect(generateServices(api, ['Tag'])).toEqual([specResult]);

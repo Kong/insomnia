@@ -3,6 +3,7 @@ import {
   getPaths,
   getPluginNameFromKey,
   getServers,
+  HttpMethodType,
   isHttpMethodKey,
   isPluginKey,
 } from '../common';
@@ -10,7 +11,7 @@ import { generateSecurityPlugins } from '../declarative-config/security-plugins'
 import { DCPlugin } from '../types/declarative-config';
 import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8splugins';
 import { K8sKongPlugin } from '../types/kubernetes-config';
-import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem } from '../types/openapi3';
+import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Operation } from '../types/openapi3';
 import { ValueOf } from 'type-fest';
 
 export function flattenPluginDocuments(plugins: Plugins): K8sKongPlugin[] {
@@ -116,8 +117,8 @@ export function getOperationPlugins(
   const operationPlugins: OperationPlugin[] = Object.keys(pathItem)
     .filter(isHttpMethodKey)
     .map(key => {
-      // We know this will always, only be OA3Operation (because of the filter above), but Flow doesn't know that...
-      const operation: Record<string, any> = pathItem[key];
+      // We know this will always, only be OA3Operation (because of the filter above)
+      const operation = pathItem[key as `${Lowercase<HttpMethodType>}`] as OA3Operation;
       const pluginNameSuffix = PluginNameSuffix.operation;
       const opPlugins = generateK8sPluginConfig(operation, pluginNameSuffix, increment);
       const securityPlugins = mapDcPluginsToK8sPlugins(

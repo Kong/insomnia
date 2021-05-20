@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { generate } from './generate';
 import { DCRoute, DeclarativeConfig } from './types/declarative-config';
+import { DeclarativeConfigResult } from './types/outputs';
 
 describe('fixtures', () => {
   const root = path.join(__dirname, './fixtures/');
@@ -14,7 +15,7 @@ describe('fixtures', () => {
     const expected = fs.readFileSync(expectedPath, 'utf8');
 
     it(`converts ${fileBase}`, async () => {
-      const result = await generate(inputPath, 'kong-declarative-config');
+      const result = await generate(inputPath, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(result.documents.length).toBe(1);
       const document = result.documents[0];
 

@@ -52,7 +52,9 @@ export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec) => {
           kind: 'Ingress',
           metadata,
           spec: {
-            rules: [generateRulesForServer(serverIndex, sp.server, specName, [pp.path])],
+            rules: [
+              generateRulesForServer(serverIndex, sp.server, specName, [pp.path]),
+            ],
           },
         };
         ingressDocuments.push(doc);
@@ -147,7 +149,7 @@ export const generateRulesForServer = (
   server: OA3Server,
   specName: string,
   paths?: string[],
-): K8sIngressRule => {
+) => {
   // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
   server.url = resolveUrlVariables(server.url, server.variables);
   const { hostname, pathname } = parseUrl(server.url);
@@ -159,23 +161,19 @@ export const generateRulesForServer = (
   };
   const pathsToUse: string[] = (paths?.length && paths) || ['']; // Make flow happy
 
-  const k8sPaths: K8sHTTPIngressPath[] = pathsToUse.map(p => {
-    const path = generateServicePath(pathname, p);
-    return path
-      ? {
-          path,
-          backend,
-        }
-      : {
-          backend,
-        };
+  const k8sPaths = pathsToUse.map(pathToUse => {
+    const path = pathname ? generateServicePath(pathname, pathToUse) : null;
+    const ingressPath: K8sHTTPIngressPath = {
+      backend,
+      ...(path ? { path } : {}),
+    };
+    return ingressPath;
   });
   const tlsConfig = generateTlsConfig(server);
 
   if (tlsConfig) {
     return {
       host: hostname,
-      // @ts-expect-error -- TSCONVERSION This appears broken.  sometimes `tls` contains the secretName and sometimes it's one level up.
       tls: {
         paths: k8sPaths,
         ...tlsConfig,
@@ -183,12 +181,13 @@ export const generateRulesForServer = (
     };
   }
 
-  return {
+  const k8sIngressRule: K8sIngressRule = {
     host: hostname,
     http: {
       paths: k8sPaths,
     },
   };
+  return k8sIngressRule;
 };
 
 export const generateServiceName = (
@@ -196,21 +195,18 @@ export const generateServiceName = (
   specName: string,
   index: number,
 ) => {
-  // x-kubernetes-backend.serviceName
   const serviceName = server['x-kubernetes-backend']?.serviceName;
 
   if (serviceName) {
     return serviceName;
   }
 
-  // x-kubernetes-service.metadata.name
   const metadataName = server['x-kubernetes-service']?.metadata?.name;
-
   if (metadataName) {
     return metadataName;
   }
 
-  // <ingress-name>-s<server index>
+  // <ingress-name>-service-<server index>
   return `${specName}-service-${index}`;
 };
 

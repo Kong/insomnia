@@ -1,4 +1,4 @@
-import { DCRoute } from './declarative-config';
+import { DCRoute, DCUpstream } from './declarative-config';
 import { K8sIngressTLS } from './kubernetes-config';
 
 export interface XKongName {
@@ -7,6 +7,14 @@ export interface XKongName {
 
 export interface XKongRouteDefaults {
   'x-kong-route-defaults'?: DCRoute;
+}
+
+export interface XKongUpstreamDefaults {
+  'x-kong-upstream-defaults'?: DCUpstream;
+}
+
+export interface XKongServiceDefaults {
+  'x-kong-service-defaults'?: Record<string, any>;
 }
 
 export interface XKongPluginRequestValidator {
@@ -72,8 +80,8 @@ export interface OA3Parameter {
   required?: boolean;
   deprecated?: boolean;
   allowEmptyValue?: boolean;
-  style?: 'form' | 'spaceDelimited' | 'pipeDelimited' | 'deepObject';
-  schema?: Record<string, any>;
+  style?: 'form' | 'spaceDelimited' | 'pipeDelimited' | 'deepObject' | string;
+  schema?: Record<string, any> | string;
   content?: Record<string, any>;
   explode?: boolean;
 }
@@ -82,7 +90,7 @@ export interface OA3RequestBody {
   content?: Record<string, any>; // TODO
 }
 
-export interface OA3SecurityRequirement {}
+export type OA3SecurityRequirement = Record<string, any>;
 
 export interface OA3Reference {
   $ref: string;
@@ -138,6 +146,7 @@ export type OA3Operation = {
   security?: OA3SecurityRequirement[];
   servers?: OA3Server[];
 } & XKongName
+  & XKongRouteDefaults
   & XKongPluginKeyAuth
   ;
 
@@ -244,5 +253,7 @@ export type OpenApi3Spec = {
   & XKongPluginKeyAuth
   & XKongPluginRequestValidator
   & XKongPluginUnknown
+  & XKongServiceDefaults
+  & XKongUpstreamDefaults
   & XKongRouteDefaults
   ;

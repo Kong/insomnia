@@ -138,7 +138,7 @@ export const ingressDocWithOverride = (
                 serviceName,
                 servicePort: 80,
               },
-              path,
+              ...(path ? { path } : {}),
             },
           ],
         },
