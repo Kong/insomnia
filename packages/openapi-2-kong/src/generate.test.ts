@@ -1,56 +1,119 @@
-import { generate, generateFromString, parseSpec } from './generate';
+import { generate, generateFromSpec, generateFromString, parseSpec } from './generate';
 import YAML from 'yaml';
 import path from 'path';
 import fs from 'fs';
-import { DeclarativeConfigResult } from './types/outputs';
+import { DeclarativeConfigResult, KongForKubernetesResult } from './types/outputs';
+import { K8sKongIngress } from './types/kubernetes-config';
+import { OpenApi3Spec } from './types/openapi3';
 
-describe('index', () => {
+const firstK8sDocument: K8sKongIngress = {
+  apiVersion: 'configuration.konghq.com/v1',
+  kind: 'KongIngress',
+  metadata: {
+    name: 'get-method',
+  },
+  route: {
+    methods: [
+      'get',
+    ],
+  },
+};
+
+const dcFixturesLocation = 'declarative-config/fixtures';
+const dcFixtureFilepath = path.join(__dirname, dcFixturesLocation, 'uspto.yaml');
+const dcFixtureFileString = fs.readFileSync(dcFixtureFilepath, 'utf-8');
+
+const k8sFixturesLocation = 'kubernetes/fixtures';
+const k8sFixtureFilepath = path.join(__dirname, k8sFixturesLocation, 'cloud-api.yaml');
+const k8sFixtureFileString = fs.readFileSync(k8sFixtureFilepath, 'utf-8');
+
+describe('top-level API exports', () => {
   describe('generate()', () => {
     it('generates DC from file', async () => {
-      const p = path.join(__dirname, './fixtures/uspto.yaml');
       const {
         documents: [dc],
-      } = await generate(p, 'kong-declarative-config') as DeclarativeConfigResult;
+      } = await generate(dcFixtureFilepath, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
       expect(dc.upstreams.length).toBe(1);
     });
 
     it('generates DC from file with extra tags', async () => {
-      const p = path.join(__dirname, './fixtures/uspto.yaml');
       const {
         documents: [dc],
-      } = await generate(p, 'kong-declarative-config', ['MyTag']) as DeclarativeConfigResult;
+      } = await generate(dcFixtureFilepath, 'kong-declarative-config', ['MyTag']) as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
       expect(dc.services[0].tags).toEqual(['OAS3_import', 'OAS3file_uspto.yaml', 'MyTag']);
+    });
+
+    it('generates kubernetes from file', async () => {
+      const {
+        type,
+        label,
+        documents,
+        warnings,
+      } = await generate(k8sFixtureFilepath, 'kong-for-kubernetes') as KongForKubernetesResult;
+      expect(type).toBe('kong-for-kubernetes');
+      expect(label).toBe('Kong for Kubernetes');
+      expect(documents).toHaveLength(9);
+      expect(documents[0]).toMatchObject(firstK8sDocument);
+      expect(warnings).toHaveLength(0);
     });
   });
 
   describe('generateFromString()', () => {
     it('generates DC from string', async () => {
-      const s = fs.readFileSync(path.join(__dirname, './fixtures/uspto.yaml'), 'utf8');
       const {
         documents: [dc],
-      } = await generateFromString(s, 'kong-declarative-config') as DeclarativeConfigResult;
+      } = await generateFromString(k8sFixtureFileString, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
+    });
+
+    it('generates kubernetes from string', async () => {
+      const {
+        type,
+        label,
+        documents,
+        warnings,
+      } = await generateFromString(k8sFixtureFileString, 'kong-for-kubernetes') as KongForKubernetesResult;
+      expect(type).toBe('kong-for-kubernetes');
+      expect(label).toBe('Kong for Kubernetes');
+      expect(documents).toHaveLength(9);
+      expect(documents[0]).toMatchObject(firstK8sDocument);
+      expect(warnings).toHaveLength(0);
     });
   });
 
   describe('generateFromSpec()', () => {
     it('generates DC from spec', async () => {
-      const s = YAML.parse(
-        fs.readFileSync(path.join(__dirname, './fixtures/uspto.yaml'), 'utf8'),
-      );
+      const parsedSpec = YAML.parse(dcFixtureFileString, 'utf8');
       const {
         documents: [dc],
-      } = await generateFromString(s, 'kong-declarative-config') as DeclarativeConfigResult;
+      } = await generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
+      expect(dc.services.length).toBe(1);
+      expect(dc.upstreams.length).toBe(1);
+    });
+
+    it('generates kubernetes from spec', async () => {
+      const parsedSpec = YAML.parse(k8sFixtureFileString, 'utf8');
+      const {
+        type,
+        label,
+        documents,
+        warnings,
+      } = await generateFromSpec(parsedSpec, 'kong-for-kubernetes') as KongForKubernetesResult;
+      expect(type).toBe('kong-for-kubernetes');
+      expect(label).toBe('Kong for Kubernetes');
+      expect(documents).toHaveLength(9);
+      expect(documents[0]).toMatchObject(firstK8sDocument);
+      expect(warnings).toHaveLength(0);
     });
   });
 
   describe('parseSpec()', () => {
-    const spec = {
+    const partialSpec: Partial<OpenApi3Spec> = {
       openapi: '3.0',
       paths: {
         '/': {
@@ -73,9 +136,9 @@ describe('index', () => {
         },
       },
     };
-    const specResolved = {
+    const specResolved: OpenApi3Spec = {
       openapi: '3.0.0',
-      components: spec.components,
+      components: partialSpec.components,
       info: {},
       paths: {
         '/': {
@@ -93,17 +156,17 @@ describe('index', () => {
     };
 
     it('parses JSON spec', async () => {
-      const result = await parseSpec(spec);
+      const result = await parseSpec(partialSpec);
       expect(result).toEqual(specResolved);
     });
 
     it('parses JSON spec string', async () => {
-      const result = await parseSpec(JSON.stringify(spec));
+      const result = await parseSpec(JSON.stringify(partialSpec));
       expect(result).toEqual(specResolved);
     });
 
     it('parses YAML spec string', async () => {
-      const result = await parseSpec(YAML.stringify(spec));
+      const result = await parseSpec(YAML.stringify(partialSpec));
       expect(result).toEqual(specResolved);
     });
   });

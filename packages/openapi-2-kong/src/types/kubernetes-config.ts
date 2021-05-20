@@ -68,7 +68,7 @@ export interface K8sKongIngress {
     name: string;
   };
   route: {
-    methods: HttpMethodType[];
+    methods: (HttpMethodType | Lowercase<HttpMethodType>)[];
   };
 }
 

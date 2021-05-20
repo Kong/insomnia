@@ -153,18 +153,15 @@ export const generateRulesForServer = (
   // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
   server.url = resolveUrlVariables(server.url, server.variables);
   const { hostname, pathname } = parseUrl(server.url);
-  const serviceName = generateServiceName(server, specName, index);
-  const servicePort = generateServicePort(server);
-  const backend = {
-    serviceName,
-    servicePort,
-  };
-  const pathsToUse: string[] = (paths?.length && paths) || ['']; // Make flow happy
+  const pathsToUse: string[] = (paths?.length && paths) || [''];
 
   const k8sPaths = pathsToUse.map(pathToUse => {
     const path = pathname ? generateServicePath(pathname, pathToUse) : null;
     const ingressPath: K8sHTTPIngressPath = {
-      backend,
+      backend: {
+        serviceName: generateServiceName(server, specName, index),
+        servicePort: generateServicePort(server),
+      },
       ...(path ? { path } : {}),
     };
     return ingressPath;

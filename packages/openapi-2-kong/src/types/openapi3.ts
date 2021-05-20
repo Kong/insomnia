@@ -134,11 +134,16 @@ export type OA3Server = {
   & OA3ServerKubernetesBackend
   & OA3ServerKubernetesService;
 
+export interface OA3ResponsesObject {
+  $ref?: string;
+}
+
 export type OA3Operation = {
   description?: string;
   summary?: string;
   tags?: string[];
   externalDocs?: OA3ExternalDocs;
+  responses: OA3ResponsesObject;
   operationId?: string;
   parameters?: (OA3Parameter | OA3Reference)[];
   requestBody?: OA3RequestBody | OA3Reference;
