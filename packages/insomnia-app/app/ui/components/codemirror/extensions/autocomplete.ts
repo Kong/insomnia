@@ -3,6 +3,7 @@ import 'codemirror/addon/mode/overlay';
 import * as models from '../../../../models';
 import { getDefaultFill } from '../../../../templating/utils';
 import { escapeHTML, escapeRegex } from '../../../../common/misc';
+
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
 const AFTER_VARIABLE_MATCH = /{{\s*[\w.\][]*$/;
@@ -37,6 +38,7 @@ const ICONS = {
     title: 'Generator Tag',
   },
 };
+
 CodeMirror.defineExtension('isHintDropdownActive', function() {
   return (
     this.state.completionActive &&
@@ -45,9 +47,11 @@ CodeMirror.defineExtension('isHintDropdownActive', function() {
     this.state.completionActive.data.list.length
   );
 });
+
 CodeMirror.defineExtension('closeHintDropdown', function() {
   this.state.completionActive?.close();
 });
+
 CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;

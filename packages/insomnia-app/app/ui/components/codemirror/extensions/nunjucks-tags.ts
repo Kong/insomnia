@@ -4,10 +4,13 @@ import NunjucksVariableModal from '../../modals/nunjucks-modal';
 import { showModal } from '../../modals/index';
 import { tokenizeTag } from '../../../../templating/utils';
 import { getTagDefinitions } from '../../../../templating/index';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
-CodeMirror.defineExtension(
-  'enableNunjucksTags',
-  function(handleRender, handleGetRenderContext, isVariableUncovered = false) {
+CodeMirror.defineExtension('enableNunjucksTags', function(
+  handleRender: HandleRender,
+  handleGetRenderContext: HandleGetRenderContext,
+  isVariableUncovered = false,
+) {
     if (!handleRender) {
       console.warn("enableNunjucksTags wasn't passed a render function");
       return;

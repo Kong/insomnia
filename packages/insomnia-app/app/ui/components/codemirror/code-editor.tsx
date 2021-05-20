@@ -6,7 +6,7 @@ import {
   EDITOR_KEY_MAP_VIM,
   isMac,
 } from '../../../common/constants';
-import CodeMirror from 'codemirror';
+import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
 import classnames from 'classnames';
 import clone from 'clone';
 import jq from 'jsonpath';
@@ -24,7 +24,6 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
-import { CodeMirrorLinkClickCallback } from './extensions/clickable';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { NunjucksParsedTag } from '../../../templating/utils';
 const TAB_KEY = 9;
@@ -534,13 +533,11 @@ class CodeEditor extends Component<Props, State> {
       this._codemirrorSetValue(defaultValue || '');
 
       // Clear history so we can't undo the initial set
-      // @ts-expect-error -- TSCONVERSION
-      this.codeMirror.clearHistory();
+      this.codeMirror?.clearHistory();
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        // @ts-expect-error -- TSCONVERSION this comes from a custom extension
-        this.codeMirror.enableNunjucksTags(
+        this.codeMirror?.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
           this.props.isVariableUncovered,
@@ -549,15 +546,12 @@ class CodeEditor extends Component<Props, State> {
 
       // Make URLs clickable
       if (this.props.onClickLink) {
-        // @ts-expect-error -- TSCONVERSION this comes from a custom extension
-        this.codeMirror.makeLinksClickable(this.props.onClickLink);
+        this.codeMirror?.makeLinksClickable(this.props.onClickLink);
       }
 
-      // HACK: Refresh because sometimes it renders too early and the scroll doesn't
-      // quite fit.
+      // HACK: Refresh because sometimes it renders too early and the scroll doesn't quite fit.
       setTimeout(() => {
-        // @ts-expect-error -- TSCONVERSION
-        this.codeMirror.refresh();
+        this.codeMirror?.refresh();
       }, 100);
 
       // Restore the state
