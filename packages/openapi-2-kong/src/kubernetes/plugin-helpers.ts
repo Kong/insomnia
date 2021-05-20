@@ -1,4 +1,5 @@
-import { K8sKongPlugin } from '../types/kubernetes-config';
+import { HttpMethodType } from '../common';
+import { K8sIngress, K8sKongIngress, K8sKongPlugin } from '../types/kubernetes-config';
 import { XKongPluginKeyAuth, XKongPluginUnknown } from '../types/openapi3';
 
 export const pluginKeyAuth: XKongPluginKeyAuth = {
@@ -12,6 +13,7 @@ export const pluginKeyAuth: XKongPluginKeyAuth = {
   },
 };
 
+/** used only for testing */
 export const pluginDummy: XKongPluginUnknown<{ foo: 'bar' }> = {
   'x-kong-plugin-dummy-thing': {
     name: 'dummy-thing',
@@ -30,7 +32,7 @@ export const pluginDocWithName = (name: string, pluginType: string): K8sKongPlug
   plugin: pluginType,
 });
 
-export const keyAuthPluginDoc = (suffix: string) => ({
+export const keyAuthPluginDoc = (suffix: string): K8sKongPlugin => ({
   apiVersion: 'configuration.konghq.com/v1',
   config: {
     hide_credentials: true,
@@ -56,14 +58,14 @@ export const dummyPluginDoc = (suffix: string): K8sKongPlugin => ({
   plugin: 'dummy-thing',
 });
 
-export const methodDoc = (method: string) => ({
+export const methodDoc = (method: HttpMethodType | Lowercase<HttpMethodType>): K8sKongIngress => ({
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongIngress',
   metadata: {
     name: `${method}-method`,
   },
   route: {
-    methods: [method.toUpperCase()],
+    methods: [method.toUpperCase() as HttpMethodType],
   },
 });
 
@@ -77,41 +79,35 @@ export const ingressDoc = (
   host: string,
   serviceName: string,
   path?: string | null,
-) => {
-  const backend = {
-    serviceName,
-    servicePort: 80,
-  };
-  const paths = path
-    ? {
-        path,
-        backend,
-      }
-    : {
-        backend,
-      };
-  return {
-    apiVersion: 'extensions/v1beta1',
-    kind: 'Ingress',
-    metadata: {
-      annotations: {
-        'kubernetes.io/ingress.class': 'kong',
-        'konghq.com/plugins': plugins.join(', '),
-      },
-      name: `my-api-${index}`,
+): K8sIngress => ({
+  apiVersion: 'extensions/v1beta1',
+  kind: 'Ingress',
+  metadata: {
+    annotations: {
+      'kubernetes.io/ingress.class': 'kong',
+      'konghq.com/plugins': plugins.join(', '),
     },
-    spec: {
-      rules: [
-        {
-          host,
-          http: {
-            paths: [paths],
-          },
+    name: `my-api-${index}`,
+  },
+  spec: {
+    rules: [
+      {
+        host,
+        http: {
+          paths: [
+            {
+              backend: {
+                serviceName,
+                servicePort: 80,
+              },
+              ...(path ? { path } : {}),
+            },
+          ],
         },
-      ],
-    },
-  };
-};
+      },
+    ],
+  },
+});
 
 export const ingressDocWithOverride = (
   index: number,
@@ -120,7 +116,7 @@ export const ingressDocWithOverride = (
   host: string,
   serviceName: string,
   path?: string | null,
-) => ({
+): K8sIngress => ({
   apiVersion: 'extensions/v1beta1',
   kind: 'Ingress',
   metadata: {

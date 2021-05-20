@@ -12,7 +12,7 @@ interface CustomAnnotations {
   overrideName?: string;
 }
 
-export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec) {
+export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec) => {
   const specName = getSpecName(api);
 
   // Extract global, server, and path plugins upfront
@@ -75,49 +75,43 @@ export function generateKongForKubernetesConfigFromSpec(api: OpenApi3Spec) {
     warnings: [],
   };
   return result;
-}
+};
 
-function generateK8sMethodDocuments(method: HttpMethodType): K8sKongIngress {
-  return {
-    apiVersion: 'configuration.konghq.com/v1',
-    kind: 'KongIngress',
-    metadata: {
-      name: getMethodAnnotationName(method),
-    },
-    route: {
-      methods: [method],
-    },
-  };
-}
+const generateK8sMethodDocuments = (method: HttpMethodType): K8sKongIngress => ({
+  apiVersion: 'configuration.konghq.com/v1',
+  kind: 'KongIngress',
+  metadata: {
+    name: getMethodAnnotationName(method),
+  },
+  route: {
+    methods: [method],
+  },
+});
 
-function generateMetadata(
+const generateMetadata = (
   api: OpenApi3Spec,
   customAnnotations: CustomAnnotations,
   increment: IndexIncrement,
   specName: string,
-): K8sMetadata {
-  return {
-    name: `${specName}-${increment()}`,
-    annotations: generateMetadataAnnotations(api, customAnnotations),
-  };
-}
+): K8sMetadata => ({
+  name: `${specName}-${increment()}`,
+  annotations: generateMetadataAnnotations(api, customAnnotations),
+});
 
-export function getSpecName(api: OpenApi3Spec): string {
-  return getName(
-    api,
-    'openapi',
-    {
-      lower: true,
-      replacement: '-',
-    },
-    true,
-  );
-}
+export const getSpecName = (api: OpenApi3Spec) => getName(
+  api,
+  'openapi',
+  {
+    lower: true,
+    replacement: '-',
+  },
+  true,
+);
 
-export function generateMetadataAnnotations(
+export const generateMetadataAnnotations = (
   api: OpenApi3Spec,
   { pluginNames, overrideName }: CustomAnnotations,
-) {
+) => {
   // This annotation is required by kong-ingress-controller
   // https://github.com/Kong/kubernetes-ingress-controller/blob/main/docs/references/annotations.md#kubernetesioingressclass
   const coreAnnotations: K8sAnnotations = {
@@ -146,14 +140,14 @@ export function generateMetadataAnnotations(
   }
 
   return coreAnnotations;
-}
+};
 
-export function generateRulesForServer(
+export const generateRulesForServer = (
   index: number,
   server: OA3Server,
   specName: string,
   paths?: string[],
-): K8sIngressRule {
+): K8sIngressRule => {
   // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
   server.url = resolveUrlVariables(server.url, server.variables);
   const { hostname, pathname } = parseUrl(server.url);
@@ -195,9 +189,13 @@ export function generateRulesForServer(
       paths: k8sPaths,
     },
   };
-}
+};
 
-export function generateServiceName(server: OA3Server, specName: string, index: number): string {
+export const generateServiceName = (
+  server: OA3Server,
+  specName: string,
+  index: number,
+) => {
   // x-kubernetes-backend.serviceName
   const serviceName = server['x-kubernetes-backend']?.serviceName;
 
@@ -214,13 +212,11 @@ export function generateServiceName(server: OA3Server, specName: string, index: 
 
   // <ingress-name>-s<server index>
   return `${specName}-service-${index}`;
-}
+};
 
-export function generateTlsConfig(server: OA3Server) {
-  return server['x-kubernetes-tls'] || null;
-}
+export const generateTlsConfig = (server: OA3Server) => server['x-kubernetes-tls'] || null;
 
-export function generateServicePort(server: OA3Server): number {
+export const generateServicePort = (server: OA3Server) => {
   // x-kubernetes-backend.servicePort
   const backend = server['x-kubernetes-backend'];
 
@@ -241,12 +237,9 @@ export function generateServicePort(server: OA3Server): number {
   }
 
   return firstPort || 80;
-}
+};
 
-export function generateServicePath(
-  serverBasePath: string,
-  specificPath = '',
-): string | typeof undefined {
+export const generateServicePath = (serverBasePath: string, specificPath = '') => {
   const shouldExtractPath = specificPath || (serverBasePath && serverBasePath !== '/');
 
   if (!shouldExtractPath) {
@@ -256,4 +249,4 @@ export function generateServicePath(
   const fullPath = urlJoin(serverBasePath, specificPath, specificPath ? '' : '.*');
   const pathname = pathVariablesToWildcard(fullPath);
   return pathname;
-}
+};

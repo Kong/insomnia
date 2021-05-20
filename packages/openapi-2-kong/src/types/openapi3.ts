@@ -1,5 +1,5 @@
 import { DCRoute } from './declarative-config';
-import { K8sIngressRule } from './kubernetes-config';
+import { K8sIngressTLS } from './kubernetes-config';
 
 export interface XKongName {
   'x-kong-name'?: string;
@@ -89,7 +89,7 @@ export interface OA3Reference {
 }
 
 export interface OA3ServerKubernetesTLS {
-  'x-kubernetes-tls'?: K8sIngressRule
+  'x-kubernetes-tls'?: K8sIngressTLS
 }
 
 export interface OA3ServerKubernetesBackend {

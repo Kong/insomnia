@@ -50,7 +50,7 @@ export interface K8sIngressRule {
 
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingresstls-v1beta1-extensions */
 export interface K8sIngressTLS {
-  hosts: string[];
+  hosts?: string[];
   secretName: string;
 }
 
