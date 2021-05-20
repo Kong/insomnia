@@ -10,13 +10,13 @@ import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleRender } from '../../common/render';
 
-interface Props {
+export interface CookieListProps {
   handleCookieAdd: Function;
   handleCookieDelete: Function;
   handleDeleteAll: Function;
   cookies: Cookie[];
   newCookieDomainName: string;
-  handleShowModifyCookieModal: Function;
+  handleShowModifyCookieModal: (cookie: Cookie) => void;
   handleRender: HandleRender;
 }
 
@@ -25,7 +25,7 @@ interface Props {
 const MAX_TIME = 2147483647000;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookieList extends PureComponent<Props> {
+class CookieList extends PureComponent<CookieListProps> {
   _handleCookieAdd() {
     const newCookie: Cookie = {
       id: uuid.v4(),
@@ -98,7 +98,7 @@ class CookieList extends PureComponent<Props> {
                   <td onClick={() => {}} className="text-right no-wrap">
                     <button
                       className="btn btn--super-compact btn--outlined"
-                      onClick={() => handleShowModifyCookieModal(cookie)}
+                      onClick={() => { handleShowModifyCookieModal(cookie); }}
                       title="Edit cookie properties">
                       Edit
                     </button>{' '}

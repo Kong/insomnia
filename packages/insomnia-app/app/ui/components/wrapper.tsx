@@ -63,7 +63,7 @@ import CodePromptModal from './modals/code-prompt-modal';
 import { database as db } from '../../common/database';
 import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
-import type { CookieJar } from '../../models/cookie-jar';
+import type { Cookie, CookieJar } from '../../models/cookie-jar';
 import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
@@ -389,7 +389,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  static _handleShowModifyCookieModal(cookie: Record<string, any>) {
+  static _handleShowModifyCookieModal(cookie: Cookie) {
     showModal(CookieModifyModal, cookie);
   }
 
