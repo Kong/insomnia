@@ -97,7 +97,7 @@ export interface OA3Reference {
 }
 
 export interface OA3ServerKubernetesTLS {
-  'x-kubernetes-tls'?: K8sIngressTLS
+  'x-kubernetes-tls'?: K8sIngressTLS[];
 }
 
 export interface OA3ServerKubernetesBackend {

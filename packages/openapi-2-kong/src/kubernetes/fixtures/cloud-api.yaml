@@ -59,9 +59,9 @@ servers:
 - url: https://myserver/v1
   description: The non-production API Server for FRED Studio
   x-kubernetes-tls:
-    hosts:
-      - myserver
-    secretName: myserver-tls
+    - hosts:
+        - myserver
+      secretName: myserver-tls
 ################
 ## Components ##
 ################

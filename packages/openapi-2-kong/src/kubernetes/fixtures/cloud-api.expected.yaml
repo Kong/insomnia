@@ -106,18 +106,19 @@ documents:
         konghq.com/override: get-method
         kubernetes.io/ingress.class: kong
     spec:
+      tls:
+        - hosts:
+            &a1
+            - myserver
+          secretName: myserver-tls
       rules:
         - host: myserver
-          tls:
+          http:
             paths:
-              - backend:
-                  serviceName: my-cloud-api-service-0
-                  servicePort: 443
-                path: /v1/offline-portal
-            hosts:
-              &a1
-              - myserver
-            secretName: myserver-tls
+                - backend:
+                    serviceName: my-cloud-api-service-0
+                    servicePort: 443
+                  path: /v1/offline-portal
   - apiVersion: extensions/v1beta1
     kind: Ingress
     metadata:
@@ -130,14 +131,16 @@ documents:
         konghq.com/override: get-method
         kubernetes.io/ingress.class: kong
     spec:
+      tls:
+        - hosts:
+            - myserver
+          secretName: myserver-tls
       rules:
         - host: myserver
-          tls:
+          http:
             paths:
-              - backend:
+              - path: /v1/user-info
+                backend:
                   serviceName: my-cloud-api-service-0
                   servicePort: 443
-                path: /v1/user-info
-            hosts: *a1
-            secretName: myserver-tls
 warnings: []

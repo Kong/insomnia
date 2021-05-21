@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { flattenPluginDocuments, getPlugins, prioritizePlugins } from './plugins';
 import { pathVariablesToWildcard, resolveUrlVariables } from './variables';
 import { IndexIncrement } from '../types/k8splugins';
-import { K8sIngress, K8sKongIngress, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sHTTPIngressPath } from '../types/kubernetes-config';
+import { K8sIngress, K8sKongIngress, K8sMetadata, K8sAnnotations, K8sIngressRule, K8sHTTPIngressPath, K8sIngressBackend } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server } from '../types/openapi3';
 import { KongForKubernetesResult } from '../types/outputs';
 
@@ -22,39 +22,40 @@ export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec) => {
   const ingressDocuments: K8sIngress[] = [];
   const methodsThatNeedKongIngressDocuments = new Set<HttpMethodType>();
   let _iterator = 0;
-
   const increment = (): number => _iterator++;
-
-  // Iterate all global servers
-  plugins.servers.forEach((sp, serverIndex) => {
-    // Iterate all paths
-    plugins.paths.forEach(pp => {
-      // Iterate methods
-      pp.operations.forEach(o => {
+  plugins.servers.forEach((serverPlugin, serverIndex) => {
+    plugins.paths.forEach(pathPlugin => {
+      pathPlugin.operations.forEach(operation => {
         // Prioritize plugins for doc
-        const pluginsForDoc = prioritizePlugins(plugins.global, sp.plugins, pp.plugins, o.plugins);
+        const pluginsForDoc = prioritizePlugins(
+          plugins.global,
+          serverPlugin.plugins,
+          pathPlugin.plugins,
+          operation.plugins,
+        );
+
         // Identify custom annotations
         const annotations: CustomAnnotations = {
-          pluginNames: pluginsForDoc.map(x => x.metadata.name),
+          pluginNames: pluginsForDoc.map(plugin => plugin.metadata.name),
         };
-        const method = o.method;
+        const { method } = operation;
 
         if (method) {
           annotations.overrideName = getMethodAnnotationName(method);
           methodsThatNeedKongIngressDocuments.add(method);
         }
 
-        // Create metadata
         const metadata = generateMetadata(api, annotations, increment, specName);
-        // Generate Kong ingress document for a server and path in the doc
+        const tls = generateTLS(serverPlugin.server);
+        const rule = generateIngressRule(serverIndex, serverPlugin.server, specName, [pathPlugin.path]);
+
         const doc: K8sIngress = {
           apiVersion: 'extensions/v1beta1',
           kind: 'Ingress',
           metadata,
           spec: {
-            rules: [
-              generateRulesForServer(serverIndex, sp.server, specName, [pp.path]),
-            ],
+            ...(tls ? { tls } : {}),
+            rules: [rule],
           },
         };
         ingressDocuments.push(doc);
@@ -68,12 +69,14 @@ export const generateKongForKubernetesConfigFromSpec = (api: OpenApi3Spec) => {
 
   const pluginDocuments = flattenPluginDocuments(plugins);
 
-  const documents = [...methodDocuments, ...pluginDocuments, ...ingressDocuments];
-
   const result: KongForKubernetesResult = {
     type: 'kong-for-kubernetes',
     label: 'Kong for Kubernetes',
-    documents,
+    documents: [
+      ...methodDocuments,
+      ...pluginDocuments,
+      ...ingressDocuments,
+    ],
     warnings: [],
   };
   return result;
@@ -144,7 +147,7 @@ export const generateMetadataAnnotations = (
   return coreAnnotations;
 };
 
-export const generateRulesForServer = (
+  export const generateIngressRule = (
   index: number,
   server: OA3Server,
   specName: string,
@@ -153,33 +156,22 @@ export const generateRulesForServer = (
   // Resolve serverUrl variables and update the source object so it only needs to be done once per server loop.
   server.url = resolveUrlVariables(server.url, server.variables);
   const { hostname, pathname } = parseUrl(server.url);
-  const pathsToUse: string[] = (paths?.length && paths) || [''];
+  const pathsToUse = paths?.length ? paths : [''];
+  const backend: K8sIngressBackend = {
+    serviceName: generateServiceName(server, specName, index),
+    servicePort: generateServicePort(server),
+  };
 
-  const k8sPaths = pathsToUse.map(pathToUse => {
-    const path = pathname ? generateServicePath(pathname, pathToUse) : null;
-    const ingressPath: K8sHTTPIngressPath = {
-      backend: {
-        serviceName: generateServiceName(server, specName, index),
-        servicePort: generateServicePort(server),
-      },
+  const k8sPaths = pathsToUse.map((pathToUse): K8sHTTPIngressPath => {
+    const path = pathname === null ? null : generateServicePath(pathname, pathToUse);
+    return {
+      backend,
       ...(path ? { path } : {}),
     };
-    return ingressPath;
   });
-  const tlsConfig = generateTlsConfig(server);
-
-  if (tlsConfig) {
-    return {
-      host: hostname,
-      tls: {
-        paths: k8sPaths,
-        ...tlsConfig,
-      },
-    };
-  }
 
   const k8sIngressRule: K8sIngressRule = {
-    host: hostname,
+    ...(hostname ? { host: hostname } : {}),
     http: {
       paths: k8sPaths,
     },
@@ -207,7 +199,22 @@ export const generateServiceName = (
   return `${specName}-service-${index}`;
 };
 
-export const generateTlsConfig = (server: OA3Server) => server['x-kubernetes-tls'] || null;
+export const generateTLS = (server?: OA3Server) => {
+  if (!server) {
+    return null;
+  }
+
+  const tls = server['x-kubernetes-tls'];
+  if (!tls) {
+    return null;
+  }
+
+  if (!Array.isArray(tls)) {
+    throw new Error('x-kubernetes-tls must be an array of IngressTLS, matching the kubernetes IngressSpec resource. see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressspec-v1beta1-extensions');
+  }
+
+  return tls;
+};
 
 export const generateServicePort = (server: OA3Server) => {
   // x-kubernetes-backend.servicePort
@@ -221,7 +228,7 @@ export const generateServicePort = (server: OA3Server) => {
   const firstPort = ports[0]?.port;
 
   // Return 443
-  if (generateTlsConfig(server)) {
+  if (generateTLS(server)) {
     if (ports.find(p => p.port === 443)) {
       return 443;
     }

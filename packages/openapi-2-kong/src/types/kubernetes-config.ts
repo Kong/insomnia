@@ -44,7 +44,7 @@ export interface K8sHTTPIngressRuleValue {
 
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressrule-v1beta1-extensions */
 export interface K8sIngressRule {
-  host: string;
+  host?: string;
   http?: K8sHTTPIngressRuleValue;
 }
 

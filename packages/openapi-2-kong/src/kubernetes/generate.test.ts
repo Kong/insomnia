@@ -1,14 +1,15 @@
 import { parseSpec } from '../generate';
-import { K8sAnnotations, K8sIngressRule, K8sManifest } from '../types/kubernetes-config';
+import { K8sAnnotations, K8sIngressRule, K8sIngressTLS, K8sManifest } from '../types/kubernetes-config';
 import { OA3Server, OpenApi3Spec } from '../types/openapi3';
 import {
   generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
   getSpecName,
-  generateRulesForServer,
+  generateIngressRule,
   generateServiceName,
   generateServicePath,
   generateServicePort,
+  generateTLS,
 } from './generate';
 import {
   dummyName,
@@ -197,9 +198,11 @@ describe('index', () => {
     it('uses default 443 when tls configured ', () => {
       const server: OA3Server = {
         url: 'https://api.insomnia.rest',
-        'x-kubernetes-tls': {
-          secretName: 'tls-secret',
-        },
+        'x-kubernetes-tls': [
+          {
+            secretName: 'tls-secret',
+          },
+        ],
       };
       expect(generateServicePort(server)).toEqual(443);
     });
@@ -207,9 +210,11 @@ describe('index', () => {
     it('uses 443 if any port is 443 when tls configured ', () => {
       const server: OA3Server = {
         url: 'https://api.insomnia.rest',
-        'x-kubernetes-tls': {
-          secretName: 'tls-secret',
-        },
+        'x-kubernetes-tls': [
+          {
+            secretName: 'tls-secret',
+          },
+        ],
         'x-kubernetes-service': {
           spec: {
             ports: [
@@ -269,6 +274,32 @@ describe('index', () => {
     });
   });
 
+  describe('generateTLS', () => {
+    const server = spec.servers?.[0] as OA3Server;
+    const ingressTLS: K8sIngressTLS[] = [{ secretName: 'ziltoid' }];
+
+    it('should return null when no config is provided', () => {
+      const tls = generateTLS(server);
+      expect(tls).toEqual(null);
+    });
+
+    it('should return the tls config when provided', () => {
+      const tls = generateTLS({
+        ...server,
+        'x-kubernetes-tls': ingressTLS,
+      });
+      expect(tls).toEqual(ingressTLS);
+    });
+
+    it('should throw when the tls config is not an array', () => {
+      expect(() => generateTLS({
+        ...server,
+        // @ts-expect-error intentionally invalid
+        'x-kubernetes-tls': ingressTLS[0],
+      })).toThrow();
+    });
+  });
+
   describe('generateServicePath()', () => {
     it.each(['', '/'])('returns undefined if base path is [%o] and no specific path exists', serverBasePath => {
       expect(generateServicePath(serverBasePath)).toBe(undefined);
@@ -299,9 +330,9 @@ describe('index', () => {
     });
   });
 
-  describe('generateRulesForServer()', () => {
+  describe('generateIngressRule()', () => {
     it('handles basic server at root', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         0,
         {
           url: 'http://api.insomnia.rest',
@@ -324,7 +355,7 @@ describe('index', () => {
     });
 
     it('handles basic server with base path', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         0,
         {
           url: 'http://api.insomnia.rest/v1',
@@ -348,7 +379,7 @@ describe('index', () => {
     });
 
     it('handles server with specific path', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         1,
         {
           url: 'http://api.insomnia.rest/v1',
@@ -373,7 +404,7 @@ describe('index', () => {
     });
 
     it('handles server with no paths', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         1,
         {
           url: 'http://api.insomnia.rest/v1',
@@ -397,39 +428,11 @@ describe('index', () => {
       });
     });
 
-    it('handles TLS', () => {
-      const result = generateRulesForServer(
-        0,
-        {
-          url: 'http://api.insomnia.rest/v1',
-          'x-kubernetes-tls': {
-            secretName: 'my-secret',
-          },
-        },
-        'my-ingress',
-      );
-      expect(result).toEqual({
-        host: 'api.insomnia.rest',
-        tls: {
-          paths: [
-            {
-              path: '/v1/.*',
-              backend: {
-                serviceName: 'my-ingress-service-0',
-                servicePort: 443,
-              },
-            },
-          ],
-          secretName: 'my-secret',
-        },
-      });
-    });
-
     it('handles server url with protocol variable - no default', () => {
       const server = {
         url: '{protocol}://api.insomnia.rest/v1',
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateIngressRule(1, server, 'my-ingress', []);
       expect(result).toEqual({
         host: 'api.insomnia.rest',
         http: {
@@ -456,7 +459,7 @@ describe('index', () => {
           },
         },
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateIngressRule(1, server, 'my-ingress', []);
       expect(result).toEqual({
         host: 'api.insomnia.rest',
         http: {
@@ -483,7 +486,7 @@ describe('index', () => {
           },
         },
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateIngressRule(1, server, 'my-ingress', []);
       expect(result).toEqual({
         host: 'api.insomnia.rest',
         http: {
