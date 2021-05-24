@@ -63,7 +63,7 @@ import CodePromptModal from './modals/code-prompt-modal';
 import { database as db } from '../../common/database';
 import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
-import type { CookieJar } from '../../models/cookie-jar';
+import type { Cookie, CookieJar } from '../../models/cookie-jar';
 import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
@@ -172,7 +172,7 @@ export interface WrapperProps {
   requestVersions: RequestVersion[];
   unseenWorkspaces: Workspace[];
   workspaceChildren: (Request | RequestGroup)[];
-  activeWorkspaceMeta: WorkspaceMeta;
+  activeWorkspaceMeta?: WorkspaceMeta;
   environments: Environment[];
   activeApiSpec: ApiSpec;
   activeUnitTestSuite: UnitTestSuite | null;
@@ -206,16 +206,13 @@ interface State {
   activeGitBranch: string;
 }
 
-const rUpdate = (request, ...args: Partial<Request>[]) => {
+const requestUpdate = (request: Request, patch: Partial<Request>) => {
   if (!request) {
     throw new Error('Tried to update null request');
   }
 
-  // @ts-expect-error -- TSCONVERSION
-  return models.request.update(request, ...args);
+  return models.request.update(request, patch);
 };
-
-const sUpdate = models.settings.update;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class Wrapper extends PureComponent<WrapperProps, State> {
@@ -226,7 +223,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
   // Request updaters
   async _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
-    const newRequest = await rUpdate(r, patch);
+    const newRequest = await requestUpdate(r, patch);
     // Give it a second for the app to render first. If we don't wait, it will refresh
     // on the old request and won't catch the newest one.
     // TODO: Move this refresh key into redux store so we don't need timeout
@@ -235,54 +232,40 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   _handleForceUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
-    return this._handleForceUpdateRequest(r, {
-      headers,
-    });
+    return this._handleForceUpdateRequest(r, { headers });
   }
 
-  async _handleUpdateApiSpec(s: ApiSpec) {
-    await models.apiSpec.update(s);
+  async _handleUpdateApiSpec(apiSpec: ApiSpec) {
+    await models.apiSpec.update(apiSpec);
   }
 
-  static _handleUpdateRequestBody(r: Request, body: RequestBody) {
-    return rUpdate(r, {
-      body,
-    });
+  static _handleUpdateRequestBody(request: Request, body: RequestBody) {
+    return requestUpdate(request, { body });
   }
 
-  static _handleUpdateRequestParameters(r: Request, parameters: RequestParameter[]) {
-    return rUpdate(r, {
-      parameters,
-    });
+  static _handleUpdateRequestParameters(request: Request, parameters: RequestParameter[]) {
+    return requestUpdate(request, { parameters });
   }
 
-  static _handleUpdateRequestAuthentication(r: Request, authentication: RequestAuthentication) {
-    return rUpdate(r, {
-      authentication,
-    });
+  static _handleUpdateRequestAuthentication(request: Request, authentication: RequestAuthentication) {
+    return requestUpdate(request, { authentication });
   }
 
-  static _handleUpdateRequestHeaders(r: Request, headers: RequestHeader[]) {
-    return rUpdate(r, {
-      headers,
-    });
+  static _handleUpdateRequestHeaders(request: Request, headers: RequestHeader[]) {
+    return requestUpdate(request, { headers });
   }
 
-  static _handleUpdateRequestMethod(r: Request, method: string) {
-    return rUpdate(r, {
-      method,
-    });
+  static _handleUpdateRequestMethod(request: Request, method: string) {
+    return requestUpdate(request, { method });
   }
 
-  static _handleUpdateRequestUrl(r: Request, url: string) {
+  static _handleUpdateRequestUrl(request: Request, url: string) {
     // Don't update if we don't need to
-    if (r.url === url) {
-      return Promise.resolve(r);
+    if (request.url === url) {
+      return Promise.resolve(request);
     }
 
-    return rUpdate(r, {
-      url,
-    });
+    return requestUpdate(request, { url });
   }
 
   async _handleImport(text: string) {
@@ -366,21 +349,15 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
   // Settings updaters
   _handleUpdateSettingsShowPasswords(showPasswords: boolean) {
-    return sUpdate(this.props.settings, {
-      showPasswords,
-    });
+    return models.settings.update(this.props.settings, { showPasswords });
   }
 
   _handleUpdateSettingsUseBulkHeaderEditor(useBulkHeaderEditor: boolean) {
-    return sUpdate(this.props.settings, {
-      useBulkHeaderEditor,
-    });
+    return models.settings.update(this.props.settings, { useBulkHeaderEditor });
   }
 
   _handleUpdateSettingsUseBulkParametersEditor(useBulkParametersEditor: boolean) {
-    return sUpdate(this.props.settings, {
-      useBulkParametersEditor,
-    });
+    return models.settings.update(this.props.settings, { useBulkParametersEditor });
   }
 
   _handleImportFile(options?: ImportOptions) {
@@ -412,14 +389,12 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  static _handleShowModifyCookieModal(cookie: Record<string, any>) {
+  static _handleShowModifyCookieModal(cookie: Cookie) {
     showModal(CookieModifyModal, cookie);
   }
 
   _handleShowRequestSettingsModal() {
-    showModal(RequestSettingsModal, {
-      request: this.props.activeRequest,
-    });
+    showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
 
   async _handleDeleteResponses(requestId: string, environmentId: string | null) {

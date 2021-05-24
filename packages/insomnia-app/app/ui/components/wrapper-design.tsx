@@ -11,7 +11,7 @@ import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
 import previewIcon from '../images/icn-eye.svg';
 import * as models from '../../models/index';
-import { parseApiSpec } from '../../common/api-specs';
+import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
@@ -26,7 +26,6 @@ interface Props {
 }
 
 interface State {
-  previewHidden: boolean;
   lintMessages: {
     message: string;
     line: number;
@@ -42,7 +41,6 @@ class WrapperDesign extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      previewHidden: props.wrapperProps.activeWorkspaceMeta.previewHidden || false,
       lintMessages: [],
     };
   }
@@ -58,18 +56,9 @@ class WrapperDesign extends PureComponent<Props, State> {
   }
 
   async _handleTogglePreview() {
-    await this.setState(
-      prevState => ({
-        previewHidden: !prevState.previewHidden,
-      }),
-      async () => {
-        const workspaceId = this.props.wrapperProps.activeWorkspace._id;
-        const previewHidden = this.state.previewHidden;
-        await models.workspaceMeta.updateByParentId(workspaceId, {
-          previewHidden,
-        });
-      },
-    );
+    const workspaceId = this.props.wrapperProps.activeWorkspace._id;
+    const previewHidden = Boolean(this.props.wrapperProps.activeWorkspaceMeta?.previewHidden);
+    await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
   }
 
   _handleOnChange(v: string) {
@@ -171,14 +160,13 @@ class WrapperDesign extends PureComponent<Props, State> {
   }
 
   _renderPreview() {
-    const { activeApiSpec } = this.props.wrapperProps;
-    const { previewHidden } = this.state;
+    const { activeApiSpec, activeWorkspaceMeta } = this.props.wrapperProps;
 
-    if (previewHidden) {
+    if (activeWorkspaceMeta?.previewHidden) {
       return null;
     }
 
-    let swaggerUiSpec;
+    let swaggerUiSpec: ParsedApiSpec['contents'] | null = null;
 
     try {
       swaggerUiSpec = parseApiSpec(activeApiSpec.contents).contents;
@@ -221,7 +209,7 @@ class WrapperDesign extends PureComponent<Props, State> {
 
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { previewHidden } = this.state;
+    const previewHidden = Boolean(wrapperProps.activeWorkspaceMeta?.previewHidden);
     return (
       <WorkspacePageHeader
         wrapperProps={wrapperProps}
