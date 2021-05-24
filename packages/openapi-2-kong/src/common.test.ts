@@ -14,24 +14,10 @@ import {
   parseUrl,
   pathVariablesToRegex,
 } from './common';
-import { parseSpec } from './generate';
-import { OpenApi3Spec, OA3Operation, OA3Server } from './types/openapi3';
+import { getSpec } from './declarative-config/utils';
+import { OA3Operation, OA3Server } from './types/openapi3';
 
 describe('common', () => {
-  const spec: OpenApi3Spec = {
-    openapi: '3.0.0',
-    info: {
-      version: '1.0.0',
-      title: 'Swagger Petstore',
-    },
-    servers: [
-      {
-        url: 'https://server1.com/path',
-      },
-    ],
-    paths: {},
-  };
-
   describe('getPaths()', () => {
     it('should return api paths', () => {
       const paths = {
@@ -39,19 +25,14 @@ describe('common', () => {
           description: 'test',
         },
       };
-      const api = { ...spec, paths };
+      const api = getSpec({ paths });
       const result = getPaths(api);
-      expect(result).toBe(paths);
+      expect(result).toStrictEqual(paths);
     });
   });
 
   describe('getServers()', () => {
-    const spec = {
-      openapi: '3.0.0',
-      info: {
-        version: '1.0.0',
-        title: 'Swagger Petstore',
-      },
+    const spec = getSpec({
       servers: [
         {
           url: 'https://server1.com/path',
@@ -66,11 +47,10 @@ describe('common', () => {
           ],
         },
       },
-    };
+    });
 
-    it('returns path item servers', async () => {
-      const s = await parseSpec(spec);
-      const result = getServers(s.paths['/']);
+    it('returns path item servers', () => {
+      const result = getServers(spec.paths['/']);
       expect(result).toEqual([
         {
           url: 'https://server2.com/path',
@@ -78,9 +58,8 @@ describe('common', () => {
       ]);
     });
 
-    it('returns api servers', async () => {
-      const s = await parseSpec(spec);
-      const result = getServers(s);
+    it('returns api servers', () => {
+      const result = getServers(spec);
       expect(result).toEqual([
         {
           url: 'https://server1.com/path',
@@ -97,7 +76,6 @@ describe('common', () => {
             petstoreAuth: [],
           },
         ],
-        // @ts-expect-error -- TSCONVERSION not sure, but this appears to be wrong maybe?
         responses: {},
       };
       const result = getSecurity(operation);
@@ -109,12 +87,7 @@ describe('common', () => {
     });
 
     it('returns security from api', () => {
-      const spec: OpenApi3Spec = {
-        openapi: '3.0.0',
-        info: {
-          version: '1.0.0',
-          title: 'Swagger Petstore',
-        },
+      const spec = getSpec({
         servers: [
           {
             url: 'https://server1.com/path',
@@ -151,7 +124,7 @@ describe('common', () => {
             },
           },
         },
-      };
+      });
       const result = getSecurity(spec);
       expect(result).toEqual([
         {
@@ -162,48 +135,33 @@ describe('common', () => {
   });
 
   describe('getName()', () => {
-    const spec = {
-      openapi: '3.0.0',
-      info: {
-        version: '1.0.0',
-        title: 'Swagger Petstore',
-      },
-      servers: [
-        {
-          url: 'https://server1.com/path',
-        },
-      ],
-      paths: {},
-    };
-
-    it('openapi object with x-kong-name', async () => {
-      const s = await parseSpec({ ...spec, 'x-kong-name': 'override' });
-      const result = getName(s);
+    it('openapi object with x-kong-name', () => {
+      const spec = getSpec({ 'x-kong-name': 'override' });
+      const result = getName(spec);
       expect(result).toBe('override');
     });
 
-    it('openapi object without x-kong-name', async () => {
-      const s = await parseSpec(spec);
-      const result = getName(s);
-      expect(result).toBe('Swagger_Petstore');
+    it('openapi object without x-kong-name', () => {
+      const spec = getSpec();
+      const result = getName(spec);
+      expect(result).toBe('My_API');
     });
 
-    it('openapi object without anything', async () => {
-      const s = await parseSpec({
-        ...spec,
+    it('openapi object without anything', () => {
+      const spec = getSpec({
         info: {
           version: '1.0.0',
         },
       });
-      const result = getName(s);
+      const result = getName(spec);
       expect(result).toBe('openapi');
-      const result2 = getName(s, 'Another Default');
+      const result2 = getName(spec, 'Another Default');
       expect(result2).toBe('Another_Default');
     });
 
     it('works with slugify options', () => {
-      const p = { ...spec, 'x-kong-name': 'This Needs Slugify' };
-      const result = getName(p, '', {
+      const spec = getSpec({ 'x-kong-name': 'This Needs Slugify' });
+      const result = getName(spec, '', {
         replacement: '?',
         lower: true,
       });
@@ -254,7 +212,7 @@ describe('common', () => {
       const server: OA3Server = {
         url: 'https://{subdomain}.swagger.io/v1',
         variables: {
-          // @ts-expect-error intentionally missing a required value
+          // @ts-expect-error intentionally invalid - missing a required property, `default`
           subdomain: {
             enum: ['petstore'],
           },

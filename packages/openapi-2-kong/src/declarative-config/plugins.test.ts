@@ -69,6 +69,7 @@ describe('plugins', () => {
 
     });
   });
+
   describe('generateRequestValidatorPlugin()', () => {
     const parameterSchema = [
       {
@@ -262,6 +263,7 @@ describe('plugins', () => {
         });
       });
     });
+
     describe('body_schema and allowed_content_types', () => {
       it('should not add body_schema or allowed_content_types if no body present', () => {
         const plugin = {
