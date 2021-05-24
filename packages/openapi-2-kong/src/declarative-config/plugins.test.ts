@@ -91,8 +91,7 @@ describe('plugins', () => {
           allowed_content_types: ['application/json'],
         },
       };
-      const operation = {};
-      const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+      const generated = generateRequestValidatorPlugin({ plugin, tags });
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
@@ -114,8 +113,7 @@ describe('plugins', () => {
           // allowed_content_types: ['application/json'],
         },
       };
-      const operation = {};
-      const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+      const generated = generateRequestValidatorPlugin({ plugin, tags });
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
@@ -133,14 +131,14 @@ describe('plugins', () => {
           enabled: true,
           config: {},
         };
-        const generated1 = generateRequestValidatorPlugin(plugin, {}, tags);
-        const generated2 = generateRequestValidatorPlugin(
+        const generated1 = generateRequestValidatorPlugin({ plugin, tags });
+        const generated2 = generateRequestValidatorPlugin({
           plugin,
-          {
+          operation: {
             parameters: [],
           },
           tags,
-        );
+        });
         expect(generated1.config).toStrictEqual({
           version: 'draft4',
           body_schema: '{}',
@@ -172,7 +170,7 @@ describe('plugins', () => {
         const operation: OA3Operation = {
           parameters: [param],
         };
-        const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+        const generated = generateRequestValidatorPlugin({ plugin, tags, operation });
         expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           parameter_schema: [
@@ -198,7 +196,7 @@ describe('plugins', () => {
             },
           ],
         };
-        const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+        const generated = generateRequestValidatorPlugin({ plugin, tags, operation });
         expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           parameter_schema: [
@@ -239,7 +237,7 @@ describe('plugins', () => {
             paramWithoutSchema,
           ],
         };
-        const generated = generateRequestValidatorPlugin({}, operation, tags);
+        const generated = generateRequestValidatorPlugin({ plugin: {}, tags, operation });
         expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           parameter_schema: [
@@ -268,8 +266,7 @@ describe('plugins', () => {
         const plugin = {
           config: {},
         };
-        const operation = {};
-        const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+        const generated = generateRequestValidatorPlugin({ plugin, tags });
         expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: '{}',
@@ -282,22 +279,21 @@ describe('plugins', () => {
           version: 'draft4',
           body_schema: '{}',
         };
-        const op1 = {
+        const op1: OA3Operation = {
           requestBody: {},
         };
-        const op2 = {
+        const op2: OA3Operation = {
           requestBody: {
             $ref: 'non-existent',
           },
         };
-        const op3 = {};
-        expect(generateRequestValidatorPlugin(plugin, op1, tags).config).toStrictEqual(
+        expect(generateRequestValidatorPlugin({ plugin, operation: op1, tags }).config).toStrictEqual(
           defaultReqVal,
         );
-        expect(generateRequestValidatorPlugin(plugin, op2, tags).config).toStrictEqual(
+        expect(generateRequestValidatorPlugin({ plugin, operation: op2, tags }).config).toStrictEqual(
           defaultReqVal,
         );
-        expect(generateRequestValidatorPlugin(plugin, op3, tags).config).toStrictEqual(
+        expect(generateRequestValidatorPlugin({ plugin, tags }).config).toStrictEqual(
           defaultReqVal,
         );
       });
@@ -312,7 +308,7 @@ describe('plugins', () => {
             },
           },
         };
-        const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+        const generated = generateRequestValidatorPlugin({ plugin, tags, operation });
         expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: '{}',
@@ -352,7 +348,7 @@ describe('plugins', () => {
             },
           },
         };
-        const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+        const generated = generateRequestValidatorPlugin({ plugin, tags, operation });
         expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
@@ -361,9 +357,7 @@ describe('plugins', () => {
       });
 
       it('should default body_schema if no schema is defined or generated', () => {
-        const plugin = {};
-        const operation = {};
-        const generated = generateRequestValidatorPlugin(plugin, operation, tags);
+        const generated = generateRequestValidatorPlugin({ plugin: {}, tags, operation: {} });
         expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: '{}',

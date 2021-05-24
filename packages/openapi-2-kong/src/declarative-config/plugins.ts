@@ -103,13 +103,13 @@ function generateBodyOptions(operation?: OA3Operation) {
   };
 }
 
-export function generateRequestValidatorPlugin(
+export function generateRequestValidatorPlugin({ plugin, tags, operation }: {
   plugin: Record<string, any>,
+  tags: string[],
   operation?: OA3Operation,
-  tags?: string[],
-) {
+}) {
   const config: DCPluginConfig = {
-    version: 'draft4', // Fixed version
+    version: 'draft4',
   };
 
   const pluginConfig = plugin.config ?? {};
@@ -161,7 +161,7 @@ export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
   const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
 
   if (requestValidatorPlugin) {
-    globalPlugins.push(generateRequestValidatorPlugin(requestValidatorPlugin, undefined, tags));
+    globalPlugins.push(generateRequestValidatorPlugin({ plugin: requestValidatorPlugin, tags }));
   }
 
   return {
@@ -181,10 +181,10 @@ export function generateOperationPlugins(
   // Check if validator plugin exists on the operation
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
   // Use the operation or parent validator plugin, or skip if neither exist
-  const validatorPluginToUse = operationValidatorPlugin || parentValidatorPlugin;
+  const plugin = operationValidatorPlugin || parentValidatorPlugin;
 
-  if (validatorPluginToUse) {
-    operationPlugins.push(generateRequestValidatorPlugin(validatorPluginToUse, operation, tags));
+  if (plugin) {
+    operationPlugins.push(generateRequestValidatorPlugin({ plugin, tags, operation }));
   }
 
   // Operation plugins take precedence over path plugins
