@@ -1,5 +1,5 @@
 import { generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
-import { OA3Operation, OA3Parameter, xKongPluginKeyAuth, xKongPluginRequestValidator } from '../types/openapi3';
+import { OA3Operation, OA3Parameter, xKongPluginKeyAuth, xKongPluginRequestTermination, xKongPluginRequestValidator } from '../types/openapi3';
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
 import { getSpec } from './utils';
 
@@ -69,10 +69,28 @@ describe('plugins', () => {
       const spec = getSpec({
         [xKongPluginRequestTermination]: {
           name: 'request-termination',
+          mad: 'max',
+          config: {
+            max: 'is mad',
+            status_code: 403,
+            message: 'So long and thanks for all the fish!',
+          },
         },
       });
 
-      expect().toBe();
+      const result = generateGlobalPlugins(spec, tags);
+
+      expect(result.plugins).toBe([
+        {
+          name: 'request-termination',
+          mad: 'max',
+          config: {
+            max: 'is mad',
+            status_code: 403,
+            message: 'So long and thanks for all the fish!',
+          },
+        },
+      ]);
     });
   });
 

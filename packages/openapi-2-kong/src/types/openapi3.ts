@@ -44,6 +44,19 @@ export interface XKongPluginKeyAuth {
   };
 }
 
+export const xKongPluginRequestTermination = 'x-kong-plugin-request-termination';
+export interface XKongPluginRequestTermination {
+  [xKongPluginRequestTermination]?: {
+    name: 'request-termination';
+    config: {
+      status_code: number;
+      message: string;
+      [key: string]: string | number;
+    }
+    [key: string]: string | number | Record<string, string | number>;
+  }
+}
+
 export type XKongPluginUnknown<Config = any> = Record<`x-kong-plugin-${string}`, {
   enabled?: boolean;
   name?: string;
@@ -263,11 +276,13 @@ export type OpenApi3Spec = {
   security?: OA3SecurityRequirement[];
   tags?: string[];
   externalDocs?: OA3ExternalDocs;
-} & XKongName
+}
   & XKongPluginKeyAuth
+  & XKongPluginRequestTermination
   & XKongPluginRequestValidator
   & XKongPluginUnknown
+  & XKongRouteDefaults
   & XKongServiceDefaults
   & XKongUpstreamDefaults
-  & XKongRouteDefaults
+  & XKongName
   ;
