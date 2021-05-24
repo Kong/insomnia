@@ -69,6 +69,10 @@ class Theme extends PureComponent<Props, State> {
               height="10%"
               className="theme--pane__header--sub bg-fill"
             />
+            {/* Send Button */}
+            <g>
+              <rect x="53%" y="10%" width="9%" height="10%" className="success-fill" />
+            </g>
           </g>
 
           {/* Sidebar */}
