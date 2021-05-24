@@ -63,8 +63,10 @@ describe('services', () => {
     });
 
     it('throws for a root level x-kong-route-default', async () => {
-      const spec = getSpec();
-      spec[xKongRouteDefaults] = 'foo';
+      const spec = getSpec({
+        // @ts-expect-error intentionally invalid
+        [xKongRouteDefaults]: 'foo',
+      });
       const api = await parseSpec(spec);
 
       const fn = () => generateServices(api, ['Tag']);
@@ -73,15 +75,18 @@ describe('services', () => {
     });
 
     it('ignores null for a root level x-kong-route-default', async () => {
-      const spec = getSpec();
-      spec[xKongRouteDefaults] = null;
+      const spec = getSpec({
+        // @ts-expect-error intentionally invalid
+        [xKongRouteDefaults]: null,
+      });
       const specResult = getSpecResult();
       const api = await parseSpec(spec);
       expect(generateServices(api, ['Tag'])).toEqual([specResult]);
     });
 
     it('throws for a paths level x-kong-route-default', async () => {
-      const spec = getSpec();
+      const spec = getSpec({});
+      // @ts-expect-error intentionally invalid
       spec.paths['/cats'][xKongRouteDefaults] = 'foo';
       const api = await parseSpec(spec);
 
@@ -92,6 +97,7 @@ describe('services', () => {
 
     it('ignores null for a paths level x-kong-route-default', async () => {
       const spec = getSpec();
+      // @ts-expect-error intentionally invalid
       spec.paths['/cats'][xKongRouteDefaults] = null;
       const specResult = getSpecResult();
       const api = await parseSpec(spec);
@@ -100,6 +106,7 @@ describe('services', () => {
 
     it('throws for an operation level x-kong-route-default', async () => {
       const spec = getSpec();
+      // @ts-expect-error intentionally invalid
       spec.paths['/cats'].post[xKongRouteDefaults] = 'foo';
       const api = await parseSpec(spec);
 
@@ -112,6 +119,7 @@ describe('services', () => {
 
     it('ignores null for an operation level x-kong-route-default', async () => {
       const spec = getSpec();
+      // @ts-expect-error intentionally invalid
       spec.paths['/cats'].post[xKongRouteDefaults] = null;
       const specResult = getSpecResult();
       const api = await parseSpec(spec);
@@ -127,13 +135,14 @@ describe('services', () => {
     });
 
     it('generates routes with request validator plugin from operation over path over global', async () => {
-      const spec = getSpec();
-      // global req validator plugin
-      spec[xKongPluginRequestValidator] = {
-        config: {
-          parameter_schema: 'global',
+      const spec = getSpec({
+        // global req validator plugin
+        [xKongPluginRequestValidator]: {
+          config: {
+            parameter_schema: 'global',
+          },
         },
-      };
+      });
       // path req validator plugin
       spec.paths['/cats'][xKongPluginRequestValidator] = {
         config: {
@@ -142,17 +151,21 @@ describe('services', () => {
       };
       spec.paths['/cats'].get = {};
       // operation req validator plugin
-      spec.paths['/cats'].post[xKongPluginRequestValidator] = {
-        config: {
-          parameter_schema: 'operation',
-        },
-      };
+      if (spec.paths['/cats'].post) {
+        spec.paths['/cats'].post[xKongPluginRequestValidator] = {
+          config: {
+            parameter_schema: 'operation',
+          },
+        };
+      }
       // operation req validator plugin
-      spec.paths['/dogs'].post[xKongPluginRequestValidator] = {
-        config: {
-          parameter_schema: 'operation',
-        },
-      };
+      if (spec.paths['/dogs'].post) {
+        spec.paths['/dogs'].post[xKongPluginRequestValidator] = {
+          config: {
+            parameter_schema: 'operation',
+          },
+        };
+      }
       const specResult = getSpecResult();
       specResult.plugins = [
         {
@@ -279,6 +292,7 @@ describe('services', () => {
           get: {},
           post: {
             'x-kong-plugin-key-auth': {
+              name: 'key-auth',
               config: {
                 key_names: ['operation'],
               },
@@ -351,22 +365,24 @@ describe('services', () => {
     });
 
     describe('x-kong-route-defaults and strip_path', () => {
+      // Note: although these are technically not valid DC Routes configs, we use them because they make it crystal-clear what the tests are checking for
       const rootLevel = {
         level: 'root',
         rootLevel: true,
-      };
+      } as unknown as DCRoute;
       const pathLevel = {
         level: 'path',
         pathLevel: true,
-      };
+      } as unknown as DCRoute;
       const operationLevel = {
         level: 'operation',
         operationLevel: true,
-      };
+      } as unknown as DCRoute;
 
       it('root level', async () => {
-        const spec = getSpec();
-        spec[xKongRouteDefaults] = rootLevel;
+        const spec = getSpec({
+          [xKongRouteDefaults]: rootLevel,
+        });
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({ ...route, ...rootLevel }));
         const api = await parseSpec(spec);
@@ -385,7 +401,9 @@ describe('services', () => {
 
       it('operation level', async () => {
         const spec = getSpec();
-        spec.paths['/dogs'].get[xKongRouteDefaults] = operationLevel;
+        if (spec.paths['/dogs'].get) {
+          spec.paths['/dogs'].get[xKongRouteDefaults] = operationLevel;
+        }
         const specResult = getSpecResult();
         specResult.routes[1] = { ...specResult.routes[1], ...operationLevel };
         const api = await parseSpec(spec);
@@ -393,9 +411,12 @@ describe('services', () => {
       });
 
       it('will select (but not merge) the operation level over the root level', async () => {
-        const spec = getSpec();
-        spec[xKongRouteDefaults] = rootLevel;
-        spec.paths['/cats'].post[xKongRouteDefaults] = operationLevel;
+        const spec = getSpec({
+          [xKongRouteDefaults]: rootLevel,
+        });
+        if (spec.paths['/cats'].post) {
+          spec.paths['/cats'].post[xKongRouteDefaults] = operationLevel;
+        }
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({
           ...route,
@@ -408,7 +429,9 @@ describe('services', () => {
       it('will select (but not merge) the operation level over the path level', async () => {
         const spec = getSpec();
         spec.paths['/dogs'][xKongRouteDefaults] = pathLevel;
-        spec.paths['/dogs'].post[xKongRouteDefaults] = operationLevel;
+        if (spec.paths['/dogs'].post) {
+          spec.paths['/dogs'].post[xKongRouteDefaults] = operationLevel;
+        }
         const specResult = getSpecResult();
         specResult.routes[1] = { ...specResult.routes[1], ...pathLevel };
         specResult.routes[2] = { ...specResult.routes[2], ...operationLevel };
@@ -417,8 +440,9 @@ describe('services', () => {
       });
 
       it('will select (but not merge) the path level over the root level', async () => {
-        const spec = getSpec();
-        spec[xKongRouteDefaults] = rootLevel;
+        const spec = getSpec({
+          [xKongRouteDefaults]: rootLevel,
+        });
         spec.paths['/cats'][xKongRouteDefaults] = pathLevel;
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({
@@ -442,10 +466,11 @@ describe('services', () => {
       });
 
       it('allows overriding `strip_path` from `x-kong-route-defaults` at the root', async () => {
-        const spec = getSpec();
-        spec[xKongRouteDefaults] = {
-          strip_path: true,
-        };
+        const spec = getSpec({
+          [xKongRouteDefaults]: {
+            strip_path: true,
+          },
+        });
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({ ...route, strip_path: true }));
         const api = await parseSpec(spec);

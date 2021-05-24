@@ -28,9 +28,10 @@ describe('upstreams', () => {
   });
 
   it('throws for a root level x-kong-route-default', async () => {
-    const spec = getSpec();
-    // @ts-expect-error intentionall invalid
-    spec[xKongUpstreamDefaults] = 'foo';
+    const spec = getSpec({
+      // @ts-expect-error intentionall invalid
+      [xKongUpstreamDefaults]: 'foo',
+    });
     const api = await parseSpec(spec);
 
     const fn = () => generateUpstreams(api, ['Tag']);
@@ -39,9 +40,10 @@ describe('upstreams', () => {
   });
 
   it('ignores null for a root level x-kong-route-default', async () => {
-    const spec = getSpec();
-    // @ts-expect-error intentionall invalid
-    spec[xKongUpstreamDefaults] = null;
+    const spec = getSpec({
+      // @ts-expect-error intentionall invalid
+      [xKongUpstreamDefaults]: null,
+    });
     const specResult = getSpecResult();
     const api = await parseSpec(spec);
     expect(generateUpstreams(api, ['Tag'])).toEqual([specResult]);

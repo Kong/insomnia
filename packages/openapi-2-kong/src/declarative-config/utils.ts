@@ -1,7 +1,7 @@
 import { OpenApi3Spec } from '../types/openapi3';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
-export const getSpec = (): OpenApi3Spec =>
+export const getSpec = (overrides: Partial<OpenApi3Spec> = {}): OpenApi3Spec =>
   JSON.parse(
     JSON.stringify({
       openapi: '3.0',
@@ -31,5 +31,6 @@ export const getSpec = (): OpenApi3Spec =>
           get: {},
         },
       },
+      ...overrides,
     }),
   );

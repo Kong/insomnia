@@ -3,7 +3,7 @@ import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
 import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
 
-export function isRequestValidatorPluginKey(key: string): boolean {
+export function isRequestValidatorPluginKey(key: string) {
   return key.match(/-request-validator$/) != null;
 }
 

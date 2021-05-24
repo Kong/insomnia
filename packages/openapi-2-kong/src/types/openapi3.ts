@@ -6,11 +6,11 @@ export interface XKongName {
 }
 
 export interface XKongRouteDefaults {
-  'x-kong-route-defaults'?: DCRoute;
+  'x-kong-route-defaults'?: Partial<DCRoute>;
 }
 
 export interface XKongUpstreamDefaults {
-  'x-kong-upstream-defaults'?: DCUpstream;
+  'x-kong-upstream-defaults'?: Partial<DCUpstream>;
 }
 
 export interface XKongServiceDefaults {
@@ -19,11 +19,12 @@ export interface XKongServiceDefaults {
 
 export interface XKongPluginRequestValidator {
   'x-kong-plugin-request-validator'?: {
-    enabled: boolean;
+    enabled?: boolean;
     config: {
-      verbose_response: boolean,
-    }
-  }
+      verbose_response?: boolean;
+      parameter_schema?: 'global' | 'path' | 'operation';
+    };
+  };
 }
 
 export type XKongPluginUnknown<Config = any> = Record<`x-kong-plugin-${string}`, {
@@ -153,6 +154,7 @@ export type OA3Operation = {
 } & XKongName
   & XKongRouteDefaults
   & XKongPluginKeyAuth
+  & XKongPluginRequestValidator
   ;
 
 export type OA3PathItem = {
@@ -171,6 +173,7 @@ export type OA3PathItem = {
   trace?: OA3Operation;
 } & XKongName
   & XKongRouteDefaults
+  & XKongPluginRequestValidator
   ;
 
 export type OA3Paths = Record<string, OA3PathItem>

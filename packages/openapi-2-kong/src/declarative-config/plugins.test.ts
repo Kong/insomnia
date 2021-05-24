@@ -1,19 +1,14 @@
 import { generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
-import { OpenApi3Spec, OA3Operation, OA3Parameter } from '../types/openapi3';
+import { OA3Operation, OA3Parameter } from '../types/openapi3';
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
+import { getSpec } from './utils';
 
 const tags = ['Tag'];
 
 describe('plugins', () => {
   describe('generateGlobalPlugins()', () => {
     it('generates plugin given a spec with a plugin attached', async () => {
-      const api: OpenApi3Spec = {
-        openapi: '3.0.2',
-        info: {
-          title: 'something',
-          version: '12',
-        },
-        paths: {},
+      const api = getSpec({
         'x-kong-plugin-request-validator': {
           enabled: false,
           config: {
@@ -32,20 +27,21 @@ describe('plugins', () => {
             key_names: ['x-api-key'],
           },
         },
-      };
-      const result = generateGlobalPlugins(api, ['Tag']);
+      });
+
+      const result = generateGlobalPlugins(api, tags);
+
       expect(result.plugins).toEqual<DCPlugin[]>([
         {
           name: 'abcd',
-          // name from plugin tag
-          tags: ['Tag'],
+          tags,
           config: {
             some_config: ['something'],
           },
         },
         {
           name: 'key-auth',
-          tags: ['Tag'],
+          tags,
           config: {
             key_names: ['x-api-key'],
           },
@@ -56,7 +52,7 @@ describe('plugins', () => {
             verbose_response: true,
             version: 'draft4',
           },
-          tags: ['Tag'],
+          tags,
           enabled: false,
           name: 'request-validator',
         },
@@ -67,6 +63,10 @@ describe('plugins', () => {
         },
         enabled: false,
       });
+    });
+
+    it('does not add extra things to the plugin', () => {
+
     });
   });
   describe('generateRequestValidatorPlugin()', () => {
@@ -95,7 +95,7 @@ describe('plugins', () => {
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
-        tags: ['Tag'],
+        tags,
         config: {
           version: 'draft4',
           ...plugin.config,
@@ -108,7 +108,8 @@ describe('plugins', () => {
         enabled: true,
         config: {
           parameter_schema: [parameterSchema],
-          body_schema: '[{"name":{"type": "string", "required": true}}]', // The following properties are missing
+          body_schema: '[{"name":{"type": "string", "required": true}}]',
+          // The following properties are missing
           // verbose_response: true,
           // allowed_content_types: ['application/json'],
         },
@@ -117,7 +118,7 @@ describe('plugins', () => {
       expect(generated).toStrictEqual({
         name: 'request-validator',
         enabled: plugin.enabled,
-        tags: ['Tag'],
+        tags,
         config: {
           version: 'draft4',
           ...plugin.config,
