@@ -23,6 +23,8 @@ export const conversionTypeMap: Record<ConversionOption, ConversionResultType> =
 export type GenerateConfigOptions = GlobalOptions & {
   type: ConversionOption;
   output?: string;
+
+  /** a comma-separated list of tags */
   tags?: string,
 };
 

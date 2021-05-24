@@ -117,14 +117,18 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api, tags);
-      const regularPlugins = generateOperationPlugins(
+
+      // Path plugin takes precedence over global
+      const parentValidatorPlugin = pathValidatorPlugin || globalPlugins.requestValidatorPlugin;
+
+      const regularPlugins = generateOperationPlugins({
         operation,
         pathPlugins,
-        pathValidatorPlugin || globalPlugins.requestValidatorPlugin, // Path plugin takes precedence over global
+        parentValidatorPlugin,
         tags,
-      );
-      const plugins = [...regularPlugins, ...securityPlugins];
+      });
 
+      const plugins = [...regularPlugins, ...securityPlugins];
       // Add plugins if there are any
       if (plugins.length) {
         route.plugins = plugins;

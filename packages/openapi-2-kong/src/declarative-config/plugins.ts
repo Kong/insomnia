@@ -171,12 +171,12 @@ export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
   };
 }
 
-export function generateOperationPlugins(
+export const generateOperationPlugins = ({ operation, pathPlugins, parentValidatorPlugin, tags }: {
   operation: OA3Operation,
   pathPlugins: DCPlugin[],
   parentValidatorPlugin?: Record<string, any> | null,
-  tags?: string[],
-) {
+  tags: string[],
+}) => {
   const operationPlugins = generatePlugins(operation, tags);
   // Check if validator plugin exists on the operation
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
@@ -189,7 +189,7 @@ export function generateOperationPlugins(
 
   // Operation plugins take precedence over path plugins
   return distinctByProperty<DCPlugin>([...operationPlugins, ...pathPlugins], plugin => plugin.name);
-}
+};
 
 export function getRequestValidatorPluginDirective(obj: Record<string, any>) {
   const key = Object.keys(obj).filter(isPluginKey).find(isRequestValidatorPluginKey);
