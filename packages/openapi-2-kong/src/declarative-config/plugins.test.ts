@@ -1,5 +1,6 @@
 import { generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
 import { OpenApi3Spec, OA3Operation, OA3Parameter } from '../types/openapi3';
+import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
 
 const tags = ['Tag'];
 
@@ -33,7 +34,7 @@ describe('plugins', () => {
         },
       };
       const result = generateGlobalPlugins(api, ['Tag']);
-      expect(result.plugins).toEqual([
+      expect(result.plugins).toEqual<DCPlugin[]>([
         {
           name: 'abcd',
           // name from plugin tag
@@ -172,7 +173,7 @@ describe('plugins', () => {
           parameters: [param],
         };
         const generated = generateRequestValidatorPlugin(plugin, operation, tags);
-        expect(generated.config).toStrictEqual({
+        expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           parameter_schema: [
             {
@@ -198,7 +199,7 @@ describe('plugins', () => {
           ],
         };
         const generated = generateRequestValidatorPlugin(plugin, operation, tags);
-        expect(generated.config).toStrictEqual({
+        expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           parameter_schema: [
             {
@@ -239,7 +240,7 @@ describe('plugins', () => {
           ],
         };
         const generated = generateRequestValidatorPlugin({}, operation, tags);
-        expect(generated.config).toStrictEqual({
+        expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           parameter_schema: [
             {
@@ -269,7 +270,7 @@ describe('plugins', () => {
         };
         const operation = {};
         const generated = generateRequestValidatorPlugin(plugin, operation, tags);
-        expect(generated.config).toStrictEqual({
+        expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: '{}',
         });
@@ -312,7 +313,7 @@ describe('plugins', () => {
           },
         };
         const generated = generateRequestValidatorPlugin(plugin, operation, tags);
-        expect(generated.config).toStrictEqual({
+        expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: '{}',
           allowed_content_types: ['application/xml', 'text/yaml'],
@@ -352,7 +353,7 @@ describe('plugins', () => {
           },
         };
         const generated = generateRequestValidatorPlugin(plugin, operation, tags);
-        expect(generated.config).toStrictEqual({
+        expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
           allowed_content_types: ['application/xml', 'application/json'],
@@ -363,7 +364,7 @@ describe('plugins', () => {
         const plugin = {};
         const operation = {};
         const generated = generateRequestValidatorPlugin(plugin, operation, tags);
-        expect(generated.config).toStrictEqual({
+        expect(generated.config).toStrictEqual<DCPluginConfig>({
           version: 'draft4',
           body_schema: '{}',
         });

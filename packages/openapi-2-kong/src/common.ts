@@ -4,24 +4,22 @@ import {
   OpenApi3Spec,
   OA3PathItem,
   OA3Server,
-  OA3Paths,
   OA3Operation,
-  OA3SecurityRequirement,
 } from './types/openapi3';
 
-export function getServers(obj: OpenApi3Spec | OA3PathItem): OA3Server[] {
+export function getServers(obj: OpenApi3Spec | OA3PathItem) {
   return obj.servers || [];
 }
 
-export function getPaths(obj: OpenApi3Spec): OA3Paths {
+export function getPaths(obj: OpenApi3Spec) {
   return obj.paths || {};
 }
 
-export function getAllServers(api: OpenApi3Spec): OA3Server[] {
+export function getAllServers(api: OpenApi3Spec) {
   const servers = getServers(api);
 
-  for (const p of Object.keys(api.paths)) {
-    for (const server of getServers(api.paths[p])) {
+  for (const path of Object.keys(api.paths)) {
+    for (const server of getServers(api.paths[path])) {
       servers.push(server);
     }
   }
@@ -29,11 +27,7 @@ export function getAllServers(api: OpenApi3Spec): OA3Server[] {
   return servers;
 }
 
-export function getSecurity(
-  obj: OpenApi3Spec | OA3Operation | null,
-): OA3SecurityRequirement[] {
-  return obj?.security || [];
-}
+export const getSecurity = (obj: OpenApi3Spec | OA3Operation | null) => obj?.security || [];
 
 interface SlugifyOptions {
   replacement?: string;
@@ -45,22 +39,27 @@ export function getName(
   defaultValue?: string,
   slugifyOptions?: SlugifyOptions,
   isKubernetes?: boolean,
-): string {
-  let rawName = '';
+) {
+  let rawName: string | undefined = '';
+
   // Get $.info.x-kubernetes-ingress-metadata.name
-  rawName = isKubernetes && api.info?.['x-kubernetes-ingress-metadata']?.name;
+  rawName = isKubernetes ? api.info?.['x-kubernetes-ingress-metadata']?.name : '';
+
   // Get $.x-kong-name
   rawName = rawName || api['x-kong-name'];
+
   // Get $.info.title
   rawName = rawName || api.info?.title;
+
   // Make sure the name is a string
   const defaultName = defaultValue || 'openapi';
   const name = typeof rawName === 'string' && rawName ? rawName : defaultName;
+
   // Sluggify
   return generateSlug(name, slugifyOptions);
 }
 
-export function generateSlug(str: string, options: SlugifyOptions = {}): string {
+export function generateSlug(str: string, options: SlugifyOptions = {}) {
   options.replacement = options.replacement || '_';
   options.lower = options.lower || false;
   return slugify(str, options);
@@ -69,18 +68,18 @@ export function generateSlug(str: string, options: SlugifyOptions = {}): string 
 /** characters in curly brances not immediately followed by `://`, e.g. `{foo}` will match but `{foo}://` will not. */
 const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
-export function pathVariablesToRegex(p: string): string {
+export function pathVariablesToRegex(p: string) {
   // match anything except whitespace and '/'
   const result = p.replace(pathVariableSearchValue, '(?<$1>[^\\/\\s]+)');
   // add a line ending because it is a regex
   return result + '$';
 }
 
-export function getPluginNameFromKey(key: string): string {
+export function getPluginNameFromKey(key: string) {
   return key.replace(/^x-kong-plugin-/, '');
 }
 
-export function isPluginKey(key: string): boolean {
+export function isPluginKey(key: string) {
   return key.indexOf('x-kong-plugin-') === 0;
 }
 
@@ -102,19 +101,11 @@ export function isHttpMethodKey(key: string): key is HttpMethodType {
   return Object.values(HttpMethod).some(method => method === uppercaseKey);
 }
 
-export function getMethodAnnotationName(method: HttpMethodType): string {
+export function getMethodAnnotationName(method: HttpMethodType) {
   return `${method}-method`.toLowerCase();
 }
 
-export function parseUrl(
-  urlStr: string,
-): {
-  host: string;
-  hostname: string;
-  port: string;
-  protocol: string;
-  pathname: string;
-} {
+export function parseUrl(urlStr: string) {
   const parsed = url.parse(urlStr);
 
   if (!parsed.port && parsed.protocol === 'https:') {
@@ -134,7 +125,7 @@ export function parseUrl(
   return parsed;
 }
 
-export function fillServerVariables(server: OA3Server): string {
+export function fillServerVariables(server: OA3Server) {
   let finalUrl = server.url;
   const variables = server.variables || {};
 
@@ -151,7 +142,7 @@ export function fillServerVariables(server: OA3Server): string {
   return finalUrl;
 }
 
-export function joinPath(p1: string, p2: string): string {
+export function joinPath(p1: string, p2: string) {
   p1 = p1.replace(/\/$/, '');
   p2 = p2.replace(/^\//, '');
   return `${p1}/${p2}`;

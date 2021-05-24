@@ -1,5 +1,5 @@
-import { DCRoute } from './declarative-config';
-import { K8sIngressRule } from './kubernetes-config';
+import { DCRoute, DCUpstream } from './declarative-config';
+import { K8sIngressTLS } from './kubernetes-config';
 
 export interface XKongName {
   'x-kong-name'?: string;
@@ -7,6 +7,14 @@ export interface XKongName {
 
 export interface XKongRouteDefaults {
   'x-kong-route-defaults'?: DCRoute;
+}
+
+export interface XKongUpstreamDefaults {
+  'x-kong-upstream-defaults'?: DCUpstream;
+}
+
+export interface XKongServiceDefaults {
+  'x-kong-service-defaults'?: Record<string, any>;
 }
 
 export interface XKongPluginRequestValidator {
@@ -72,8 +80,8 @@ export interface OA3Parameter {
   required?: boolean;
   deprecated?: boolean;
   allowEmptyValue?: boolean;
-  style?: 'form' | 'spaceDelimited' | 'pipeDelimited' | 'deepObject';
-  schema?: Record<string, any>;
+  style?: 'form' | 'spaceDelimited' | 'pipeDelimited' | 'deepObject' | string;
+  schema?: Record<string, any> | string;
   content?: Record<string, any>;
   explode?: boolean;
 }
@@ -82,14 +90,14 @@ export interface OA3RequestBody {
   content?: Record<string, any>; // TODO
 }
 
-export interface OA3SecurityRequirement {}
+export type OA3SecurityRequirement = Record<string, any>;
 
 export interface OA3Reference {
   $ref: string;
 }
 
 export interface OA3ServerKubernetesTLS {
-  'x-kubernetes-tls'?: K8sIngressRule
+  'x-kubernetes-tls'?: K8sIngressTLS[];
 }
 
 export interface OA3ServerKubernetesBackend {
@@ -126,11 +134,16 @@ export type OA3Server = {
   & OA3ServerKubernetesBackend
   & OA3ServerKubernetesService;
 
+export interface OA3ResponsesObject {
+  $ref?: string;
+}
+
 export type OA3Operation = {
   description?: string;
   summary?: string;
   tags?: string[];
   externalDocs?: OA3ExternalDocs;
+  responses: OA3ResponsesObject;
   operationId?: string;
   parameters?: (OA3Parameter | OA3Reference)[];
   requestBody?: OA3RequestBody | OA3Reference;
@@ -138,6 +151,7 @@ export type OA3Operation = {
   security?: OA3SecurityRequirement[];
   servers?: OA3Server[];
 } & XKongName
+  & XKongRouteDefaults
   & XKongPluginKeyAuth
   ;
 
@@ -244,5 +258,7 @@ export type OpenApi3Spec = {
   & XKongPluginKeyAuth
   & XKongPluginRequestValidator
   & XKongPluginUnknown
+  & XKongServiceDefaults
+  & XKongUpstreamDefaults
   & XKongRouteDefaults
   ;
