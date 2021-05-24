@@ -1,3 +1,4 @@
+import { Entry } from 'type-fest';
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
 import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
@@ -6,29 +7,27 @@ export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
 }
 
-export function generatePlugins(item: Record<string, any>, tags?: string[]) {
+type PluginItem = Record<string, any>;
+
+export function generatePlugins(item: PluginItem, tags: string[]) {
   // When generating plugins, ignore the request validator plugin because it is handled at the operation level
-  const pluginFilter = ([key]: [string, any]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
+  const pluginFilter = ([key]: Entry<PluginItem>) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
 
   // Server plugins should load from the api spec root and from the server
   return Object.entries(item)
     .filter(pluginFilter)
-    .map(e => generatePlugin(e, tags));
+    .map(generatePlugin(tags));
 }
 
-function generatePlugin([key, value]: [string, Record<string, any>], tags?: string[]) {
-  const plugin: DCPlugin = {
-    name: value.name || getPluginNameFromKey(key),
-  };
-
-  if (value.config) {
-    plugin.config = value.config;
-  }
-
-  // Add tags to plugins while appending defaults tags
-  plugin.tags = [...(tags || []), ...(value.tags ?? [])];
-  return plugin;
-}
+const generatePlugin = (tags: string[]) => ([key, value]: Entry<PluginItem>): DCPlugin => ({
+  name: value.name || getPluginNameFromKey(key),
+  ...(value.config ? { config: value.config } : {}),
+  tags: [
+    // Add tags to plugins while appending defaults tags
+    ...tags,
+    ...(value.tags ?? []),
+  ],
+});
 
 /**
   This is valid config to allow all content to pass
@@ -157,10 +156,7 @@ export function generateRequestValidatorPlugin(
   return dcPlugin;
 }
 
-export function generateGlobalPlugins(
-  api: OpenApi3Spec,
-  tags: string[],
-) {
+export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
   const globalPlugins = generatePlugins(api, tags);
   const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
 
@@ -181,7 +177,7 @@ export function generateOperationPlugins(
   parentValidatorPlugin?: Record<string, any> | null,
   tags?: string[],
 ) {
-  const operationPlugins: DCPlugin[] = generatePlugins(operation, tags);
+  const operationPlugins = generatePlugins(operation, tags);
   // Check if validator plugin exists on the operation
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
   // Use the operation or parent validator plugin, or skip if neither exist
