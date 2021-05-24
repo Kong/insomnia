@@ -12,6 +12,7 @@ export interface K8sOverrideAnnotation {
   'konghq.com/override'?: string;
 }
 
+/** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta then look at `annotations`. */
 export type K8sAnnotations =
   & K8sIngressClassAnnotation
   & K8sOverrideAnnotation
@@ -61,6 +62,7 @@ export interface K8sIngressSpec {
   tls?: K8sIngressTLS[];
 }
 
+/** see: https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/custom-resources/#kongingress */
 export interface K8sKongIngress {
   apiVersion: 'configuration.konghq.com/v1';
   kind: 'KongIngress';
@@ -72,6 +74,7 @@ export interface K8sKongIngress {
   };
 }
 
+/** see: https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/custom-resources/#kongplugin */
 export interface K8sKongPlugin {
   apiVersion: 'configuration.konghq.com/v1';
   kind: 'KongPlugin';
