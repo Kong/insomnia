@@ -71,7 +71,7 @@ class Theme extends PureComponent<Props, State> {
             />
             {/* Send Button */}
             <g>
-              <rect x="53%" y="10%" width="9%" height="10%" className="success-fill" />
+              <rect x="53%" y="10%" width="9%" height="10%" className="surprise-fill" />
             </g>
           </g>
 
