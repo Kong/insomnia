@@ -1,12 +1,12 @@
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
-import { OA3Operation, OpenApi3Spec, OA3PathItem, OA3RequestBody, OA3Parameter } from '../types/openapi3';
+import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
 
 export function isRequestValidatorPluginKey(key: string): boolean {
   return key.match(/-request-validator$/) != null;
 }
 
-export function generatePlugins(item: Record<string, any>, tags?: string[]): DCPlugin[] {
+export function generatePlugins(item: Record<string, any>, tags?: string[]) {
   // When generating plugins, ignore the request validator plugin because it is handled at the operation level
   const pluginFilter = ([key]: [string, any]) => isPluginKey(key) && !isRequestValidatorPluginKey(key);
 
@@ -173,10 +173,6 @@ export function generateGlobalPlugins(
     plugins: distinctByProperty<DCPlugin>(globalPlugins, plugin => plugin.name),
     requestValidatorPlugin,
   };
-}
-
-export function generatePathPlugins(pathItem: OA3PathItem, tags: string[]): DCPlugin[] {
-  return generatePlugins(pathItem, tags);
 }
 
 export function generateOperationPlugins(

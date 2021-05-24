@@ -10,9 +10,9 @@ import {
 import { generateSecurityPlugins } from './security-plugins';
 import {
   generateOperationPlugins,
-  generatePathPlugins,
   generateGlobalPlugins,
   getRequestValidatorPluginDirective,
+  generatePlugins,
 } from './plugins';
 import { DCService, DCRoute } from '../types/declarative-config';
 import { OpenApi3Spec, OA3Server, OA3PathItem } from '../types/openapi3';
@@ -70,7 +70,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
     }
 
     const pathValidatorPlugin = getRequestValidatorPluginDirective(pathItem);
-    const pathPlugins = generatePathPlugins(pathItem, tags);
+    const pathPlugins = generatePlugins(pathItem, tags);
 
     for (const method of Object.keys(pathItem)) {
       if (
