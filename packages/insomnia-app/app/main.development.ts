@@ -61,8 +61,30 @@ app.on('ready', async () => {
   await updates.init();
   grpcIpcMain.init();
 });
+
 // Set as default protocol
-app.setAsDefaultProtocolClient(`insomnia${isDevelopment() ? 'dev' : ''}`);
+const defaultProtocol = `insomnia${isDevelopment() ? 'dev' : ''}`;
+const fullDefaultProtocol = `${defaultProtocol}://`;
+const defaultProtocolSuccessful = app.setAsDefaultProtocolClient(defaultProtocol);
+if (defaultProtocolSuccessful) {
+  console.log(`[electron client protocol] successfully set default protocol '${fullDefaultProtocol}'`);
+} else {
+  console.error(`[electron client protocol] FAILED to set default protocol '${fullDefaultProtocol}'`);
+  const isDefaultAlready = app.isDefaultProtocolClient(defaultProtocol);
+  if (isDefaultAlready) {
+    console.log(`[electron client protocol] the current executable is the default protocol for '${fullDefaultProtocol}'`);
+  } else {
+    console.log(`[electron client protocol] the current executable is not the default protocol for '${fullDefaultProtocol}'`);
+  }
+
+  // Note: `getApplicationInfoForProtocol` is not available on Linux, so we use `getApplicationNameForProtocol` instead
+  const applicationName = app.getApplicationNameForProtocol(fullDefaultProtocol);
+  if (applicationName) {
+    console.log(`[electron client protocol] the default application set for '${fullDefaultProtocol}' is '${applicationName}'`);
+  } else {
+    console.error(`[electron client protocol] the default application set for '${fullDefaultProtocol}' was not found`);
+  }
+}
 
 function _addUrlToOpen(e, url) {
   e.preventDefault();
