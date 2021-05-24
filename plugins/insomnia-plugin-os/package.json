@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-os",
-  "version": "2.2.35",
+  "version": "2.3.0-beta.2",
   "author": "Kong <office@konghq.com>",
   "description": "Template tag to get information about the OS",
   "license": "MIT",

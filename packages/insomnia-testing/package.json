@@ -1,7 +1,7 @@
 {
   "name": "insomnia-testing",
   "license": "Apache-2.0",
-  "version": "2.2.35",
+  "version": "2.3.0-beta.2",
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
@@ -25,8 +25,8 @@
     "prepublish": "npm run build"
   },
   "devDependencies": {
-    "@types/mkdirp": "^1.0.1",
     "@types/chai": "^4.2.15",
+    "@types/mkdirp": "^1.0.1",
     "@types/mocha": "^8.2.1",
     "@types/webpack": "^4.41.26",
     "ts-loader": "^8.2.0",
@@ -35,8 +35,8 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
-    "mkdirp": "^1.0.4",
     "chai": "^4.3.4",
+    "mkdirp": "^1.0.4",
     "mocha": "^8.3.2"
   },
   "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"

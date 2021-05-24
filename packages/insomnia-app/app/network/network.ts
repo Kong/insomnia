@@ -58,7 +58,7 @@ import {
 } from 'insomnia-url';
 import fs from 'fs';
 import { database as db } from '../common/database';
-import * as caCerts from './ca-certs';
+import caCerts from './ca-certs';
 import * as plugins from '../plugins/index';
 import * as pluginContexts from '../plugins/context/index';
 import { getAuthHeader } from './authentication';
