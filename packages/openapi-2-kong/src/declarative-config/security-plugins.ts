@@ -84,11 +84,11 @@ export function generateSecurityPlugin(
   scheme: OA3SecurityScheme | null,
   args: string[],
   tags: string[],
-): DCPlugin | null {
+) {
   let plugin: DCPlugin | null = null;
 
   // Generate base plugin
-  switch (scheme.type.toLowerCase()) {
+  switch (scheme?.type.toLowerCase()) {
     case 'apikey':
       plugin = generateApiKeySecurityPlugin(scheme as OA3SecuritySchemeApiKey);
       break;

@@ -6,7 +6,7 @@ import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import CookieList from '../cookie-list';
+import CookieList, { CookieListProps } from '../cookie-list';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
@@ -14,7 +14,7 @@ import { fuzzyMatch } from '../../../common/misc';
 import { HandleRender } from '../../../common/render';
 
 interface Props extends ModalProps {
-  handleShowModifyCookieModal: Function;
+  handleShowModifyCookieModal: CookieListProps['handleShowModifyCookieModal'];
   handleRender: HandleRender;
   cookieJar: CookieJar;
   workspace: Workspace;

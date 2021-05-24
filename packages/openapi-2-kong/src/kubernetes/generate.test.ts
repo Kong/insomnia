@@ -1,13 +1,15 @@
 import { parseSpec } from '../generate';
+import { K8sAnnotations, K8sIngressRule, K8sIngressTLS, K8sManifest } from '../types/kubernetes-config';
 import { OA3Server, OpenApi3Spec } from '../types/openapi3';
 import {
   generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
   getSpecName,
-  generateRulesForServer,
+  generateIngressRule,
   generateServiceName,
   generateServicePath,
   generateServicePort,
+  generateTLS,
 } from './generate';
 import {
   dummyName,
@@ -35,6 +37,7 @@ describe('index', () => {
     ],
     paths: {},
   };
+
   describe('getSpecName()', () => {
     it('with info.title', async () => {
       const api = await parseSpec({ ...spec });
@@ -64,6 +67,7 @@ describe('index', () => {
       expect(getSpecName(api)).toBe('k8s-name');
     });
   });
+
   describe('generateMetadataAnnotations()', () => {
     it('gets annotations from x-kubernetes-ingress-metadata', async () => {
       const api = await parseSpec({
@@ -80,7 +84,7 @@ describe('index', () => {
       const result = generateMetadataAnnotations(api, {
         pluginNames: [],
       });
-      expect(result).toEqual({
+      expect(result).toEqual<K8sAnnotations>({
         'kubernetes.io/ingress.class': 'kong',
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
       });
@@ -90,7 +94,7 @@ describe('index', () => {
       const result = generateMetadataAnnotations(spec, {
         pluginNames: [],
       });
-      expect(result).toEqual({
+      expect(result).toEqual<K8sAnnotations>({
         'kubernetes.io/ingress.class': 'kong',
       });
     });
@@ -99,7 +103,7 @@ describe('index', () => {
       const result = generateMetadataAnnotations(spec, {
         pluginNames: ['one', 'two'],
       });
-      expect(result).toEqual({
+      expect(result).toEqual<K8sAnnotations>({
         'kubernetes.io/ingress.class': 'kong',
         'konghq.com/plugins': 'one, two',
       });
@@ -110,14 +114,14 @@ describe('index', () => {
         pluginNames: [],
         overrideName: 'name',
       });
-      expect(result).toEqual({
+      expect(result).toEqual<K8sAnnotations>({
         'kubernetes.io/ingress.class': 'kong',
         'konghq.com/override': 'name',
       });
     });
 
     it('gets all annotations correctly', () => {
-      const originalAnnotations = {
+      const originalAnnotations: K8sAnnotations = {
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
       };
       const api: OpenApi3Spec = {
@@ -134,18 +138,20 @@ describe('index', () => {
         pluginNames: ['one', 'two'],
         overrideName: 'name',
       });
-      expect(result).toEqual({
+      expect(result).toEqual<K8sAnnotations>({
         'kubernetes.io/ingress.class': 'kong',
         'nginx.ingress.kubernetes.io/rewrite-target': '/',
         'konghq.com/plugins': 'one, two',
         'konghq.com/override': 'name',
       });
       // Should not modify source metadata annotations object
-      expect(api.info['x-kubernetes-ingress-metadata']?.annotations).toStrictEqual(
+      const sourceMetadata = api.info['x-kubernetes-ingress-metadata']?.annotations;
+      expect(sourceMetadata).toStrictEqual<K8sAnnotations>(
         originalAnnotations,
       );
     });
   });
+
   describe('generateServiceName()', () => {
     it('defaults to ingress name', () => {
       const server: OA3Server = {
@@ -167,7 +173,7 @@ describe('index', () => {
     });
 
     it('uses x-kubernetes-service.metadata.name', () => {
-      const server = {
+      const server: OA3Server = {
         url: 'https://insomnia.rest',
         'x-kubernetes-service': {
           metadata: {
@@ -178,9 +184,10 @@ describe('index', () => {
       expect(generateServiceName(server, 'my-api', 0)).toBe('s-name');
     });
   });
+
   describe('generateServicePort()', () => {
     it('uses default 80 for http and https', () => {
-      const server = {
+      const server: OA3Server = {
         url: 'http://api.insomnia.rest',
       };
       expect(generateServicePort(server)).toEqual(80);
@@ -191,9 +198,11 @@ describe('index', () => {
     it('uses default 443 when tls configured ', () => {
       const server: OA3Server = {
         url: 'https://api.insomnia.rest',
-        'x-kubernetes-tls': {
-          secretName: 'tls-secret',
-        },
+        'x-kubernetes-tls': [
+          {
+            secretName: 'tls-secret',
+          },
+        ],
       };
       expect(generateServicePort(server)).toEqual(443);
     });
@@ -201,9 +210,11 @@ describe('index', () => {
     it('uses 443 if any port is 443 when tls configured ', () => {
       const server: OA3Server = {
         url: 'https://api.insomnia.rest',
-        'x-kubernetes-tls': {
-          secretName: 'tls-secret',
-        },
+        'x-kubernetes-tls': [
+          {
+            secretName: 'tls-secret',
+          },
+        ],
         'x-kubernetes-service': {
           spec: {
             ports: [
@@ -244,7 +255,7 @@ describe('index', () => {
     });
 
     it('uses first port', () => {
-      const server = {
+      const server: OA3Server = {
         url: 'https://api.insomnia.rest',
         'x-kubernetes-service': {
           spec: {
@@ -262,13 +273,37 @@ describe('index', () => {
       expect(generateServicePort(server)).toEqual(212);
     });
   });
+
+  describe('generateTLS', () => {
+    const server = spec.servers?.[0] as OA3Server;
+    const ingressTLS: K8sIngressTLS[] = [{ secretName: 'ziltoid' }];
+
+    it('should return null when no config is provided', () => {
+      const tls = generateTLS(server);
+      expect(tls).toEqual(null);
+    });
+
+    it('should return the tls config when provided', () => {
+      const tls = generateTLS({
+        ...server,
+        'x-kubernetes-tls': ingressTLS,
+      });
+      expect(tls).toEqual(ingressTLS);
+    });
+
+    it('should throw when the tls config is not an array', () => {
+      expect(() => generateTLS({
+        ...server,
+        // @ts-expect-error intentionally invalid
+        'x-kubernetes-tls': ingressTLS[0],
+      })).toThrow();
+    });
+  });
+
   describe('generateServicePath()', () => {
-    it.each(['', '/'])(
-      'returns undefined if base path is [%o] and no specific path exists',
-      serverBasePath => {
-        expect(generateServicePath(serverBasePath)).toBe(undefined);
-      },
-    );
+    it.each(['', '/'])('returns undefined if base path is [%o] and no specific path exists', serverBasePath => {
+      expect(generateServicePath(serverBasePath)).toBe(undefined);
+    });
 
     it.each(['/api/v1', '/api/v1/'])('adds closing wildcard if base path is [%o]', basePath => {
       expect(generateServicePath(basePath)).toBe('/api/v1/.*');
@@ -294,16 +329,17 @@ describe('index', () => {
       expect(result).toBe('/api/v1/.*/.*/path');
     });
   });
-  describe('generateRulesForServer()', () => {
+
+  describe('generateIngressRule()', () => {
     it('handles basic server at root', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         0,
         {
           url: 'http://api.insomnia.rest',
         },
         'my-ingress',
       );
-      expect(result).toStrictEqual({
+      expect(result).toStrictEqual<K8sIngressRule>({
         host: 'api.insomnia.rest',
         http: {
           paths: [
@@ -319,7 +355,7 @@ describe('index', () => {
     });
 
     it('handles basic server with base path', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         0,
         {
           url: 'http://api.insomnia.rest/v1',
@@ -343,7 +379,7 @@ describe('index', () => {
     });
 
     it('handles server with specific path', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         1,
         {
           url: 'http://api.insomnia.rest/v1',
@@ -368,7 +404,7 @@ describe('index', () => {
     });
 
     it('handles server with no paths', () => {
-      const result = generateRulesForServer(
+      const result = generateIngressRule(
         1,
         {
           url: 'http://api.insomnia.rest/v1',
@@ -392,39 +428,11 @@ describe('index', () => {
       });
     });
 
-    it('handles TLS', () => {
-      const result = generateRulesForServer(
-        0,
-        {
-          url: 'http://api.insomnia.rest/v1',
-          'x-kubernetes-tls': {
-            secretName: 'my-secret',
-          },
-        },
-        'my-ingress',
-      );
-      expect(result).toEqual({
-        host: 'api.insomnia.rest',
-        tls: {
-          paths: [
-            {
-              path: '/v1/.*',
-              backend: {
-                serviceName: 'my-ingress-service-0',
-                servicePort: 443,
-              },
-            },
-          ],
-          secretName: 'my-secret',
-        },
-      });
-    });
-
     it('handles server url with protocol variable - no default', () => {
       const server = {
         url: '{protocol}://api.insomnia.rest/v1',
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateIngressRule(1, server, 'my-ingress', []);
       expect(result).toEqual({
         host: 'api.insomnia.rest',
         http: {
@@ -451,7 +459,7 @@ describe('index', () => {
           },
         },
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateIngressRule(1, server, 'my-ingress', []);
       expect(result).toEqual({
         host: 'api.insomnia.rest',
         http: {
@@ -478,7 +486,7 @@ describe('index', () => {
           },
         },
       };
-      const result = generateRulesForServer(1, server, 'my-ingress', []);
+      const result = generateIngressRule(1, server, 'my-ingress', []);
       expect(result).toEqual({
         host: 'api.insomnia.rest',
         http: {
@@ -496,11 +504,12 @@ describe('index', () => {
       expect(server.url).toBe('http://api.insomnia.rest/.*/v1');
     });
   });
+
   describe('generateKongForKubernetesConfigFromSpec()', () => {
     it('handles global plugins', async () => {
       const api = await parseSpec({ ...spec, ...pluginKeyAuth, ...pluginDummy });
       const result = generateKongForKubernetesConfigFromSpec(api);
-      expect(result.documents).toStrictEqual([
+      expect(result.documents).toStrictEqual<K8sManifest[]>([
         keyAuthPluginDoc('g0'),
         dummyPluginDoc('g1'),
         ingressDoc(
@@ -532,7 +541,7 @@ describe('index', () => {
         ],
       });
       const result = generateKongForKubernetesConfigFromSpec(api);
-      expect(result.documents).toStrictEqual([
+      expect(result.documents).toStrictEqual<K8sManifest[]>([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('s1'),
         keyAuthPluginDoc('s2'),
@@ -559,7 +568,7 @@ describe('index', () => {
         },
       });
       const result = generateKongForKubernetesConfigFromSpec(api);
-      expect(result.documents).toStrictEqual([
+      expect(result.documents).toStrictEqual<K8sManifest[]>([
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('p1'),
         keyAuthPluginDoc('p2'),
@@ -589,7 +598,7 @@ describe('index', () => {
         },
       });
       const result = generateKongForKubernetesConfigFromSpec(api);
-      expect(result.documents).toStrictEqual([
+      expect(result.documents).toStrictEqual<K8sManifest[]>([
         methodDoc('get'),
         methodDoc('put'),
         methodDoc('post'),

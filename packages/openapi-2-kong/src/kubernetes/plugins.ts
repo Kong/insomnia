@@ -3,18 +3,19 @@ import {
   getPaths,
   getPluginNameFromKey,
   getServers,
+  HttpMethodType,
   isHttpMethodKey,
   isPluginKey,
 } from '../common';
 import { generateSecurityPlugins } from '../declarative-config/security-plugins';
 import { DCPlugin } from '../types/declarative-config';
 import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8splugins';
-import { K8sPluginConfig } from '../types/kubernetes-config';
-import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem } from '../types/openapi3';
+import { K8sKongPlugin } from '../types/kubernetes-config';
+import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Operation } from '../types/openapi3';
 import { ValueOf } from 'type-fest';
 
-export function flattenPluginDocuments(plugins: Plugins): K8sPluginConfig[] {
-  const all: K8sPluginConfig[] = [];
+export function flattenPluginDocuments(plugins: Plugins): K8sKongPlugin[] {
+  const all: K8sKongPlugin[] = [];
   const { global, servers, paths } = plugins;
   all.push(...global);
   servers.forEach(s => {
@@ -58,7 +59,7 @@ export function mapDcPluginsToK8sPlugins(
   increment: IndexIncrement,
 ) {
   return dcPlugins.map(dcPlugin => {
-    const k8sPlugin: K8sPluginConfig = {
+    const k8sPlugin: K8sKongPlugin = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
@@ -116,8 +117,8 @@ export function getOperationPlugins(
   const operationPlugins: OperationPlugin[] = Object.keys(pathItem)
     .filter(isHttpMethodKey)
     .map(key => {
-      // We know this will always, only be OA3Operation (because of the filter above), but Flow doesn't know that...
-      const operation: Record<string, any> = pathItem[key];
+      // We know this will always, only be OA3Operation (because of the filter above)
+      const operation = pathItem[key as `${Lowercase<HttpMethodType>}`] as OA3Operation;
       const pluginNameSuffix = PluginNameSuffix.operation;
       const opPlugins = generateK8sPluginConfig(operation, pluginNameSuffix, increment);
       const securityPlugins = mapDcPluginsToK8sPlugins(
@@ -149,12 +150,12 @@ export function generateK8sPluginConfig(
   pluginNameSuffix: PluginNameSuffixKeys,
   increment: IndexIncrement,
 ) {
-  const plugins: K8sPluginConfig[] = [];
+  const plugins: K8sKongPlugin[] = [];
 
   for (const key of Object.keys(obj).filter(isPluginKey)) {
     const pData = obj[key];
     const name = pData.name || getPluginNameFromKey(key);
-    const p: K8sPluginConfig = {
+    const p: K8sKongPlugin = {
       apiVersion: 'configuration.konghq.com/v1',
       kind: 'KongPlugin',
       metadata: {
@@ -197,13 +198,13 @@ export function normalizeOperationPlugins(operationPlugins: OperationPlugin[]) {
 }
 
 export function prioritizePlugins(
-  global: K8sPluginConfig[],
-  server: K8sPluginConfig[],
-  path: K8sPluginConfig[],
-  operation: K8sPluginConfig[],
+  global: K8sKongPlugin[],
+  server: K8sKongPlugin[],
+  path: K8sKongPlugin[],
+  operation: K8sKongPlugin[],
 ) {
   // Order in priority: operation > path > server > global
-  const plugins: K8sPluginConfig[] = [...operation, ...path, ...server, ...global];
+  const plugins: K8sKongPlugin[] = [...operation, ...path, ...server, ...global];
   // Select first of each type of plugin
   return distinctByProperty(plugins, p => p.plugin);
 }

@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
-import { generateDeclarativeConfigFromSpec } from './declarative-config';
-import { generateKongForKubernetesConfigFromSpec } from './kubernetes';
 import SwaggerParser from 'swagger-parser';
 import { OpenApi3Spec } from './types/openapi3';
 import { ConversionResultType, ConversionResult } from './types/outputs';
 import YAML from 'yaml';
+import { generateDeclarativeConfigFromSpec } from './declarative-config/generate';
+import { generateKongForKubernetesConfigFromSpec } from './kubernetes/generate';
 
 const defaultTags = ['OAS3_import'];
 

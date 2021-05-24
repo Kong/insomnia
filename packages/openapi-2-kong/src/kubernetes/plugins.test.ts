@@ -553,11 +553,7 @@ describe('plugins', () => {
 
   describe('prioritizePlugins', () => {
     it('should return empty array if no plugins', () => {
-      const global = [];
-      const server = [];
-      const path = [];
-      const operation = [];
-      const result = prioritizePlugins(global, server, path, operation);
+      const result = prioritizePlugins([], [], [], []);
       expect(result).toHaveLength(0);
     });
 
@@ -596,8 +592,7 @@ describe('plugins', () => {
       const global = [p1];
       const server = [p2];
       const path = [p3];
-      const operation = [];
-      const result = prioritizePlugins(global, server, path, operation);
+      const result = prioritizePlugins(global, server, path, []);
       expect(result).toEqual([...path]);
     });
 
@@ -607,9 +602,7 @@ describe('plugins', () => {
       const p2 = pluginDocWithName('p2', pluginType);
       const global = [p1];
       const server = [p2];
-      const path = [];
-      const operation = [];
-      const result = prioritizePlugins(global, server, path, operation);
+      const result = prioritizePlugins(global, server, [], []);
       expect(result).toEqual([...server]);
     });
 

@@ -1,4 +1,4 @@
-import { parseSpec } from '../..';
+import { parseSpec } from '../generate';
 import { generateUpstreams } from './upstreams';
 import { getSpec } from './utils';
 
@@ -29,6 +29,7 @@ describe('upstreams', () => {
 
   it('throws for a root level x-kong-route-default', async () => {
     const spec = getSpec();
+    // @ts-expect-error intentionall invalid
     spec[xKongUpstreamDefaults] = 'foo';
     const api = await parseSpec(spec);
 
@@ -39,6 +40,7 @@ describe('upstreams', () => {
 
   it('ignores null for a root level x-kong-route-default', async () => {
     const spec = getSpec();
+    // @ts-expect-error intentionall invalid
     spec[xKongUpstreamDefaults] = null;
     const specResult = getSpecResult();
     const api = await parseSpec(spec);
