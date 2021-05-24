@@ -15,7 +15,7 @@ import {
   pathVariablesToRegex,
 } from './common';
 import { getSpec } from './declarative-config/utils';
-import { OA3Operation, OA3Server } from './types/openapi3';
+import { OA3Operation, OA3Server, xKongName } from './types/openapi3';
 
 describe('common', () => {
   describe('getPaths()', () => {
@@ -136,7 +136,7 @@ describe('common', () => {
 
   describe('getName()', () => {
     it('openapi object with x-kong-name', () => {
-      const spec = getSpec({ 'x-kong-name': 'override' });
+      const spec = getSpec({ [xKongName]: 'override' });
       const result = getName(spec);
       expect(result).toBe('override');
     });
@@ -160,7 +160,7 @@ describe('common', () => {
     });
 
     it('works with slugify options', () => {
-      const spec = getSpec({ 'x-kong-name': 'This Needs Slugify' });
+      const spec = getSpec({ [xKongName]: 'This Needs Slugify' });
       const result = getName(spec, '', {
         replacement: '?',
         lower: true,
@@ -249,7 +249,7 @@ describe('common', () => {
     });
 
     it('should be false if key is not prefixed by x-kong-plugin-', () => {
-      expect(isPluginKey('x-kong-name')).toBe(false);
+      expect(isPluginKey(xKongName)).toBe(false);
     });
   });
 

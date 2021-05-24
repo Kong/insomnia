@@ -1,9 +1,9 @@
 import { HttpMethodType } from '../common';
 import { K8sIngress, K8sKongIngress, K8sKongPlugin } from '../types/kubernetes-config';
-import { XKongPluginKeyAuth, XKongPluginUnknown } from '../types/openapi3';
+import { xKongPluginKeyAuth, XKongPluginKeyAuth, XKongPluginUnknown } from '../types/openapi3';
 
 export const pluginKeyAuth: XKongPluginKeyAuth = {
-  'x-kong-plugin-key-auth': {
+  [xKongPluginKeyAuth]: {
     name: 'key-auth',
     config: {
       key_names: ['api_key', 'apikey'],

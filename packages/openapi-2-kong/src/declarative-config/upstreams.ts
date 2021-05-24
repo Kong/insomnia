@@ -1,6 +1,6 @@
 import { getName, parseUrl, fillServerVariables } from '../common';
 import { DCUpstream } from '../types/declarative-config';
-import { OpenApi3Spec } from '../types/openapi3';
+import { OpenApi3Spec, xKongUpstreamDefaults } from '../types/openapi3';
 
 export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
   const servers = api.servers || [];
@@ -11,10 +11,10 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
 
   // x-kong-upstream-defaults is free format so we do not want type checking.
   // If added, it would tightly couple these objects to Kong, and that would make future maintenance a lot harder.
-  const upstreamDefaults = api['x-kong-upstream-defaults'] || {};
+  const upstreamDefaults = api[xKongUpstreamDefaults] || {};
 
   if (typeof upstreamDefaults !== 'object') {
-    throw new Error("expected 'x-kong-upstream-defaults' to be an object");
+    throw new Error(`expected '${xKongUpstreamDefaults}' to be an object`);
   }
 
   const upstream: DCUpstream = {

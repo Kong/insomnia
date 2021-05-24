@@ -1,4 +1,4 @@
-import { OA3PathItem, OpenApi3Spec } from '../types/openapi3';
+import { OA3PathItem, OpenApi3Spec, xKongName } from '../types/openapi3';
 import { generateRouteName } from './services';
 
 const api: OpenApi3Spec = {
@@ -35,9 +35,9 @@ const compare = (expected: string, pathItem: OA3PathItem) => {
 describe('names', () => {
   it("api.paths[path][method]['x-kong-name'] is highest priority", () => {
     compare('Nebulo_9-method_smash', {
-      'x-kong-name': 'pathItem-smash',
+      [xKongName]: 'pathItem-smash',
       post: {
-        'x-kong-name': 'method-smash',
+        [xKongName]: 'method-smash',
         operationId: 'operationId-smash',
       },
     });
@@ -45,7 +45,7 @@ describe('names', () => {
 
   it('api.paths[path][method].operationId is second priority (and not slugified)', () => {
     compare('Nebulo_9-operationId_smash', {
-      'x-kong-name': 'pathItem-smash',
+      [xKongName]: 'pathItem-smash',
       post: {
         operationId: 'operationId-smash',
       },
@@ -54,7 +54,7 @@ describe('names', () => {
 
   it("api.paths[path]['x-kong-name'] is third priority", () => {
     compare('Nebulo_9-pathItem_smash-post', {
-      'x-kong-name': 'pathItem-smash',
+      [xKongName]: 'pathItem-smash',
       post: {},
     });
   });

@@ -15,7 +15,7 @@ import {
   generatePlugins,
 } from './plugins';
 import { DCService, DCRoute } from '../types/declarative-config';
-import { OpenApi3Spec, OA3Server, OA3PathItem } from '../types/openapi3';
+import { OpenApi3Spec, OA3Server, OA3PathItem, xKongServiceDefaults, xKongName } from '../types/openapi3';
 
 export function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);
@@ -35,10 +35,10 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
   const parsedUrl = parseUrl(serverUrl);
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api, tags);
-  const serviceDefaults = api['x-kong-service-defaults'] || {};
+  const serviceDefaults = api[xKongServiceDefaults] || {};
 
   if (typeof serviceDefaults !== 'object') {
-    throw new Error('expected \'x-kong-service-defaults\' to be an object');
+    throw new Error(`expected '${xKongServiceDefaults}' to be an object`);
   }
 
   const service: DCService = {
@@ -147,8 +147,8 @@ export function generateRouteName(
   const name = getName(api);
   const pathItem = api.paths[routePath];
 
-  if (typeof pathItem?.[method]?.['x-kong-name'] === 'string') {
-    const opsName = generateSlug(pathItem?.[method]?.['x-kong-name'] as string);
+  if (typeof pathItem?.[method]?.[xKongName] === 'string') {
+    const opsName = generateSlug(pathItem?.[method]?.[xKongName] as string);
     return `${name}-${opsName}`;
   }
 
@@ -159,6 +159,6 @@ export function generateRouteName(
 
   // replace all `/` with `-` except the ones at the beginning or end of a string
   const replacedRoute = routePath.replace(/(?!^)\/(?!$)/g, '-');
-  const pathSlug = generateSlug(pathItem['x-kong-name'] || replacedRoute);
+  const pathSlug = generateSlug(pathItem[xKongName] || replacedRoute);
   return `${name}${pathSlug ? `-${pathSlug}` : ''}-${method}`;
 }

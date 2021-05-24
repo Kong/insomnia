@@ -2,9 +2,7 @@ import { generateServices } from './services';
 import { parseSpec } from '../generate';
 import { getSpec } from './utils';
 import { DCRoute, DCService } from '../types/declarative-config';
-
-const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
-const xKongRouteDefaults = 'x-kong-route-defaults';
+import { xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCService =>
@@ -284,14 +282,14 @@ describe('services', () => {
       spec.paths = {
         '/dogs': {
           summary: 'Dog stuff',
-          'x-kong-plugin-key-auth': {
+          [xKongPluginKeyAuth]: {
             config: {
               key_names: ['path'],
             },
           },
           get: {},
           post: {
-            'x-kong-plugin-key-auth': {
+            [xKongPluginKeyAuth]: {
               name: 'key-auth',
               config: {
                 key_names: ['operation'],

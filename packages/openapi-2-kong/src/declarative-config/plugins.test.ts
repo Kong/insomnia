@@ -1,5 +1,5 @@
 import { generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
-import { OA3Operation, OA3Parameter } from '../types/openapi3';
+import { OA3Operation, OA3Parameter, xKongPluginKeyAuth, xKongPluginRequestValidator } from '../types/openapi3';
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
 import { getSpec } from './utils';
 
@@ -9,7 +9,7 @@ describe('plugins', () => {
   describe('generateGlobalPlugins()', () => {
     it('generates plugin given a spec with a plugin attached', async () => {
       const api = getSpec({
-        'x-kong-plugin-request-validator': {
+        [xKongPluginRequestValidator]: {
           enabled: false,
           config: {
             verbose_response: true,
@@ -21,7 +21,7 @@ describe('plugins', () => {
             some_config: ['something'],
           },
         },
-        'x-kong-plugin-key-auth': {
+        [xKongPluginKeyAuth]: {
           name: 'key-auth',
           config: {
             key_names: ['x-api-key'],
@@ -66,7 +66,13 @@ describe('plugins', () => {
     });
 
     it('does not add extra things to the plugin', () => {
+      const spec = getSpec({
+        [xKongPluginRequestTermination]: {
+          name: 'request-termination',
+        },
+      });
 
+      expect().toBe();
     });
   });
 
@@ -104,7 +110,7 @@ describe('plugins', () => {
       });
     });
 
-    it('should not add properties if they are not defined', () => {
+    it('should not add config properties if they are not defined', () => {
       const plugin = {
         enabled: true,
         config: {

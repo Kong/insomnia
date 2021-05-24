@@ -1,28 +1,45 @@
 import { DCRoute, DCUpstream } from './declarative-config';
 import { K8sIngressTLS } from './kubernetes-config';
 
+export const xKongName = 'x-kong-name';
 export interface XKongName {
-  'x-kong-name'?: string;
+  [xKongName]?: string;
 }
 
+export const xKongRouteDefaults = 'x-kong-route-defaults';
 export interface XKongRouteDefaults {
-  'x-kong-route-defaults'?: Partial<DCRoute>;
+  [xKongRouteDefaults]?: Partial<DCRoute>;
 }
 
+export const xKongUpstreamDefaults = 'x-kong-upstream-defaults';
 export interface XKongUpstreamDefaults {
-  'x-kong-upstream-defaults'?: Partial<DCUpstream>;
+  [xKongUpstreamDefaults]?: Partial<DCUpstream>;
 }
 
+export const xKongServiceDefaults = 'x-kong-service-defaults';
 export interface XKongServiceDefaults {
-  'x-kong-service-defaults'?: Record<string, any>;
+  [xKongServiceDefaults]?: Record<string, any>;
 }
 
+export const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
 export interface XKongPluginRequestValidator {
-  'x-kong-plugin-request-validator'?: {
+  [xKongPluginRequestValidator]?: {
     enabled?: boolean;
     config: {
       verbose_response?: boolean;
       parameter_schema?: 'global' | 'path' | 'operation';
+    };
+  };
+}
+
+export const xKongPluginKeyAuth = 'x-kong-plugin-key-auth';
+export interface XKongPluginKeyAuth {
+  [xKongPluginKeyAuth]?: {
+    name: 'key-auth';
+    config: {
+      key_names: string[];
+      key_in_body?: boolean;
+      hide_credentials?: boolean;
     };
   };
 }
@@ -32,17 +49,6 @@ export type XKongPluginUnknown<Config = any> = Record<`x-kong-plugin-${string}`,
   name?: string;
   config: Record<string, Config>;
 }>
-
-export interface XKongPluginKeyAuth {
-  'x-kong-plugin-key-auth'?: {
-    name: 'key-auth';
-    config: {
-      key_names: string[];
-      key_in_body?: boolean;
-      hide_credentials?: boolean;
-    };
-  };
-}
 
 export interface StripPath {
   // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
