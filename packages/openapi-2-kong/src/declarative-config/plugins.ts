@@ -147,10 +147,16 @@ export function generateRequestValidatorPlugin({ plugin, tags, operation }: {
     config.verbose_response = Boolean(pluginConfig.verbose_response);
   }
 
+  const isEnabledSpecified = Object.prototype.hasOwnProperty.call(plugin, 'enabled');
+  const enabled = isEnabledSpecified ? { enabled: Boolean(plugin.enabled ?? true) } : {};
+
   const dcPlugin: DCPlugin = {
     config,
-    tags: [...(tags ?? []), ...(plugin.tags ?? [])],
-    enabled: Boolean(plugin.enabled ?? true),
+    tags: [
+      ...(tags ?? []),
+      ...(plugin.tags ?? []),
+    ],
+    ...enabled,
     name: 'request-validator',
   };
   return dcPlugin;

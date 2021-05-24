@@ -13,7 +13,6 @@
             "body_schema": "{}",
             "version": "draft4"
           },
-          "enabled": true,
           "tags": [
             "OAS3_import",
             "OAS3file_request-validator-plugin.yaml"
@@ -40,7 +39,6 @@
                 "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
                 "version": "draft4"
               },
-              "enabled": true,
               "tags": [
                 "OAS3_import",
                 "OAS3file_request-validator-plugin.yaml"
@@ -71,7 +69,6 @@
                 "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
                 "version": "draft4"
               },
-              "enabled": true,
               "tags": [
                 "OAS3_import",
                 "OAS3file_request-validator-plugin.yaml"
