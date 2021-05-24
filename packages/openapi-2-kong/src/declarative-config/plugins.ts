@@ -20,8 +20,8 @@ export function generatePlugins(item: PluginItem, tags: string[]) {
 }
 
 const generatePlugin = (tags: string[]) => ([key, value]: Entry<PluginItem>): DCPlugin => ({
+  ...(value ?? {}),
   name: value.name || getPluginNameFromKey(key),
-  ...(value.config ? { config: value.config } : {}),
   tags: [
     // Add tags to plugins while appending defaults tags
     ...tags,
