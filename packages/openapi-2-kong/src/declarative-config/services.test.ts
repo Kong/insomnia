@@ -399,7 +399,6 @@ describe('services', () => {
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({
           ...route,
-          // $FlowFixMe
           ...(route.paths[0] === '/cats$' ? operationLevel : rootLevel),
         }));
         const api = await parseSpec(spec);
@@ -424,7 +423,6 @@ describe('services', () => {
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({
           ...route,
-          // $FlowFixMe
           ...(route.paths[0] === '/cats$' ? pathLevel : rootLevel),
         }));
         const api = await parseSpec(spec);

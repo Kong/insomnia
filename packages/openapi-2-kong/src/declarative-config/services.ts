@@ -62,7 +62,6 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
-    // $FlowFixMe
     const routeDefaultsPath = api.paths[routePath]['x-kong-route-defaults'] || routeDefaultsRoot;
 
     if (typeof routeDefaultsPath !== 'object') {
@@ -95,7 +94,6 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
         );
       }
 
-      // This check is here to make Flow happy
       if (!operation) {
         continue;
       }
