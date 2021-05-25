@@ -87,7 +87,7 @@ describe('top-level API exports', () => {
 
   describe('generateFromSpec()', () => {
     it('generates DC from spec', async () => {
-      const parsedSpec = YAML.parse(dcFixtureFileString, 'utf8');
+      const parsedSpec = YAML.parse(dcFixtureFileString);
       const {
         documents: [dc],
       } = await generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
@@ -97,7 +97,7 @@ describe('top-level API exports', () => {
     });
 
     it('generates kubernetes from spec', async () => {
-      const parsedSpec = YAML.parse(k8sFixtureFileString, 'utf8');
+      const parsedSpec = YAML.parse(k8sFixtureFileString);
       const {
         type,
         label,
