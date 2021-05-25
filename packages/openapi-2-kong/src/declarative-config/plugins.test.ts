@@ -80,10 +80,11 @@ describe('plugins', () => {
 
       const result = generateGlobalPlugins(spec, tags);
 
-      expect(result.plugins).toBe([
+      expect(result.plugins).toEqual([
         {
           name: 'request-termination',
           mad: 'max',
+          tags,
           config: {
             max: 'is mad',
             status_code: 403,
