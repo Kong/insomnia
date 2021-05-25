@@ -19,7 +19,7 @@ describe('kubernetes fixtures', () => {
         const expectedBase = `${path.parse(fileBase).name}.expected.yaml`;
         const expectedPath = path.join(root, expectedBase);
         const expected = await readFile(expectedPath, 'utf8');
-        const parsedExpected = YAML.parse<KongForKubernetesResult>(expected);
+        const parsedExpected = YAML.parse(expected);
 
         expect(result).toEqual(parsedExpected);
       });
