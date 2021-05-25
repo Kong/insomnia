@@ -39,23 +39,11 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
           return 'openDirectory';
       }
     }),
-    filters: [
-      {
-        name: 'All Files',
-        extensions: ['*'],
-      },
-    ],
+    // @ts-expect-error https://github.com/electron/electron/pull/29322
+    filters: [{
+      extensions: (extensions?.length ? extensions : ['*']),
+    }],
   };
-
-  // If extensions are provided then filter for just those extensions
-  if (extensions?.length) {
-    options.filters = [
-      {
-        name: 'Files',
-        extensions: extensions,
-      },
-    ];
-  }
 
   const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
   const fileSelection: FileSelection = {
