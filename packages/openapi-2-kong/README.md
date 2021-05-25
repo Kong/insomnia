@@ -28,7 +28,7 @@ This module generates Kong Declarative Config and Kong for Kubernetes config, fr
 
 This module exposes three methods of generating Kong declarative config.
 
-```flow js
+```ts
 type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
 
 generateFromString (spec: string, type: ConversionResultType, tags: Array<string>) => Promise<Object>,
@@ -38,8 +38,14 @@ generate (filename: string, type: ConversionResultType, tags: Array<string>) => 
 
 ### Usage Example
 
-```js
-const o2k = require('openapi-2-kong');
+```ts
+import {
+  generateFromString,
+  generateFromSpec,
+  generate,
+} from 'openapi-2-kong';
+import YAML from 'yaml';
+import { writeFileSync } from 'fs';
 
 const spec = `
 openapi: "3.0.0"
@@ -54,27 +60,27 @@ paths:
       summary: Get all pets
 `;
 
-async function examples() {
+const examples = async () => {
   const tags = [ 'MyTag' ];
-  const type = 'kong-declarative-config'; // or 'kong-for-kubernetes'
+  const type: ConversionResultType = 'kong-declarative-config'; // or 'kong-for-kubernetes'
 
   // Generate a config from YAML string
-  const config1 = await o2k.generateFromString(spec, type, tags);
+  const config1 = await generateFromString(spec, type, tags);
 
-  // Generate a config from a JS object
-  const specObject = require('yaml').parse(spec);
-  const config2 = await o2k.generateFromSpec(specObject, type, tags);
+  // Generate a config from a JavaScript Object
+  const specObject = YAML.parse(spec);
+  const config2 = generateFromSpec(specObject, type, tags);
 
   // Generate a config from a JSON string
   const specJSON = JSON.stringify(specObject);
-  const config3 = await o2k.generateFromString(specJSON, type, tags);
+  const config3 = await generateFromString(specJSON, type, tags);
 
   // generate a config from a file path
-  require('fs').writeFileSync('/tmp/spec.yaml', spec);
-  const config4 = await o2k.generate('/tmp/spec.yaml', type, tags);
+  writeFileSync('/tmp/spec.yaml', spec);
+  const config4 = await generate('/tmp/spec.yaml', type, tags);
 
   console.log('Generated:', { config1, config2, config3, config4 });
-}
+};
 ```
 
 ## Kong Declarative Config

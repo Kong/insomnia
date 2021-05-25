@@ -14,39 +14,37 @@ export const conversionTypes: ConversionResultType[] = [
   'kong-for-kubernetes',
 ];
 
-export async function generate(
+export const generate = (
   specPath: string,
   type: ConversionResultType,
   tags: string[] = [],
-) {
-  return new Promise<ConversionResult>((resolve, reject) => {
-    fs.readFile(path.resolve(specPath), 'utf8', (err, contents) => {
-      if (err != null) {
-        reject(err);
-        return;
-      }
+) => new Promise<ConversionResult>((resolve, reject) => {
+  fs.readFile(path.resolve(specPath), 'utf8', (err, contents) => {
+    if (err != null) {
+      reject(err);
+      return;
+    }
 
-      const fileSlug = path.basename(specPath);
-      const allTags = [`OAS3file_${fileSlug}`, ...tags];
-      resolve(generateFromString(contents, type, allTags));
-    });
+    const fileSlug = path.basename(specPath);
+    const allTags = [`OAS3file_${fileSlug}`, ...tags];
+    resolve(generateFromString(contents, type, allTags));
   });
-}
+});
 
-export async function generateFromString(
+export const generateFromString = async (
   specStr: string,
   type: ConversionResultType,
   tags: string[] = [],
-) {
+) => {
   const api = await parseSpec(specStr);
   return generateFromSpec(api, type, tags);
-}
+};
 
-export function generateFromSpec(
+export const generateFromSpec = (
   api: OpenApi3Spec,
   type: ConversionResultType,
   tags: string[] = [],
-) {
+) => {
   const allTags = [...defaultTags, ...tags];
 
   switch (type) {
@@ -59,9 +57,9 @@ export function generateFromSpec(
     default:
       throw new Error(`Unsupported output type "${type}"`);
   }
-}
+};
 
-export async function parseSpec(spec: string | Record<string, any>) {
+export const parseSpec = (spec: string | Record<string, any>) => {
   let api: OpenApi3Spec;
 
   if (typeof spec === 'string') {
@@ -85,4 +83,4 @@ export async function parseSpec(spec: string | Record<string, any>) {
 
   // @ts-expect-error -- TSCONVERSION
   return SwaggerParser.dereference(api) as Promise<OpenApi3Spec>;
-}
+};

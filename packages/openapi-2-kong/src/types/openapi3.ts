@@ -143,7 +143,7 @@ export type OA3Operation = {
   summary?: string;
   tags?: string[];
   externalDocs?: OA3ExternalDocs;
-  responses: OA3ResponsesObject;
+  responses?: OA3ResponsesObject;
   operationId?: string;
   parameters?: (OA3Parameter | OA3Reference)[];
   requestBody?: OA3RequestBody | OA3Reference;

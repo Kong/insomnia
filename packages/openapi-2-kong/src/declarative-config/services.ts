@@ -10,9 +10,9 @@ import {
 import { generateSecurityPlugins } from './security-plugins';
 import {
   generateOperationPlugins,
-  generatePathPlugins,
   generateGlobalPlugins,
   getRequestValidatorPluginDirective,
+  generatePlugins,
 } from './plugins';
 import { DCService, DCRoute } from '../types/declarative-config';
 import { OpenApi3Spec, OA3Server, OA3PathItem } from '../types/openapi3';
@@ -62,7 +62,6 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
 
   for (const routePath of Object.keys(api.paths)) {
     const pathItem: OA3PathItem = api.paths[routePath];
-    // $FlowFixMe
     const routeDefaultsPath = api.paths[routePath]['x-kong-route-defaults'] || routeDefaultsRoot;
 
     if (typeof routeDefaultsPath !== 'object') {
@@ -70,7 +69,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
     }
 
     const pathValidatorPlugin = getRequestValidatorPluginDirective(pathItem);
-    const pathPlugins = generatePathPlugins(pathItem, tags);
+    const pathPlugins = generatePlugins(pathItem, tags);
 
     for (const method of Object.keys(pathItem)) {
       if (
@@ -95,7 +94,6 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
         );
       }
 
-      // This check is here to make Flow happy
       if (!operation) {
         continue;
       }
@@ -117,14 +115,18 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
 
       // Generate generic and security-related plugin objects
       const securityPlugins = generateSecurityPlugins(operation, api, tags);
-      const regularPlugins = generateOperationPlugins(
+
+      // Path plugin takes precedence over global
+      const parentValidatorPlugin = pathValidatorPlugin || globalPlugins.requestValidatorPlugin;
+
+      const regularPlugins = generateOperationPlugins({
         operation,
         pathPlugins,
-        pathValidatorPlugin || globalPlugins.requestValidatorPlugin, // Path plugin takes precedence over global
+        parentValidatorPlugin,
         tags,
-      );
-      const plugins = [...regularPlugins, ...securityPlugins];
+      });
 
+      const plugins = [...regularPlugins, ...securityPlugins];
       // Add plugins if there are any
       if (plugins.length) {
         route.plugins = plugins;
