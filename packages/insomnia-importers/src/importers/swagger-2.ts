@@ -90,7 +90,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
       return distinct;
     }, [] as string[])
     .filter((tag) => !tags.map((tag) => tag.name).includes(tag))
-    .map((name) => ({ name, desciption: '' }));
+    .map((name) => ({ name, description: '' }));
 
   const folders = [...tags, ...implicitTags].map(
     importFolderItem(defaultParent),
@@ -515,7 +515,7 @@ const generateParameterExample = (
 };
 
 /**
- * Converts swagger schema of parametes into insomnia one.
+ * Converts swagger schema of parameters into insomnia one.
  */
 const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
   return parameters?.map((parameter) => {

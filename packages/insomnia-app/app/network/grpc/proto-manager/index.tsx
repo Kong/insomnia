@@ -109,7 +109,7 @@ export async function addDirectory(workspaceId: string) {
       error: e,
     });
   } finally {
-    // Fake flushing changes (or, rollback) only prevents change notifs being sent to the UI
+    // Fake flushing changes (or, rollback) only prevents change notifications being sent to the UI
     // It does NOT revert changes written to the database, as is typical of a db transaction rollback
     // As such, if rolling back, the created directory needs to be deleted manually
     await db.flushChanges(bufferId, rollback);

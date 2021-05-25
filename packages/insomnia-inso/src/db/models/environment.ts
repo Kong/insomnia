@@ -30,7 +30,7 @@ export const loadEnvironment = (
     env => env.parentId === baseWorkspaceEnv._id,
   );
 
-  // If no identifier, return base environmenmt
+  // If no identifier, return base environment
   if (!identifier) {
     logger.trace('No sub environments found, using base environment');
     return baseWorkspaceEnv;

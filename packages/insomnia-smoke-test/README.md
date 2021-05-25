@@ -72,7 +72,7 @@ A test should not depend on any external services unless absolutely necessary. I
 ### Element selection
 Spectron is built heavily on top of WebdriverIO, and WebdriverIO's `browser` object is available under `app.client` ([docs](https://github.com/electron-userland/spectron#client)). This is the primary API you will need for user interactions, see examples with existing tests.
 
-Through WebdriverIO you can use a host of CSS or React selectors. There is no clear guideline about which selector to use, but whichever approach is used it must favour stablility and be understandable.
+Through WebdriverIO you can use a host of CSS or React selectors. There is no clear guideline about which selector to use, but whichever approach is used it must favour stability and be understandable.
 
 There are trade-offs with each selector approach but it's important to know how generic or specific a particular component or CSS class is, in order to ensure that the correct element is always selected as the application evolves.
 
@@ -194,7 +194,7 @@ Unlike unit tests, the application startup time for a smoke test can sometimes b
 
 ## Contributing a smoke test?
 
-Smoke tests can potentially be flaky, and one attempt to avoid flaky tests in the default branch is to run the final implementation of a test atleast 20 times locally to prove its stability. If a test is unable to achieve this, it is very unlikely to be accepted into the test suite.
+Smoke tests can potentially be flaky, and one attempt to avoid flaky tests in the default branch is to run the final implementation of a test at least 20 times locally to prove its stability. If a test is unable to achieve this, it is very unlikely to be accepted into the test suite.
 
 You can repeat a test quickly by wrapping it with the following block:
 ```ts

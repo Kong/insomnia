@@ -182,7 +182,7 @@ export async function _trackEvent(
   action: string,
   label?: string | null,
   value?: string | null,
-  queuable?: boolean | null,
+  queueable?: boolean | null,
 ) {
   const prefix = interactive ? '[ga] Event' : '[ga] Non-interactive';
   console.log(prefix, [category, action, label, value].filter(Boolean).join(', '));
@@ -216,7 +216,7 @@ export async function _trackEvent(
       value: value,
     });
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-  await _sendToGoogle(params, !!queuable);
+  await _sendToGoogle(params, !!queueable);
 }
 
 export async function _trackPageView(location: string) {
