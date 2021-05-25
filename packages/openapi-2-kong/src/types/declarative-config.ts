@@ -6,7 +6,7 @@ export interface DCPluginConfig {
   body_schema?: string;
   issuer?: string;
   key_names?: string[];
-  parameter_schema?: OA3Parameter[];
+  parameter_schema?: OA3Parameter[] | 'global' | 'path' | 'operation';
   scopes_required?: string[];
   verbose_response?: boolean;
   version?: 'draft4';

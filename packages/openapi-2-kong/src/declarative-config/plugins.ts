@@ -3,7 +3,7 @@ import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common
 import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
 import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
 
-export function isRequestValidatorPluginKey(key: string): boolean {
+export function isRequestValidatorPluginKey(key: string) {
   return key.match(/-request-validator$/) != null;
 }
 
@@ -20,8 +20,8 @@ export function generatePlugins(item: PluginItem, tags: string[]) {
 }
 
 const generatePlugin = (tags: string[]) => ([key, value]: Entry<PluginItem>): DCPlugin => ({
+  ...(value ?? {}),
   name: value.name || getPluginNameFromKey(key),
-  ...(value.config ? { config: value.config } : {}),
   tags: [
     // Add tags to plugins while appending defaults tags
     ...tags,
@@ -147,10 +147,16 @@ export function generateRequestValidatorPlugin({ plugin, tags, operation }: {
     config.verbose_response = Boolean(pluginConfig.verbose_response);
   }
 
+  const isEnabledSpecified = Object.prototype.hasOwnProperty.call(plugin, 'enabled');
+  const enabled = isEnabledSpecified ? { enabled: Boolean(plugin.enabled ?? true) } : {};
+
   const dcPlugin: DCPlugin = {
     config,
-    tags: [...(tags ?? []), ...(plugin.tags ?? [])],
-    enabled: Boolean(plugin.enabled ?? true),
+    tags: [
+      ...(tags ?? []),
+      ...(plugin.tags ?? []),
+    ],
+    ...enabled,
     name: 'request-validator',
   };
   return dcPlugin;

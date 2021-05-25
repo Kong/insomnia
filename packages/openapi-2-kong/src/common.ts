@@ -5,6 +5,7 @@ import {
   OA3PathItem,
   OA3Server,
   OA3Operation,
+  xKongName,
 } from './types/openapi3';
 
 export function getServers(obj: OpenApi3Spec | OA3PathItem) {
@@ -46,7 +47,7 @@ export function getName(
   rawName = isKubernetes ? api.info?.['x-kubernetes-ingress-metadata']?.name : '';
 
   // Get $.x-kong-name
-  rawName = rawName || api['x-kong-name'];
+  rawName = rawName || api[xKongName];
 
   // Get $.info.title
   rawName = rawName || api.info?.title;

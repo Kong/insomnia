@@ -1,6 +1,6 @@
 import { parseSpec } from '../generate';
 import { K8sAnnotations, K8sIngressRule, K8sIngressTLS, K8sManifest } from '../types/kubernetes-config';
-import { OA3Server, OpenApi3Spec } from '../types/openapi3';
+import { OA3Server, OpenApi3Spec, xKongName } from '../types/openapi3';
 import {
   generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
@@ -50,14 +50,14 @@ describe('index', () => {
     });
 
     it('with x-kong-name', () => {
-      const api: OpenApi3Spec = { ...spec, 'x-kong-name': 'kong-name' };
+      const api: OpenApi3Spec = { ...spec, [xKongName]: 'kong-name' };
       expect(getSpecName(api)).toBe('kong-name');
     });
 
     it('with x-kubernetes-ingress-metadata.name', async () => {
       const api = await parseSpec({
         ...spec,
-        'x-kong-name': 'Kong Name',
+        [xKongName]: 'Kong Name',
         info: {
           'x-kubernetes-ingress-metadata': {
             name: 'K8s name',
