@@ -538,7 +538,7 @@ class TagEditor extends PureComponent<Props, State> {
         {docs.map((doc: any) => {
           let namePrefix: string | null = null;
 
-          // Show paren't folder with name if it's a request
+          // Show parent folder with name if it's a request
           if (doc.type === models.request.type) {
             const requests = allDocs[models.request.type] || [];
             const request: any = requests.find(r => r._id === doc._id);

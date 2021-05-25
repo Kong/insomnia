@@ -191,7 +191,7 @@ describe('Application launch', function() {
   //  1. sending no basic auth will fail
   //  2. sending basic auth will succeed
   //  3. sending basic auth with special characters encoded with IS0-8859-1 will succeed
-  //  4. sending while basic auth is disabled within insomnnia will fail
+  //  4. sending while basic auth is disabled within insomnia will fail
   // TODO(TSCONVERSION) - this test fails fairly readily after TS conversion, needs investigation
   it.skip('sends request with basic authentication', async () => {
     const url = 'http://127.0.0.1:4010/auth/basic';

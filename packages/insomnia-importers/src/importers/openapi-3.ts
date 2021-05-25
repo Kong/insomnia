@@ -460,7 +460,7 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
 };
 
 /**
- * Converts openapi schema of parametes into insomnia one.
+ * Converts openapi schema of parameters into insomnia one.
  */
 const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
   return parameters.map((parameter) => {

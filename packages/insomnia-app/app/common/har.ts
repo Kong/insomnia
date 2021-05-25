@@ -256,7 +256,7 @@ export async function exportHarResponse(response: ResponseModel | null) {
     status: response.statusCode,
     statusText: response.statusMessage,
     httpVersion: 'HTTP/1.1',
-    cookies: getReponseCookies(response),
+    cookies: getResponseCookies(response),
     headers: getResponseHeaders(response),
     content: getResponseContent(response),
     redirectURL: '',
@@ -380,7 +380,7 @@ function getRequestCookies(renderedRequest: RenderedRequest) {
   return harCookies;
 }
 
-function getReponseCookies(response: ResponseModel) {
+function getResponseCookies(response: ResponseModel) {
   const headers = response.headers.filter(Boolean) as HarCookie[];
   const responseCookies = getSetCookieHeaders(headers)
   .reduce((accumulator, harCookie) => {

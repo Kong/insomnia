@@ -369,7 +369,7 @@ export class MemClient {
       throw new SystemError({
         code: 'ENOTDIR',
         errno: -20,
-        message: `ENOTDIR: not a simlink, scandir '${entry.path}'`,
+        message: `ENOTDIR: not a symlink, scandir '${entry.path}'`,
         path: entry.path,
         syscall: 'scandir',
       });

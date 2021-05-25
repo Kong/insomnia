@@ -157,7 +157,7 @@ export function generateRouteName(
     return `${name}-${opsName}`;
   }
 
-  // replace all `/` with `-` except the ones at the beginng or end of a string
+  // replace all `/` with `-` except the ones at the beginning or end of a string
   const replacedRoute = routePath.replace(/(?!^)\/(?!$)/g, '-');
   const pathSlug = generateSlug(pathItem['x-kong-name'] || replacedRoute);
   return `${name}${pathSlug ? `-${pathSlug}` : ''}-${method}`;

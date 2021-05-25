@@ -41,7 +41,7 @@ If `inso` cannot find the `.insomnia` directory, it will try to run against the 
 
 Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da418a85ffea7406e1292a` . When specifying an identifier for `inso` , similar to Git hashes, you may choose to concatenate and use the first x characters (for example, `wrk_012d486` ), which is very likely to be unique. If in the rare chance the short id is _not_ unique against the data, `inso` will inform as such.
 
-Additionally, if the `[identifier]` argument is ommitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
+Additionally, if the `[identifier]` argument is omitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
 
 ![](https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif)
 

@@ -424,7 +424,7 @@ export function isObject(obj: unknown) {
 
 /**
   Finds epoch's digit count and converts it to make it exactly 13 digits.
-  Which is the epoch millisecond represntation.
+  Which is the epoch millisecond representation.
 */
 export function convertEpochToMilliseconds(epoch: number) {
   const expDigitCount = epoch.toString().length;

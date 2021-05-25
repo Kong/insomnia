@@ -705,7 +705,7 @@ export async function _actuallySend(
         });
       }
 
-      // Set User-Agent if it't not already in headers
+      // Set User-Agent if it's not already in headers
       if (!hasUserAgentHeader(headers)) {
         setOpt(Curl.option.USERAGENT, `insomnia/${getAppVersion()}`);
       }

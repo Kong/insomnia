@@ -239,7 +239,7 @@ const Fail = ({ error }: FailProps) => (
 
       {error && (
         <details>
-          <summary>Additonal information</summary>
+          <summary>Additional information</summary>
           <pre className="pad-top-sm selectable">
             <code className="wide">{error.stack || error}</code>
           </pre>
