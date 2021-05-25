@@ -1,6 +1,6 @@
 {
   "name": "insomnia-importers",
-  "version": "2.2.35",
+  "version": "2.3.0-beta.2",
   "author": "Kong <office@konghq.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",
@@ -15,7 +15,7 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
-    "insomnia-import": "./dist/src/cli"
+    "insomnia-import": "bin/cli"
   },
   "scripts": {
     "bootstrap": "npm run build",
@@ -27,12 +27,12 @@
     "test": "jest --silent"
   },
   "dependencies": {
+    "@apidevtools/swagger-parser": "10.0.2",
     "apiconnect-wsdl": "^1.8.31",
     "change-case": "^4.1.1",
     "commander": "^7.1.0",
     "lodash": "^4.17.15",
     "shell-quote": "^1.7.2",
-    "@apidevtools/swagger-parser": "10.0.2",
     "yaml": "^1.10.0"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1",

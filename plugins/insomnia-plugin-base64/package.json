@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-base64",
-  "version": "2.2.35",
+  "version": "2.3.0-beta.2",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia base64 template tag",
   "license": "MIT",
