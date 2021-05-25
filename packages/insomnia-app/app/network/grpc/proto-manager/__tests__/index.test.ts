@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
-import selectFileOrFolder from '../../../../common/select-file-or-folder';
+import { selectFileOrFolder } from '../../../../common/select-file-or-folder';
 import * as protoManager from '../index';
 import { loadMethods as _loadMethods, loadMethodsFromPath as _loadMethodsFromPath } from '../../proto-loader';
 import * as models from '../../../../models';

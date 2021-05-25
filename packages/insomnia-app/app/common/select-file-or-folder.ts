@@ -1,14 +1,16 @@
 import { OpenDialogOptions, remote } from 'electron';
+
 interface Options {
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
 }
+
 interface FileSelection {
   filePath: string;
   canceled: boolean;
 }
 
-const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<FileSelection> => {
+export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => {
   // If no types are selected then default to just files and not directories
   const types = itemTypes || ['file'];
   let title = 'Select ';
@@ -57,10 +59,9 @@ const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<F
   }
 
   const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
-  return {
+  const fileSelection: FileSelection = {
     filePath: filePaths[0],
     canceled,
   };
+  return fileSelection;
 };
-
-export default selectFileOrFolder;
