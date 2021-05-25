@@ -12,9 +12,9 @@ const loadMethods = _loadMethods as jest.Mock;
 const loadMethodsFromPath = _loadMethodsFromPath as jest.Mock;
 
 jest.mock('../../../../common/select-file-or-folder', () => ({
-  __esModule: true,
-  default: jest.fn(),
+  selectFileOrFolder: jest.fn(),
 }));
+
 jest.mock('../../../../ui/components/modals');
 jest.mock('../../proto-loader');
 
@@ -109,9 +109,9 @@ describe('protoManager', () => {
 
       // Assert
       const pf = await models.protoFile.getByParentId(w._id);
-      expect(cbMock).toHaveBeenCalledWith(pf._id);
-      expect(pf.name).toBe(filePath);
-      expect(pf.protoText).toBe(contents);
+      expect(cbMock).toHaveBeenCalledWith(pf?._id);
+      expect(pf?.name).toBe(filePath);
+      expect(pf?.protoText).toBe(contents);
     });
   });
 
@@ -138,8 +138,8 @@ describe('protoManager', () => {
       // Assert
       expect(cbMock).toHaveBeenCalledWith(pf._id);
       const updatedPf = await models.protoFile.getById(pf._id);
-      expect(updatedPf.name).toBe(filePath);
-      expect(updatedPf.protoText).toBe(contents);
+      expect(updatedPf?.name).toBe(filePath);
+      expect(updatedPf?.protoText).toBe(contents);
     });
   });
 
@@ -158,7 +158,7 @@ describe('protoManager', () => {
 
       // Assert
       const updatedPf = await models.protoFile.getById(pf._id);
-      expect(updatedPf.name).toBe(updatedName);
+      expect(updatedPf?.name).toBe(updatedName);
     });
   });
 
