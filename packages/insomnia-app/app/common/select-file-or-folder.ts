@@ -28,16 +28,15 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
   }
 
   const options: OpenDialogOptions = {
-    title: title,
+    title,
     buttonLabel: 'Select',
-    // @ts-expect-error -- TSCONVERSION we should update this to accept other properties types as well, which flow all the way up to plugins
     properties: types.map(type => {
-      if (type === 'file') {
-        return 'openFile';
-      }
+      switch (type) {
+        case 'file':
+          return 'openFile';
 
-      if (type === 'directory') {
-        return 'openDirectory';
+        case 'directory':
+          return 'openDirectory';
       }
     }),
     filters: [
