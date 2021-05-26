@@ -1,4 +1,4 @@
-import electron, { OpenDialogOptions, SaveDialogOptions } from 'electron';
+import electron, { OpenDialogOptions } from 'electron';
 import React, { Fragment } from 'react';
 import { combineReducers } from 'redux';
 import fs, { NoParamCallback } from 'fs';
@@ -366,8 +366,8 @@ export const importFile = (
     buttonLabel: 'Import',
     properties: ['openFile'],
     filters: [
+      // @ts-expect-error https://github.com/electron/electron/pull/29322
       {
-        name: 'Insomnia Import',
         extensions: [
           '',
           'sh',
@@ -526,7 +526,7 @@ const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, select
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
   const dir = lastDir || electron.remote.app.getPath('desktop');
-  const options: SaveDialogOptions = {
+  const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
     defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
