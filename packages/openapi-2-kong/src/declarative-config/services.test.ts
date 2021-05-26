@@ -1,5 +1,4 @@
 import { generateServices } from './services';
-import { parseSpec } from '../generate';
 import { getSpec } from './utils';
 import { DCRoute, DCService } from '../types/declarative-config';
 import { OA3Operation, xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types';
@@ -50,89 +49,81 @@ const getSpecResult = (): DCService =>
 
 describe('services', () => {
   describe('error states and validation', () => {
-    it('fails with no servers', async () => {
+    it('fails with no servers', () => {
       const spec = getSpec();
       delete spec.servers;
-      const api = await parseSpec(spec);
 
-      const fn = () => generateServices(api, ['Tag']);
+      const fn = () => generateServices(spec, ['Tag']);
 
       expect(fn).toThrowError('no servers defined in spec');
     });
 
-    it('throws for a root level x-kong-route-default', async () => {
+    it('throws for a root level x-kong-route-default', () => {
       const spec = getSpec({
         // @ts-expect-error intentionally invalid
         [xKongRouteDefaults]: 'foo',
       });
-      const api = await parseSpec(spec);
 
-      const fn = () => generateServices(api, ['Tag']);
+      const fn = () => generateServices(spec, ['Tag']);
 
       expect(fn).toThrowError('expected root-level \'x-kong-route-defaults\' to be an object');
     });
 
-    it('ignores null for a root level x-kong-route-default', async () => {
+    it('ignores null for a root level x-kong-route-default', () => {
       const spec = getSpec({
         // @ts-expect-error intentionally invalid
         [xKongRouteDefaults]: null,
       });
       const specResult = getSpecResult();
-      const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+      expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
     });
 
-    it('throws for a paths level x-kong-route-default', async () => {
+    it('throws for a paths level x-kong-route-default', () => {
       const spec = getSpec({});
       // @ts-expect-error intentionally invalid
       spec.paths['/cats'][xKongRouteDefaults] = 'foo';
-      const api = await parseSpec(spec);
 
-      const fn = () => generateServices(api, ['Tag']);
+      const fn = () => generateServices(spec, ['Tag']);
 
       expect(fn).toThrowError('expected \'x-kong-route-defaults\' to be an object (at path \'/cats\')');
     });
 
-    it('ignores null for a paths level x-kong-route-default', async () => {
+    it('ignores null for a paths level x-kong-route-default', () => {
       const spec = getSpec();
       // @ts-expect-error intentionally invalid
       spec.paths['/cats'][xKongRouteDefaults] = null;
       const specResult = getSpecResult();
-      const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+      expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
     });
 
-    it('throws for an operation level x-kong-route-default', async () => {
+    it('throws for an operation level x-kong-route-default', () => {
       const spec = getSpec();
       // @ts-expect-error intentionally invalid
       spec.paths['/cats'].post[xKongRouteDefaults] = 'foo';
-      const api = await parseSpec(spec);
 
-      const fn = () => generateServices(api, ['Tag']);
+      const fn = () => generateServices(spec, ['Tag']);
 
       expect(fn).toThrowError(
         'expected \'x-kong-route-defaults\' to be an object (at operation \'post\' of path \'/cats\')',
       );
     });
 
-    it('ignores null for an operation level x-kong-route-default', async () => {
+    it('ignores null for an operation level x-kong-route-default', () => {
       const spec = getSpec();
       // @ts-expect-error intentionally invalid
       spec.paths['/cats'].post[xKongRouteDefaults] = null;
       const specResult = getSpecResult();
-      const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+      expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
     });
   });
   describe('generateServices()', () => {
-    it('generates generic service with paths', async () => {
+    it('generates generic service with paths', () => {
       const spec = getSpec();
       const specResult = getSpecResult();
-      const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+      expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
     });
 
-    it('generates routes with request validator plugin from operation over path over global', async () => {
+    it('generates routes with request validator plugin from operation over path over global', () => {
       const spec = getSpec({
         // global req validator plugin
         [xKongPluginRequestValidator]: {
@@ -263,11 +254,10 @@ describe('services', () => {
           ],
         },
       ];
-      const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+      expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
     });
 
-    it('generates routes with plugins from operation over path', async () => {
+    it('generates routes with plugins from operation over path', () => {
       const spec = getSpec();
       spec.paths = {
         '/dogs': {
@@ -325,11 +315,10 @@ describe('services', () => {
           ],
         },
       ];
-      const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+      expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
     });
 
-    it('replaces variables', async () => {
+    it('replaces variables', () => {
       const spec = getSpec();
       spec.servers = [
         {
@@ -348,8 +337,7 @@ describe('services', () => {
       const specResult = getSpecResult();
       specResult.port = 8443;
       specResult.path = '/v2';
-      const api = await parseSpec(spec);
-      expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+      expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
     });
 
     describe('x-kong-route-defaults and strip_path', () => {
@@ -367,36 +355,33 @@ describe('services', () => {
         operationLevel: true,
       } as unknown as DCRoute;
 
-      it('root level', async () => {
+      it('root level', () => {
         const spec = getSpec({
           [xKongRouteDefaults]: rootLevel,
         });
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({ ...route, ...rootLevel }));
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
 
-      it('path level', async () => {
+      it('path level', () => {
         const spec = getSpec();
         spec.paths['/dogs'][xKongRouteDefaults] = pathLevel;
         const specResult = getSpecResult();
         specResult.routes[1] = { ...specResult.routes[1], ...pathLevel };
         specResult.routes[2] = { ...specResult.routes[2], ...pathLevel };
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
 
-      it('operation level', async () => {
+      it('operation level', () => {
         const spec = getSpec();
         (spec.paths['/dogs'].get as OA3Operation)[xKongRouteDefaults] = operationLevel;
         const specResult = getSpecResult();
         specResult.routes[1] = { ...specResult.routes[1], ...operationLevel };
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
 
-      it('will select (but not merge) the operation level over the root level', async () => {
+      it('will select (but not merge) the operation level over the root level', () => {
         const spec = getSpec({
           [xKongRouteDefaults]: rootLevel,
         });
@@ -406,22 +391,20 @@ describe('services', () => {
           ...route,
           ...(route.paths[0] === '/cats$' ? operationLevel : rootLevel),
         }));
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
 
-      it('will select (but not merge) the operation level over the path level', async () => {
+      it('will select (but not merge) the operation level over the path level', () => {
         const spec = getSpec();
         spec.paths['/dogs'][xKongRouteDefaults] = pathLevel;
         (spec.paths['/dogs'].post as OA3Operation)[xKongRouteDefaults] = operationLevel;
         const specResult = getSpecResult();
         specResult.routes[1] = { ...specResult.routes[1], ...pathLevel };
         specResult.routes[2] = { ...specResult.routes[2], ...operationLevel };
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
 
-      it('will select (but not merge) the path level over the root level', async () => {
+      it('will select (but not merge) the path level over the root level', () => {
         const spec = getSpec({
           [xKongRouteDefaults]: rootLevel,
         });
@@ -431,21 +414,19 @@ describe('services', () => {
           ...route,
           ...(route.paths[0] === '/cats$' ? pathLevel : rootLevel),
         }));
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
 
-      it('allows overriding strip_path at the path level', async () => {
+      it('allows overriding strip_path at the path level', () => {
         const spec = getSpec();
         spec.paths['/cats'][xKongRouteDefaults] = { strip_path: true };
         const specResult = getSpecResult();
         const cats = specResult.routes.find(route => route.paths[0] === '/cats$') as DCRoute;
         cats.strip_path = true;
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
 
-      it('allows overriding `strip_path` from `x-kong-route-defaults` at the root', async () => {
+      it('allows overriding `strip_path` from `x-kong-route-defaults` at the root', () => {
         const spec = getSpec({
           [xKongRouteDefaults]: {
             strip_path: true,
@@ -453,8 +434,7 @@ describe('services', () => {
         });
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({ ...route, strip_path: true }));
-        const api = await parseSpec(spec);
-        expect(generateServices(api, ['Tag'])).toEqual([specResult]);
+        expect(generateServices(spec, ['Tag'])).toEqual([specResult]);
       });
     });
   });

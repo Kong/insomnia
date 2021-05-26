@@ -33,7 +33,7 @@ export function flattenPluginDocuments(plugins: Plugins): K8sKongPlugin[] {
 export function getPlugins(api: OpenApi3Spec): Plugins {
   let _iterator = 0;
 
-  const increment = (): number => _iterator++;
+  const increment = () => _iterator++;
 
   const servers = getServers(api);
 
