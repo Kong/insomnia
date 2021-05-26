@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import * as electron from 'electron';
+import electron, { SaveDialogOptions } from 'electron';
 import mimes from 'mime-types';
 import fs from 'fs';
 import moment from 'moment';
@@ -135,13 +135,13 @@ class ResponseMultipart extends PureComponent<Props, State> {
     const dir = lastDir || electron.remote.app.getPath('desktop');
     const date = moment().format('YYYY-MM-DD');
     const filename = part.filename || `${part.name}_${date}`;
-    const options = {
+    const options: SaveDialogOptions = {
       title: 'Save as File',
       buttonLabel: 'Save',
       defaultPath: path.join(dir, filename),
       filters: [
+        // @ts-expect-error https://github.com/electron/electron/pull/29322
         {
-          name: 'Download',
           extensions: [extension],
         },
       ],
