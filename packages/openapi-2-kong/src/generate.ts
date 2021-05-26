@@ -14,51 +14,6 @@ export const conversionTypes: ConversionResultType[] = [
   'kong-for-kubernetes',
 ];
 
-export const generate = (
-  specPath: string,
-  type: ConversionResultType,
-  tags: string[] = [],
-) => new Promise<ConversionResult>((resolve, reject) => {
-  fs.readFile(path.resolve(specPath), 'utf8', (err, contents) => {
-    if (err != null) {
-      reject(err);
-      return;
-    }
-
-    const fileSlug = path.basename(specPath);
-    const allTags = [`OAS3file_${fileSlug}`, ...tags];
-    resolve(generateFromString(contents, type, allTags));
-  });
-});
-
-export const generateFromString = async (
-  specStr: string,
-  type: ConversionResultType,
-  tags: string[] = [],
-) => {
-  const api = await parseSpec(specStr);
-  return generateFromSpec(api, type, tags);
-};
-
-export const generateFromSpec = (
-  api: OpenApi3Spec,
-  type: ConversionResultType,
-  tags: string[] = [],
-) => {
-  const allTags = [...defaultTags, ...tags];
-
-  switch (type) {
-    case 'kong-declarative-config':
-      return generateDeclarativeConfigFromSpec(api, allTags);
-
-    case 'kong-for-kubernetes':
-      return generateKongForKubernetesConfigFromSpec(api);
-
-    default:
-      throw new Error(`Unsupported output type "${type}"`);
-  }
-};
-
 export const parseSpec = (spec: string | Record<string, any>) => {
   let api: OpenApi3Spec;
 
@@ -84,3 +39,48 @@ export const parseSpec = (spec: string | Record<string, any>) => {
   // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
   return SwaggerParser.dereference(api) as Promise<OpenApi3Spec>;
 };
+
+export const generateFromSpec = (
+  api: OpenApi3Spec,
+  type: ConversionResultType,
+  tags: string[] = [],
+) => {
+  const allTags = [...defaultTags, ...tags];
+
+  switch (type) {
+    case 'kong-declarative-config':
+      return generateDeclarativeConfigFromSpec(api, allTags);
+
+    case 'kong-for-kubernetes':
+      return generateKongForKubernetesConfigFromSpec(api);
+
+    default:
+      throw new Error(`Unsupported output type "${type}"`);
+  }
+};
+
+export const generateFromString = async (
+  specStr: string,
+  type: ConversionResultType,
+  tags: string[] = [],
+) => {
+  const api = await parseSpec(specStr);
+  return generateFromSpec(api, type, tags);
+};
+
+export const generate = (
+  filePath: string,
+  type: ConversionResultType,
+  tags: string[] = [],
+) => new Promise<ConversionResult>((resolve, reject) => {
+  fs.readFile(path.resolve(filePath), 'utf8', (err, contents) => {
+    if (err != null) {
+      reject(err);
+      return;
+    }
+
+    const fileSlug = path.basename(filePath);
+    const allTags = [`OAS3file_${fileSlug}`, ...tags];
+    resolve(generateFromString(contents, type, allTags));
+  });
+});
