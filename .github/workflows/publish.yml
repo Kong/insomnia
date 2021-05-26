@@ -13,7 +13,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Ensure stable release tag
+      id: stable-tag
+      run: |
+        if [[ ${{ github.event.inputs.tag }} =~ ^core@\d{4}\.\d+\.\d+$$ ]]; then
+          echo ::set-output is-stable=match::true
+        fi
+
     - name: Download .deb from GitHub release
+      if: steps.stable-tag.outputs.is-stable == 'true'
       uses: MrOctopus/download-asset-action@5b7c3c9bcb75047bb7aaad45718403b413cc0290
       id: download
       with:
@@ -21,6 +29,7 @@ jobs:
         asset: ".deb"
 
     - name: Upload .deb to Pulp
+      if: steps.stable-tag.outputs.is-stable == 'true'
       uses: docker://kong/release-script:1.7.0
       env:
         PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
