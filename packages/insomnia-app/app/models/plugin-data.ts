@@ -43,13 +43,13 @@ export async function upsertByKey(plugin: string, key: string, value: string) {
   const doc = await getByKey(plugin, key);
   return doc
     ? update(doc, {
-        value,
-      })
+      value,
+    })
     : create({
-        plugin,
-        key,
-        value,
-      });
+      plugin,
+      key,
+      value,
+    });
 }
 
 export async function removeByKey(plugin: string, key: string) {

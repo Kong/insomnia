@@ -77,7 +77,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
   renderFieldsMaybe() {
     const { type, onNavigateType } = this.props;
 
-      // @ts-expect-error -- TSCONVERSION
+    // @ts-expect-error -- TSCONVERSION
     if (typeof type.getFields !== 'function') {
       return null;
     }

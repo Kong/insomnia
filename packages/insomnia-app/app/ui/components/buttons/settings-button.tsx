@@ -29,6 +29,6 @@ const SettingsButton: FunctionComponent<Props> = ({ className, settings }) => (
 );
 
 export default connect((state, props) => ({
-    // @ts-expect-error -- TSCONVERSION
-    settings: selectSettings(state, props),
+  // @ts-expect-error -- TSCONVERSION
+  settings: selectSettings(state, props),
 }))(SettingsButton);

@@ -145,13 +145,13 @@ class CodePromptModal extends PureComponent<Props, State> {
           style={
             showCopyButton
               ? {
-                  display: 'grid',
-                  gridTemplateColumns: 'minmax(0, 1fr)',
-                  gridTemplateRows: 'auto minmax(0, 1fr)',
-                }
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr)',
+                gridTemplateRows: 'auto minmax(0, 1fr)',
+              }
               : {
-                  minHeight: '10rem',
-                }
+                minHeight: '10rem',
+              }
           }>
           {showCopyButton ? (
             <div className="pad-top-sm pad-right-sm">

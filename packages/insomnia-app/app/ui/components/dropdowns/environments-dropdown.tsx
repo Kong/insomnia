@@ -111,13 +111,13 @@ class EnvironmentsDropdown extends PureComponent<Props> {
                 {activeEnvironment &&
                 activeEnvironment.color &&
                 environmentHighlightColorStyle === 'sidebar-indicator' ? (
-                  <i
-                    className="fa fa-circle space-right"
-                    style={{
-                      color: activeEnvironment.color,
-                    }}
-                  />
-                ) : null}
+                    <i
+                      className="fa fa-circle space-right"
+                      style={{
+                        color: activeEnvironment.color,
+                      }}
+                    />
+                  ) : null}
                 {description}
               </div>
               <i className="space-left fa fa-caret-down" />

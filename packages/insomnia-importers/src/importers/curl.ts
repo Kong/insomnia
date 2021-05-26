@@ -111,9 +111,9 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
 
   const authentication = username
     ? {
-        username: username.trim(),
-        password: password.trim(),
-      }
+      username: username.trim(),
+      password: password.trim(),
+    }
     : {};
 
   /// /////// Headers //////////

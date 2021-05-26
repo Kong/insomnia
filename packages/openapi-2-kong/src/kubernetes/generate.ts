@@ -147,7 +147,7 @@ export const generateMetadataAnnotations = (
   return coreAnnotations;
 };
 
-  export const generateIngressRule = (
+export const generateIngressRule = (
   index: number,
   server: OA3Server,
   specName: string,

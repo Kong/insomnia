@@ -698,8 +698,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
                   ? 'Refreshing...'
                   : 'Fetching...'
                 : tok
-                ? 'Refresh Token'
-                : 'Fetch Tokens'}
+                  ? 'Refresh Token'
+                  : 'Fetch Tokens'}
             </button>
           </div>
         </div>
