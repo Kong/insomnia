@@ -1,11 +1,10 @@
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { GlobalActivity } from '../../common/constants';
 import {
+  GlobalActivity,
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   AUTOBIND_CFG,
-  getAppName,
   isWorkspaceActivity,
 } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
@@ -331,6 +330,27 @@ class WrapperHome extends PureComponent<Props, State> {
     );
   }
 
+  renderSpaceMenu() {
+    const spaceName = 'Space 1';
+    const button = (
+      <button type="button" className="row">
+        <div
+          title={spaceName}>
+          {spaceName}
+        </div>
+        <i className="fa fa-caret-down space-left" />
+      </button>
+    );
+
+    return <Dropdown renderButton={button}>
+      <DropdownItem icon={<i className="fa fa-cog" />} right={<i className="fa fa-check" />}>Space 1</DropdownItem>
+      <DropdownItem icon={<i className="fa fa-cog" />}>Space 2</DropdownItem>
+      <DropdownDivider />
+      <DropdownItem icon={<></>}>Settings</DropdownItem>
+      <DropdownItem icon={<></>}>Create a workspace</DropdownItem>
+    </Dropdown>;
+  }
+
   renderDashboardMenu() {
     const { vcs, workspaces } = this.props.wrapperProps;
     return (
@@ -377,7 +397,7 @@ class WrapperHome extends PureComponent<Props, State> {
             gridLeft={
               <Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
+                <Breadcrumb crumbs={[{ id: 'space', node: this.renderSpaceMenu() }]} />
                 {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </Fragment>
             }
