@@ -1,6 +1,7 @@
 import { Entry } from 'type-fest';
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
-import { DCPlugin, DCPluginConfig } from '../types/declarative-config';
+import { DCPlugin } from '../types/declarative-config';
+import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator } from '../types/kong';
 import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
 
 export function isRequestValidatorPluginKey(key: string) {
@@ -47,7 +48,7 @@ const generateParameterSchema = (operation?: OA3Operation) => {
     return undefined;
   }
 
-  const parameterSchema: OA3Parameter[] = [];
+  const parameterSchemas: ParameterSchema[] = [];
   for (const parameter of operation.parameters as OA3Parameter[]) {
     // The following is valid config to allow all content to pass, in the case where schema is not defined
     let schema = '';
@@ -69,17 +70,18 @@ const generateParameterSchema = (operation?: OA3Operation) => {
       throw new Error(`invalid 'in' property (parameter '${name}')`);
     }
 
-    parameterSchema.push({
+    const parameterSchema: ParameterSchema = {
       in: parameter.in,
       explode: !!parameter.explode,
       required: !!parameter.required,
       name: parameter.name,
       schema,
       style: paramStyle,
-    });
+    };
+    parameterSchemas.push(parameterSchema);
   }
 
-  return parameterSchema;
+  return parameterSchemas;
 };
 
 function generateBodyOptions(operation?: OA3Operation) {
@@ -103,23 +105,29 @@ function generateBodyOptions(operation?: OA3Operation) {
   };
 }
 
-export function generateRequestValidatorPlugin({ plugin, tags, operation }: {
-  plugin: Record<string, any>,
+export function generateRequestValidatorPlugin({
+  plugin = { name: 'request-validator' },
+  tags,
+  operation,
+}: {
+  plugin?: RequestValidatorPlugin,
   tags: string[],
   operation?: OA3Operation,
 }) {
-  const config: DCPluginConfig = {
+  const config: Partial<RequestValidatorPlugin['config']> = {
     version: 'draft4',
   };
 
-  const pluginConfig = plugin.config ?? {};
+  const pluginConfig: Partial<RequestValidatorPlugin['config']> = plugin.config ?? {};
 
-  // Use original or generated parameter_schema
-  const parameterSchema = pluginConfig.parameter_schema ?? generateParameterSchema(operation);
+  // // Use original or generated parameter_schema
+    // @ts-expect-error TODO
+  const parameterSchema = isParameterSchema(pluginConfig) ? pluginConfig.parameter_schema : generateParameterSchema(operation);
   const generated = generateBodyOptions(operation);
 
   // Use original or generated body_schema
-  let bodySchema = pluginConfig.body_schema ?? generated.bodySchema;
+    // @ts-expect-error TODO
+  let bodySchema = isBodySchema(pluginConfig) ? pluginConfig.body_schema : generated.bodySchema;
 
   // If no parameter_schema or body_schema is defined or generated, allow all content to pass
   if (parameterSchema === undefined && bodySchema === undefined) {
@@ -130,12 +138,12 @@ export function generateRequestValidatorPlugin({ plugin, tags, operation }: {
   if (parameterSchema !== undefined) {
     config.parameter_schema = parameterSchema;
   }
-
   if (bodySchema !== undefined) {
     config.body_schema = bodySchema;
   }
 
   // Use original or generated allowed_content_types
+    // @ts-expect-error TODO
   const allowedContentTypes = pluginConfig.allowed_content_types ?? generated.allowedContentTypes;
 
   if (allowedContentTypes !== undefined) {
@@ -143,44 +151,47 @@ export function generateRequestValidatorPlugin({ plugin, tags, operation }: {
   }
 
   // Use original verbose_response if defined
+    // @ts-expect-error TODO
   if (pluginConfig.verbose_response !== undefined) {
+    // @ts-expect-error TODO
     config.verbose_response = Boolean(pluginConfig.verbose_response);
   }
 
   const isEnabledSpecified = Object.prototype.hasOwnProperty.call(plugin, 'enabled');
   const enabled = isEnabledSpecified ? { enabled: Boolean(plugin.enabled ?? true) } : {};
 
-  const dcPlugin: DCPlugin = {
+  const requestValidatorPlugin: RequestValidatorPlugin = {
+    name: 'request-validator',
+    // @ts-expect-error TODO
     config,
     tags: [
       ...(tags ?? []),
       ...(plugin.tags ?? []),
     ],
     ...enabled,
-    name: 'request-validator',
   };
-  return dcPlugin;
+  return requestValidatorPlugin;
 }
 
 export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
   const globalPlugins = generatePlugins(api, tags);
-  const requestValidatorPlugin = getRequestValidatorPluginDirective(api);
+  const plugin = getRequestValidatorPluginDirective(api);
 
-  if (requestValidatorPlugin) {
-    globalPlugins.push(generateRequestValidatorPlugin({ plugin: requestValidatorPlugin, tags }));
+  if (plugin) {
+    globalPlugins.push(generateRequestValidatorPlugin({ plugin, tags }));
   }
 
   return {
     // Server plugins take precedence over global plugins
     plugins: distinctByProperty<DCPlugin>(globalPlugins, plugin => plugin.name),
-    requestValidatorPlugin,
+    requestValidatorPlugin: plugin,
   };
 }
 
 export const generateOperationPlugins = ({ operation, pathPlugins, parentValidatorPlugin, tags }: {
   operation: OA3Operation,
   pathPlugins: DCPlugin[],
-  parentValidatorPlugin?: Record<string, any> | null,
+  parentValidatorPlugin?: RequestValidatorPlugin | null,
   tags: string[],
 }) => {
   const operationPlugins = generatePlugins(operation, tags);
@@ -197,8 +208,9 @@ export const generateOperationPlugins = ({ operation, pathPlugins, parentValidat
   return distinctByProperty<DCPlugin>([...operationPlugins, ...pathPlugins], plugin => plugin.name);
 };
 
-export function getRequestValidatorPluginDirective(obj: Record<string, any>) {
+export function getRequestValidatorPluginDirective(obj: XKongPluginRequestValidator) {
   const key = Object.keys(obj).filter(isPluginKey).find(isRequestValidatorPluginKey);
   // If the key is defined but is blank (therefore should be fully generated) then default to {}
-  return key ? (obj[key] || {}) as Record<string, any> : null;
+    // @ts-expect-error TODO
+  return key ? (obj[key] || {}) as RequestValidatorPlugin : null;
 }

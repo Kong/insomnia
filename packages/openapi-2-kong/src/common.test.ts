@@ -15,7 +15,8 @@ import {
   pathVariablesToRegex,
 } from './common';
 import { getSpec } from './declarative-config/utils';
-import { OA3Operation, OA3Server, xKongName } from './types/openapi3';
+import { xKongName } from './types/kong';
+import { OA3Operation, OA3Server } from './types/openapi3';
 
 describe('common', () => {
   describe('getPaths()', () => {

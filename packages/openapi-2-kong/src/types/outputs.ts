@@ -1,5 +1,13 @@
-import { DeclarativeConfig } from './declarative-config';
+import { DCPlugin, DeclarativeConfig } from './declarative-config';
 import { K8sManifest } from './kubernetes-config';
+
+export interface Taggable {
+  tags?: string[];
+}
+
+export interface Pluggable {
+  plugins?: DCPlugin[];
+}
 
 export type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
 

@@ -1,4 +1,4 @@
-import { xKongUpstreamDefaults } from '../types';
+import { xKongUpstreamDefaults } from '../types/kong';
 import { generateUpstreams } from './upstreams';
 import { getSpec } from './utils';
 

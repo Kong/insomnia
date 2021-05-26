@@ -1,5 +1,5 @@
 import { K8sAnnotations, K8sIngressRule, K8sIngressTLS, K8sManifest } from '../types/kubernetes-config';
-import { OA3Server, xKongName } from '../types/openapi3';
+import { OA3Server } from '../types/openapi3';
 import {
   generateKongForKubernetesConfigFromSpec,
   generateMetadataAnnotations,
@@ -22,6 +22,7 @@ import {
   pluginKeyAuth,
 } from './plugin-helpers';
 import { getSpec } from '../declarative-config/utils';
+import { xKongName } from '../types/kong';
 
 describe('index', () => {
   describe('getSpecName()', () => {

@@ -1,68 +1,16 @@
 import { HttpMethodType } from '../common';
-import { DCRoute, DCUpstream } from './declarative-config';
 import { K8sIngressTLS } from './kubernetes-config';
-
-export const xKongName = 'x-kong-name';
-export interface XKongName {
-  [xKongName]?: string;
-}
-
-export const xKongRouteDefaults = 'x-kong-route-defaults';
-export interface XKongRouteDefaults {
-  [xKongRouteDefaults]?: Partial<DCRoute>;
-}
-
-export const xKongUpstreamDefaults = 'x-kong-upstream-defaults';
-export interface XKongUpstreamDefaults {
-  [xKongUpstreamDefaults]?: Partial<DCUpstream>;
-}
-
-export const xKongServiceDefaults = 'x-kong-service-defaults';
-export interface XKongServiceDefaults {
-  [xKongServiceDefaults]?: Record<string, any>;
-}
-
-export const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
-export interface XKongPluginRequestValidator {
-  [xKongPluginRequestValidator]?: {
-    enabled?: boolean;
-    config: {
-      verbose_response?: boolean;
-      parameter_schema?: 'global' | 'path' | 'operation';
-    };
-  };
-}
-
-export const xKongPluginKeyAuth = 'x-kong-plugin-key-auth';
-export interface XKongPluginKeyAuth {
-  [xKongPluginKeyAuth]?: {
-    name: 'key-auth';
-    config: {
-      key_names: string[];
-      key_in_body?: boolean;
-      hide_credentials?: boolean;
-    };
-  };
-}
-
-export const xKongPluginRequestTermination = 'x-kong-plugin-request-termination';
-export interface XKongPluginRequestTermination {
-  [xKongPluginRequestTermination]?: {
-    name: 'request-termination';
-    config: {
-      status_code: number;
-      message: string;
-      [key: string]: string | number;
-    }
-    [key: string]: string | number | Record<string, string | number>;
-  }
-}
-
-export type XKongPluginUnknown<Config = any> = Record<`x-kong-plugin-${string}`, {
-  enabled?: boolean;
-  name?: string;
-  config: Record<string, Config>;
-}>
+import { Taggable } from './outputs';
+import {
+  XKongName,
+  XKongPluginKeyAuth,
+  XKongPluginRequestTermination,
+  XKongPluginRequestValidator,
+  XKongPluginUnknown,
+  XKongRouteDefaults,
+  XKongServiceDefaults,
+  XKongUpstreamDefaults,
+} from './kong';
 
 export interface StripPath {
   // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
@@ -162,7 +110,6 @@ export interface OA3ResponsesObject {
 export type OA3Operation = {
   description?: string;
   summary?: string;
-  tags?: string[];
   externalDocs?: OA3ExternalDocs;
   responses?: OA3ResponsesObject;
   operationId?: string;
@@ -171,7 +118,8 @@ export type OA3Operation = {
   deprecated?: boolean;
   security?: OA3SecurityRequirement[];
   servers?: OA3Server[];
-} & XKongName
+} & Taggable
+  & XKongName
   & XKongRouteDefaults
   & XKongPluginKeyAuth
   & XKongPluginRequestValidator
@@ -274,9 +222,8 @@ export type OpenApi3Spec = {
   servers?: OA3Server[];
   components?: OA3Components;
   security?: OA3SecurityRequirement[];
-  tags?: string[];
   externalDocs?: OA3ExternalDocs;
-}
+} & Taggable
   & XKongPluginKeyAuth
   & XKongPluginRequestTermination
   & XKongPluginRequestValidator

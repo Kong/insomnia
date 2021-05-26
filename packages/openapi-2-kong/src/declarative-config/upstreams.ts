@@ -1,6 +1,7 @@
 import { getName, parseUrl, fillServerVariables } from '../common';
 import { DCUpstream } from '../types/declarative-config';
-import { OpenApi3Spec, xKongUpstreamDefaults } from '../types/openapi3';
+import { xKongUpstreamDefaults } from '../types/kong';
+import { OpenApi3Spec } from '../types/openapi3';
 
 export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
   const servers = api.servers || [];

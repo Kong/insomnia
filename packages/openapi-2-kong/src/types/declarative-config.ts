@@ -1,54 +1,36 @@
-import { OA3Parameter } from './openapi3';
+import { BasicAuthPlugin, KeyAuthPlugin, OpenIDConnectPlugin, RequestTerminationPlugin, RequestValidatorPlugin } from './kong';
+import { Pluggable, Taggable } from './outputs';
 
-export interface DCPluginConfig {
-  allowed_content_types?: string[];
-  auth_methods?: string[];
-  body_schema?: string;
-  issuer?: string;
-  key_names?: string[];
-  parameter_schema?: OA3Parameter[] | 'global' | 'path' | 'operation';
-  scopes_required?: string[];
-  verbose_response?: boolean;
-  version?: 'draft4';
-  [key: string]: any;
-}
+export type DCPlugin =
+  | RequestValidatorPlugin
+  | KeyAuthPlugin
+  | RequestTerminationPlugin
+  | BasicAuthPlugin
+  | OpenIDConnectPlugin
 
-export interface DCPlugin {
-  name: string;
-  enabled?: boolean;
-  tags?: string[];
-  config?: DCPluginConfig;
-}
-
-export interface DCRoute {
+export interface DCRoute extends Taggable, Pluggable {
   methods: string[];
   // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
-  strip_path: boolean;
-  tags: string[];
   name: string;
   paths: string[];
-  plugins?: DCPlugin[];
+  strip_path: boolean;
 }
 
-export interface DCService {
-  name: string;
-  protocol: string | undefined;
+export interface DCService extends Taggable, Pluggable {
   host: string;
-  port: number;
-  path: string | null;
-  routes: DCRoute[];
-  tags: string[];
-  plugins?: DCPlugin[];
-}
-
-export interface DCTarget {
-  target: string;
-  tags?: string[];
-}
-
-export interface DCUpstream {
   name: string;
-  tags: string[];
+  path: string | null;
+  port: number;
+  protocol: string | undefined;
+  routes: DCRoute[];
+}
+
+export interface DCTarget extends Taggable {
+  target: string;
+}
+
+export interface DCUpstream extends Taggable {
+  name: string;
   targets: DCTarget[];
 }
 

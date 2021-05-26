@@ -1,7 +1,8 @@
 import { generateServices } from './services';
 import { getSpec } from './utils';
 import { DCRoute, DCService } from '../types/declarative-config';
-import { OA3Operation, xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types';
+import { OA3Operation } from '../types';
+import { xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types/kong';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCService =>
@@ -127,27 +128,35 @@ describe('services', () => {
       const spec = getSpec({
         // global req validator plugin
         [xKongPluginRequestValidator]: {
+          name: 'request-validator',
           config: {
+            // @ts-expect-error TODO
             parameter_schema: 'global',
           },
         },
       });
       // path req validator plugin
       spec.paths['/cats'][xKongPluginRequestValidator] = {
+        name: 'request-validator',
         config: {
+          // @ts-expect-error TODO
           parameter_schema: 'path',
         },
       };
       spec.paths['/cats'].get = {};
       // operation req validator plugin
       (spec.paths['/cats'].post as OA3Operation)[xKongPluginRequestValidator] = {
+        name: 'request-validator',
         config: {
+          // @ts-expect-error TODO
           parameter_schema: 'operation',
         },
       };
       // operation req validator plugin
       (spec.paths['/dogs'].post as OA3Operation)[xKongPluginRequestValidator] = {
+        name: 'request-validator',
         config: {
+          // @ts-expect-error TODO
           parameter_schema: 'operation',
         },
       };
@@ -156,6 +165,7 @@ describe('services', () => {
         {
           config: {
             version: 'draft4',
+            // @ts-expect-error TODO
             parameter_schema: 'global',
           },
           tags: ['Tag'],
@@ -174,6 +184,7 @@ describe('services', () => {
               // should have operation plugin
               config: {
                 version: 'draft4',
+                // @ts-expect-error TODO
                 parameter_schema: 'operation',
               },
               tags: ['Tag'],
@@ -192,6 +203,7 @@ describe('services', () => {
               // should apply path plugin
               config: {
                 version: 'draft4',
+                // @ts-expect-error TODO
                 parameter_schema: 'path',
               },
               tags: ['Tag'],
@@ -210,6 +222,7 @@ describe('services', () => {
               // should apply global plugin
               config: {
                 version: 'draft4',
+                // @ts-expect-error TODO
                 parameter_schema: 'global',
               },
               tags: ['Tag'],
@@ -228,6 +241,7 @@ describe('services', () => {
               // should have operation plugin
               config: {
                 version: 'draft4',
+                // @ts-expect-error TODO
                 parameter_schema: 'operation',
               },
               tags: ['Tag'],
@@ -246,6 +260,7 @@ describe('services', () => {
               // should apply global plugin
               config: {
                 version: 'draft4',
+                // @ts-expect-error TODO
                 parameter_schema: 'global',
               },
               tags: ['Tag'],

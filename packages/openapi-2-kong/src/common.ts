@@ -5,8 +5,8 @@ import {
   OA3PathItem,
   OA3Server,
   OA3Operation,
-  xKongName,
 } from './types/openapi3';
+import { xKongName } from './types/kong';
 
 export function getServers(obj: OpenApi3Spec | OA3PathItem) {
   return obj.servers || [];
