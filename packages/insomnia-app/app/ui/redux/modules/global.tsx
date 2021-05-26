@@ -59,6 +59,11 @@ const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
 
+const VALUE_JSON = 'json';
+const VALUE_YAML = 'yaml';
+const VALUE_HAR = 'har';
+type SelectedFormat = typeof VALUE_HAR | typeof VALUE_JSON | typeof VALUE_YAML;
+
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
@@ -132,6 +137,7 @@ export const reducer = combineReducers({
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
+
 export function newCommand(command, args) {
   return async dispatch => {
     switch (command) {
@@ -232,16 +238,19 @@ export function newCommand(command, args) {
     }
   };
 }
+
 export function loadStart() {
   return {
     type: LOAD_START,
   };
 }
+
 export function loadStop() {
   return {
     type: LOAD_STOP,
   };
 }
+
 export function loadRequestStart(requestId) {
   return {
     type: LOAD_REQUEST_START,
@@ -249,12 +258,14 @@ export function loadRequestStart(requestId) {
     time: Date.now(),
   };
 }
+
 export function loginStateChange(loggedIn) {
   return {
     type: LOGIN_STATE_CHANGE,
     loggedIn,
   };
 }
+
 export function loadRequestStop(requestId) {
   return {
     type: LOAD_REQUEST_STOP,
@@ -344,6 +355,7 @@ export function setActiveActivity(activity: GlobalActivity) {
     activity,
   };
 }
+
 export function setActiveWorkspace(workspaceId: string | null) {
   const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
   window.localStorage.setItem(key, JSON.stringify(workspaceId));
@@ -352,10 +364,12 @@ export function setActiveWorkspace(workspaceId: string | null) {
     workspaceId,
   };
 }
+
 export interface ImportOptions {
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
 }
+
 export function importFile(
   workspaceId: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
@@ -470,6 +484,7 @@ export function importClipBoard(
     }
   };
 }
+
 export function importUri(
   workspaceId: string,
   uri: string,
@@ -495,9 +510,6 @@ export function importUri(
     }
   };
 }
-const VALUE_JSON = 'json';
-const VALUE_YAML = 'yaml';
-const VALUE_HAR = 'har';
 
 function showSelectExportTypeModal(onCancel, onDone) {
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
@@ -520,7 +532,7 @@ function showSelectExportTypeModal(onCancel, onDone) {
     ],
     message: 'Which format would you like to export as?',
     onCancel: onCancel,
-    onDone: selectedFormat => {
+    onDone: (selectedFormat: SelectedFormat) => {
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
       onDone(selectedFormat);
     },
@@ -534,7 +546,7 @@ function showExportPrivateEnvironmentsModal(privateEnvNames) {
   });
 }
 
-async function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat) {
+async function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat: SelectedFormat) {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
@@ -546,27 +558,33 @@ async function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat
     filters: [],
   };
 
-  if (selectedFormat === VALUE_HAR) {
-    options.filters = [
-      {
-        name: 'HTTP Archive 1.2',
-        extensions: ['har', 'har.json', 'json'],
-      },
-    ];
-  } else if (selectedFormat === VALUE_YAML) {
-    options.filters = [
-      {
-        name: 'Insomnia Export',
-        extensions: ['yaml'],
-      },
-    ];
-  } else {
-    options.filters = [
-      {
-        name: 'Insomnia Export',
-        extensions: ['json'],
-      },
-    ];
+  switch (selectedFormat) {
+    case VALUE_HAR:
+      options.filters = [
+        {
+          name: 'HTTP Archive 1.2',
+          extensions: ['har', 'har.json', 'json'],
+        },
+      ];
+      break;
+
+    case VALUE_YAML:
+      options.filters = [
+        {
+          name: 'Insomnia Export',
+          extensions: ['yaml'],
+        },
+      ];
+      break;
+
+    case VALUE_JSON:
+      options.filters = [
+        {
+          name: 'Insomnia Export',
+          extensions: ['json'],
+        },
+      ];
+      break;
   }
 
   const { filePath } = await electron.remote.dialog.showSaveDialog(options);
@@ -584,7 +602,7 @@ export function exportWorkspacesToFile(workspaceId: string | undefined = undefin
     dispatch(loadStart());
     showSelectExportTypeModal(
       () => dispatch(loadStop()),
-      async selectedFormat => {
+      async (selectedFormat: SelectedFormat) => {
         const workspace = await models.workspace.getById(workspaceId);
         // Check if we want to export private environments.
         let environments;
@@ -616,23 +634,28 @@ export function exportWorkspacesToFile(workspaceId: string | undefined = undefin
         let stringifiedExport;
 
         try {
-          if (selectedFormat === VALUE_HAR) {
-            stringifiedExport = await importUtils.exportWorkspacesHAR(
-              workspace,
-              exportPrivateEnvironments,
-            );
-          } else if (selectedFormat === VALUE_YAML) {
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'yaml',
-            );
-          } else {
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'json',
-            );
+          switch (selectedFormat) {
+            case VALUE_HAR:
+              stringifiedExport = await importUtils.exportWorkspacesHAR(
+                workspace,
+                exportPrivateEnvironments,
+              );
+              break;
+
+            case VALUE_YAML:
+              stringifiedExport = await importUtils.exportWorkspacesData(
+                workspace,
+                exportPrivateEnvironments,
+                'yaml',
+              );
+              break;
+            case VALUE_JSON:
+              stringifiedExport = await importUtils.exportWorkspacesData(
+                workspace,
+                exportPrivateEnvironments,
+                'json',
+              );
+              break;
           }
         } catch (err) {
           showError({
@@ -655,12 +678,13 @@ export function exportWorkspacesToFile(workspaceId: string | undefined = undefin
     );
   };
 }
+
 export function exportRequestsToFile(requestIds) {
   return async dispatch => {
     dispatch(loadStart());
     showSelectExportTypeModal(
       () => dispatch(loadStop()),
-      async selectedFormat => {
+      async (selectedFormat: SelectedFormat) => {
         const requests: (GrpcRequest | Request)[] = [];
         const privateEnvironments: Environment[] = [];
         const workspaceLookup = {};
@@ -710,23 +734,29 @@ export function exportRequestsToFile(requestIds) {
         let stringifiedExport;
 
         try {
-          if (selectedFormat === VALUE_HAR) {
+          switch (selectedFormat) {
+          case VALUE_HAR:
             stringifiedExport = await importUtils.exportRequestsHAR(
               requests,
               exportPrivateEnvironments,
             );
-          } else if (selectedFormat === VALUE_YAML) {
+            break;
+
+          case VALUE_YAML:
             stringifiedExport = await importUtils.exportRequestsData(
               requests,
               exportPrivateEnvironments,
               'yaml',
             );
-          } else {
+            break;
+
+          case VALUE_JSON:
             stringifiedExport = await importUtils.exportRequestsData(
               requests,
               exportPrivateEnvironments,
               'json',
             );
+            break;
           }
         } catch (err) {
           showError({
@@ -749,6 +779,7 @@ export function exportRequestsToFile(requestIds) {
     );
   };
 }
+
 export function initActiveWorkspace() {
   let workspaceId: string | null = null;
 
@@ -829,6 +860,7 @@ export function initActiveActivity() {
     dispatch(setActiveActivity(initializeToActivity));
   };
 }
+
 export function init() {
   return [initActiveWorkspace(), initActiveActivity()];
 }
