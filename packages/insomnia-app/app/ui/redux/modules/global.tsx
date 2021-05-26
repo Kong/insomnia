@@ -1,7 +1,7 @@
 import electron, { OpenDialogOptions, SaveDialogOptions } from 'electron';
 import React, { Fragment } from 'react';
 import { combineReducers } from 'redux';
-import fs from 'fs';
+import fs, { NoParamCallback } from 'fs';
 import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import moment from 'moment';
@@ -138,140 +138,128 @@ export const reducer = combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-export function newCommand(command, args) {
-  return async dispatch => {
-    switch (command) {
-      case COMMAND_ALERT:
-        showModal(AlertModal, {
-          title: args.title,
-          message: args.message,
-        });
-        break;
+export const newCommand = (command: string, args) => async dispatch => {
+  switch (command) {
+    case COMMAND_ALERT:
+      showModal(AlertModal, {
+        title: args.title,
+        message: args.message,
+      });
+      break;
 
-      case COMMAND_LOGIN:
-        showModal(LoginModal, {
-          title: args.title,
-          message: args.message,
-        });
-        break;
+    case COMMAND_LOGIN:
+      showModal(LoginModal, {
+        title: args.title,
+        message: args.message,
+      });
+      break;
 
-      case COMMAND_TRIAL_END:
-        showModal(PaymentNotificationModal);
-        break;
+    case COMMAND_TRIAL_END:
+      showModal(PaymentNotificationModal);
+      break;
 
-      case COMMAND_IMPORT_URI:
-        await showModal(AlertModal, {
-          title: 'Confirm Data Import',
-          message: (
-            <span>
-              Do you really want to import {args.name && (<><code>{args.name}</code> from</>)} <code>{args.uri}</code>?
-            </span>
-          ),
-          addCancel: true,
-        });
-        dispatch(importUri(args.workspaceId, args.uri));
-        break;
+    case COMMAND_IMPORT_URI:
+      await showModal(AlertModal, {
+        title: 'Confirm Data Import',
+        message: (
+          <span>
+            Do you really want to import {args.name && (<><code>{args.name}</code> from</>)} <code>{args.uri}</code>?
+          </span>
+        ),
+        addCancel: true,
+      });
+      dispatch(importUri(args.workspaceId, args.uri));
+      break;
 
-      case COMMAND_PLUGIN_INSTALL:
-        showModal(AskModal, {
-          title: 'Plugin Install',
-          message: (
-            <Fragment>
-              Do you want to install <code>{args.name}</code>?
-            </Fragment>
-          ),
-          yesText: 'Install',
-          noText: 'Cancel',
-          onDone: async isYes => {
-            if (!isYes) {
-              return;
-            }
+    case COMMAND_PLUGIN_INSTALL:
+      showModal(AskModal, {
+        title: 'Plugin Install',
+        message: (
+          <Fragment>
+            Do you want to install <code>{args.name}</code>?
+          </Fragment>
+        ),
+        yesText: 'Install',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (!isYes) {
+            return;
+          }
 
-            try {
-              await install(args.name);
-              showModal(SettingsModal, TAB_INDEX_PLUGINS);
-            } catch (err) {
-              showError({
-                title: 'Plugin Install',
-                message: 'Failed to install plugin',
-                error: err.message,
-              });
-            }
-          },
-        });
-        break;
-
-      case COMMAND_PLUGIN_THEME:
-        const parsedTheme = JSON.parse(decodeURIComponent(args.theme));
-        showModal(AskModal, {
-          title: 'Install Theme',
-          message: (
-            <Fragment>
-              Do you want to install <code>{parsedTheme.displayName}</code>?
-            </Fragment>
-          ),
-          yesText: 'Install',
-          noText: 'Cancel',
-          onDone: async isYes => {
-            if (!isYes) {
-              return;
-            }
-
-            const mainJsContent = `module.exports.themes = [${JSON.stringify(
-              parsedTheme,
-              null,
-              2,
-            )}];`;
-            await createPlugin(`theme-${parsedTheme.name}`, '0.0.1', mainJsContent);
-            const settings = await models.settings.getOrCreate();
-            await models.settings.update(settings, {
-              theme: parsedTheme.name,
+          try {
+            await install(args.name);
+            showModal(SettingsModal, TAB_INDEX_PLUGINS);
+          } catch (err) {
+            showError({
+              title: 'Plugin Install',
+              message: 'Failed to install plugin',
+              error: err.message,
             });
-            await reloadPlugins();
-            await setTheme(parsedTheme.name);
-            showModal(SettingsModal, TAB_INDEX_THEMES);
-          },
-        });
-        break;
+          }
+        },
+      });
+      break;
 
-      default: // Nothing
-    }
-  };
-}
+    case COMMAND_PLUGIN_THEME:
+      const parsedTheme = JSON.parse(decodeURIComponent(args.theme));
+      showModal(AskModal, {
+        title: 'Install Theme',
+        message: (
+          <Fragment>
+            Do you want to install <code>{parsedTheme.displayName}</code>?
+          </Fragment>
+        ),
+        yesText: 'Install',
+        noText: 'Cancel',
+        onDone: async (isYes: boolean) => {
+          if (!isYes) {
+            return;
+          }
 
-export function loadStart() {
-  return {
-    type: LOAD_START,
-  };
-}
+          const mainJsContent = `module.exports.themes = [${JSON.stringify(
+            parsedTheme,
+            null,
+            2,
+          )}];`;
+          await createPlugin(`theme-${parsedTheme.name}`, '0.0.1', mainJsContent);
+          const settings = await models.settings.getOrCreate();
+          await models.settings.update(settings, {
+            theme: parsedTheme.name,
+          });
+          await reloadPlugins();
+          await setTheme(parsedTheme.name);
+          showModal(SettingsModal, TAB_INDEX_THEMES);
+        },
+      });
+      break;
 
-export function loadStop() {
-  return {
-    type: LOAD_STOP,
-  };
-}
+    default: // Nothing
+  }
+};
 
-export function loadRequestStart(requestId) {
-  return {
-    type: LOAD_REQUEST_START,
-    requestId,
-    time: Date.now(),
-  };
-}
+export const loadStart = () => ({
+  type: LOAD_START,
+});
 
-export function loginStateChange(loggedIn) {
-  return {
-    type: LOGIN_STATE_CHANGE,
-    loggedIn,
-  };
-}
+export const loadStop = () => ({
+  type: LOAD_STOP,
+});
 
-export function loadRequestStop(requestId) {
-  return {
-    type: LOAD_REQUEST_STOP,
-    requestId,
-  };
-}
+export const loadRequestStart = (requestId: string) => ({
+  type: LOAD_REQUEST_START,
+  requestId,
+  time: Date.now(),
+});
+
+export const loginStateChange = (loggedIn: boolean) => ({
+  type: LOGIN_STATE_CHANGE,
+  loggedIn,
+});
+
+export const loadRequestStop = (requestId: string) => ({
+  type: LOAD_REQUEST_STOP,
+  requestId,
+});
 
 function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): GlobalActivity {
   switch (currentActivity) {
@@ -301,24 +289,22 @@ function _getNextActivity(settings: Settings, currentActivity: GlobalActivity): 
 /*
   Go to the next activity in a sequential activity flow, depending on different conditions
  */
-export function goToNextActivity() {
-  return function(dispatch, getState) {
-    const state = getState();
-    const { activeActivity } = state.global;
-    const settings = selectSettings(state);
+export const goToNextActivity = () => (dispatch, getState) => {
+  const state = getState();
+  const { activeActivity } = state.global;
+  const settings = selectSettings(state);
 
-    const nextActivity = _getNextActivity(settings, activeActivity);
+  const nextActivity = _getNextActivity(settings, activeActivity);
 
-    if (nextActivity !== activeActivity) {
-      dispatch(setActiveActivity(nextActivity));
-    }
-  };
-}
+  if (nextActivity !== activeActivity) {
+    dispatch(setActiveActivity(nextActivity));
+  }
+};
 
 /*
   Go to an explicit activity
  */
-export function setActiveActivity(activity: GlobalActivity) {
+export const setActiveActivity = (activity: GlobalActivity) => {
   activity = _normalizeActivity(activity);
 
   // Don't need to await settings update
@@ -354,82 +340,80 @@ export function setActiveActivity(activity: GlobalActivity) {
     type: SET_ACTIVE_ACTIVITY,
     activity,
   };
-}
+};
 
-export function setActiveWorkspace(workspaceId: string | null) {
+export const setActiveWorkspace = (workspaceId: string | null) => {
   const key = `${LOCALSTORAGE_PREFIX}::activeWorkspaceId`;
   window.localStorage.setItem(key, JSON.stringify(workspaceId));
   return {
     type: SET_ACTIVE_WORKSPACE,
     workspaceId,
   };
-}
+};
 
 export interface ImportOptions {
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
 }
 
-export function importFile(
+export const importFile = (
   workspaceId: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
-) {
-  return async dispatch => {
-    dispatch(loadStart());
-    const options: OpenDialogOptions = {
-      title: 'Import Insomnia Data',
-      buttonLabel: 'Import',
-      properties: ['openFile'],
-      filters: [
-        {
-          name: 'Insomnia Import',
-          extensions: [
-            '',
-            'sh',
-            'txt',
-            'json',
-            'har',
-            'curl',
-            'bash',
-            'shell',
-            'yaml',
-            'yml',
-            'wsdl',
-          ],
-        },
-      ],
-    };
-    const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
-
-    if (canceled) {
-      // It was cancelled, so let's bail out
-      dispatch(loadStop());
-      return;
-    }
-
-    // Let's import all the paths!
-    for (const p of paths) {
-      try {
-        const uri = `file://${p}`;
-        const options: ImportRawConfig = {
-          getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-          getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-        };
-        const result = await importUtils.importUri(uri, options);
-        handleImportResult(result, 'The file does not contain a valid specification.');
-      } catch (err) {
-        showModal(AlertModal, {
-          title: 'Import Failed',
-          message: err + '',
-        });
-      } finally {
-        dispatch(loadStop());
-      }
-    }
+) => async dispatch => {
+  dispatch(loadStart());
+  const options: OpenDialogOptions = {
+    title: 'Import Insomnia Data',
+    buttonLabel: 'Import',
+    properties: ['openFile'],
+    filters: [
+      {
+        name: 'Insomnia Import',
+        extensions: [
+          '',
+          'sh',
+          'txt',
+          'json',
+          'har',
+          'curl',
+          'bash',
+          'shell',
+          'yaml',
+          'yml',
+          'wsdl',
+        ],
+      },
+    ],
   };
-}
+  const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
 
-function handleImportResult(result: ImportResult, errorMessage: string): Workspace[] {
+  if (canceled) {
+    // It was cancelled, so let's bail out
+    dispatch(loadStop());
+    return;
+  }
+
+  // Let's import all the paths!
+  for (const p of paths) {
+    try {
+      const uri = `file://${p}`;
+      const options: ImportRawConfig = {
+        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+      };
+      const result = await importUtils.importUri(uri, options);
+      handleImportResult(result, 'The file does not contain a valid specification.');
+    } catch (err) {
+      showModal(AlertModal, {
+        title: 'Import Failed',
+        message: err + '',
+      });
+    } finally {
+      dispatch(loadStop());
+    }
+  }
+};
+
+const handleImportResult = (result: ImportResult, errorMessage: string) => {
   const { error, summary } = result;
 
   if (error) {
@@ -441,77 +425,70 @@ function handleImportResult(result: ImportResult, errorMessage: string): Workspa
     return [];
   }
 
-  const createdRequests =
-    summary[models.request.type].length + summary[models.grpcRequest.type].length;
   models.stats.incrementRequestStats({
-    createdRequests: createdRequests,
+    createdRequests: summary[models.request.type].length + summary[models.grpcRequest.type].length,
   });
-  // @ts-expect-error -- TSCONVERSION
-  return summary[models.workspace.type] || [];
-}
+  return (summary[models.workspace.type] as Workspace[]) || [];
+};
 
-export function importClipBoard(
+export const importClipBoard = (
   workspaceId: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
-) {
-  return async dispatch => {
-    dispatch(loadStart());
-    const schema = electron.clipboard.readText();
+) => async dispatch => {
+  dispatch(loadStart());
+  const schema = electron.clipboard.readText();
 
-    if (!schema) {
-      showModal(AlertModal, {
-        title: 'Import Failed',
-        message: 'Your clipboard appears to be empty.',
-      });
-      return;
-    }
+  if (!schema) {
+    showModal(AlertModal, {
+      title: 'Import Failed',
+      message: 'Your clipboard appears to be empty.',
+    });
+    return;
+  }
 
-    // Let's import all the paths!
-    try {
-      const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-      };
-      const result = await importUtils.importRaw(schema, options);
-      handleImportResult(result, 'Your clipboard does not contain a valid specification.');
-    } catch (err) {
-      showModal(AlertModal, {
-        title: 'Import Failed',
-        message: 'Your clipboard does not contain a valid specification.',
-      });
-    } finally {
-      dispatch(loadStop());
-    }
-  };
-}
+  // Let's import all the paths!
+  try {
+    const options: ImportRawConfig = {
+      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+      getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+    };
+    const result = await importUtils.importRaw(schema, options);
+    handleImportResult(result, 'Your clipboard does not contain a valid specification.');
+  } catch (err) {
+    showModal(AlertModal, {
+      title: 'Import Failed',
+      message: 'Your clipboard does not contain a valid specification.',
+    });
+  } finally {
+    dispatch(loadStop());
+  }
+};
 
-export function importUri(
+export const importUri = (
   workspaceId: string,
   uri: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
-) {
-  return async dispatch => {
-    dispatch(loadStart());
+) => async dispatch => {
+  dispatch(loadStart());
 
-    try {
-      const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-      };
-      const result = await importUtils.importUri(uri, options);
-      handleImportResult(result, 'The URI does not contain a valid specification.');
-    } catch (err) {
-      showModal(AlertModal, {
-        title: 'Import Failed',
-        message: err + '',
-      });
-    } finally {
-      dispatch(loadStop());
-    }
-  };
-}
+  try {
+    const options: ImportRawConfig = {
+      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+      getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+    };
+    const result = await importUtils.importUri(uri, options);
+    handleImportResult(result, 'The URI does not contain a valid specification.');
+  } catch (err) {
+    showModal(AlertModal, {
+      title: 'Import Failed',
+      message: err + '',
+    });
+  } finally {
+    dispatch(loadStop());
+  }
+};
 
-function showSelectExportTypeModal(onCancel, onDone) {
+function showSelectExportTypeModal(onCancel: () => void, onDone: (selectedFormat: SelectedFormat) => void) {
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
   showModal(SelectModal, {
     title: 'Select Export Type',
@@ -531,7 +508,7 @@ function showSelectExportTypeModal(onCancel, onDone) {
       },
     ],
     message: 'Which format would you like to export as?',
-    onCancel: onCancel,
+    onCancel,
     onDone: (selectedFormat: SelectedFormat) => {
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
       onDone(selectedFormat);
@@ -539,12 +516,10 @@ function showSelectExportTypeModal(onCancel, onDone) {
   });
 }
 
-function showExportPrivateEnvironmentsModal(privateEnvNames) {
-  return showModal(AskModal, {
-    title: 'Export Private Environments?',
-    message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
-  });
-}
+const showExportPrivateEnvironmentsModal = (privateEnvNames: string) => showModal(AskModal, {
+  title: 'Export Private Environments?',
+  message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
+});
 
 const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, selectedFormat: SelectedFormat) => {
   const date = moment().format('YYYY-MM-DD');
@@ -560,194 +535,190 @@ const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, select
   return filePath || null;
 };
 
-function writeExportedFileToFileSystem(filename, jsonData, onDone) {
+const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDone: NoParamCallback) => {
   // Remember last exported path
   window.localStorage.setItem('insomnia.lastExportPath', path.dirname(filename));
   fs.writeFile(filename, jsonData, {}, onDone);
-}
+};
 
-export function exportWorkspacesToFile(workspaceId: string | undefined = undefined) {
-  return async dispatch => {
-    dispatch(loadStart());
-    showSelectExportTypeModal(
-      () => dispatch(loadStop()),
-      async (selectedFormat: SelectedFormat) => {
-        const workspace = await models.workspace.getById(workspaceId);
-        // Check if we want to export private environments.
-        let environments;
+export const exportWorkspacesToFile = (workspaceId: string | undefined = undefined) => async dispatch => {
+  dispatch(loadStart());
+  showSelectExportTypeModal(
+    () => dispatch(loadStop()),
+    async (selectedFormat: SelectedFormat) => {
+      const workspace = await models.workspace.getById(workspaceId);
+      // Check if we want to export private environments.
+      let environments;
 
-        if (workspace) {
-          const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
-          environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id) || [])];
-        } else {
-          environments = await models.environment.all();
-        }
+      if (workspace) {
+        const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
+        environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id) || [])];
+      } else {
+        environments = await models.environment.all();
+      }
 
-        let exportPrivateEnvironments = false;
-        const privateEnvironments = environments.filter(e => e.isPrivate);
+      let exportPrivateEnvironments = false;
+      const privateEnvironments = environments.filter(e => e.isPrivate);
 
-        if (privateEnvironments.length) {
-          const names = privateEnvironments.map(e => e.name).join(', ');
-          exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
-        }
+      if (privateEnvironments.length) {
+        const names = privateEnvironments.map(e => e.name).join(', ');
+        exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
+      }
 
-        const fileNamePrefix = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
-        const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+      const fileNamePrefix = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
+      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
 
-        if (!fileName) {
-          // Cancelled.
-          dispatch(loadStop());
-          return;
-        }
+      if (!fileName) {
+        // Cancelled.
+        dispatch(loadStop());
+        return;
+      }
 
-        let stringifiedExport;
+      let stringifiedExport;
 
-        try {
-          switch (selectedFormat) {
-            case VALUE_HAR:
-              stringifiedExport = await importUtils.exportWorkspacesHAR(
-                workspace,
-                exportPrivateEnvironments,
-              );
-              break;
-
-            case VALUE_YAML:
-              stringifiedExport = await importUtils.exportWorkspacesData(
-                workspace,
-                exportPrivateEnvironments,
-                'yaml',
-              );
-              break;
-            case VALUE_JSON:
-              stringifiedExport = await importUtils.exportWorkspacesData(
-                workspace,
-                exportPrivateEnvironments,
-                'json',
-              );
-              break;
-          }
-        } catch (err) {
-          showError({
-            title: 'Export Failed',
-            error: err,
-            message: 'Export failed due to an unexpected error',
-          });
-          dispatch(loadStop());
-          return;
-        }
-
-        writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-          if (err) {
-            console.warn('Export failed', err);
-          }
-
-          dispatch(loadStop());
-        });
-      },
-    );
-  };
-}
-
-export function exportRequestsToFile(requestIds) {
-  return async dispatch => {
-    dispatch(loadStart());
-    showSelectExportTypeModal(
-      () => dispatch(loadStop()),
-      async (selectedFormat: SelectedFormat) => {
-        const requests: (GrpcRequest | Request)[] = [];
-        const privateEnvironments: Environment[] = [];
-        const workspaceLookup = {};
-
-        for (const requestId of requestIds) {
-          const request = await requestOperations.getById(requestId);
-
-          if (request == null) {
-            continue;
-          }
-
-          requests.push(request);
-          const ancestors = await database.withAncestors(request, [
-            models.workspace.type,
-            models.requestGroup.type,
-          ]);
-          const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
-
-          if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
-            continue;
-          }
-
-          workspaceLookup[workspace._id] = true;
-          const descendants = await database.withDescendants(workspace);
-          const privateEnvs = descendants.filter(
-            descendant => descendant.type === models.environment.type && descendant.isPrivate,
-          );
-          privateEnvironments.push(...privateEnvs);
-        }
-
-        let exportPrivateEnvironments = false;
-
-        if (privateEnvironments.length) {
-          const names = privateEnvironments.map(e => e.name).join(', ');
-          exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
-        }
-
-        const fileNamePrefix = 'Insomnia';
-        const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
-
-        if (!fileName) {
-          // Cancelled.
-          dispatch(loadStop());
-          return;
-        }
-
-        let stringifiedExport;
-
-        try {
-          switch (selectedFormat) {
+      try {
+        switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportRequestsHAR(
-              requests,
+            stringifiedExport = await importUtils.exportWorkspacesHAR(
+              workspace,
               exportPrivateEnvironments,
             );
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportRequestsData(
-              requests,
+            stringifiedExport = await importUtils.exportWorkspacesData(
+              workspace,
               exportPrivateEnvironments,
               'yaml',
             );
             break;
-
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportRequestsData(
-              requests,
+            stringifiedExport = await importUtils.exportWorkspacesData(
+              workspace,
               exportPrivateEnvironments,
               'json',
             );
             break;
-          }
-        } catch (err) {
-          showError({
-            title: 'Export Failed',
-            error: err,
-            message: 'Export failed due to an unexpected error',
-          });
-          dispatch(loadStop());
-          return;
+        }
+      } catch (err) {
+        showError({
+          title: 'Export Failed',
+          error: err,
+          message: 'Export failed due to an unexpected error',
+        });
+        dispatch(loadStop());
+        return;
+      }
+
+      writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+        if (err) {
+          console.warn('Export failed', err);
         }
 
-        writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
-          if (err) {
-            console.warn('Export failed', err);
-          }
+        dispatch(loadStop());
+      });
+    },
+  );
+};
 
-          dispatch(loadStop());
+export const exportRequestsToFile = (requestIds: string[]) => async dispatch => {
+  dispatch(loadStart());
+  showSelectExportTypeModal(
+    () => dispatch(loadStop()),
+    async (selectedFormat: SelectedFormat) => {
+      const requests: (GrpcRequest | Request)[] = [];
+      const privateEnvironments: Environment[] = [];
+      const workspaceLookup = {};
+
+      for (const requestId of requestIds) {
+        const request = await requestOperations.getById(requestId);
+
+        if (request == null) {
+          continue;
+        }
+
+        requests.push(request);
+        const ancestors = await database.withAncestors(request, [
+          models.workspace.type,
+          models.requestGroup.type,
+        ]);
+        const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+
+        if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
+          continue;
+        }
+
+        workspaceLookup[workspace._id] = true;
+        const descendants = await database.withDescendants(workspace);
+        const privateEnvs = descendants.filter(
+          descendant => descendant.type === models.environment.type && descendant.isPrivate,
+        );
+        privateEnvironments.push(...privateEnvs);
+      }
+
+      let exportPrivateEnvironments = false;
+
+      if (privateEnvironments.length) {
+        const names = privateEnvironments.map(e => e.name).join(', ');
+        exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
+      }
+
+      const fileNamePrefix = 'Insomnia';
+      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+
+      if (!fileName) {
+        // Cancelled.
+        dispatch(loadStop());
+        return;
+      }
+
+      let stringifiedExport;
+
+      try {
+        switch (selectedFormat) {
+        case VALUE_HAR:
+          stringifiedExport = await importUtils.exportRequestsHAR(
+            requests,
+            exportPrivateEnvironments,
+          );
+          break;
+
+        case VALUE_YAML:
+          stringifiedExport = await importUtils.exportRequestsData(
+            requests,
+            exportPrivateEnvironments,
+            'yaml',
+          );
+          break;
+
+        case VALUE_JSON:
+          stringifiedExport = await importUtils.exportRequestsData(
+            requests,
+            exportPrivateEnvironments,
+            'json',
+          );
+          break;
+        }
+      } catch (err) {
+        showError({
+          title: 'Export Failed',
+          error: err,
+          message: 'Export failed due to an unexpected error',
         });
-      },
-    );
-  };
-}
+        dispatch(loadStop());
+        return;
+      }
+
+      writeExportedFileToFileSystem(fileName, stringifiedExport, err => {
+        if (err) {
+          console.warn('Export failed', err);
+        }
+
+        dispatch(loadStop());
+      });
+    },
+  );
+};
 
 export function initActiveWorkspace() {
   let workspaceId: string | null = null;
@@ -785,51 +756,50 @@ function _normalizeActivity(activity: GlobalActivity): GlobalActivity {
   Initialize with the cached active activity, and navigate to the next activity if necessary
   This will also decide whether to start with the migration or onboarding activities
  */
-export function initActiveActivity() {
-  return function(dispatch, getState) {
-    const state = getState();
-    const settings = selectSettings(state);
-    // Default to home
-    let activeActivity = ACTIVITY_HOME;
+export const initActiveActivity = () => (dispatch, getState) => {
+  const state = getState();
+  const settings = selectSettings(state);
+  // Default to home
+  let activeActivity = ACTIVITY_HOME;
 
-    try {
-      const key = `${LOCALSTORAGE_PREFIX}::activity`;
-      const item = window.localStorage.getItem(key);
-      // @ts-expect-error -- TSCONVERSION don't parse item if it's null
-      activeActivity = JSON.parse(item);
-    } catch (e) {
-      // Nothing here...
-    }
+  try {
+    const key = `${LOCALSTORAGE_PREFIX}::activity`;
+    const item = window.localStorage.getItem(key);
+    // @ts-expect-error -- TSCONVERSION don't parse item if it's null
+    activeActivity = JSON.parse(item);
+  } catch (e) {
+    // Nothing here...
+  }
 
-    activeActivity = _normalizeActivity(activeActivity);
-    let overrideActivity: GlobalActivity | null = null;
+  activeActivity = _normalizeActivity(activeActivity);
+  let overrideActivity: GlobalActivity | null = null;
 
-    switch (activeActivity) {
-      // If relaunched after a migration, go to the next activity
-      // Don't need to do this for onboarding because that doesn't require a restart
-      case ACTIVITY_MIGRATION:
-        overrideActivity = _getNextActivity(settings, activeActivity);
-        break;
+  switch (activeActivity) {
+    // If relaunched after a migration, go to the next activity
+    // Don't need to do this for onboarding because that doesn't require a restart
+    case ACTIVITY_MIGRATION:
+      overrideActivity = _getNextActivity(settings, activeActivity);
+      break;
 
-      // Always check if user has been prompted to migrate or onboard
-      default:
-        if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
-          trackEvent('Data', 'Migration', 'Auto');
-          overrideActivity = ACTIVITY_MIGRATION;
-        } else if (!settings.hasPromptedOnboarding) {
-          overrideActivity = ACTIVITY_ONBOARDING;
-        } else if (!settings.hasPromptedAnalytics) {
-          overrideActivity = ACTIVITY_ANALYTICS;
-        }
+    // Always check if user has been prompted to migrate or onboard
+    default:
+      if (!settings.hasPromptedToMigrateFromDesigner && fs.existsSync(getDesignerDataDir())) {
+        trackEvent('Data', 'Migration', 'Auto');
+        overrideActivity = ACTIVITY_MIGRATION;
+      } else if (!settings.hasPromptedOnboarding) {
+        overrideActivity = ACTIVITY_ONBOARDING;
+      } else if (!settings.hasPromptedAnalytics) {
+        overrideActivity = ACTIVITY_ANALYTICS;
+      }
 
-        break;
-    }
+      break;
+  }
 
-    const initializeToActivity = overrideActivity || activeActivity;
-    dispatch(setActiveActivity(initializeToActivity));
-  };
-}
+  const initializeToActivity = overrideActivity || activeActivity;
+  dispatch(setActiveActivity(initializeToActivity));
+};
 
-export function init() {
-  return [initActiveWorkspace(), initActiveActivity()];
-}
+export const init = () => [
+  initActiveWorkspace(),
+  initActiveActivity(),
+];
