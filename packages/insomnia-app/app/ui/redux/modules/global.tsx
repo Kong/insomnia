@@ -554,7 +554,7 @@ const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, select
   const options: SaveDialogOptions = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
-    defaultPath: path.join(dir, `${name}_${date}`),
+    defaultPath: `${path.join(dir, `${name}_${date}`)}.${selectedFormat}`,
   };
   const { filePath } = await electron.remote.dialog.showSaveDialog(options);
   return filePath || null;
