@@ -54,10 +54,6 @@ export function getById(id?: string) {
 }
 
 export async function create(patch: Partial<Workspace> = {}) {
-  if (!patch.parentId) {
-    throw new Error('New Workspace missing `parentId`');
-  }
-
   return db.docCreate<Workspace>(type, patch);
 }
 

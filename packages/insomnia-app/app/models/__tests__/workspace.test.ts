@@ -5,7 +5,7 @@ import { WorkspaceScopeKeys } from '../workspace';
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);
 
-  it('migrates client certificates properly', async () => {
+  it.only('migrates client certificates properly', async () => {
     const workspace = await models.workspace.create({
       name: 'My Workspace',
       certificates: [
@@ -26,8 +26,6 @@ describe('migrate()', () => {
     for (const cert of certs) {
       expect(typeof cert.modified).toBe('number');
       expect(typeof cert.created).toBe('number');
-      delete cert.modified;
-      delete cert.created;
     }
 
     expect(certs.length).toBe(2);
@@ -73,20 +71,24 @@ describe('migrate()', () => {
     await models.workspace.migrate(workspace);
     const spec = await models.apiSpec.getByParentId(workspace._id);
     expect(spec).not.toBe(null);
-    expect(spec.fileName).toBe(workspace.name);
+    expect(spec?.fileName).toBe(workspace.name);
   });
 
   it('translates the scope correctly', async () => {
     const specW = await models.workspace.create({
+      // @ts-expect-error intentionally incorrect - old scope type
       scope: 'spec',
     });
     const debugW = await models.workspace.create({
+      // @ts-expect-error intentionally incorrect - old scope type
       scope: 'debug',
     });
     const nullW = await models.workspace.create({
+      // @ts-expect-error intentionally incorrect - old scope type
       scope: null,
     });
     const somethingElseW = await models.workspace.create({
+      // @ts-expect-error intentionally incorrect - old scope type
       scope: 'something',
     });
     const designW = await models.workspace.create({
