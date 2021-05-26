@@ -2,7 +2,7 @@ import { generateServices } from './services';
 import { parseSpec } from '../generate';
 import { getSpec } from './utils';
 import { DCRoute, DCService } from '../types/declarative-config';
-import { xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types';
+import { OA3Operation, xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCService =>
@@ -149,21 +149,17 @@ describe('services', () => {
       };
       spec.paths['/cats'].get = {};
       // operation req validator plugin
-      if (spec.paths['/cats'].post) {
-        spec.paths['/cats'].post[xKongPluginRequestValidator] = {
-          config: {
-            parameter_schema: 'operation',
-          },
-        };
-      }
+      (spec.paths['/cats'].post as OA3Operation)[xKongPluginRequestValidator] = {
+        config: {
+          parameter_schema: 'operation',
+        },
+      };
       // operation req validator plugin
-      if (spec.paths['/dogs'].post) {
-        spec.paths['/dogs'].post[xKongPluginRequestValidator] = {
-          config: {
-            parameter_schema: 'operation',
-          },
-        };
-      }
+      (spec.paths['/dogs'].post as OA3Operation)[xKongPluginRequestValidator] = {
+        config: {
+          parameter_schema: 'operation',
+        },
+      };
       const specResult = getSpecResult();
       specResult.plugins = [
         {
@@ -393,9 +389,7 @@ describe('services', () => {
 
       it('operation level', async () => {
         const spec = getSpec();
-        if (spec.paths['/dogs'].get) {
-          spec.paths['/dogs'].get[xKongRouteDefaults] = operationLevel;
-        }
+        (spec.paths['/dogs'].get as OA3Operation)[xKongRouteDefaults] = operationLevel;
         const specResult = getSpecResult();
         specResult.routes[1] = { ...specResult.routes[1], ...operationLevel };
         const api = await parseSpec(spec);
@@ -406,9 +400,7 @@ describe('services', () => {
         const spec = getSpec({
           [xKongRouteDefaults]: rootLevel,
         });
-        if (spec.paths['/cats'].post) {
-          spec.paths['/cats'].post[xKongRouteDefaults] = operationLevel;
-        }
+        (spec.paths['/cats'].post as OA3Operation)[xKongRouteDefaults] = operationLevel;
         const specResult = getSpecResult();
         specResult.routes = specResult.routes.map(route => ({
           ...route,
@@ -421,9 +413,7 @@ describe('services', () => {
       it('will select (but not merge) the operation level over the path level', async () => {
         const spec = getSpec();
         spec.paths['/dogs'][xKongRouteDefaults] = pathLevel;
-        if (spec.paths['/dogs'].post) {
-          spec.paths['/dogs'].post[xKongRouteDefaults] = operationLevel;
-        }
+        (spec.paths['/dogs'].post as OA3Operation)[xKongRouteDefaults] = operationLevel;
         const specResult = getSpecResult();
         specResult.routes[1] = { ...specResult.routes[1], ...pathLevel };
         specResult.routes[2] = { ...specResult.routes[2], ...operationLevel };
@@ -447,9 +437,7 @@ describe('services', () => {
 
       it('allows overriding strip_path at the path level', async () => {
         const spec = getSpec();
-        spec.paths['/cats'][xKongRouteDefaults] = {
-          strip_path: true,
-        };
+        spec.paths['/cats'][xKongRouteDefaults] = { strip_path: true };
         const specResult = getSpecResult();
         const cats = specResult.routes.find(route => route.paths[0] === '/cats$') as DCRoute;
         cats.strip_path = true;
