@@ -16,7 +16,7 @@ jobs:
     - name: Ensure stable release tag
       id: stable-tag
       run: |
-        if [[ ${{ github.event.inputs.tag }} =~ ^core@\d{4}\.\d+\.\d+$$ ]]; then
+        if [[ ${{ github.event.inputs.tag }} =~ ^core@\d{4}\.\d+\.\d+$ ]]; then
           echo ::set-output is-stable=match::true
         fi
 
