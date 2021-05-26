@@ -5,7 +5,7 @@ import { WorkspaceScopeKeys } from '../workspace';
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);
 
-  it.only('migrates client certificates properly', async () => {
+  it('migrates client certificates properly', async () => {
     const workspace = await models.workspace.create({
       name: 'My Workspace',
       certificates: [
