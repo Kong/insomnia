@@ -263,6 +263,7 @@ describe('services', () => {
         '/dogs': {
           summary: 'Dog stuff',
           [xKongPluginKeyAuth]: {
+            name: 'key-auth',
             config: {
               key_names: ['path'],
             },

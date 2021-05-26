@@ -547,9 +547,7 @@ describe('index', () => {
         ...pluginKeyAuth,
         paths: {
           '/no-plugin': {},
-          // @ts-expect-error TSCONVERSION appears to be genuine
           '/plugin-0': { ...pluginKeyAuth },
-          // @ts-expect-error TSCONVERSION appears to be genuine
           '/plugin-1': { ...pluginKeyAuth, ...pluginDummy },
         },
       });

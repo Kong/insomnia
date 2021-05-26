@@ -193,6 +193,7 @@ export type OA3PathItem = {
 } & XKongName
   & XKongRouteDefaults
   & XKongPluginRequestValidator
+  & XKongPluginKeyAuth
   ;
 
 export type OA3Paths = Record<string, OA3PathItem>
