@@ -354,7 +354,6 @@ describe('plugins', () => {
 
     it('should return plugins for all operations on path', () => {
       const pathItem: OA3PathItem = {
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error.  this actually passes 'GET' but I think 'get' is expected.
         [HttpMethod.get]: {},
         [HttpMethod.put]: { ...pluginKeyAuth, ...pluginDummy },
         [HttpMethod.post]: { ...pluginDummy },
@@ -389,7 +388,6 @@ describe('plugins', () => {
     it('should return security plugin from operation', () => {
       const api: OpenApi3Spec = { ...spec, components };
       const pathItem: OA3PathItem = {
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error.  this actually passes 'GET' but I think 'get' is expected.
         [HttpMethod.get]: {
           security: [
             {

@@ -575,7 +575,6 @@ describe('index', () => {
         ...pluginKeyAuth,
         paths: {
           '/path': {
-            // @ts-expect-error TSCONVERSION appears to be genuine
             GET: {},
             PUT: { ...pluginKeyAuth },
             POST: { ...pluginKeyAuth, ...pluginDummy },

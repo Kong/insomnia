@@ -1,3 +1,4 @@
+import { HttpMethodType } from '../common';
 import { DCRoute, DCUpstream } from './declarative-config';
 import { K8sIngressTLS } from './kubernetes-config';
 
@@ -176,21 +177,19 @@ export type OA3Operation = {
   & XKongPluginRequestValidator
   ;
 
+type HTTPMethodPaths = Partial<Record<
+  HttpMethodType | Lowercase<HttpMethodType>,
+  OA3Operation
+>>;
+
 export type OA3PathItem = {
   $ref?: string;
   summary?: string;
   description?: string;
   servers?: OA3Server[];
   parameters?: OA3Reference | OA3Parameter;
-  get?: OA3Operation;
-  put?: OA3Operation;
-  post?: OA3Operation;
-  delete?: OA3Operation;
-  options?: OA3Operation;
-  head?: OA3Operation;
-  patch?: OA3Operation;
-  trace?: OA3Operation;
-} & XKongName
+} & HTTPMethodPaths
+  & XKongName
   & XKongRouteDefaults
   & XKongPluginRequestValidator
   & XKongPluginKeyAuth
