@@ -18,7 +18,7 @@ import {
   pluginDummy,
   pluginKeyAuth,
 } from './plugin-helpers';
-import { PathPlugin, OperationPlugin } from '../types/k8splugins';
+import { PathPlugin, OperationPlugin } from '../types/k8s-plugins';
 import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Components } from '../types/openapi3';
 
 describe('plugins', () => {

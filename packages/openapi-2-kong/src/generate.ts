@@ -81,6 +81,6 @@ export const parseSpec = (spec: string | Record<string, any>) => {
     api.openapi = '3.0.0';
   }
 
-  // @ts-expect-error until we make our OpenAPI type extend from the cannonical one (i.e. from `openapi-types`, we'll need to shim this here)
+  // @ts-expect-error until we make our OpenAPI type extend from the canonical one (i.e. from `openapi-types`, we'll need to shim this here)
   return SwaggerParser.dereference(api) as Promise<OpenApi3Spec>;
 };

@@ -9,7 +9,7 @@ import {
 } from '../common';
 import { generateSecurityPlugins } from '../declarative-config/security-plugins';
 import { DCPlugin } from '../types/declarative-config';
-import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8splugins';
+import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8s-plugins';
 import { K8sKongPlugin } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Operation } from '../types/openapi3';
 import { ValueOf } from 'type-fest';

@@ -21,9 +21,8 @@ export function generateDeclarativeConfigFromSpec(
       warnings: [],
     };
 
-    // This remover any circular references or weirdness that might result
-    // from the JS objects used.
-    // SEE: https://github.com/Kong/studio/issues/93
+    // This removes any circular references or weirdness that might result from the JS objects used.
+    // see: https://github.com/Kong/studio/issues/93
     const result: DeclarativeConfigResult = JSON.parse(JSON.stringify(declarativeConfigResult));
     return result;
   } catch (err) {
