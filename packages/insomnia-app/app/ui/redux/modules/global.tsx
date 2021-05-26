@@ -546,7 +546,7 @@ function showExportPrivateEnvironmentsModal(privateEnvNames) {
   });
 }
 
-async function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat: SelectedFormat) {
+const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, selectedFormat: SelectedFormat) => {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
@@ -555,41 +555,10 @@ async function showSaveExportedFileDialog(exportedFileNamePrefix, selectedFormat
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',
     defaultPath: path.join(dir, `${name}_${date}`),
-    filters: [],
   };
-
-  switch (selectedFormat) {
-    case VALUE_HAR:
-      options.filters = [
-        {
-          name: 'HTTP Archive 1.2',
-          extensions: ['har', 'har.json', 'json'],
-        },
-      ];
-      break;
-
-    case VALUE_YAML:
-      options.filters = [
-        {
-          name: 'Insomnia Export',
-          extensions: ['yaml'],
-        },
-      ];
-      break;
-
-    case VALUE_JSON:
-      options.filters = [
-        {
-          name: 'Insomnia Export',
-          extensions: ['json'],
-        },
-      ];
-      break;
-  }
-
   const { filePath } = await electron.remote.dialog.showSaveDialog(options);
   return filePath || null;
-}
+};
 
 function writeExportedFileToFileSystem(filename, jsonData, onDone) {
   // Remember last exported path
