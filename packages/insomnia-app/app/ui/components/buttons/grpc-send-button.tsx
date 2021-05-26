@@ -12,8 +12,9 @@ interface Props {
 
 const buttonProps: ButtonProps = {
   className: 'tall',
+  bg: 'surprise',
   size: 'medium',
-  variant: 'text',
+  variant: 'contained',
   radius: '0',
 };
 
