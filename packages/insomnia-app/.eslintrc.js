@@ -1,6 +1,11 @@
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
   extends: '../../.eslintrc.js',
+  settings: {
+    react: {
+      version: 'detect',
+    },
+  },
   rules: {
     'filenames/match-exported': 'off',
     camelcase: 'off',

@@ -16,6 +16,7 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
     'semistandard',
+    'plugin:react/recommended',
     'plugin:react-hooks/recommended',
   ],
   plugins: [
@@ -54,7 +55,11 @@ module.exports = {
   ],
   rules: {
     'comma-dangle': ['error', 'always-multiline'],
-    indent: 'off',
+    'object-curly-spacing': ['error', 'always'],
+    'space-in-parens': 'error',
+    'array-bracket-spacing': 'error',
+    'comma-spacing': 'error',
+    indent: ['error', 2, { SwitchCase: 1 }],
     'no-var': 'error',
     'no-async-promise-executor': 'off',
     'no-case-declarations': 'off',
@@ -62,7 +67,7 @@ module.exports = {
     'no-duplicate-imports': 'off',
     'react/jsx-uses-react': 'error',
     'react/jsx-uses-vars': 'error',
-    'space-in-parens': 'off',
+    'react/prop-types': 'off',
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'error',
     camelcase: ['error', { allow: ['__export_format', '__export_date', '__export_source'] }],
@@ -99,5 +104,6 @@ module.exports = {
     '@typescript-eslint/no-use-before-define': 'error',
     'no-redeclare': 'off',
     '@typescript-eslint/no-redeclare': 'error',
+    semi: ['error', 'always'],
   },
 };
