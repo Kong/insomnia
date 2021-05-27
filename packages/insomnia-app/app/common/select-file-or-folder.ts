@@ -1,14 +1,16 @@
 import { OpenDialogOptions, remote } from 'electron';
+
 interface Options {
   itemTypes?: ('file' | 'directory')[];
   extensions?: string[];
 }
+
 interface FileSelection {
   filePath: string;
   canceled: boolean;
 }
 
-const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<FileSelection> => {
+export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => {
   // If no types are selected then default to just files and not directories
   const types = itemTypes || ['file'];
   let title = 'Select ';
@@ -26,41 +28,27 @@ const selectFileOrFolder = async ({ itemTypes, extensions }: Options): Promise<F
   }
 
   const options: OpenDialogOptions = {
-    title: title,
+    title,
     buttonLabel: 'Select',
-    // @ts-expect-error -- TSCONVERSION we should update this to accept other properties types as well, which flow all the way up to plugins
     properties: types.map(type => {
-      if (type === 'file') {
-        return 'openFile';
-      }
+      switch (type) {
+        case 'file':
+          return 'openFile';
 
-      if (type === 'directory') {
-        return 'openDirectory';
+        case 'directory':
+          return 'openDirectory';
       }
     }),
-    filters: [
-      {
-        name: 'All Files',
-        extensions: ['*'],
-      },
-    ],
+    // @ts-expect-error https://github.com/electron/electron/pull/29322
+    filters: [{
+      extensions: (extensions?.length ? extensions : ['*']),
+    }],
   };
 
-  // If extensions are provided then filter for just those extensions
-  if (extensions?.length) {
-    options.filters = [
-      {
-        name: 'Files',
-        extensions: extensions,
-      },
-    ];
-  }
-
   const { canceled, filePaths } = await remote.dialog.showOpenDialog(options);
-  return {
+  const fileSelection: FileSelection = {
     filePath: filePaths[0],
     canceled,
   };
+  return fileSelection;
 };
-
-export default selectFileOrFolder;

@@ -8,9 +8,24 @@ on:
         required: true
 
 jobs:
+  extract_channel:
+    name: Extract the release channel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract release channel from tag
+        id: extract
+        run: |
+          if [[ ${{ github.event.inputs.tag }} =~ ^core@[0-9]{4}\.[0-9]+\.[0-9]+$ ]]; then
+            echo ::set-output name=channel::stable
+          fi
+    outputs:
+      channel: ${{ steps.extract.outputs.channel }}
+
   apt_repository:
     name: Publish to apt repository
     runs-on: ubuntu-latest
+    needs: extract_channel
+    if: needs.extract_channel.outputs.channel == 'stable'
 
     steps:
     - name: Download .deb from GitHub release

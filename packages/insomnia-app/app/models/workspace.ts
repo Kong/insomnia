@@ -4,6 +4,7 @@ import { database as db } from '../common/database';
 import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
 import { ValueOf } from 'type-fest';
+import { isSpaceId } from './helpers/is-model';
 
 export const name = 'Workspace';
 
@@ -54,6 +55,7 @@ export function getById(id?: string) {
 }
 
 export async function create(patch: Partial<Workspace> = {}) {
+  expectParentToBeSpace(patch.parentId);
   return db.docCreate<Workspace>(type, patch);
 }
 
@@ -77,6 +79,7 @@ export function count() {
 }
 
 export function update(workspace: Workspace, patch: Partial<Workspace>) {
+  expectParentToBeSpace(patch.parentId);
   return db.docUpdate(workspace, patch);
 }
 
@@ -157,4 +160,10 @@ function _migrateScope(workspace: Workspace) {
   }
 
   return workspace;
+}
+
+function expectParentToBeSpace(parentId?: string | null) {
+  if (parentId && !isSpaceId(parentId)) {
+    throw new Error('Expected the parent of a Workspace to be a Space');
+  }
 }

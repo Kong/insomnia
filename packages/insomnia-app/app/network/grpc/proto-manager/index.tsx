@@ -4,7 +4,7 @@ import * as models from '../../../models';
 import React from 'react';
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import { database as db } from '../../../common/database';
-import selectFileOrFolder from '../../../common/select-file-or-folder';
+import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 import ingestProtoDirectory from './ingest-proto-directory';
 import fs from 'fs';
 import path from 'path';
