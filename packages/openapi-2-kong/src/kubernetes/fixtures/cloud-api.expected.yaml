@@ -101,24 +101,23 @@ documents:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/hostname: myserver
-        konghq.com/strip-path: "true"
+        konghq.com/strip-path: 'true'
         konghq.com/plugins: add-openid-connect-m3, add-aws-lambda-p2, add-pre-function-g1
         konghq.com/override: get-method
         kubernetes.io/ingress.class: kong
     spec:
       tls:
         - hosts:
-            &a1
             - myserver
           secretName: myserver-tls
       rules:
         - host: myserver
           http:
             paths:
-                - backend:
-                    serviceName: my-cloud-api-service-0
-                    servicePort: 443
-                  path: /v1/offline-portal
+              - backend:
+                  serviceName: my-cloud-api-service-0
+                  servicePort: 443
+                path: /v1/offline-portal
   - apiVersion: extensions/v1beta1
     kind: Ingress
     metadata:
@@ -126,7 +125,7 @@ documents:
       annotations:
         cert-manager.io/cluster-issuer: letsencrypt
         external-dns.alpha.kubernetes.io/hostname: myserver
-        konghq.com/strip-path: "true"
+        konghq.com/strip-path: 'true'
         konghq.com/plugins: add-openid-connect-m5, add-aws-lambda-p4, add-pre-function-g1
         konghq.com/override: get-method
         kubernetes.io/ingress.class: kong

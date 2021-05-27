@@ -11,7 +11,7 @@ paths:
   /only/basic:
     get:
       security:
-      - really_basic: []
+        - really_basic: []
       responses:
         '200':
           description: Saying hello
@@ -19,7 +19,7 @@ paths:
   /only/key:
     get:
       security:
-      - my_api_key: []
+        - my_api_key: []
       responses:
         '200':
           description: Saying hello
@@ -27,8 +27,8 @@ paths:
   /only/oath2:
     get:
       security:
-      - petstore_oauth2:
-        - read:pets
+        - petstore_oauth2:
+            - read:pets
       responses:
         '200':
           description: Saying hello
@@ -36,8 +36,8 @@ paths:
   /only/oidc:
     get:
       security:
-      - petstore_openid:
-        - write:pets
+        - petstore_openid:
+            - write:pets
       responses:
         '200':
           description: Saying hello
@@ -45,9 +45,9 @@ paths:
   /and/based/auth:
     get:
       security:
-      - petstore_oauth2:
-        - read:pets
-        #my_api_key: []
+        - petstore_oauth2:
+            - read:pets
+          #my_api_key: []
       responses:
         '200':
           description: Saying hello
@@ -55,7 +55,7 @@ paths:
   /or/based/auth:
     get:
       security:
-      - my_api_key: []
+        - my_api_key: []
       #- really_basic: []
       responses:
         '200':

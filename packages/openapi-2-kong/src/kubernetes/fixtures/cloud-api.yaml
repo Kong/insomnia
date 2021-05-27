@@ -9,9 +9,9 @@ info:
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt
       external-dns.alpha.kubernetes.io/hostname: myserver
-      konghq.com/strip-path: "true"
+      konghq.com/strip-path: 'true'
   title: my Cloud API
-  version: "1.0.0"
+  version: '1.0.0'
   contact:
     name: myserver Support
     url: https://myserver/support
@@ -24,44 +24,44 @@ info:
 ###################################
 # OpenID Connect Plugin for Kong API Authorization with Keycloak
 x-kong-plugin-openid-connect:
-    name: openid-connect
-    enabled: true
-    config:
-      issuer: <keycloak-realm-auth-endpoint>
-      client_id:
-        - <client-id>
-      client_secret:
-        - <client-secret>
-      auth_methods: ["authorization_code", "bearer", "session", "refresh_token"]
-      session_cookie_name: "cookie-name"
-      refresh_token_param_name: "Offline-Token"
-      scopes: ["openid", "profile", "email"]
-      upstream_user_info_header: "x-userinfo"
-      upstream_access_token_header: "access-token-name"
+  name: openid-connect
+  enabled: true
+  config:
+    issuer: <keycloak-realm-auth-endpoint>
+    client_id:
+      - <client-id>
+    client_secret:
+      - <client-secret>
+    auth_methods: ['authorization_code', 'bearer', 'session', 'refresh_token']
+    session_cookie_name: 'cookie-name'
+    refresh_token_param_name: 'Offline-Token'
+    scopes: ['openid', 'profile', 'email']
+    upstream_user_info_header: 'x-userinfo'
+    upstream_access_token_header: 'access-token-name'
 # Enable HTTPS redirect to disable HTTP access for the API server
 x-kong-plugin-https-redirect:
   name: pre-function
   config:
     functions:
-    - |
-      local scheme = kong.request.get_scheme()
-      if scheme == "http" then
-        local host = kong.request.get_host()
-        local query = kong.request.get_path_with_query()
-        local url = "https://" .. host ..query
-        kong.response.set_header("Location",url)
-        return kong.response.exit(302,url)
-      end
+      - |
+        local scheme = kong.request.get_scheme()
+        if scheme == "http" then
+          local host = kong.request.get_host()
+          local query = kong.request.get_path_with_query()
+          local url = "https://" .. host ..query
+          kong.response.set_header("Location",url)
+          return kong.response.exit(302,url)
+        end
 #############
 ## Servers ##
 #############
 servers:
-- url: https://myserver/v1
-  description: The non-production API Server for FRED Studio
-  x-kubernetes-tls:
-    - hosts:
-        - myserver
-      secretName: myserver-tls
+  - url: https://myserver/v1
+    description: The non-production API Server for FRED Studio
+    x-kubernetes-tls:
+      - hosts:
+          - myserver
+        secretName: myserver-tls
 ################
 ## Components ##
 ################
@@ -73,7 +73,7 @@ components:
       openIdConnectUrl: <well-known-config>
       ## Required Scopes defined at the Operation Level ##
   schemas:
-  # define schemas here for components
+    # define schemas here for components
     # Schema for error response body
     Error:
       type: object
@@ -85,9 +85,9 @@ components:
       required:
         - code
         - message
-#############################
-## Environment API Schemas ##
-#############################
+    #############################
+    ## Environment API Schemas ##
+    #############################
     Quotas:
       type: object
       properties:
@@ -97,9 +97,9 @@ components:
           type: object
         queuedBatches:
           type: object
-#######################
-## Batch API Schemas ##
-#######################
+    #######################
+    ## Batch API Schemas ##
+    #######################
     # Model Upload URL Request Schema
     BatchModelUploadRequest:
       type: object
@@ -123,7 +123,7 @@ components:
         containerLogLevel:
           type: string
         killTime:
-            type: integer
+          type: integer
         cliCommand:
           type: string
         batchConfig:
@@ -212,9 +212,9 @@ components:
 ## Paths and API Operations ##
 ##############################
 paths:
-####################
-## Root API Paths ##
-####################
+  ####################
+  ## Root API Paths ##
+  ####################
   '/offline-portal':
     x-kong-plugin-aws-lambda:
       name: aws-lambda
@@ -255,7 +255,7 @@ paths:
       summary: Returns the User Info from the x-userinfo header forwarded upstream by Kong
       security:
         - StudioOIDC:
-          # an array of scopes required to perform the operation
+            # an array of scopes required to perform the operation
             - fred_read # This is created through Keycloak to enforce different levels of authorization (Scope not yet defined)
       responses:
         '200':

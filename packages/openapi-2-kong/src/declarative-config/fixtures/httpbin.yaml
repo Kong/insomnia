@@ -111,7 +111,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/freeFormQuery'
       responses:
-        '200':  # Change to 'default' ???
+        '200': # Change to 'default' ???
           description: OK
           content:
             application/json:
@@ -236,7 +236,7 @@ paths:
                 value:
                   foo: bar
           # multipart/form-data: {}  # TODO
-          '*/*':   # is this valid?
+          '*/*': # is this valid?
             schema: {}
       responses:
         '200':
@@ -264,7 +264,6 @@ paths:
   #   get: {}
   #   post: {}
 
-
   /ip:
     get:
       summary: Returns Origin IP.
@@ -284,7 +283,7 @@ paths:
                     example: 10.100.10.10
                 required:
                   - origin
-              examples:   # Content examples override schema-level examples
+              examples: # Content examples override schema-level examples
                 oneIp:
                   description: Example of a single IP
                   value:
@@ -377,7 +376,8 @@ paths:
         '200':
           description: OK
           content:
-            application/json: {}
+            application/json:
+              {}
               # schema:
               #   type: object
 
@@ -447,7 +447,6 @@ paths:
                     description: Bearer token specified in the request
         '404':
           description: Unauthorized
-
 
   /status/{statusCode}:
     summary: Returns the specified HTTP status code, or a random status code if more than one are given
@@ -617,7 +616,6 @@ paths:
         200:
           description: OK
 
-
 #################################
 # Reusable things
 #################################
@@ -670,7 +668,8 @@ components:
         - $ref: '#/components/schemas/CommonResponse'
         - type: object
           properties:
-            data: {}    # Always a plain text string???
+            data:
+              {} # Always a plain text string???
               # ???
               # oneOf:
               #   - type: string
@@ -808,7 +807,6 @@ components:
         Note that the parameters will be actually sent as
         `?param1=value1&param2=value2&...`
 
-
   responses:
     200BasicAuth:
       description: OK
@@ -830,8 +828,8 @@ components:
           schema:
             type: string
             format: binary
-        image/svg+xml: {}  # string? object?
-        image/svg: {}  # string? object?
+        image/svg+xml: {} # string? object?
+        image/svg: {} # string? object?
 
     TimestampResponse:
       description: OK
