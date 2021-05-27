@@ -9,6 +9,8 @@ import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 const mapSpace = ({ _id, name }: Space) => ({ id: _id, name });
 const defaultSpace = { id: BASE_SPACE_ID, name: getAppName() };
 
+const check = <i className="fa fa-check" />;
+
 export const SpaceDropdown: FC = () => {
   // get list of spaces
   const loadedSpaces = useSelector(selectSpaces);
@@ -29,8 +31,6 @@ export const SpaceDropdown: FC = () => {
       <i className="fa fa-caret-down space-left" />
     </button>),
   [selectedSpace]);
-
-  const check = useMemo(() => <i className="fa fa-check" />, []);
 
   return <Dropdown renderButton={button}>
     {spaces.map(({ id, name }) => (
