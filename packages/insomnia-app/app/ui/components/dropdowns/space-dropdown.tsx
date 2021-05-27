@@ -29,7 +29,9 @@ export const SpaceDropdown: FC = () => {
 
   return <Dropdown renderButton={button}>
     {spaces.map(({ id, name }) => (
-      <DropdownItem key={id} icon={icon} right={id === selectedSpace.id && check}>
+      <DropdownItem key={id} icon={icon} right={id === selectedSpace.id && check}
+        value={id} onClick={(_e, id) => console.log(`clicked space ${id}`)}
+      >
         {name}
       </DropdownItem>
     ))}
