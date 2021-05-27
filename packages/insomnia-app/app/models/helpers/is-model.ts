@@ -1,5 +1,6 @@
-import type { BaseModel } from '../index';
 import {
+  BaseModel,
+  space,
   grpcRequest,
   request,
   requestGroup,
@@ -7,6 +8,7 @@ import {
   protoDirectory,
   workspace,
 } from '../index';
+
 import type { Workspace } from '../workspace';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import { ProtoDirectory } from '../proto-directory';
@@ -17,6 +19,10 @@ import { GrpcRequest } from '../grpc-request';
 
 export const isGrpcRequestId = (id: string | null) => (
   id?.startsWith(`${grpcRequest.prefix}_`)
+);
+
+export const isSpaceId = (id: string | null) => (
+  id?.startsWith(`${space.prefix}_`)
 );
 
 // TODO: Invalid until we can ensure all requests are prefixed by the id correctly INS-341

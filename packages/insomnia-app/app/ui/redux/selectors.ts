@@ -5,7 +5,7 @@ import { UnitTestResult } from '../../models/unit-test-result';
 // Selectors //
 // ~~~~~~~~~ //
 export const selectEntitiesLists = createSelector(
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   state => state.entities,
   entities => {
     const entitiesLists = {};
@@ -38,15 +38,15 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   return parentLookupMap;
 });
 export const selectSettings = createSelector(selectEntitiesLists, entities => {
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   return entities.settings[0] || models.settings.init();
 });
 export const selectActiveWorkspace = createSelector(
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   state => selectEntitiesLists(state).workspaces,
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   state => state.entities,
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   state => state.global.activeWorkspaceId,
   (workspaces, entities, activeWorkspaceId) => {
     return entities.workspaces[activeWorkspaceId] || workspaces[0];
@@ -99,13 +99,13 @@ export const selectCollapsedRequestGroups = createSelector(selectEntitiesLists, 
   const collapsed = {};
 
   // Default all to collapsed
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   for (const requestGroup of entities.requestGroups) {
     collapsed[requestGroup._id] = true;
   }
 
   // Update those that have metadata (not all do)
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   for (const meta of entities.requestGroupMetas) {
     collapsed[meta.parentId] = meta.collapsed;
   }
@@ -140,9 +140,9 @@ export const selectActiveWorkspaceEntities = createSelector(
 );
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
   const pinned = {};
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   const requests = [...entities.requests, ...entities.grpcRequests];
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
 
   // Default all to unpinned
@@ -166,7 +166,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   },
 );
 export const selectActiveRequest = createSelector(
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   state => state.entities,
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
@@ -193,7 +193,7 @@ export const selectActiveOAuth2Token = createSelector(
   },
 );
 export const selectUnseenWorkspaces = createSelector(selectEntitiesLists, entities => {
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   const { workspaces, workspaceMetas } = entities;
   return workspaces.filter(workspace => {
     const meta = workspaceMetas.find(m => m.parentId === workspace._id);

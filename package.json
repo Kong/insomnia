@@ -12,8 +12,8 @@
   "homepage": "https://github.com/kong/insomnia#readme",
   "scripts": {
     "build": "lerna run build --parallel",
-    "lint": "lerna run lint --parallel --stream --no-bail",
-    "lint:fix": "lerna run lint:fix --parallel --stream --no-bail",
+    "lint": "lerna run lint --stream --no-bail",
+    "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version --exact --preid beta",
     "version:dry": "npm run version -- --no-git-tag-version",

@@ -383,22 +383,22 @@ function getRequestCookies(renderedRequest: RenderedRequest) {
 function getResponseCookies(response: ResponseModel) {
   const headers = response.headers.filter(Boolean) as HarCookie[];
   const responseCookies = getSetCookieHeaders(headers)
-  .reduce((accumulator, harCookie) => {
-    let cookie: null | undefined | toughCookie = null;
+    .reduce((accumulator, harCookie) => {
+      let cookie: null | undefined | toughCookie = null;
 
-    try {
-      cookie = toughCookie.parse(harCookie.value || '');
-    } catch (error) {}
+      try {
+        cookie = toughCookie.parse(harCookie.value || '');
+      } catch (error) {}
 
-    if (cookie === null || cookie === undefined) {
-      return accumulator;
-    }
+      if (cookie === null || cookie === undefined) {
+        return accumulator;
+      }
 
-    return [
-      ...accumulator,
-      mapCookie(cookie as unknown as Cookie),
-    ];
-  }, [] as HarCookie[]);
+      return [
+        ...accumulator,
+        mapCookie(cookie as unknown as Cookie),
+      ];
+    }, [] as HarCookie[]);
   return responseCookies;
 }
 

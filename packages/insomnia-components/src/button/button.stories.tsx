@@ -88,14 +88,14 @@ export const reference = () => {
   return (
     <Fragment>
       {Object.values(ButtonSizeEnum).map(s => (
-        <Padded>
+        <Padded key={s}>
           <h2>
             <code>size={s as any}</code>
           </h2>
           {Object.values(ButtonVariantEnum).map(v => (
-            <Wrapper>
+            <Wrapper key={v}>
               {Object.values(ButtonThemeEnum).map(b => (
-                <Button bg={b} variant={v} size={s} radius={radius}>
+                <Button key={b} bg={b} variant={v} size={s} radius={radius}>
                   {b || 'Default'}
                 </Button>
               ))}

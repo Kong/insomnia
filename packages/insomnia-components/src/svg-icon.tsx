@@ -131,23 +131,23 @@ const SvgIconStyled = styled.div<{
     user-select: none;
     ${({ hasLabel }) => (hasLabel ? 'margin-right: var(--padding-xs);' : null)}
     ${({ theme }) => {
-      switch (theme) {
-        case ThemeEnum.danger:
-        case ThemeEnum.info:
-        case ThemeEnum.notice:
-        case ThemeEnum.success:
-        case ThemeEnum.surprise:
-        case ThemeEnum.warning:
-          return `fill: var(--color-${theme}); color: var(--color-font-${theme});`;
+    switch (theme) {
+      case ThemeEnum.danger:
+      case ThemeEnum.info:
+      case ThemeEnum.notice:
+      case ThemeEnum.success:
+      case ThemeEnum.surprise:
+      case ThemeEnum.warning:
+        return `fill: var(--color-${theme}); color: var(--color-font-${theme});`;
 
-        case ThemeEnum.highlight:
-          return 'fill: var(--hl); color: var(--color-font-danger);';
+      case ThemeEnum.highlight:
+        return 'fill: var(--hl); color: var(--color-font-danger);';
 
-        case ThemeEnum.default:
-        default:
-          return 'fill: var(--color-font); color: var(--color-font);';
-      }
-    }}
+      case ThemeEnum.default:
+      default:
+        return 'fill: var(--color-font); color: var(--color-font);';
+    }
+  }}
   }
 `;
 

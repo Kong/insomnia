@@ -45,7 +45,7 @@ export function init(plugin: Plugin) {
           key: string;
           value: string;
         }[]
-      > {
+        > {
         const docs = await models.pluginData.all(plugin.name) || [];
         return docs.map(d => ({
           value: d.value,

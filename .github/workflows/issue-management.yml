@@ -1,0 +1,16 @@
+name: Issue Management
+on:
+  issues:
+    types: [opened, closed, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  issue-management:
+    name: Issue Management
+    runs-on: ubuntu-latest
+    steps:
+      - name: Issue Management
+        uses: mheap/github-action-issue-management@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

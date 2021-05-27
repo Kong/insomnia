@@ -8,12 +8,17 @@ export const ButtonSizeEnum = {
   Medium: 'medium',
 } as const;
 
+// These variants determine how the `bg` color variable is handled
+// Outlined sets the `bg` color as an outline
+// Contained sets the `bg` color as the background color
+// Text sets the `bg` color as the text color
 export const ButtonVariantEnum = {
   Outlined: 'outlined',
   Contained: 'contained',
   Text: 'text',
 } as const;
 
+// Sets the `bg` color to a themed color
 export const ButtonThemeEnum = {
   Default: 'default',
   Surprise: 'surprise',
@@ -100,33 +105,33 @@ const StyledButton = styled.button<ButtonProps>`
     &:not(:disabled) {
       outline: 0;
       ${({ variant, bg }) => {
-        if (variant === 'contained') {
-          // kind of a hack, but using inset box shadow to darken the theme color
-          return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.1)';
-        }
+    if (variant === 'contained') {
+      // kind of a hack, but using inset box shadow to darken the theme color
+      return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.1)';
+    }
 
-        if (bg === 'default') {
-          return 'background-color: var(--hl-xs)';
-        }
+    if (bg === 'default') {
+      return 'background-color: var(--hl-xs)';
+    }
 
-        return `background-color: rgba(var(--color-${bg}-rgb), 0.1)`;
-      }}
+    return `background-color: rgba(var(--color-${bg}-rgb), 0.1)`;
+  }}
     }
   }
 
   &:active:not(:disabled) {
     ${({ variant, bg }) => {
-      if (variant === 'contained') {
-        // kind of a hack, but using inset box shadow to darken the theme color
-        return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.2)';
-      }
+    if (variant === 'contained') {
+      // kind of a hack, but using inset box shadow to darken the theme color
+      return 'box-shadow: inset 0 0 99px rgba(0, 0, 0, 0.2)';
+    }
 
-      if (bg === 'default') {
-        return 'background-color: var(--hl-sm)';
-      }
+    if (bg === 'default') {
+      return 'background-color: var(--hl-sm)';
+    }
 
-      return `background-color: rgba(var(--color-${bg}-rgb), 0.2)`;
-    }}
+    return `background-color: rgba(var(--color-${bg}-rgb), 0.2)`;
+  }}
   }
 
   &:disabled {

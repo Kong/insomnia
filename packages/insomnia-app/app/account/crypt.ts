@@ -96,7 +96,7 @@ export function encryptAESBuffer(jwkOrKey, buff, additionalData = '') {
   cipher.finish();
   return {
     iv: forge.util.bytesToHex(iv),
-      // @ts-expect-error -- TSCONVERSION needs to be converted to string
+    // @ts-expect-error -- TSCONVERSION needs to be converted to string
     t: forge.util.bytesToHex(cipher.mode.tag),
     ad: forge.util.bytesToHex(additionalData),
     // @ts-expect-error -- TSCONVERSION needs to be converted to string

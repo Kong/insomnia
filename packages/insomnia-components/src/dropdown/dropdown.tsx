@@ -522,8 +522,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     const button =
       typeof renderButton === 'function'
         ? renderButton({
-            open,
-          })
+          open,
+        })
         : renderButton;
     return (
       <StyledDropdown

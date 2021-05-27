@@ -41,26 +41,26 @@ export class SidebarPaths extends Component<SidebarPathsProps> {
     return (
       <div>
         {// @ts-expect-error TSCONVERSION
-        filteredValues.map(([route, routeBody]) => (
-          <Fragment key={route}>
-            <SidebarItem gridLayout onClick={() => onClick('paths', route)}>
-              <div>
-                <SvgIcon icon={IconEnum.indentation} />
-              </div>
-              <span>{route}</span>
-            </SidebarItem>
-            <SidebarItem>
-              {Object.keys(routeBody)
-                .filter(isNotXDashKey)
-                .map(method => (
-                  <SidebarBadge
-                    key={method}
-                    method={method}
-                    onClick={() => onClick('paths', route, method)}></SidebarBadge>
-                ))}
-            </SidebarItem>
-          </Fragment>
-        ))}
+          filteredValues.map(([route, routeBody]) => (
+            <Fragment key={route}>
+              <SidebarItem gridLayout onClick={() => onClick('paths', route)}>
+                <div>
+                  <SvgIcon icon={IconEnum.indentation} />
+                </div>
+                <span>{route}</span>
+              </SidebarItem>
+              <SidebarItem>
+                {Object.keys(routeBody)
+                  .filter(isNotXDashKey)
+                  .map(method => (
+                    <SidebarBadge
+                      key={method}
+                      method={method}
+                      onClick={() => onClick('paths', route, method)}></SidebarBadge>
+                  ))}
+              </SidebarItem>
+            </Fragment>
+          ))}
       </div>
     );
   };

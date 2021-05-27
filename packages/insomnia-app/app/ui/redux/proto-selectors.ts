@@ -11,13 +11,13 @@ export interface ExpandedProtoDirectory {
 
 const selectAllProtoFiles = createSelector(
   selectEntitiesLists,
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   entities => entities.protoFiles || [],
 );
 
 const selectAllProtoDirectories = createSelector(
   selectEntitiesLists,
-    // @ts-expect-error -- TSCONVERSION
+  // @ts-expect-error -- TSCONVERSION
   entities => entities.protoDirectories || [],
 );
 

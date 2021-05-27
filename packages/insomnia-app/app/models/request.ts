@@ -347,9 +347,9 @@ export function updateMimeType(
       ? newBodyFormUrlEncoded(oldBody.params)
       // @ts-expect-error -- TSCONVERSION
       : newBodyFormUrlEncoded(deconstructQueryStringToParams(oldBody.text));
-    } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
-      // Form Data
-      body = oldBody.params
+  } else if (mimeType === CONTENT_TYPE_FORM_DATA) {
+    // Form Data
+    body = oldBody.params
       ? newBodyForm(oldBody.params)
       // @ts-expect-error -- TSCONVERSION
       : newBodyForm(deconstructQueryStringToParams(oldBody.text));

@@ -12,6 +12,7 @@ import * as _requestMeta from './request-meta';
 import * as _requestVersion from './request-version';
 import * as _response from './response';
 import * as _settings from './settings';
+import * as _space from './space';
 import * as _stats from './stats';
 import * as _unitTest from './unit-test';
 import * as _unitTestResult from './unit-test-result';
@@ -27,6 +28,8 @@ import { generateId, pluralize } from '../common/misc';
 export interface BaseModel {
   _id: string;
   type: string;
+  // TSCONVERSION -- parentId is required for all
+  //  except Stats, Settings, Workspace and Space for which it is optional
   parentId: string;
   modified: number;
   created: number;
@@ -49,6 +52,7 @@ export const requestMeta = _requestMeta;
 export const requestVersion = _requestVersion;
 export const response = _response;
 export const settings = _settings;
+export const space = _space;
 export const stats = _stats;
 export const unitTest = _unitTest;
 export const unitTestSuite = _unitTestSuite;
@@ -62,11 +66,12 @@ export const workspaceMeta = _workspaceMeta;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
-  // For example, stats, settings and workspace are global models, with workspace being the top-most parent,
+  // For example, stats, settings, space and workspace are global models, with space and workspace being the top-most parents,
   // so they must be at the top
   return [
     stats,
     settings,
+    space,
     workspace,
     workspaceMeta,
     environment,

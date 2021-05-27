@@ -62,7 +62,7 @@ export type PluginArgument =
   | PluginArgumentFile
   | PluginArgumentNumber;
 
-  export interface PluginTemplateTagContext {
+export interface PluginTemplateTagContext {
   util: {
     models: {
       request: {
