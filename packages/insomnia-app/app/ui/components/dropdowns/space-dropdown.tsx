@@ -1,8 +1,9 @@
 import { Dropdown, DropdownItem } from 'insomnia-components';
-import React, { FC, useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import React, { FC, useCallback, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { getAppName } from '../../../common/constants';
 import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { setActiveSpace } from '../../redux/modules/global';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 
 const mapSpace = ({ _id, name }: Space) => ({ id: _id, name });
@@ -17,6 +18,11 @@ export const SpaceDropdown: FC = () => {
   const activeSpace = useSelector(selectActiveSpace);
   const selectedSpace = spaces.find(space => space.id === activeSpace?._id) || defaultSpace;
 
+  // select a new space
+  const dispatch = useDispatch();
+  const setActive = useCallback((id) => dispatch(setActiveSpace(id)), [dispatch]);
+
+  // dropdown button
   const button = useMemo(() => (
     <button type="button" className="row" title={selectedSpace.name}>
       {selectedSpace.name}
@@ -24,17 +30,15 @@ export const SpaceDropdown: FC = () => {
     </button>),
   [selectedSpace]);
 
-  const icon = useMemo(() => <i className="fa fa-cog" />, []);
   const check = useMemo(() => <i className="fa fa-check" />, []);
 
   return <Dropdown renderButton={button}>
     {spaces.map(({ id, name }) => (
       <DropdownItem
         key={id}
-        icon={icon}
         right={id === selectedSpace.id && check}
         value={id}
-        onClick={(_e, id) => console.log(`clicked space ${id}`)}
+        onClick={setActive}
       >
         {name}
       </DropdownItem>

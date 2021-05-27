@@ -2,12 +2,12 @@ import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import styled, { css } from 'styled-components';
 
-export interface DropdownItemProps<T> {
+export interface DropdownItemProps {
   buttonClass?: string,
   stayOpenAfterClick?: boolean,
-  value?: T,
+  value?: any,
   disabled?: boolean,
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>, value?: T) => void,
+  onClick?: Function,
   children?: ReactNode,
   icon?: ReactNode,
   right?: ReactNode,
@@ -86,7 +86,7 @@ const StyledIconContainer = styled.div`
 `;
 
 @autoBindMethodsForReact
-export class DropdownItem<T> extends PureComponent<DropdownItemProps<T>> {
+export class DropdownItem extends PureComponent<DropdownItemProps> {
   _handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
 
@@ -98,7 +98,11 @@ export class DropdownItem<T> extends PureComponent<DropdownItemProps<T>> {
       return;
     }
 
-    onClick(event, this.props.value);
+    if (this.props.hasOwnProperty('value')) {
+      onClick(this.props.value, event);
+    } else {
+      onClick(event);
+    }
   }
 
   render() {
