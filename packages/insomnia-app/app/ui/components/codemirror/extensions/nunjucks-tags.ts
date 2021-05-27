@@ -11,36 +11,36 @@ CodeMirror.defineExtension('enableNunjucksTags', function(
   handleGetRenderContext: HandleGetRenderContext,
   isVariableUncovered = false,
 ) {
-    if (!handleRender) {
-      console.warn("enableNunjucksTags wasn't passed a render function");
-      return;
+  if (!handleRender) {
+    console.warn("enableNunjucksTags wasn't passed a render function");
+    return;
+  }
+
+  const refreshFn = _highlightNunjucksTags.bind(
+    this,
+    handleRender,
+    handleGetRenderContext,
+    isVariableUncovered,
+  );
+
+  const debouncedRefreshFn = misc.debounce(refreshFn);
+  this.on('change', (_cm, change) => {
+    const origin = change.origin || 'unknown';
+
+    if (!origin.match(/^[+*]/)) {
+      // Refresh immediately on non-joinable events
+      // (cut, paste, autocomplete; as opposed to +input, +delete)
+      refreshFn();
+    } else {
+      // Debounce all joinable events
+      debouncedRefreshFn();
     }
-
-    const refreshFn = _highlightNunjucksTags.bind(
-      this,
-      handleRender,
-      handleGetRenderContext,
-      isVariableUncovered,
-    );
-
-    const debouncedRefreshFn = misc.debounce(refreshFn);
-    this.on('change', (_cm, change) => {
-      const origin = change.origin || 'unknown';
-
-      if (!origin.match(/^[+*]/)) {
-        // Refresh immediately on non-joinable events
-        // (cut, paste, autocomplete; as opposed to +input, +delete)
-        refreshFn();
-      } else {
-        // Debounce all joinable events
-        debouncedRefreshFn();
-      }
-    });
-    this.on('cursorActivity', debouncedRefreshFn);
-    this.on('viewportChange', debouncedRefreshFn);
-    // Trigger once right away to snappy perf
-    refreshFn();
-  },
+  });
+  this.on('cursorActivity', debouncedRefreshFn);
+  this.on('viewportChange', debouncedRefreshFn);
+  // Trigger once right away to snappy perf
+  refreshFn();
+},
 );
 
 async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
