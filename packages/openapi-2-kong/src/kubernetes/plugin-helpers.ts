@@ -1,4 +1,4 @@
-import { DummyPlugin, HttpMethodType } from '../common';
+import { HttpMethodType } from '../common';
 import { K8sIngress, K8sKongIngress, K8sKongPlugin, K8sKongPluginBase } from '../types/kubernetes-config';
 import { xKongPluginKeyAuth, XKongPluginKeyAuth, PluginBase } from '../types/kong';
 
@@ -36,18 +36,6 @@ export const keyAuthPluginDoc = (suffix: string): K8sKongPlugin => ({
   plugin: 'key-auth',
 });
 
-export const dummyPluginDoc = (suffix: string): K8sKongPluginBase<DummyPlugin> => ({
-  apiVersion: 'configuration.konghq.com/v1',
-  config: {
-    foo: 'bar',
-  },
-  kind: 'KongPlugin',
-  metadata: {
-    name: dummyName(suffix),
-  },
-  plugin: 'dummy',
-});
-
 export const methodDoc = (method: HttpMethodType | Lowercase<HttpMethodType>): K8sKongIngress => ({
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongIngress',
@@ -60,8 +48,6 @@ export const methodDoc = (method: HttpMethodType | Lowercase<HttpMethodType>): K
 });
 
 export const keyAuthName = (suffix: string) => `add-key-auth-${suffix}`;
-
-export const dummyName = (suffix: string) => `add-dummy-${suffix}`;
 
 export const ingressDoc = (
   index: number,

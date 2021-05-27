@@ -1,7 +1,7 @@
-import { getSpec } from '../common';
 import { DCUpstream } from '../types';
 import { xKongUpstreamDefaults } from '../types/kong';
 import { generateUpstreams } from './upstreams';
+import { tags, getSpec } from './jest/test-helpers';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCUpstream =>
@@ -11,10 +11,10 @@ const getSpecResult = (): DCUpstream =>
       targets: [
         {
           target: 'server1.com:443',
-          tags: ['Tag'],
+          tags,
         },
       ],
-      tags: ['Tag'],
+      tags,
     }),
   );
 
@@ -22,7 +22,7 @@ describe('upstreams', () => {
   it('generates an upstream', () => {
     const spec = getSpec();
     const specResult = getSpecResult();
-    expect(generateUpstreams(spec, ['Tag'])).toEqual<DCUpstream[]>([specResult]);
+    expect(generateUpstreams(spec, tags)).toEqual<DCUpstream[]>([specResult]);
   });
 
   it('throws for a root level x-kong-route-default', () => {
@@ -31,7 +31,7 @@ describe('upstreams', () => {
       [xKongUpstreamDefaults]: 'foo',
     });
 
-    const fn = () => generateUpstreams(spec, ['Tag']);
+    const fn = () => generateUpstreams(spec, tags);
 
     expect(fn).toThrowError(`expected '${xKongUpstreamDefaults}' to be an object`);
   });
@@ -42,6 +42,6 @@ describe('upstreams', () => {
       [xKongUpstreamDefaults]: null,
     });
     const specResult = getSpecResult();
-    expect(generateUpstreams(spec, ['Tag'])).toEqual<DCUpstream[]>([specResult]);
+    expect(generateUpstreams(spec, tags)).toEqual<DCUpstream[]>([specResult]);
   });
 });

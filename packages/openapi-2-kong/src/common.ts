@@ -6,16 +6,11 @@ import {
   OA3Server,
   OA3Operation,
 } from './types/openapi3';
-import { PluginBase, xKongName, XKongPlugin } from './types/kong';
-import { DCPlugin, K8sKongPlugin, K8sKongPluginBase } from './types';
+import { xKongName } from './types/kong';
 
-export function getServers(obj: OpenApi3Spec | OA3PathItem) {
-  return obj.servers || [];
-}
+export const getServers = (obj: OpenApi3Spec | OA3PathItem) => obj.servers || [];
 
-export function getPaths(obj: OpenApi3Spec) {
-  return obj.paths || {};
-}
+export const getPaths = (obj: OpenApi3Spec) => obj.paths || {};
 
 export function getAllServers(api: OpenApi3Spec) {
   const servers = getServers(api);
@@ -168,75 +163,3 @@ export function distinctByProperty<T>(arr: T[], propertySelector: (item: T) => a
 
   return result;
 }
-
-/** used only for testing */
-export interface DummyPlugin extends PluginBase<'dummy'> {
-  config: {
-    foo: 'bar';
-  };
-}
-export type XKongPluginDummy = XKongPlugin<DummyPlugin>;
-export const pluginDummy: XKongPluginDummy = {
-  'x-kong-plugin-dummy': {
-    name: 'dummy',
-    config: {
-      foo: 'bar',
-    },
-  },
-};
-
-/**
- * This simulates what a user would do when creating a custom plugin.
- *
- * In the user's case they would, in practice, use module augmentation to extend DCPlugin, however a simple union achieves the same goal, here.
- */
-export type UserDCPlugin = DCPlugin | DummyPlugin;
-
-/**
- * This simulates what a user would do when creating a custom plugin.
- *
- * In the user's case they would, in practice, use module augmentation to extend K8sKongPlugin, however a simple union achieves the same goal, here.
- */
-export type UserK8sPlugin = K8sKongPlugin | K8sKongPluginBase<DummyPlugin>
-
-/**
- * This simulates what a user would do when creating a custom plugin.
- *
- * In the user's case they would, in practice, use module augmentation to extend K8sKongPlugin, however a simple union achieves the same goal, here.
- */
-export type UserXKongPlugin = XKongPlugin<Plugin> | XKongPlugin<DummyPlugin>
-
-/** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
-export const getSpec = (overrides: Partial<OpenApi3Spec> = {}): OpenApi3Spec =>
-  JSON.parse(
-    JSON.stringify({
-      openapi: '3.0',
-      info: {
-        version: '1.0',
-        title: 'My API',
-      },
-      servers: [
-        {
-          url: 'https://server1.com/path',
-        },
-      ],
-      paths: {
-        '/cats': {
-          'x-kong-name': 'Cat stuff',
-          summary: 'summary is ignored',
-          post: {},
-        },
-        '/dogs': {
-          summary: 'Dog stuff',
-          get: {},
-          post: {
-            summary: 'Ignored summary',
-          },
-        },
-        '/birds/{id}': {
-          get: {},
-        },
-      },
-      ...overrides,
-    }),
-  );

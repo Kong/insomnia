@@ -11,8 +11,6 @@ import {
   generateTLS,
 } from './generate';
 import {
-  dummyName,
-  dummyPluginDoc,
   ingressDoc,
   ingressDocWithOverride,
   keyAuthName,
@@ -21,7 +19,7 @@ import {
   pluginKeyAuth,
 } from './plugin-helpers';
 import { xKongName } from '../types/kong';
-import { getSpec, pluginDummy } from '../common';
+import { dummyName, dummyPluginDoc, getSpec, pluginDummy } from '../declarative-config/jest/test-helpers';
 
 describe('index', () => {
   describe('getSpecName()', () => {

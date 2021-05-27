@@ -8,13 +8,13 @@ import {
   getPluginNameFromKey,
   getSecurity,
   getServers,
-  getSpec,
   HttpMethodType,
   isHttpMethodKey,
   isPluginKey,
   parseUrl,
   pathVariablesToRegex,
 } from './common';
+import { getSpec } from './declarative-config/jest/test-helpers';
 import { xKongName } from './types/kong';
 import { OA3Operation, OA3Server } from './types/openapi3';
 

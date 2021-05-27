@@ -10,9 +10,8 @@ import {
   normalizePathPlugins,
   prioritizePlugins,
 } from './plugins';
-import { HttpMethod, pluginDummy, UserK8sPlugin } from '../common';
+import { HttpMethod } from '../common';
 import {
-  dummyPluginDoc,
   keyAuthPluginDoc,
   pluginDocWithName,
   pluginKeyAuth,
@@ -26,6 +25,7 @@ import {
   OA3Components,
   OA3Operation,
 } from '../types/openapi3';
+import { dummyPluginDoc, pluginDummy, UserK8sPlugin } from '../declarative-config/jest/test-helpers';
 
 describe('plugins', () => {
   let _iterator = 0;
