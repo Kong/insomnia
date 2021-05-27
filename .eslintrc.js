@@ -107,5 +107,7 @@ module.exports = {
     semi: ['error', 'always'],
     'react/no-find-dom-node': 'off',
     'react/no-unescaped-entities': 'off', // TSCONVERSION
+    'react/jsx-first-prop-new-line': ['error', 'multiline'],
+    'react/jsx-max-props-per-line': ['error', { maximum: 1, when: 'multiline' }],
   },
 };
