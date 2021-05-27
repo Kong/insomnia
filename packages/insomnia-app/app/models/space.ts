@@ -6,7 +6,7 @@ export const name = 'Space';
 export const type = 'Space';
 export const prefix = 'sp';
 export const canDuplicate = false;
-export const canSync = true;
+export const canSync = false;
 
 interface BaseSpace {
   name: string;

@@ -26,6 +26,10 @@ describe('migrate()', () => {
     for (const cert of certs) {
       expect(typeof cert.modified).toBe('number');
       expect(typeof cert.created).toBe('number');
+      // @ts-expect-error delete in order to test
+      delete cert.modified;
+      // @ts-expect-error delete in order to test
+      delete cert.created;
     }
 
     expect(certs.length).toBe(2);
