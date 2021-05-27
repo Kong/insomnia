@@ -302,11 +302,11 @@ export function createWindow() {
       },
       // @ts-expect-error -- TSCONVERSION missing in official electron types
       ...(isMac() ? [
-            {
-              label: `${MNEMONIC_SYM}Close`,
-              role: 'close',
-            },
-          ]
+        {
+          label: `${MNEMONIC_SYM}Close`,
+          role: 'close',
+        },
+      ]
         : []),
     ],
   };

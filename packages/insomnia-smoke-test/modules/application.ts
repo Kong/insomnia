@@ -48,9 +48,9 @@ const getLaunchPath = config =>
   isPackage()
     ? { path: config.packagePath }
     : {
-        path: electronPath,
-        args: [config.buildPath],
-      };
+      path: electronPath,
+      args: [config.buildPath],
+    };
 
 const launch = async config => {
   if (!config) {

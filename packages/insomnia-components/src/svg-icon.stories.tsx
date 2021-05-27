@@ -38,7 +38,7 @@ export const reference = () => (
         {(Object.keys(SvgIcon.icons) as IconId[])
           .sort()
           .map(name => (
-            <TableRow>
+            <TableRow key={name}>
               <TableData>
                 <code>{name}</code>
               </TableData>

@@ -25,7 +25,7 @@ export function diff(source: string, target: string, blockSize: number): Operati
   // Iterate over source blocks in order and match them to target
   let lastTargetMatch = 0;
 
-  for (let targetPosition = 0; targetPosition < target.length; ) {
+  for (let targetPosition = 0; targetPosition < target.length;) {
     const targetBlock = getBlock(target, targetPosition, blockSize);
     const sourceBlocks = sourceBlockMap[targetBlock.hash] || [];
 
@@ -104,7 +104,7 @@ function getBlock(value: string, start: number, blockSize: number): Block {
 function getBlockMap(value: string, blockSize: number): Record<string, Block> {
   const map = {};
 
-  for (let i = 0; i < value.length; ) {
+  for (let i = 0; i < value.length;) {
     const block = getBlock(value, i, blockSize);
 
     if (map[block.hash]) {

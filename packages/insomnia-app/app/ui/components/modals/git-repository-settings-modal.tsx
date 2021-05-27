@@ -66,10 +66,10 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
     const uri = inputs.uri || '';
     const credentials = inputs.token
       ? {
-          type: 'token',
-          username: inputs.username,
-          token: inputs.token,
-        }
+        type: 'token',
+        username: inputs.username,
+        token: inputs.token,
+      }
       : null;
     const author = {
       name: inputs.authorName || '',

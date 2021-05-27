@@ -218,10 +218,10 @@ export const getBodyBuffer = <TFail = null>(
   response?: { bodyPath?: string, bodyCompression?: Compression },
   readFailureValue?: TFail | null,
 ) => getBodyBufferFromPath(
-  response?.bodyPath || '',
-  response?.bodyCompression || null,
-  readFailureValue,
-);
+    response?.bodyPath || '',
+    response?.bodyCompression || null,
+    readFailureValue,
+  );
 
 export function getTimeline(response: Response) {
   return getTimelineFromPath(response.timelinePath || '');

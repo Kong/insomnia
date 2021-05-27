@@ -60,51 +60,51 @@ const SidebarListItem = SortableElement<SidebarListItemProps>(({
   selectedEnvironment,
   showEnvironment,
 }) => {
-    const classes = classnames({
-      'env-modal__sidebar-item': true,
-      'env-modal__sidebar-item--active': selectedEnvironment === environment,
-      // Specify theme because dragging will pull it out to <body>
-      'theme--dialog': true,
-    });
-    return (
-      <li key={environment._id} className={classes}>
-        <Button onClick={showEnvironment} value={environment}>
-          <i className="fa fa-drag-handle drag-handle" />
-          {environment.color ? (
-            <i
-              className="space-right fa fa-circle"
-              style={{
-                color: environment.color,
-              }}
-            />
-          ) : (
-            <i className="space-right fa fa-empty" />
-          )}
-
-          {environment.isPrivate && (
-            <Tooltip position="top" message="Environment will not be exported or synced">
-              <i className="fa fa-eye-slash faint space-right" />
-            </Tooltip>
-          )}
-
-          <Editable
-            className="inline-block"
-            onSubmit={name => changeEnvironmentName(environment, name)}
-            value={environment.name}
+  const classes = classnames({
+    'env-modal__sidebar-item': true,
+    'env-modal__sidebar-item--active': selectedEnvironment === environment,
+    // Specify theme because dragging will pull it out to <body>
+    'theme--dialog': true,
+  });
+  return (
+    <li key={environment._id} className={classes}>
+      <Button onClick={showEnvironment} value={environment}>
+        <i className="fa fa-drag-handle drag-handle" />
+        {environment.color ? (
+          <i
+            className="space-right fa fa-circle"
+            style={{
+              color: environment.color,
+            }}
           />
-        </Button>
-        <div className="env-status">
-          {environment._id === activeEnvironmentId ? (
-            <i className="fa fa-square active" title="Active Environment" />
-          ) : (
-            <Button onClick={handleActivateEnvironment} value={environment}>
-              <i className="fa fa-square-o inactive" title="Click to activate Environment" />
-            </Button>
-          )}
-        </div>
-      </li>
-    );
-  },
+        ) : (
+          <i className="space-right fa fa-empty" />
+        )}
+
+        {environment.isPrivate && (
+          <Tooltip position="top" message="Environment will not be exported or synced">
+            <i className="fa fa-eye-slash faint space-right" />
+          </Tooltip>
+        )}
+
+        <Editable
+          className="inline-block"
+          onSubmit={name => changeEnvironmentName(environment, name)}
+          value={environment.name}
+        />
+      </Button>
+      <div className="env-status">
+        {environment._id === activeEnvironmentId ? (
+          <i className="fa fa-square active" title="Active Environment" />
+        ) : (
+          <Button onClick={handleActivateEnvironment} value={environment}>
+            <i className="fa fa-square-o inactive" title="Click to activate Environment" />
+          </Button>
+        )}
+      </div>
+    </li>
+  );
+},
 );
 
 interface SidebarListProps extends Omit<SidebarListItemProps, 'environment'> {

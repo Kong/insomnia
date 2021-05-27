@@ -1126,8 +1126,8 @@ export function _getAwsAuthHeaders(
     path: parsedUrl.path,
     headers: contentTypeHeader
       ? {
-          'content-type': contentTypeHeader.value,
-        }
+        'content-type': contentTypeHeader.value,
+      }
       : {},
   };
   const signature = aws4.sign(awsSignOptions, credentials);

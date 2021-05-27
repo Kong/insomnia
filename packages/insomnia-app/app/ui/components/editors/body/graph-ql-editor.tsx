@@ -655,8 +655,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
             lintOptions={
               schema
                 ? {
-                    schema,
-                  }
+                  schema,
+                }
                 : undefined
             }
             fontSize={settings.editorFontSize}
