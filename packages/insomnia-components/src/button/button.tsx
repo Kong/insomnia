@@ -8,12 +8,17 @@ export const ButtonSizeEnum = {
   Medium: 'medium',
 } as const;
 
+// These variants determine how the `bg` color variable is handled
+// Outlined sets the `bg` color as an outline
+// Contained sets the `bg` color as the background color
+// Text sets the `bg` color as the text color
 export const ButtonVariantEnum = {
   Outlined: 'outlined',
   Contained: 'contained',
   Text: 'text',
 } as const;
 
+// Sets the `bg` color to a themed color
 export const ButtonThemeEnum = {
   Default: 'default',
   Surprise: 'surprise',
