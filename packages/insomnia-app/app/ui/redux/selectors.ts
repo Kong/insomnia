@@ -297,6 +297,22 @@ export const selectActiveUnitTests = createSelector(
     return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
   },
 );
+
+export const selectSpaces = createSelector(
+  selectEntitiesLists,
+  (entities) => {
+    // @ts-expect-error -- TSCONVERSION
+    return entities.spaces;
+  },
+);
+
+export const selectActiveSpace = createSelector(
+  selectSpaces,
+  (spaces) => {
+    return spaces[0];
+  },
+);
+
 export const selectActiveUnitTestSuites = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,

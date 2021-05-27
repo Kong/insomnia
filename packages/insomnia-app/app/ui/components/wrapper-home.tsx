@@ -51,6 +51,7 @@ import { bindActionCreators } from 'redux';
 import * as workspaceActions from '../redux/modules/workspace';
 import * as gitActions from '../redux/modules/git';
 import { MemClient } from '../../sync/git/mem-client';
+import { SpaceDropdown } from './dropdowns/space-dropdown';
 
 interface RenderedCard {
   card: ReactNode;
@@ -330,27 +331,6 @@ class WrapperHome extends PureComponent<Props, State> {
     );
   }
 
-  renderSpaceMenu() {
-    const spaceName = 'Space 1';
-    const button = (
-      <button type="button" className="row">
-        <div
-          title={spaceName}>
-          {spaceName}
-        </div>
-        <i className="fa fa-caret-down space-left" />
-      </button>
-    );
-
-    return <Dropdown renderButton={button}>
-      <DropdownItem icon={<i className="fa fa-cog" />} right={<i className="fa fa-check" />}>Space 1</DropdownItem>
-      <DropdownItem icon={<i className="fa fa-cog" />}>Space 2</DropdownItem>
-      <DropdownDivider />
-      <DropdownItem icon={<></>}>Settings</DropdownItem>
-      <DropdownItem icon={<></>}>Create a workspace</DropdownItem>
-    </Dropdown>;
-  }
-
   renderDashboardMenu() {
     const { vcs, workspaces } = this.props.wrapperProps;
     return (
@@ -397,7 +377,7 @@ class WrapperHome extends PureComponent<Props, State> {
             gridLeft={
               <Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb crumbs={[{ id: 'space', node: this.renderSpaceMenu() }]} />
+                <Breadcrumb crumbs={[{ id: 'space', node: <SpaceDropdown /> }]} />
                 {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </Fragment>
             }
