@@ -1,31 +1,37 @@
-import { Dropdown, DropdownDivider, DropdownItem } from 'insomnia-components';
-import React, { FC } from 'react';
+import { Dropdown, DropdownItem } from 'insomnia-components';
+import React, { FC, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { getAppName } from '../../../common/constants';
-import { Space } from '../../../models/space';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 
+const mapSpace = ({ _id, name }: Space) => ({ id: _id, name });
+const defaultSpace = { id: BASE_SPACE_ID, name: getAppName() };
+
 export const SpaceDropdown: FC = () => {
-  const loadedSpaces = (useSelector(selectSpaces) as Space[]).map(space => ({ id: space._id, name: space.name }));
-  const activeSpaceId = (useSelector(selectActiveSpace) as Space | null)?._id;
+  // get list of spaces
+  const loadedSpaces = useSelector(selectSpaces);
+  const spaces = [defaultSpace, ...(loadedSpaces.map(mapSpace))];
 
-  const defaultSpace = { id: null, name: getAppName() };
+  // figure out which space is selected
+  const activeSpace = useSelector(selectActiveSpace);
+  const selectedSpace = spaces.find(space => space.id === activeSpace?._id) || defaultSpace;
 
-  const spaces = [defaultSpace, ...loadedSpaces];
+  const button = useMemo(() => (
+    <button type="button" className="row" title={selectedSpace.name}>
+      {selectedSpace.name}
+      <i className="fa fa-caret-down space-left" />
+    </button>),
+  [selectedSpace]);
 
-  const button = <button type="button" className="row">
-    <div
-      title={spaceName}>
-      {spaceName}
-    </div>
-    <i className="fa fa-caret-down space-left" />
-  </button>;
+  const icon = useMemo(() => <i className="fa fa-cog" />, []);
+  const check = useMemo(() => <i className="fa fa-check" />, []);
 
   return <Dropdown renderButton={button}>
-    <DropdownItem icon={<i className="fa fa-cog" />} right={<i className="fa fa-check" />}>Space 1</DropdownItem>
-    <DropdownItem icon={<i className="fa fa-cog" />}>Space 2</DropdownItem>
-    <DropdownDivider />
-    <DropdownItem icon={<></>}>Settings</DropdownItem>
-    <DropdownItem icon={<></>}>Create a space</DropdownItem>
+    {spaces.map(({ id, name }) => (
+      <DropdownItem key={id} icon={icon} right={id === selectedSpace.id && check}>
+        {name}
+      </DropdownItem>
+    ))}
   </Dropdown>;
 };
