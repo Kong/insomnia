@@ -88,6 +88,7 @@ export async function allDocs() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
   return [
     ...(await models.settings.all()),
+    ...(await models.space.all()),
     ...(await models.workspace.all()),
     ...(await models.workspaceMeta.all()),
     ...(await models.gitRepository.all()),
