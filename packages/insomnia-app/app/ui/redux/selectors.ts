@@ -309,12 +309,12 @@ export const selectSpaces = createSelector<any, {}, Space[]>(
 );
 
 // TODO(TSCONVERSION) type this properly when doing the rest of this file
-export const selectActiveSpace = createSelector<any, {}, {}, Space | null>(
+export const selectActiveSpace = createSelector<any, {}, {}, Space | undefined>(
   state => state.entities,
   state => state.global.activeSpaceId,
   (entities, activeSpaceId) => {
     // @ts-expect-error -- TSCONVERSION
-    return entities.spaces[activeSpaceId] || null;
+    return entities.spaces[activeSpaceId];
   },
 );
 
