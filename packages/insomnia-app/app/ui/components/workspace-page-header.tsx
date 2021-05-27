@@ -53,7 +53,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
         <Fragment>
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />
           <Breadcrumb crumbs={[{ id: 'home', node: strings.home, onClick: homeCallback },
-{ id: 'workspace', node: <Fragment key="workspace-dd">{workspace}</Fragment> }]}/>
+            { id: 'workspace', node: <Fragment key="workspace-dd">{workspace}</Fragment> }]}/>
         </Fragment>
       }
       gridCenter={
