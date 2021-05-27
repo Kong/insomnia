@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useMemo } from 'react';
 import styled from 'styled-components';
 import { getGrpcPathSegments, getShortGrpcPath } from '../../../../common/grpc-paths';
-import { Button, Tooltip } from 'insomnia-components';
+import { Button, ButtonProps, Tooltip } from 'insomnia-components';
 
 const FlexSpaceBetween = styled.span`
   width: 100%;
@@ -25,8 +25,15 @@ const useLabel = (fullPath?: string) =>
     return 'Select Method';
   }, [fullPath]);
 
+const buttonProps: ButtonProps = {
+  className: "tall wide",
+  variant: 'text',
+  size: 'medium',
+  'radius': '0',
+};
+
 const GrpcMethodDropdownButton: FunctionComponent<Props> = ({ fullPath }) => (
-  <Button className="tall wide" variant="text" size="medium" radius="0">
+  <Button {...buttonProps}>
     <Tooltip className="tall wide" message={fullPath} position="bottom" delay={500}>
       <FlexSpaceBetween>
         {useLabel(fullPath)}
