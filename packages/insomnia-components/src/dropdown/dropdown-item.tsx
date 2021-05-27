@@ -114,11 +114,7 @@ export class DropdownItem extends PureComponent<DropdownItemProps> {
       disabled,
       right,
       icon,
-      onClick,
-      // eslint-disable-line no-unused-vars
-      stayOpenAfterClick,
-      // eslint-disable-line no-unused-vars
-      ...props
+      selected,
     } = this.props;
 
     const styles = color ? { color } : {};
@@ -134,7 +130,7 @@ export class DropdownItem extends PureComponent<DropdownItemProps> {
         type="button"
         onClick={this._handleClick}
         disabled={disabled}
-        {...props}>
+        selected={selected}>
         {icon && <StyledIconContainer>{icon}</StyledIconContainer>}
         {inner}
         {right && <StyledRightNode>{right}</StyledRightNode>}

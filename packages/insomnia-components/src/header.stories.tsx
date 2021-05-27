@@ -14,8 +14,7 @@ export const _primary = () => (
     gridLeft={
       <Fragment>
         <Breadcrumb
-          className="breadcrumb"
-          crumbs={['Documents', 'Deployment']}
+          crumbs={[{ id: '1', node: 'Documents' }, { id: '2', node: 'Deployment' }]}
         />
       </Fragment>
     }
