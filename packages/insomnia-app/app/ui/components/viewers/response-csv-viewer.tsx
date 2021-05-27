@@ -56,9 +56,11 @@ class ResponseCSVViewer extends PureComponent<Props, State> {
         <table className="table--fancy table--striped table--compact selectable">
           <tbody>
             {result.data.map(row => (
+              // TODO: figure out what to key this with
+              // eslint-disable-next-line react/jsx-key
               <tr>
                 {row.map(c => (
-                  <td>{c}</td>
+                  <td key={c}>{c}</td>
                 ))}
               </tr>
             ))}

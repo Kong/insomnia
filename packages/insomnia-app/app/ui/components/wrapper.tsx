@@ -817,8 +817,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               gitSyncDropdown={gitSyncDropdown}
               wrapperProps={this.props}
               handleActivityChange={this._handleWorkspaceActivityChange}
-              children={sidebarChildren}
-            />
+            >
+              {sidebarChildren}
+            </WrapperUnitTest>
           )}
 
           {activity === ACTIVITY_DEBUG && (

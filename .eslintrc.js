@@ -105,5 +105,7 @@ module.exports = {
     'no-redeclare': 'off',
     '@typescript-eslint/no-redeclare': 'error',
     semi: ['error', 'always'],
+    'react/no-find-dom-node': 'off',
+    'react/no-unescaped-entities': 'off', // TSCONVERSION
   },
 };

@@ -160,9 +160,10 @@ class SidebarChildren extends PureComponent<Props> {
           workspace={workspace}
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}
-          children={children}
           activeEnvironment={activeEnvironment}
-        />
+        >
+          {children}
+        </SidebarRequestGroupRow>
       );
     });
   }

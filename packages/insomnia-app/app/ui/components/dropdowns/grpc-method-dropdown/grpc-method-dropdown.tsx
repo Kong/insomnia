@@ -49,9 +49,9 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
       )}
       {Object.keys(groupedByPkg).map(pkgName => (
         <Fragment key={pkgName}>
-          <DropdownDivider
-            children={pkgName !== NO_PACKAGE_KEY && <NormalCase>pkg: {pkgName}</NormalCase>}
-          />
+          <DropdownDivider>
+            {pkgName !== NO_PACKAGE_KEY && <NormalCase>pkg: {pkgName}</NormalCase>}
+          </DropdownDivider>
           {groupedByPkg[pkgName].map(({ segments, type, fullPath }: GrpcMethodInfo) => (
             <DropdownItem
               key={fullPath}

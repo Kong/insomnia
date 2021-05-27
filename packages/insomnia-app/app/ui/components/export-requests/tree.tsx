@@ -49,8 +49,9 @@ class Tree extends PureComponent<Props> {
         totalRequests={node.totalRequests}
         selectedRequests={node.selectedRequests}
         requestGroup={requestGroup}
-        children={children}
-      />
+      >
+        {children}
+      </RequestGroupRow>
     );
   }
 
