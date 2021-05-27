@@ -39,7 +39,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const StyledButton = styled.button<ButtonProps>`
   color: ${({ bg }) => (bg ? `var(--color-${bg})` : 'var(--color-font)')};
-  margin: ${({ margin}) => (margin ? margin : 0)};
+  margin: ${({ margin }) => (margin || 0)};
   text-align: center;
   font-size: var(--font-size-sm);
   display: inline-flex !important;

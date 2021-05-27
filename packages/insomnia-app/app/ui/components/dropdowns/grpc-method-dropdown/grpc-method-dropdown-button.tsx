@@ -26,10 +26,10 @@ const useLabel = (fullPath?: string) =>
   }, [fullPath]);
 
 const buttonProps: ButtonProps = {
-  className: "tall wide",
+  className: 'tall wide',
   variant: 'text',
   size: 'medium',
-  'radius': '0',
+  radius: '0',
 };
 
 const GrpcMethodDropdownButton: FunctionComponent<Props> = ({ fullPath }) => (
