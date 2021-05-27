@@ -121,34 +121,43 @@ module.exports.templateTags = [
       let response = await context.util.models.response.getLatestForRequestId(id, environmentId);
 
       let shouldResend = false;
-      if (context.context.getExtraInfo('fromResponseTag')) {
-        shouldResend = false;
-      } else if (resendBehavior === 'never') {
-        shouldResend = false;
-      } else if (resendBehavior === 'no-history') {
-        shouldResend = !response;
-      } else if (resendBehavior === 'when-expired') {
-        if (!response) {
+      switch (resendBehavior) {
+        case 'no-history':
+          shouldResend = !response;
+          break;
+
+        case 'when-expired':
+          if (!response) {
+            shouldResend = true;
+          } else {
+            const ageSeconds = (Date.now() - response.created) / 1000;
+            shouldResend = ageSeconds > maxAgeSeconds;
+          }
+          break;
+        
+        case 'always':
           shouldResend = true;
-        } else {
-          const ageSeconds = (Date.now() - response.created) / 1000;
-          shouldResend = ageSeconds > maxAgeSeconds;
-        }
-      } else if (resendBehavior === 'always') {
-        shouldResend = true;
+          break;
+
+        case 'never':
+        default:
+          shouldResend = false;
+          break;
+
       }
 
       // Make sure we only send the request once per render so we don't have infinite recursion
-      const fromResponseTag = context.context.getExtraInfo('fromResponseTag');
-      if (fromResponseTag) {
+      const requestChain = context.context.getExtraInfo('requestChain') || [];
+      if (requestChain.some(id => id === request._id)) {
         console.log('[response tag] Preventing recursive render');
         shouldResend = false;
       }
 
       if (shouldResend && context.renderPurpose === 'send') {
         console.log('[response tag] Resending dependency');
+        requestChain.push(request._id)
         response = await context.network.sendRequest(request, [
-          { name: 'fromResponseTag', value: true },
+          { name: 'requestChain', value: requestChain }
         ]);
       }
 
@@ -172,44 +181,43 @@ module.exports.templateTags = [
       }
 
       const sanitizedFilter = filter.trim();
+      const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
+      const match = response.contentType && response.contentType.match(/charset=([\w-]+)/);
+      const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+      switch (field) {
+        case 'header':
+          return matchHeader(response.headers, sanitizedFilter);
 
-      if (field === 'header') {
-        return matchHeader(response.headers, sanitizedFilter);
-      } else if (field === 'url') {
-        return response.url;
-      } else if (field === 'raw') {
-        const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
-        const match = response.contentType.match(/charset=([\w-]+)/);
-        const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+        case 'url':
+          return response.url;
 
-        // Sometimes iconv conversion fails so fallback to regular buffer
-        try {
-          return iconv.decode(bodyBuffer, charset);
-        } catch (err) {
-          console.warn('[response] Failed to decode body', err);
-          return bodyBuffer.toString();
-        }
-      } else if (field === 'body') {
-        const bodyBuffer = context.util.models.response.getBodyBuffer(response, '');
-        const match = response.contentType.match(/charset=([\w-]+)/);
-        const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+        case 'raw':
+          // Sometimes iconv conversion fails so fallback to regular buffer
+          try {
+            return iconv.decode(bodyBuffer, charset);
+          } catch (err) {
+            console.warn('[response] Failed to decode body', err);
+            return bodyBuffer.toString();
+          }
 
-        // Sometimes iconv conversion fails so fallback to regular buffer
-        let body;
-        try {
-          body = iconv.decode(bodyBuffer, charset);
-        } catch (err) {
-          body = bodyBuffer.toString();
-          console.warn('[response] Failed to decode body', err);
-        }
+        case 'body':
+          // Sometimes iconv conversion fails so fallback to regular buffer
+          let body;
+          try {
+            body = iconv.decode(bodyBuffer, charset);
+          } catch (err) {
+            body = bodyBuffer.toString();
+            console.warn('[response] Failed to decode body', err);
+          }
+    
+          if (sanitizedFilter.indexOf('$') === 0) {
+            return matchJSONPath(body, sanitizedFilter);
+          } else {
+            return matchXPath(body, sanitizedFilter);
+          }
 
-        if (sanitizedFilter.indexOf('$') === 0) {
-          return matchJSONPath(body, sanitizedFilter);
-        } else {
-          return matchXPath(body, sanitizedFilter);
-        }
-      } else {
-        throw new Error(`Unknown field ${field}`);
+        default:
+          throw new Error(`Unknown field ${field}`);
       }
     },
   },
