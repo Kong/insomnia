@@ -4,40 +4,43 @@ import NunjucksVariableModal from '../../modals/nunjucks-modal';
 import { showModal } from '../../modals/index';
 import { tokenizeTag } from '../../../../templating/utils';
 import { getTagDefinitions } from '../../../../templating/index';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
-CodeMirror.defineExtension(
-  'enableNunjucksTags',
-  function(handleRender, handleGetRenderContext, isVariableUncovered = false) {
-    if (!handleRender) {
-      console.warn("enableNunjucksTags wasn't passed a render function");
-      return;
+CodeMirror.defineExtension('enableNunjucksTags', function(
+  handleRender: HandleRender,
+  handleGetRenderContext: HandleGetRenderContext,
+  isVariableUncovered = false,
+) {
+  if (!handleRender) {
+    console.warn("enableNunjucksTags wasn't passed a render function");
+    return;
+  }
+
+  const refreshFn = _highlightNunjucksTags.bind(
+    this,
+    handleRender,
+    handleGetRenderContext,
+    isVariableUncovered,
+  );
+
+  const debouncedRefreshFn = misc.debounce(refreshFn);
+  this.on('change', (_cm, change) => {
+    const origin = change.origin || 'unknown';
+
+    if (!origin.match(/^[+*]/)) {
+      // Refresh immediately on non-joinable events
+      // (cut, paste, autocomplete; as opposed to +input, +delete)
+      refreshFn();
+    } else {
+      // Debounce all joinable events
+      debouncedRefreshFn();
     }
-
-    const refreshFn = _highlightNunjucksTags.bind(
-      this,
-      handleRender,
-      handleGetRenderContext,
-      isVariableUncovered,
-    );
-
-    const debouncedRefreshFn = misc.debounce(refreshFn);
-    this.on('change', (_cm, change) => {
-      const origin = change.origin || 'unknown';
-
-      if (!origin.match(/^[+*]/)) {
-        // Refresh immediately on non-joinable events
-        // (cut, paste, autocomplete; as opposed to +input, +delete)
-        refreshFn();
-      } else {
-        // Debounce all joinable events
-        debouncedRefreshFn();
-      }
-    });
-    this.on('cursorActivity', debouncedRefreshFn);
-    this.on('viewportChange', debouncedRefreshFn);
-    // Trigger once right away to snappy perf
-    refreshFn();
-  },
+  });
+  this.on('cursorActivity', debouncedRefreshFn);
+  this.on('viewportChange', debouncedRefreshFn);
+  // Trigger once right away to snappy perf
+  refreshFn();
+},
 );
 
 async function _highlightNunjucksTags(render, renderContext, isVariableUncovered) {
@@ -186,13 +189,12 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       // Set up the drag
       el.addEventListener('dragstart', event => {
         // Setup the drag contents
-        // @ts-expect-error -- TSCONVERSION
-        const template = event.target?.getAttribute('data-template');
-        event.dataTransfer?.setData('text/plain', template);
-        // @ts-expect-error -- TSCONVERSION
-        event.dataTransfer.effectAllowed = 'copyMove';
-        // @ts-expect-error -- TSCONVERSION
-        event.dataTransfer.dropEffect = 'move';
+        if (event.dataTransfer) {
+          const template = (event.target as typeof el)?.getAttribute('data-template') || '';
+          event.dataTransfer.setData('text/plain', template);
+          event.dataTransfer.effectAllowed = 'copyMove';
+          event.dataTransfer.dropEffect = 'move';
+        }
         // Add some listeners
         this.on('beforeChange', beforeChangeCb);
         this.on('drop', dropCb);
