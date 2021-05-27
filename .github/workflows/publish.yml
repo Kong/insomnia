@@ -15,7 +15,7 @@ jobs:
       - name: Extract release channel from tag
         id: extract
         run: |
-          if [[ ${{ github.event.inputs.tag }} =~ ^core@\d{4}\.\d+\.\d+$ ]]; then
+          if [[ ${{ github.event.inputs.tag }} =~ ^core@[0-9]{4}\.[0-9]+\.[0-9]+$ ]]; then
             echo ::set-output name=channel::stable
           fi
     outputs:
