@@ -676,28 +676,28 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
 
       try {
         switch (selectedFormat) {
-        case VALUE_HAR:
-          stringifiedExport = await importUtils.exportRequestsHAR(
-            requests,
-            exportPrivateEnvironments,
-          );
-          break;
+          case VALUE_HAR:
+            stringifiedExport = await importUtils.exportRequestsHAR(
+              requests,
+              exportPrivateEnvironments,
+            );
+            break;
 
-        case VALUE_YAML:
-          stringifiedExport = await importUtils.exportRequestsData(
-            requests,
-            exportPrivateEnvironments,
-            'yaml',
-          );
-          break;
+          case VALUE_YAML:
+            stringifiedExport = await importUtils.exportRequestsData(
+              requests,
+              exportPrivateEnvironments,
+              'yaml',
+            );
+            break;
 
-        case VALUE_JSON:
-          stringifiedExport = await importUtils.exportRequestsData(
-            requests,
-            exportPrivateEnvironments,
-            'json',
-          );
-          break;
+          case VALUE_JSON:
+            stringifiedExport = await importUtils.exportRequestsData(
+              requests,
+              exportPrivateEnvironments,
+              'json',
+            );
+            break;
         }
       } catch (err) {
         showError({
