@@ -34,6 +34,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
     () => handleActivityChange(activeWorkspace._id, ACTIVITY_HOME),
     [activeWorkspace._id, handleActivityChange],
   );
+
   const workspace = (
     <WorkspaceDropdown
       displayName={collection ? activeWorkspace.name : activeApiSpec.fileName}
@@ -44,6 +45,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
       isLoading={isLoading}
     />
   );
+
   return (
     <Header
       className="app-header theme--app-header"
@@ -51,11 +53,8 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
         <Fragment>
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />
           <Breadcrumb
-            className="breadcrumb"
-            // @ts-expect-error -- TSCONVERSION
-            crumbs={[strings.home, <Fragment key="workspace-dd">{workspace}</Fragment>]}
-            onClick={homeCallback}
-          />
+            crumbs={[{ id: 'home', node: strings.home, onClick: homeCallback },
+              { id: 'workspace', node: <Fragment key="workspace-dd">{workspace}</Fragment> }]}/>
         </Fragment>
       }
       gridCenter={

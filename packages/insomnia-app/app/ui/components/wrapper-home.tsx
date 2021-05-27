@@ -1,11 +1,10 @@
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { GlobalActivity } from '../../common/constants';
 import {
+  GlobalActivity,
   ACTIVITY_DEBUG,
   ACTIVITY_SPEC,
   AUTOBIND_CFG,
-  getAppName,
   isWorkspaceActivity,
 } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
@@ -52,6 +51,7 @@ import { bindActionCreators } from 'redux';
 import * as workspaceActions from '../redux/modules/workspace';
 import * as gitActions from '../redux/modules/git';
 import { MemClient } from '../../sync/git/mem-client';
+import { SpaceDropdown } from './dropdowns/space-dropdown';
 
 interface RenderedCard {
   card: ReactNode;
@@ -377,7 +377,7 @@ class WrapperHome extends PureComponent<Props, State> {
             gridLeft={
               <Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb className="breadcrumb" crumbs={[getAppName()]} />
+                <Breadcrumb crumbs={[{ id: 'space', node: <SpaceDropdown /> }]} />
                 {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </Fragment>
             }

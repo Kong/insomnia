@@ -22,10 +22,14 @@ import {
   SET_ACTIVE_WORKSPACE,
   setActiveActivity,
   setActiveWorkspace,
+  SET_ACTIVE_SPACE,
+  setActiveSpace,
+  initActiveSpace,
 } from '../global';
 import * as models from '../../../../models';
 import fs from 'fs';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
+import { BASE_SPACE_ID } from '../../../../models/space';
 
 jest.mock('../../../../common/analytics');
 
@@ -99,6 +103,20 @@ describe('global', () => {
       const settings = await models.settings.getOrCreate();
       expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
       expect(settings.hasPromptedOnboarding).toBe(false);
+    });
+  });
+
+  describe('setActiveSpace', () => {
+    it('should update local storage', () => {
+      const spaceId = 'id';
+      const expectedEvent = {
+        type: SET_ACTIVE_SPACE,
+        spaceId,
+      };
+      expect(setActiveSpace(spaceId)).toStrictEqual(expectedEvent);
+      expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeSpaceId`)).toBe(
+        JSON.stringify(spaceId),
+      );
     });
   });
 
@@ -227,6 +245,29 @@ describe('global', () => {
         workspaceId,
       };
       expect(initActiveWorkspace()).toStrictEqual(expectedEvent);
+    });
+  });
+
+  describe('initActiveSpace', () => {
+    it('should initialize from local storage', () => {
+      const spaceId = 'id';
+      global.localStorage.setItem(
+        `${LOCALSTORAGE_PREFIX}::activeSpaceId`,
+        JSON.stringify(spaceId),
+      );
+      const expectedEvent = {
+        type: SET_ACTIVE_SPACE,
+        spaceId,
+      };
+      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+    });
+
+    it('should default to base space if not exist', () => {
+      const expectedEvent = {
+        type: SET_ACTIVE_SPACE,
+        spaceId: BASE_SPACE_ID,
+      };
+      expect(initActiveSpace()).toStrictEqual(expectedEvent);
     });
   });
 

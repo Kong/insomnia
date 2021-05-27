@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect';
 import * as models from '../../models';
+import { Space } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 // ~~~~~~~~~ //
 // Selectors //
@@ -297,6 +298,26 @@ export const selectActiveUnitTests = createSelector(
     return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
   },
 );
+
+// TODO(TSCONVERSION) type this properly when doing the rest of this file
+export const selectSpaces = createSelector<any, {}, Space[]>(
+  selectEntitiesLists,
+  (entities) => {
+    // @ts-expect-error -- TSCONVERSION
+    return entities.spaces;
+  },
+);
+
+// TODO(TSCONVERSION) type this properly when doing the rest of this file
+export const selectActiveSpace = createSelector<any, {}, {}, Space | undefined>(
+  state => state.entities,
+  state => state.global.activeSpaceId,
+  (entities, activeSpaceId) => {
+    // @ts-expect-error -- TSCONVERSION
+    return entities.spaces[activeSpaceId];
+  },
+);
+
 export const selectActiveUnitTestSuites = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
