@@ -1,8 +1,8 @@
 import { generateServices } from './services';
-import { getSpec } from './utils';
 import { DCRoute, DCService } from '../types/declarative-config';
 import { OA3Operation } from '../types';
 import { xKongPluginKeyAuth, xKongPluginRequestValidator, xKongRouteDefaults } from '../types/kong';
+import { getSpec } from '../common';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCService =>

@@ -2,27 +2,32 @@ import { RequireAtLeastOne } from 'type-fest';
 import { DCRoute, DCService, DCUpstream } from './declarative-config';
 import { Taggable } from './outputs';
 
-export const xKongName = 'x-kong-name';
+export type XKongProperty<Property extends string = string> = `x-kong-${Property}`;
+
+export const xKongName: XKongProperty<'name'> = 'x-kong-name';
 export interface XKongName {
   [xKongName]?: string;
 }
 
-export const xKongRouteDefaults = 'x-kong-route-defaults';
+export const xKongRouteDefaults: XKongProperty<'route-defaults'> = 'x-kong-route-defaults';
 export interface XKongRouteDefaults {
   [xKongRouteDefaults]?: Partial<DCRoute>;
 }
 
-export const xKongUpstreamDefaults = 'x-kong-upstream-defaults';
+export const xKongUpstreamDefaults: XKongProperty<'upstream-defaults'> = 'x-kong-upstream-defaults';
 export interface XKongUpstreamDefaults {
   [xKongUpstreamDefaults]?: Partial<DCUpstream>;
 }
 
-export const xKongServiceDefaults = 'x-kong-service-defaults';
+export const xKongServiceDefaults: XKongProperty<'service-defaults'> = 'x-kong-service-defaults';
 export interface XKongServiceDefaults {
   [xKongServiceDefaults]?: Partial<DCService>;
 }
 
-export interface PluginBase extends Taggable {
+export type XKongPluginProperty<Name extends string = string> = XKongProperty<`plugin-${Name}`>
+
+// Note: it's important that `Name` doesn't have a default argument.  We want to force the consumer of this type to specify the name as specifically as possible because this value is instrumental to how the plugins are used and discriminated.
+export interface PluginBase<Name extends string> extends Taggable {
   /**
    * Whether this plugin will be applied.
    *
@@ -30,7 +35,8 @@ export interface PluginBase extends Taggable {
    */
   enabled?: boolean;
   /** The name of the plugin to use. */
-  name: string;
+  name: Name;
+  config?: Record<string, any>;
   service?: {
     /** The ID of the Service the plugin targets. */
     id: string;
@@ -44,6 +50,21 @@ export interface PluginBase extends Taggable {
     id: string;
   };
 }
+
+/**
+ * A plugin which is not associated to any service, route, or consumer is considered global, and will be run on every request.
+ *
+ * see: https://docs.konghq.com/hub/kong-inc/openid-connect/#enabling-the-plugin-globally
+ */
+export type GlobalPluginBase<Name extends string> = Omit<PluginBase<Name>, 'service' | 'route' | 'consumer'>
+
+/** used for user-defined or yet-untyped plugins */
+export type XKongPlugin<Plugin extends PluginBase<string>> = Partial<
+  Record<
+    XKongPluginProperty<Plugin['name']>,
+    Plugin
+  >
+>
 
 export interface BodySchema {
   /** The request body schema specification */
@@ -98,19 +119,18 @@ export interface ParameterSchemas {
   parameter_schema: ParameterSchema[];
 }
 
-export const isBodySchema = (value?: BodySchema | ParameterSchemas): value is BodySchema => (
-  Object.prototype.hasOwnProperty.call(value, 'body_schema')
+export const isBodySchema = (value: Partial<BodySchema | ParameterSchemas> = {}): value is BodySchema => (
+  Object.prototype.hasOwnProperty.call(value, 'body_schema') && (value as BodySchema).body_schema !== undefined
 );
 
-export const isParameterSchema = (value?: BodySchema | ParameterSchemas): value is ParameterSchemas => (
-  Object.prototype.hasOwnProperty.call(value, 'parameter_schema')
+export const isParameterSchema = (value: Partial<BodySchema | ParameterSchemas> = {}): value is ParameterSchemas => (
+  Object.prototype.hasOwnProperty.call(value, 'parameter_schema') && (value as ParameterSchemas).parameter_schema !== undefined
 );
 
 /** see: https://docs.konghq.com/hub/kong-inc/request-validator/#parameters */
-export const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
-export interface RequestValidatorPlugin extends PluginBase {
-  name: 'request-validator'
-  config?: {
+export type RequestValidator = 'request-validator';
+export interface RequestValidatorPlugin extends PluginBase<RequestValidator> {
+  config: {
     /**
      * List of allowed content types.
      *
@@ -118,7 +138,7 @@ export interface RequestValidatorPlugin extends PluginBase {
      *
      * @defaultValue application/json
      */
-    allowed_content_types?: string;
+    allowed_content_types?: string[];
     /**
      * Which validator to use.
      *
@@ -128,21 +148,19 @@ export interface RequestValidatorPlugin extends PluginBase {
      */
     version?: 'draft4' | 'kong';
     /**
-     * The request body schema specification. One of body_schema or parameter_schema must be specified.
+     * If enabled, the plugin returns more verbose and detailed validation errors (for example, the name of the required field that is missing).
      *
      * @defaultValue false
      */
     verbose_response?: boolean;
   } & RequireAtLeastOne<BodySchema & ParameterSchemas>;
 }
-export interface XKongPluginRequestValidator {
-  [xKongPluginRequestValidator]?: RequestValidatorPlugin;
-}
+export const xKongPluginRequestValidator: XKongPluginProperty<RequestValidator> = 'x-kong-plugin-request-validator';
+export type XKongPluginRequestValidator = XKongPlugin<RequestValidatorPlugin>
 
 /** see: https://docs.konghq.com/hub/kong-inc/key-auth/#parameters */
-export const xKongPluginKeyAuth = 'x-kong-plugin-key-auth';
-export interface KeyAuthPlugin extends PluginBase {
-  name: 'key-auth';
+export type KeyAuth = 'key-auth';
+export interface KeyAuthPlugin extends PluginBase<KeyAuth> {
   config: {
     /**
      * Describes an array of parameter names where the plugin will look for a key.
@@ -200,15 +218,12 @@ export interface KeyAuthPlugin extends PluginBase {
     run_on_preflight?: boolean;
   };
 }
-export interface XKongPluginKeyAuth {
-  [xKongPluginKeyAuth]?: KeyAuthPlugin;
-}
+export const xKongPluginKeyAuth: XKongPluginProperty<KeyAuth> = 'x-kong-plugin-key-auth';
+export type XKongPluginKeyAuth = XKongPlugin<KeyAuthPlugin>;
 
 /** see: https://docs.konghq.com/hub/kong-inc/request-termination/#parameters */
-export const xKongPluginRequestTermination = 'x-kong-plugin-request-termination';
-export interface RequestTerminationPlugin extends PluginBase {
-  /** the name of the plugin to use, in this case request-termination */
-  name: 'request-termination';
+export type RequestTermination = 'request-termination';
+export interface RequestTerminationPlugin extends PluginBase<RequestTermination> {
   config?: {
     /**
      * the response code to send
@@ -230,13 +245,12 @@ export interface RequestTerminationPlugin extends PluginBase {
     content_type?: string;
   }
 }
-export interface XKongPluginRequestTermination {
-  [xKongPluginRequestTermination]?: RequestTerminationPlugin;
-}
+export const xKongPluginRequestTermination: XKongPluginProperty<RequestTermination> = 'x-kong-plugin-request-termination';
+export type XKongPluginRequestTermination = XKongPlugin<RequestTerminationPlugin>
 
 /** see: https://docs.konghq.com/hub/kong-inc/basic-auth/#parameters */
-export interface BasicAuthPlugin extends Omit<PluginBase, 'consumer'> {
-  name: 'basic-auth';
+export type BasicAuth = 'basic-auth';
+export interface BasicAuthPlugin extends Omit<PluginBase<BasicAuth>, 'consumer'> {
   config?: {
     /**
      * An optional boolean value telling the plugin to show or hide the credential from the upstream service.
@@ -256,6 +270,8 @@ export interface BasicAuthPlugin extends Omit<PluginBase, 'consumer'> {
     anonymous?: string;
   }
 }
+export const xKongBasicAuth: XKongPluginProperty<BasicAuth> = 'x-kong-plugin-basic-auth';
+export type XKongBasicAuthPlugin = XKongPlugin<BasicAuthPlugin>
 
 export type AuthMethod =
   | 'password'
@@ -267,12 +283,16 @@ export type AuthMethod =
   | 'refresh_token'
   | 'session'
 
+export type OpenIDConnect = 'openid-connect';
+
 /**
  * Note: These types are incomplete, as there are dozens of parameters for the config.
  *
- * see: https://docs.konghq.com/hub/kong-inc/openid-connect/#parameter-descriptions */
-export interface OpenIDConnectPlugin extends Taggable { // note: appears to not extend PluginBase from what I can tell in the docs.
-  name: 'openid-connect';
+ * Note: This is a global plugin, not associated to any service, route, or consumer.
+ *
+ * see: https://docs.konghq.com/hub/kong-inc/openid-connect/#parameter-descriptions
+ */
+export interface OpenIDConnectPlugin extends GlobalPluginBase<OpenIDConnect> {
   enabled?: boolean;
   config?: {
     issuer?: string;
@@ -280,13 +300,12 @@ export interface OpenIDConnectPlugin extends Taggable { // note: appears to not 
     auth_methods?: AuthMethod[];
   }
 }
+export const xKongOpenIDConnect: XKongPluginProperty<OpenIDConnect> = 'x-kong-plugin-openid-connect';
+export type XOpenIDConnectPlugin = XKongPlugin<OpenIDConnectPlugin>;
 
-/** used for user-defined or yet-untyped plugins */
-export type PluginUnknown<Config = any> = PluginBase & {
-  config: Record<string, Config>
-}
-/** used for user-defined or yet-untyped plugins */
-export type XKongPluginUnknown<Config = any> = Record<
-  `x-kong-plugin-${string}`,
-  PluginUnknown<Config>
->
+export type Plugin =
+  | RequestValidatorPlugin
+  | KeyAuthPlugin
+  | RequestTerminationPlugin
+  | BasicAuthPlugin
+  | OpenIDConnectPlugin;

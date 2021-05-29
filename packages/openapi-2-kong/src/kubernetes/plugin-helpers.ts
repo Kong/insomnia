@@ -1,6 +1,6 @@
-import { HttpMethodType } from '../common';
-import { K8sIngress, K8sKongIngress, K8sKongPlugin } from '../types/kubernetes-config';
-import { xKongPluginKeyAuth, XKongPluginKeyAuth, XKongPluginUnknown } from '../types/kong';
+import { DummyPlugin, HttpMethodType } from '../common';
+import { K8sIngress, K8sKongIngress, K8sKongPlugin, K8sKongPluginBase } from '../types/kubernetes-config';
+import { xKongPluginKeyAuth, XKongPluginKeyAuth, PluginBase } from '../types/kong';
 
 export const pluginKeyAuth: XKongPluginKeyAuth = {
   [xKongPluginKeyAuth]: {
@@ -13,23 +13,13 @@ export const pluginKeyAuth: XKongPluginKeyAuth = {
   },
 };
 
-/** used only for testing */
-export const pluginDummy: XKongPluginUnknown<{ foo: 'bar' }> = {
-  'x-kong-plugin-dummy-thing': {
-    name: 'dummy-thing',
-    config: {
-      foo: 'bar',
-    },
-  },
-};
-
-export const pluginDocWithName = (name: string, pluginType: string): K8sKongPlugin => ({
+export const pluginDocWithName = (name: string, plugin: string): K8sKongPluginBase<PluginBase<typeof plugin>> => ({
   apiVersion: 'configuration.konghq.com/v1',
   kind: 'KongPlugin',
   metadata: {
     name,
   },
-  plugin: pluginType,
+  plugin,
 });
 
 export const keyAuthPluginDoc = (suffix: string): K8sKongPlugin => ({
@@ -46,7 +36,7 @@ export const keyAuthPluginDoc = (suffix: string): K8sKongPlugin => ({
   plugin: 'key-auth',
 });
 
-export const dummyPluginDoc = (suffix: string): K8sKongPlugin => ({
+export const dummyPluginDoc = (suffix: string): K8sKongPluginBase<DummyPlugin> => ({
   apiVersion: 'configuration.konghq.com/v1',
   config: {
     foo: 'bar',
@@ -55,7 +45,7 @@ export const dummyPluginDoc = (suffix: string): K8sKongPlugin => ({
   metadata: {
     name: dummyName(suffix),
   },
-  plugin: 'dummy-thing',
+  plugin: 'dummy',
 });
 
 export const methodDoc = (method: HttpMethodType | Lowercase<HttpMethodType>): K8sKongIngress => ({
@@ -71,7 +61,7 @@ export const methodDoc = (method: HttpMethodType | Lowercase<HttpMethodType>): K
 
 export const keyAuthName = (suffix: string) => `add-key-auth-${suffix}`;
 
-export const dummyName = (suffix: string) => `add-dummy-thing-${suffix}`;
+export const dummyName = (suffix: string) => `add-dummy-${suffix}`;
 
 export const ingressDoc = (
   index: number,

@@ -1,8 +1,7 @@
-import { generateGlobalPlugins, generateRequestValidatorPlugin } from './plugins';
+import { generateGlobalPlugins, generateRequestValidatorPlugin, ALLOW_ALL_SCHEMA } from './plugins';
 import { OA3Operation, OA3Parameter } from '../types/openapi3';
-import { DCPlugin } from '../types/declarative-config';
-import { getSpec } from './utils';
 import { ParameterSchema, RequestTerminationPlugin, RequestValidatorPlugin, xKongPluginKeyAuth, xKongPluginRequestTermination, xKongPluginRequestValidator } from '../types/kong';
+import { getSpec, pluginDummy, UserDCPlugin } from '../common';
 
 const tags = ['Tag'];
 
@@ -14,17 +13,11 @@ describe('plugins', () => {
           name: 'request-validator',
           enabled: false,
           config: {
-            body_schema: '{}',
+            body_schema: ALLOW_ALL_SCHEMA,
             verbose_response: true,
           },
         },
-        // @ts-expect-error -- TSCONVERSION needs work for generic for XKongPluginUnknown
-        'x-kong-plugin-abcd': {
-          name: 'abcd',
-          config: {
-            some_config: ['something'],
-          },
-        },
+        ...pluginDummy,
         [xKongPluginKeyAuth]: {
           name: 'key-auth',
           config: {
@@ -35,14 +28,12 @@ describe('plugins', () => {
 
       const result = generateGlobalPlugins(api, tags);
 
-      expect(result.plugins).toEqual<DCPlugin[]>([
+      expect(result.plugins).toEqual<UserDCPlugin[]>([
         {
-          // @ts-expect-error -- TSCONVERSION needs work for generic for XKongPluginUnknown
-          name: 'abcd',
+          name: 'dummy',
           tags,
           config: {
-            // @ts-expect-error -- TSCONVERSION needs work for generic for XKongPluginUnknown
-            some_config: ['something'],
+            foo: 'bar',
           },
         },
         {
@@ -54,7 +45,7 @@ describe('plugins', () => {
         },
         {
           config: {
-            body_schema: '{}',
+            body_schema: ALLOW_ALL_SCHEMA,
             verbose_response: true,
             version: 'draft4',
           },
@@ -66,7 +57,7 @@ describe('plugins', () => {
       expect(result.requestValidatorPlugin).toEqual({
         name: 'request-validator',
         config: {
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
           verbose_response: true,
         },
         enabled: false,
@@ -123,7 +114,6 @@ describe('plugins', () => {
           parameter_schema: [parameterSchema],
           body_schema: '[{"name":{"type": "string", "required": true}}]',
           verbose_response: true,
-          // @ts-expect-error TODO
           allowed_content_types: ['application/json'],
         },
       };
@@ -133,7 +123,7 @@ describe('plugins', () => {
         enabled: plugin.enabled,
         tags,
         config: {
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
           version: 'draft4',
           ...plugin.config,
         },
@@ -158,7 +148,7 @@ describe('plugins', () => {
         enabled: plugin.enabled,
         tags,
         config: {
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
           version: 'draft4',
           ...plugin.config,
         },
@@ -169,16 +159,15 @@ describe('plugins', () => {
       it('should not add parameter_schema if no parameters present', () => {
         const plugin: RequestValidatorPlugin = {
           name: 'request-validator',
-          enabled: true,
           config: {
-            body_schema: '{}',
+            body_schema: ALLOW_ALL_SCHEMA,
           },
         };
 
         const generated1 = generateRequestValidatorPlugin({ plugin, tags });
         expect(generated1.config).toStrictEqual<RequestValidatorPlugin['config']>({
           version: 'draft4',
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
         });
 
         const generated2 = generateRequestValidatorPlugin({
@@ -190,14 +179,11 @@ describe('plugins', () => {
         });
         expect(generated2.config).toStrictEqual<RequestValidatorPlugin['config']>({
           version: 'draft4',
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
         });
       });
 
       it('should convert operation parameters to parameter_schema', () => {
-        const plugin: RequestValidatorPlugin = {
-          name: 'request-validator',
-        };
         const param: OA3Parameter = {
           in: 'query',
           explode: true,
@@ -215,20 +201,17 @@ describe('plugins', () => {
         const operation: OA3Operation = {
           parameters: [param],
         };
-        const generated = generateRequestValidatorPlugin({ plugin, tags, operation });
+        const generated = generateRequestValidatorPlugin({ tags, operation });
         expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
           version: 'draft4',
           parameter_schema: [
             {
-              schema: '{"anyOf":[{"type":"string"}]}',
               in: param.in,
               name: param.name,
-              // @ts-expect-error TODO
+              required: Boolean(param.required),
               style: param.style,
-              // @ts-expect-error TODO
               explode: param.explode,
-              // @ts-expect-error TODO
-              required: param.required,
+              schema: '{"anyOf":[{"type":"string"}]}',
             },
           ],
         });
@@ -292,12 +275,9 @@ describe('plugins', () => {
               schema: '{"anyOf":[{"type":"string"}]}',
               in: paramWithSchema.in,
               name: paramWithSchema.name,
-              // @ts-expect-error TODO
               style: paramWithSchema.style,
-              // @ts-expect-error TODO
               explode: paramWithSchema.explode,
-              // @ts-expect-error TODO
-              required: paramWithSchema.required,
+              required: Boolean(paramWithSchema.required),
             },
             {
               schema: '{}',
@@ -317,20 +297,20 @@ describe('plugins', () => {
         const plugin: RequestValidatorPlugin = {
           name: 'request-validator',
           config: {
-            body_schema: '{}',
+            body_schema: ALLOW_ALL_SCHEMA,
           },
         };
         const generated = generateRequestValidatorPlugin({ plugin, tags });
         expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
           version: 'draft4',
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
         });
       });
 
       it('should return default if no operation request body content defined', () => {
         const defaultReqVal: RequestValidatorPlugin['config'] = {
           version: 'draft4',
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
         };
         const op1: OA3Operation = {
           requestBody: {},
@@ -363,8 +343,7 @@ describe('plugins', () => {
         const generated = generateRequestValidatorPlugin({ tags, operation });
         expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
           version: 'draft4',
-          body_schema: '{}',
-          // @ts-expect-error TODO
+          body_schema: ALLOW_ALL_SCHEMA,
           allowed_content_types: ['application/xml', 'text/yaml'],
         });
       });
@@ -404,7 +383,6 @@ describe('plugins', () => {
         expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
           version: 'draft4',
           body_schema: JSON.stringify(schemaJson),
-          // @ts-expect-error TODO
           allowed_content_types: ['application/xml', 'application/json'],
         });
       });
@@ -413,7 +391,7 @@ describe('plugins', () => {
         const generated = generateRequestValidatorPlugin({ tags, operation: {} });
         expect(generated.config).toStrictEqual<RequestValidatorPlugin['config']>({
           version: 'draft4',
-          body_schema: '{}',
+          body_schema: ALLOW_ALL_SCHEMA,
         });
       });
     });

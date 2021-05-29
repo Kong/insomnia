@@ -18,11 +18,10 @@ import {
   keyAuthName,
   keyAuthPluginDoc,
   methodDoc,
-  pluginDummy,
   pluginKeyAuth,
 } from './plugin-helpers';
-import { getSpec } from '../declarative-config/utils';
 import { xKongName } from '../types/kong';
+import { getSpec, pluginDummy } from '../common';
 
 describe('index', () => {
   describe('getSpecName()', () => {
@@ -502,6 +501,7 @@ describe('index', () => {
       const result = generateKongForKubernetesConfigFromSpec(spec);
       expect(result.documents).toStrictEqual<K8sManifest[]>([
         keyAuthPluginDoc('g0'),
+        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('g1'),
         ingressDoc(0, [keyAuthName('g0'), dummyName('g1')], 'api.insomnia.rest', 'my-api-service-0'),
       ]);
@@ -530,6 +530,7 @@ describe('index', () => {
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('s1'),
         keyAuthPluginDoc('s2'),
+        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('s3'),
         ingressDoc(0, [keyAuthName('g0')], 'api-0.insomnia.rest', 'my-api-service-0'),
         ingressDoc(1, [keyAuthName('s1')], 'api-1.insomnia.rest', 'my-api-service-1'),
@@ -557,6 +558,7 @@ describe('index', () => {
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('p1'),
         keyAuthPluginDoc('p2'),
+        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('p3'),
         ingressDoc(0, [keyAuthName('g0')], 'api.insomnia.rest', 'my-api-service-0', '/no-plugin'),
         ingressDoc(1, [keyAuthName('p1')], 'api.insomnia.rest', 'my-api-service-0', '/plugin-0'),
@@ -590,6 +592,7 @@ describe('index', () => {
         keyAuthPluginDoc('g0'),
         keyAuthPluginDoc('m1'),
         keyAuthPluginDoc('m2'),
+        // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
         dummyPluginDoc('m3'),
         ingressDocWithOverride(
           0,

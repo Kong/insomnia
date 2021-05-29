@@ -10,9 +10,10 @@ import {
 import { generateSecurityPlugins } from '../declarative-config/security-plugins';
 import { DCPlugin } from '../types/declarative-config';
 import { Plugins, IndexIncrement, ServerPlugin, PathPlugin, OperationPlugin } from '../types/k8s-plugins';
-import { K8sKongPlugin } from '../types/kubernetes-config';
+import { K8sKongPlugin, K8sKongPluginBase } from '../types/kubernetes-config';
 import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Operation } from '../types/openapi3';
 import { ValueOf } from 'type-fest';
+import { PluginBase } from '../types/kong';
 
 export function flattenPluginDocuments(plugins: Plugins): K8sKongPlugin[] {
   const all: K8sKongPlugin[] = [];
@@ -192,19 +193,19 @@ export function normalizePathPlugins(pathPlugins: PathPlugin[]) {
   return pluginsExist ? pathPlugins : [blankPath];
 }
 
-export function normalizeOperationPlugins(operationPlugins: OperationPlugin[]) {
-  const pluginsExist = operationPlugins.some(o => o.plugins.length);
+export const normalizeOperationPlugins = (operationPlugins: OperationPlugin[]) => {
+  const pluginsExist = operationPlugins.some(operation => operation.plugins.length);
   return pluginsExist ? operationPlugins : [blankOperation];
-}
+};
 
-export function prioritizePlugins(
-  global: K8sKongPlugin[],
-  server: K8sKongPlugin[],
-  path: K8sKongPlugin[],
-  operation: K8sKongPlugin[],
+export function prioritizePlugins<T extends K8sKongPluginBase<PluginBase<string>>>(
+  global: T[],
+  server: T[],
+  path: T[],
+  operation: T[],
 ) {
   // Order in priority: operation > path > server > global
-  const plugins: K8sKongPlugin[] = [...operation, ...path, ...server, ...global];
+  const plugins: T[] = [...operation, ...path, ...server, ...global];
   // Select first of each type of plugin
   return distinctByProperty(plugins, p => p.plugin);
 }

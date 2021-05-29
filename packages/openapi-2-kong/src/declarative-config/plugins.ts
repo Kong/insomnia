@@ -1,12 +1,12 @@
 import { Entry } from 'type-fest';
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin } from '../types/declarative-config';
-import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator } from '../types/kong';
+import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, xKongPluginRequestValidator, XKongPluginRequestValidator } from '../types/kong';
 import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
 
-export function isRequestValidatorPluginKey(key: string) {
-  return key.match(/-request-validator$/) != null;
-}
+export const isRequestValidatorPluginKey = (property: string): property is typeof xKongPluginRequestValidator => (
+  property.match(/-request-validator$/) != null
+);
 
 type PluginItem = Record<string, any>;
 
@@ -31,10 +31,10 @@ const generatePlugin = (tags: string[]) => ([key, value]: Entry<PluginItem>): DC
 });
 
 /**
-  This is valid config to allow all content to pass
-  See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
+ * This is valid config to allow all content to pass
+ * See: https://github.com/Kong/kong-plugin-enterprise-request-validator/pull/34/files#diff-1a1d2d5ce801cc1cfb2aa91ae15686d81ef900af1dbef00f004677bc727bfd3cR284
  */
-const ALLOW_ALL_SCHEMA = '{}';
+export const ALLOW_ALL_SCHEMA = '{}';
 
 const DEFAULT_PARAM_STYLE = {
   header: 'simple',
@@ -110,7 +110,7 @@ export function generateRequestValidatorPlugin({
   tags,
   operation,
 }: {
-  plugin?: RequestValidatorPlugin,
+  plugin?: Partial<RequestValidatorPlugin>,
   tags: string[],
   operation?: OA3Operation,
 }) {
@@ -118,16 +118,13 @@ export function generateRequestValidatorPlugin({
     version: 'draft4',
   };
 
-  const pluginConfig: Partial<RequestValidatorPlugin['config']> = plugin.config ?? {};
-
   // // Use original or generated parameter_schema
-    // @ts-expect-error TODO
-  const parameterSchema = isParameterSchema(pluginConfig) ? pluginConfig.parameter_schema : generateParameterSchema(operation);
+  const parameterSchema = isParameterSchema(plugin.config) ? plugin.config.parameter_schema : generateParameterSchema(operation);
+
   const generated = generateBodyOptions(operation);
 
   // Use original or generated body_schema
-    // @ts-expect-error TODO
-  let bodySchema = isBodySchema(pluginConfig) ? pluginConfig.body_schema : generated.bodySchema;
+  let bodySchema = isBodySchema(plugin.config) ? plugin.config.body_schema : generated.bodySchema;
 
   // If no parameter_schema or body_schema is defined or generated, allow all content to pass
   if (parameterSchema === undefined && bodySchema === undefined) {
@@ -143,18 +140,15 @@ export function generateRequestValidatorPlugin({
   }
 
   // Use original or generated allowed_content_types
-    // @ts-expect-error TODO
-  const allowedContentTypes = pluginConfig.allowed_content_types ?? generated.allowedContentTypes;
+  const allowedContentTypes = plugin.config?.allowed_content_types ?? generated.allowedContentTypes;
 
   if (allowedContentTypes !== undefined) {
     config.allowed_content_types = allowedContentTypes;
   }
 
   // Use original verbose_response if defined
-    // @ts-expect-error TODO
-  if (pluginConfig.verbose_response !== undefined) {
-    // @ts-expect-error TODO
-    config.verbose_response = Boolean(pluginConfig.verbose_response);
+  if (plugin.config?.verbose_response !== undefined) {
+    config.verbose_response = Boolean(plugin.config.verbose_response);
   }
 
   const isEnabledSpecified = Object.prototype.hasOwnProperty.call(plugin, 'enabled');
@@ -162,8 +156,7 @@ export function generateRequestValidatorPlugin({
 
   const requestValidatorPlugin: RequestValidatorPlugin = {
     name: 'request-validator',
-    // @ts-expect-error TODO
-    config,
+    config: config as RequestValidatorPlugin['config'],
     tags: [
       ...(tags ?? []),
       ...(plugin.tags ?? []),
@@ -195,8 +188,10 @@ export const generateOperationPlugins = ({ operation, pathPlugins, parentValidat
   tags: string[],
 }) => {
   const operationPlugins = generatePlugins(operation, tags);
-  // Check if validator plugin exists on the operation
+
+  // Check if validator plugin exists on the operation, even if the value of the plugin is undefined
   const operationValidatorPlugin = getRequestValidatorPluginDirective(operation);
+
   // Use the operation or parent validator plugin, or skip if neither exist
   const plugin = operationValidatorPlugin || parentValidatorPlugin;
 
@@ -208,9 +203,9 @@ export const generateOperationPlugins = ({ operation, pathPlugins, parentValidat
   return distinctByProperty<DCPlugin>([...operationPlugins, ...pathPlugins], plugin => plugin.name);
 };
 
-export function getRequestValidatorPluginDirective(obj: XKongPluginRequestValidator) {
-  const key = Object.keys(obj).filter(isPluginKey).find(isRequestValidatorPluginKey);
-  // If the key is defined but is blank (therefore should be fully generated) then default to {}
-    // @ts-expect-error TODO
-  return key ? (obj[key] || {}) as RequestValidatorPlugin : null;
-}
+/** This function accepts any OpenAPI3 document segment that can have the request validator plugin and returns it if found */
+export const getRequestValidatorPluginDirective = (segment: XKongPluginRequestValidator) => {
+  const key = Object.keys(segment).filter(isPluginKey).find(isRequestValidatorPluginKey);
+  // If the key is defined but is blank (therefore should be fully generated) then default to {}, which is truthy.
+  return key ? (segment[key] || {} as RequestValidatorPlugin) : undefined;
+};

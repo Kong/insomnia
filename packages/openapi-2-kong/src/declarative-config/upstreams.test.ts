@@ -1,9 +1,10 @@
+import { getSpec } from '../common';
+import { DCUpstream } from '../types';
 import { xKongUpstreamDefaults } from '../types/kong';
 import { generateUpstreams } from './upstreams';
-import { getSpec } from './utils';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
-const getSpecResult = () =>
+const getSpecResult = (): DCUpstream =>
   JSON.parse(
     JSON.stringify({
       name: 'My_API',
@@ -21,7 +22,7 @@ describe('upstreams', () => {
   it('generates an upstream', () => {
     const spec = getSpec();
     const specResult = getSpecResult();
-    expect(generateUpstreams(spec, ['Tag'])).toEqual([specResult]);
+    expect(generateUpstreams(spec, ['Tag'])).toEqual<DCUpstream[]>([specResult]);
   });
 
   it('throws for a root level x-kong-route-default', () => {
@@ -41,6 +42,6 @@ describe('upstreams', () => {
       [xKongUpstreamDefaults]: null,
     });
     const specResult = getSpecResult();
-    expect(generateUpstreams(spec, ['Tag'])).toEqual([specResult]);
+    expect(generateUpstreams(spec, ['Tag'])).toEqual<DCUpstream[]>([specResult]);
   });
 });

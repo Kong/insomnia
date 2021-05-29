@@ -6,7 +6,6 @@ import {
   XKongPluginKeyAuth,
   XKongPluginRequestTermination,
   XKongPluginRequestValidator,
-  XKongPluginUnknown,
   XKongRouteDefaults,
   XKongServiceDefaults,
   XKongUpstreamDefaults,
@@ -224,12 +223,11 @@ export type OpenApi3Spec = {
   security?: OA3SecurityRequirement[];
   externalDocs?: OA3ExternalDocs;
 } & Taggable
+  & XKongName
   & XKongPluginKeyAuth
   & XKongPluginRequestTermination
   & XKongPluginRequestValidator
-  & XKongPluginUnknown
   & XKongRouteDefaults
   & XKongServiceDefaults
   & XKongUpstreamDefaults
-  & XKongName
   ;

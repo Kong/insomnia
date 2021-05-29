@@ -10,16 +10,22 @@ import {
   normalizePathPlugins,
   prioritizePlugins,
 } from './plugins';
-import { HttpMethod } from '../common';
+import { HttpMethod, pluginDummy, UserK8sPlugin } from '../common';
 import {
   dummyPluginDoc,
   keyAuthPluginDoc,
   pluginDocWithName,
-  pluginDummy,
   pluginKeyAuth,
 } from './plugin-helpers';
 import { PathPlugin, OperationPlugin } from '../types/k8s-plugins';
-import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Components } from '../types/openapi3';
+import {
+  OpenApi3Spec,
+  OA3Server,
+  OA3Paths,
+  OA3PathItem,
+  OA3Components,
+  OA3Operation,
+} from '../types/openapi3';
 
 describe('plugins', () => {
   let _iterator = 0;
@@ -159,7 +165,7 @@ describe('plugins', () => {
     it('returns multiple plugin docs', () => {
       const api: OpenApi3Spec = { ...spec, ...pluginKeyAuth, ...pluginDummy };
       const result = getGlobalPlugins(api, increment);
-      expect(result).toEqual([keyAuthPluginDoc('g0'), dummyPluginDoc('g1')]);
+      expect(result).toEqual<UserK8sPlugin[]>([keyAuthPluginDoc('g0'), dummyPluginDoc('g1')]);
     });
 
     it('returns security plugin doc', () => {
@@ -284,7 +290,7 @@ describe('plugins', () => {
     it('should handle plugins existing on path', () => {
       const paths: OA3Paths = {
         '/path-no-plugin': {},
-        '/path': { ...pluginDummy },
+        '/path': pluginDummy as OA3PathItem,
       };
       const result = getPathPlugins(paths, increment, spec);
       expect(result).toHaveLength(2);
@@ -301,7 +307,7 @@ describe('plugins', () => {
     it('should handle plugins existing on operation and not on path', () => {
       const paths: OA3Paths = {
         '/path': {
-          get: { ...pluginDummy },
+          get: pluginDummy as OA3Operation,
           put: {},
         },
       };
@@ -322,7 +328,7 @@ describe('plugins', () => {
 
     it('should handle plugins existing on path and operation', () => {
       const paths: OA3Paths = {
-        '/path-0': { ...pluginKeyAuth, get: { ...pluginDummy } },
+        '/path-0': { ...pluginKeyAuth, get: pluginDummy as OA3Operation },
         '/path-1': { ...pluginDummy, put: {} },
       };
       const result = getPathPlugins(paths, increment, spec);
@@ -356,7 +362,7 @@ describe('plugins', () => {
       const pathItem: OA3PathItem = {
         [HttpMethod.get]: {},
         [HttpMethod.put]: { ...pluginKeyAuth, ...pluginDummy },
-        [HttpMethod.post]: { ...pluginDummy },
+        [HttpMethod.post]: pluginDummy as OA3Operation,
       };
       const result = getOperationPlugins(pathItem, increment, spec);
       expect(result).toHaveLength(3);
@@ -444,6 +450,7 @@ describe('plugins', () => {
       const source: PathPlugin[] = [
         {
           path: '/path-with-plugin',
+          // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
           plugins: [dummyPluginDoc('p0')],
           operations: [blankOperation],
         },
@@ -464,6 +471,7 @@ describe('plugins', () => {
           operations: [
             {
               method: HttpMethod.get,
+              // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
               plugins: [dummyPluginDoc('p0')],
             },
             {
@@ -502,6 +510,7 @@ describe('plugins', () => {
         },
         {
           method: HttpMethod.post,
+          // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
           plugins: [dummyPluginDoc('p0')],
         },
       ];
