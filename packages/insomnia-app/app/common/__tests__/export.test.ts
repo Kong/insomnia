@@ -2,7 +2,8 @@ import * as models from '../../models';
 import { getAppVersion } from '../constants';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import YAML from 'yaml';
-import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWorkspacesHAR } from '../export';
+import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWorkspacesHAR, exportWorkspacesPostman, exportRequestsPostman } from '../export';
+import * as modals from '../../ui/components/modals';
 
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(globalBeforeEach);
@@ -465,6 +466,230 @@ describe('export', () => {
         }),
         expect.objectContaining({
           _id: spec._id,
+        }),
+      ]),
+    });
+  });
+});
+
+describe('exportPostman', () => {
+  beforeEach(globalBeforeEach);
+
+  it('exports all workspaces and some requests only', async () => {
+    modals.showAlert = jest.fn();
+    // set workspace 1 data
+    const w = await models.workspace.create({
+      name: 'Workspace',
+    });
+    const r1 = await models.request.create({
+      name: 'Request 1',
+      parentId: w._id,
+    });
+    // setup for ProtoFile, Grpc Request, ProtoDirectory from older tests is skipped. Are probably legacy.
+    const eBase = await models.environment.getOrCreateForParentId(w._id);
+    await models.environment.create({
+      name: 'Public',
+      parentId: eBase._id,
+    });
+    await models.environment.create({
+      name: 'Private',
+      isPrivate: true,
+      parentId: eBase._id,
+    });
+
+    // set workspace 2 data
+    const w2 = await models.workspace.create({
+      name: 'Workspace 2',
+    });
+    const f1W2 = await models.requestGroup.create({
+      name: 'Folder 1',
+      parentId: w2._id,
+    });
+    const postRequestW2 = await models.request.create({
+      name: 'POST Request',
+      parentId: f1W2._id,
+      url: 'https://www.example.org/some/resources',
+      description: '',
+      method: 'POST',
+      body: {
+        mimeType: '',
+        text: '{"bodyKey1": "bodyValue1"}',
+      },
+      headers: [
+        { name: 'h1', value: 'h1Value' },
+      ],
+    });
+    const postRequestFormDataW2 = await models.request.create({
+      name: 'POST Request with Form Data',
+      parentId: f1W2._id,
+      url: 'https://www.example.org/some/resources',
+      description: '',
+      method: 'POST',
+      body: {
+        mimeType: 'multipart/form-data',
+        params: [
+          { name: 'formDataKey1', value: 'formDataValue1' },
+        ],
+      },
+      headers: [
+        { name: 'h1', value: 'h1Value' },
+      ],
+    });
+    const getRequestWithParamsW2 = await models.request.create({
+      name: 'GET Request with URL Params',
+      parentId: f1W2._id,
+      url: 'https://www.example.org/some/resources?queryParam1=queryValue1',
+      parameters: [
+        { name: 'queryParam2', value: 'queryValue2' },
+      ],
+      description: '',
+      method: 'GET',
+      headers: [
+        { name: 'h1', value: 'h1Value' },
+      ],
+    });
+
+    // Test export whole workspace.
+    const fileName = 'testFile';
+    const fullFileName = '/folder1/' + fileName + '.postman_collection.json';
+    const exportedWorkspacesPostmanJson = await exportWorkspacesPostman([w, w2], false, fullFileName);
+    const exportedWorkspacesPostmanDataJson = JSON.parse(exportedWorkspacesPostmanJson);
+    expect(exportedWorkspacesPostmanDataJson).toMatchObject({
+      info: expect.objectContaining({
+        _postman_id: expect.anything(),
+        name: fileName,
+        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+      }),
+      item: expect.arrayContaining([
+        expect.objectContaining({
+          name: w.name,
+          item: expect.arrayContaining([
+            expect.objectContaining({
+              name: r1.name,
+              request: expect.objectContaining({
+                method: r1.method,
+                header: expect.arrayContaining([]),
+              }),
+            }),
+          ]),
+        }),
+        expect.objectContaining({
+          name: w2.name,
+          item: expect.arrayContaining([
+            expect.objectContaining({
+              name: f1W2.name,
+              item: expect.arrayContaining([
+                expect.objectContaining({
+                  name: postRequestW2.name,
+                  request: expect.objectContaining({
+                    method: postRequestW2.method,
+                    header: expect.arrayContaining([
+                      expect.objectContaining({
+                        key: 'h1', value: 'h1Value',
+                      }),
+                    ]),
+                    body: expect.objectContaining({
+                      mode: 'raw',
+                      raw: expect.any(String),
+                    }),
+                    url: expect.objectContaining({
+                      raw: postRequestW2.url,
+                    }),
+                  }),
+                }),
+                expect.objectContaining({
+                  name: postRequestFormDataW2.name,
+                  request: expect.objectContaining({
+                    method: postRequestFormDataW2.method,
+                    body: expect.objectContaining({
+                      mode: 'formdata',
+                      formdata: expect.arrayContaining([{
+                        key: 'formDataKey1', value: 'formDataValue1',
+                      }]),
+                    }),
+                    header: expect.arrayContaining([
+                      expect.objectContaining({
+                        key: 'h1', value: 'h1Value',
+                      }),
+                    ]),
+                  }),
+                }),
+                expect.objectContaining({
+                  name: getRequestWithParamsW2.name,
+                  request: expect.objectContaining({
+                    method: getRequestWithParamsW2.method,
+                    header: expect.arrayContaining([
+                      expect.objectContaining({
+                        key: 'h1', value: 'h1Value',
+                      }),
+                    ]),
+                  }),
+                }),
+              ]),
+            }),
+          ]),
+        }),
+      ]),
+    });
+
+    // Test export some requests only, but from across two workspaces.
+    const exportRequestsPostmanJson = await exportRequestsPostman([r1, postRequestW2], false, fullFileName);
+    const exportRequestsPostmanDataJson = JSON.parse(exportRequestsPostmanJson);
+    expect(exportRequestsPostmanDataJson).toMatchObject({
+      info: expect.objectContaining({
+        _postman_id: expect.anything(),
+        name: fileName,
+        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+      }),
+      item: expect.arrayContaining([
+        expect.objectContaining({
+          name: w.name,
+          item: expect.arrayContaining([
+            expect.objectContaining({
+              name: r1.name,
+              request: expect.objectContaining({
+                method: r1.method,
+                header: expect.arrayContaining([]),
+              }),
+            }),
+          ]),
+        }),
+        expect.objectContaining({
+          name: w2.name,
+          item: expect.arrayContaining([
+            expect.objectContaining({
+              name: f1W2.name,
+              item: expect.arrayContaining([
+                expect.objectContaining({
+                  name: postRequestW2.name,
+                  request: expect.objectContaining({
+                    method: postRequestW2.method,
+                    header: expect.arrayContaining([]),
+                  }),
+                }),
+              ]),
+            }),
+          ]),
+        }),
+      ]),
+    });
+
+    // Test export some requests only, but from a single workspaces (intermediary workspace folder should not get included).
+    const exportRequestsSingleWSPostmanJson2 = await exportRequestsPostman([r1], false, fullFileName);
+    const exportRequestsSingleWSPostmanDataJson2 = JSON.parse(exportRequestsSingleWSPostmanJson2);
+    expect(exportRequestsSingleWSPostmanDataJson2).toMatchObject({
+      info: expect.objectContaining({
+        _postman_id: expect.anything(),
+        name: fileName,
+        schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
+      }),
+      item: expect.arrayContaining([
+        expect.objectContaining({
+          name: r1.name,
+          request: expect.objectContaining({
+            method: r1.method,
+            header: expect.arrayContaining([]),
+          }),
         }),
       ]),
     });

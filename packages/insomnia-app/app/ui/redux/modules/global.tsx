@@ -10,6 +10,8 @@ import {
   exportRequestsHAR,
   exportWorkspacesData,
   exportWorkspacesHAR,
+  exportWorkspacesPostman,
+  exportRequestsPostman,
 } from '../../../common/export';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
@@ -385,11 +387,13 @@ export const setActiveWorkspace = (workspaceId: string | null) => {
 const VALUE_JSON = 'json';
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
+const VALUE_POSTMAN = 'postman_collection.json';
 
 export type SelectedFormat =
   | typeof VALUE_HAR
   | typeof VALUE_JSON
   | typeof VALUE_YAML
+  | typeof VALUE_POSTMAN
   ;
 
 const showSelectExportTypeModal = ({ onCancel, onDone }: {
@@ -408,6 +412,10 @@ const showSelectExportTypeModal = ({ onCancel, onDone }: {
     {
       name: 'HAR – HTTP Archive Format',
       value: VALUE_HAR,
+    },
+    {
+      name: 'Postman Collection v2.1.0',
+      value: VALUE_POSTMAN,
     },
   ];
 
@@ -494,6 +502,10 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
         switch (selectedFormat) {
           case VALUE_HAR:
             stringifiedExport = await exportWorkspacesHAR(workspaces, exportPrivateEnvironments);
+            break;
+
+          case VALUE_POSTMAN:
+            stringifiedExport = await exportWorkspacesPostman(workspaces, exportPrivateEnvironments, fileName);
             break;
 
           case VALUE_YAML:
@@ -587,6 +599,10 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
         switch (selectedFormat) {
           case VALUE_HAR:
             stringifiedExport = await exportRequestsHAR(requests, exportPrivateEnvironments);
+            break;
+
+          case VALUE_POSTMAN:
+            stringifiedExport = await exportRequestsPostman(requests, exportPrivateEnvironments, fileName);
             break;
 
           case VALUE_YAML:

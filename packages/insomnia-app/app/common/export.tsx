@@ -32,6 +32,9 @@ import { isEnvironment } from '../models/environment';
 import { isUnitTestSuite } from '../models/unit-test-suite';
 import { isUnitTest } from '../models/unit-test';
 import { resetKeys } from '../sync/ignore-keys';
+import * as postmanExport from './postman-export';
+import { showAlert } from '../ui/components/modals';
+import React from 'react';
 
 const EXPORT_FORMAT = 4;
 
@@ -144,6 +147,23 @@ export async function exportRequestsData(
     __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
     resources: [],
   };
+
+  data.resources = await getExportData(requests, includePrivateDocs);
+
+  trackEvent('Data', 'Export', `Insomnia ${format}`);
+
+  if (format.toLowerCase() === 'yaml') {
+    return YAML.stringify(data);
+  } else if (format.toLowerCase() === 'json') {
+    return JSON.stringify(data);
+  } else {
+    throw new Error(`Invalid export format ${format}. Must be "json" or "yaml"`);
+  }
+}
+
+async function getExportData(
+  requests: BaseModel[],
+  includePrivateDocs: boolean) {
   const docs: BaseModel[] = [];
   const workspaces: Workspace[] = [];
   const mapTypeAndIdToDoc: Record<string, BaseModel> = {};
@@ -183,7 +203,7 @@ export async function exportRequestsData(
     docs.push(...descendants);
   }
 
-  data.resources = docs
+  return docs
     .filter(d => {
       // Only export these model types.
       if (
@@ -250,13 +270,39 @@ export async function exportRequestsData(
       delete d.type;
       return d;
     });
-  trackEvent('Data', 'Export', `Insomnia ${format}`);
+}
 
-  if (format.toLowerCase() === 'yaml') {
-    return YAML.stringify(data);
-  } else if (format.toLowerCase() === 'json') {
-    return JSON.stringify(data);
-  } else {
-    throw new Error(`Invalid export format ${format}. Must be "json" or "yaml"`);
-  }
+export async function exportWorkspacesPostman(
+  workspaces: Workspace[],
+  includePrivateDocs = false,
+  fileNameWithPath: string,
+) {
+  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
+  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const docs = (await Promise.all(promises)).flat();
+  const requests = docs.filter(isRequest);
+  return exportRequestsPostman(requests, includePrivateDocs, fileNameWithPath);
+}
+
+export async function exportRequestsPostman(
+  requests: BaseModel[],
+  includePrivateDocs = false,
+  fileNameWithPath: string,
+) {
+  const rawExportData = await getExportData(requests, includePrivateDocs);
+  showAlert({
+    title: 'Insomnia to Postman Export Limitations',
+    message: (
+      <div>
+        Please see <a href="https://github.com/Kong/insomnia/discussions/3703#discussioncomment-1022038">this Github post</a> for details on the limitations.
+      </div>
+    ),
+  });
+  const fileNameParts = fileNameWithPath.split(/(\\|\/)/);
+  const fileNameWithoutPath = fileNameParts[fileNameParts.length - 1];
+  const fileNameWithoutPathParts = fileNameWithoutPath.split(/\./);
+  const fileNameWithoutPathOrExtension = fileNameWithoutPathParts.slice(0, -2).join('.'); // remove '.postman_collection.json'
+  const data = postmanExport.convert(rawExportData, fileNameWithoutPathOrExtension);
+  trackEvent('Data', 'Export', 'Postman');
+  return JSON.stringify(data, null, '\t');
 }
