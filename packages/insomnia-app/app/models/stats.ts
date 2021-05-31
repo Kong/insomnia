@@ -3,6 +3,7 @@ import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
 import type { RequestGroup } from './request-group';
 import { isRequest, isGrpcRequest } from './helpers/is-model';
+import { Space } from './space';
 
 export const name = 'Stats';
 
@@ -108,7 +109,7 @@ export async function incrementCreatedRequestsForDescendents(doc: Workspace | Re
   });
 }
 
-export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup) {
+export async function incrementDeletedRequestsForDescendents(doc: Workspace | RequestGroup | Space) {
   const docs = await db.withDescendants(doc);
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   await incrementRequestStats({

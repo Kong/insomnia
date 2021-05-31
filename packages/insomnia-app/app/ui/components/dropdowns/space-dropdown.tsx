@@ -7,6 +7,8 @@ import { BASE_SPACE_ID, Space } from '../../../models/space';
 import { setActiveSpace } from '../../redux/modules/global';
 import { createSpace } from '../../redux/modules/space';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
+import { showModal } from '../modals';
+import SpaceSettingsModal from '../modals/space-settings-modal';
 
 const mapSpace = ({ _id, name }: Space) => ({ id: _id, name });
 const defaultSpace = { id: BASE_SPACE_ID, name: getAppName() };
@@ -26,6 +28,8 @@ export const SpaceDropdown: FC = () => {
   const dispatch = useDispatch();
   const setActive = useCallback((id) => dispatch(setActiveSpace(id)), [dispatch]);
   const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
+  const showSettings = useCallback(() => showModal(SpaceSettingsModal), []);
+  const spaceHasSettings = selectedSpace !== defaultSpace;
 
   // dropdown button
   const button = useMemo(() => (
@@ -46,6 +50,10 @@ export const SpaceDropdown: FC = () => {
         {name}
       </DropdownItem>
     ))}
+    {spaceHasSettings && <>
+      <DropdownDivider />
+      <DropdownItem onClick={showSettings}>{strings.space.singular} Settings</DropdownItem>
+    </>}
     <DropdownDivider />
     <DropdownItem onClick={createNew}>Create new {strings.space.singular.toLowerCase()}</DropdownItem>
   </Dropdown>;
