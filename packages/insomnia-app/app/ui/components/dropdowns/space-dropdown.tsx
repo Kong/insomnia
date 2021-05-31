@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getAppName } from '../../../common/constants';
 import { BASE_SPACE_ID, Space } from '../../../models/space';
 import { setActiveSpace } from '../../redux/modules/global';
+import { createSpace } from '../../redux/modules/space';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 
 const mapSpace = ({ _id, name }: Space) => ({ id: _id, name });
@@ -23,6 +24,7 @@ export const SpaceDropdown: FC = () => {
   // select a new space
   const dispatch = useDispatch();
   const setActive = useCallback((id) => dispatch(setActiveSpace(id)), [dispatch]);
+  const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
 
   // dropdown button
   const button = useMemo(() => (
@@ -43,5 +45,6 @@ export const SpaceDropdown: FC = () => {
         {name}
       </DropdownItem>
     ))}
+    <DropdownItem onClick={createNew}>Create new local space</DropdownItem>
   </Dropdown>;
 };
