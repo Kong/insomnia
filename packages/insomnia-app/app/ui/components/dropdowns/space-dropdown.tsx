@@ -1,7 +1,8 @@
-import { Dropdown, DropdownItem } from 'insomnia-components';
+import { Dropdown, DropdownDivider, DropdownItem } from 'insomnia-components';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAppName } from '../../../common/constants';
+import { strings } from '../../../common/strings';
 import { BASE_SPACE_ID, Space } from '../../../models/space';
 import { setActiveSpace } from '../../redux/modules/global';
 import { createSpace } from '../../redux/modules/space';
@@ -45,6 +46,7 @@ export const SpaceDropdown: FC = () => {
         {name}
       </DropdownItem>
     ))}
-    <DropdownItem onClick={createNew}>Create new local space</DropdownItem>
+    <DropdownDivider />
+    <DropdownItem onClick={createNew}>Create new {strings.space.singular.toLowerCase()}</DropdownItem>
   </Dropdown>;
 };
