@@ -79,7 +79,7 @@ class SyncShareModal extends PureComponent<Props, State> {
 
     if (!vcs.hasProject()) {
       this.setState({
-        error: `Please set up sync to be able to share the ${strings.collection.toLowerCase()}`,
+        error: `Please set up sync to be able to share the ${strings.collection.singular.toLowerCase()}`,
         loading: false,
       });
       return;
@@ -115,7 +115,7 @@ class SyncShareModal extends PureComponent<Props, State> {
     const { workspace } = this.props;
     return (
       <Modal ref={this._setModalRef}>
-        <ModalHeader key="header">Share {strings.collection}</ModalHeader>
+        <ModalHeader key="header">Share {strings.collection.singular}</ModalHeader>
         <ModalBody key="body" className="pad text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p>

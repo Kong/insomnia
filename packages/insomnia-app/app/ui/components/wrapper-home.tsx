@@ -29,7 +29,7 @@ import { showPrompt } from './modals';
 import * as models from '../../models';
 import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
-import { fuzzyMatchAll, isNotNullOrUndefined, pluralize } from '../../common/misc';
+import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import type {
   HandleImportClipboardCallback,
   HandleImportFileCallback,
@@ -237,14 +237,14 @@ class WrapperHome extends PureComponent<Props, State> {
       </DocumentCardDropdown>
     );
     const version = spec?.info?.version || '';
-    let label: string = strings.collection;
+    let label: string = strings.collection.singular;
     let format = '';
     let labelIcon = <i className="fa fa-bars" />;
     let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
 
     if (workspace.scope === WorkspaceScopeKeys.design) {
-      label = strings.document;
+      label = strings.document.singular;
       labelIcon = <i className="fa fa-file-o" />;
 
       if (specFormat === 'openapi') {
@@ -367,7 +367,7 @@ class WrapperHome extends PureComponent<Props, State> {
       // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       .sort((a: RenderedCard, b: RenderedCard) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
       .map(c => c?.card);
-    const countLabel = cards.length > 1 ? pluralize(strings.document) : strings.document;
+    const countLabel = cards.length > 1 ? strings.document.plural : strings.document.singular;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}

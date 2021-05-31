@@ -41,7 +41,7 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
   _handleDuplicate() {
     const { apiSpec, workspace, handleSetActiveWorkspace } = this.props;
     showPrompt({
-      title: `Duplicate ${getWorkspaceLabel(workspace)}`,
+      title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
       // @ts-expect-error -- TSCONVERSION
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
@@ -58,7 +58,7 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
   _handleRename() {
     const { apiSpec, workspace } = this.props;
     showPrompt({
-      title: `Rename ${getWorkspaceLabel(workspace)}`,
+      title: `Rename ${getWorkspaceLabel(workspace).singular}`,
       // @ts-expect-error -- TSCONVERSION
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Rename',
@@ -78,7 +78,7 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
       // @ts-expect-error -- TSCONVERSION
       `Do you really want to delete "${getWorkspaceName(workspace, apiSpec)}"?`,
       isLastWorkspace
-        ? ` This is the only ${label.toLowerCase()} so a new one will be created for you.`
+        ? ` This is the only ${label.singular.toLowerCase()} so a new one will be created for you.`
         : null,
     ];
     showModal(AskModal, {

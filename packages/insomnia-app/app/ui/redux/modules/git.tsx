@@ -126,10 +126,10 @@ const cloneProblem = (message: ReactNode) => {
 const noDocumentFound = (gitRepo: GitRepository) => {
   return dispatch => {
     showAlert({
-      title: `No ${strings.document.toLowerCase()} found`,
+      title: `No ${strings.document.singular.toLowerCase()} found`,
       okLabel: 'Yes',
       addCancel: true,
-      message: `No ${strings.document.toLowerCase()} found in the repository for import. Would you like to create a new one?`,
+      message: `No ${strings.document.singular.toLowerCase()} found in the repository for import. Would you like to create a new one?`,
       onConfirm: async () => await dispatch(createWorkspaceWithGitRepo(gitRepo)),
     });
   };

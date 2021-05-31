@@ -280,7 +280,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     }
 
     if (type === models.workspace.type) {
-      type = strings.document;
+      type = strings.document.singular;
     }
 
     return (
