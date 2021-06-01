@@ -1292,7 +1292,6 @@ class App extends PureComponent<Props, State> {
         directory,
       });
 
-      // @ts-expect-error -- TSCONVERSION
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
           showModal(SyncMergeModal, {
