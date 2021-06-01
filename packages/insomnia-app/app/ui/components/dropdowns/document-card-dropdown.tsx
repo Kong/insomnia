@@ -82,7 +82,7 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
         : null,
     ];
     showModal(AskModal, {
-      title: `Delete ${label}`,
+      title: `Delete ${label.singular}`,
       message: messages.join(' '),
       yesText: 'Yes',
       noText: 'Cancel',

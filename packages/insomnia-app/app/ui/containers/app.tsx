@@ -519,7 +519,7 @@ class App extends PureComponent<Props, State> {
     const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
     showPrompt({
       // @ts-expect-error -- TSCONVERSION workspace can be null
-      title: `Duplicate ${getWorkspaceLabel(workspace).plural}`,
+      title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
       // @ts-expect-error -- TSCONVERSION workspace can be null
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
