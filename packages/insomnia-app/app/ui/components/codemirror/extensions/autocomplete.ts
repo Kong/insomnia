@@ -3,6 +3,7 @@ import 'codemirror/addon/mode/overlay';
 import * as models from '../../../../models';
 import { getDefaultFill } from '../../../../templating/utils';
 import { escapeHTML, escapeRegex } from '../../../../common/misc';
+
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
 const AFTER_VARIABLE_MATCH = /{{\s*[\w.\][]*$/;
@@ -37,6 +38,7 @@ const ICONS = {
     title: 'Generator Tag',
   },
 };
+
 CodeMirror.defineExtension('isHintDropdownActive', function() {
   return (
     this.state.completionActive &&
@@ -45,15 +47,17 @@ CodeMirror.defineExtension('isHintDropdownActive', function() {
     this.state.completionActive.data.list.length
   );
 });
+
 CodeMirror.defineExtension('closeHintDropdown', function() {
   this.state.completionActive?.close();
 });
+
 CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
   if (!options) {
     return;
   }
 
-  async function completeAfter(cm, fn, showAllOnNoMatch = false) {
+  async function completeAfter(cm: CodeMirror.Editor, fn, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
     if (fn && !fn()) {
       return;
@@ -68,7 +72,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    let hintsContainer = document.querySelector('#hints-container');
+    let hintsContainer = document.querySelector<HTMLElement>('#hints-container');
 
     if (!hintsContainer) {
       const el = document.createElement('div');
@@ -85,6 +89,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     // Actually show the hint
     cm.showHint({
       // Insomnia-specific options
+      // @ts-expect-error -- TSCONVERSION needs investigation
       constants: constants || [],
       variables: variables || [],
       snippets: snippets || [],

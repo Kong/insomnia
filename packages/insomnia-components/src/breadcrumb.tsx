@@ -1,10 +1,15 @@
-import React, { PureComponent } from 'react';
+import React, { FC, ReactNode } from 'react';
 import styled from 'styled-components';
 
-export interface BreadcrumbProps {
-  crumbs: string[];
-  className: string;
+interface CrumbProps {
+  id: string;
+  node: ReactNode;
   onClick?: React.MouseEventHandler<HTMLAnchorElement>;
+}
+
+export interface BreadcrumbProps {
+  crumbs: CrumbProps[];
+  className?: string;
 }
 
 const StyledBreadcrumb = styled.ul`
@@ -41,25 +46,12 @@ const StyledBreadcrumb = styled.ul`
   }
 `;
 
-export class Breadcrumb extends PureComponent<BreadcrumbProps> {
-  render() {
-    const { className, crumbs, onClick } = this.props;
-    return (
-      <StyledBreadcrumb className={className}>
-        {crumbs.map((crumb, i, arr) => {
-          if (arr.length - 1 === i) {
-            return <li key={crumb}>{crumb}</li>;
-          } else {
-            return (
-              <li key={crumb}>
-                <a href="#" onClick={onClick}>
-                  {crumb}
-                </a>
-              </li>
-            );
-          }
-        })}
-      </StyledBreadcrumb>
-    );
-  }
-}
+const Crumb: FC<CrumbProps> = ({ id, node, onClick }) => <li key={id}>
+  {onClick ? <a href="#" onClick={onClick}>{node}</a> : node}
+</li>;
+
+export const Breadcrumb: FC<BreadcrumbProps> = ({ crumbs, className }) => (
+  <StyledBreadcrumb className={className}>
+    {crumbs.map(Crumb)}
+  </StyledBreadcrumb>
+);

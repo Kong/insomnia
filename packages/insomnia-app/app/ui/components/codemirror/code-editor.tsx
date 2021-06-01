@@ -6,7 +6,7 @@ import {
   EDITOR_KEY_MAP_VIM,
   isMac,
 } from '../../../common/constants';
-import CodeMirror from 'codemirror';
+import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
 import classnames from 'classnames';
 import clone from 'clone';
 import jq from 'jsonpath';
@@ -24,7 +24,6 @@ import DropdownItem from '../base/dropdown/dropdown-item';
 import { query as queryXPath } from 'insomnia-xpath';
 import deepEqual from 'deep-equal';
 import zprint from 'zprint-clj';
-import { CodeMirrorLinkClickCallback } from './extensions/clickable';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { NunjucksParsedTag } from '../../../templating/utils';
 const TAB_KEY = 9;
@@ -167,7 +166,6 @@ class CodeEditor extends Component<Props, State> {
   componentWillUnmount() {
     if (this.codeMirror) {
       this.codeMirror.toTextArea();
-      // @ts-expect-error -- TSCONVERSION this comes from a custom extension
       this.codeMirror.closeHintDropdown();
     }
   }
@@ -249,7 +247,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  setSelection(chStart, chEnd, lineStart, lineEnd) {
+  setSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
     if (this.codeMirror) {
       this.codeMirror.setSelection(
         {
@@ -262,14 +260,13 @@ class CodeEditor extends Component<Props, State> {
         },
       );
       this.codeMirror.scrollIntoView({
-        // @ts-expect-error -- TSCONVERSION
         line: lineStart,
-        char: chStart,
+        ch: chStart,
       });
     }
   }
 
-  scrollToSelection(chStart, chEnd, lineStart, lineEnd) {
+  scrollToSelection(chStart: number, chEnd: number, lineStart: number, lineEnd: number) {
     const selectionFocusPos = window.innerHeight / 2 - 100;
 
     if (this.codeMirror) {
@@ -285,9 +282,8 @@ class CodeEditor extends Component<Props, State> {
       );
       this.codeMirror.scrollIntoView(
         {
-          // @ts-expect-error -- TSCONVERSION
           line: lineStart,
-          char: chStart,
+          ch: chStart,
         }, // If sizing permits, position selection just above center
         selectionFocusPos,
       );
@@ -352,8 +348,7 @@ class CodeEditor extends Component<Props, State> {
 
   clearSelection() {
     // Never do this if dropdown is open
-    // @ts-expect-error -- TSCONVERSION this comes from a custom extension
-    if (this.codeMirror.isHintDropdownActive()) {
+    if (this.codeMirror?.isHintDropdownActive()) {
       return;
     }
 
@@ -430,7 +425,7 @@ class CodeEditor extends Component<Props, State> {
       scroll: false,
     });
     // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.setSelections(selections, null, {
+    this.codeMirror.setSelection(selections, null, {
       scroll: false,
     });
 
@@ -503,7 +498,9 @@ class CodeEditor extends Component<Props, State> {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
     this.codeMirror.on('scroll', this._codemirrorScroll);
+    // @ts-expect-error this event does indeed exist, but is not present on the CodeMirror types and declaration merging doesn't seem to want to allow adding it
     this.codeMirror.on('fold', this._codemirrorToggleFold);
+    // @ts-expect-error this event does indeed exist, but is not present on the CodeMirror types and declaration merging doesn't seem to want to allow adding it
     this.codeMirror.on('unfold', this._codemirrorToggleFold);
     this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
     // Prevent these things if we're type === "password"
@@ -536,13 +533,11 @@ class CodeEditor extends Component<Props, State> {
       this._codemirrorSetValue(defaultValue || '');
 
       // Clear history so we can't undo the initial set
-      // @ts-expect-error -- TSCONVERSION
-      this.codeMirror.clearHistory();
+      this.codeMirror?.clearHistory();
 
       // Setup nunjucks listeners
       if (this.props.render && !this.props.nunjucksPowerUserMode) {
-        // @ts-expect-error -- TSCONVERSION this comes from a custom extension
-        this.codeMirror.enableNunjucksTags(
+        this.codeMirror?.enableNunjucksTags(
           this.props.render,
           this.props.getRenderContext,
           this.props.isVariableUncovered,
@@ -551,15 +546,12 @@ class CodeEditor extends Component<Props, State> {
 
       // Make URLs clickable
       if (this.props.onClickLink) {
-        // @ts-expect-error -- TSCONVERSION this comes from a custom extension
-        this.codeMirror.makeLinksClickable(this.props.onClickLink);
+        this.codeMirror?.makeLinksClickable(this.props.onClickLink);
       }
 
-      // HACK: Refresh because sometimes it renders too early and the scroll doesn't
-      // quite fit.
+      // HACK: Refresh because sometimes it renders too early and the scroll doesn't quite fit.
       setTimeout(() => {
-        // @ts-expect-error -- TSCONVERSION
-        this.codeMirror.refresh();
+        this.codeMirror?.refresh();
       }, 100);
 
       // Restore the state
@@ -908,7 +900,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  async _codemirrorKeyDown(doc, e) {
+  async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, e) {
     // Use default tab behaviour if we're told
     if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
       e.codemirrorIgnore = true;
@@ -1037,7 +1029,6 @@ class CodeEditor extends Component<Props, State> {
     if (shouldLint !== existingLint) {
       const { lintOptions } = this.props;
       const lint = shouldLint ? lintOptions || true : false;
-
       this._codemirrorSmartSetOption('lint', lint);
     }
 

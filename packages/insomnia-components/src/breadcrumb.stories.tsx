@@ -8,6 +8,6 @@ export default {
 export const _default = () => (
   <Breadcrumb
     className="breadcrumb"
-    crumbs={['Documents', 'Deployment']}
+    crumbs={[{ id: '1', node: 'Documents' }, { id: '2', node: 'Deployment', onClick: () => {} }, { id: '3', node: 'Another' }]}
   />
 );

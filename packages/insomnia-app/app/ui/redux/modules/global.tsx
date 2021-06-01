@@ -43,6 +43,7 @@ import { Settings } from '../../../models/settings';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { Environment } from '../../../models/environment';
+import { BASE_SPACE_ID } from '../../../models/space';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -50,6 +51,7 @@ export const LOAD_START = 'global/load-start';
 export const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
+export const SET_ACTIVE_SPACE = 'global/activate-space';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
@@ -71,6 +73,16 @@ function activeActivityReducer(state = null, action) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
       return action.activity;
+
+    default:
+      return state;
+  }
+}
+
+function activeSpaceReducer(state = BASE_SPACE_ID, action) {
+  switch (action.type) {
+    case SET_ACTIVE_SPACE:
+      return action.spaceId;
 
     default:
       return state;
@@ -130,6 +142,7 @@ function loginStateChangeReducer(state = false, action) {
 export const reducer = combineReducers({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
+  activeSpaceId: activeSpaceReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
@@ -339,6 +352,15 @@ export const setActiveActivity = (activity: GlobalActivity) => {
   return {
     type: SET_ACTIVE_ACTIVITY,
     activity,
+  };
+};
+
+export const setActiveSpace = (spaceId: string) => {
+  const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
+  window.localStorage.setItem(key, JSON.stringify(spaceId));
+  return {
+    type: SET_ACTIVE_SPACE,
+    spaceId,
   };
 };
 
@@ -720,6 +742,21 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
   );
 };
 
+export function initActiveSpace() {
+  let spaceId: string | null = null;
+
+  try {
+    const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
+    const item = window.localStorage.getItem(key);
+    // @ts-expect-error -- TSCONVERSION don't parse item if it's null
+    spaceId = JSON.parse(item);
+  } catch (e) {
+    // Nothing here...
+  }
+
+  return setActiveSpace(spaceId || BASE_SPACE_ID);
+}
+
 export function initActiveWorkspace() {
   let workspaceId: string | null = null;
 
@@ -800,6 +837,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
 };
 
 export const init = () => [
+  initActiveSpace(),
   initActiveWorkspace(),
   initActiveActivity(),
 ];

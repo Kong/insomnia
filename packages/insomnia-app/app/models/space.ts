@@ -8,6 +8,10 @@ export const prefix = 'sp';
 export const canDuplicate = false;
 export const canSync = false;
 
+// A base space represents "no" space, when viewing this base space fetch all workspaces with no parent.
+// Using this instead of null.
+export const BASE_SPACE_ID = 'base-space';
+
 interface BaseSpace {
   name: string;
 }

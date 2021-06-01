@@ -277,8 +277,10 @@ class OneLineEditor extends PureComponent<Props, State> {
 
     if (this._input?.hasFocus()) {
       const start = this._input?.getSelectionStart();
-
       const end = this._input?.getSelectionEnd();
+      if (start === null || end === null) {
+        return;
+      }
 
       // Wait for the editor to swap and restore cursor position
       const check = () => {
