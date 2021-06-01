@@ -22,7 +22,7 @@ export type ApiSpec = BaseModel & BaseApiSpec;
 
 export function init(): BaseApiSpec {
   return {
-    fileName: `New ${strings.document}`,
+    fileName: `New ${strings.document.singular}`,
     contents: '',
     contentType: 'yaml',
   };

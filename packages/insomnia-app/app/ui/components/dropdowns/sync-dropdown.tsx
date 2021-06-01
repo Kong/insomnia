@@ -543,7 +543,7 @@ class SyncDropdown extends PureComponent<Props, State> {
 
           <DropdownItem onClick={this._handleShowDeleteModal} disabled={historyCount === 0}>
             <i className="fa fa-remove" />
-            Delete {strings.collection}
+            Delete {strings.collection.singular}
           </DropdownItem>
 
           <DropdownDivider>Local Branches</DropdownDivider>

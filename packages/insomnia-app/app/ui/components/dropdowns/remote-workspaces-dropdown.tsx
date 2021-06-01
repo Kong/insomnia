@@ -10,7 +10,7 @@ import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import { database as db } from '../../../common/database';
 import { showAlert } from '../modals';
-import { stringsPlural } from '../../../common/strings';
+import { strings } from '../../../common/strings';
 
 interface Props {
   className?: string;
@@ -159,9 +159,9 @@ class RemoteWorkspacesDropdown extends Component<Props, State> {
     return (
       <Dropdown onOpen={this._refreshRemoteWorkspaces} renderButton={button}>
         <DropdownDivider>
-          Remote {stringsPlural.collection}
+          Remote {strings.collection.plural}
           <HelpTooltip>
-            These {stringsPlural.collection.toLowerCase()} have been shared with you via Insomnia
+            These {strings.collection.plural.toLowerCase()} have been shared with you via Insomnia
             Sync and do not yet exist on your machine.
           </HelpTooltip>{' '}
           {loading && <i className="fa fa-spin fa-refresh" />}

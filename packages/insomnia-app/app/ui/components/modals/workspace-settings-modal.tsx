@@ -206,7 +206,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
     const { workspace } = this.props;
     return (
       <ModalHeader key={`header::${workspace._id}`}>
-        {getWorkspaceLabel(workspace)} Settings{' '}
+        {getWorkspaceLabel(workspace).singular} Settings{' '}
         <div className="txt-sm selectable faint monospace">{workspace ? workspace._id : ''}</div>
       </ModalHeader>
     );

@@ -5,7 +5,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 import Link from '../base/link';
 import { showPrompt } from '../modals/index';
 import { docsImportExport } from '../../../common/documentation';
-import { strings, stringsPlural } from '../../../common/strings';
+import { strings } from '../../../common/strings';
 
 interface Props {
   handleImportFile: Function;
@@ -58,11 +58,11 @@ class ImportExport extends PureComponent<Props> {
             <DropdownDivider>Choose Export Type</DropdownDivider>
             <DropdownItem onClick={handleShowExportRequestsModal}>
               <i className="fa fa-home" />
-              Current {strings.document} / {strings.collection}
+              Current {strings.document.singular} / {strings.collection.singular}
             </DropdownItem>
             <DropdownItem onClick={handleExportAll}>
               <i className="fa fa-empty" />
-              All {stringsPlural.document} / {stringsPlural.collection}
+              All {strings.document.plural} / {strings.collection.plural}
             </DropdownItem>
           </Dropdown>
           &nbsp;&nbsp;
