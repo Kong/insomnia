@@ -71,7 +71,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
         <ModalBody key={`body::${space._id}`} className="pad">
           <div className="form-control form-control--outlined">
             <label>
-            Name
+              Name
               <DebouncedInput
               // @ts-expect-error -- TSCONVERSION props are spread into an input element
                 type="text"
