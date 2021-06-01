@@ -2,6 +2,9 @@ openapi: '3.0.2'
 info:
   title: Sample Spec
   version: '1.2'
+  description: A sample API specification
+  contact:
+    email: support@insomnia.rest
 servers:
   - url: https://200.insomnia.rest
 tags:
@@ -9,6 +12,8 @@ tags:
 paths:
   /global:
     get:
+      description: Global
+      operationId: get_global
       tags:
         - Folder
       responses:
@@ -16,6 +21,10 @@ paths:
           description: OK
   /override:
     get:
+      description: Override
+      operationId: get_override
+      tags:
+        - Folder
       responses:
         '200':
           description: OK

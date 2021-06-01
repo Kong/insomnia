@@ -76,7 +76,7 @@ import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
 import type { GlobalActivity } from '../../common/constants';
-import { Spectral } from '@stoplight/spectral';
+import { isOpenApiv2, isOpenApiv3, Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
 import WrapperMigration from './wrapper-migration';
@@ -88,6 +88,9 @@ import SpaceSettingsModal from './modals/space-settings-modal';
 import { AppProps } from '../containers/app';
 
 const spectral = new Spectral();
+spectral.registerFormat('oas2', isOpenApiv2);
+spectral.registerFormat('oas3', isOpenApiv3);
+spectral.loadRuleset('spectral:oas');
 
 export type WrapperProps = AppProps & {
   handleActivateRequest: (activeRequestId: string) => void;
@@ -259,8 +262,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     // Handle switching away from the spec design activity. For this, we want to generate
     // requests that can be accessed from debug or test.
     // If there are errors in the spec, show the user a warning first
-    const results = await spectral.run(activeApiSpec.contents);
-
+    const results = (await spectral.run(activeApiSpec.contents)).filter(result => (
+      result.severity === 0 // filter for errors only
+    ));
     if (activeApiSpec.contents && results && results.length) {
       showModal(AlertModal, {
         title: 'Error Generating Configuration',
