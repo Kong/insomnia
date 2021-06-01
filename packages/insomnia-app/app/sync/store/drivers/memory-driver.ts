@@ -1,6 +1,4 @@
 import type { BaseDriver } from './base';
-
-// @ts-expect-error -- TSCONVERSION
 export default class MemoryDriver implements BaseDriver {
   _db: Record<string, Buffer>;
 

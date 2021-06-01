@@ -1,5 +1,4 @@
 export interface BaseDriver {
-  new (config: Record<string, any>): void;
   hasItem(key: string): Promise<boolean>;
   setItem(key: string, value: Buffer): Promise<void>;
   getItem(key: string): Promise<Buffer | null>;
