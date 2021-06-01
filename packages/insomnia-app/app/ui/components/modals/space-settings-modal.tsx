@@ -56,59 +56,42 @@ class SpaceSettingsModal extends PureComponent<Props> {
     this.modal && this.modal.hide();
   }
 
-  renderModalHeader() {
-    const { space } = this.props;
-    if (!space) {
-      return null;
-    }
-
-    return (
-      <ModalHeader key={`header::${space._id}`}>
-        {strings.space.singular} Settings{' '}
-        <div className="txt-sm selectable faint monospace">{space._id}</div>
-      </ModalHeader>
-    );
-  }
-
-  renderModalBody() {
-    const { space } = this.props;
-    if (!space) {
-      return null;
-    }
-
-    return (
-      <ModalBody key={`body::${space._id}`} className="pad">
-        <div className="form-control form-control--outlined">
-          <label>
-            Name
-            <DebouncedInput
-              // @ts-expect-error -- TSCONVERSION props are spread into an input element
-              type="text"
-              delay={500}
-              placeholder="My Space"
-              defaultValue={space.name}
-              onChange={this._handleRename}
-            />
-          </label>
-        </div>
-        <h2>Actions</h2>
-        <div className="form-control form-control--padded">
-          <PromptButton
-            onClick={this._handleRemoveSpace}
-            addIcon
-            className="width-auto btn btn--clicky inline-block">
-            <i className="fa fa-trash-o" /> Delete
-          </PromptButton>
-        </div>
-      </ModalBody>
-    );
-  }
-
   render() {
+    const { space } = this.props;
+    if (!space) {
+      return null;
+    }
+
     return (
       <Modal ref={this._handleSetModalRef} freshState>
-        {this.renderModalHeader()}
-        {this.renderModalBody()}
+        <ModalHeader key={`header::${space._id}`}>
+          {strings.space.singular} Settings{' '}
+          <div className="txt-sm selectable faint monospace">{space._id}</div>
+        </ModalHeader>
+        <ModalBody key={`body::${space._id}`} className="pad">
+          <div className="form-control form-control--outlined">
+            <label>
+            Name
+              <DebouncedInput
+              // @ts-expect-error -- TSCONVERSION props are spread into an input element
+                type="text"
+                delay={500}
+                placeholder="My Space"
+                defaultValue={space.name}
+                onChange={this._handleRename}
+              />
+            </label>
+          </div>
+          <h2>Actions</h2>
+          <div className="form-control form-control--padded">
+            <PromptButton
+              onClick={this._handleRemoveSpace}
+              addIcon
+              className="width-auto btn btn--clicky inline-block">
+              <i className="fa fa-trash-o" /> Delete
+            </PromptButton>
+          </div>
+        </ModalBody>
       </Modal>
     );
   }
