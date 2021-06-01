@@ -14,10 +14,15 @@ import { bindActionCreators } from 'redux';
 import * as spaceActions from '../../redux/modules/space';
 import { connect } from 'react-redux';
 
-interface Props {
-  space: Space;
+interface ReduxStateProps {
+  space?: Space;
+}
+
+interface ReduxDispatchProps {
   handleRemoveSpace: (space: Space) => void;
 }
+
+interface Props extends ReduxStateProps, ReduxDispatchProps { }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class SpaceSettingsModal extends PureComponent<Props> {
@@ -28,13 +33,19 @@ class SpaceSettingsModal extends PureComponent<Props> {
   }
 
   _handleRemoveSpace() {
-    this.props.handleRemoveSpace(this.props.space);
+    if (this.props.space) {
+      this.props.handleRemoveSpace(this.props.space);
+    }
+
     this.hide();
   }
 
   async _handleRename(name: string) {
     const { space } = this.props;
-    await models.space.update(space, { name });
+
+    if (space) {
+      await models.space.update(space, { name });
+    }
   }
 
   show() {
@@ -47,16 +58,24 @@ class SpaceSettingsModal extends PureComponent<Props> {
 
   renderModalHeader() {
     const { space } = this.props;
+    if (!space) {
+      return null;
+    }
+
     return (
       <ModalHeader key={`header::${space._id}`}>
         {strings.space.singular} Settings{' '}
-        <div className="txt-sm selectable faint monospace">{space ? space._id : ''}</div>
+        <div className="txt-sm selectable faint monospace">{space._id}</div>
       </ModalHeader>
     );
   }
 
   renderModalBody() {
     const { space } = this.props;
+    if (!space) {
+      return null;
+    }
+
     return (
       <ModalBody key={`body::${space._id}`} className="pad">
         <div className="form-control form-control--outlined">
@@ -86,28 +105,25 @@ class SpaceSettingsModal extends PureComponent<Props> {
   }
 
   render() {
-    const { space } = this.props;
     return (
       <Modal ref={this._handleSetModalRef} freshState>
-        {space ? this.renderModalHeader() : null}
-        {space ? this.renderModalBody() : null}
+        {this.renderModalHeader()}
+        {this.renderModalBody()}
       </Modal>
     );
   }
 }
 
-const mapStateToProps = (state) => {
+const mapStateToProps = (state): ReduxStateProps => {
   const space = selectActiveSpace(state);
-  return {
-    space,
-  };
+  return { space };
 };
 
-function mapDispatchToProps(dispatch) {
+const mapDispatchToProps = (dispatch): ReduxDispatchProps => {
   const boundSpaceActions = bindActionCreators(spaceActions, dispatch);
   return {
     handleRemoveSpace: boundSpaceActions.removeSpace,
   };
-}
+};
 
 export default connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(SpaceSettingsModal);
