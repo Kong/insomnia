@@ -98,6 +98,7 @@ import type { ImportOptions } from '../redux/modules/global';
 import WrapperAnalytics from './wrapper-analytics';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { RequestGroup } from '../../models/request-group';
+import SpaceSettingsModal from './modals/space-settings-modal';
 
 const spectral = new Spectral();
 
@@ -594,6 +595,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} settings={settings} />
+            <SpaceSettingsModal ref={registerModal} />
 
             <CodePromptModal
               ref={registerModal}

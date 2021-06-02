@@ -44,6 +44,10 @@ export function remove(obj: Space) {
   return db.remove(obj);
 }
 
+export function update(space: Space, patch: Partial<Space>) {
+  return db.docUpdate(space, patch);
+}
+
 export function all() {
   return db.all<Space>(type);
 }
