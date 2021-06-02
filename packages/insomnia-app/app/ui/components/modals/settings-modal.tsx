@@ -29,7 +29,7 @@ interface Props {
   handleExportAllToFile: () => void;
   handleImportFile: () => void;
   handleImportUri: (uri: string) => void;
-  handleToggleMenuBar: () => void;
+  handleToggleMenuBar: (hide: boolean) => void;
   handleImportClipBoard: () => void;
   settings: any;
 }

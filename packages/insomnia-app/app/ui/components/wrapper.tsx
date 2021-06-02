@@ -106,13 +106,13 @@ export interface WrapperProps {
   // Helper Functions
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleToggleMenuBar: Function;
+  handleToggleMenuBar: (hide: boolean) => void;
   handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
   handleInitializeEntities: () => Promise<void>;
   handleExportAllToFile: () => void;
-  handleShowExportRequestsModal: Function;
+  handleShowExportRequestsModal: () => void;
   handleShowSettingsModal: Function;
   handleExportRequestsToFile: Function;
   handleSetActiveWorkspace: (workspaceId: string | null) => void;
