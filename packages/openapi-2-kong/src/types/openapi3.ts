@@ -214,6 +214,11 @@ export interface OA3Components {
   securitySchemes?: Record<string, OA3SecurityScheme | OA3Reference>;
 }
 
+export interface TagObject {
+  name: string;
+  description?: string;
+  externalDocs?: Record<string, any>;
+}
 export type OpenApi3Spec = {
   openapi: string;
   info: OA3Info;
@@ -222,7 +227,8 @@ export type OpenApi3Spec = {
   components?: OA3Components;
   security?: OA3SecurityRequirement[];
   externalDocs?: OA3ExternalDocs;
-} & Taggable
+  tags?: TagObject[];
+}
   & XKongName
   & XKongPluginKeyAuth
   & XKongPluginRequestTermination
