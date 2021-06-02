@@ -358,7 +358,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces, isLoading } = this.props.wrapperProps;
+    const { workspaces, isLoading, vcs } = this.props.wrapperProps;
     const { filter } = this.state;
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces
@@ -377,7 +377,7 @@ class WrapperHome extends PureComponent<Props, State> {
             gridLeft={
               <Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb crumbs={[{ id: 'space', node: <SpaceDropdown /> }]} />
+                <Breadcrumb crumbs={[{ id: 'space', node: <SpaceDropdown vcs={vcs || undefined} /> }]} />
                 {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </Fragment>
             }
