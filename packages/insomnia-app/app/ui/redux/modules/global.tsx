@@ -5,8 +5,16 @@ import fs, { NoParamCallback } from 'fs';
 import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import moment from 'moment';
-import type { ImportRawConfig, ImportResult } from '../../../common/import';
-import * as importUtils from '../../../common/import';
+import {
+  ImportRawConfig,
+  ImportResult,
+  exportRequestsData,
+  exportRequestsHAR,
+  exportWorkspacesData,
+  exportWorkspacesHAR,
+  importRaw,
+  importUri as _importUri,
+} from '../../../common/import';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import LoginModal from '../../components/modals/login-modal';
@@ -401,7 +409,7 @@ export const importFile = (
       },
     ],
   };
-  const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
+  const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
 
   if (canceled) {
     // It was cancelled, so let's bail out
@@ -409,15 +417,15 @@ export const importFile = (
     return;
   }
 
-  // Let's import all the paths!
-  for (const p of paths) {
+  // Let's import all the files!
+  for (const filePath of filePaths) {
     try {
-      const uri = `file://${p}`;
+      const uri = `file://${filePath}`;
       const options: ImportRawConfig = {
         getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };
-      const result = await importUtils.importUri(uri, options);
+      const result = await _importUri(uri, options);
       handleImportResult(result, 'The file does not contain a valid specification.');
     } catch (err) {
       showModal(AlertModal, {
@@ -469,7 +477,7 @@ export const importClipBoard = (
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
       getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
     };
-    const result = await importUtils.importRaw(schema, options);
+    const result = await importRaw(schema, options);
     handleImportResult(result, 'Your clipboard does not contain a valid specification.');
   } catch (err) {
     showModal(AlertModal, {
@@ -493,7 +501,7 @@ export const importUri = (
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
       getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
     };
-    const result = await importUtils.importUri(uri, options);
+    const result = await _importUri(uri, options);
     handleImportResult(result, 'The URI does not contain a valid specification.');
   } catch (err) {
     showModal(AlertModal, {
@@ -600,15 +608,15 @@ export const exportAllToFile = () => async (dispatch: Dispatch) => {
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportWorkspacesHAR(null, exportPrivateEnvironments);
+            stringifiedExport = await exportWorkspacesHAR(null, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportWorkspacesData(null, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportWorkspacesData(null, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'json');
             break;
         }
       } catch (err) {
@@ -688,15 +696,15 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportRequestsHAR(requests, exportPrivateEnvironments);
+            stringifiedExport = await exportRequestsHAR(requests, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportRequestsData(requests, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportRequestsData(requests, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'json');
             break;
         }
       } catch (err) {
