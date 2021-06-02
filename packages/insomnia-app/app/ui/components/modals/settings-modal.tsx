@@ -8,7 +8,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import SettingsShortcuts from '../settings/shortcuts';
 import General from '../settings/general';
-import ImportExport from '../settings/import-export';
+import { ImportExport } from '../settings/import-export';
 import Plugins from '../settings/plugins';
 import Theme from '../settings/theme';
 import * as models from '../../../models/index';
