@@ -563,7 +563,7 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportWorkspacesToFile = (workspaceId: string | undefined = undefined) => async dispatch => {
+export const exportWorkspacesToFile = (workspaceId?: string) => async dispatch => {
   dispatch(loadStart());
   showSelectExportTypeModal(
     () => dispatch(loadStop()),

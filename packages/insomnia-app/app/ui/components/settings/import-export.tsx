@@ -8,11 +8,11 @@ import { docsImportExport } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 
 interface Props {
-  handleImportFile: Function;
-  handleImportClipBoard: Function;
-  handleImportUri: Function;
-  handleExportAll: Function;
-  handleShowExportRequestsModal: Function;
+  handleImportFile: () => void;
+  handleImportClipBoard: () => void;
+  handleImportUri: (uri: string) => void;
+  handleExportAll: () => void;
+  handleShowExportRequestsModal: () => void;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

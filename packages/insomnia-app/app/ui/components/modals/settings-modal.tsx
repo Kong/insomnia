@@ -25,12 +25,12 @@ export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
 interface Props {
-  handleShowExportRequestsModal: Function;
-  handleExportAllToFile: Function;
-  handleImportFile: Function;
-  handleImportUri: Function;
-  handleToggleMenuBar: Function;
-  handleImportClipBoard: Function;
+  handleShowExportRequestsModal: () => void;
+  handleExportAllToFile: () => void;
+  handleImportFile: () => void;
+  handleImportUri: (uri: string) => void;
+  handleToggleMenuBar: () => void;
+  handleImportClipBoard: () => void;
   settings: any;
 }
 
@@ -76,7 +76,7 @@ class SettingsModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _handleImportUri(uri) {
+  _handleImportUri(uri: string) {
     this.props.handleImportUri(uri);
     this.modal?.hide();
   }
