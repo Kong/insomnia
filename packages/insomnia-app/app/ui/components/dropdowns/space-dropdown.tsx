@@ -1,5 +1,5 @@
 import { Dropdown, DropdownDivider, DropdownItem } from 'insomnia-components';
-import React, { FC, useCallback, useMemo, useState } from 'react';
+import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { isLoggedIn } from '../../../account/session';
 import { getAppName } from '../../../common/constants';
@@ -40,6 +40,13 @@ const useRemoteSpaces = (vcs?: VCS) => {
       setLoading(false);
     }
   }, [vcs]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      await refresh();
+    };
+    fetch();
+  }, [refresh]);
 
   return { loading, refresh };
 };
