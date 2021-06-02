@@ -9,11 +9,11 @@ paths:
     get:
       operationId: getUserByName
       parameters:
-      - name: username
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: The User
@@ -63,9 +63,9 @@ paths:
         '200':
           description: The repository
           content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/repository'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/repository'
           links:
             repositoryPullRequests:
               $ref: '#/components/links/RepositoryPullRequests'
@@ -73,24 +73,24 @@ paths:
     get:
       operationId: getPullRequestsByRepository
       parameters:
-      - name: username
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: slug
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: state
-        in: query
-        schema:
-          type: string
-          enum:
-            - open
-            - merged
-            - declined
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum:
+              - open
+              - merged
+              - declined
       responses:
         '200':
           description: an array of pull request objects
@@ -104,21 +104,21 @@ paths:
     get:
       operationId: getPullRequestsById
       parameters:
-      - name: username
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: slug
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: pid
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: a pull request object
@@ -133,21 +133,21 @@ paths:
     post:
       operationId: mergePullRequest
       parameters:
-      - name: username
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: slug
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: pid
-        in: path
-        required: true
-        schema:
-          type: string
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '204':
           description: the PR was successfully merged
@@ -168,8 +168,8 @@ components:
       # returns '#/components/schemas/pullrequest'
       operationId: getPullRequestsByRepository
       parameters:
-          username: $response.body#/owner/username
-          slug: $response.body#/slug
+        username: $response.body#/owner/username
+        slug: $response.body#/slug
     PullRequestMerge:
       # executes /2.0/repositories/{username}/{slug}/pullrequests/{pid}/merge
       operationId: mergePullRequest

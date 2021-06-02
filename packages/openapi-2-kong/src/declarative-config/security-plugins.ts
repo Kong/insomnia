@@ -1,5 +1,6 @@
 import { getSecurity } from '../common';
 import { DCPlugin } from '../types/declarative-config';
+import { BasicAuthPlugin, KeyAuthPlugin, OpenIDConnectPlugin } from '../types/kong';
 import { OA3Operation, OpenApi3Spec, OA3SecurityScheme, OA3SecuritySchemeApiKey, OA3SecuritySchemeHttp, OA3SecuritySchemeOpenIdConnect } from '../types/openapi3';
 
 export function generateSecurityPlugins(
@@ -27,7 +28,7 @@ export function generateSecurityPlugins(
   return plugins;
 }
 
-export function generateApiKeySecurityPlugin(scheme: OA3SecuritySchemeApiKey): DCPlugin {
+export const generateApiKeySecurityPlugin = (scheme: OA3SecuritySchemeApiKey) => {
   if (!['query', 'header', 'cookie'].includes(scheme.in)) {
     throw new Error(`a ${scheme.type} object expects valid "in" property. Got ${scheme.in}`);
   }
@@ -35,50 +36,45 @@ export function generateApiKeySecurityPlugin(scheme: OA3SecuritySchemeApiKey): D
   if (!scheme.name) {
     throw new Error(`a ${scheme.type} object expects valid "name" property. Got ${scheme.name}`);
   }
-
-  return {
+  const keyAuthPlugin: KeyAuthPlugin = {
     name: 'key-auth',
     config: {
       key_names: [scheme.name],
     },
   };
-}
+  return keyAuthPlugin;
+};
 
-export function generateHttpSecurityPlugin(scheme: OA3SecuritySchemeHttp): DCPlugin {
+export const generateBasicAuthPlugin = (scheme: OA3SecuritySchemeHttp) => {
   if ((scheme.scheme || '').toLowerCase() !== 'basic') {
     throw new Error(`Only "basic" http scheme supported. got ${scheme.scheme}`);
   }
-
-  return {
+  const basicAuthPlugin: BasicAuthPlugin = {
     name: 'basic-auth',
   };
-}
+  return basicAuthPlugin;
+};
 
-export function generateOpenIdConnectSecurityPlugin(
-  scheme: OA3SecuritySchemeOpenIdConnect,
-  args: string[],
-): DCPlugin {
+export const generateOpenIdConnectSecurityPlugin = (scheme: OA3SecuritySchemeOpenIdConnect, args: string[]) => {
   if (!scheme.openIdConnectUrl) {
     throw new Error(`invalid "openIdConnectUrl" property. Got ${scheme.openIdConnectUrl}`);
   }
-
-  return {
+  const openIdConnectPlugin: OpenIDConnectPlugin = {
     name: 'openid-connect',
     config: {
       issuer: scheme.openIdConnectUrl,
       scopes_required: args || [],
     },
   };
-}
+  return openIdConnectPlugin;
+};
 
-export function generateOAuth2SecurityPlugin(): DCPlugin {
-  return {
-    config: {
-      auth_methods: ['client_credentials'],
-    },
-    name: 'openid-connect',
-  };
-}
+export const generateOAuth2SecurityPlugin = (): OpenIDConnectPlugin => ({
+  config: {
+    auth_methods: ['client_credentials'],
+  },
+  name: 'openid-connect',
+});
 
 export function generateSecurityPlugin(
   scheme: OA3SecurityScheme | null,
@@ -94,7 +90,7 @@ export function generateSecurityPlugin(
       break;
 
     case 'http':
-      plugin = generateHttpSecurityPlugin(scheme as OA3SecuritySchemeHttp);
+      plugin = generateBasicAuthPlugin(scheme as OA3SecuritySchemeHttp);
       break;
 
     case 'openidconnect':

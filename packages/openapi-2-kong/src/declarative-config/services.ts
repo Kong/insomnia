@@ -15,7 +15,8 @@ import {
   generatePlugins,
 } from './plugins';
 import { DCService, DCRoute } from '../types/declarative-config';
-import { OpenApi3Spec, OA3Server, OA3PathItem, xKongServiceDefaults, xKongName } from '../types/openapi3';
+import { OpenApi3Spec, OA3Server, OA3PathItem } from '../types/openapi3';
+import { xKongName, xKongServiceDefaults } from '../types/kong';
 
 export function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);

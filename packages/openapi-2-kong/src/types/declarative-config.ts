@@ -1,54 +1,35 @@
-import { OA3Parameter } from './openapi3';
+import { Plugin } from './kong';
+import { Pluggable, Taggable } from './outputs';
 
-export interface DCPluginConfig {
-  allowed_content_types?: string[];
-  auth_methods?: string[];
-  body_schema?: string;
-  issuer?: string;
-  key_names?: string[];
-  parameter_schema?: OA3Parameter[] | 'global' | 'path' | 'operation';
-  scopes_required?: string[];
-  verbose_response?: boolean;
-  version?: 'draft4';
-  [key: string]: any;
-}
+// In case this seems weird to you, it's an important semantic difference.
+// The `Plugin` type is intentionally focused on the _Kong_ plugin definitions without knowledge of declarative-config or kubernetes or any other transforms.
+// It happens to be the case, yes, that the DC shape directly matches the Kong plugin shape in all cases, but this is by coincidence, as far as the types are concerned.  Other transformers, e.g. Kubernetes, use this same `Plugin` type but resituate it quite a bit.  It just so happens that declarative config does not do this (yet).
+// Finally, if nothing else it serves as useful documentation to distinguish when we're talking about declarative-config vs kong-config.
+export type DCPlugin = Plugin
 
-export interface DCPlugin {
-  name: string;
-  enabled?: boolean;
-  tags?: string[];
-  config?: DCPluginConfig;
-}
-
-export interface DCRoute {
+export interface DCRoute extends Taggable, Pluggable {
   methods: string[];
   // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
-  strip_path: boolean;
-  tags: string[];
   name: string;
   paths: string[];
-  plugins?: DCPlugin[];
+  strip_path: boolean;
 }
 
-export interface DCService {
+export interface DCService extends Taggable, Pluggable {
+  host: DCUpstream['name'];
   name: string;
-  protocol: string | undefined;
-  host: string;
-  port: number;
   path: string | null;
+  port: number;
+  protocol: string | undefined;
   routes: DCRoute[];
-  tags: string[];
-  plugins?: DCPlugin[];
 }
 
-export interface DCTarget {
+export interface DCTarget extends Taggable {
   target: string;
-  tags?: string[];
 }
 
-export interface DCUpstream {
+export interface DCUpstream extends Taggable {
   name: string;
-  tags: string[];
   targets: DCTarget[];
 }
 

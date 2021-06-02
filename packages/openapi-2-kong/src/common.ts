@@ -5,16 +5,12 @@ import {
   OA3PathItem,
   OA3Server,
   OA3Operation,
-  xKongName,
 } from './types/openapi3';
+import { xKongName } from './types/kong';
 
-export function getServers(obj: OpenApi3Spec | OA3PathItem) {
-  return obj.servers || [];
-}
+export const getServers = (obj: OpenApi3Spec | OA3PathItem) => obj.servers || [];
 
-export function getPaths(obj: OpenApi3Spec) {
-  return obj.paths || {};
-}
+export const getPaths = (obj: OpenApi3Spec) => obj.paths || {};
 
 export function getAllServers(api: OpenApi3Spec) {
   const servers = getServers(api);

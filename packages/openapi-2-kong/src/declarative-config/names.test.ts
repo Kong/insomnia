@@ -1,4 +1,5 @@
-import { OA3PathItem, OpenApi3Spec, xKongName } from '../types/openapi3';
+import { xKongName } from '../types/kong';
+import { OA3PathItem, OpenApi3Spec } from '../types/openapi3';
 import { generateRouteName } from './services';
 
 const api: OpenApi3Spec = {
