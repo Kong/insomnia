@@ -6,7 +6,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
-import DebouncedInput from '../base/debounced-input';
+import { DebouncedInput } from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
 import { database as db } from '../../../common/database';
 import { isWorkspace, Workspace } from '../../../models/workspace';

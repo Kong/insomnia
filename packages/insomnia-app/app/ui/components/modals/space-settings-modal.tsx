@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import DebouncedInput from '../base/debounced-input';
+import { DebouncedInput } from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';

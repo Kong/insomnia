@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import CodeEditor from './code-editor';
-import Input from '../base/debounced-input';
+import { DebouncedInput } from '../base/debounced-input';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -40,7 +40,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class OneLineEditor extends PureComponent<Props, State> {
   _editor: CodeEditor | null = null;
-  _input: Input | null = null;
+  _input: DebouncedInput | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -324,10 +324,6 @@ class OneLineEditor extends PureComponent<Props, State> {
     this._editor = n;
   }
 
-  _setInputRef(n: Input) {
-    this._input = n;
-  }
-
   _mayContainNunjucks(text) {
     // Not sure, but sometimes this isn't a string
     if (typeof text !== 'string') {
@@ -398,8 +394,8 @@ class OneLineEditor extends PureComponent<Props, State> {
       );
     } else {
       return (
-        <Input
-          ref={this._setInputRef}
+        <DebouncedInput
+          ref={ref => { this._input = ref; }}
           // @ts-expect-error -- TSCONVERSION
           id={id}
           type={type}

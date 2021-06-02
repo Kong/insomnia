@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-import DebouncedInput from '../base/debounced-input';
+import { DebouncedInput } from '../base/debounced-input';
 import FileInputButton from '../base/file-input-button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
