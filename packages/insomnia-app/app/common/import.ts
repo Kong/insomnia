@@ -445,8 +445,8 @@ export async function exportWorkspacesData(
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: BaseModel[] = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
+  const docs = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
 

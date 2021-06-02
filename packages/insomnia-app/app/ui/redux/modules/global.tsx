@@ -559,7 +559,13 @@ const showExportPrivateEnvironmentsModal = (privateEnvNames: string) => showModa
   message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
 });
 
-const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, selectedFormat: SelectedFormat) => {
+const showSaveExportedFileDialog = async ({
+  exportedFileNamePrefix,
+  selectedFormat,
+}: {
+  exportedFileNamePrefix: string,
+  selectedFormat: SelectedFormat,
+}) => {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
@@ -595,7 +601,10 @@ export const exportAllToFile = () => async (dispatch: Dispatch) => {
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
-      const fileName = await showSaveExportedFileDialog('Insomnia All', selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: 'Insomnia All',
+        selectedFormat,
+      });
 
       if (!fileName) {
         // Cancelled.
@@ -682,8 +691,10 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
-      const fileNamePrefix = 'Insomnia';
-      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: 'Insomnia',
+        selectedFormat,
+      });
 
       if (!fileName) {
         // Cancelled.
