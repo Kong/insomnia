@@ -8,6 +8,7 @@ import { generateId, nullFn } from '../../../common/misc';
 import { Dropdown, DropdownItem, DropdownButton } from '../base/dropdown';
 import PromptButton from '../base/prompt-button';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { RequestHeader } from '../../../models/request';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -20,7 +21,7 @@ const LEFT = 37;
 const RIGHT = 39;
 
 interface Props {
-  onChange: Function;
+  onChange: (headers: RequestHeader[]) => void;
   pairs: any[];
   handleRender?: HandleRender;
   handleGetRenderContext?: HandleGetRenderContext;

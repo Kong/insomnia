@@ -9,7 +9,7 @@ import MarkdownPreview from './markdown-preview';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 
 interface Props {
-  onChange: Function,
+  onChange: (markdown: string) => void;
   defaultValue: string,
   fontSize: number,
   indentSize: number,
@@ -41,11 +41,9 @@ class MarkdownEditor extends PureComponent<Props, State> {
     };
   }
 
-  _handleChange(markdown) {
+  _handleChange(markdown: string) {
     this.props.onChange(markdown);
-    this.setState({
-      markdown,
-    });
+    this.setState({ markdown });
   }
 
   _setEditorRef(n: CodeEditor) {

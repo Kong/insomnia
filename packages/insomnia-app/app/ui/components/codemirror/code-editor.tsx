@@ -1,4 +1,4 @@
-import React, { Component, CSSProperties, ReactNode } from 'react';
+import React, { Component, CSSProperties, HTMLAttributes, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   AUTOBIND_CFG,
@@ -80,19 +80,29 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   gutters: ['CodeMirror-lint-markers'],
 };
 
-export type CodeEditorOnChange = (value: string) => void;
+type InheritedAttributes = Pick<HTMLAttributes<HTMLDivElement>,
+  | 'onBlur'
+  | 'onFocus'
+  | 'onMouseLeave'
+  | 'onMouseLeave'
+  | 'onClick'
+  | 'onPaste'
+  | 'placeholder'
+  | 'id'
+  | 'className'
+  | 'style'
+>
 
-interface Props {
+interface ExtendedAttributes {
+  onKeyDown?: (event: React.KeyboardEvent, value?: string) => void;
+  onChange?: (value?: string) => void;
+}
+
+interface Props extends InheritedAttributes, ExtendedAttributes {
   indentWithTabs?: boolean,
-  onChange?: CodeEditorOnChange,
   onCursorActivity?: Function,
-  onFocus?: Function,
-  onBlur?: Function,
   onClickLink?: CodeMirrorLinkClickCallback,
-  onKeyDown?: Function,
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>,
-  onClick?: React.MouseEventHandler<HTMLDivElement>,
-  onPaste?: Function,
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void,
   render?: HandleRender,
   nunjucksPowerUserMode?: boolean,
@@ -101,8 +111,6 @@ interface Props {
   getAutocompleteSnippets?: Function,
   keyMap?: string,
   mode?: string,
-  id?: string,
-  placeholder?: string,
   lineWrapping?: boolean,
   hideLineNumbers?: boolean,
   hideGutters?: boolean,
@@ -117,8 +125,6 @@ interface Props {
   noLint?: boolean,
   noDragDrop?: boolean,
   noStyleActiveLine?: boolean,
-  className?: string,
-  style?: Object,
   updateFilter?: (filter: string) => void,
   defaultTabBehavior?: boolean,
   readOnly?: boolean,

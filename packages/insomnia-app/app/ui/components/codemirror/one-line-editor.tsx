@@ -1,4 +1,4 @@
-import React, { Fragment, PureComponent } from 'react';
+import React, { Fragment, InputHTMLAttributes, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
@@ -10,29 +10,34 @@ const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
-interface Props {
+type InheritedAttributes = Pick<InputHTMLAttributes<HTMLInputElement>,
+  | 'onPaste'
+  | 'onFocus'
+  | 'className'
+  | 'placeholder'
+  | 'type'
+  | 'id'
+>
+
+interface ExtendedAttributes {
+  onKeyDown?: (event: React.KeyboardEvent, value?: string) => void;
+  onChange?: (value: string) => void;
+  onBlur?: () => void;
+}
+
+interface Props extends InheritedAttributes, ExtendedAttributes {
   defaultValue: string;
-  id?: string;
-  type?: string;
   mode?: string;
-  onBlur?: Function;
-  onKeyDown?: Function;
-  onFocus?: Function;
-  onChange?: Function;
-  onPaste?: Function;
   render?: Function;
   getRenderContext?: Function;
   nunjucksPowerUserMode?: boolean;
   getAutocompleteConstants?: Function | null;
-  placeholder?: string;
-  className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
   isVariableUncovered?: boolean;
   // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
   disabled?: boolean;
 }
-
 interface State {
   mode: string;
 }
@@ -377,7 +382,6 @@ class OneLineEditor extends PureComponent<Props, State> {
             onKeyDown={this._handleKeyDown}
             onFocus={this._handleEditorFocus}
             onMouseLeave={this._handleEditorMouseLeave}
-            // @ts-expect-error -- TSCONVERSION
             onChange={onChange}
             // @ts-expect-error -- TSCONVERSION
             render={render}
@@ -396,7 +400,6 @@ class OneLineEditor extends PureComponent<Props, State> {
       return (
         <DebouncedInput
           ref={ref => { this._input = ref; }}
-          // @ts-expect-error -- TSCONVERSION
           id={id}
           type={type}
           className={className}

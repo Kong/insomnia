@@ -1,12 +1,17 @@
-import React, { ChangeEvent, PureComponent } from 'react';
+import React, { ChangeEvent, InputHTMLAttributes, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { debounce } from '../../../common/misc';
 
-interface Props {
-  onChange: (value: string) => void;
-  onFocus?: Function;
-  onBlur?: Function;
+type TargetElement = HTMLTextAreaElement | HTMLInputElement;
+
+interface ExtendedAttributes {
+  onChange: (value?: string) => void;
+}
+
+type InheritedAttributes = Omit<InputHTMLAttributes<TargetElement>, keyof ExtendedAttributes>
+
+interface Props extends InheritedAttributes, ExtendedAttributes {
   textarea?: boolean;
   delay?: number;
 }

@@ -168,10 +168,8 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     });
   }
 
-  async _handleUnitTestCodeChange(unitTest: UnitTest, v: string) {
-    await models.unitTest.update(unitTest, {
-      code: v,
-    });
+  async _handleUnitTestCodeChange(unitTest: UnitTest, code: string) {
+    await models.unitTest.update(unitTest, { code });
   }
 
   async _handleRunTests() {

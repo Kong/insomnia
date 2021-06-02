@@ -73,7 +73,6 @@ class SpaceSettingsModal extends PureComponent<Props> {
             <label>
               Name
               <DebouncedInput
-              // @ts-expect-error -- TSCONVERSION props are spread into an input element
                 type="text"
                 delay={500}
                 placeholder="My Space"

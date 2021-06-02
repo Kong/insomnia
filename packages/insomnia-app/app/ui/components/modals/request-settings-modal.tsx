@@ -452,7 +452,6 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
             <DebouncedInput
               delay={500}
-              // @ts-expect-error -- TSCONVERSION props expand into an input but are difficult to type
               type="text"
               placeholder={request.url || 'My Request'}
               defaultValue={request.name}

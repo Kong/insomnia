@@ -15,6 +15,16 @@ import { showModal } from '../modals/index';
 import { describeByteSize } from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
+interface Pair {
+  id: string,
+  name: string,
+  value: string,
+  description: string,
+  fileName: string,
+  type: string,
+  disabled: boolean,
+}
+
 interface Props {
   onChange: Function,
   onDelete: Function,
@@ -23,20 +33,11 @@ interface Props {
   onFocusDescription: Function,
   displayDescription: boolean,
   index: number,
-  pair: {
-    id: string,
-    name: string,
-    value: string,
-    description: string,
-    fileName: string,
-    type: string,
-    disabled: boolean,
-  },
-  readOnly?: boolean,
+  pair: Pair,
   onMove?: Function,
   onKeyDown?: Function,
-  onBlurName?: Function,
-  onBlurValue?: Function,
+  onBlurName?: (pair?: Pair) => void,
+  onBlurValue?: (pair?: Pair) => void,
   onBlurDescription?: Function,
   handleRender?: HandleRender,
   handleGetRenderContext?: HandleGetRenderContext,
@@ -74,20 +75,17 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
   _nameInput: OneLineEditor | null = null;
   _valueInput: OneLineEditor | FileInputButton | null = null;
   _descriptionInput: OneLineEditor | null = null;
+
   state: State = {
     dragDirection: 0,
   };
 
   focusNameEnd() {
-    if (this._nameInput) {
-      this._nameInput.focusEnd();
-    }
+    this._nameInput?.focusEnd();
   }
 
   focusValueEnd() {
-    if (this._valueInput) {
-      this._valueInput?.focusEnd();
-    }
+    this._valueInput?.focusEnd();
   }
 
   focusDescriptionEnd() {
@@ -96,9 +94,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   setDragDirection(dragDirection) {
     if (dragDirection !== this.state.dragDirection) {
-      this.setState({
-        dragDirection,
-      });
+      this.setState({ dragDirection });
     }
   }
 
@@ -111,10 +107,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     this.props.onChange && this.props.onChange(pair);
   }
 
-  _handleNameChange(name) {
-    this._sendChange({
-      name,
-    });
+  _handleNameChange(name: string) {
+    this._sendChange({ name });
   }
 
   _handleValuePaste(e) {
@@ -148,22 +142,16 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     }
   }
 
-  _handleValueChange(value) {
-    this._sendChange({
-      value,
-    });
+  _handleValueChange(value: string) {
+    this._sendChange({ value });
   }
 
-  _handleFileNameChange(fileName) {
-    this._sendChange({
-      fileName,
-    });
+  _handleFileNameChange(fileName: string) {
+    this._sendChange({ fileName });
   }
 
-  _handleDescriptionChange(description) {
-    this._sendChange({
-      description,
-    });
+  _handleDescriptionChange(description: string) {
+    this._sendChange({ description });
   }
 
   _handleTypeChange(def) {
@@ -181,10 +169,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     });
   }
 
-  _handleDisableChange(disabled) {
-    this._sendChange({
-      disabled,
-    });
+  _handleDisableChange(disabled: boolean) {
+    this._sendChange({ disabled });
   }
 
   _handleFocusName(e) {
@@ -199,34 +185,24 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     this.props.onFocusDescription(this.props.pair, e);
   }
 
-  _handleBlurName(e) {
-    if (this.props.onBlurName) {
-      this.props.onBlurName(this.props.pair, e);
-    }
+  _handleBlurName() {
+    this.props.onBlurName?.(this.props.pair);
   }
 
-  _handleBlurValue(e) {
-    if (this.props.onBlurName) {
-      this.props.onBlurValue?.(this.props.pair, e);
-    }
+  _handleBlurValue() {
+    this.props.onBlurValue?.(this.props.pair);
   }
 
-  _handleBlurDescription(e) {
-    if (this.props.onBlurDescription) {
-      this.props.onBlurDescription(this.props.pair, e);
-    }
+  _handleBlurDescription() {
+    this.props.onBlurDescription?.(this.props.pair);
   }
 
   _handleDelete() {
-    if (this.props.onDelete) {
-      this.props.onDelete(this.props.pair);
-    }
+    this.props.onDelete?.(this.props.pair);
   }
 
   _handleKeyDown(e, value) {
-    if (this.props.onKeyDown) {
-      this.props.onKeyDown(this.props.pair, e, value);
-    }
+    this.props.onKeyDown?.(this.props.pair, e, value);
   }
 
   _handleAutocompleteNames() {
@@ -268,7 +244,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
   renderPairDescription() {
     const {
       displayDescription,
-      readOnly,
       forceInput,
       descriptionPlaceholder,
       pair,
@@ -287,8 +262,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
         )}>
         <OneLineEditor
           ref={this._setDescriptionInputRef}
-          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
-          readOnly={readOnly}
           forceInput={forceInput}
           placeholder={descriptionPlaceholder || 'Description'}
           defaultValue={pair.description || ''}
@@ -308,7 +281,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
   renderPairValue() {
     const {
       pair,
-      readOnly,
       forceInput,
       valueInputType,
       valuePlaceholder,
@@ -344,8 +316,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       return (
         <OneLineEditor
           ref={ref => { this._valueInput = ref; }}
-          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
-          readOnly={readOnly}
           forceInput={forceInput}
           type={valueInputType || 'text'}
           placeholder={valuePlaceholder || 'Value'}
@@ -434,7 +404,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       noDropZone,
       hideButtons,
       forceInput,
-      readOnly,
       className,
       isDragging,
       isDraggingOver,
@@ -485,8 +454,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
-              // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
-              readOnly={readOnly}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}
               onFocus={this._handleFocusName}
