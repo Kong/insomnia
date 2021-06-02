@@ -24,17 +24,20 @@ describe('tags', () => {
   });
 
   it('test that tags are appended to Plugin entities', () => {
+    const pluginTags = ['pluginTag'];
     const spec = getSpec();
     const keyAuthPlugin: KeyAuthPlugin = {
       name: 'key-auth',
       config: {
         key_names: ['x-api-key'],
       },
+      tags: pluginTags,
     };
     spec[xKongPluginKeyAuth] = keyAuthPlugin;
     const plugins = generatePlugins(spec, tags);
+    const resultingTags = [...tags, ...pluginTags];
     plugins.forEach(plugin => {
-      expect(plugin.tags).toEqual(tags);
+      expect(plugin.tags).toEqual(resultingTags);
     });
   });
 
