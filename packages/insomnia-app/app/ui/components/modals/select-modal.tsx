@@ -6,29 +6,34 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 
-interface State {
-  title: string;
+export interface SelectModalShowOptions {
+  title: string | null;
+  message: string | null;
   options: {
     name: string;
     value: string;
   }[];
-  value: string;
-  message: string;
-  onCancel?: (...args: any[]) => any;
+  value: string | null;
+  onDone?: (selectedValue: string | null) => Promise<void>;
+  onCancel?: () => void;
 }
 
+type State = Omit<SelectModalShowOptions, 'onDone'>;
+
+const initialState: State = {
+  title: null,
+  options: [],
+  message: null,
+  value: null,
+};
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SelectModal extends PureComponent<{}, State> {
+export class SelectModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   doneButton: HTMLButtonElement | null = null;
-  _doneCallback: ((...args: any[]) => any) | null = null;
+  onDone: SelectModalShowOptions['onDone'] | null = null;
 
-  state: State = {
-    title: '',
-    options: [],
-    message: '',
-    value: '',
-  }
+  state: State = initialState;
 
   _setModalRef(m: Modal) {
     this.modal = m;
@@ -38,9 +43,9 @@ class SelectModal extends PureComponent<{}, State> {
     this.doneButton = n;
   }
 
-  _handleDone() {
+  _handleDone = async () => {
     this.hide();
-    this._doneCallback && this._doneCallback(this.state.value);
+    await this.onDone?.(this.state.value);
   }
 
   _handleSelectChange(e: React.SyntheticEvent<HTMLSelectElement>) {
@@ -50,12 +55,18 @@ class SelectModal extends PureComponent<{}, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
-  show(data: Record<string, any> = {}) {
-    const { title, message, options, value, onDone, onCancel } = data;
-    this._doneCallback = onDone;
+  show({
+    title,
+    message,
+    options,
+    value,
+    onDone,
+    onCancel,
+  }: SelectModalShowOptions = initialState) {
+    this.onDone = onDone;
     this.setState({
       title,
       message,
@@ -63,9 +74,9 @@ class SelectModal extends PureComponent<{}, State> {
       value,
       onCancel,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
     setTimeout(() => {
-      this.doneButton && this.doneButton.focus();
+      this.doneButton?.focus();
     }, 100);
   }
 
@@ -77,7 +88,7 @@ class SelectModal extends PureComponent<{}, State> {
         <ModalBody className="wide pad">
           <p>{message}</p>
           <div className="form-control form-control--outlined">
-            <select onChange={this._handleSelectChange} value={value}>
+            <select onChange={this._handleSelectChange} value={value ?? undefined}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
                   {name}
@@ -95,5 +106,3 @@ class SelectModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default SelectModal;

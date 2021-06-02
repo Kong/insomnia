@@ -12,7 +12,7 @@ import PaymentNotificationModal from '../../components/modals/payment-notificati
 import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import SelectModal from '../../components/modals/select-modal';
+import { SelectModal } from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import { database } from '../../../common/database';
 import { trackEvent } from '../../../common/analytics';
@@ -60,11 +60,6 @@ const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
-
-const VALUE_JSON = 'json';
-const VALUE_YAML = 'yaml';
-const VALUE_HAR = 'har';
-type SelectedFormat = typeof VALUE_HAR | typeof VALUE_JSON | typeof VALUE_YAML;
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -510,7 +505,20 @@ export const importUri = (
   }
 };
 
-function showSelectExportTypeModal(onCancel: () => void, onDone: (selectedFormat: SelectedFormat) => void) {
+const VALUE_JSON = 'json';
+const VALUE_YAML = 'yaml';
+const VALUE_HAR = 'har';
+
+export type SelectedFormat =
+  | typeof VALUE_HAR
+  | typeof VALUE_JSON
+  | typeof VALUE_YAML
+  ;
+
+const showSelectExportTypeModal = ({ onCancel, onDone }: {
+  onCancel: () => void;
+  onDone: (selectedFormat: SelectedFormat) => Promise<void>;
+}) => {
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
   showModal(SelectModal, {
     title: 'Select Export Type',
@@ -531,12 +539,12 @@ function showSelectExportTypeModal(onCancel: () => void, onDone: (selectedFormat
     ],
     message: 'Which format would you like to export as?',
     onCancel,
-    onDone: (selectedFormat: SelectedFormat) => {
+    onDone: async (selectedFormat: SelectedFormat) => {
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
-      onDone(selectedFormat);
+      await onDone(selectedFormat);
     },
   });
-}
+};
 
 const showExportPrivateEnvironmentsModal = (privateEnvNames: string) => showModal(AskModal, {
   title: 'Export Private Environments?',
@@ -565,14 +573,14 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
 
 export const exportAllToFile = () => async dispatch => {
   dispatch(loadStart());
-  showSelectExportTypeModal(
-    () => dispatch(loadStop()),
-    async (selectedFormat: SelectedFormat) => {
+  showSelectExportTypeModal({
+    onCancel: () => { dispatch(loadStop()); },
+    onDone: async selectedFormat => {
       // Check if we want to export private environments.
       const environments = await models.environment.all();
 
       let exportPrivateEnvironments = false;
-      const privateEnvironments = environments.filter(e => e.isPrivate);
+      const privateEnvironments = environments.filter(environment => environment.isPrivate);
 
       if (privateEnvironments.length) {
         const names = privateEnvironments.map(environment => environment.name).join(', ');
@@ -621,14 +629,14 @@ export const exportAllToFile = () => async dispatch => {
         dispatch(loadStop());
       });
     },
-  );
+  });
 };
 
 export const exportRequestsToFile = (requestIds: string[]) => async dispatch => {
   dispatch(loadStart());
-  showSelectExportTypeModal(
-    () => dispatch(loadStop()),
-    async (selectedFormat: SelectedFormat) => {
+  showSelectExportTypeModal({
+    onCancel: () => { dispatch(loadStop()); },
+    onDone: async selectedFormat => {
       const requests: (GrpcRequest | Request)[] = [];
       const privateEnvironments: Environment[] = [];
       const workspaceLookup = {};
@@ -720,7 +728,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
         dispatch(loadStop());
       });
     },
-  );
+  });
 };
 
 export function initActiveSpace() {

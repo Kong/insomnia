@@ -40,7 +40,7 @@ import NunjucksModal from './modals/nunjucks-modal';
 import PromptModal from './modals/prompt-modal';
 import AskModal from './modals/ask-modal';
 import GenerateConfigModal from './modals/generate-config-modal';
-import SelectModal from './modals/select-modal';
+import { SelectModal } from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
