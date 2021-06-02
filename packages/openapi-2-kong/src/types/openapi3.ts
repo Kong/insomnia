@@ -54,12 +54,16 @@ export interface OA3Parameter {
   explode?: boolean;
 }
 
+/** see: https://swagger.io/specification/#request-body-object */
 export interface OA3RequestBody {
   content?: Record<string, any>; // TODO
+  description?: string;
+  required?: boolean;
 }
 
 export type OA3SecurityRequirement = Record<string, any>;
 
+/** see: https://swagger.io/specification/#reference-object */
 export interface OA3Reference {
   $ref: string;
 }
@@ -88,16 +92,18 @@ export interface OA3ServerKubernetesService {
   };
 }
 
-export type OA3Variables = Record<string, {
+/** see: https://swagger.io/specification/#server-variable-object */
+export interface OA3ServerVariable {
   default: string;
   enum?: string[];
   description?: string;
-}>;
+}
 
+/** see: https://swagger.io/specification/#server-object */
 export type OA3Server = {
   url: string;
   description?: string;
-  variables?: OA3Variables;
+  variables?: Record<string, OA3ServerVariable>;
 } & OA3ServerKubernetesTLS
   & OA3ServerKubernetesBackend
   & OA3ServerKubernetesService;
@@ -106,6 +112,7 @@ export interface OA3ResponsesObject {
   $ref?: string;
 }
 
+/** see: https://swagger.io/specification/#operation-object */
 export type OA3Operation = {
   description?: string;
   summary?: string;
@@ -129,6 +136,7 @@ type HTTPMethodPaths = Partial<Record<
   OA3Operation
 >>;
 
+/** see: https://swagger.io/specification/#path-item-object */
 export type OA3PathItem = {
   $ref?: string;
   summary?: string;
@@ -142,11 +150,13 @@ export type OA3PathItem = {
   & XKongPluginKeyAuth
   ;
 
+/** see: https://swagger.io/specification/#paths-object */
 export type OA3Paths = Record<string, OA3PathItem>
   & StripPath
   & XKongRouteDefaults
   ;
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeApiKey {
   type: 'apiKey';
   name: string;
@@ -154,6 +164,7 @@ export interface OA3SecuritySchemeApiKey {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeHttp {
   type: 'http';
   name: string;
@@ -162,6 +173,7 @@ export interface OA3SecuritySchemeHttp {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeOpenIdConnect {
   type: 'openIdConnect';
   name: string;
@@ -169,6 +181,7 @@ export interface OA3SecuritySchemeOpenIdConnect {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeOAuth2Flow {
   authorizationUrl?: string;
   tokenUrl?: string;
@@ -176,6 +189,7 @@ export interface OA3SecuritySchemeOAuth2Flow {
   scopes: Record<string, string>;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeOAuth2 {
   type: 'oauth2';
   name: string;
@@ -188,16 +202,25 @@ export interface OA3SecuritySchemeOAuth2 {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export type OA3SecurityScheme =
   | OA3SecuritySchemeApiKey
   | OA3SecuritySchemeHttp
   | OA3SecuritySchemeOpenIdConnect
   | OA3SecuritySchemeOAuth2;
 
-export interface OA3Example {}
+/** see: https://swagger.io/specification/#example-object */
+export interface OA3Example {
+  summary?: string;
+  description?: string;
+  value?: any;
+  externalValue?: string;
+}
 
+/** see: https://swagger.io/specification/#schema-object */
 export interface OA3Schema {}
 
+/** see: https://swagger.io/specification/#header-object */
 export interface OA3Header {
   description?: string;
   required?: boolean;
@@ -205,6 +228,7 @@ export interface OA3Header {
   allowEmptyValue?: boolean;
 }
 
+/** see: https://swagger.io/specification/#components-object */
 export interface OA3Components {
   schemas?: Record<string, OA3Schema | OA3Reference>;
   parameters?: Record<string, OA3Parameter | OA3Reference>;
@@ -214,11 +238,14 @@ export interface OA3Components {
   securitySchemes?: Record<string, OA3SecurityScheme | OA3Reference>;
 }
 
+/** see: https://swagger.io/specification/#tag-object */
 export interface TagObject {
   name: string;
   description?: string;
   externalDocs?: Record<string, any>;
 }
+
+/** see: https://swagger.io/specification/#openapi-object */
 export type OpenApi3Spec = {
   openapi: string;
   info: OA3Info;

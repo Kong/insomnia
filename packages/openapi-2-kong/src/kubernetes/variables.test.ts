@@ -1,4 +1,4 @@
-import { OA3Variables } from '../types/openapi3';
+import { OA3ServerVariable } from '../types/openapi3';
 import { resolveUrlVariables, resolveVariables, pathVariablesToWildcard } from './variables';
 
 describe('variables', () => {
@@ -19,7 +19,7 @@ describe('variables', () => {
     });
 
     it('should return default in place of variable', () => {
-      const variables: OA3Variables = {
+      const variables: Record<string, OA3ServerVariable> = {
         var: {
           default: 'bar',
         },
@@ -29,7 +29,7 @@ describe('variables', () => {
     });
 
     it('should return defaults in place of multiple variables', () => {
-      const variables: OA3Variables = {
+      const variables: Record<string, OA3ServerVariable> = {
         var1: {
           default: 'darkness',
         },
@@ -54,7 +54,7 @@ describe('variables', () => {
 
     it('should replace protocol variable with default protocol', () => {
       const url = '{protocol}://api.insomnia.rest';
-      const variables: OA3Variables = {
+      const variables: Record<string, OA3ServerVariable> = {
         protocol: {
           default: 'https',
         },
@@ -79,7 +79,7 @@ describe('variables', () => {
 
     it('should handle protocol and path variables with and without defaults', () => {
       const url = '{protocol}://api.insomnia.rest/hello/{var}/my/{another-var}/friend/';
-      const variables: OA3Variables = {
+      const variables: Record<string, OA3ServerVariable> = {
         'another-var': {
           default: 'old',
         },
@@ -91,7 +91,7 @@ describe('variables', () => {
 
     it('should handle partial routes with variables', () => {
       const partial = '/hello/{var}/my/{another-var}/friend';
-      const variables: OA3Variables = {
+      const variables: Record<string, OA3ServerVariable> = {
         'another-var': {
           default: 'old',
         },
