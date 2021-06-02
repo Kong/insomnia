@@ -12,14 +12,20 @@ import {
 } from './plugins';
 import { HttpMethod } from '../common';
 import {
-  dummyPluginDoc,
   keyAuthPluginDoc,
   pluginDocWithName,
-  pluginDummy,
   pluginKeyAuth,
 } from './plugin-helpers';
-import { PathPlugin, OperationPlugin } from '../types/k8splugins';
-import { OpenApi3Spec, OA3Server, OA3Paths, OA3PathItem, OA3Components } from '../types/openapi3';
+import { PathPlugin, OperationPlugin } from '../types/k8s-plugins';
+import {
+  OpenApi3Spec,
+  OA3Server,
+  OA3Paths,
+  OA3PathItem,
+  OA3Components,
+  OA3Operation,
+} from '../types/openapi3';
+import { dummyPluginDoc, pluginDummy, UserK8sPlugin } from '../declarative-config/jest/test-helpers';
 
 describe('plugins', () => {
   let _iterator = 0;
@@ -159,7 +165,7 @@ describe('plugins', () => {
     it('returns multiple plugin docs', () => {
       const api: OpenApi3Spec = { ...spec, ...pluginKeyAuth, ...pluginDummy };
       const result = getGlobalPlugins(api, increment);
-      expect(result).toEqual([keyAuthPluginDoc('g0'), dummyPluginDoc('g1')]);
+      expect(result).toEqual<UserK8sPlugin[]>([keyAuthPluginDoc('g0'), dummyPluginDoc('g1')]);
     });
 
     it('returns security plugin doc', () => {
@@ -284,7 +290,7 @@ describe('plugins', () => {
     it('should handle plugins existing on path', () => {
       const paths: OA3Paths = {
         '/path-no-plugin': {},
-        '/path': { ...pluginDummy },
+        '/path': pluginDummy as OA3PathItem,
       };
       const result = getPathPlugins(paths, increment, spec);
       expect(result).toHaveLength(2);
@@ -301,7 +307,7 @@ describe('plugins', () => {
     it('should handle plugins existing on operation and not on path', () => {
       const paths: OA3Paths = {
         '/path': {
-          get: { ...pluginDummy },
+          get: pluginDummy as OA3Operation,
           put: {},
         },
       };
@@ -322,7 +328,7 @@ describe('plugins', () => {
 
     it('should handle plugins existing on path and operation', () => {
       const paths: OA3Paths = {
-        '/path-0': { ...pluginKeyAuth, get: { ...pluginDummy } },
+        '/path-0': { ...pluginKeyAuth, get: pluginDummy as OA3Operation },
         '/path-1': { ...pluginDummy, put: {} },
       };
       const result = getPathPlugins(paths, increment, spec);
@@ -354,10 +360,9 @@ describe('plugins', () => {
 
     it('should return plugins for all operations on path', () => {
       const pathItem: OA3PathItem = {
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error.  this actually passes 'GET' but I think 'get' is expected.
         [HttpMethod.get]: {},
         [HttpMethod.put]: { ...pluginKeyAuth, ...pluginDummy },
-        [HttpMethod.post]: { ...pluginDummy },
+        [HttpMethod.post]: pluginDummy as OA3Operation,
       };
       const result = getOperationPlugins(pathItem, increment, spec);
       expect(result).toHaveLength(3);
@@ -389,7 +394,6 @@ describe('plugins', () => {
     it('should return security plugin from operation', () => {
       const api: OpenApi3Spec = { ...spec, components };
       const pathItem: OA3PathItem = {
-        // @ts-expect-error -- TSCONVERSION appears to be a genuine error.  this actually passes 'GET' but I think 'get' is expected.
         [HttpMethod.get]: {
           security: [
             {
@@ -446,6 +450,7 @@ describe('plugins', () => {
       const source: PathPlugin[] = [
         {
           path: '/path-with-plugin',
+          // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
           plugins: [dummyPluginDoc('p0')],
           operations: [blankOperation],
         },
@@ -466,6 +471,7 @@ describe('plugins', () => {
           operations: [
             {
               method: HttpMethod.get,
+              // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
               plugins: [dummyPluginDoc('p0')],
             },
             {
@@ -504,6 +510,7 @@ describe('plugins', () => {
         },
         {
           method: HttpMethod.post,
+          // @ts-expect-error -- TSCONVERSION more work is needed to module augment to include DummyPlugin (but not export those augmentations)
           plugins: [dummyPluginDoc('p0')],
         },
       ];

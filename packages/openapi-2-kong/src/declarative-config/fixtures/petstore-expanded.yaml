@@ -1,4 +1,4 @@
-openapi: "3.0.0"
+openapi: '3.0.0'
 info:
   version: 1.0.0
   title: Swagger Petstore
@@ -128,7 +128,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/NewPet'
         - required:
-          - id
+            - id
           properties:
             id:
               type: integer
@@ -136,7 +136,7 @@ components:
 
     NewPet:
       required:
-        - name  
+        - name
       properties:
         name:
           type: string

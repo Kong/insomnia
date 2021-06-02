@@ -1,5 +1,6 @@
 import { OA3SecurityScheme } from '../types/openapi3';
 import { generateSecurityPlugin } from './security-plugins';
+import { tags } from './jest/test-helpers';
 
 describe('security-plugins', () => {
   describe('generateSecurityPlugin()', () => {
@@ -10,10 +11,10 @@ describe('security-plugins', () => {
         name: 'x-api-key',
       };
 
-      const result = generateSecurityPlugin(scheme, [], ['Tag']);
+      const result = generateSecurityPlugin(scheme, [], tags);
       expect(result).toEqual({
         name: 'key-auth',
-        tags: ['Tag'],
+        tags,
         config: {
           key_names: ['x-api-key'],
         },
@@ -28,10 +29,10 @@ describe('security-plugins', () => {
         name: 'x-api-key',
       };
 
-      const result = generateSecurityPlugin(scheme, [], ['Tag']);
+      const result = generateSecurityPlugin(scheme, [], tags);
       expect(result).toEqual({
         name: 'key-auth',
-        tags: ['Tag'],
+        tags,
         config: {
           key_names: ['x-api-key'],
         },

@@ -90,7 +90,7 @@ describe('top-level API exports', () => {
       const parsedSpec = YAML.parse(dcFixtureFileString);
       const {
         documents: [dc],
-      } = await generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
+      } = generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
       expect(dc.upstreams.length).toBe(1);
@@ -103,7 +103,7 @@ describe('top-level API exports', () => {
         label,
         documents,
         warnings,
-      } = await generateFromSpec(parsedSpec, 'kong-for-kubernetes') as KongForKubernetesResult;
+      } = generateFromSpec(parsedSpec, 'kong-for-kubernetes') as KongForKubernetesResult;
       expect(type).toBe('kong-for-kubernetes');
       expect(label).toBe('Kong for Kubernetes');
       expect(documents).toHaveLength(9);

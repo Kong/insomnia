@@ -1,67 +1,15 @@
-import { DCRoute, DCUpstream } from './declarative-config';
+import { HttpMethodType } from '../common';
 import { K8sIngressTLS } from './kubernetes-config';
-
-export const xKongName = 'x-kong-name';
-export interface XKongName {
-  [xKongName]?: string;
-}
-
-export const xKongRouteDefaults = 'x-kong-route-defaults';
-export interface XKongRouteDefaults {
-  [xKongRouteDefaults]?: Partial<DCRoute>;
-}
-
-export const xKongUpstreamDefaults = 'x-kong-upstream-defaults';
-export interface XKongUpstreamDefaults {
-  [xKongUpstreamDefaults]?: Partial<DCUpstream>;
-}
-
-export const xKongServiceDefaults = 'x-kong-service-defaults';
-export interface XKongServiceDefaults {
-  [xKongServiceDefaults]?: Record<string, any>;
-}
-
-export const xKongPluginRequestValidator = 'x-kong-plugin-request-validator';
-export interface XKongPluginRequestValidator {
-  [xKongPluginRequestValidator]?: {
-    enabled?: boolean;
-    config: {
-      verbose_response?: boolean;
-      parameter_schema?: 'global' | 'path' | 'operation';
-    };
-  };
-}
-
-export const xKongPluginKeyAuth = 'x-kong-plugin-key-auth';
-export interface XKongPluginKeyAuth {
-  [xKongPluginKeyAuth]?: {
-    name: 'key-auth';
-    config: {
-      key_names: string[];
-      key_in_body?: boolean;
-      hide_credentials?: boolean;
-    };
-  };
-}
-
-export const xKongPluginRequestTermination = 'x-kong-plugin-request-termination';
-export interface XKongPluginRequestTermination {
-  [xKongPluginRequestTermination]?: {
-    name: 'request-termination';
-    config: {
-      status_code: number;
-      message: string;
-      [key: string]: string | number;
-    }
-    [key: string]: string | number | Record<string, string | number>;
-  }
-}
-
-export type XKongPluginUnknown<Config = any> = Record<`x-kong-plugin-${string}`, {
-  enabled?: boolean;
-  name?: string;
-  config: Record<string, Config>;
-}>
+import { Taggable } from './outputs';
+import {
+  XKongName,
+  XKongPluginKeyAuth,
+  XKongPluginRequestTermination,
+  XKongPluginRequestValidator,
+  XKongRouteDefaults,
+  XKongServiceDefaults,
+  XKongUpstreamDefaults,
+} from './kong';
 
 export interface StripPath {
   // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
@@ -106,12 +54,16 @@ export interface OA3Parameter {
   explode?: boolean;
 }
 
+/** see: https://swagger.io/specification/#request-body-object */
 export interface OA3RequestBody {
   content?: Record<string, any>; // TODO
+  description?: string;
+  required?: boolean;
 }
 
 export type OA3SecurityRequirement = Record<string, any>;
 
+/** see: https://swagger.io/specification/#reference-object */
 export interface OA3Reference {
   $ref: string;
 }
@@ -140,16 +92,18 @@ export interface OA3ServerKubernetesService {
   };
 }
 
-export type OA3Variables = Record<string, {
+/** see: https://swagger.io/specification/#server-variable-object */
+export interface OA3ServerVariable {
   default: string;
   enum?: string[];
   description?: string;
-}>;
+}
 
+/** see: https://swagger.io/specification/#server-object */
 export type OA3Server = {
   url: string;
   description?: string;
-  variables?: OA3Variables;
+  variables?: Record<string, OA3ServerVariable>;
 } & OA3ServerKubernetesTLS
   & OA3ServerKubernetesBackend
   & OA3ServerKubernetesService;
@@ -158,10 +112,10 @@ export interface OA3ResponsesObject {
   $ref?: string;
 }
 
+/** see: https://swagger.io/specification/#operation-object */
 export type OA3Operation = {
   description?: string;
   summary?: string;
-  tags?: string[];
   externalDocs?: OA3ExternalDocs;
   responses?: OA3ResponsesObject;
   operationId?: string;
@@ -170,36 +124,39 @@ export type OA3Operation = {
   deprecated?: boolean;
   security?: OA3SecurityRequirement[];
   servers?: OA3Server[];
-} & XKongName
+} & Taggable
+  & XKongName
   & XKongRouteDefaults
   & XKongPluginKeyAuth
   & XKongPluginRequestValidator
   ;
 
+type HTTPMethodPaths = Partial<Record<
+  HttpMethodType | Lowercase<HttpMethodType>,
+  OA3Operation
+>>;
+
+/** see: https://swagger.io/specification/#path-item-object */
 export type OA3PathItem = {
   $ref?: string;
   summary?: string;
   description?: string;
   servers?: OA3Server[];
   parameters?: OA3Reference | OA3Parameter;
-  get?: OA3Operation;
-  put?: OA3Operation;
-  post?: OA3Operation;
-  delete?: OA3Operation;
-  options?: OA3Operation;
-  head?: OA3Operation;
-  patch?: OA3Operation;
-  trace?: OA3Operation;
-} & XKongName
+} & HTTPMethodPaths
+  & XKongName
   & XKongRouteDefaults
   & XKongPluginRequestValidator
+  & XKongPluginKeyAuth
   ;
 
+/** see: https://swagger.io/specification/#paths-object */
 export type OA3Paths = Record<string, OA3PathItem>
   & StripPath
   & XKongRouteDefaults
   ;
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeApiKey {
   type: 'apiKey';
   name: string;
@@ -207,6 +164,7 @@ export interface OA3SecuritySchemeApiKey {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeHttp {
   type: 'http';
   name: string;
@@ -215,6 +173,7 @@ export interface OA3SecuritySchemeHttp {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeOpenIdConnect {
   type: 'openIdConnect';
   name: string;
@@ -222,6 +181,7 @@ export interface OA3SecuritySchemeOpenIdConnect {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeOAuth2Flow {
   authorizationUrl?: string;
   tokenUrl?: string;
@@ -229,6 +189,7 @@ export interface OA3SecuritySchemeOAuth2Flow {
   scopes: Record<string, string>;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export interface OA3SecuritySchemeOAuth2 {
   type: 'oauth2';
   name: string;
@@ -241,16 +202,25 @@ export interface OA3SecuritySchemeOAuth2 {
   description?: string;
 }
 
+/** see: https://swagger.io/specification/#security-scheme-object */
 export type OA3SecurityScheme =
   | OA3SecuritySchemeApiKey
   | OA3SecuritySchemeHttp
   | OA3SecuritySchemeOpenIdConnect
   | OA3SecuritySchemeOAuth2;
 
-export interface OA3Example {}
+/** see: https://swagger.io/specification/#example-object */
+export interface OA3Example {
+  summary?: string;
+  description?: string;
+  value?: any;
+  externalValue?: string;
+}
 
+/** see: https://swagger.io/specification/#schema-object */
 export interface OA3Schema {}
 
+/** see: https://swagger.io/specification/#header-object */
 export interface OA3Header {
   description?: string;
   required?: boolean;
@@ -258,6 +228,7 @@ export interface OA3Header {
   allowEmptyValue?: boolean;
 }
 
+/** see: https://swagger.io/specification/#components-object */
 export interface OA3Components {
   schemas?: Record<string, OA3Schema | OA3Reference>;
   parameters?: Record<string, OA3Parameter | OA3Reference>;
@@ -267,6 +238,14 @@ export interface OA3Components {
   securitySchemes?: Record<string, OA3SecurityScheme | OA3Reference>;
 }
 
+/** see: https://swagger.io/specification/#tag-object */
+export interface TagObject {
+  name: string;
+  description?: string;
+  externalDocs?: Record<string, any>;
+}
+
+/** see: https://swagger.io/specification/#openapi-object */
 export type OpenApi3Spec = {
   openapi: string;
   info: OA3Info;
@@ -274,15 +253,14 @@ export type OpenApi3Spec = {
   servers?: OA3Server[];
   components?: OA3Components;
   security?: OA3SecurityRequirement[];
-  tags?: string[];
   externalDocs?: OA3ExternalDocs;
+  tags?: TagObject[];
 }
+  & XKongName
   & XKongPluginKeyAuth
   & XKongPluginRequestTermination
   & XKongPluginRequestValidator
-  & XKongPluginUnknown
   & XKongRouteDefaults
   & XKongServiceDefaults
   & XKongUpstreamDefaults
-  & XKongName
   ;

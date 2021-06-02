@@ -13,22 +13,15 @@
             "body_schema": "{}",
             "version": "draft4"
           },
-          "tags": [
-            "OAS3_import",
-            "OAS3file_request-validator-plugin.yaml"
-          ],
+          "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
           "name": "request-validator"
         }
       ],
       "routes": [
         {
-          "methods": [
-            "POST"
-          ],
+          "methods": ["POST"],
           "name": "Example-body-post",
-          "paths": [
-            "/body$"
-          ],
+          "paths": ["/body$"],
           "plugins": [
             {
               "config": {
@@ -39,57 +32,35 @@
                 "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
                 "version": "draft4"
               },
-              "tags": [
-                "OAS3_import",
-                "OAS3file_request-validator-plugin.yaml"
-              ],
+              "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
               "name": "request-validator"
             }
           ],
           "strip_path": false,
-          "tags": [
-            "OAS3_import",
-            "OAS3file_request-validator-plugin.yaml"
-          ]
+          "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
         },
         {
-          "methods": [
-            "GET"
-          ],
+          "methods": ["GET"],
           "name": "Example-global-get",
-          "paths": [
-            "/global$"
-          ],
+          "paths": ["/global$"],
           "plugins": [
             {
               "config": {
-                "allowed_content_types": [
-                  "application/json"
-                ],
+                "allowed_content_types": ["application/json"],
                 "body_schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"integer\"},\"name\":{\"type\":\"string\"}}}",
                 "version": "draft4"
               },
-              "tags": [
-                "OAS3_import",
-                "OAS3file_request-validator-plugin.yaml"
-              ],
+              "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
               "name": "request-validator"
             }
           ],
           "strip_path": false,
-          "tags": [
-            "OAS3_import",
-            "OAS3file_request-validator-plugin.yaml"
-          ]
+          "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
         },
         {
-          "methods": [
-            "GET"
-          ],
+          "methods": ["GET"],
           "name": "Example-params_pathid-get",
-          "paths": [
-            "/params/(?<pathid>[^\\/\\s]+)/$"
-          ],
+          "paths": ["/params/(?<pathid>[^\\/\\s]+)/$"],
           "plugins": [
             {
               "config": {
@@ -130,40 +101,25 @@
                 "version": "draft4"
               },
               "enabled": true,
-              "tags": [
-                "OAS3_import",
-                "OAS3file_request-validator-plugin.yaml"
-              ],
+              "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
               "name": "request-validator"
             }
           ],
           "strip_path": false,
-          "tags": [
-            "OAS3_import",
-            "OAS3file_request-validator-plugin.yaml"
-          ]
+          "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
         }
       ],
-      "tags": [
-        "OAS3_import",
-        "OAS3file_request-validator-plugin.yaml"
-      ]
+      "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
     }
   ],
   "upstreams": [
     {
       "name": "Example",
-      "tags": [
-        "OAS3_import",
-        "OAS3file_request-validator-plugin.yaml"
-      ],
+      "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
       "targets": [
         {
           "target": "backend.com:80",
-          "tags": [
-            "OAS3_import",
-            "OAS3file_request-validator-plugin.yaml"
-          ]
+          "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
         }
       ]
     }
