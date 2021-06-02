@@ -130,7 +130,7 @@ describe('services', () => {
         [xKongPluginRequestValidator]: {
           name: 'request-validator',
           config: {
-            // @ts-expect-error TODO
+            // @ts-expect-error use body_schema instead
             parameter_schema: 'global',
           },
         },
@@ -139,7 +139,7 @@ describe('services', () => {
       spec.paths['/cats'][xKongPluginRequestValidator] = {
         name: 'request-validator',
         config: {
-          // @ts-expect-error TODO
+          // @ts-expect-error use body_schema instead
           parameter_schema: 'path',
         },
       };
@@ -148,7 +148,7 @@ describe('services', () => {
       (spec.paths['/cats'].post as OA3Operation)[xKongPluginRequestValidator] = {
         name: 'request-validator',
         config: {
-          // @ts-expect-error TODO
+          // @ts-expect-error use body_schema instead
           parameter_schema: 'operation',
         },
       };
@@ -156,7 +156,7 @@ describe('services', () => {
       (spec.paths['/dogs'].post as OA3Operation)[xKongPluginRequestValidator] = {
         name: 'request-validator',
         config: {
-          // @ts-expect-error TODO
+          // @ts-expect-error use body_schema instead
           parameter_schema: 'operation',
         },
       };
@@ -165,7 +165,7 @@ describe('services', () => {
         {
           config: {
             version: 'draft4',
-            // @ts-expect-error TODO
+            // @ts-expect-error use body_schema instead
             parameter_schema: 'global',
           },
           tags,
@@ -184,7 +184,7 @@ describe('services', () => {
               // should have operation plugin
               config: {
                 version: 'draft4',
-                // @ts-expect-error TODO
+                // @ts-expect-error use body_schema instead
                 parameter_schema: 'operation',
               },
               tags,
@@ -203,7 +203,7 @@ describe('services', () => {
               // should apply path plugin
               config: {
                 version: 'draft4',
-                // @ts-expect-error TODO
+                // @ts-expect-error use body_schema instead
                 parameter_schema: 'path',
               },
               tags,
@@ -222,7 +222,7 @@ describe('services', () => {
               // should apply global plugin
               config: {
                 version: 'draft4',
-                // @ts-expect-error TODO
+                // @ts-expect-error use body_schema instead
                 parameter_schema: 'global',
               },
               tags,
@@ -241,7 +241,7 @@ describe('services', () => {
               // should have operation plugin
               config: {
                 version: 'draft4',
-                // @ts-expect-error TODO
+                // @ts-expect-error use body_schema instead
                 parameter_schema: 'operation',
               },
               tags,
@@ -260,7 +260,7 @@ describe('services', () => {
               // should apply global plugin
               config: {
                 version: 'draft4',
-                // @ts-expect-error TODO
+                // @ts-expect-error use body_schema instead
                 parameter_schema: 'global',
               },
               tags,
