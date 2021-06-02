@@ -563,32 +563,23 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = (workspaceId?: string) => async dispatch => {
+export const exportAllToFile = () => async dispatch => {
   dispatch(loadStart());
   showSelectExportTypeModal(
     () => dispatch(loadStop()),
     async (selectedFormat: SelectedFormat) => {
-      const workspace = await models.workspace.getById(workspaceId);
       // Check if we want to export private environments.
-      let environments;
-
-      if (workspace) {
-        const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
-        environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id) || [])];
-      } else {
-        environments = await models.environment.all();
-      }
+      const environments = await models.environment.all();
 
       let exportPrivateEnvironments = false;
       const privateEnvironments = environments.filter(e => e.isPrivate);
 
       if (privateEnvironments.length) {
-        const names = privateEnvironments.map(e => e.name).join(', ');
+        const names = privateEnvironments.map(environment => environment.name).join(', ');
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
-      const fileNamePrefix = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
-      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+      const fileName = await showSaveExportedFileDialog('Insomnia All', selectedFormat);
 
       if (!fileName) {
         // Cancelled.
@@ -601,25 +592,15 @@ export const exportAllToFile = (workspaceId?: string) => async dispatch => {
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportWorkspacesHAR(
-              workspace,
-              exportPrivateEnvironments,
-            );
+            stringifiedExport = await importUtils.exportWorkspacesHAR(null, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'yaml',
-            );
+            stringifiedExport = await importUtils.exportWorkspacesData(null, exportPrivateEnvironments, 'yaml');
             break;
+
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'json',
-            );
+            stringifiedExport = await importUtils.exportWorkspacesData(null, exportPrivateEnvironments, 'json');
             break;
         }
       } catch (err) {
