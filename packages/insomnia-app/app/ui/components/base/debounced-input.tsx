@@ -78,30 +78,23 @@ export class DebouncedInput extends PureComponent<Props> {
   }
 
   focus() {
-    if (this._input) {
-      this._input.focus();
-    }
+    this._input?.focus();
   }
 
   focusEnd() {
     if (this._input) {
       // Hack to focus the end (set value to current value);
       this._input.value = this.getValue();
-
-      this._input.focus();
     }
+    this._input?.focus();
   }
 
   blur() {
-    if (this._input) {
-      this._input.blur();
-    }
+    this._input?.blur();
   }
 
   select() {
-    if (this._input) {
-      this._input.select();
-    }
+    this._input?.select();
   }
 
   getValue() {
