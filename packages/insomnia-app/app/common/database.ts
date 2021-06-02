@@ -50,14 +50,16 @@ export const database = {
     const promisesUpserted: Promise<BaseModel>[] = [];
     const promisesDeleted: Promise<void>[] = [];
 
-    // @ts-expect-error -- TSCONVERSION upsert operations are optional
-    for (const doc of operation.upsert) {
-      promisesUpserted.push(database.upsert(doc, true));
+    if (operation.upsert !== undefined) {
+      for (const doc of operation.upsert) {
+        promisesUpserted.push(database.upsert(doc, true));
+      }
     }
 
-    // @ts-expect-error -- TSCONVERSION remove operations are optional
-    for (const doc of operation.remove) {
-      promisesDeleted.push(database.unsafeRemove(doc, true));
+    if (operation.remove !== undefined) {
+      for (const doc of operation.remove) {
+        promisesDeleted.push(database.unsafeRemove(doc, true));
+      }
     }
 
     // Perform from least to most dangerous
