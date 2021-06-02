@@ -2,38 +2,70 @@
 
 This module generates Kong Declarative Config and Kong for Kubernetes config, from OpenAPI 3.0 specifications.
 
-**Table of Contents**
-
-- [Library Usage](#library-usage)
-- [Kong Declarative Config](#kong-declarative-config)
+- [openapi-2-kong](#openapi-2-kong)
+  - [Library Usage](#library-usage)
+    - [Usage Example](#usage-example)
+  - [Kong Declarative Config](#kong-declarative-config)
     - [`$._format_version`](#_format_version)
     - [`$.services`](#services)
     - [`$.upstreams`](#upstreams)
     - [`$.services[*].routes`](#servicesroutes)
     - [`$..tags`](#tags)
-- [Kong for Kubernetes](#kong-for-kubernetes)
-    - [Output Structure](#output-structure)
+  - [Kong for Kubernetes](#kong-for-kubernetes)
+    - [Output structure](#output-structure)
     - [The `Ingress` document](#the-ingress-document)
-        - [`$.metadata.name`](#metadataname)
-        - [`$.metadata.annotations`](#metadataannotations)
+      - [Source spec](#source-spec)
+      - [Generated config](#generated-config)
+      - [`$.metadata.name`](#metadataname)
+      - [`$.metadata.annotations`](#metadataannotations)
     - [The `KongPlugin` and `KongIngress` resources](#the-kongplugin-and-kongingress-resources)
     - [Example](#example)
 - [Defaults](#defaults)
 - [Plugins](#plugins)
-    - [Security Plugins](#security-plugins)
-    - [Generic Plugins](#generic-plugins)
-    - [Request Validation Plugin](#request-validation-plugin)
+  - [Security Plugins](#security-plugins)
+  - [Generic Plugins](#generic-plugins)
+  - [Request Validator Plugin](#request-validator-plugin)
 
 ## Library Usage
 
 This module exposes three methods of generating Kong declarative config.
 
 ```ts
-type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
+export type ConversionResultType = 'kong-declarative-config' | 'kong-for-kubernetes';
 
-generateFromString (spec: string, type: ConversionResultType, tags: Array<string>) => Promise<Object>,
-generateFromSpec (spec: Object, type: ConversionResultType, tags: Array<string>) => Promise<Object>,
-generate (filename: string, type: ConversionResultType, tags: Array<string>) => Promise<Object>,
+export interface DeclarativeConfigResult {
+  type: 'kong-declarative-config';
+  label: string;
+  documents: DeclarativeConfig[];
+  warnings: Warning[];
+}
+
+export interface KongForKubernetesResult {
+  type: 'kong-for-kubernetes';
+  label: string;
+  documents: K8sManifest[];
+  warnings: Warning[];
+}
+
+export type ConversionResult = DeclarativeConfigResult | KongForKubernetesResult;
+
+generateFromSpec(
+  spec: OpenApi3Spec,
+  type: ConversionResultType,
+  tags?: string[],
+) => ConversionResult
+
+generateFromString(
+  spec: string,
+  type: ConversionResultType,
+  tags?: string[],
+) => Promise<ConversionResult>
+
+generate(
+  filePath: string,
+  type: ConversionResultType,
+  tags?: string[],
+) => Promise<ConversionResult>
 ```
 
 ### Usage Example
@@ -200,6 +232,7 @@ all created resources.
 ## Kong for Kubernetes
 
 ### Output structure
+
 The Kong for Kubernetes config will contain at least one `Ingress` document per server. Depending on where
 Kong plugins (`x-kong-plugin-<plugin-name>`) exist in the specification, several `Ingress` documents may be created, in addition to
 `KongPlugin` and `KongIngress` documents.
@@ -208,6 +241,7 @@ Kong plugins (`x-kong-plugin-<plugin-name>`) exist in the specification, several
 via metadata annotations.
 
 ### The `Ingress` document
+
 **At least** one `Ingress` document will be generated for each server. How many are required for each server, will be
 determined by the presence of `KongPlugin` and `KongIngress` resources that need to be applied to specific paths.
 
@@ -261,6 +295,7 @@ spec:
               serviceName: insomnia-api-service-1
               servicePort: 80
 ```
+
 </details>
 
 #### `$.metadata.name`
@@ -269,6 +304,7 @@ The `Ingress` document `metadata.name` is derived from sections in the source sp
 The name is also converted to a lowercase slug.
 
 Each of the following specifications generate an `Ingress` document with the following name:
+
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -316,6 +352,7 @@ Annotations can be used to configure an Ingress document. This configuration app
     - `konghq.com/override` references single `KongIngress` resource via the resource name
 
 ### The `KongPlugin` and `KongIngress` resources
+
 If plugins are found in the OpenAPI spec (see [Plugins](#plugins)), then they are converted to `KongPlugin` resources
 by the Kong for Kubernetes config generator, before being applied to the `Ingress` document via [metadata annotations](#metadataannotations).
 
@@ -325,12 +362,13 @@ that refers to the operation (`GET`, `POST`, etc).
 ### Example
 
 This example combines all of the information in the previous sections. The input specification contains:
+
 - `x-kubernetes-ingress-metadata` to provide a document name and default annotations
 - a global plugin at the OpenAPI spec level
 - two servers, with s1 containing a plugin
 - two paths with one operation
-    - no plugins on the first path and operation
-    - no plugin on the second path, but one on the operation
+  - no plugins on the first path and operation
+  - no plugin on the second path, but one on the operation
 
 <details>
 <Summary>Input OpenAPI specification</Summary>
@@ -368,9 +406,11 @@ paths:
           key_in_body: false
           hide_credentials: true
 ```
+
 </details>
 
 The resultant spec creates:
+
 - four unique `Ingress` documents (two servers, two paths, one operation each),
 - three `KongPlugin` documents (global, server, operation plugin),
 - one `KongIngress` document (GET operation containing plugin)
@@ -487,18 +527,22 @@ spec:
               serviceName: insomnia-api-service-1
               servicePort: 80
 ```
+
 </details>
 
 # Defaults
 
 While properties for the generated entities will have properties derived from the OpenAPI spec, you may
 choose to specify defaults for certain properties. You can specify these defaults using the following keys:
-* `x-kong-service-defaults` applied to the `root` object
-* `x-kong-upstream-defaults` applied to the `root` object
-* `x-kong-route-defaults` applied to the `root`, `path` or `operation` object
+
+- `x-kong-service-defaults` applied to the `root` object
+- `x-kong-upstream-defaults` applied to the `root` object
+- `x-kong-route-defaults` applied to the `root`, `path` or `operation` object
 
 These defaults are only supported by the Declarative Config generator currently.
+
 # Plugins
+
 ## Security Plugins
 
 The `security` property can be defined on the top-level `openapi` object as well
@@ -515,36 +559,30 @@ by using custom extensions. The custom extensions are
 Supported types are:
 
 - `oauth2`
-    - NOT YET IMPLEMENTED!
-    - except for the implicit flow
-    - implemented using the Kong plugin `openid-connect`
-    - extended by: `x-kong-security-openid-connect`
+  - NOT YET IMPLEMENTED!
+  - except for the implicit flow
+  - implemented using the Kong plugin `openid-connect`
+  - extended by: `x-kong-security-openid-connect`
 - `openIdConnect`
-    - implemented using the Kong plugin `openid-connect`
-    - extended by: `x-kong-security-openid-connect`
-    - properties set from OpenAPI spec:
-        - `issuer` (from `openIdConnectUrl` property)
-        - `scopes_required` will get the combined set of scopes from the
-          extension defaults and the scopes from the Security Requirement
-          Object
+  - implemented using the Kong plugin `openid-connect`
+  - extended by: `x-kong-security-openid-connect`
+  - properties set from OpenAPI spec:
+    - `issuer` (from `openIdConnectUrl` property)
+    - `scopes_required` will get the combined set of scopes from the extension defaults and the scopes from the Security Requirement Object
 - `apiKey`
-    - except for the `in` property, since the Kong plugin will by default
-      look in header and query already. Cookie is not supported.
-    - implemented using the Kong plugin `key-auth`
-    - extended by: `x-kong-security-key-auth`
-    - properties set from OpenAPI spec:
-        - `key_names` will get the defaults from the extension and then the
-          `name` from the `securityScheme` object will be added to that list
-    - requires to add credentials to Kong, which is not supported through
-      OpenAPI specs.
+  - except for the `in` property, since the Kong plugin will by default look in header and query already. Cookie is not supported.
+  - implemented using the Kong plugin `key-auth`
+  - extended by: `x-kong-security-key-auth`
+  - properties set from OpenAPI spec:
+    - `key_names` will get the defaults from the extension and then the `name` from the `securityScheme` object will be added to that list
+  - requires to add credentials to Kong, which is not supported through OpenAPI specs.
 - `http`
-    - only `Basic` scheme is supported
-    - implemented using the Kong plugin `basic-auth`
-    - extended by: `x-kong-security-basic-auth`
-    - properties set from OpenAPI spec:
-        - none
-    - requires to add credentials to Kong, which is not supported through
-      OpenAPI specs.
+  - only `Basic` scheme is supported
+  - implemented using the Kong plugin `basic-auth`
+  - extended by: `x-kong-security-basic-auth`
+  - properties set from OpenAPI spec:
+    - none
+  - requires to add credentials to Kong, which is not supported through OpenAPI specs.
 
 ## Generic Plugins
 
@@ -554,12 +592,14 @@ use is `x-kong-plugin-<plugin-name>`. The `name` property is not required
 will get Kong defaults.
 
 Currently, plugins are supported on the following OpenAPI objects by each generator:
+
 - Declarative Config: `OpenAPI root`, `path` and `operation`
-  * plugins on the `root` will be configured on a Kong `service`
-  * plugins on the `path` or `operation` will be configured on a Kong `route`
+  - plugins on the `root` will be configured on a Kong `service`
+  - plugins on the `path` or `operation` will be configured on a Kong `route`
 - Kong for Kubernetes: `OpenAPI root`, `server`, `path`, `operation`
 
 If the _same_ plugin exists in several sections, then the more specific section will take precedence. These sections are:
+
 1. `operation` (most specific)
 1. `path`
 1. `server`
@@ -591,9 +631,10 @@ x-kong-plugin-key-auth:
 To enable validation the `request-validator` plugin can be added to the `root`, `path` or `operation` object of the Spec and whichever is more specific will be used. You can either specify the full configuration, or have the missing properties be auto-generated based on the OpenAPI spec.
 
 The `request-validator` plugin has three [parameters](https://docs.konghq.com/hub/kong-inc/request-validator/#parameters) which can be generated. These are:
-* `config.body_schema`
-* `config.parameter_schema`
-* `config.allowed_content_types`
+
+- `config.body_schema`
+- `config.parameter_schema`
+- `config.allowed_content_types`
 
 If any of these are *not* specified in the `x-kong-plugin-request-validator.config` object in the OpenAPI spec, they will be generated if possible, otherwise will be configured to allow all body/parameter/content types.
 

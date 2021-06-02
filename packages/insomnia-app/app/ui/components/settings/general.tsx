@@ -29,7 +29,7 @@ import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { bindActionCreators } from 'redux';
 import * as globalActions from '../../redux/modules/global';
 import { connect } from 'react-redux';
-import { stringsPlural } from '../../../common/strings';
+import { strings } from '../../../common/strings';
 import { snapNumberToLimits } from '../../../common/misc';
 import { restartApp } from '../../../common/electron-helpers';
 
@@ -566,7 +566,7 @@ class General extends PureComponent<Props, State> {
           <p className="txt-sm faint">
             Help Kong improve its products by sending anonymous data about features and plugins
             used, hardware and software configuration, statistics on number of requests,{' '}
-            {stringsPlural.collection.toLowerCase()}, {stringsPlural.document.toLowerCase()}, etc.
+            {strings.collection.plural.toLowerCase()}, {strings.document.plural.toLowerCase()}, etc.
           </p>
           <p className="txt-sm faint">
             Please note that this will not include personal data or any sensitive information, such

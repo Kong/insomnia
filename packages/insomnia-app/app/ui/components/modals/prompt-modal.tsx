@@ -28,6 +28,24 @@ interface State {
   currentValue: string;
 }
 
+export interface PromptModalOptions {
+  title: string;
+  defaultValue?: string;
+  submitName?: string;
+  selectText?: boolean;
+  upperCase?: boolean;
+  hint?: string;
+  cancelable?: boolean;
+  inputType?: string;
+  placeholder?: string;
+  validate?: (arg0: string) => string;
+  label?: string;
+  hints?: string[];
+  onComplete?: (arg0: string) => void;
+  onDeleteHint?: (arg0: string) => void;
+  onCancel?: () => void;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class PromptModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
@@ -104,40 +122,23 @@ class PromptModal extends PureComponent<{}, State> {
     this.modal && this.modal.hide();
   }
 
-  show(options: {
-    title: string;
-    defaultValue?: string;
-    submitName?: string;
-    selectText?: boolean;
-    upperCase?: boolean;
-    hint?: string;
-    cancelable?: boolean;
-    inputType?: string;
-    placeholder?: string;
-    validate?: (arg0: string) => string;
-    label?: string;
-    hints?: string[];
-    onComplete?: (arg0: string) => void;
-    onDeleteHint?: (arg0: string) => void;
-    onCancel?: () => void;
-  }) {
-    const {
-      title,
-      defaultValue,
-      submitName,
-      selectText,
-      upperCase,
-      hint,
-      cancelable,
-      inputType,
-      placeholder,
-      label,
-      hints,
-      onComplete,
-      onCancel,
-      validate,
-      onDeleteHint,
-    } = options;
+  show({
+    title,
+    defaultValue,
+    submitName,
+    selectText,
+    upperCase,
+    hint,
+    cancelable,
+    inputType,
+    placeholder,
+    label,
+    hints,
+    onComplete,
+    onCancel,
+    validate,
+    onDeleteHint,
+  }: PromptModalOptions) {
     this.setState({
       currentValue: '',
       title,

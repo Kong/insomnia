@@ -1153,7 +1153,7 @@ export default class VCS {
     );
 
     if (!project) {
-      throw new Error(`Please push the ${strings.collection.toLowerCase()} to be able to share it`);
+      throw new Error(`Please push the ${strings.collection.singular.toLowerCase()} to be able to share it`);
     }
 
     return project.teams;

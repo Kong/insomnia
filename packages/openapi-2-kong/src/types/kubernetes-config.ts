@@ -1,4 +1,5 @@
 import { HttpMethodType } from '../common';
+import { Plugin, PluginBase } from './kong';
 
 export interface K8sIngressClassAnnotation {
   'kubernetes.io/ingress.class'?: 'kong';
@@ -22,8 +23,9 @@ export type K8sAnnotations =
 
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#objectmeta-v1-meta */
 export interface K8sMetadata {
+  /** The unique-per-instance name used by kubernetes to track individual Kubernetes resources */
   name: string;
-  annotations: K8sAnnotations;
+  annotations?: K8sAnnotations;
 }
 
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingressbackend-v1beta1-extensions */
@@ -62,37 +64,40 @@ export interface K8sIngressSpec {
   tls?: K8sIngressTLS[];
 }
 
+export interface KubernetesResource {
+  apiVersion: string;
+  kind: string;
+  metadata: K8sMetadata,
+}
+
 /** see: https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/custom-resources/#kongingress */
-export interface K8sKongIngress {
+export interface K8sKongIngress extends KubernetesResource {
   apiVersion: 'configuration.konghq.com/v1';
   kind: 'KongIngress';
-  metadata: {
-    name: string;
-  };
   route: {
     methods: (HttpMethodType | Lowercase<HttpMethodType>)[];
   };
 }
 
-/** see: https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/custom-resources/#kongplugin */
-export interface K8sKongPlugin {
-  apiVersion: 'configuration.konghq.com/v1';
-  kind: 'KongPlugin';
-  metadata: {
-    name: string;
-    global?: boolean;
-  };
-  config?: Record<string, any>;
-  plugin: string;
-}
-
 /** see: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingress-v1beta1-extensions */
-export interface K8sIngress {
+export interface K8sIngress extends KubernetesResource {
   apiVersion: 'extensions/v1beta1';
   kind: 'Ingress';
-  metadata: K8sMetadata;
   spec: K8sIngressSpec;
 }
+
+/** see: https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/custom-resources/#kongplugin */
+export interface K8sKongPluginBase<Plugin extends PluginBase<string>> extends KubernetesResource {
+  apiVersion: 'configuration.konghq.com/v1';
+  kind: 'KongPlugin';
+  metadata: K8sMetadata & {
+    global?: boolean;
+  };
+  config?: Plugin['config'];
+  plugin: Plugin['name'];
+}
+
+export type K8sKongPlugin = K8sKongPluginBase<Plugin>
 
 export type K8sManifest =
   | K8sIngress

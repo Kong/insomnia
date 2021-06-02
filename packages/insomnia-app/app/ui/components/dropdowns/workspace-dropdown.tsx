@@ -163,7 +163,7 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
             {getAppName()} v{getAppVersion()}
           </DropdownDivider>
           <DropdownItem onClick={WorkspaceDropdown._handleShowWorkspaceSettings}>
-            <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace)} Settings
+            <i className="fa fa-wrench" /> {getWorkspaceLabel(activeWorkspace).singular} Settings
             <DropdownHint keyBindings={hotKeyRegistry[hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]} />
           </DropdownItem>
 

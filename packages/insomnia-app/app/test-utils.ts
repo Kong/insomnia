@@ -1,16 +1,12 @@
 import * as modals from './ui/components/modals';
 import type { ErrorModalOptions } from './ui/components/modals/error-modal';
+import { PromptModalOptions } from './ui/components/modals/prompt-modal';
 
-export const getAndClearShowPromptMockArgs = () => {
+export const getAndClearShowPromptMockArgs = (): PromptModalOptions => {
   const mockFn = modals.showPrompt as jest.Mock;
-  const { title, submitName, defaultValue, onComplete } = mockFn.mock.calls[0][0];
+  const options = mockFn.mock.calls[0][0] as PromptModalOptions;
   mockFn.mockClear();
-  return {
-    title,
-    submitName,
-    defaultValue,
-    onComplete,
-  };
+  return options;
 };
 
 export const getAndClearShowAlertMockArgs = () => {

@@ -240,7 +240,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     }
 
     if (type === models.workspace.type) {
-      type = strings.collection;
+      type = strings.collection.singular;
     }
 
     return (

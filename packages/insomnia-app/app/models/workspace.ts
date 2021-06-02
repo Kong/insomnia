@@ -34,7 +34,7 @@ export type Workspace = BaseModel & BaseWorkspace;
 
 export function init() {
   return {
-    name: `New ${strings.collection}`,
+    name: `New ${strings.collection.singular}`,
     description: '',
     scope: WorkspaceScopeKeys.collection,
   };

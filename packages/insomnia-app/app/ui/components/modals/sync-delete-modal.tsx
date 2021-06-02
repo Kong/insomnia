@@ -92,12 +92,12 @@ class SyncDeleteModal extends PureComponent<Props, State> {
     );
     return (
       <Modal ref={this._setModalRef} skinny>
-        <ModalHeader>Delete {strings.collection}</ModalHeader>
+        <ModalHeader>Delete {strings.collection.singular}</ModalHeader>
         <ModalBody className="wide pad-left pad-right text-center" noScroll>
           {error && <p className="notice error margin-bottom-sm no-margin-top">{error}</p>}
           <p className="selectable">
             This will permanently delete the {workspaceNameElement}{' '}
-            {strings.collection.toLowerCase()} remotely.
+            {strings.collection.singular.toLowerCase()} remotely.
           </p>
           <p className="selectable">Please type {workspaceNameElement} to confirm.</p>
 
@@ -110,7 +110,7 @@ class SyncDeleteModal extends PureComponent<Props, State> {
                 value={workspaceName}
               />
               <Button bg="danger" disabled={workspaceName !== workspace.name}>
-                Delete {strings.collection}
+                Delete {strings.collection.singular}
               </Button>
             </div>
           </form>

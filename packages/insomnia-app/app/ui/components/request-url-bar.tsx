@@ -182,13 +182,16 @@ class RequestUrlBar extends PureComponent<Props, State> {
       inputType: 'decimal',
       title: 'Send After Delay',
       label: 'Delay in seconds',
+      // @ts-expect-error TSCONVERSION string vs number issue
       defaultValue: 3,
       submitName: 'Start',
       onComplete: seconds => {
         this._handleStopTimeout();
 
+        // @ts-expect-error TSCONVERSION string vs number issue
         this._sendTimeout = setTimeout(this._handleSend, seconds * 1000);
         this.setState({
+          // @ts-expect-error TSCONVERSION string vs number issue
           currentTimeout: seconds,
         });
       },
@@ -200,13 +203,16 @@ class RequestUrlBar extends PureComponent<Props, State> {
       inputType: 'decimal',
       title: 'Send on Interval',
       label: 'Interval in seconds',
+      // @ts-expect-error TSCONVERSION string vs number issue
       defaultValue: 3,
       submitName: 'Start',
       onComplete: seconds => {
         this._handleStopInterval();
 
+        // @ts-expect-error TSCONVERSION string vs number issue
         this._sendInterval = setInterval(this._handleSend, seconds * 1000);
         this.setState({
+          // @ts-expect-error TSCONVERSION string vs number issue
           currentInterval: seconds,
         });
       },
