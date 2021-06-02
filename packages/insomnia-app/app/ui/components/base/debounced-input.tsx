@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { ChangeEvent, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { debounce } from '../../../common/misc';
@@ -15,20 +15,15 @@ interface Props {
 export class DebouncedInput extends PureComponent<Props> {
   _hasFocus = false;
   _input: HTMLTextAreaElement | HTMLInputElement | null = null;
-  _handleValueChange: Props['onChange'] | null = null;
 
-  constructor(props: Props) {
-    super(props);
-
-    if (!props.delay) {
-      this._handleValueChange = props.onChange;
+  _handleChange(event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    const { delay, onChange } = this.props;
+    const { value } = event.target;
+    if (!delay) {
+      onChange(value);
     } else {
-      this._handleValueChange = debounce(props.onChange, props.delay || 500);
+      debounce(onChange, delay || 500)(value);
     }
-  }
-
-  _handleChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    this._handleValueChange?.(e.target.value);
   }
 
   _handleFocus(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
