@@ -1,18 +1,16 @@
 import { Dropdown, DropdownDivider, DropdownItem } from 'insomnia-components';
-import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { isLoggedIn } from '../../../account/session';
 import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import { BASE_SPACE_ID, Space } from '../../../models/space';
 import VCS from '../../../sync/vcs';
+import { useRemoteSpaces } from '../../hooks/space';
 import { setActiveSpace } from '../../redux/modules/global';
 import { createSpace } from '../../redux/modules/space';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/space-settings-modal';
-import * as models from '../../../models';
-import { database } from '../../../common/database';
 
 type SpaceSubset = Pick<Space, '_id'> & Pick<Space, 'name'> & Pick<Space, 'remoteId'>;
 
@@ -27,29 +25,6 @@ const home = <i className="fa fa-home" />;
 interface Props {
   vcs?: VCS;
 }
-
-const useRemoteSpaces = (vcs?: VCS) => {
-  const [loading, setLoading] = useState(false);
-
-  const refresh = useCallback(async () => {
-    if (vcs && isLoggedIn()) {
-      setLoading(true);
-      const teams = await vcs.teams();
-      const spaces = await Promise.all(teams.map(team => models.initModel<Space>(models.space.type, { _id: team.id, name: team.name })));
-      await database.batchModifyDocs({ upsert: spaces });
-      setLoading(false);
-    }
-  }, [vcs]);
-
-  useEffect(() => {
-    const fetch = async () => {
-      await refresh();
-    };
-    fetch();
-  }, [refresh]);
-
-  return { loading, refresh };
-};
 
 export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   const { loading, refresh } = useRemoteSpaces(vcs);
