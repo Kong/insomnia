@@ -193,7 +193,7 @@ class SettingsModal extends PureComponent<Props, State> {
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
-                handleExportAll={this._handleExportAllToFile}
+                handleExportAllToFile={this._handleExportAllToFile}
                 handleShowExportRequestsModal={this._handleShowExportRequestsModal}
                 handleImportFile={this._handleImportFile}
                 handleImportClipBoard={this._handleImportClipBoard}

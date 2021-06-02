@@ -9,14 +9,14 @@ interface Props {
   handleImportFile: () => void;
   handleImportClipBoard: () => void;
   handleImportUri: (uri: string) => void;
-  handleExportAll: () => void;
+  handleExportAllToFile: () => void;
   handleShowExportRequestsModal: () => void;
 }
 
 export const ImportExport: FC<Props> = ({
   handleImportFile,
   handleImportClipBoard,
-  handleExportAll,
+  handleExportAllToFile,
   handleShowExportRequestsModal,
   handleImportUri,
 }) => {
@@ -55,7 +55,7 @@ export const ImportExport: FC<Props> = ({
             <i className="fa fa-home" />
               Current {strings.document.singular} / {strings.collection.singular}
           </DropdownItem>
-          <DropdownItem onClick={handleExportAll}>
+          <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />
               All {strings.document.plural} / {strings.collection.plural}
           </DropdownItem>

@@ -1723,7 +1723,7 @@ function mapDispatchToProps(dispatch) {
     handleImportClipBoardToWorkspace: global.importClipBoard,
     handleImportUriToWorkspace: global.importUri,
     handleCommand: global.newCommand,
-    handleExportFile: global.exportWorkspacesToFile,
+    handleExportAllToFile: global.exportAllToFile,
     handleExportRequestsToFile: global.exportRequestsToFile,
     handleInitializeEntities: entities.initialize,
     handleMoveDoc: _moveDoc,
