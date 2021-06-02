@@ -14,6 +14,7 @@ export const BASE_SPACE_ID = 'base-space';
 
 interface BaseSpace {
   name: string;
+  remoteId?: string;
 }
 
 export type Space = BaseModel & BaseSpace;
