@@ -16,18 +16,44 @@ interface Props extends InheritedAttributes, ExtendedAttributes {
   delay?: number;
 }
 
+interface State {
+  delay: number;
+  onChange: ExtendedAttributes['onChange'];
+  debouncedOnChange: ExtendedAttributes['onChange'];
+}
+
+const defaultDelay = 500;
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class DebouncedInput extends PureComponent<Props> {
+export class DebouncedInput extends PureComponent<Props, State> {
   _hasFocus = false;
   _input: HTMLTextAreaElement | HTMLInputElement | null = null;
 
+  state: State = {
+    delay: defaultDelay,
+    onChange: this.props.onChange,
+    debouncedOnChange: debounce(this.props.onChange, this.props.delay || defaultDelay),
+  }
+
+  static getDerivedStateFromProps(props: Props, state: State) {
+    if (state.delay !== props.delay || state.onChange !== props.onChange) {
+      return {
+        onChange: props.onChange,
+        debouncedOnChange: debounce(props.onChange, props.delay || defaultDelay),
+        delay: props.delay,
+      };
+    }
+    return null;
+  }
+
   _handleChange(event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    const { delay, onChange } = this.props;
+    const { delay } = this.props;
+    const { onChange, debouncedOnChange } = this.state;
     const { value } = event.target;
     if (!delay) {
       onChange(value);
     } else {
-      debounce(onChange, delay || 500)(value);
+      debouncedOnChange(value);
     }
   }
 
