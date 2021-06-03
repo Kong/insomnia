@@ -114,8 +114,8 @@ export default class VCS {
     return this._allProjects();
   }
 
-  async remoteProjects() {
-    return this._queryProjects();
+  async remoteProjects(teamId?: string) {
+    return this._queryProjects(teamId);
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -1098,18 +1098,22 @@ export default class VCS {
     return projectShareInstructions;
   }
 
-  async _queryProjects(): Promise<Project[]> {
+  async _queryProjects(
+    teamId?: string,
+  ): Promise<Project[]> {
     const { projects } = await this._runGraphQL(
       `
-        query {
-          projects {
+        query ($teamId: ID) {
+          projects(teamId: $teamId) {
             id
             name
             rootDocumentId
           }
         }
       `,
-      {},
+      {
+        teamId,
+      },
       'projects',
     );
     return projects;
