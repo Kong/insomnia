@@ -14,7 +14,11 @@ import SpaceSettingsModal from '../modals/space-settings-modal';
 
 type SpaceSubset = Pick<Space, '_id' | 'name' | 'remoteId'>;
 
-const defaultSpace: SpaceSubset = { _id: BASE_SPACE_ID, name: getAppName() };
+const defaultSpace: SpaceSubset = {
+  _id: BASE_SPACE_ID,
+  name: getAppName(),
+  remoteId: null,
+};
 
 const check = <i className="fa fa-check" />;
 const cog = <i className="fa fa-cog" />;
@@ -35,7 +39,7 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   // figure out which space is selected
   const activeSpace = useSelector(selectActiveSpace);
   const selectedSpace = activeSpace || defaultSpace;
-  const spaceHasSettings = selectedSpace !== defaultSpace && selectedSpace.remoteId === undefined;
+  const spaceHasSettings = selectedSpace !== defaultSpace && selectedSpace.remoteId === null;
 
   // select a new space
   const dispatch = useDispatch();
@@ -60,8 +64,8 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
     <button type="button" className="row" title={selectedSpace.name}>
       {selectedSpace.name}
       <i className="fa fa-caret-down space-left" />
-    </button>),
-  [selectedSpace]);
+    </button>
+  ), [selectedSpace]);
 
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
