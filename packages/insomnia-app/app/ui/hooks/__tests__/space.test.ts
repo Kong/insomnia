@@ -5,6 +5,7 @@ import VCS from '../../../sync/vcs';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { useRemoteSpaces } from '../space';
 import * as models from '../../../models';
+import { Space } from '../../../models/space';
 
 jest.mock('../../../account/session', () => ({
   isLoggedIn: jest.fn(),
@@ -39,8 +40,10 @@ describe('useRemoteSpaces', () => {
 
     const vcs1 = new VCS(new MemoryDriver());
     const vcs2 = new VCS(new MemoryDriver());
-    (vcs1.teams as jest.MockedFunction<typeof vcs1.teams>).mockResolvedValue([{ id: 'id1', name: 'name' }]);
-    (vcs2.teams as jest.MockedFunction<typeof vcs2.teams>).mockResolvedValue([{ id: 'id2', name: 'name' }]);
+    const team1 = { id: 'id1', name: 'team1' };
+    const team2 = { id: 'id1', name: 'team2' };
+    (vcs1.teams as jest.MockedFunction<typeof vcs1.teams>).mockResolvedValue([team1]);
+    (vcs2.teams as jest.MockedFunction<typeof vcs2.teams>).mockResolvedValue([team2]);
 
     const { result, rerender, waitFor } = renderHook(prop => useRemoteSpaces(prop), { initialProps: vcs1 });
 
@@ -58,7 +61,18 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs2.teams).toHaveBeenCalledTimes(1);
 
-    await expect(models.space.all()).resolves.toHaveLength(2);
+    const allSpaces = await models.space.all();
+    expect(allSpaces).toHaveLength(2);
+    expect(allSpaces).toEqual(expect.arrayContaining([
+      expect.objectContaining<Partial<Space>>({
+        remoteId: team1.id,
+        name: team1.name,
+      }),
+      expect.objectContaining<Partial<Space>>({
+        remoteId: team2.id,
+        name: team2.name,
+      }),
+    ]));
   });
 
   it('should load teams on refresh', async () => {
