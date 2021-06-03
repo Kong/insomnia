@@ -5,6 +5,7 @@ import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { isDesign } from '../../../models/helpers/is-model';
 import { showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveWorkspace } from './global';
+import { selectActiveSpace } from '../selectors';
 
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
@@ -28,7 +29,10 @@ export type CreateWorkspaceCallback = (arg0: {
 }) => void;
 
 export const createWorkspace: CreateWorkspaceCallback = ({ scope, onCreate }) => {
-  return dispatch => {
+  return (dispatch, getState) => {
+    const activeSpace = selectActiveSpace(getState());
+    const parentId = activeSpace?._id || null;
+
     const design = isDesign({
       scope,
     });
@@ -47,6 +51,8 @@ export const createWorkspace: CreateWorkspaceCallback = ({ scope, onCreate }) =>
             {
               name,
               scope,
+              // @ts-expect-error TSCONVERSION the common parentId isn't typed correctly
+              parentId,
             },
             onCreate,
           ),
