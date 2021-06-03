@@ -12,7 +12,7 @@ import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/space-settings-modal';
 
-type SpaceSubset = Pick<Space, '_id'> & Pick<Space, 'name'> & Pick<Space, 'remoteId'>;
+type SpaceSubset = Pick<Space, '_id' | 'name' | 'remoteId'>;
 
 const defaultSpace: SpaceSubset = { _id: BASE_SPACE_ID, name: getAppName() };
 
