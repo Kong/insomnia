@@ -41,7 +41,7 @@ describe('useRemoteSpaces', () => {
     const vcs1 = new VCS(new MemoryDriver());
     const vcs2 = new VCS(new MemoryDriver());
     const team1 = { id: 'id1', name: 'team1' };
-    const team2 = { id: 'id1', name: 'team2' };
+    const team2 = { id: 'id2', name: 'team2' };
     (vcs1.teams as jest.MockedFunction<typeof vcs1.teams>).mockResolvedValue([team1]);
     (vcs2.teams as jest.MockedFunction<typeof vcs2.teams>).mockResolvedValue([team2]);
 
@@ -90,11 +90,27 @@ describe('useRemoteSpaces', () => {
     expect(vcs.teams).toHaveBeenCalledTimes(1);
     await expect(models.space.all()).resolves.toHaveLength(0);
 
-    (vcs.teams as jest.MockedFunction<typeof vcs.teams>).mockResolvedValue([{ id: 'id1', name: 'name' }, { id: 'id2', name: 'name' }]);
+    const team1 = { id: 'id1', name: 'team1' };
+    const team2 = { id: 'id2', name: 'team2' };
+    (vcs.teams as jest.MockedFunction<typeof vcs.teams>).mockResolvedValue([team1, team2]);
 
+    // Refresh multiple times
+    await act(() => result.current.refresh());
     await act(() => result.current.refresh());
 
-    expect(vcs.teams).toHaveBeenCalledTimes(2);
-    await expect(models.space.all()).resolves.toHaveLength(2);
+    expect(vcs.teams).toHaveBeenCalledTimes(3);
+
+    const allSpaces = await models.space.all();
+    expect(allSpaces).toHaveLength(2);
+    expect(allSpaces).toEqual(expect.arrayContaining([
+      expect.objectContaining<Partial<Space>>({
+        remoteId: team1.id,
+        name: team1.name,
+      }),
+      expect.objectContaining<Partial<Space>>({
+        remoteId: team2.id,
+        name: team2.name,
+      }),
+    ]));
   });
 });
