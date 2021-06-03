@@ -44,27 +44,13 @@ export const database = {
     return database.find<T>(type);
   },
 
-  batchModifyDocs: async function(operation: Operation) {
+  batchModifyDocs: async function({ upsert = [], remove = [] }: Operation) {
     if (db._empty) return _send<void>('batchModifyDocs', ...arguments);
     const flushId = await database.bufferChanges();
-    const promisesUpserted: Promise<BaseModel>[] = [];
-    const promisesDeleted: Promise<void>[] = [];
-
-    if (operation.upsert !== undefined) {
-      for (const doc of operation.upsert) {
-        promisesUpserted.push(database.upsert(doc, true));
-      }
-    }
-
-    if (operation.remove !== undefined) {
-      for (const doc of operation.remove) {
-        promisesDeleted.push(database.unsafeRemove(doc, true));
-      }
-    }
 
     // Perform from least to most dangerous
-    await Promise.all(promisesUpserted);
-    await Promise.all(promisesDeleted);
+    await Promise.all(upsert.map(doc => database.upsert(doc, true)));
+    await Promise.all(remove.map(doc => database.unsafeRemove(doc, true)));
 
     await database.flushChanges(flushId);
   },
