@@ -14,7 +14,10 @@ export const useRemoteSpaces = (vcs?: VCS) => {
       setLoading(true);
 
       const teams = await vcs.teams();
-      const spaces = await Promise.all(teams.map(team => models.initModel<Space>(models.space.type, { remoteId: team.id, name: team.name })));
+      const spaces = await Promise.all(teams.map(team => models.initModel<Space>(
+        models.space.type,
+        { _id: `${models.space.prefix}_${team.id}`, remoteId: team.id, name: team.name },
+      )));
       await database.batchModifyDocs({ upsert: spaces });
 
       setLoading(false);
