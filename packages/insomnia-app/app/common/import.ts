@@ -324,7 +324,7 @@ async function updateWorkspaceScope(
     }
 
     const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
-    (resource as Workspace).scope = await getWorkspaceScope(nameToPrompt);
+    resource.scope = await getWorkspaceScope(nameToPrompt);
   }
 }
 

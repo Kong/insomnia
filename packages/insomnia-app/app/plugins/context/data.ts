@@ -8,55 +8,49 @@ interface PluginImportOptions {
   scope?: WorkspaceScope;
 }
 
-export function init() {
-  return {
-    data: {
-      import: {
-        async uri(uri: string, options: PluginImportOptions = {}) {
-          await importUri(uri, buildImportRawConfig(options));
-        },
-        async raw(text: string, options: PluginImportOptions = {}) {
-          await importRaw(text, buildImportRawConfig(options));
-        },
-      },
-      export: {
-        async insomnia(
-          options: {
-            includePrivate?: boolean;
-            format?: 'json' | 'yaml';
-            workspace?: Workspace;
-          } = {},
-        ) {
-          options = options || {};
-          return exportWorkspacesData(
-            options.workspace || null,
-            !!options.includePrivate,
-            options.format || 'json',
-          );
-        },
+interface InsomniaExport {
+  workspace?: Workspace | null;
+  includePrivate?: boolean;
+  format?: 'json' | 'yaml';
+}
 
-        async har(
-          options: {
-            includePrivate?: boolean;
-            workspace?: Workspace;
-          } = {},
-        ) {
-          return exportWorkspacesHAR(options.workspace || null, !!options.includePrivate);
-        },
+type HarExport = Omit<InsomniaExport, 'format'>;
+
+const buildImportRawConfig = (options: PluginImportOptions): ImportRawConfig => ({
+  getWorkspaceId: () => Promise.resolve(options.workspaceId || null),
+  getWorkspaceScope: options.scope && (() => (
+    Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
+  ),
+});
+
+export const init = () => ({
+  data: {
+    import: {
+      uri: async (uri: string, options: PluginImportOptions = {}) => {
+        await importUri(uri, buildImportRawConfig(options));
+      },
+      raw: async (text: string, options: PluginImportOptions = {}) => {
+        await importRaw(text, buildImportRawConfig(options));
       },
     },
-  };
-}
+    export: {
+      insomnia: async ({
+        workspace,
+        includePrivate,
+        format,
+      }: InsomniaExport = {}) => exportWorkspacesData(
+        workspace || null,
+        Boolean(includePrivate),
+        format || 'json',
+      ),
 
-function buildImportRawConfig(options: PluginImportOptions): ImportRawConfig {
-  const getWorkspaceId = () => Promise.resolve(options.workspaceId || null);
-
-  const getWorkspaceScope = options.scope && (() => (
-    Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
-  );
-
-  return {
-    getWorkspaceId,
-    getWorkspaceScope,
-  };
-}
+      har: async ({
+        workspace,
+        includePrivate,
+      }: HarExport = {}) => exportWorkspacesHAR(
+        workspace || null,
+        Boolean(includePrivate),
+      ),
+    },
+  },
+});
