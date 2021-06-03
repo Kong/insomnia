@@ -1,9 +1,5 @@
-import {
-  exportWorkspacesHAR,
-  exportWorkspacesData,
-  importRaw,
-  importUri,
-} from '../../common/import';
+import { exportWorkspacesHAR, exportWorkspacesData } from '../../common/export';
+import { importRaw, importUri } from '../../common/import';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 import type { ImportRawConfig } from '../../common/import';
 

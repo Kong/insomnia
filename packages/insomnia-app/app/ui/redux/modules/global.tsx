@@ -8,13 +8,15 @@ import moment from 'moment';
 import {
   ImportRawConfig,
   ImportResult,
+  importRaw,
+  importUri as _importUri,
+} from '../../../common/import';
+import {
   exportRequestsData,
   exportRequestsHAR,
   exportWorkspacesData,
   exportWorkspacesHAR,
-  importRaw,
-  importUri as _importUri,
-} from '../../../common/import';
+} from '../../../common/export';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import LoginModal from '../../components/modals/login-modal';

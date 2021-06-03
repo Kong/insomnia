@@ -478,3 +478,17 @@ export const RESPONSE_CODE_REASONS = {
   510: 'Not Extended',
   511: 'Network Authentication Required',
 };
+
+export const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
+export const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
+export const EXPORT_TYPE_REQUEST = 'request';
+export const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
+export const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
+export const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
+export const EXPORT_TYPE_UNIT_TEST = 'unit_test';
+export const EXPORT_TYPE_WORKSPACE = 'workspace';
+export const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
+export const EXPORT_TYPE_ENVIRONMENT = 'environment';
+export const EXPORT_TYPE_API_SPEC = 'api_spec';
+export const EXPORT_TYPE_PROTO_FILE = 'proto_file';
+export const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
