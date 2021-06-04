@@ -16,18 +16,6 @@ class ResponseRaw extends PureComponent<Props> {
     this._codeEditor = n;
   }
 
-  shouldComponentUpdate(nextProps) {
-    for (const key in nextProps) {
-      if (nextProps.hasOwnProperty(key)) {
-        if (nextProps[key] !== this.props[key]) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
   focus() {
     if (this._codeEditor) {
       this._codeEditor.focus();
