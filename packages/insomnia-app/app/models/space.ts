@@ -14,6 +14,7 @@ export const BASE_SPACE_ID = 'base-space';
 
 interface BaseSpace {
   name: string;
+  remoteId: string | null;
 }
 
 export type Space = BaseModel & BaseSpace;
@@ -21,6 +22,7 @@ export type Space = BaseModel & BaseSpace;
 export function init(): BaseSpace {
   return {
     name: 'My Space',
+    remoteId: null, // `null` is necessary for the model init logic to work properly
   };
 }
 
