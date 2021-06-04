@@ -59,7 +59,7 @@ export async function create(patch: Partial<Workspace> = {}) {
   return db.docCreate<Workspace>(type, patch);
 }
 
-export async function all() {
+export async function all(): Promise<Workspace[]> {
   const workspaces = await db.all<Workspace>(type) || [];
 
   if (workspaces.length === 0) {
