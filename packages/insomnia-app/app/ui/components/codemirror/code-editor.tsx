@@ -442,7 +442,7 @@ class CodeEditor extends Component<Props, State> {
     this.codeMirror?.setHistory(history);
     // NOTE: These won't be visible unless the editor is focused
     this.codeMirror?.setCursor(cursor.line, cursor.ch, { scroll: false });
-    this.codeMirror?.setSelection(selections, undefined, { scroll: false });
+    this.codeMirror?.setSelections(selections, undefined, { scroll: false });
 
     // Restore marks one-by-one
     for (const { from, to } of marks || []) {
