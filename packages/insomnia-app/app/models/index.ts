@@ -41,8 +41,9 @@ import {
 export interface BaseModel {
   _id: string;
   type: string;
-  // TSCONVERSION -- parentId is required for all
-  //  except Stats, Settings, Workspace and Space for which it is optional
+  // TSCONVERSION -- parentId is always required for all models, except 4:
+  //   - Stats, Settings, and Space, which never have a parentId
+  //   - Workspace optionally has a parentId (which will be the id of a Space)
   parentId: string;
   modified: number;
   created: number;

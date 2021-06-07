@@ -587,7 +587,7 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = () => async (dispatch: Dispatch) => {
+export const exportAllToFile = (dispatch: Dispatch) => async (spaceId?: string) => {
   dispatch(loadStart());
   showSelectExportTypeModal({
     onCancel: () => { dispatch(loadStop()); },
@@ -616,18 +616,20 @@ export const exportAllToFile = () => async (dispatch: Dispatch) => {
 
       let stringifiedExport;
 
+      const space = spaceId ? await models.space.getById(spaceId) : null;
+
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await exportWorkspacesHAR(null, exportPrivateEnvironments);
+            stringifiedExport = await exportWorkspacesHAR(space, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportWorkspacesData(space, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportWorkspacesData(space, exportPrivateEnvironments, 'json');
             break;
         }
       } catch (err) {

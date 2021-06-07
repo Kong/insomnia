@@ -34,7 +34,7 @@ const EXPORT_FORMAT = 4;
 async function getDocWithDescendants(
   parentDoc: BaseModel | null = null,
   includePrivateDocs = false,
-): Promise<BaseModel[]> {
+) {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(
     // Don't include if private, except if we want to
@@ -43,11 +43,11 @@ async function getDocWithDescendants(
 }
 
 export async function exportWorkspacesHAR(
-  parentDoc: BaseModel | null = null,
+  model: BaseModel | null = null,
   includePrivateDocs = false,
 ) {
-  const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: BaseModel[] = docs.filter(isRequest);
+  const docs = await getDocWithDescendants(model, includePrivateDocs);
+  const requests = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
 

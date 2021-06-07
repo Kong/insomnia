@@ -4,19 +4,21 @@ import Link from '../base/link';
 import { showPrompt } from '../modals/index';
 import { docsImportExport } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
+import { useSelector } from 'react-redux';
+import { selectActiveSpace, selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
 
 interface Props {
   handleImportFile: () => void;
   handleImportClipBoard: () => void;
   handleImportUri: (uri: string) => void;
-  handleExportAllToFile: () => void;
+  handleExportAllToFile: (spaceId?: string) => void;
   handleShowExportRequestsModal: () => void;
 }
 
 export const ImportExport: FC<Props> = ({
   handleImportFile,
   handleImportClipBoard,
-  handleExportAllToFile,
+  handleExportAllToFile: _handleExportAllToFile,
   handleShowExportRequestsModal,
   handleImportUri,
 }) => {
@@ -36,6 +38,15 @@ export const ImportExport: FC<Props> = ({
     });
   }, [handleImportUri]);
 
+  const space = useSelector(selectActiveSpace);
+  const spaceName = useSelector(selectActiveSpaceName);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeResourceScope = activeWorkspace.scope === 'collection' ? strings.collection : strings.document;
+
+  const handleExportAllToFile = useCallback(() => {
+    _handleExportAllToFile(space?._id);
+  }, [_handleExportAllToFile, space]);
+
   return (
     <div>
       <p className="no-margin-top">
@@ -53,11 +64,11 @@ export const ImportExport: FC<Props> = ({
           <DropdownDivider>Choose Export Type</DropdownDivider>
           <DropdownItem onClick={handleShowExportRequestsModal}>
             <i className="fa fa-home" />
-              Current {strings.document.singular} / {strings.collection.singular}
+              Export Requests from the "{activeWorkspace.name}" {activeResourceScope.singular}
           </DropdownItem>
           <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />
-              All {strings.document.plural} / {strings.collection.plural}
+              All {strings.document.plural} and {strings.collection.plural} from the "{spaceName}" {strings.space.singular}
           </DropdownItem>
         </Dropdown>
           &nbsp;&nbsp;

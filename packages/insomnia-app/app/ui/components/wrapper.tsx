@@ -111,8 +111,6 @@ export interface WrapperProps {
   handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
   handleInitializeEntities: () => Promise<void>;
-  handleExportAllToFile: () => void;
-  handleShowExportRequestsModal: () => void;
   handleShowSettingsModal: Function;
   handleExportRequestsToFile: Function;
   handleSetActiveWorkspace: (workspaceId: string | null) => void;
@@ -537,13 +535,11 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       gitVCS,
       handleActivateRequest,
       handleDuplicateWorkspace,
-      handleExportAllToFile,
       handleExportRequestsToFile,
       handleGetRenderContext,
       handleInitializeEntities,
       handleRender,
       handleSetActiveWorkspace,
-      handleShowExportRequestsModal,
       handleSidebarSort,
       handleToggleMenuBar,
       isVariableUncovered,
@@ -685,8 +681,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <SettingsModal
               ref={registerModal}
-              handleShowExportRequestsModal={handleShowExportRequestsModal}
-              handleExportAllToFile={handleExportAllToFile}
               handleImportClipBoard={this._handleImportClipBoard}
               handleImportFile={this._handleImportFile}
               handleImportUri={this._handleImportUri}

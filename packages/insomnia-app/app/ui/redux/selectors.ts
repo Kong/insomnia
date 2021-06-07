@@ -331,6 +331,36 @@ export const selectActiveUnitTests = createSelector(
   },
 );
 
+// TODO(TSCONVERSION) type this properly when doing the rest of this file
+export const selectSpaces = createSelector<any, {}, Space[]>(
+  selectEntitiesLists,
+  (entities) => {
+    // @ts-expect-error -- TSCONVERSION
+    return entities.spaces;
+  },
+);
+
+// TODO(TSCONVERSION) type this properly when doing the rest of this file
+export const selectActiveSpace = createSelector<any, {}, {}, Space | undefined>(
+  state => state.entities,
+  state => state.global.activeSpaceId,
+  (entities, activeSpaceId) => {
+    // @ts-expect-error -- TSCONVERSION
+    return entities.spaces[activeSpaceId];
+  },
+);
+
+// TODO(TSCONVERSION) type this properly when doing the rest of this file
+export const selectActiveSpaceName = createSelector(
+  selectActiveSpace,
+  (activeSpace?: Space) => {
+    if (activeSpace === undefined) {
+      return 'Insomnia';
+    }
+    return activeSpace.name;
+  },
+);
+
 export const selectActiveUnitTestSuites = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,

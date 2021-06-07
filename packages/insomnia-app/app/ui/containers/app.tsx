@@ -87,7 +87,6 @@ import AskModal from '../components/modals/ask-modal';
 import { Request, updateMimeType } from '../../models/request';
 import MoveRequestGroupModal from '../components/modals/move-request-group-modal';
 import * as themes from '../../plugins/misc';
-import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import VCS from '../../sync/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
@@ -1127,10 +1126,6 @@ class App extends PureComponent<Props, State> {
     await this._handleSetSidebarHidden(sidebarHidden);
   }
 
-  _handleShowExportRequestsModal() {
-    showModal(ExportRequestsModal);
-  }
-
   static _handleShowSettingsModal(tabIndex?: number) {
     showModal(SettingsModal, tabIndex);
   }
@@ -1550,7 +1545,6 @@ class App extends PureComponent<Props, State> {
                 handleSetSidebarFilter={this._handleSetSidebarFilter}
                 handleToggleMenuBar={this._handleToggleMenuBar}
                 handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
-                handleShowExportRequestsModal={this._handleShowExportRequestsModal}
                 handleShowSettingsModal={App._handleShowSettingsModal}
                 handleUpdateDownloadPath={this._handleUpdateDownloadPath}
                 isVariableUncovered={isVariableUncovered}
@@ -1723,7 +1717,6 @@ function mapDispatchToProps(dispatch) {
     handleImportClipBoardToWorkspace: global.importClipBoard,
     handleImportUriToWorkspace: global.importUri,
     handleCommand: global.newCommand,
-    handleExportAllToFile: global.exportAllToFile,
     handleExportRequestsToFile: global.exportRequestsToFile,
     handleInitializeEntities: entities.initialize,
     handleMoveDoc: _moveDoc,
