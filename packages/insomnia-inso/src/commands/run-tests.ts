@@ -62,8 +62,6 @@ export async function runInsomniaTests(
     appDataDir,
     filterTypes: [],
     src,
-    env,
-    ci,
   });
 
   // Find suites

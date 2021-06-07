@@ -1,8 +1,9 @@
-// @flow
+/* eslint-disable camelcase */
 import fs from 'fs';
-import type { DbAdapter } from '../index';
+import type { Database, DbAdapter } from '../index';
 import YAML from 'yaml';
 import { emptyDb } from '../index';
+import { BaseModel, RawBaseModel } from '../models/types';
 
 /**
  * When exporting, models.[kind].type is translated to his CamelCase corrispettive.
@@ -24,7 +25,8 @@ import { emptyDb } from '../index';
  *
  * @see packages/insomnia-app/app/common/import.js
  */
-const modelTypeToExportTypeMap = {
+
+const modelTypeToExportTypeMap: Record<string, keyof Database> = {
   api_spec: 'ApiSpec',
   environment: 'Environment',
   request: 'Request',
@@ -33,6 +35,12 @@ const modelTypeToExportTypeMap = {
   unit_test_suite: 'UnitTestSuite',
   unit_test: 'UnitTest',
 };
+
+const transformRawToImported = (item: RawBaseModel): BaseModel => ({
+  _id: item._id,
+  parentId: item.parentId,
+  type: modelTypeToExportTypeMap[item._type],
+});
 
 const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
   // Sanity check - do db files exist and is it a file?
@@ -50,25 +58,24 @@ const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
   const restricted = filterTypes && filterTypes.length !== 0;
   // Transform to set for faster comparison
   // If it is undefined, it will return an empty set
-  filterTypes = new Set<string>(filterTypes);
+  const toFilter = new Set<string>(filterTypes);
+
   // Execute translation between un-mapped and mapped models
-  importedModels.forEach(item => {
+  importedModels.forEach((item: RawBaseModel) => {
     // Do we need to filter?
     if (restricted) {
       // If so, is it an allowed type?
-      if (filterTypes.has(modelTypeToExportTypeMap[item._type])) {
-        // Rename field, transform value and delete obsolete one
-        item.type = modelTypeToExportTypeMap[item._type];
-        delete item._type;
-        // Store it
-        db[item.type] && db[item.type].push(item);
+      if (toFilter.has(modelTypeToExportTypeMap[item._type])) {
+        // Rename field, transform value and return a new object
+        const obj = transformRawToImported(item);
+        // Store it, only if the key value exists
+        db[obj.type] && db[obj.type].push(obj as never);
       }
     } else {
-      // Rename field, transform value and delete obsolete one
-      item.type = modelTypeToExportTypeMap[item._type];
-      delete item._type;
+      // Rename field, transform value and return a new object
+      const obj = transformRawToImported(item);
       // Store it
-      db[item.type] && db[item.type].push(item);
+      db[obj.type] && db[obj.type].push(obj as never);
     }
   });
 

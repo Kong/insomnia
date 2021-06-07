@@ -4,7 +4,7 @@ import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import _gitAdapter from './adapters/git-adapter';
 import _neDbAdapter from './adapters/ne-db-adapter';
-import _insomniaAdapter from '../adapters/insomnia-adapter';
+import _insomniaAdapter from './adapters/insomnia-adapter';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import path from 'path';
@@ -12,6 +12,7 @@ import { emptyDb, loadDb } from './index';
 
 jest.mock('./adapters/git-adapter');
 jest.mock('./adapters/ne-db-adapter');
+jest.mock('./adapters/insomnia-adapter');
 
 const gitAdapter = _gitAdapter as jest.MockedFunction<typeof _gitAdapter>;
 const neDbAdapter = _neDbAdapter as jest.MockedFunction<typeof _neDbAdapter>;

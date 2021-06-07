@@ -1,7 +1,15 @@
 // Simplified and extracted from insomnia-app/app/models/*
+import { Database } from '../index';
+
+export interface RawBaseModel {
+    _id: string
+    _type: keyof(Database)
+    parentId: string
+}
+
 export interface BaseModel {
     _id: string;
-    type: string;
+    type: keyof Database;
     parentId: string;
 }
 
