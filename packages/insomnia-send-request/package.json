@@ -31,7 +31,7 @@
     "multiparty": "^4.2.1",
     "nedb": "^1.8.0",
     "node-forge": "^0.10.0",
-    "node-libcurl": "2.3.2",
+    "node-libcurl": "2.3.3",
     "nunjucks": "^3.2.1",
     "oauth-1.0a": "^2.2.6",
     "openapi-2-kong": "2.3.0-beta.2",
