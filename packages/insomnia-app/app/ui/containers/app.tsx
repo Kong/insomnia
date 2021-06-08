@@ -1512,7 +1512,7 @@ class App extends PureComponent<Props, State> {
         <GrpcProvider>
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
-              {/* @ts-expect-error -- TSCONVERSION expected props are not recieved likely because of the this.props expansion */}
+              {/* @ts-expect-error -- TSCONVERSION expected props are not received likely because of the this.props expansion */}
               <Wrapper
                 {...this.props}
                 ref={this._setWrapperRef}
