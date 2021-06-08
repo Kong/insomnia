@@ -34,6 +34,7 @@ export type SendRequestCallback = (requestId: string) => Promise<Response>;
 export interface InsomniaOptions {
   requests?: Request[];
   sendRequest?: SendRequestCallback;
+  reporterOptions?: Record<string, unknown>;
   bail?: boolean;
   keepFile?: boolean;
   testFilter?: string;

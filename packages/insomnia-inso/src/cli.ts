@@ -1,6 +1,6 @@
 import { ConversionOption, conversionOptions, generateConfig } from './commands/generate-config';
 import { getVersion, logErrorExit1, exit } from './util';
-import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
+import { runInsomniaTests, TestReporter } from './commands/run-tests';
 import { lintSpecification } from './commands/lint-specification';
 import { exportSpecification } from './commands/export-specification';
 import { parseArgsStringToArgv } from 'string-argv';

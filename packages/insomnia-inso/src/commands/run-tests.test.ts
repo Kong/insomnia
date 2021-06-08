@@ -1,5 +1,5 @@
 import { generate as _generate, runTestsCli as _runTestsCli } from 'insomnia-testing';
-import { runInsomniaTests, RunTestsOptions, TestReporterEnum, isReporterFailure } from './run-tests';
+import { runInsomniaTests, RunTestsOptions, isReporterFailure } from './run-tests';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import { GenerateConfigOptions } from './generate-config';
@@ -28,17 +28,6 @@ describe('runInsomniaTests()', () => {
     appDataDir: 'src/db/fixtures/nedb',
     ci: true,
   };
-
-  it('should should not  as _generate if type arg is invalid', async () => {
-    await runInsomniaTests(null, {
-      // @ts-expect-error this is intentionally passing in a bad value
-      reporter: 'invalid',
-    });
-    expect(runTestsCli).not.toHaveBeenCalled();
-    expect(logger.__getLogs().fatal).toEqual([
-      'Reporter "invalid" not unrecognized. Options are [dot, list, min, progress, spec].',
-    ]);
-  });
 
   it('should forward options to insomnia-testing', async () => {
     const contents = 'generated test contents';
@@ -96,7 +85,7 @@ describe('runInsomniaTests()', () => {
 
   it('should return true if reporter options are decoded properly', async () => {
     const contents = 'generated test contents';
-    mock(insomniaTesting.generate).mockResolvedValue(contents);
+    generate.mockReturnValue(contents);
 
     const options = {
       ...base,
@@ -118,7 +107,7 @@ describe('runInsomniaTests()', () => {
 
     await runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', options);
 
-    expect(insomniaTesting.runTestsCli).toHaveBeenCalledWith(contents, {
+    expect(runTestsCli).toHaveBeenCalledWith(contents, {
       bail: false,
       keepFile: false,
       reporter: 'custom-reporter',
@@ -133,7 +122,6 @@ describe('runInsomniaTests()', () => {
         someNumber2: 10.52,
       },
       sendRequest: expect.any(Function),
-      testFilter: undefined,
     });
   });
 
@@ -161,7 +149,7 @@ describe('runInsomniaTests()', () => {
 
   it('should return falsy value if reporter is not found', async () => {
     const contents = 'generated test contents';
-    mock(insomniaTesting.generate).mockResolvedValue(contents);
+    generate.mockReturnValue(contents);
 
     const result = await runInsomniaTests('spc_46c5a4a40e83445a9bd9d9758b86c16c', {
       ...base,

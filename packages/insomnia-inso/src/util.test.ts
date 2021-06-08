@@ -1,4 +1,4 @@
-import { exit, logErrorExit1, getDefaultAppName, getVersion, isDevelopment, noop } from './util';
+import { exit, logErrorExit1, getDefaultAppName, getVersion, isDevelopment, noop, parseObjFromKeyValuePair } from './util';
 import * as packageJson from '../package.json';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
@@ -147,6 +147,34 @@ describe('isDevelopment()', () => {
     process.env.NODE_ENV = 'production';
     expect(isDevelopment()).toBe(false);
     process.env.NODE_ENV = oldNodeEnv;
+  });
+});
+
+describe('parseObjFromKeyValuePair()', function() {
+  it('should return true if key-value pairs are decoded properly', async () => {
+    const arr = [
+      'key1=value1',
+      'key2=value2',
+      'path=/tmp/9047ue.txt',
+      'delimiter="="',
+      'delimiter2==',
+      'someBoolStuff=true',
+      'someNumber=5',
+      'someNumber2=10.52',
+    ];
+
+    const expected = {
+      key1: 'value1',
+      key2: 'value2',
+      path: '/tmp/9047ue.txt',
+      delimiter: '"="',
+      delimiter2: '=',
+      someBoolStuff: true,
+      someNumber: 5,
+      someNumber2: 10.52,
+    };
+
+    expect(parseObjFromKeyValuePair(arr)).toBe(expected);
   });
 });
 

@@ -23,7 +23,7 @@ const runInternal = async <T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type not available, and postponing anyway until the impending move to all jest (and no mocha)
   extractResult: (runner: { [key: string]: any }) => T,
 ): Promise<T> => new Promise((resolve, reject) => {
-  const { bail, keepFile, testFilter } = options;
+  const { bail, keepFile, testFilter, reporterOptions } = options;
 
   // Add global `insomnia` helper.
   // This is the only way to add new globals to the Mocha environment as far as I can tell
@@ -35,6 +35,7 @@ const runInternal = async <T>(
     globals: ['insomnia', 'chai'],
     bail,
     reporter,
+    reporterOptions,
     // @ts-expect-error https://github.com/DefinitelyTyped/DefinitelyTyped/pull/51770
     fgrep: testFilter,
   });
@@ -67,6 +68,7 @@ const runInternal = async <T>(
       });
     });
   } catch (err) {
+    console.log(err);
     reject(err);
   }
 });
