@@ -42,6 +42,10 @@ export function getById(_id: string) {
   return db.getWhere<Space>(type, { _id });
 }
 
+export function getByRemoteId(remoteId: string) {
+  return db.getWhere<Space>(type, { remoteId });
+}
+
 export function remove(obj: Space) {
   return db.remove(obj);
 }

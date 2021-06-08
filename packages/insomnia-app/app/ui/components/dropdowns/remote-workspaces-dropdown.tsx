@@ -11,6 +11,7 @@ import { showAlert } from '../modals';
 import { strings } from '../../../common/strings';
 import { useSelector } from 'react-redux';
 import { selectActiveSpace, selectAllWorkspaces } from '../../redux/selectors';
+import { isWorkspace } from '../../../models/helpers/is-model';
 
 interface Props {
   className?: string;
@@ -20,7 +21,9 @@ interface Props {
 const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
   const workspaces = useSelector(selectAllWorkspaces);
-  const remoteId = useSelector(selectActiveSpace)?.remoteId || undefined;
+  const activeSpace = useSelector(selectActiveSpace);
+  const spaceRemoteId = activeSpace?.remoteId || undefined;
+  const spaceId = activeSpace?._id;
 
   // Local state
   const [loading, setLoading] = useState(false);
@@ -35,11 +38,11 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
     }
 
     setLoading(true);
-    setRemoteProjects(await vcs.remoteProjects(remoteId));
+    setRemoteProjects(await vcs.remoteProjects(spaceRemoteId));
     setLocalProjects(await vcs.localProjects());
     setLoading(false);
   },
-  [remoteId, vcs]);
+  [spaceRemoteId, vcs]);
 
   // Find remote spaces that haven't been pulled
   const missingProjects = useMemo(() => remoteProjects.filter(({ id, rootDocumentId }) => {
@@ -76,6 +79,7 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
         const workspace: Workspace = await models.initModel(models.workspace.type, {
           _id: project.rootDocumentId,
           name: project.name,
+          parentId: spaceId || null,
         });
         await db.upsert(workspace);
       } else {
@@ -85,6 +89,10 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
 
         // @ts-expect-error -- TSCONVERSION
         for (const doc of (await newVCS.allDocuments() || [])) {
+          if (isWorkspace(doc)) {
+            // @ts-expect-error parent id is optional for workspaces
+            doc.parentId = spaceId || null;
+          }
           await db.upsert(doc);
         }
 
@@ -100,7 +108,7 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
     } finally {
       setPullingProjects(state => ({ ...state, [project.id]: false }));
     }
-  }, [vcs, refresh]);
+  }, [vcs, refresh, spaceId]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {
