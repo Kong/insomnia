@@ -605,7 +605,7 @@ export const exportAllToFile = async (dispatch: Dispatch) => {
       }
 
       const fileName = await showSaveExportedFileDialog({
-        exportedFileNamePrefix: 'Insomnia All',
+        exportedFileNamePrefix: 'Insomnia-All',
         selectedFormat,
       });
 
