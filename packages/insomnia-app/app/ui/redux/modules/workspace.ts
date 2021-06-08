@@ -23,12 +23,10 @@ const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateC
   };
 };
 
-export type CreateWorkspaceCallback = (arg0: {
+export const createWorkspace = ({ scope, onCreate }: {
   scope: WorkspaceScope;
   onCreate?: OnWorkspaceCreateCallback;
-}) => void;
-
-export const createWorkspace: CreateWorkspaceCallback = ({ scope, onCreate }) => {
+}) => {
   return (dispatch, getState) => {
     const activeSpace = selectActiveSpace(getState());
     const parentId = activeSpace?._id || null;
