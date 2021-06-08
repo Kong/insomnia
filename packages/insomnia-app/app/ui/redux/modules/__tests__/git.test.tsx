@@ -31,7 +31,7 @@ describe('git', () => {
   let store;
   beforeEach(async () => {
     await globalBeforeEach();
-    store = mockStore({ entities: {}, global: {} });
+    store = mockStore({ entities: { spaces: [] }, global: {} });
   });
   // Check loading events
   afterEach(() => {
