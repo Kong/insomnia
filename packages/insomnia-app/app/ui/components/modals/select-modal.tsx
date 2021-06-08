@@ -29,16 +29,12 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
   state: SelectModalShowOptions = initialState;
 
   #onDone = async () => {
-    this.hide();
+    this.modal.current?.hide();
     await this.state.onDone?.(this.state.value);
   }
 
   #handleSelectChange = (event: React.SyntheticEvent<HTMLSelectElement>) => {
     this.setState({ value: event.currentTarget.value });
-  }
-
-  hide = () => {
-    this.modal.current?.hide();
   }
 
   show = ({
