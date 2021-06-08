@@ -3,7 +3,6 @@ import * as models from './index';
 import { database as db } from '../common/database';
 import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
-import { ValueOf } from 'type-fest';
 import { isSpaceId } from './helpers/is-model';
 
 export const name = 'Workspace';
@@ -12,19 +11,28 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
-export const WorkspaceScopeKeys = {
+export interface DesignWorkspace {
+  name: string;
+  description: string;
+  scope: 'design';
+  certificates?: any;
+}
+
+export interface CollectionWorkspace {
+  name: string;
+  description: string;
+  scope: 'collection';
+  certificates?: any;
+}
+
+export type BaseWorkspace = DesignWorkspace | CollectionWorkspace;
+
+export type WorkspaceScope = BaseWorkspace['scope'];
+
+export const WorkspaceScopeKeys: Record<WorkspaceScope, WorkspaceScope> = {
   design: 'design',
   collection: 'collection',
 } as const;
-
-export type WorkspaceScope = ValueOf<typeof WorkspaceScopeKeys>;
-
-interface BaseWorkspace {
-  name: string;
-  description: string;
-  scope: WorkspaceScope;
-  certificates?: any;
-}
 
 export type Workspace = BaseModel & BaseWorkspace;
 

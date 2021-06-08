@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
 import ExportRequestsModal from '../modals/export-requests-modal';
 import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
+import { isDesign } from '../../../models/helpers/is-model';
 
 interface Props {
   hideSettingsModal: () => void;
@@ -17,7 +18,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
   const spaceName = useSelector(selectActiveSpaceName);
   const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeResourceScope = activeWorkspace.scope === 'collection' ? strings.collection : strings.document;
+  const activeResourceScope = isDesign(activeWorkspace) ? strings.document : strings.collection;
 
   const handleImportUri = useCallback(() => {
     const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
