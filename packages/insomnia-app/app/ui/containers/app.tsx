@@ -34,17 +34,11 @@ import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import {
   importUri,
-  exportRequestsToFile,
-  goToNextActivity,
-  importClipBoard,
-  importFile,
   loadRequestStart,
   loadRequestStop,
   newCommand,
-  setActiveActivity,
   setActiveWorkspace,
 } from '../redux/modules/global';
-import { initialize } from '../redux/modules/entities';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import {
@@ -155,17 +149,12 @@ interface OwnProps {
 }
 
 export interface ReduxDispatchProps {
-  handleCommand: Function,
-  handleExportRequestsToFile: Function,
-  handleGoToNextActivity: Function,
-  handleImportClipBoardToWorkspace: Function,
-  handleImportFileToWorkspace: Function,
-  handleImportUriToWorkspace: Function,
-  handleInitializeEntities: Function,
-  handleSetActiveActivity: Function,
-  handleSetActiveWorkspace: Function,
-  handleStartLoading: Function,
-  handleStopLoading: Function,
+  handleCommand: Function;
+  handleImportUriToWorkspace: Function;
+  handleSetActiveWorkspace: Function;
+  handleStartLoading: Function;
+  handleStopLoading: Function;
+  handleMoveDoc: Function;
 }
 
 type Props = OwnProps & ReduxDispatchProps;
@@ -1805,41 +1794,23 @@ function mapStateToProps(state, props) {
   });
 }
 
-const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
+const mapDispatchToProps = (dispatch: Dispatch<Action<any>>): ReduxDispatchProps => {
   const {
-    exportRequestsToFile: handleExportRequestsToFile,
-    goToNextActivity: handleGoToNextActivity,
-    importClipBoard: handleImportClipBoardToWorkspace,
-    importFile: handleImportFileToWorkspace,
     importUri: handleImportUriToWorkspace,
-    initialize: handleInitializeEntities,
     loadRequestStart: handleStartLoading,
     loadRequestStop: handleStopLoading,
-    newCommand: handleCommand,
-    setActiveActivity: handleSetActiveActivity,
     setActiveWorkspace: handleSetActiveWorkspace,
+    newCommand: handleCommand,
   } = bindActionCreators({
-    exportRequestsToFile,
-    goToNextActivity,
-    importClipBoard,
-    importFile,
     importUri,
-    initialize,
     loadRequestStart,
     loadRequestStop,
     newCommand,
-    setActiveActivity,
     setActiveWorkspace,
   }, dispatch);
   return {
     handleCommand,
-    handleExportRequestsToFile,
-    handleGoToNextActivity,
-    handleImportClipBoardToWorkspace,
-    handleImportFileToWorkspace,
     handleImportUriToWorkspace,
-    handleInitializeEntities,
-    handleSetActiveActivity,
     handleSetActiveWorkspace,
     handleStartLoading,
     handleStopLoading,
