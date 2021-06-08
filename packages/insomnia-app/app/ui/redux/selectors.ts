@@ -225,6 +225,15 @@ export const selectActiveOAuth2Token = createSelector(
     return entities.oAuth2Tokens.find(t => t.parentId === id);
   },
 );
+
+export const selectAllWorkspaces = createSelector<any, {}, Workspace[]>(
+  selectEntitiesLists,
+  entities => {
+  // @ts-expect-error -- TSCONVERSION
+    const { workspaces } = entities;
+    return workspaces;
+  });
+
 export const selectUnseenWorkspaces = createSelector(selectEntitiesLists, entities => {
   // @ts-expect-error -- TSCONVERSION
   const { workspaces, workspaceMetas } = entities;
