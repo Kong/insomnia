@@ -5,7 +5,7 @@ import { showModal, showPrompt } from '../modals/index';
 import { docsImportExport } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectActiveSpace, selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
+import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
 import ExportRequestsModal from '../modals/export-requests-modal';
 import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
 
@@ -15,7 +15,6 @@ interface Props {
 
 export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
-  const space = useSelector(selectActiveSpace);
   const spaceName = useSelector(selectActiveSpaceName);
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeResourceScope = activeWorkspace.scope === 'collection' ? strings.collection : strings.document;
@@ -43,9 +42,9 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [hideSettingsModal]);
 
   const handleExportAllToFile = useCallback(async () => {
-    await exportAllToFile(dispatch)(space?._id);
+    dispatch(exportAllToFile);
     hideSettingsModal();
-  }, [hideSettingsModal, space, dispatch]);
+  }, [hideSettingsModal, dispatch]);
 
   const handleImportFile = useCallback(async () => {
     await importFile(activeWorkspace._id)(dispatch);
