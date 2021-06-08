@@ -367,7 +367,7 @@ class WrapperHome extends PureComponent<Props, State> {
       // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       .sort((a: RenderedCard, b: RenderedCard) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
       .map(c => c?.card);
-    const countLabel = cards.length > 1 ? strings.document.plural : strings.document.singular;
+    const countLabel = cards.length === 1 ? strings.document.singular : strings.document.plural;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
