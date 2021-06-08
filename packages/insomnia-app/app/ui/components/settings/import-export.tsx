@@ -1,28 +1,26 @@
 import React, { FC, useCallback } from 'react';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
-import { showPrompt } from '../modals/index';
+import { showModal, showPrompt } from '../modals/index';
 import { docsImportExport } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectActiveSpace, selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
+import ExportRequestsModal from '../modals/export-requests-modal';
+import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
 
 interface Props {
-  handleImportFile: () => void;
-  handleImportClipBoard: () => void;
-  handleImportUri: (uri: string) => void;
-  handleExportAllToFile: (spaceId?: string) => void;
-  handleShowExportRequestsModal: () => void;
+  hideSettingsModal: () => void;
 }
 
-export const ImportExport: FC<Props> = ({
-  handleImportFile,
-  handleImportClipBoard,
-  handleExportAllToFile: _handleExportAllToFile,
-  handleShowExportRequestsModal,
-  handleImportUri,
-}) => {
-  const importUri = useCallback(() => {
+export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
+  const dispatch = useDispatch();
+  const space = useSelector(selectActiveSpace);
+  const spaceName = useSelector(selectActiveSpaceName);
+  const activeWorkspace = useSelector(selectActiveWorkspace);
+  const activeResourceScope = activeWorkspace.scope === 'collection' ? strings.collection : strings.document;
+
+  const handleImportUri = useCallback(() => {
     const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
     const defaultValue = lastUsedImportUri ? { defaultValue: lastUsedImportUri } : {};
     showPrompt({
@@ -30,22 +28,34 @@ export const ImportExport: FC<Props> = ({
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: (uri: string) => {
+      onComplete: async (uri: string) => {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
-        handleImportUri(uri);
+        await importUri(activeWorkspace._id, uri)(dispatch);
+        hideSettingsModal();
       },
       ...defaultValue,
     });
-  }, [handleImportUri]);
+  }, [hideSettingsModal, activeWorkspace, dispatch]);
 
-  const space = useSelector(selectActiveSpace);
-  const spaceName = useSelector(selectActiveSpaceName);
-  const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeResourceScope = activeWorkspace.scope === 'collection' ? strings.collection : strings.document;
+  const showExportRequestsModal = useCallback(() => {
+    showModal(ExportRequestsModal);
+    hideSettingsModal();
+  }, [hideSettingsModal]);
 
-  const handleExportAllToFile = useCallback(() => {
-    _handleExportAllToFile(space?._id);
-  }, [_handleExportAllToFile, space]);
+  const handleExportAllToFile = useCallback(async () => {
+    await exportAllToFile(dispatch)(space?._id);
+    hideSettingsModal();
+  }, [hideSettingsModal, space, dispatch]);
+
+  const handleImportFile = useCallback(async () => {
+    await importFile(activeWorkspace._id)(dispatch);
+    hideSettingsModal();
+  }, [hideSettingsModal, activeWorkspace, dispatch]);
+
+  const handleImportClipBoard = useCallback(async () => {
+    await importClipBoard(activeWorkspace._id)(dispatch);
+    hideSettingsModal();
+  }, [hideSettingsModal, activeWorkspace, dispatch]);
 
   return (
     <div>
@@ -62,7 +72,7 @@ export const ImportExport: FC<Props> = ({
               Export Data <i className="fa fa-caret-down" />
           </DropdownButton>
           <DropdownDivider>Choose Export Type</DropdownDivider>
-          <DropdownItem onClick={handleShowExportRequestsModal}>
+          <DropdownItem onClick={showExportRequestsModal}>
             <i className="fa fa-home" />
               Export Requests from the "{activeWorkspace.name}" {activeResourceScope.singular}
           </DropdownItem>
@@ -81,7 +91,7 @@ export const ImportExport: FC<Props> = ({
             <i className="fa fa-file-o" />
               From File
           </DropdownItem>
-          <DropdownItem onClick={importUri}>
+          <DropdownItem onClick={handleImportUri}>
             <i className="fa fa-link" />
               From URL
           </DropdownItem>

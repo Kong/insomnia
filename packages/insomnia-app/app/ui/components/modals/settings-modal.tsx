@@ -18,20 +18,13 @@ import { applyColorScheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Account from '../settings/account';
 import { showModal } from './index';
-import { exportAllToFile } from '../../redux/modules/global';
-import { connect } from 'react-redux';
-import ExportRequestsModal from './export-requests-modal';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
 export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
-interface ReduxDispatchProps {
-  exportAllToFile: ReturnType<typeof exportAllToFile>;
-}
-
-interface Props extends ReduxDispatchProps {
+interface Props {
   handleImportFile: () => void;
   handleImportUri: (uri: string) => void;
   handleToggleMenuBar: (hide: boolean) => void;
@@ -61,28 +54,7 @@ class SettingsModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleExportAllToFile(spaceId?: string) {
-    await this.props.exportAllToFile(spaceId);
-    this.modal?.hide();
-  }
-
-  _handleShowExportRequestsModal() {
-    showModal(ExportRequestsModal);
-    this.modal?.hide();
-  }
-
-  _handleImportFile() {
-    this.props.handleImportFile();
-    this.modal?.hide();
-  }
-
-  _handleImportClipBoard() {
-    this.props.handleImportClipBoard();
-    this.modal?.hide();
-  }
-
-  _handleImportUri(uri: string) {
-    this.props.handleImportUri(uri);
+  hideSettingsModal() {
     this.modal?.hide();
   }
 
@@ -198,11 +170,7 @@ class SettingsModal extends PureComponent<Props, State> {
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
-                handleExportAllToFile={this._handleExportAllToFile}
-                handleShowExportRequestsModal={this._handleShowExportRequestsModal}
-                handleImportFile={this._handleImportFile}
-                handleImportClipBoard={this._handleImportClipBoard}
-                handleImportUri={this._handleImportUri}
+                hideSettingsModal={this.hideSettingsModal}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
@@ -236,11 +204,4 @@ class SettingsModal extends PureComponent<Props, State> {
 
 export const showSettingsModal = () => showModal(SettingsModal);
 
-export default connect(
-  null,
-  (dispatch): ReduxDispatchProps => ({
-    exportAllToFile: (spaceId?: string) => exportAllToFile(dispatch)(spaceId),
-  }),
-  null,
-  { forwardRef: true },
-)(SettingsModal);
+export default SettingsModal;

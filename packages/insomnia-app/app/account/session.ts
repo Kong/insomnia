@@ -2,7 +2,9 @@ import * as srp from 'srp-js';
 import * as crypt from './crypt';
 import * as fetch from './fetch';
 
-const loginCallbacks: Function[] = [];
+type LoginCallback = (isLoggedIn: boolean) => void;
+
+const loginCallbacks: LoginCallback[] = [];
 
 function _callCallbacks() {
   const loggedIn = isLoggedIn();
@@ -15,12 +17,12 @@ function _callCallbacks() {
   }
 }
 
-export function onLoginLogout(callback: Function) {
-  loginCallbacks.push(callback);
+export function onLoginLogout(loginCallback: LoginCallback) {
+  loginCallbacks.push(loginCallback);
 }
 
 /** Create a new session for the user */
-export async function login(rawEmail, rawPassphrase) {
+export async function login(rawEmail: string, rawPassphrase: string) {
   // ~~~~~~~~~~~~~~~ //
   // Sanitize Inputs //
   // ~~~~~~~~~~~~~~~ //

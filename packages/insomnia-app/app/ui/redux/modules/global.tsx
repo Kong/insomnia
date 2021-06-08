@@ -152,11 +152,12 @@ export const reducer = combineReducers({
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
+
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
 
-export const newCommand = (command: string, args) => async (dispatch: Dispatch) => {
+export const newCommand = (command: string, args: any) => async (dispatch: Dispatch) => {
   switch (command) {
     case COMMAND_ALERT:
       showModal(AlertModal, {
@@ -836,9 +837,3 @@ export const initActiveActivity = () => (dispatch, getState) => {
   const initializeToActivity = overrideActivity || activeActivity;
   dispatch(setActiveActivity(initializeToActivity));
 };
-
-export const init = () => [
-  initActiveSpace(),
-  initActiveWorkspace(),
-  initActiveActivity(),
-];
