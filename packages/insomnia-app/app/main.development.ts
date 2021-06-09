@@ -38,13 +38,12 @@ if (!isDevelopment()) {
 global.window = global.window || undefined;
 // When the app is first launched
 app.on('ready', async () => {
-  // Enable react dev tools if development
   if (isDevelopment()) {
     try {
       const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS];
-      const names = await Promise.all(extensions.map(extension => installExtension(extension)));
       const extensionsPlural = extensions.length > 0 ? 's' : '';
-      console.log(`[electron-extensions] Added Extension${extensionsPlural}: ${names.join(', ')}`);
+      const names = await Promise.all(extensions.map(extension => installExtension(extension)));
+      console.log(`[electron-extensions] Added DevTools Extension${extensionsPlural}: ${names.join(', ')}`);
     } catch (err) {
       console.log('[electron-extensions] An error occurred: ', err);
     }
