@@ -25,10 +25,6 @@ export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
 interface Props {
-  handleImportFile: () => void;
-  handleImportUri: (uri: string) => void;
-  handleToggleMenuBar: (hide: boolean) => void;
-  handleImportClipBoard: () => void;
   settings: any;
 }
 
@@ -164,7 +160,6 @@ class SettingsModal extends PureComponent<Props, State> {
               <General
                 settings={settings}
                 hideModal={this.hide}
-                handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
               />
             </TabPanel>

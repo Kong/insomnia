@@ -1121,15 +1121,6 @@ class App extends PureComponent<Props, State> {
     }
   }
 
-  _handleToggleMenuBar(hide: boolean) {
-    for (const win of remote.BrowserWindow.getAllWindows()) {
-      if (win.autoHideMenuBar !== hide) {
-        win.setAutoHideMenuBar(hide);
-        win.setMenuBarVisibility(!hide);
-      }
-    }
-  }
-
   async _handleToggleSidebar() {
     const sidebarHidden = !this.props.sidebarHidden;
     await this._handleSetSidebarHidden(sidebarHidden);
@@ -1422,9 +1413,6 @@ class App extends PureComponent<Props, State> {
     );
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
 
-    // handle this
-    this._handleToggleMenuBar(this.props.settings.autoHideMenuBar);
-
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
     window
@@ -1552,7 +1540,6 @@ class App extends PureComponent<Props, State> {
                 handleSetActiveResponse={this._handleSetActiveResponse}
                 handleSetActiveEnvironment={this._handleSetActiveEnvironment}
                 handleSetSidebarFilter={this._handleSetSidebarFilter}
-                handleToggleMenuBar={this._handleToggleMenuBar}
                 handleUpdateRequestMimeType={this._handleUpdateRequestMimeType}
                 handleShowSettingsModal={App._handleShowSettingsModal}
                 handleUpdateDownloadPath={this._handleUpdateDownloadPath}

@@ -106,7 +106,6 @@ export interface WrapperProps {
   // Helper Functions
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleToggleMenuBar: (hide: boolean) => void;
   handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
@@ -541,7 +540,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       handleRender,
       handleSetActiveWorkspace,
       handleSidebarSort,
-      handleToggleMenuBar,
       isVariableUncovered,
       requestMetas,
       settings,
@@ -681,10 +679,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <SettingsModal
               ref={registerModal}
-              handleImportClipBoard={this._handleImportClipBoard}
-              handleImportFile={this._handleImportFile}
-              handleImportUri={this._handleImportUri}
-              handleToggleMenuBar={handleToggleMenuBar}
               settings={settings}
             />
 
