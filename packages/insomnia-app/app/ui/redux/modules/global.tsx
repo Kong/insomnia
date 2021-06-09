@@ -157,7 +157,7 @@ export const reducer = combineReducers({
 // ACTIONS //
 // ~~~~~~~ //
 
-export const newCommand = (command: string, args: any) => async (dispatch: Dispatch) => {
+export const newCommand = (command: string, args: any) => async (dispatch: Dispatch<any>) => {
   switch (command) {
     case COMMAND_ALERT:
       showModal(AlertModal, {
@@ -187,7 +187,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         ),
         addCancel: true,
       });
-      await importUri(args.workspaceId, args.uri)(dispatch);
+      dispatch(importUri(args.workspaceId, args.uri));
       break;
 
     case COMMAND_PLUGIN_INSTALL:

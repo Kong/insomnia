@@ -30,7 +30,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: async (uri: string) => {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
-        await importUri(activeWorkspace._id, uri)(dispatch);
+        dispatch(importUri(activeWorkspace._id, uri));
         hideSettingsModal();
       },
       ...defaultValue,
@@ -42,18 +42,18 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     hideSettingsModal();
   }, [hideSettingsModal]);
 
-  const handleExportAllToFile = useCallback(async () => {
+  const handleExportAllToFile = useCallback(() => {
     dispatch(exportAllToFile);
     hideSettingsModal();
   }, [hideSettingsModal, dispatch]);
 
-  const handleImportFile = useCallback(async () => {
-    await importFile(activeWorkspace._id)(dispatch);
+  const handleImportFile = useCallback(() => {
+    dispatch(importFile(activeWorkspace._id));
     hideSettingsModal();
   }, [hideSettingsModal, activeWorkspace, dispatch]);
 
-  const handleImportClipBoard = useCallback(async () => {
-    await importClipBoard(activeWorkspace._id)(dispatch);
+  const handleImportClipBoard = useCallback(() => {
+    dispatch(importClipBoard(activeWorkspace._id));
     hideSettingsModal();
   }, [hideSettingsModal, activeWorkspace, dispatch]);
 
