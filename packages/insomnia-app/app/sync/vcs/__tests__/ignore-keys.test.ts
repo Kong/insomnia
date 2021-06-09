@@ -1,6 +1,6 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
-import { deleteIgnoredKeys, shouldIgnoreKey } from '../ignore-keys';
+import { clearIgnoredKeys, shouldIgnoreKey } from '../ignore-keys';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
@@ -23,23 +23,26 @@ describe('shouldIgnoreKey()', () => {
   });
 });
 
-describe('deleteIgnoredKeys', () => {
-  it('should always delete the ignored keys', () => {
-    const base = baseModelBuilder.build();
-
-    deleteIgnoredKeys(base);
-
-    expect(Object.keys(base)).not.toContain('modified');
-  });
-
-  it('should delete parentId from the workspace', () => {
+describe('clearIgnoredKeys', () => {
+  it('should always delete the modified key', () => {
     const base = baseModelBuilder.build();
     const workspace = workspaceModelBuilder.build();
 
-    deleteIgnoredKeys(base);
-    deleteIgnoredKeys(workspace);
+    clearIgnoredKeys(base);
+    clearIgnoredKeys(workspace);
 
-    expect(Object.keys(base)).toContain('parentId');
-    expect(Object.keys(workspace)).not.toContain('parentId');
+    expect(Object.keys(base)).not.toContain('modified');
+    expect(Object.keys(workspace)).not.toContain('modified');
+  });
+
+  it('should clear parentId from the workspace', () => {
+    const base = baseModelBuilder.parentId('abc').build();
+    const workspace = workspaceModelBuilder.parentId('abc').build();
+
+    clearIgnoredKeys(base);
+    clearIgnoredKeys(workspace);
+
+    expect(base.parentId).toBe('abc');
+    expect(workspace.parentId).toBeNull();
   });
 });
