@@ -332,24 +332,6 @@ export const selectActiveUnitTests = createSelector(
   },
 );
 
-export const selectSpaces = createSelector(
-  selectEntitiesLists,
-  (entities) => {
-    // @ts-expect-error -- TSCONVERSION
-    return entities.spaces;
-  },
-);
-
-export const selectActiveSpace = createSelector(
-  // @ts-expect-error -- TSCONVERSION
-  state => state.entities,
-  // @ts-expect-error -- TSCONVERSION
-  state => state.global.activeSpaceId,
-  (entities, activeSpaceId) => {
-    return entities.spaces[activeSpaceId];
-  },
-);
-
 export const selectActiveSpaceName = createSelector(
   selectActiveSpace,
   (activeSpace?: Space) => {
