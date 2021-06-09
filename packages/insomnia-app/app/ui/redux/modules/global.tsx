@@ -835,3 +835,9 @@ export const initActiveActivity = () => (dispatch, getState) => {
   const initializeToActivity = overrideActivity || activeActivity;
   dispatch(setActiveActivity(initializeToActivity));
 };
+
+export const initActions = [
+  initActiveSpace,
+  initActiveWorkspace,
+  initActiveActivity,
+];

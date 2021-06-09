@@ -1,7 +1,7 @@
 import { bindActionCreators, combineReducers } from 'redux';
 import { allDocs, addChanges, initializeWith, reducer as entitiesReducer } from './entities';
 import configureStore from '../create';
-import { reducer as globalReducer, newCommand, loginStateChange, initActiveSpace, initActiveActivity, initActiveWorkspace } from './global';
+import { reducer as globalReducer, newCommand, loginStateChange, initActions } from './global';
 import { database as db } from '../../../common/database';
 import { API_BASE_URL, getClientString } from '../../../common/constants';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
@@ -34,10 +34,10 @@ export async function init() {
   setup(getClientString(), API_BASE_URL);
   onCommand(bound.newCommand);
 
-  store.dispatch(initActiveSpace());
-  store.dispatch(initActiveWorkspace());
-  // @ts-expect-error -- TSCONVERSION need to merge in Redux-Thunk types to root
-  store.dispatch(initActiveActivity());
+  initActions.forEach(action => {
+    // @ts-expect-error -- TSCONVERSION need to merge in Redux-Thunk types to root
+    store.dispatch(action());
+  });
 
   return store;
 }
