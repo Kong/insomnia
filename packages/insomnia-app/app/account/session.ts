@@ -101,6 +101,7 @@ export async function login(rawEmail: string, rawPassphrase: string) {
 
   _callCallbacks();
 }
+
 export async function changePasswordWithToken(rawNewPassphrase, confirmationCode) {
   // Sanitize inputs
   const newPassphrase = _sanitizePassphrase(rawNewPassphrase);
@@ -137,18 +138,22 @@ export async function changePasswordWithToken(rawNewPassphrase, confirmationCode
     getCurrentSessionId(),
   );
 }
+
 export function sendPasswordChangeCode() {
   return fetch.post('/auth/send-password-code', null, getCurrentSessionId());
 }
+
 export function getPublicKey() {
   return _getSessionData().publicKey;
 }
+
 export function getPrivateKey() {
   const { symmetricKey, encPrivateKey } = _getSessionData();
 
   const privateKeyStr = crypt.decryptAES(symmetricKey, encPrivateKey);
   return JSON.parse(privateKeyStr);
 }
+
 export function getCurrentSessionId() {
   if (window) {
     return window.localStorage.getItem('currentSessionId');
@@ -156,18 +161,23 @@ export function getCurrentSessionId() {
     return '';
   }
 }
+
 export function getAccountId() {
   return _getSessionData().accountId;
 }
+
 export function getEmail() {
   return _getSessionData().email;
 }
+
 export function getFirstName() {
   return _getSessionData().firstName;
 }
+
 export function getLastName() {
   return _getSessionData().lastName;
 }
+
 export function getFullName() {
   return `${getFirstName()} ${getLastName()}`.trim();
 }
@@ -267,7 +277,7 @@ function _unsetSessionData() {
   window.localStorage.removeItem('currentSessionId');
 }
 
-function _getSessionKey(sessionId) {
+function _getSessionKey(sessionId: string | null) {
   return `session__${(sessionId || '').slice(0, 10)}`;
 }
 
@@ -275,10 +285,10 @@ function _getSrpParams() {
   return srp.params[2048];
 }
 
-function _sanitizeEmail(email) {
+function _sanitizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-function _sanitizePassphrase(passphrase) {
+function _sanitizePassphrase(passphrase: string) {
   return passphrase.trim().normalize('NFKD');
 }
