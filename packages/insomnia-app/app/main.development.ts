@@ -13,7 +13,7 @@ import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import log, { initializeLogging } from './common/log';
-import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {
@@ -41,7 +41,7 @@ app.on('ready', async () => {
   // Enable react dev tools if development
   if (isDevelopment()) {
     try {
-      const names = await installExtension([REACT_DEVELOPER_TOOLS]);
+      const names = await installExtension([REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS]);
       console.log(`[electron-extensions] Added Extension:  ${names}`);
     } catch (err) {
       console.log('[electron-extensions] An error occurred: ', err);
