@@ -1,5 +1,4 @@
 import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
-import * as session from '../../../account/session';
 import VCS from '../../../sync/vcs';
 import type { Project } from '../../../sync/types';
 import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomnia-components';
@@ -12,6 +11,8 @@ import { strings } from '../../../common/strings';
 import { useSelector } from 'react-redux';
 import { selectActiveSpace, selectAllWorkspaces } from '../../redux/selectors';
 import { isWorkspace } from '../../../models/helpers/is-model';
+import { isLoggedIn } from '../../../account/session';
+import { isNotNullOrUndefined } from '../../../common/misc';
 
 interface Props {
   className?: string;
@@ -23,6 +24,7 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
   const workspaces = useSelector(selectAllWorkspaces);
   const activeSpace = useSelector(selectActiveSpace);
   const spaceRemoteId = activeSpace?.remoteId || undefined;
+  const isRemoteSpace = isNotNullOrUndefined(spaceRemoteId);
   const spaceId = activeSpace?._id;
 
   // Local state
@@ -33,7 +35,7 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
 
   // Refresh remote spaces
   const refresh = useCallback(async () => {
-    if (!vcs || !session.isLoggedIn()) {
+    if (!vcs || !isLoggedIn()) {
       return;
     }
 
@@ -116,6 +118,7 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
   }, [refresh]);
 
   return {
+    isRemoteSpace,
     loading,
     missingProjects,
     pullingProjects,
@@ -133,6 +136,7 @@ const PullButton: FC<{disabled?: boolean, className?: string}> = ({ disabled, cl
 
 export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
   const {
+    isRemoteSpace,
     loading,
     refresh,
     missingProjects,
@@ -140,7 +144,13 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
-  if (!session.isLoggedIn()) {
+  // Don't show the pull dropdown if this is not a remote space
+  if (!isRemoteSpace) {
+    return null;
+  }
+
+  // Show a disaled button if remote space but not logged in
+  if (!isLoggedIn()) {
     return (
       <Tooltip message="Please log in to access your remote collections" position="bottom">
         <PullButton className={className} disabled />
