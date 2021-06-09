@@ -74,7 +74,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           <DropdownDivider>Choose Export Type</DropdownDivider>
           <DropdownItem onClick={showExportRequestsModal}>
             <i className="fa fa-home" />
-              Export Requests from the "{activeWorkspace.name}" {activeResourceScope.singular}
+              Export the "{activeWorkspace.name}" {activeResourceScope.singular}
           </DropdownItem>
           <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />
