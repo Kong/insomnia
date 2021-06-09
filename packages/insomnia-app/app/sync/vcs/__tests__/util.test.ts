@@ -1,3 +1,7 @@
+import { createBuilder } from '@develohpanda/fluent-builder';
+import { baseModelSchema } from '../../../models/__schemas__/base-model-schema';
+import { StageEntry } from '../../types';
+import { branchSchema, statusCandidateSchema, mergeConflictSchema } from '../../__schemas__/type-schemas';
 import {
   combinedMapKeys,
   compareBranches,
@@ -5,6 +9,7 @@ import {
   generateSnapshotStateMap,
   getRootSnapshot,
   getStagable,
+  hash,
   hashDocument,
   preMergeCheck,
   stateDelta,
@@ -12,7 +17,72 @@ import {
   updateStateWithConflictResolutions,
 } from '../util';
 
+const statusCandidateBuilder = createBuilder(statusCandidateSchema);
+const baseModelBuilder = createBuilder(baseModelSchema);
+const mergeConflictBuilder = createBuilder(mergeConflictSchema);
+const branchBuilder = createBuilder(branchSchema);
+
 describe('util', () => {
+  beforeEach(() => {
+    statusCandidateBuilder.reset();
+    baseModelBuilder.reset();
+    mergeConflictBuilder.reset();
+    branchBuilder.reset();
+  });
+
+  const DA1 = statusCandidateBuilder.reset()
+    .key('a')
+    .document(baseModelBuilder.reset()._id('a').name('1').build())
+    .build();
+  const DA2 = statusCandidateBuilder.reset()
+    .key('a')
+    .document(baseModelBuilder.reset()._id('a').name('2').build())
+    .build();
+  const DB1 = statusCandidateBuilder.reset()
+    .key('b')
+    .document(baseModelBuilder.reset()._id('b').name('1').build())
+    .build();
+  const DB2 = statusCandidateBuilder.reset()
+    .key('b')
+    .document(baseModelBuilder.reset()._id('b').name('2').build())
+    .build();
+  const DC1 = statusCandidateBuilder.reset()
+    .key('c')
+    .document(baseModelBuilder.reset()._id('c').name('1').build())
+    .build();
+
+  const HA1 = hashDocument(DA1.document);
+  const HA2 = hashDocument(DA2.document);
+  const HB1 = hashDocument(DB1.document);
+  const HB2 = hashDocument(DB2.document);
+  const HC1 = hashDocument(DC1.document);
+
+  const A1 = {
+    key: DA1.key,
+    blob: HA1.hash,
+    name: '',
+  };
+  const A2 = {
+    key: DA2.key,
+    blob: HA2.hash,
+    name: '',
+  };
+  const B1 = {
+    key: DB1.key,
+    blob: HB1.hash,
+    name: '',
+  };
+  const B2 = {
+    key: DB2.key,
+    blob: HB2.hash,
+    name: '',
+  };
+  const C1 = {
+    key: DC1.key,
+    blob: HC1.hash,
+    name: '',
+  };
+
   describe('generateSnapshotStateMap()', () => {
     it('generates from simple states', async () => {
       const snapshot = newSnapshot(1, [
@@ -351,81 +421,15 @@ describe('util', () => {
   });
 
   describe('getStagable()', () => {
-    const A1 = {
-      key: 'a',
-      blob: '1932cc749f57a77ba4a231d62559c47ee931ee2c',
-      name: '',
-    };
-    const A2 = {
-      key: 'a',
-      blob: 'cf2ec18c2e686b4c966725f30050120d42d4b2e5',
-      name: '',
-    };
-    const B1 = {
-      key: 'b',
-      blob: '05ab2ec03c7e32eff27305b4a11c573a3843fa01',
-      name: '',
-    };
-    const B2 = {
-      key: 'b',
-      blob: 'eb157a78ebd367a004c5a32a18d6d8c18e60ce00',
-      name: '',
-    };
-    const C1 = {
-      key: 'c',
-      blob: 'db7d35b96291b823e674bf23ac59e6e116b1890e',
-      name: '',
-    };
-    const DA1 = {
-      key: 'a',
-      document: {
-        id: 'a',
-        v: 1,
-      },
-      name: '',
-    };
-    const DA2 = {
-      key: 'a',
-      document: {
-        id: 'a',
-        v: 2,
-      },
-      name: '',
-    };
-    const DB1 = {
-      key: 'b',
-      document: {
-        id: 'b',
-        v: 1,
-      },
-      name: '',
-    };
-    const DB2 = {
-      key: 'b',
-      document: {
-        id: 'b',
-        v: 2,
-      },
-      name: '',
-    };
-    const DC1 = {
-      key: 'c',
-      document: {
-        id: 'c',
-        v: 1,
-      },
-      name: '',
-    };
-
     it('works with empty state', () => {
       const state = [];
       const dsrd = [DA1];
-      expect(getStagable(state, dsrd)).toEqual([
+      expect(getStagable(state, dsrd)).toEqual<StageEntry[]>([
         {
-          blobContent: '{"id":"a","v":1}',
-          blobId: A1.blob,
-          key: 'a',
-          name: '',
+          blobContent: HA1.content,
+          blobId: HA1.hash,
+          key: A1.key,
+          name: DA1.name,
           added: true,
         },
       ]);
@@ -442,10 +446,10 @@ describe('util', () => {
       const dsrd = [DA1, DB1];
       expect(getStagable(state, dsrd)).toEqual([
         {
-          key: 'b',
-          blobId: B1.blob,
-          blobContent: '{"id":"b","v":1}',
-          name: '',
+          key: B1.key,
+          blobId: HB1.hash,
+          blobContent: HB1.content,
+          name: DB1.name,
           added: true,
         },
       ]);
@@ -456,10 +460,10 @@ describe('util', () => {
       const dsrd = [DB2];
       expect(getStagable(state, dsrd)).toEqual([
         {
-          key: 'b',
-          blobId: B2.blob,
-          blobContent: '{"id":"b","v":2}',
-          name: '',
+          key: B2.key,
+          blobId: HB2.hash,
+          blobContent: HB2.content,
+          name: DB2.name,
           modified: true,
         },
       ]);
@@ -470,8 +474,8 @@ describe('util', () => {
       const dsrd = [];
       expect(getStagable(state, dsrd)).toEqual([
         {
-          key: 'b',
-          blobId: '05ab2ec03c7e32eff27305b4a11c573a3843fa01',
+          key: B1.key,
+          blobId: HB1.hash,
           name: '',
           deleted: true,
         },
@@ -483,23 +487,23 @@ describe('util', () => {
       const dsrd = [DA2, DB1];
       expect(getStagable(state, dsrd)).toEqual([
         {
-          blobContent: '{"id":"a","v":2}',
-          blobId: A2.blob,
-          key: 'a',
+          blobContent: HA2.content,
+          blobId: HA2.hash,
+          key: A2.key,
           modified: true,
-          name: '',
+          name: DA2.name,
         },
         {
-          key: 'c',
-          blobId: 'db7d35b96291b823e674bf23ac59e6e116b1890e',
+          key: C1.key,
+          blobId: HC1.hash,
           name: '',
           deleted: true,
         },
         {
-          key: 'b',
-          blobId: B1.blob,
-          blobContent: '{"id":"b","v":1}',
-          name: '',
+          key: B1.key,
+          blobId: HB1.hash,
+          blobContent: HB1.content,
+          name: DB1.name,
           added: true,
         },
       ]);
@@ -548,26 +552,6 @@ describe('util', () => {
   });
 
   describe('updateStateWithConflictResolutions()', () => {
-    const A1 = {
-      key: 'a',
-      blob: '1932cc749f57a77ba4a231d62559c47ee931ee2c',
-      name: '',
-    };
-    const A2 = {
-      key: 'a',
-      blob: 'cf2ec18c2e686b4c966725f30050120d42d4b2e5',
-      name: '',
-    };
-    const B1 = {
-      key: 'b',
-      blob: '05ab2ec03c7e32eff27305b4a11c573a3843fa01',
-      name: '',
-    };
-    const C1 = {
-      key: 'c',
-      blob: 'db7d35b96291b823e674bf23ac59e6e116b1890e',
-      name: '',
-    };
     const D1 = {
       key: 'd',
       blob: 'f23ac59e6e11db7d35b96291b823e674b6b1890e',
@@ -587,93 +571,40 @@ describe('util', () => {
     it('does it', () => {
       const state = [A1, B1, E1, F1];
       const conflicts = [
-        {
-          key: A1.key,
-          name: A1.name,
-          mineBlob: A1.blob,
-          theirsBlob: A2.blob,
-          choose: A1.blob,
-        },
-        {
-          key: B1.key,
-          name: B1.name,
-          mineBlob: B1.blob,
-          theirsBlob: null,
-          choose: null,
-        },
-        {
-          key: C1.key,
-          name: C1.name,
-          mineBlob: null,
-          theirsBlob: C1.blob,
-          choose: C1.blob,
-        },
-        {
-          key: D1.key,
-          name: D1.name,
-          mineBlob: D1.blob,
-          theirsBlob: null,
-          choose: null,
-        },
+        mergeConflictBuilder.reset()
+          .key(A1.key)
+          .name(A1.name)
+          .mineBlob(A1.blob)
+          .theirsBlob(A2.blob)
+          .choose(A1.blob)
+          .build(),
+        mergeConflictBuilder.reset()
+          .key(B1.key)
+          .name(B1.name)
+          .mineBlob(B1.blob)
+          .theirsBlob(null)
+          .choose(null)
+          .build(),
+        mergeConflictBuilder.reset()
+          .key(C1.key)
+          .name(C1.name)
+          .mineBlob(null)
+          .theirsBlob(C1.blob)
+          .choose(C1.blob)
+          .build(),
+        mergeConflictBuilder.reset()
+          .key(D1.key)
+          .name(D1.name)
+          .mineBlob(D1.blob)
+          .theirsBlob(null)
+          .choose(null)
+          .build(),
       ];
       expect(updateStateWithConflictResolutions(state, conflicts)).toEqual([A1, E1, F1, C1]);
     });
   });
 
   describe('preMergeCheck()', () => {
-    const A1 = {
-      key: 'a',
-      blob: '1932cc749f57a77ba4a231d62559c47ee931ee2c',
-      name: '',
-    };
-    const A2 = {
-      key: 'a',
-      blob: 'cf2ec18c2e686b4c966725f30050120d42d4b2e5',
-      name: '',
-    };
-    const B1 = {
-      key: 'b',
-      blob: '05ab2ec03c7e32eff27305b4a11c573a3843fa01',
-      name: '',
-    };
-    const B2 = {
-      key: 'b',
-      blob: 'eb157a78ebd367a004c5a32a18d6d8c18e60ce00',
-      name: '',
-    };
-    const DA1 = {
-      key: 'a',
-      document: {
-        id: 'a',
-        v: 1,
-      },
-      name: '',
-    };
-    const DA2 = {
-      key: 'a',
-      document: {
-        id: 'a',
-        v: 2,
-      },
-      name: '',
-    };
-    const DB1 = {
-      key: 'b',
-      document: {
-        id: 'b',
-        v: 1,
-      },
-      name: '',
-    };
-    const DC1 = {
-      key: 'c',
-      document: {
-        id: 'c',
-        v: 1,
-      },
-      name: '',
-    };
-
     it('no changes', () => {
       const trunk = [A1];
       const other = [A1];
@@ -885,14 +816,14 @@ describe('util', () => {
     });
   });
 
-  describe('hashDocument()', () => {
+  describe('hash()', () => {
     it('ignore object key order', () => {
-      const result1 = hashDocument({
+      const result1 = hash({
         c: 'c',
         a: 'a',
         b: 'b',
       });
-      const result2 = hashDocument({
+      const result2 = hash({
         a: 'a',
         b: 'b',
         c: 'c',
@@ -900,12 +831,12 @@ describe('util', () => {
       expect(result1.hash).toBe(result2.hash);
       expect(result1.hash).toBe('fed03259e8027e1fab2e2e57b402671bef7f3eb9');
       expect(result2.hash).toBe('fed03259e8027e1fab2e2e57b402671bef7f3eb9');
-      expect(result1.content.toString('utf8')).toBe('{"a":"a","b":"b","c":"c"}');
-      expect(result2.content.toString('utf8')).toBe('{"a":"a","b":"b","c":"c"}');
+      expect(result1.content).toBe('{"a":"a","b":"b","c":"c"}');
+      expect(result2.content).toBe('{"a":"a","b":"b","c":"c"}');
     });
 
     it('works on recursive things', () => {
-      const result1 = hashDocument({
+      const result1 = hash({
         arr: [
           {
             b: 'b',
@@ -919,7 +850,7 @@ describe('util', () => {
           },
         },
       });
-      const result2 = hashDocument({
+      const result2 = hash({
         arr: [
           {
             b: 'b',
@@ -936,76 +867,73 @@ describe('util', () => {
       expect(result1.hash).toBe(result2.hash);
       expect(result1.hash).toBe('7eaaa8a03bada54b403aeada681aad6892a28ab3');
       expect(result2.hash).toBe('7eaaa8a03bada54b403aeada681aad6892a28ab3');
-      expect(result1.content.toString('utf8')).toBe(
+      expect(result1.content).toBe(
         '{"arr":[{"a":"a","b":"b"}],"obj":{"obj2":{"a":"a","b":"b"}}}',
       );
-      expect(result2.content.toString('utf8')).toBe(
+      expect(result2.content).toBe(
         '{"arr":[{"a":"a","b":"b"}],"obj":{"obj2":{"a":"a","b":"b"}}}',
       );
     });
 
     it('array order matters', () => {
-      const result1 = hashDocument(['c', 'a', 'b']);
-      const result2 = hashDocument(['a', 'b', 'c']);
+      const result1 = hash(['c', 'a', 'b']);
+      const result2 = hash(['a', 'b', 'c']);
       expect(result1.hash).not.toBe(result2.hash);
       expect(result1.hash).toBe('edf94aad27c26bdcfe7477e0ed68991cbaedf8d8');
       expect(result2.hash).toBe('e13460afb1e68af030bb9bee8344c274494661fa');
-      expect(result1.content.toString('utf8')).toBe('["c","a","b"]');
-      expect(result2.content.toString('utf8')).toBe('["a","b","c"]');
+      expect(result1.content).toBe('["c","a","b"]');
+      expect(result2.content).toBe('["a","b","c"]');
     });
 
     it('works with strange types', () => {
-      const sDate1 = hashDocument(new Date(1541178019555));
-      const sDate2 = hashDocument('2018-11-02T17:00:19.555Z');
+      const sDate1 = hash(new Date(1541178019555));
+      const sDate2 = hash('2018-11-02T17:00:19.555Z');
       expect(sDate1.hash).toBe(sDate2.hash);
       expect(sDate1.hash).toBe('ec0a18c47fb39de00204c57b5b492fd408394a01');
       expect(sDate2.hash).toBe('ec0a18c47fb39de00204c57b5b492fd408394a01');
-      expect(sDate1.content.toString('utf8')).toBe('"2018-11-02T17:00:19.555Z"');
-      expect(sDate2.content.toString('utf8')).toBe('"2018-11-02T17:00:19.555Z"');
-      const sNull2 = hashDocument('null');
+      expect(sDate1.content).toBe('"2018-11-02T17:00:19.555Z"');
+      expect(sDate2.content).toBe('"2018-11-02T17:00:19.555Z"');
+      const sNull2 = hash('null');
       expect(sNull2.hash).toBe('8c1030365643f1f4b7f00e3d88c0a3c555522b60');
-      expect(sNull2.content.toString('utf8')).toBe('"null"');
+      expect(sNull2.content).toBe('"null"');
     });
 
     it('skips non-json types', () => {
-      const sFunc1 = hashDocument({
+      const sFunc1 = hash({
         a: [0, () => null],
         fn: () => null,
       });
-      const sFunc2 = hashDocument({
+      const sFunc2 = hash({
         a: [0],
       });
       expect(sFunc1.hash).toBe(sFunc2.hash);
       expect(sFunc1.hash).toBe('38b742facb1034438d82cf1e294d9e71051bf120');
       expect(sFunc2.hash).toBe('38b742facb1034438d82cf1e294d9e71051bf120');
-      expect(sFunc1.content.toString('utf8')).toBe('{"a":[0]}');
-      expect(sFunc2.content.toString('utf8')).toBe('{"a":[0]}');
+      expect(sFunc1.content.toString()).toBe('{"a":[0]}');
+      expect(sFunc2.content.toString()).toBe('{"a":[0]}');
     });
 
     it('fails on undefined', () => {
-      try {
-        hashDocument(undefined);
-        hashDocument();
-      } catch (err) {
-        return;
-      }
-
-      throw new Error('Expected hashDocument(undefined) to fail');
+      expect(() => hash(undefined)).toThrowError('Cannot hash undefined value');
+      expect(() => hash()).toThrowError('Cannot hash undefined value');
+    });
+  });
+  describe('hashDocument()', () => {
+    it('fails on undefined', () => {
+      expect(() => hashDocument(undefined)).toThrowError('Cannot hash undefined value');
+      expect(() => hashDocument()).toThrowError('Cannot hash undefined value');
     });
 
-    it('ignores object keys that do not matter', () => {
-      const result1 = hashDocument({
-        a: 'a',
-        modified: 456,
-      });
-      const result2 = hashDocument({
-        a: 'a',
-        modified: 123,
-      });
-      const result3 = hashDocument({
-        a: 'b',
-        modified: 123,
-      });
+    it('ignores global object keys that do not matter', () => {
+      const result1 = hashDocument(
+        baseModelBuilder.modified(123).parentId('abc').build(),
+      );
+      const result2 = hashDocument(
+        baseModelBuilder.modified(456).build(),
+      );
+      const result3 = hashDocument(
+        baseModelBuilder.name('abc').modified(456).build(),
+      );
       expect(result1.hash).toBe(result2.hash);
       expect(result1.hash).not.toBe(result3.hash);
     });
@@ -1032,19 +960,11 @@ function newStateEntry(key, blob) {
   };
 }
 
-function newCandidate(key, n) {
-  return {
-    key,
-    name: `Candidate ${n}`,
-    content: `Content for candidate ${key}.${n}`,
-  };
-}
+const newCandidate = (key: string, n: number) => statusCandidateBuilder
+  .reset()
+  .key(key)
+  .name(`Candidate ${n}`)
+  .document(baseModelBuilder.reset().name(`Content for candidate ${key}.${n}`).build())
+  .build();
 
-function newBranch(snapshots) {
-  return {
-    name: '',
-    created: new Date(0),
-    modified: new Date(0),
-    snapshots,
-  };
-}
+const newBranch = (snapshots: string[]) => branchBuilder.snapshots(snapshots).build();

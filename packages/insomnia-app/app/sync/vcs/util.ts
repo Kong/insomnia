@@ -451,7 +451,8 @@ export function preMergeCheck(
   };
 }
 
-export function hash(obj: Record<string, any>): {
+// Intentionally any to handle strange types, see unit tests
+export function hash(obj?: any): {
   content: string;
   hash: string;
 } {
@@ -467,10 +468,10 @@ export function hash(obj: Record<string, any>): {
   };
 }
 
-export function hashDocument(doc: BaseModel) {
+export function hashDocument(doc?: BaseModel) {
   // Remove fields we don't care about for sync purposes
   const newDoc = clone(doc);
-  deleteIgnoredKeys(newDoc);
+  newDoc && deleteIgnoredKeys(newDoc);
 
   return hash(newDoc);
 }
