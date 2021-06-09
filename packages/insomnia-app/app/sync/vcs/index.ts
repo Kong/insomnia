@@ -514,11 +514,11 @@ export default class VCS {
 
   async _createRemoteProject(workspaceId: string, workspaceName: string, teamId?: string) {
     if (teamId) {
-      var teamKeys = await this._queryTeamMemberKeys(teamId)
-      return this._queryCreateProject(workspaceId, workspaceName, teamId, teamKeys.memberKeys)
+      const teamKeys = await this._queryTeamMemberKeys(teamId);
+      return this._queryCreateProject(workspaceId, workspaceName, teamId, teamKeys.memberKeys);
     }
 
-    return this._queryCreateProject(workspaceId, workspaceName)
+    return this._queryCreateProject(workspaceId, workspaceName);
   }
 
   async push() {
