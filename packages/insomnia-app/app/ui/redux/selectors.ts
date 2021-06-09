@@ -2,6 +2,7 @@ import { createSelector } from 'reselect';
 import * as models from '../../models';
 import { Space } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
+import { Workspace } from '../../models/workspace';
 // ~~~~~~~~~ //
 // Selectors //
 // ~~~~~~~~~ //
@@ -38,21 +39,52 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
 
   return parentLookupMap;
 });
+
 export const selectSettings = createSelector(selectEntitiesLists, entities => {
   // @ts-expect-error -- TSCONVERSION
   return entities.settings[0] || models.settings.init();
 });
-export const selectActiveWorkspace = createSelector(
+
+export const selectSpaces = createSelector(
   // @ts-expect-error -- TSCONVERSION
-  state => selectEntitiesLists(state).workspaces,
-  // @ts-expect-error -- TSCONVERSION
-  state => state.entities,
-  // @ts-expect-error -- TSCONVERSION
-  state => state.global.activeWorkspaceId,
-  (workspaces, entities, activeWorkspaceId) => {
-    return entities.workspaces[activeWorkspaceId] || workspaces[0];
+  state => selectEntitiesLists(state).spaces as Space[],
+  (spaces) => {
+    return spaces;
   },
 );
+
+export const selectActiveSpace = createSelector<any, {}, string, Space | undefined>(
+  state => state.entities,
+  state => state.global.activeSpaceId,
+  (entities, activeSpaceId) => {
+    // @ts-expect-error -- TSCONVERSION
+    return entities.spaces[activeSpaceId];
+  },
+);
+
+export const selectWorkspacesForActiveSpace = createSelector(
+  // @ts-expect-error -- TSCONVERSION
+  state => selectEntitiesLists(state).workspaces as Workspace[],
+  selectActiveSpace,
+  (workspaces, activeSpace) => {
+    const parentId = activeSpace?._id || null;
+    return workspaces.filter(w => w.parentId === parentId);
+  },
+);
+
+export const selectActiveWorkspace = createSelector(
+  // @ts-expect-error -- TSCONVERSION
+  state => selectEntitiesLists(state).workspaces as Workspace[],
+  selectWorkspacesForActiveSpace,
+  state => state.global.activeWorkspaceId,
+  (allWorkspaces, workspaces, activeWorkspaceId) => {
+    const activeWorkspace = workspaces.find(w => w._id === activeWorkspaceId) || workspaces[0];
+    // This fallback is needed because while a space may not have any workspaces
+    // The app still _needs_ an active workspace.
+    return activeWorkspace || allWorkspaces[0];
+  },
+);
+
 export const selectActiveWorkspaceMeta = createSelector(
   selectActiveWorkspace,
   selectEntitiesLists,
@@ -296,25 +328,6 @@ export const selectActiveUnitTests = createSelector(
 
     // @ts-expect-error -- TSCONVERSION
     return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
-  },
-);
-
-// TODO(TSCONVERSION) type this properly when doing the rest of this file
-export const selectSpaces = createSelector<any, {}, Space[]>(
-  selectEntitiesLists,
-  (entities) => {
-    // @ts-expect-error -- TSCONVERSION
-    return entities.spaces;
-  },
-);
-
-// TODO(TSCONVERSION) type this properly when doing the rest of this file
-export const selectActiveSpace = createSelector<any, {}, {}, Space | undefined>(
-  state => state.entities,
-  state => state.global.activeSpaceId,
-  (entities, activeSpaceId) => {
-    // @ts-expect-error -- TSCONVERSION
-    return entities.spaces[activeSpaceId];
   },
 );
 
