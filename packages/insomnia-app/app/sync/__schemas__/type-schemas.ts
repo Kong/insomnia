@@ -1,5 +1,5 @@
 import { createBuilder, Schema } from '@develohpanda/fluent-builder';
-import { baseModelSchema } from '../../models/__schemas__/base-model-schema';
+import { baseModelSchema } from '../../models/__schemas__/model-schemas';
 import { Branch, MergeConflict, StatusCandidate } from '../types';
 
 export const branchSchema: Schema<Branch> = {
