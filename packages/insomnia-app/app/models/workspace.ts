@@ -4,6 +4,7 @@ import { database as db } from '../common/database';
 import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
 import { isSpaceId } from './helpers/is-model';
+import { Merge } from 'type-fest';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -11,38 +12,31 @@ export const prefix = 'wrk';
 export const canDuplicate = true;
 export const canSync = true;
 
-export interface DesignWorkspace {
+interface GenericWorkspace<Scope extends string> {
   name: string;
   description: string;
-  scope: 'design';
   certificates?: any;
+  scope: Scope;
 }
 
-export interface CollectionWorkspace {
-  name: string;
-  description: string;
-  scope: 'collection';
-  certificates?: any;
-}
-
+export type DesignWorkspace = GenericWorkspace<'design'>;
+export type CollectionWorkspace = GenericWorkspace<'collection'>;
 export type BaseWorkspace = DesignWorkspace | CollectionWorkspace;
 
 export type WorkspaceScope = BaseWorkspace['scope'];
 
-export const WorkspaceScopeKeys: Record<WorkspaceScope, WorkspaceScope> = {
+export const WorkspaceScopeKeys = {
   design: 'design',
   collection: 'collection',
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export function init() {
-  return {
-    name: `New ${strings.collection.singular}`,
-    description: '',
-    scope: WorkspaceScopeKeys.collection,
-  };
-}
+export const init = (): CollectionWorkspace => ({
+  name: `New ${strings.collection.singular}`,
+  description: '',
+  scope: WorkspaceScopeKeys.collection,
+});
 
 export async function migrate(doc: Workspace) {
   doc = await _migrateExtractClientCertificates(doc);
@@ -131,30 +125,23 @@ async function _migrateEnsureName(workspace: Workspace) {
   return workspace;
 }
 
+// Translate the old value
+type OldScopeTypes = 'spec' | 'debug' | 'designer' | null;
+type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['scope'] }>;
+
 /**
  * Ensure workspace scope is set to a valid entry
  */
-function _migrateScope(workspace: Workspace) {
-  if (
-    workspace.scope === WorkspaceScopeKeys.design ||
-    workspace.scope === WorkspaceScopeKeys.collection
-  ) {
-    return workspace;
-  }
+function _migrateScope(workspace: MigrationWorkspace) {
+  switch (workspace.scope) {
+    case 'collection':
+    case 'design':
+      break;
 
-  // Translate the old value
-  type OldScopeTypes = 'spec' | 'debug' | 'designer' | null;
-
-  switch (workspace.scope as OldScopeTypes) {
-    case 'spec': {
+    case 'designer':
+    case 'spec':
       workspace.scope = WorkspaceScopeKeys.design;
       break;
-    }
-
-    case 'designer': {
-      workspace.scope = WorkspaceScopeKeys.design;
-      break;
-    }
 
     case 'debug':
     case null:
@@ -162,8 +149,7 @@ function _migrateScope(workspace: Workspace) {
       workspace.scope = WorkspaceScopeKeys.collection;
       break;
   }
-
-  return workspace;
+  return workspace as Workspace;
 }
 
 function expectParentToBeSpace(parentId?: string | null) {
