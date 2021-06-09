@@ -1,5 +1,5 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import { baseModelSchema } from '../../../models/__schemas__/model-schemas';
+import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { StageEntry } from '../../types';
 import { branchSchema, statusCandidateSchema, mergeConflictSchema } from '../../__schemas__/type-schemas';
 import {
@@ -19,6 +19,7 @@ import {
 
 const statusCandidateBuilder = createBuilder(statusCandidateSchema);
 const baseModelBuilder = createBuilder(baseModelSchema);
+const workspaceModelBuilder = createBuilder(workspaceModelSchema);
 const mergeConflictBuilder = createBuilder(mergeConflictSchema);
 const branchBuilder = createBuilder(branchSchema);
 
@@ -28,6 +29,7 @@ describe('util', () => {
     baseModelBuilder.reset();
     mergeConflictBuilder.reset();
     branchBuilder.reset();
+    workspaceModelBuilder.reset();
   });
 
   const DA1 = statusCandidateBuilder.reset()
@@ -936,6 +938,31 @@ describe('util', () => {
       );
       expect(result1.hash).toBe(result2.hash);
       expect(result1.hash).not.toBe(result3.hash);
+    });
+
+    it('shouldnt change the hash of a workspace after a parent id is added and ignored', () => {
+      // Arrange
+      // @ts-expect-error parent id should be nullable
+      const originalSyncedWorkspace = workspaceModelBuilder.parentId(null).build();
+
+      // Existing synced workspaces do not have a modified field
+      // @ts-expect-error delete non-optional
+      delete originalSyncedWorkspace.modified;
+
+      // intentionally hash and not hashDocument, to bypass ignoring logic
+      const original = hash(originalSyncedWorkspace);
+
+      // Act
+      const withParent = hashDocument(
+        workspaceModelBuilder.parentId('abc').build(),
+      );
+      const unique = hashDocument(
+        workspaceModelBuilder.name('unique').parentId('abc').build(),
+      );
+
+      // Assert
+      expect(original.hash).toBe(withParent.hash);
+      expect(original.hash).not.toBe(unique.hash);
     });
   });
 });
