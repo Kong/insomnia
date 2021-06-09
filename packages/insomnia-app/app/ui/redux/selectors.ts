@@ -334,12 +334,7 @@ export const selectActiveUnitTests = createSelector(
 
 export const selectActiveSpaceName = createSelector(
   selectActiveSpace,
-  (activeSpace?: Space) => {
-    if (activeSpace === undefined) {
-      return 'Insomnia';
-    }
-    return activeSpace.name;
-  },
+  activeSpace => activeSpace?.name,
 );
 
 export const selectActiveUnitTestSuites = createSelector(
