@@ -7,13 +7,9 @@ import { ValueOf } from 'type-fest';
 import { isSpaceId } from './helpers/is-model';
 
 export const name = 'Workspace';
-
 export const type = 'Workspace';
-
 export const prefix = 'wrk';
-
 export const canDuplicate = true;
-
 export const canSync = true;
 
 export const WorkspaceScopeKeys = {
@@ -59,19 +55,19 @@ export async function create(patch: Partial<Workspace> = {}) {
   return db.docCreate<Workspace>(type, patch);
 }
 
-export async function all(): Promise<Workspace[]> {
-  const workspaces = await db.all<Workspace>(type) || [];
+export async function all() {
+  const workspaces = await db.all<Workspace>(type);
 
-  if (workspaces.length === 0) {
-    // Create default workspace
-    await create({
-      name: getAppName(),
-      scope: WorkspaceScopeKeys.collection,
-    });
-    return all();
-  } else {
+  if (workspaces.length > 0) {
     return workspaces;
   }
+
+  // Create default workspace
+  await create({
+    name: getAppName(),
+    scope: WorkspaceScopeKeys.collection,
+  });
+  return db.all<Workspace>(type);
 }
 
 export function count() {
