@@ -3,6 +3,8 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 
 export interface SelectModalShowOptions {
   message: string | null;
@@ -23,28 +25,29 @@ const initialState: SelectModalShowOptions = {
   value: null,
 };
 
+@autoBindMethodsForReact(AUTOBIND_CFG)
 export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
   modal = createRef<Modal>();
   doneButton = createRef<HTMLButtonElement>();
   state: SelectModalShowOptions = initialState;
 
-  #onDone = async () => {
+  async _onDone() {
     this.modal.current?.hide();
     await this.state.onDone?.(this.state.value);
   }
 
-  #handleSelectChange = (event: React.SyntheticEvent<HTMLSelectElement>) => {
+  _handleSelectChange(event: React.SyntheticEvent<HTMLSelectElement>) {
     this.setState({ value: event.currentTarget.value });
   }
 
-  show = ({
+  show({
     message,
     onCancel,
     onDone,
     options,
     title,
     value,
-  }: SelectModalShowOptions = initialState) => {
+  }: SelectModalShowOptions = initialState) {
     this.setState({
       message,
       onCancel,
@@ -67,7 +70,7 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
         <ModalBody className="wide pad">
           <p>{message}</p>
           <div className="form-control form-control--outlined">
-            <select onChange={this.#handleSelectChange} value={value ?? undefined}>
+            <select onChange={this._handleSelectChange} value={value ?? undefined}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
                   {name}
@@ -77,7 +80,7 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
           </div>
         </ModalBody>
         <ModalFooter>
-          <button ref={this.doneButton} className="btn" onClick={this.#onDone}>
+          <button ref={this.doneButton} className="btn" onClick={this._onDone}>
             Done
           </button>
         </ModalFooter>
