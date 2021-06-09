@@ -1,5 +1,6 @@
 import clone from 'clone';
 import crypto from 'crypto';
+import { BaseModel } from '../../models';
 import { deterministicStringify } from '../lib/deterministicStringify';
 import type {
   Branch,
@@ -13,8 +14,7 @@ import type {
   StatusCandidate,
   StatusCandidateMap,
 } from '../types';
-// Keys for VCS to ignore when computing changes
-const IGNORED_KEYS = ['modified'];
+import { deleteIgnoredKeys, shouldIgnoreKey } from './ignore-keys';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
@@ -451,29 +451,28 @@ export function preMergeCheck(
   };
 }
 
-export function hashDocument(
-  doc: Record<string, any>,
-): {
+export function hash(obj: Record<string, any>): {
   content: string;
   hash: string;
 } {
-  if (!doc) {
+  if (!obj) {
     throw new Error('Cannot hash undefined value');
   }
 
-  // Remove fields we don't care about for sync purposes
-  const newDoc = clone(doc);
-
-  for (const key of IGNORED_KEYS) {
-    delete newDoc[key];
-  }
-
-  const content = deterministicStringify(newDoc);
+  const content = deterministicStringify(obj);
   const hash = crypto.createHash('sha1').update(content).digest('hex');
   return {
     hash,
     content,
   };
+}
+
+export function hashDocument(doc: BaseModel) {
+  // Remove fields we don't care about for sync purposes
+  const newDoc = clone(doc);
+  deleteIgnoredKeys(newDoc);
+
+  return hash(newDoc);
 }
 
 export function updateStateWithConflictResolutions(state: SnapshotState, conflicts: MergeConflict[]) {
@@ -509,7 +508,7 @@ export function updateStateWithConflictResolutions(state: SnapshotState, conflic
   return Object.keys(newStateMap).map(k => newStateMap[k]);
 }
 
-export function describeChanges(a: any, b: any): string[] {
+export function describeChanges(a: BaseModel, b: BaseModel): string[] {
   const aT = Object.prototype.toString.call(a);
   const bT = Object.prototype.toString.call(b);
 
@@ -521,7 +520,7 @@ export function describeChanges(a: any, b: any): string[] {
   const allKeys = [...Object.keys({ ...a, ...b })];
 
   for (const key of allKeys) {
-    if (IGNORED_KEYS.includes(key)) {
+    if (shouldIgnoreKey(key, a)) {
       continue;
     }
 

@@ -1,8 +1,10 @@
 import { createSelector } from 'reselect';
 import * as models from '../../models';
+import { BaseModel } from '../../models';
 import { Space } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { Workspace } from '../../models/workspace';
+import { StatusCandidate } from '../../sync/types';
 // ~~~~~~~~~ //
 // Selectors //
 // ~~~~~~~~~ //
@@ -149,7 +151,7 @@ export const selectActiveWorkspaceEntities = createSelector(
   selectActiveWorkspace,
   selectEntitiesChildrenMap,
   (activeWorkspace, childrenMap) => {
-    const descendants = [activeWorkspace];
+    const descendants: BaseModel[] = [activeWorkspace];
 
     // @ts-expect-error -- TSCONVERSION
     const addChildrenOf = parent => {
@@ -348,10 +350,15 @@ export const selectActiveUnitTestSuites = createSelector(
     return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace._id);
   },
 );
-export const selectSyncItems = createSelector(selectActiveWorkspaceEntities, workspaceEntities =>
-  workspaceEntities.filter(models.canSync).map(doc => ({
-    key: doc._id,
-    name: doc.name || '',
-    document: doc,
-  })),
+
+export const selectSyncItems = createSelector(
+  selectActiveWorkspaceEntities,
+  workspaceEntities =>
+    workspaceEntities
+      .filter(models.canSync)
+      .map<StatusCandidate>(doc => ({
+        key: doc._id,
+        name: doc.name || '',
+        document: doc,
+      })),
 );

@@ -13,6 +13,7 @@ import Tooltip from '../tooltip';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import { describeChanges } from '../../../sync/vcs/util';
 import { strings } from '../../../common/strings';
+import { BaseModel } from '../../../models';
 
 interface Props {
   workspace: Workspace;
@@ -155,7 +156,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
     for (const key of allKeys) {
       const item = syncItems.find(si => si.key === key);
-      const oldDoc: Record<string, any> | null = await vcs.blobFromLastSnapshot(key);
+      const oldDoc: BaseModel | null = await vcs.blobFromLastSnapshot(key);
       const doc = (item && item.document) || oldDoc;
       const entry = status.stage[key] || status.unstaged[key];
 
