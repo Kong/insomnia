@@ -32,7 +32,7 @@ export const WorkspaceScopeKeys = {
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export const init = (): CollectionWorkspace => ({
+export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',
   scope: WorkspaceScopeKeys.collection,
