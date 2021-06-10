@@ -36,7 +36,7 @@ export async function init() {
 
   initActions.forEach(action => {
     // @ts-expect-error -- TSCONVERSION need to merge in Redux-Thunk types to root
-    store.dispatch(action());
+    store.dispatch(action);
   });
 
   return store;
