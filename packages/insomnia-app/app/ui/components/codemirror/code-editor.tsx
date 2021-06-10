@@ -371,6 +371,7 @@ class CodeEditor extends Component<Props, State> {
       return;
     }
 
+    // Never do this if dropdown is open
     if (this.codeMirror?.isHintDropdownActive()) {
       return;
     }
