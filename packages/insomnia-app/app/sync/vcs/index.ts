@@ -1212,7 +1212,7 @@ export default class VCS {
     const symmetricKey = await crypt.generateAES256Key();
     const symmetricKeyStr = JSON.stringify(symmetricKey);
 
-    const teamKeys: any[] = [];
+    const teamKeys: {accountId: string, encSymmetricKey: string}[] = [];
     let encSymmetricKey: string | undefined;
 
     if (teamId && teamPublicKeys) {
