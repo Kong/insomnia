@@ -134,8 +134,8 @@ type MigrationWorkspace = Merge<Workspace, { scope: OldScopeTypes | Workspace['s
  */
 function _migrateScope(workspace: MigrationWorkspace) {
   switch (workspace.scope) {
-    case 'collection':
-    case 'design':
+    case WorkspaceScopeKeys.collection:
+    case WorkspaceScopeKeys.design:
       break;
 
     case 'designer':
