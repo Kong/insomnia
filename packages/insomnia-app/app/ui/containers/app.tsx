@@ -39,7 +39,12 @@ import {
   newCommand,
   setActiveWorkspace,
   setActiveActivity,
+  goToNextActivity,
+  importFile,
+  importClipBoard,
+  exportRequestsToFile,
 } from '../redux/modules/global';
+import { initialize } from '../redux/modules/entities';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
 import {
@@ -157,6 +162,11 @@ export interface ReduxDispatchProps {
   handleStopLoading: Function;
   handleMoveDoc: Function;
   handleSetActiveActivity: Function;
+  handleGoToNextActivity: Function;
+  handleImportFileToWorkspace: Function;
+  handleImportClipBoardToWorkspace: Function;
+  handleExportRequestsToFile: Function;
+  handleInitializeEntities: Function;
 }
 
 type Props = OwnProps & ReduxDispatchProps;
@@ -1791,6 +1801,11 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>): ReduxDispatchProps
     setActiveWorkspace: handleSetActiveWorkspace,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
+    goToNextActivity: handleGoToNextActivity,
+    importFile: handleImportFileToWorkspace,
+    importClipBoard: handleImportClipBoardToWorkspace,
+    exportRequestsToFile: handleExportRequestsToFile,
+    initialize: handleInitializeEntities,
   } = bindActionCreators({
     importUri,
     loadRequestStart,
@@ -1798,6 +1813,11 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>): ReduxDispatchProps
     newCommand,
     setActiveWorkspace,
     setActiveActivity,
+    goToNextActivity,
+    importFile,
+    importClipBoard,
+    exportRequestsToFile,
+    initialize,
   }, dispatch);
   return {
     handleCommand,
@@ -1806,6 +1826,11 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>): ReduxDispatchProps
     handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,
+    handleGoToNextActivity,
+    handleImportFileToWorkspace,
+    handleImportClipBoardToWorkspace,
+    handleExportRequestsToFile,
+    handleInitializeEntities,
     handleMoveDoc: _moveDoc, // TODO this doesn't use dispatch.. it's unclear why it needs to be here.
   };
 };
