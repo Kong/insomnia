@@ -430,11 +430,10 @@ class CodeEditor extends Component<Props, State> {
   _restoreState() {
     const { uniquenessKey } = this.props;
 
-    // @ts-expect-error -- TSCONVERSION only try access if uniquenessKey is defined
-    if (!editorStates.hasOwnProperty(uniquenessKey)) {
+    if (uniquenessKey === undefined) {
       return;
     }
-    if (uniquenessKey === undefined) {
+    if (!editorStates.hasOwnProperty(uniquenessKey)) {
       return;
     }
     if (!this.codeMirror) {
