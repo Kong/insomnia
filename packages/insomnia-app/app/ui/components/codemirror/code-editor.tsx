@@ -291,7 +291,10 @@ class CodeEditor extends Component<Props, State> {
   }
 
   getSelectionStart() {
-    // @ts-expect-error -- TSCONVERSION
+    if (!this.codeMirror) {
+      return;
+    }
+
     const selections = this.codeMirror.listSelections();
 
     if (selections.length) {
@@ -302,7 +305,10 @@ class CodeEditor extends Component<Props, State> {
   }
 
   getSelectionEnd() {
-    // @ts-expect-error -- TSCONVERSION
+    if (!this.codeMirror) {
+      return;
+    }
+
     const selections = this.codeMirror.listSelections();
 
     if (selections.length) {
@@ -313,14 +319,16 @@ class CodeEditor extends Component<Props, State> {
   }
 
   focusEnd() {
-    if (this.codeMirror) {
-      if (!this.hasFocus()) {
-        this.focus();
-      }
-
-      const doc = this.codeMirror.getDoc();
-      doc.setCursor(doc.lineCount(), 0);
+    if (!this.codeMirror) {
+      return;
     }
+
+    if (!this.hasFocus()) {
+      this.focus();
+    }
+
+    const doc = this.codeMirror.getDoc();
+    doc.setCursor(doc.lineCount(), 0);
   }
 
   hasFocus() {
@@ -331,42 +339,56 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  setAttribute(name, value) {
-    // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.getTextArea().parentNode.setAttribute(name, value);
+  setAttribute(name: string, value: string) {
+    if (!this.codeMirror) {
+      return;
+    }
+
+    // @ts-expect-error this is a (Node & ParentNode) in the types, but I think it's actually supposed to be Element
+    this.codeMirror.getTextArea().parentNode?.setAttribute(name, value);
   }
 
   removeAttribute(name) {
-    // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.getTextArea().parentNode.removeAttribute(name);
+    if (!this.codeMirror) {
+      return;
+    }
+
+    // @ts-expect-error this is a (Node & ParentNode) in the types, but I think it's actually supposed to be Element
+    this.codeMirror.getTextArea().parentNode?.removeAttribute(name);
   }
 
   getAttribute(name) {
-    // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.getTextArea().parentNode.getAttribute(name);
+    if (!this.codeMirror) {
+      return;
+    }
+
+    // @ts-expect-error this is a (Node & ParentNode) in the types, but I think it's actually supposed to be Element
+    this.codeMirror.getTextArea().parentNode?.getAttribute(name);
   }
 
   clearSelection() {
+    if (!this.codeMirror) {
+      return;
+    }
+
     // Never do this if dropdown is open
     if (this.codeMirror?.isHintDropdownActive()) {
       return;
     }
 
-    if (this.codeMirror) {
-      this.codeMirror.setSelection(
-        {
-          line: -1,
-          ch: -1,
-        },
-        {
-          line: -1,
-          ch: -1,
-        },
-        {
-          scroll: false,
-        },
-      );
-    }
+    this.codeMirror.setSelection(
+      {
+        line: -1,
+        ch: -1,
+      },
+      {
+        line: -1,
+        ch: -1,
+      },
+      {
+        scroll: false,
+      },
+    );
   }
 
   getValue() {
@@ -408,30 +430,25 @@ class CodeEditor extends Component<Props, State> {
   _restoreState() {
     const { uniquenessKey } = this.props;
 
-    // @ts-expect-error -- TSCONVERSION only try access if uniquenessKey is defined
+    if (uniquenessKey === undefined) {
+      return;
+    }
     if (!editorStates.hasOwnProperty(uniquenessKey)) {
       return;
     }
+    if (!this.codeMirror) {
+      return;
+    }
 
-    // @ts-expect-error -- TSCONVERSION only try access if uniquenessKey is defined
     const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
-    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.scrollTo(scroll.left, scroll.top);
-    // @ts-expect-error -- TSCONVERSION
     this.codeMirror.setHistory(history);
     // NOTE: These won't be visible unless the editor is focused
-    // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.setCursor(cursor.line, cursor.ch, {
-      scroll: false,
-    });
-    // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.setSelection(selections, null, {
-      scroll: false,
-    });
+    this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
+    this.codeMirror.setSelections(selections, undefined, { scroll: false });
 
     // Restore marks one-by-one
     for (const { from, to } of marks || []) {
-      // @ts-expect-error -- TSCONVERSION
       this.codeMirror.foldCode(from, to);
     }
   }
@@ -459,8 +476,7 @@ class CodeEditor extends Component<Props, State> {
         let endToken = '}';
         // Prevent retrieving an invalid content if undefined
         if (!from?.line || !to?.line) return '\u2194';
-        // @ts-expect-error -- TSCONVERSION
-        const prevLine = this.codeMirror.getLine(from.line);
+        const prevLine = this.codeMirror?.getLine(from.line);
         if (!prevLine) return '\u2194';
 
         if (prevLine.lastIndexOf('[') > prevLine.lastIndexOf('{')) {
@@ -469,8 +485,7 @@ class CodeEditor extends Component<Props, State> {
         }
 
         // Get json content
-        // @ts-expect-error -- TSCONVERSION
-        const internal = this.codeMirror.getRange(from, to);
+        const internal = this.codeMirror?.getRange(from, to);
         const toParse = startToken + internal + endToken;
 
         // Get key count
@@ -607,16 +622,13 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _indentChars() {
-    // @ts-expect-error -- TSCONVERSION
-    return this.codeMirror.getOption('indentWithTabs')
+    return this.codeMirror?.getOption('indentWithTabs')
       ? '\t'
-      // @ts-expect-error -- TSCONVERSION
-      : new Array(this.codeMirror.getOption('indentUnit') + 1).join(' ');
+      : new Array((this.codeMirror?.getOption?.('indentUnit') || 0) + 1).join(' ');
   }
 
   _handleBeautify() {
-    // @ts-expect-error -- TSCONVERSION
-    this._prettify(this.codeMirror.getValue());
+    this._prettify(this.codeMirror?.getValue());
   }
 
   _prettify(code) {
@@ -969,8 +981,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   _codemirrorValueBeforeChange(doc, change) {
-    // @ts-expect-error -- TSCONVERSION
-    const value = this.codeMirror.getDoc().getValue();
+    const value = this.codeMirror?.getDoc().getValue();
 
     // If we're in single-line mode, merge all changed lines into one
     if (this.props.singleLine && change.text && change.text.length > 1) {
@@ -982,7 +993,7 @@ class CodeEditor extends Component<Props, State> {
     }
 
     // Suppress lint on empty doc or single space exists (default value)
-    if (value.trim() === '') {
+    if (value?.trim() === '') {
       this._codemirrorSmartSetOption('lint', false);
     } else {
       this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
@@ -1018,13 +1029,12 @@ class CodeEditor extends Component<Props, State> {
       return;
     }
 
-    // @ts-expect-error -- TSCONVERSION
-    const value = this.codeMirror.getDoc().getValue();
+    const value = this.codeMirror?.getDoc().getValue() || '';
     // Disable linting if the document reaches a maximum size or is empty
-    const shouldLint =
-      value.length > MAX_SIZE_FOR_LINTING || value.length === 0 ? false : !this.props.noLint;
-    // @ts-expect-error -- TSCONVERSION
-    const existingLint = this.codeMirror.options.lint || false;
+    const isOverMaxSize = value.length > MAX_SIZE_FOR_LINTING;
+    const shouldLint = isOverMaxSize || value.length === 0 ? false : !this.props.noLint;
+    // @ts-expect-error TSCONVERSION
+    const existingLint = this.codeMirror?.options.lint || false;
 
     if (shouldLint !== existingLint) {
       const { lintOptions } = this.props;
@@ -1066,8 +1076,7 @@ class CodeEditor extends Component<Props, State> {
       }
     }
 
-    // @ts-expect-error -- TSCONVERSION
-    this.codeMirror.setValue(code || '');
+    this.codeMirror?.setValue(code || '');
   }
 
   _handleFilterHistorySelect(filter) {
@@ -1223,8 +1232,8 @@ class CodeEditor extends Component<Props, State> {
               display: 'none',
             }}
             readOnly={readOnly}
-            autoComplete="off" // NOTE: When setting this to empty string, it breaks the _ignoreNextChange
-            //   logic on initial component mount
+            autoComplete="off"
+            // NOTE: When setting this to empty string, it breaks the _ignoreNextChange logic on initial component mount
             defaultValue=" "
           />
         </div>
