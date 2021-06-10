@@ -47,7 +47,7 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
-      onComplete: async newName => {
+      onComplete: newName => {
         const newWorkspace = workspaceOperations.duplicate(workspace, newName);
         // @ts-expect-error -- TSCONVERSION
         handleSetActiveWorkspace(newWorkspace._id);

@@ -28,7 +28,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: async (uri: string) => {
+      onComplete: (uri: string) => {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
         dispatch(importUri(activeWorkspace._id, uri));
         hideSettingsModal();
