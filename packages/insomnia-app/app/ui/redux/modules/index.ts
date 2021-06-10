@@ -1,5 +1,5 @@
 import { bindActionCreators, combineReducers } from 'redux';
-import { allDocs, addChanges, initializeWith, reducer as entitiesReducer } from './entities';
+import * as entities from './entities';
 import configureStore from '../create';
 import { reducer as globalReducer, newCommand, loginStateChange, initActions } from './global';
 import { database as db } from '../../../common/database';
@@ -13,14 +13,14 @@ export async function init() {
 
   // Do things that must happen before initial render
   const bound = bindActionCreators({
-    addChanges,
-    initializeWith,
+    addChanges: entities.addChanges,
+    initializeWith: entities.initializeWith,
     newCommand,
     loginStateChange,
   }, store.dispatch);
 
   // Link DB changes to entities reducer/actions
-  const docs = await allDocs();
+  const docs = await entities.allDocs();
   bound.initializeWith(docs);
   db.onChange(bound.addChanges);
 
@@ -43,6 +43,6 @@ export async function init() {
 }
 
 export const reducer = combineReducers({
-  entities: entitiesReducer,
+  entities: entities.reducer,
   global: globalReducer,
 });
