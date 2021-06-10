@@ -9,6 +9,7 @@ import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/select
 import ExportRequestsModal from '../modals/export-requests-modal';
 import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
 import { isDesign } from '../../../models/helpers/is-model';
+import { getAppName } from '../../../common/constants';
 
 interface Props {
   hideSettingsModal: () => void;
@@ -16,7 +17,7 @@ interface Props {
 
 export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
-  const spaceName = useSelector(selectActiveSpaceName);
+  const spaceName = useSelector(selectActiveSpaceName) ?? getAppName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
   const activeResourceScope = isDesign(activeWorkspace) ? strings.document : strings.collection;
 
