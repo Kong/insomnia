@@ -1215,7 +1215,11 @@ export default class VCS {
     const teamKeys: {accountId: string, encSymmetricKey: string}[] = [];
     let encSymmetricKey: string | undefined;
 
-    if (teamId && teamPublicKeys) {
+    if (teamId) {
+      if (!teamPublicKeys?.length) {
+        throw new Error('teamPublicKeys must not be null or empty!');
+      }
+
       // Encrypt the symmetric key with the public keys of all the team members, ourselves included
       for (const { accountId, publicKey } of teamPublicKeys) {
         teamKeys.push({
