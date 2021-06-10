@@ -38,6 +38,7 @@ import {
   loadRequestStop,
   newCommand,
   setActiveWorkspace,
+  setActiveActivity,
 } from '../redux/modules/global';
 import { database as db } from '../../common/database';
 import * as models from '../../models';
@@ -155,6 +156,7 @@ export interface ReduxDispatchProps {
   handleStartLoading: Function;
   handleStopLoading: Function;
   handleMoveDoc: Function;
+  handleSetActiveActivity: Function;
 }
 
 type Props = OwnProps & ReduxDispatchProps;
@@ -1788,17 +1790,20 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>): ReduxDispatchProps
     loadRequestStop: handleStopLoading,
     setActiveWorkspace: handleSetActiveWorkspace,
     newCommand: handleCommand,
+    setActiveActivity: handleSetActiveActivity,
   } = bindActionCreators({
     importUri,
     loadRequestStart,
     loadRequestStop,
     newCommand,
     setActiveWorkspace,
+    setActiveActivity,
   }, dispatch);
   return {
     handleCommand,
     handleImportUriToWorkspace,
     handleSetActiveWorkspace,
+    handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,
     handleMoveDoc: _moveDoc, // TODO this doesn't use dispatch.. it's unclear why it needs to be here.
