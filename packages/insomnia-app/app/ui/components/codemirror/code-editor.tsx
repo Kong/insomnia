@@ -437,17 +437,20 @@ class CodeEditor extends Component<Props, State> {
     if (uniquenessKey === undefined) {
       return;
     }
+    if (!this.codeMirror) {
+      return;
+    }
 
     const { scroll, selections, cursor, history, marks } = editorStates[uniquenessKey];
-    this.codeMirror?.scrollTo(scroll.left, scroll.top);
-    this.codeMirror?.setHistory(history);
+    this.codeMirror.scrollTo(scroll.left, scroll.top);
+    this.codeMirror.setHistory(history);
     // NOTE: These won't be visible unless the editor is focused
-    this.codeMirror?.setCursor(cursor.line, cursor.ch, { scroll: false });
-    this.codeMirror?.setSelections(selections, undefined, { scroll: false });
+    this.codeMirror.setCursor(cursor.line, cursor.ch, { scroll: false });
+    this.codeMirror.setSelections(selections, undefined, { scroll: false });
 
     // Restore marks one-by-one
     for (const { from, to } of marks || []) {
-      this.codeMirror?.foldCode(from, to);
+      this.codeMirror.foldCode(from, to);
     }
   }
 
