@@ -149,7 +149,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
     return null;
   }
 
-  // Show a disaled button if remote space but not logged in
+  // Show a disabled button if remote space but not logged in
   if (!isLoggedIn()) {
     return (
       <Tooltip message="Please log in to access your remote collections" position="bottom">
