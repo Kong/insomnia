@@ -40,8 +40,10 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
     }
 
     setLoading(true);
-    setRemoteProjects(await vcs.remoteProjects(spaceRemoteId));
-    setLocalProjects(await vcs.localProjects());
+    const remote = await vcs.remoteProjects(spaceRemoteId);
+    const local = await vcs.localProjects();
+    setRemoteProjects(remote);
+    setLocalProjects(local);
     setLoading(false);
   },
   [spaceRemoteId, vcs]);
