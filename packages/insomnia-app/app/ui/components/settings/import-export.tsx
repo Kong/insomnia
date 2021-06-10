@@ -43,7 +43,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [hideSettingsModal]);
 
   const handleExportAllToFile = useCallback(() => {
-    dispatch(exportAllToFile);
+    dispatch((exportAllToFile()));
     hideSettingsModal();
   }, [hideSettingsModal, dispatch]);
 

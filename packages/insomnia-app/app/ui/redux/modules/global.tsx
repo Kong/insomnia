@@ -588,7 +588,7 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = async (dispatch: Dispatch) => {
+export const exportAllToFile = () => async (dispatch: Dispatch) => {
   dispatch(loadStart());
   showSelectExportTypeModal({
     onCancel: () => { dispatch(loadStop()); },
