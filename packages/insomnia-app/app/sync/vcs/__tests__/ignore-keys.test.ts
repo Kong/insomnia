@@ -14,7 +14,7 @@ describe('shouldIgnoreKey()', () => {
     expect(shouldIgnoreKey('_id', base)).toBe(false);
     expect(shouldIgnoreKey('_id', workspace)).toBe(false);
 
-    // ignore modified
+    // do ignore modified
     expect(shouldIgnoreKey('modified', base)).toBe(true);
     expect(shouldIgnoreKey('modified', workspace)).toBe(true);
   });
@@ -36,19 +36,29 @@ describe('deleteKeys', () => {
     deleteKeys(base);
     deleteKeys(workspace);
 
-    expect(Object.keys(base)).not.toContain('modified');
-    expect(Object.keys(workspace)).not.toContain('modified');
+    // Don't delete _id
+    expect('_id' in base).toBe(true);
+    expect('_id' in workspace).toBe(true);
+
+    // Do delete modified
+    expect('modified' in base).not.toBe(true);
+    expect('modified' in workspace).not.toBe(true);
   });
 });
 
 describe('resetKeys', () => {
   it('should clear parentId from the workspace', () => {
-    const base = baseModelBuilder.parentId('abc').build();
-    const workspace = workspaceModelBuilder.parentId('abc').build();
+    const base = baseModelBuilder._id('123').parentId('abc').build();
+    const workspace = workspaceModelBuilder._id('123').parentId('abc').build();
 
     resetKeys(base);
     resetKeys(workspace);
 
+    // Don't reset _id
+    expect(base._id).toBe('123');
+    expect(workspace._id).toBe('123');
+
+    // Do reset parentId for a workspace
     expect(base.parentId).toBe('abc');
     expect(workspace.parentId).toBeNull();
   });
