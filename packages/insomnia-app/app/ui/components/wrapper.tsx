@@ -99,6 +99,7 @@ import WrapperAnalytics from './wrapper-analytics';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { RequestGroup } from '../../models/request-group';
 import SpaceSettingsModal from './modals/space-settings-modal';
+import { Space } from '../../models/space';
 
 const spectral = new Spectral();
 
@@ -176,6 +177,7 @@ export interface WrapperProps {
   activeWorkspaceMeta?: WorkspaceMeta;
   environments: Environment[];
   activeApiSpec: ApiSpec;
+  activeSpace: Space | null;
   activeUnitTestSuite: UnitTestSuite | null;
   activeRequestResponses: Response[];
   activeWorkspace: Workspace;

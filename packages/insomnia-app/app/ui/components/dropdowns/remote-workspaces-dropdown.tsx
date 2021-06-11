@@ -2,17 +2,14 @@ import React, { FC, useCallback, useEffect, useMemo, useState } from 'react';
 import VCS from '../../../sync/vcs';
 import type { Project } from '../../../sync/types';
 import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomnia-components';
-import type { Workspace } from '../../../models/workspace';
 import HelpTooltip from '../help-tooltip';
-import * as models from '../../../models';
-import { database as db } from '../../../common/database';
 import { showAlert } from '../modals';
 import { strings } from '../../../common/strings';
 import { useSelector } from 'react-redux';
 import { selectActiveSpace, selectAllWorkspaces } from '../../redux/selectors';
-import { isWorkspace } from '../../../models/helpers/is-model';
 import { isLoggedIn } from '../../../account/session';
 import { isNotNullOrUndefined } from '../../../common/misc';
+import { pullProject } from '../../../sync/vcs/pull-project';
 
 interface Props {
   className?: string;
@@ -67,41 +64,12 @@ const useRemoteWorkspaces = (vcs?: VCS) => {
     setPullingProjects(state => ({ ...state, [project.id]: true }));
 
     try {
-    // Clone old VCS so we don't mess anything up while working on other projects
+      // Clone old VCS so we don't mess anything up while working on other projects
       const newVCS = vcs.newInstance();
       // Remove all projects for workspace first
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
-      // Set project, checkout master, and pull
-      const defaultBranch = 'master';
-      await newVCS.setProject(project);
-      await newVCS.checkout([], defaultBranch);
-      const remoteBranches = await newVCS.getRemoteBranches();
-      const defaultBranchMissing = !remoteBranches.includes(defaultBranch);
 
-      // The default branch does not exist, so we create it and the workspace locally
-      if (defaultBranchMissing) {
-        const workspace: Workspace = await models.initModel(models.workspace.type, {
-          _id: project.rootDocumentId,
-          name: project.name,
-          parentId: spaceId || null,
-        });
-        await db.upsert(workspace);
-      } else {
-        await newVCS.pull([]); // There won't be any existing docs since it's a new pull
-
-        const flushId = await db.bufferChanges();
-
-        // @ts-expect-error -- TSCONVERSION
-        for (const doc of (await newVCS.allDocuments() || [])) {
-          if (isWorkspace(doc)) {
-            // @ts-expect-error parent id is optional for workspaces
-            doc.parentId = spaceId || null;
-          }
-          await db.upsert(doc);
-        }
-
-        await db.flushChanges(flushId);
-      }
+      await pullProject({ vcs: newVCS, project, spaceId });
 
       await refresh();
     } catch (err) {

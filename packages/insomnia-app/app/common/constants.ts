@@ -94,8 +94,11 @@ export const UPDATE_CHANNEL_BETA = 'beta';
 export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
 export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
 
-// AP
+// API
 export const API_BASE_URL = 'https://api.insomnia.rest';
+
+// SYNC
+export const DEFAULT_BRANCH_NAME = 'master';
 
 // PLUGIN
 export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
