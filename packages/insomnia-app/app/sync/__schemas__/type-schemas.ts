@@ -1,6 +1,12 @@
 import { createBuilder, Schema } from '@develohpanda/fluent-builder';
 import { baseModelSchema } from '../../models/__schemas__/model-schemas';
-import { Branch, MergeConflict, StatusCandidate } from '../types';
+import { Branch, MergeConflict, Project, StatusCandidate } from '../types';
+
+export const projectSchema: Schema<Project> = {
+  id: () => 'id',
+  rootDocumentId: () => 'rootDocumentId',
+  name: () => 'name',
+};
 
 export const branchSchema: Schema<Branch> = {
   created: () => new Date(0),
