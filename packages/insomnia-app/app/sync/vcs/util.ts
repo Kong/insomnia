@@ -14,7 +14,7 @@ import type {
   StatusCandidate,
   StatusCandidateMap,
 } from '../types';
-import { clearIgnoredKeys, shouldIgnoreKey } from './ignore-keys';
+import { deleteKeys, resetKeys, shouldIgnoreKey } from './ignore-keys';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {
@@ -471,7 +471,11 @@ export function hash(obj?: any): {
 export function hashDocument(doc?: BaseModel) {
   // Remove fields we don't care about for sync purposes
   const newDoc = clone(doc);
-  newDoc && clearIgnoredKeys(newDoc);
+
+  if (newDoc) {
+    deleteKeys(newDoc);
+    resetKeys(newDoc);
+  }
 
   return hash(newDoc);
 }

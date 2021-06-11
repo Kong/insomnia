@@ -1,34 +1,44 @@
-import { BaseModel, workspace } from '../../models';
+import { BaseModel } from '../../models';
+import { isWorkspace } from '../../models/helpers/is-model';
+import { Workspace } from '../../models/workspace';
 
-// Keys for VCS to ignore when computing changes
-const ALWAYS_IGNORED_KEYS = ['modified'];
+// Key for VCS to delete before computing changes
+const DELETE_KEY: keyof BaseModel = 'modified';
 
-const MODEL_IGNORED_KEYS: Record<string, {key: string; defaultValue: any}[]> = {
-  [workspace.type]: [{ key: 'parentId', defaultValue: null }],
+type ResetModelKeys<T extends BaseModel> = {
+  [K in keyof T]?: T[K] | null;
+}
+
+// Keys for VCS to reset before computing changes
+//  We can't always delete keys
+//  If we delete a key that previously existed (even as null), we then have a different hash because of the deletion
+//  Therefore, we have to set it back to a default value
+const RESET_WORKSPACE_KEYS: ResetModelKeys<Workspace> = {
+  parentId: null,
 };
 
-const getModelIgnoredKeys = (type: string) => MODEL_IGNORED_KEYS[type] || [];
-
-export const shouldIgnoreKey = (key: string, { type }: BaseModel) => {
-  if (ALWAYS_IGNORED_KEYS.includes(key)) {
+export const shouldIgnoreKey = <T extends BaseModel>(key: keyof T, doc: T) => {
+  if (key === DELETE_KEY) {
     return true;
   }
 
-  if ((getModelIgnoredKeys(type)).find(entry => entry.key === key)) {
-    return true;
+  if (isWorkspace(doc)) {
+    return key in RESET_WORKSPACE_KEYS;
   }
 
   return false;
 };
 
-export const clearIgnoredKeys = (doc: BaseModel) => {
-  for (const key of ALWAYS_IGNORED_KEYS) {
-    delete doc[key];
-  }
+export const deleteKeys = <T extends BaseModel>(doc: T) => {
+  // @ts-expect-error force delete the key even if it is required
+  delete doc[DELETE_KEY];
+};
 
-  for (const { key, defaultValue } of getModelIgnoredKeys(doc.type)) {
-    // If we delete the key, we then have a different hash because of the deletion
-    // We have to not delete the key, but set it back to it's default value
-    doc[key] = defaultValue;
+export const resetKeys = <T extends BaseModel>(doc: T) => {
+  if (isWorkspace(doc)) {
+    Object.keys(RESET_WORKSPACE_KEYS)
+      .forEach(key => {
+        doc[key] = RESET_WORKSPACE_KEYS[key];
+      });
   }
 };
