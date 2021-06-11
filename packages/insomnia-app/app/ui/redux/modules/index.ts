@@ -34,7 +34,7 @@ export async function init() {
   setup(getClientString(), API_BASE_URL);
   onCommand(bound.newCommand);
 
-  initActions.forEach(action => {
+  initActions().forEach(action => {
     // @ts-expect-error -- TSCONVERSION need to merge in Redux-Thunk types to root
     store.dispatch(action);
   });
