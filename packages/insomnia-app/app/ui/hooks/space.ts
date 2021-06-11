@@ -5,6 +5,16 @@ import VCS from '../../sync/vcs';
 import { useCallback, useEffect, useState } from 'react';
 import { isLoggedIn } from '../../account/session';
 import { Space } from '../../models/space';
+import { selectActiveSpace } from '../redux/selectors';
+import { useSelector } from 'react-redux';
+import { isNotNullOrUndefined } from '../../common/misc';
+
+export const useActiveSpace = () => {
+  const activeSpace = useSelector(selectActiveSpace);
+  const spaceRemoteId = activeSpace?.remoteId || undefined;
+  const isRemoteSpace = isNotNullOrUndefined(spaceRemoteId);
+  return { activeSpace, isRemoteSpace };
+};
 
 export const useRemoteSpaces = (vcs?: VCS) => {
   const [loading, setLoading] = useState(false);
