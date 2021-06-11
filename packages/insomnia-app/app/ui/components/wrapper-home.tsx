@@ -48,8 +48,8 @@ import { strings } from '../../common/strings';
 import { descendingNumberSort } from '../../common/sorting';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import * as workspaceActions from '../redux/modules/workspace';
-import * as gitActions from '../redux/modules/git';
+import { createWorkspace } from '../redux/modules/workspace';
+import { cloneGitRepository } from '../redux/modules/git';
 import { MemClient } from '../../sync/git/mem-client';
 import { SpaceDropdown } from './dropdowns/space-dropdown';
 
@@ -58,13 +58,16 @@ interface RenderedCard {
   lastModifiedTimestamp?: number | null;
 }
 
-interface Props {
+interface ReduxDispatchProps {
+  handleCreateWorkspace: typeof createWorkspace;
+  handleGitCloneWorkspace: typeof cloneGitRepository;
+}
+
+interface Props extends ReduxDispatchProps {
   wrapperProps: WrapperProps;
   handleImportFile: HandleImportFileCallback;
   handleImportUri: HandleImportUriCallback;
   handleImportClipboard: HandleImportClipboardCallback;
-  handleCreateWorkspace: workspaceActions.CreateWorkspaceCallback;
-  handleGitCloneWorkspace: Function;
 }
 
 interface State {
@@ -367,7 +370,7 @@ class WrapperHome extends PureComponent<Props, State> {
       // @ts-expect-error -- TSCONVERSION appears to be a genuine error
       .sort((a: RenderedCard, b: RenderedCard) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
       .map(c => c?.card);
-    const countLabel = cards.length > 1 ? strings.document.plural : strings.document.singular;
+    const countLabel = cards.length === 1 ? strings.document.singular : strings.document.plural;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
@@ -415,11 +418,9 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 }
 
-function mapDispatchToProps(dispatch) {
-  return {
-    handleCreateWorkspace: bindActionCreators(workspaceActions.createWorkspace, dispatch),
-    handleGitCloneWorkspace: bindActionCreators(gitActions.cloneGitRepository, dispatch),
-  };
-}
+const mapDispatchToProps = (dispatch): ReduxDispatchProps => ({
+  handleCreateWorkspace: bindActionCreators(createWorkspace, dispatch),
+  handleGitCloneWorkspace: bindActionCreators(cloneGitRepository, dispatch),
+});
 
 export default connect(null, mapDispatchToProps)(WrapperHome);

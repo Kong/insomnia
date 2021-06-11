@@ -55,6 +55,7 @@ import {
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
+  selectWorkspacesForActiveSpace,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import RequestCreateModal from '../components/modals/request-create-modal';
@@ -1596,12 +1597,13 @@ function mapStateToProps(state, props) {
     requests,
     // @ts-expect-error -- TSCONVERSION
     workspaceMetas,
-    // @ts-expect-error -- TSCONVERSION
-    workspaces,
   } = entitiesLists;
   // @ts-expect-error -- TSCONVERSION
   const settings = entitiesLists.settings[0];
   // Workspace stuff
+
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  const workspaces = selectWorkspacesForActiveSpace(state, props);
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props);
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors

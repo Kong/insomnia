@@ -135,14 +135,12 @@ const noDocumentFound = (gitRepo: GitRepository) => {
   };
 };
 
-export type CloneGitRepositoryCallback = (arg0: {
-  createFsClient: () => git.PromiseFsClient;
-}) => void;
-
 /**
  * Clone a git repository
  * */
-export const cloneGitRepository: CloneGitRepositoryCallback = ({ createFsClient }) => {
+export const cloneGitRepository = ({ createFsClient }: {
+  createFsClient: () => git.PromiseFsClient;
+}) => {
   return dispatch => {
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
