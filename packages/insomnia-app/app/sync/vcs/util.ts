@@ -513,7 +513,7 @@ export function updateStateWithConflictResolutions(state: SnapshotState, conflic
   return Object.keys(newStateMap).map(k => newStateMap[k]);
 }
 
-export function describeChanges(a: BaseModel, b: BaseModel): string[] {
+export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
   const aT = Object.prototype.toString.call(a);
   const bT = Object.prototype.toString.call(b);
 
@@ -525,7 +525,7 @@ export function describeChanges(a: BaseModel, b: BaseModel): string[] {
   const allKeys = [...Object.keys({ ...a, ...b })];
 
   for (const key of allKeys) {
-    if (shouldIgnoreKey(key, a)) {
+    if (shouldIgnoreKey(key as keyof T, a)) {
       continue;
     }
 
