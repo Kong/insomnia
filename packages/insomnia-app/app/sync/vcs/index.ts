@@ -505,11 +505,20 @@ export default class VCS {
     let project = await this._queryProject();
 
     if (!project) {
-      project = await this._queryCreateProject(localProject.rootDocumentId, localProject.name);
+      project = await this._createRemoteProject(localProject.rootDocumentId, localProject.name);
     }
 
     await this._storeProject(project);
     return project;
+  }
+
+  async _createRemoteProject(workspaceId: string, workspaceName: string, teamId?: string) {
+    if (teamId) {
+      const teamKeys = await this._queryTeamMemberKeys(teamId);
+      return this._queryCreateProject(workspaceId, workspaceName, teamId, teamKeys.memberKeys);
+    }
+
+    return this._queryCreateProject(workspaceId, workspaceName);
   }
 
   async push() {
@@ -1163,18 +1172,85 @@ export default class VCS {
     return project.teams;
   }
 
-  async _queryCreateProject(workspaceId: string, workspaceName: string) {
-    const { publicKey } = this._assertSession();
+  async _queryTeamMemberKeys(
+    teamId: string,
+  ): Promise<{
+    memberKeys: {
+      accountId: string;
+      publicKey: string;
+    }[];
+  }> {
+    const { teamMemberKeys } = await this._runGraphQL(
+      `
+        query ($teamId: ID!) {
+          teamMemberKeys(teamId: $teamId) {
+            memberKeys {
+              accountId
+              publicKey
+            }
+          }
+        }
+      `,
+      {
+        teamId: teamId,
+      },
+      'teamMemberKeys',
+    );
+    return teamMemberKeys;
+  }
 
+  async _queryCreateProject(
+    workspaceId: string,
+    workspaceName: string,
+    teamId?: string,
+    teamPublicKeys?: {
+      accountId: string;
+      publicKey: string;
+    }[],
+  ) {
     // Generate symmetric key for ResourceGroup
     const symmetricKey = await crypt.generateAES256Key();
     const symmetricKeyStr = JSON.stringify(symmetricKey);
-    // Encrypt the symmetric key with Account public key
-    const encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
+
+    const teamKeys: {accountId: string, encSymmetricKey: string}[] = [];
+    let encSymmetricKey: string | undefined;
+
+    if (teamId) {
+      if (!teamPublicKeys?.length) {
+        throw new Error('teamPublicKeys must not be null or empty!');
+      }
+
+      // Encrypt the symmetric key with the public keys of all the team members, ourselves included
+      for (const { accountId, publicKey } of teamPublicKeys) {
+        teamKeys.push({
+          accountId,
+          encSymmetricKey: crypt.encryptRSAWithJWK(JSON.parse(publicKey), symmetricKeyStr),
+        });
+      }
+    } else {
+      const { publicKey } = this._assertSession();
+      // Encrypt the symmetric key with the account public key
+      encSymmetricKey = crypt.encryptRSAWithJWK(publicKey, symmetricKeyStr);
+    }
+
     const { projectCreate } = await this._runGraphQL(
       `
-        mutation ($rootDocumentId: ID!, $name: String!, $id: ID!, $key: String!) {
-          projectCreate(name: $name, id: $id, rootDocumentId: $rootDocumentId, encSymmetricKey: $key) {
+        mutation (
+          $name: String!,
+          $id: ID!,
+          $rootDocumentId: ID!,
+          $encSymmetricKey: String,
+          $teamId: ID,
+          $teamKeys: [ProjectCreateKeyInput!],
+        ) {
+          projectCreate(
+            name: $name,
+            id: $id,
+            rootDocumentId: $rootDocumentId,
+            encSymmetricKey: $encSymmetricKey,
+            teamId: $teamId,
+            teamKeys: $teamKeys,
+          ) {
             id
             name
             rootDocumentId
@@ -1182,13 +1258,16 @@ export default class VCS {
         }
       `,
       {
+        name: workspaceName,
         id: this._projectId(),
         rootDocumentId: workspaceId,
-        name: workspaceName,
-        key: encSymmetricKey,
+        encSymmetricKey: encSymmetricKey,
+        teamId: teamId,
+        teamKeys: teamKeys,
       },
-      'switchAndCreateProjectIfNotExist',
+      'createProject',
     );
+
     console.log(`[sync] Created remote project ${projectCreate.id} (${projectCreate.name})`);
     return projectCreate as Project;
   }
