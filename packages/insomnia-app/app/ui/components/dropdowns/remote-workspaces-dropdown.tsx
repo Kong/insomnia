@@ -5,7 +5,8 @@ import HelpTooltip from '../help-tooltip';
 import { strings } from '../../../common/strings';
 import { isLoggedIn } from '../../../account/session';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
-import { useActiveSpace } from '../../hooks/space';
+import { useSelector } from 'react-redux';
+import { selectActiveSpace } from '../../redux/selectors';
 
 interface Props {
   className?: string;
@@ -28,7 +29,7 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
-  const { isRemoteSpace } = useActiveSpace();
+  const isRemoteSpace = Boolean(useSelector(selectActiveSpace)?.remoteId);
 
   // Don't show the pull dropdown if we are not in a remote space
   if (!isRemoteSpace) {

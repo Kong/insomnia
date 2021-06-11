@@ -5,13 +5,12 @@ import { Project } from '../../sync/types';
 import VCS from '../../sync/vcs';
 import { pullProject } from '../../sync/vcs/pull-project';
 import { showAlert } from '../components/modals';
-import { selectAllWorkspaces } from '../redux/selectors';
-import { useActiveSpace } from './space';
+import { selectActiveSpace, selectAllWorkspaces } from '../redux/selectors';
 
 export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
   const workspaces = useSelector(selectAllWorkspaces);
-  const { activeSpace } = useActiveSpace();
+  const activeSpace = useSelector(selectActiveSpace);
   const spaceRemoteId = activeSpace?.remoteId || undefined;
   const spaceId = activeSpace?._id;
 
