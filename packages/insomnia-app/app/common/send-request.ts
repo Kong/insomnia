@@ -4,10 +4,6 @@ import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 import * as plugins from '../plugins';
 
-function toMs(num) {
-  return Math.round(num * 1000) / 1000;
-}
-
 export async function getSendRequestCallbackMemDb(environmentId, memDB) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await db.init(
@@ -59,7 +55,7 @@ async function sendAndTransform(requestId, environmentId) {
       statusMessage: res.statusMessage,
       data: bodyBuffer ? bodyBuffer.toString('utf8') : undefined,
       headers: headersObj,
-      responseTime: toMs(res.elapsedTime),
+      responseTime: res.elapsedTime,
     };
   } finally {
     plugins.clearIgnores();
