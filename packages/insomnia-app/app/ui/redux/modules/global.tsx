@@ -836,7 +836,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
   dispatch(setActiveActivity(initializeToActivity));
 };
 
-export const initActions = () => [
+export const init = () => [
   initActiveSpace(),
   initActiveWorkspace(),
   initActiveActivity(),
