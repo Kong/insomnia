@@ -4,7 +4,7 @@ import { send } from '../network/network';
 import { getBodyBuffer } from '../models/response';
 import * as plugins from '../plugins';
 
-function toMs (num) {
+function toMs(num) {
   return Math.round(num * 1000) / 1000;
 }
 
