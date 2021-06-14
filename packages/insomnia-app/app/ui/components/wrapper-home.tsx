@@ -100,10 +100,10 @@ class WrapperHome extends PureComponent<Props, State> {
     });
   }
 
-  _handleCollectionCreate() {
+  async _handleCollectionCreate() {
     const { handleCreateWorkspace, wrapperProps: { activeSpace, vcs } } = this.props;
 
-    handleCreateWorkspace({
+    await handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
       onCreate: async workspace => {
         const spaceRemoteId = activeSpace?.remoteId;

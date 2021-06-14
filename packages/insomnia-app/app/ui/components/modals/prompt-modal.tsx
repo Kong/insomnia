@@ -22,10 +22,11 @@ interface State {
   placeholder?: string | null;
   inputType?: string | null;
   cancelable?: boolean | null;
-  onComplete?: ((arg0: string) => void) | null;
+  onComplete?: (arg0: string) => Promise<void> | void;
   onCancel?: (() => void) | null;
   onDeleteHint?: ((arg0: string) => void) | null;
   currentValue: string;
+  loading: boolean;
 }
 
 export interface PromptModalOptions {
@@ -41,7 +42,7 @@ export interface PromptModalOptions {
   validate?: (arg0: string) => string;
   label?: string;
   hints?: string[];
-  onComplete?: (arg0: string) => void;
+  onComplete?: (arg0: string) => Promise<void> | void;
   onDeleteHint?: (arg0: string) => void;
   onCancel?: () => void;
 }
@@ -50,6 +51,7 @@ export interface PromptModalOptions {
 class PromptModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
+  _promiseCallback: Function = () => {};
 
   state: State = {
     title: 'Not Set',
@@ -68,12 +70,14 @@ class PromptModal extends PureComponent<{}, State> {
     onCancel: undefined,
     onDeleteHint: undefined,
     currentValue: '',
+    loading: false,
   }
 
-  _done(rawValue: string) {
+  async _done(rawValue: string) {
     const { onComplete, upperCase } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
-    onComplete && onComplete(value);
+    onComplete && await onComplete(value);
+    this._promiseCallback(true);
     this.hide();
   }
 
@@ -99,6 +103,10 @@ class PromptModal extends PureComponent<{}, State> {
   }
 
   _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
+    this.setState({
+      loading: true,
+    });
+
     e.preventDefault();
 
     if (this._input) {
@@ -156,8 +164,10 @@ class PromptModal extends PureComponent<{}, State> {
       label,
       validate,
       hints: hints || [],
+      loading: false,
     });
     this.modal && this.modal.show();
+
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
       if (!this._input) {
@@ -174,6 +184,10 @@ class PromptModal extends PureComponent<{}, State> {
 
       selectText && this._input && this._input.select();
     }, 100);
+
+    return new Promise(resolve => {
+      this._promiseCallback = resolve;
+    });
   }
 
   _renderHintButton(hint: string) {
@@ -210,6 +224,7 @@ class PromptModal extends PureComponent<{}, State> {
       hints,
       cancelable,
       onCancel,
+      loading,
     } = this.state;
     const input = (
       <input
@@ -259,7 +274,7 @@ class PromptModal extends PureComponent<{}, State> {
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this._handleSubmit}>
-            {submitName || 'Submit'}
+            {loading && <i className="fa fa-refresh fa-spin" />} {submitName || 'Submit'}
           </button>
         </ModalFooter>
       </Modal>
