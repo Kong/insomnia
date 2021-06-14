@@ -106,10 +106,10 @@ describe('pullProject()', () => {
     it('should overwrite the parentId only for a workspace with null', async () => {
       // Arrange
       const spaceId = undefined;
-      const w = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
-      const r = await models.request.create({ parentId: w._id });
+      const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
+      const existingReq = await models.request.create({ parentId: existingWrk._id });
 
-      vcs.allDocuments.mockResolvedValue([w, r]);
+      vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
       await pullProject({ vcs, project, spaceId });
@@ -128,16 +128,16 @@ describe('pullProject()', () => {
       const requests = await models.request.all();
       expect(requests).toHaveLength(1);
       const request = requests[0];
-      expect(request).toStrictEqual(r);
+      expect(request).toStrictEqual(existingReq);
     });
 
     it('should overwrite the parentId only for a workspace with the space id', async () => {
       // Arrange
       const spaceId = 'spaceId';
-      const w = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
-      const r = await models.request.create({ parentId: w._id });
+      const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
+      const existingReq = await models.request.create({ parentId: existingWrk._id });
 
-      vcs.allDocuments.mockResolvedValue([w, r]);
+      vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
       await pullProject({ vcs, project, spaceId });
@@ -155,7 +155,7 @@ describe('pullProject()', () => {
       const requests = await models.request.all();
       expect(requests).toHaveLength(1);
       const request = requests[0];
-      expect(request).toStrictEqual(r);
+      expect(request).toStrictEqual(existingReq);
     });
   });
 });
