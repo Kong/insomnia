@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import { BASE_SPACE_ID, Space } from '../../../models/space';
-import VCS from '../../../sync/vcs';
+import VCS from '../../../sync/vcs/vcs';
 import { useRemoteSpaces } from '../../hooks/space';
 import { setActiveSpace } from '../../redux/modules/global';
 import { createSpace } from '../../redux/modules/space';

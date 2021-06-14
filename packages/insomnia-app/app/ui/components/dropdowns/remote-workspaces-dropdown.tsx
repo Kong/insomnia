@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import * as session from '../../../account/session';
-import VCS from '../../../sync/vcs';
+import VCS from '../../../sync/vcs/vcs';
 import type { Project } from '../../../sync/types';
 import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomnia-components';
 import type { Workspace } from '../../../models/workspace';
