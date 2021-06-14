@@ -1,7 +1,7 @@
 
 import * as models from '../../models';
 import { database } from '../../common/database';
-import VCS from '../../sync/vcs';
+import { VCS } from '../../sync/vcs/vcs';
 import { useCallback, useEffect, useState } from 'react';
 import { isLoggedIn } from '../../account/session';
 import { Space } from '../../models/space';

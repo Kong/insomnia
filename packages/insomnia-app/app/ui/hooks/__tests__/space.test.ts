@@ -1,19 +1,22 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import { isLoggedIn as _isLoggedIn } from '../../../account/session';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
-import VCS from '../../../sync/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { useRemoteSpaces } from '../space';
 import * as models from '../../../models';
 import { Space } from '../../../models/space';
+import { mocked } from 'ts-jest/utils';
 
 jest.mock('../../../account/session', () => ({
   isLoggedIn: jest.fn(),
 }));
 
-jest.mock('../../../sync/vcs');
+jest.mock('../../../sync/vcs/vcs');
 
-const isLoggedIn = _isLoggedIn as jest.MockedFunction<typeof _isLoggedIn>;
+const isLoggedIn = mocked(_isLoggedIn);
+
+const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
 describe('useRemoteSpaces', () => {
   beforeEach(globalBeforeEach);
@@ -24,7 +27,7 @@ describe('useRemoteSpaces', () => {
   });
 
   it('should not load teams if not signed in', async () => {
-    const vcs = new VCS(new MemoryDriver());
+    const vcs = newMockedVcs();
     isLoggedIn.mockReturnValue(false);
 
     const { result } = renderHook(() => useRemoteSpaces(vcs));
@@ -38,12 +41,12 @@ describe('useRemoteSpaces', () => {
   it('should load teams each time VCS changes', async () => {
     isLoggedIn.mockReturnValue(true);
 
-    const vcs1 = new VCS(new MemoryDriver());
-    const vcs2 = new VCS(new MemoryDriver());
+    const vcs1 = newMockedVcs();
+    const vcs2 = newMockedVcs();
     const team1 = { id: 'id1', name: 'team1' };
     const team2 = { id: 'id2', name: 'team2' };
-    (vcs1.teams as jest.MockedFunction<typeof vcs1.teams>).mockResolvedValue([team1]);
-    (vcs2.teams as jest.MockedFunction<typeof vcs2.teams>).mockResolvedValue([team2]);
+    vcs1.teams.mockResolvedValue([team1]);
+    vcs2.teams.mockResolvedValue([team2]);
 
     const { result, rerender, waitFor } = renderHook(prop => useRemoteSpaces(prop), { initialProps: vcs1 });
 
@@ -78,8 +81,8 @@ describe('useRemoteSpaces', () => {
   it('should load teams on refresh', async () => {
     isLoggedIn.mockReturnValue(true);
 
-    const vcs = new VCS(new MemoryDriver());
-    (vcs.teams as jest.MockedFunction<typeof vcs.teams>).mockResolvedValue([]);
+    const vcs = newMockedVcs();
+    vcs.teams.mockResolvedValue([]);
 
     const { result, waitFor } = renderHook(() => useRemoteSpaces(vcs));
 
@@ -92,7 +95,7 @@ describe('useRemoteSpaces', () => {
 
     const team1 = { id: 'id1', name: 'team1' };
     const team2 = { id: 'id2', name: 'team2' };
-    (vcs.teams as jest.MockedFunction<typeof vcs.teams>).mockResolvedValue([team1, team2]);
+    vcs.teams.mockResolvedValue([team1, team2]);
 
     // Refresh multiple times
     await act(() => result.current.refresh());
