@@ -42,7 +42,6 @@ interface Props {
   settings: Settings;
   hideModal: () => void;
   updateSetting: (key: string, value: any) => Promise<Settings>;
-  handleToggleMenuBar: Function;
   handleSetActiveActivity: (activity?: GlobalActivity) => void;
 }
 

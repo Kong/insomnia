@@ -1,83 +1,76 @@
-import React, { PureComponent } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import React, { createRef, PureComponent } from 'react';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
 
-interface State {
-  title: string;
+export interface SelectModalShowOptions {
+  message: string | null;
+  onCancel?: () => void;
+  onDone?: (selectedValue: string | null) => Promise<void>;
   options: {
     name: string;
     value: string;
   }[];
-  value: string;
-  message: string;
-  onCancel?: (...args: any[]) => any;
+  title: string | null;
+  value: string | null;
 }
 
+const initialState: SelectModalShowOptions = {
+  message: null,
+  options: [],
+  title: null,
+  value: null,
+};
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SelectModal extends PureComponent<{}, State> {
-  modal: Modal | null = null;
-  doneButton: HTMLButtonElement | null = null;
-  _doneCallback: ((...args: any[]) => any) | null = null;
+export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
+  modal = createRef<Modal>();
+  doneButton = createRef<HTMLButtonElement>();
+  state: SelectModalShowOptions = initialState;
 
-  state: State = {
-    title: '',
-    options: [],
-    message: '',
-    value: '',
+  async _onDone() {
+    this.modal.current?.hide();
+    await this.state.onDone?.(this.state.value);
   }
 
-  _setModalRef(m: Modal) {
-    this.modal = m;
+  _handleSelectChange(event: React.SyntheticEvent<HTMLSelectElement>) {
+    this.setState({ value: event.currentTarget.value });
   }
 
-  _setDoneButtonRef(n: HTMLButtonElement) {
-    this.doneButton = n;
-  }
-
-  _handleDone() {
-    this.hide();
-    this._doneCallback && this._doneCallback(this.state.value);
-  }
-
-  _handleSelectChange(e: React.SyntheticEvent<HTMLSelectElement>) {
+  show({
+    message,
+    onCancel,
+    onDone,
+    options,
+    title,
+    value,
+  }: SelectModalShowOptions = initialState) {
     this.setState({
-      value: e.currentTarget.value,
-    });
-  }
-
-  hide() {
-    this.modal && this.modal.hide();
-  }
-
-  show(data: Record<string, any> = {}) {
-    const { title, message, options, value, onDone, onCancel } = data;
-    this._doneCallback = onDone;
-    this.setState({
-      title,
       message,
-      options,
-      value,
       onCancel,
+      onDone,
+      options,
+      title,
+      value,
     });
-    this.modal && this.modal.show();
+    this.modal.current?.show();
     setTimeout(() => {
-      this.doneButton && this.doneButton.focus();
+      this.doneButton.current?.focus();
     }, 100);
   }
 
   render() {
     const { message, title, options, value, onCancel } = this.state;
     return (
-      <Modal ref={this._setModalRef} onCancel={onCancel}>
+      <Modal ref={this.modal} onCancel={onCancel}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
         <ModalBody className="wide pad">
           <p>{message}</p>
           <div className="form-control form-control--outlined">
-            <select onChange={this._handleSelectChange} value={value}>
+            <select onChange={this._handleSelectChange} value={value ?? undefined}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
                   {name}
@@ -87,7 +80,7 @@ class SelectModal extends PureComponent<{}, State> {
           </div>
         </ModalBody>
         <ModalFooter>
-          <button ref={this._setDoneButtonRef} className="btn" onClick={this._handleDone}>
+          <button ref={this.doneButton} className="btn" onClick={this._onDone}>
             Done
           </button>
         </ModalFooter>
@@ -95,5 +88,3 @@ class SelectModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default SelectModal;

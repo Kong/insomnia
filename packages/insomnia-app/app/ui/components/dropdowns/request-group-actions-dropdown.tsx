@@ -110,7 +110,7 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...(pluginContexts.data.init() as Record<string, any>),
+        ...pluginContexts.data.init(),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };

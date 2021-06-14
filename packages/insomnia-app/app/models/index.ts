@@ -24,12 +24,26 @@ import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _workspace from './workspace';
 import * as _workspaceMeta from './workspace-meta';
 import { generateId, pluralize } from '../common/misc';
+import {
+  EXPORT_TYPE_API_SPEC,
+  EXPORT_TYPE_COOKIE_JAR,
+  EXPORT_TYPE_ENVIRONMENT,
+  EXPORT_TYPE_GRPC_REQUEST,
+  EXPORT_TYPE_PROTO_DIRECTORY,
+  EXPORT_TYPE_PROTO_FILE,
+  EXPORT_TYPE_REQUEST,
+  EXPORT_TYPE_REQUEST_GROUP,
+  EXPORT_TYPE_UNIT_TEST,
+  EXPORT_TYPE_UNIT_TEST_SUITE,
+  EXPORT_TYPE_WORKSPACE,
+} from '../common/constants';
 
 export interface BaseModel {
   _id: string;
   type: string;
-  // TSCONVERSION -- parentId is required for all
-  //  except Stats, Settings, Workspace and Space for which it is optional
+  // TSCONVERSION -- parentId is always required for all models, except 4:
+  //   - Stats, Settings, and Space, which never have a parentId
+  //   - Workspace optionally has a parentId (which will be the id of a Space)
   parentId: string;
   modified: number;
   created: number;
@@ -189,3 +203,17 @@ export async function initModel<T extends BaseModel>(type: string, ...sources: R
   // @ts-expect-error -- TSCONVERSION not sure why this error is occuring
   return migratedDoc;
 }
+
+export const MODELS_BY_EXPORT_TYPE = {
+  [EXPORT_TYPE_REQUEST]: request,
+  [EXPORT_TYPE_GRPC_REQUEST]: grpcRequest,
+  [EXPORT_TYPE_REQUEST_GROUP]: requestGroup,
+  [EXPORT_TYPE_UNIT_TEST_SUITE]: unitTestSuite,
+  [EXPORT_TYPE_UNIT_TEST]: unitTest,
+  [EXPORT_TYPE_WORKSPACE]: workspace,
+  [EXPORT_TYPE_COOKIE_JAR]: cookieJar,
+  [EXPORT_TYPE_ENVIRONMENT]: environment,
+  [EXPORT_TYPE_API_SPEC]: apiSpec,
+  [EXPORT_TYPE_PROTO_FILE]: protoFile,
+  [EXPORT_TYPE_PROTO_DIRECTORY]: protoDirectory,
+};

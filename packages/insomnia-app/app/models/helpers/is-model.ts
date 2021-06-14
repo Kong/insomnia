@@ -9,7 +9,7 @@ import {
   workspace,
 } from '../index';
 
-import type { Workspace } from '../workspace';
+import type { CollectionWorkspace, DesignWorkspace, Workspace } from '../workspace';
 import { WorkspaceScopeKeys } from '../../models/workspace';
 import { ProtoDirectory } from '../proto-directory';
 import { ProtoFile } from '../proto-file';
@@ -52,10 +52,10 @@ export const isWorkspace = (obj: Pick<BaseModel, 'type'>): obj is Workspace => (
   obj.type === workspace.type
 );
 
-export const isDesign = (obj: Partial<Workspace>) => (
+export const isDesign = (obj: Pick<Workspace, 'scope'>): obj is DesignWorkspace => (
   obj.scope === WorkspaceScopeKeys.design
 );
 
-export const isCollection = (obj: Workspace) => (
+export const isCollection = (obj: Pick<Workspace, 'scope'>): obj is CollectionWorkspace => (
   obj.scope === WorkspaceScopeKeys.collection
 );
