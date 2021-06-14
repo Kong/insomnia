@@ -6,7 +6,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
-import VCS from '../../../sync/vcs/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import { database as db } from '../../../common/database';
 import type { StatusCandidate } from '../../../sync/types';
 import PromptButton from '../base/prompt-button';

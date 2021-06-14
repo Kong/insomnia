@@ -10,7 +10,7 @@ import Tooltip from '../tooltip';
 import PromptButton from '../base/prompt-button';
 import HelpTooltip from '../help-tooltip';
 import type { Snapshot } from '../../../sync/types';
-import VCS from '../../../sync/vcs/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import * as session from '../../../account/session';
 
 interface Props {

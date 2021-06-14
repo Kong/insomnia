@@ -8,7 +8,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import type { Workspace } from '../../../models/workspace';
-import VCS from '../../../sync/vcs/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import { showModal } from './index';
 import { strings } from '../../../common/strings';
 

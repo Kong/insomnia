@@ -5,7 +5,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import type { Workspace } from '../../../models/workspace';
-import VCS from '../../../sync/vcs/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import { Button } from 'insomnia-components';
 import { strings } from '../../../common/strings';
 

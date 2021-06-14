@@ -12,7 +12,7 @@ import SyncHistoryModal from '../modals/sync-history-modal';
 import SyncShareModal from '../modals/sync-share-modal';
 import SyncBranchesModal from '../modals/sync-branches-modal';
 import SyncDeleteModal from '../modals/sync-delete-modal';
-import VCS from '../../../sync/vcs/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import ErrorModal from '../modals/error-modal';
 import Tooltip from '../tooltip';

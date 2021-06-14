@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react-hooks';
 import { isLoggedIn as _isLoggedIn } from '../../../account/session';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
-import VCS from '../../../sync/vcs/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { useRemoteSpaces } from '../space';
 import * as models from '../../../models';

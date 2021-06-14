@@ -1,4 +1,4 @@
-import VCS from '../vcs';
+import { VCS } from '../vcs';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { describeChanges } from '../util';
 import { globalBeforeEach } from '../../../__jest__/before-each';
