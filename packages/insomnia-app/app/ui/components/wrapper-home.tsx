@@ -52,6 +52,8 @@ import { createWorkspace } from '../redux/modules/workspace';
 import { cloneGitRepository } from '../redux/modules/git';
 import { MemClient } from '../../sync/git/mem-client';
 import { SpaceDropdown } from './dropdowns/space-dropdown';
+import { database } from '../../common/database';
+import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 
 interface RenderedCard {
   card: ReactNode;
@@ -113,10 +115,9 @@ class WrapperHome extends PureComponent<Props, State> {
           await newVcs.createLocalAndRemoteProject(workspace._id, workspace.name, spaceRemoteId);
 
           const blankStage = {};
-          const noCandidates = [];
-
           // Everything unstaged
-          const status = await newVcs.status(noCandidates, blankStage);
+          const candidates = getStatusCandidates(await database.withDescendants(workspace));
+          const status = await newVcs.status(candidates, blankStage);
 
           // Stage everything
           const stage = await newVcs.stage(blankStage, Object.values(status.unstaged));

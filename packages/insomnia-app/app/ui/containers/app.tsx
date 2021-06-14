@@ -1461,9 +1461,7 @@ class App extends PureComponent<Props, State> {
       },
       async () => {
         const flushId = await db.bufferChanges();
-        await models.environment.getOrCreateForWorkspace(activeWorkspace);
-        await models.cookieJar.getOrCreateForParentId(activeWorkspace._id);
-        await models.workspaceMeta.getOrCreateByParentId(activeWorkspace._id);
+        await models.workspace.ensureChildren(activeWorkspace);
         await db.flushChanges(flushId);
         this.setState({
           isMigratingChildren: false,

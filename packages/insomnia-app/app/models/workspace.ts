@@ -164,6 +164,12 @@ function _migrateScope(workspace: MigrationWorkspace) {
   return workspace as Workspace;
 }
 
+export async function ensureChildren({ _id }: Workspace) {
+  await models.environment.getOrCreateForParentId(_id);
+  await models.cookieJar.getOrCreateForParentId(_id);
+  await models.workspaceMeta.getOrCreateByParentId(_id);
+}
+
 function expectParentToBeSpace(parentId?: string | null) {
   if (parentId && !isSpaceId(parentId)) {
     throw new Error('Expected the parent of a Workspace to be a Space');

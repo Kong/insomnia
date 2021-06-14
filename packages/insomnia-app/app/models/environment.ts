@@ -1,16 +1,11 @@
 import * as crypto from 'crypto';
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-import type { Workspace } from './workspace';
 
 export const name = 'Environment';
-
 export const type = 'Environment';
-
 export const prefix = 'env';
-
 export const canDuplicate = true;
-
 export const canSync = true;
 
 interface BaseEnvironment {
@@ -68,7 +63,7 @@ export function findByParentId(parentId: string) {
   );
 }
 
-export async function getOrCreateForWorkspaceId(workspaceId: string) {
+export async function getOrCreateForParentId(workspaceId: string) {
   const environments = await db.find<Environment>(type, {
     parentId: workspaceId,
   });
@@ -84,10 +79,6 @@ export async function getOrCreateForWorkspaceId(workspaceId: string) {
   }
 
   return environments[environments.length - 1];
-}
-
-export async function getOrCreateForWorkspace(workspace: Workspace) {
-  return getOrCreateForWorkspaceId(workspace._id);
 }
 
 export function getById(id: string): Promise<Environment | null> {
