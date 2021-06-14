@@ -3,7 +3,7 @@ import * as models from '../../../models';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
 import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { showPrompt } from '../../components/modals';
-import { setActiveActivity, setActiveWorkspace } from './global';
+import { loadStart, loadStop, setActiveActivity, setActiveWorkspace } from './global';
 import { selectActiveSpace } from '../selectors';
 import { Dispatch } from 'redux';
 import { database } from '../../../common/database';
@@ -22,12 +22,14 @@ const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
 
 const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
   return async (dispatch: Dispatch) => {
+    dispatch(loadStart());
     const workspace = await createWorkspaceAndChildren(patch);
 
     if (onCreate) {
       await onCreate(workspace);
     }
 
+    dispatch(loadStop());
     trackEvent('Workspace', 'Create');
     dispatch(setActiveWorkspace(workspace._id));
     dispatch(setActiveActivity(isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG));
