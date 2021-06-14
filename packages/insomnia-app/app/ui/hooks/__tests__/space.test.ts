@@ -14,7 +14,7 @@ jest.mock('../../../account/session', () => ({
 
 jest.mock('../../../sync/vcs/vcs');
 
-const isLoggedIn = _isLoggedIn as jest.MockedFunction<typeof _isLoggedIn>;
+const isLoggedIn = mocked(_isLoggedIn);
 
 const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
