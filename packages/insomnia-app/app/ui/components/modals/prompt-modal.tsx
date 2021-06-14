@@ -51,7 +51,7 @@ export interface PromptModalOptions {
 class PromptModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
-  _promiseCallback: Function = () => {};
+  _promiseCallback: ((value: boolean | PromiseLike<boolean>) => void) | null = null;
 
   state: State = {
     title: 'Not Set',
@@ -76,9 +76,21 @@ class PromptModal extends PureComponent<{}, State> {
   async _done(rawValue: string) {
     const { onComplete, upperCase } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
-    onComplete && await onComplete(value);
-    this._promiseCallback(true);
+    await onComplete?.(value);
+    this._promiseCallback?.(true);
+    this._promiseCallback = null;
     this.hide();
+  }
+
+  _handleCancel() {
+    const { onCancel, loading } = this.state;
+    if (loading) {
+      return;
+    }
+
+    onCancel?.();
+    this._promiseCallback?.(false);
+    this._promiseCallback = null;
   }
 
   _setInputRef(n: HTMLInputElement) {
@@ -102,7 +114,11 @@ class PromptModal extends PureComponent<{}, State> {
     });
   }
 
-  _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
+  async _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
+    if (this.state.loading) {
+      return;
+    }
+
     this.setState({
       loading: true,
     });
@@ -113,8 +129,12 @@ class PromptModal extends PureComponent<{}, State> {
       const result =
         this._input.type === 'checkbox' ? this._input.checked.toString() : this._input.value;
 
-      this._done(result);
+      await this._done(result);
     }
+
+    this.setState({
+      loading: false,
+    });
   }
 
   _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
@@ -185,7 +205,7 @@ class PromptModal extends PureComponent<{}, State> {
       selectText && this._input && this._input.select();
     }, 100);
 
-    return new Promise(resolve => {
+    return new Promise<boolean>(resolve => {
       this._promiseCallback = resolve;
     });
   }
@@ -223,7 +243,6 @@ class PromptModal extends PureComponent<{}, State> {
       upperCase,
       hints,
       cancelable,
-      onCancel,
       loading,
     } = this.state;
     const input = (
@@ -231,6 +250,7 @@ class PromptModal extends PureComponent<{}, State> {
         ref={this._setInputRef}
         onChange={this._handleChange}
         id="prompt-input"
+        disabled={loading}
         type={inputType === 'decimal' ? 'number' : inputType || 'text'}
         step={inputType === 'decimal' ? '0.1' : undefined}
         min={inputType === 'decimal' ? '0.5' : undefined}
@@ -263,7 +283,7 @@ class PromptModal extends PureComponent<{}, State> {
       'form-control--outlined': inputType !== 'checkbox',
     });
     return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel || undefined}>
+      <Modal ref={this._setModalRef} noEscape={!cancelable || loading} onCancel={this._handleCancel}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
@@ -273,7 +293,7 @@ class PromptModal extends PureComponent<{}, State> {
         </ModalBody>
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
-          <button className="btn" onClick={this._handleSubmit}>
+          <button className="btn" onClick={this._handleSubmit} disabled={loading}>
             {loading && <i className="fa fa-refresh fa-spin" />} {submitName || 'Submit'}
           </button>
         </ModalFooter>

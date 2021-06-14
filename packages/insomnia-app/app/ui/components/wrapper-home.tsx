@@ -94,8 +94,8 @@ class WrapperHome extends PureComponent<Props, State> {
     });
   }
 
-  _handleDocumentCreate() {
-    this.props.handleCreateWorkspace({
+  async _handleDocumentCreate() {
+    await this.props.handleCreateWorkspace({
       scope: WorkspaceScopeKeys.design,
     });
   }

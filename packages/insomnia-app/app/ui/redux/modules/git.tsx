@@ -105,8 +105,8 @@ const containsInsomniaWorkspaceDir = async (fsClient: Record<string, any>): Prom
 };
 
 const createWorkspaceWithGitRepo = (gitRepo: GitRepository) => {
-  return dispatch =>
-    dispatch(
+  return async dispatch =>
+    await dispatch(
       createWorkspace({
         scope: WorkspaceScopeKeys.design,
         onCreate: async wrk => {
