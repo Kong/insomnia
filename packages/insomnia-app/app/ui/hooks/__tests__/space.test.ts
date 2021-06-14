@@ -11,7 +11,7 @@ jest.mock('../../../account/session', () => ({
   isLoggedIn: jest.fn(),
 }));
 
-jest.mock('../../../sync/vcs');
+jest.mock('../../../sync/vcs/vcs');
 
 const isLoggedIn = _isLoggedIn as jest.MockedFunction<typeof _isLoggedIn>;
 
