@@ -4,21 +4,23 @@ import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
 import { Workspace } from '../../../models/workspace';
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import MemoryDriver from '../../store/drivers/memory-driver';
 import { projectSchema } from '../../__schemas__/type-schemas';
 import { pullProject } from '../pull-project';
+import { mocked } from 'ts-jest/utils';
+import { MockedObjectDeep } from 'ts-jest/dist/utils/testing';
+import MemoryDriver from '../../store/drivers/memory-driver';
 
 jest.mock('../');
 
 const project = createBuilder(projectSchema).build();
 
 describe('pullProject()', () => {
-  let vcs: VCS;
+  let vcs: MockedObjectDeep<VCS>;
 
   beforeEach(async () => {
     (VCS as jest.MockedClass<typeof VCS>).mockClear();
     await globalBeforeEach();
-    vcs = new VCS(new MemoryDriver());
+    vcs = mocked(new VCS(new MemoryDriver()), true);
   });
 
   afterEach(() => {
@@ -28,7 +30,7 @@ describe('pullProject()', () => {
 
   describe('creating a new project', () => {
     beforeEach(() => {
-      (vcs.getRemoteBranches as jest.MockedFunction<typeof vcs.getRemoteBranches>).mockResolvedValue([]);
+      vcs.getRemoteBranches.mockResolvedValue([]);
     });
 
     afterEach(() => {
@@ -94,7 +96,7 @@ describe('pullProject()', () => {
 
   describe('pulling an existing project', () => {
     beforeEach(() => {
-      (vcs.getRemoteBranches as jest.MockedFunction<typeof vcs.getRemoteBranches>).mockResolvedValue([DEFAULT_BRANCH_NAME]);
+      vcs.getRemoteBranches.mockResolvedValue([DEFAULT_BRANCH_NAME]);
     });
 
     afterEach(() => {
@@ -107,7 +109,7 @@ describe('pullProject()', () => {
       const w = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
       const r = await models.request.create({ parentId: w._id });
 
-      (vcs.allDocuments as jest.MockedFunction<typeof vcs.allDocuments>).mockResolvedValue([w, r]);
+      vcs.allDocuments.mockResolvedValue([w, r]);
 
       // Act
       await pullProject({ vcs, project, spaceId });
@@ -135,7 +137,7 @@ describe('pullProject()', () => {
       const w = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
       const r = await models.request.create({ parentId: w._id });
 
-      (vcs.allDocuments as jest.MockedFunction<typeof vcs.allDocuments>).mockResolvedValue([w, r]);
+      vcs.allDocuments.mockResolvedValue([w, r]);
 
       // Act
       await pullProject({ vcs, project, spaceId });
