@@ -504,20 +504,26 @@ export class VCS {
     let project = await this._queryProject();
 
     if (!project) {
-      project = await this._createRemoteProject(localProject.rootDocumentId, localProject.name);
+      project = await this._createRemoteProject(localProject);
     }
 
     await this._storeProject(project);
     return project;
   }
 
-  async _createRemoteProject(workspaceId: string, workspaceName: string, teamId?: string) {
+  async createLocalAndRemoteProject(workspaceId: string, name: string, teamId?: string) {
+    await this.switchAndCreateProjectIfNotExist(workspaceId, name);
+    const localProject = await this._assertProject();
+    await this._createRemoteProject(localProject, teamId);
+  }
+
+  async _createRemoteProject({ rootDocumentId, name }: Project, teamId?: string) {
     if (teamId) {
       const teamKeys = await this._queryTeamMemberKeys(teamId);
-      return this._queryCreateProject(workspaceId, workspaceName, teamId, teamKeys.memberKeys);
+      return this._queryCreateProject(rootDocumentId, name, teamId, teamKeys.memberKeys);
     }
 
-    return this._queryCreateProject(workspaceId, workspaceName);
+    return this._queryCreateProject(rootDocumentId, name);
   }
 
   async push() {

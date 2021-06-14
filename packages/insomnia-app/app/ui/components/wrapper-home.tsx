@@ -99,8 +99,35 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   _handleCollectionCreate() {
-    this.props.handleCreateWorkspace({
+    const { handleCreateWorkspace, wrapperProps: { activeSpace, vcs } } = this.props;
+
+    handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
+      onCreate: async workspace => {
+        const spaceRemoteId = activeSpace?.remoteId;
+
+        if (vcs && spaceRemoteId) {
+          const newVcs = vcs.newInstance();
+
+          // Create local and remote project
+          await newVcs.createLocalAndRemoteProject(workspace._id, workspace.name, spaceRemoteId);
+
+          const blankStage = {};
+          const noCandidates = [];
+
+          // Everything unstaged
+          const status = await newVcs.status(noCandidates, blankStage);
+
+          // Stage everything
+          const stage = await newVcs.stage(blankStage, Object.values(status.unstaged));
+
+          // Snapshot
+          await newVcs.takeSnapshot(stage, 'Initial Snapshot');
+
+          // Push initial snapshot
+          await newVcs.push();
+        }
+      },
     });
   }
 
