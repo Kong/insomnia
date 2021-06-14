@@ -89,7 +89,7 @@ import MoveRequestGroupModal from '../components/modals/move-request-group-modal
 import * as themes from '../../plugins/misc';
 import ExportRequestsModal from '../components/modals/export-requests-modal';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import VCS from '../../sync/vcs';
+import { VCS } from '../../sync/vcs/vcs';
 import SyncMergeModal from '../components/modals/sync-merge-modal';
 import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
 import { NeDBClient } from '../../sync/git/ne-db-client';
