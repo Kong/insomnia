@@ -7,20 +7,21 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { projectSchema } from '../../__schemas__/type-schemas';
 import { pullProject } from '../pull-project';
 import { mocked } from 'ts-jest/utils';
-import { MockedObjectDeep } from 'ts-jest/dist/utils/testing';
 import MemoryDriver from '../../store/drivers/memory-driver';
 
 jest.mock('../');
 
 const project = createBuilder(projectSchema).build();
 
+const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
+
 describe('pullProject()', () => {
-  let vcs: MockedObjectDeep<VCS>;
+  let vcs = newMockedVcs();
 
   beforeEach(async () => {
     (VCS as jest.MockedClass<typeof VCS>).mockClear();
     await globalBeforeEach();
-    vcs = mocked(new VCS(new MemoryDriver()), true);
+    vcs = newMockedVcs();
   });
 
   afterEach(() => {
