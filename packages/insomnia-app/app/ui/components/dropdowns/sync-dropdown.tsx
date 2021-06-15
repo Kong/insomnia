@@ -33,7 +33,7 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 
 interface Props {
   workspace: Workspace;
-  workspaceMeta: WorkspaceMeta;
+  workspaceMeta?: WorkspaceMeta;
   space: Space | null;
   vcs: VCS;
   syncItems: StatusCandidate[];
@@ -89,7 +89,7 @@ class SyncDropdown extends PureComponent<Props, State> {
       const spaceId = space?._id;
       const spaceRemoteId = space?.remoteId;
       const spaceIsForWorkspace = spaceId === workspace.parentId;
-      const shouldPush = workspaceMeta.pushSnapshotOnInitialize;
+      const shouldPush = workspaceMeta?.pushSnapshotOnInitialize;
 
       if (spaceId && spaceIsForWorkspace && shouldPush && spaceRemoteId) {
         await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });

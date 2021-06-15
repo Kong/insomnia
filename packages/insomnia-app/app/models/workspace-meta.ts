@@ -87,8 +87,8 @@ export function update(workspaceMeta: WorkspaceMeta, patch: Partial<WorkspaceMet
   return db.docUpdate<WorkspaceMeta>(workspaceMeta, patch);
 }
 
-export async function updateByParentId(workspaceId: string, patch: Partial<WorkspaceMeta> = {}) {
-  const meta = await getByParentId(workspaceId);
+export async function updateByParentId(parentId: string, patch: Partial<WorkspaceMeta> = {}) {
+  const meta = await getByParentId(parentId);
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error not previously caught by Flow
   return db.docUpdate<WorkspaceMeta>(meta, patch);
 }
