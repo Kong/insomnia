@@ -111,8 +111,8 @@ class WrapperHome extends PureComponent<Props, State> {
         if (vcs && spaceRemoteId) {
           const newVcs = vcs.newInstance();
 
-          // Create local and remote project
-          await newVcs.createLocalAndRemoteProject(workspace._id, workspace.name, spaceRemoteId);
+          // Create local
+          await newVcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
 
           const blankStage = {};
           // Everything unstaged
@@ -125,8 +125,8 @@ class WrapperHome extends PureComponent<Props, State> {
           // Snapshot
           await newVcs.takeSnapshot(stage, 'Initial Snapshot');
 
-          // Push initial snapshot
-          await newVcs.push();
+          // Mark for pushing to the active space
+          await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
         }
       },
     });

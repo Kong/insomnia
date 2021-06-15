@@ -9,13 +9,9 @@ import {
 } from '../common/constants';
 
 export const name = 'Workspace Meta';
-
 export const type = 'WorkspaceMeta';
-
 export const prefix = 'wrkm';
-
 export const canDuplicate = false;
-
 export const canSync = false;
 
 interface BaseWorkspaceMeta {
@@ -35,6 +31,7 @@ interface BaseWorkspaceMeta {
   sidebarFilter: string;
   sidebarHidden: boolean;
   sidebarWidth: number;
+  pushSnapshotOnInitialize: boolean;
 }
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -61,6 +58,7 @@ export function init(): BaseWorkspaceMeta {
     sidebarFilter: '',
     sidebarHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    pushSnapshotOnInitialize: false,
   };
 }
 
