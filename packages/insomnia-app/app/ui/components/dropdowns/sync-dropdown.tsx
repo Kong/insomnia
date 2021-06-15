@@ -25,6 +25,7 @@ import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import { pullProject } from '../../../sync/vcs/pull-project';
 import { Space } from '../../../models/space';
+import { WorkspaceMeta } from '../../../models/workspace-meta';
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
@@ -32,6 +33,7 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 
 interface Props {
   workspace: Workspace;
+  workspaceMeta: WorkspaceMeta;
   space: Space | null;
   vcs: VCS;
   syncItems: StatusCandidate[];
@@ -81,15 +83,25 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 
   async refreshMainAttributes(extraState: Record<string, any> = {}) {
-    const { vcs, syncItems, workspace } = this.props;
+    const { vcs, syncItems, workspace, workspaceMeta, space } = this.props;
 
-    if (!vcs.hasProject()) {
-      const remoteProjects = await vcs.remoteProjects();
-      const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
-      this.setState({
-        remoteProjects: matchedProjects,
-      });
-      return;
+    if (!vcs.hasProject() && session.isLoggedIn()) {
+      const spaceId = space?._id;
+      const spaceRemoteId = space?.remoteId;
+      const spaceIsForWorkspace = spaceId === workspace.parentId;
+      const shouldPush = workspaceMeta.pushSnapshotOnInitialize;
+
+      if (spaceId && spaceIsForWorkspace && shouldPush && spaceRemoteId) {
+        await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
+        await vcs.push(spaceRemoteId);
+      } else {
+        const remoteProjects = await vcs.remoteProjects();
+        const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
+        this.setState({
+          remoteProjects: matchedProjects,
+        });
+        return;
+      }
     }
 
     const localBranches = (await vcs.getBranches()).sort();
@@ -129,6 +141,7 @@ class SyncDropdown extends PureComponent<Props, State> {
           initializing: false,
         }),
       );
+
     // Refresh but only if the user has been active in the last n minutes
     this.checkInterval = setInterval(async () => {
       if (Date.now() - this.lastUserActivity < REFRESH_USER_ACTIVITY) {

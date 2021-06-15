@@ -111,7 +111,7 @@ class WrapperHome extends PureComponent<Props, State> {
         if (vcs && spaceRemoteId) {
           const newVcs = vcs.newInstance();
 
-          // Create local
+          // Create local project
           await newVcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
 
           const blankStage = {};

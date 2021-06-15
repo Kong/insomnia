@@ -499,22 +499,17 @@ export class VCS {
     console.log(`[sync] Unshared project ${this._projectId()}`);
   }
 
-  async _getOrCreateRemoteProject() {
+  async _getOrCreateRemoteProject(teamId?: string) {
     const localProject = await this._assertProject();
-    let project = await this._queryProject();
+    let remoteProject = await this._queryProject();
 
-    if (!project) {
-      project = await this._createRemoteProject(localProject);
+    // TODO do we need to ensure that if a remoteProject exists, it is within the expected team?
+    if (!remoteProject) {
+      remoteProject = await this._createRemoteProject(localProject, teamId);
     }
 
-    await this._storeProject(project);
-    return project;
-  }
-
-  async createLocalAndRemoteProject(workspaceId: string, name: string, teamId?: string) {
-    await this.switchAndCreateProjectIfNotExist(workspaceId, name);
-    const localProject = await this._assertProject();
-    await this._createRemoteProject(localProject, teamId);
+    await this._storeProject(remoteProject);
+    return remoteProject;
   }
 
   async _createRemoteProject({ rootDocumentId, name }: Project, teamId?: string) {
@@ -526,8 +521,8 @@ export class VCS {
     return this._queryCreateProject(rootDocumentId, name);
   }
 
-  async push() {
-    await this._getOrCreateRemoteProject();
+  async push(teamId?: string) {
+    await this._getOrCreateRemoteProject(teamId);
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;
