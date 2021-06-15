@@ -1,5 +1,4 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import VCS from '../';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
 import { Workspace } from '../../../models/workspace';
@@ -8,8 +7,9 @@ import { projectSchema } from '../../__schemas__/type-schemas';
 import { pullProject } from '../pull-project';
 import { mocked } from 'ts-jest/utils';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import { VCS } from '../vcs';
 
-jest.mock('../');
+jest.mock('../vcs');
 
 const project = createBuilder(projectSchema).build();
 
