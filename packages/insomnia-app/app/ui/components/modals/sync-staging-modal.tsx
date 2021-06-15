@@ -6,7 +6,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import type { Workspace } from '../../../models/workspace';
-import VCS from '../../../sync/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import * as models from '../../../models';
 import Tooltip from '../tooltip';

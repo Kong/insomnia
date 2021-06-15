@@ -40,7 +40,7 @@ import NunjucksModal from './modals/nunjucks-modal';
 import PromptModal from './modals/prompt-modal';
 import AskModal from './modals/ask-modal';
 import GenerateConfigModal from './modals/generate-config-modal';
-import SelectModal from './modals/select-modal';
+import { SelectModal } from './modals/select-modal';
 import RequestCreateModal from './modals/request-create-modal';
 import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
@@ -70,7 +70,7 @@ import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
-import VCS from '../../sync/vcs';
+import { VCS } from '../../sync/vcs/vcs';
 import type { StatusCandidate } from '../../sync/types';
 import type { RequestMeta } from '../../models/request-meta';
 import type { RequestVersion } from '../../models/request-version';
@@ -107,13 +107,10 @@ export interface WrapperProps {
   // Helper Functions
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleToggleMenuBar: Function;
   handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
   handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
   handleInitializeEntities: () => Promise<void>;
-  handleExportFile: Function;
-  handleShowExportRequestsModal: Function;
   handleShowSettingsModal: Function;
   handleExportRequestsToFile: Function;
   handleSetActiveWorkspace: (workspaceId: string | null) => void;
@@ -539,15 +536,12 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       gitVCS,
       handleActivateRequest,
       handleDuplicateWorkspace,
-      handleExportFile,
       handleExportRequestsToFile,
       handleGetRenderContext,
       handleInitializeEntities,
       handleRender,
       handleSetActiveWorkspace,
-      handleShowExportRequestsModal,
       handleSidebarSort,
-      handleToggleMenuBar,
       isVariableUncovered,
       requestMetas,
       settings,
@@ -687,12 +681,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <SettingsModal
               ref={registerModal}
-              handleShowExportRequestsModal={handleShowExportRequestsModal}
-              handleExportAllToFile={handleExportFile}
-              handleImportClipBoard={this._handleImportClipBoard}
-              handleImportFile={this._handleImportFile}
-              handleImportUri={this._handleImportUri}
-              handleToggleMenuBar={handleToggleMenuBar}
               settings={settings}
             />
 

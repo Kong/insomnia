@@ -5,6 +5,7 @@ import { Space } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { Workspace } from '../../models/workspace';
 import { StatusCandidate } from '../../sync/types';
+
 // ~~~~~~~~~ //
 // Selectors //
 // ~~~~~~~~~ //
@@ -340,6 +341,11 @@ export const selectActiveUnitTests = createSelector(
     // @ts-expect-error -- TSCONVERSION
     return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
   },
+);
+
+export const selectActiveSpaceName = createSelector(
+  selectActiveSpace,
+  activeSpace => activeSpace?.name,
 );
 
 export const selectActiveUnitTestSuites = createSelector(

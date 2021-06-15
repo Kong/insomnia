@@ -1,7 +1,7 @@
 import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
-import VCS from '../../sync/vcs';
+import { VCS } from '../../sync/vcs/vcs';
 import { showError } from './modals';
 
 interface Props {

@@ -41,7 +41,7 @@ const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
 type ConflictHandler = (conflicts: MergeConflict[]) => Promise<MergeConflict[]>;
 
-export default class VCS {
+export class VCS {
   _store: Store;
   _driver: BaseDriver;
   _project: Project | null;

@@ -51,6 +51,7 @@ class LoginModal extends PureComponent<{}, State> {
     const password = this._passwordInput?.value;
 
     try {
+      // @ts-expect-error -- TSCONVERSION this needs to explicitly handle the case where email or password is undefined
       await session.login(email, password);
       this.hide();
     } catch (e) {

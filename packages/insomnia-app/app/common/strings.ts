@@ -1,29 +1,35 @@
-export interface Label {
+export interface StringInfo {
   singular: string;
   plural: string;
 }
-interface Strings {
-  document: Label;
-  collection: Label;
-  space: Label;
-  home: Label;
-}
 
-export const strings: Strings = {
+type StringId =
+  | 'collection'
+  | 'document'
+  | 'home'
+  | 'space'
+  | 'workspace'
+  ;
+
+export const strings: Record<StringId, StringInfo> = {
+  collection: {
+    singular: 'Collection',
+    plural: 'Collections',
+  },
   document: {
     singular: 'Document',
     plural: 'Documents',
   },
-  collection: {
-    singular: 'Collection',
-    plural: 'Collections',
+  home: {
+    singular: 'Dashboard',
+    plural: 'Dashboards',
   },
   space: {
     singular: 'Space',
     plural: 'Spaces',
   },
-  home: {
-    singular: 'Dashboard',
-    plural: 'Dashboards',
+  workspace: {
+    singular: 'Workspace',
+    plural: 'Workspaces',
   },
 };

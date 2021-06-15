@@ -1,18 +1,28 @@
 import electron, { OpenDialogOptions } from 'electron';
 import React, { Fragment } from 'react';
-import { combineReducers } from 'redux';
+import { combineReducers, Dispatch } from 'redux';
 import fs, { NoParamCallback } from 'fs';
 import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import moment from 'moment';
-import type { ImportRawConfig, ImportResult } from '../../../common/import';
-import * as importUtils from '../../../common/import';
+import {
+  ImportRawConfig,
+  ImportResult,
+  importRaw,
+  importUri as _importUri,
+} from '../../../common/import';
+import {
+  exportRequestsData,
+  exportRequestsHAR,
+  exportWorkspacesData,
+  exportWorkspacesHAR,
+} from '../../../common/export';
 import AlertModal from '../../components/modals/alert-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import SelectModal from '../../components/modals/select-modal';
+import { SelectModal } from '../../components/modals/select-modal';
 import { showError, showModal } from '../../components/modals/index';
 import { database } from '../../../common/database';
 import { trackEvent } from '../../../common/analytics';
@@ -60,11 +70,6 @@ const COMMAND_TRIAL_END = 'app/billing/trial-end';
 const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
-
-const VALUE_JSON = 'json';
-const VALUE_YAML = 'yaml';
-const VALUE_HAR = 'har';
-type SelectedFormat = typeof VALUE_HAR | typeof VALUE_JSON | typeof VALUE_YAML;
 
 // ~~~~~~~~ //
 // REDUCERS //
@@ -147,11 +152,12 @@ export const reducer = combineReducers({
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
+
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
 
-export const newCommand = (command: string, args) => async dispatch => {
+export const newCommand = (command: string, args: any) => async (dispatch: Dispatch<any>) => {
   switch (command) {
     case COMMAND_ALERT:
       showModal(AlertModal, {
@@ -381,7 +387,7 @@ export interface ImportOptions {
 export const importFile = (
   workspaceId: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async dispatch => {
+) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
   const options: OpenDialogOptions = {
     title: 'Import Insomnia Data',
@@ -406,7 +412,7 @@ export const importFile = (
       },
     ],
   };
-  const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
+  const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
 
   if (canceled) {
     // It was cancelled, so let's bail out
@@ -414,15 +420,15 @@ export const importFile = (
     return;
   }
 
-  // Let's import all the paths!
-  for (const p of paths) {
+  // Let's import all the files!
+  for (const filePath of filePaths) {
     try {
-      const uri = `file://${p}`;
+      const uri = `file://${filePath}`;
       const options: ImportRawConfig = {
         getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
         getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
       };
-      const result = await importUtils.importUri(uri, options);
+      const result = await _importUri(uri, options);
       handleImportResult(result, 'The file does not contain a valid specification.');
     } catch (err) {
       showModal(AlertModal, {
@@ -456,7 +462,7 @@ const handleImportResult = (result: ImportResult, errorMessage: string) => {
 export const importClipBoard = (
   workspaceId: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async dispatch => {
+) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
   const schema = electron.clipboard.readText();
 
@@ -474,7 +480,7 @@ export const importClipBoard = (
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
       getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
     };
-    const result = await importUtils.importRaw(schema, options);
+    const result = await importRaw(schema, options);
     handleImportResult(result, 'Your clipboard does not contain a valid specification.');
   } catch (err) {
     showModal(AlertModal, {
@@ -490,7 +496,7 @@ export const importUri = (
   workspaceId: string,
   uri: string,
   { forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async dispatch => {
+) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
 
   try {
@@ -498,7 +504,7 @@ export const importUri = (
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
       getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
     };
-    const result = await importUtils.importUri(uri, options);
+    const result = await _importUri(uri, options);
     handleImportResult(result, 'The URI does not contain a valid specification.');
   } catch (err) {
     showModal(AlertModal, {
@@ -510,7 +516,20 @@ export const importUri = (
   }
 };
 
-function showSelectExportTypeModal(onCancel: () => void, onDone: (selectedFormat: SelectedFormat) => void) {
+const VALUE_JSON = 'json';
+const VALUE_YAML = 'yaml';
+const VALUE_HAR = 'har';
+
+export type SelectedFormat =
+  | typeof VALUE_HAR
+  | typeof VALUE_JSON
+  | typeof VALUE_YAML
+  ;
+
+const showSelectExportTypeModal = ({ onCancel, onDone }: {
+  onCancel: () => void;
+  onDone: (selectedFormat: SelectedFormat) => Promise<void>;
+}) => {
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
   showModal(SelectModal, {
     title: 'Select Export Type',
@@ -531,19 +550,25 @@ function showSelectExportTypeModal(onCancel: () => void, onDone: (selectedFormat
     ],
     message: 'Which format would you like to export as?',
     onCancel,
-    onDone: (selectedFormat: SelectedFormat) => {
+    onDone: async (selectedFormat: SelectedFormat) => {
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
-      onDone(selectedFormat);
+      await onDone(selectedFormat);
     },
   });
-}
+};
 
 const showExportPrivateEnvironmentsModal = (privateEnvNames: string) => showModal(AskModal, {
   title: 'Export Private Environments?',
   message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
 });
 
-const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, selectedFormat: SelectedFormat) => {
+const showSaveExportedFileDialog = async ({
+  exportedFileNamePrefix,
+  selectedFormat,
+}: {
+  exportedFileNamePrefix: string,
+  selectedFormat: SelectedFormat,
+}) => {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
@@ -563,32 +588,26 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportWorkspacesToFile = (workspaceId: string | undefined = undefined) => async dispatch => {
+export const exportAllToFile = () => async (dispatch: Dispatch) => {
   dispatch(loadStart());
-  showSelectExportTypeModal(
-    () => dispatch(loadStop()),
-    async (selectedFormat: SelectedFormat) => {
-      const workspace = await models.workspace.getById(workspaceId);
+  showSelectExportTypeModal({
+    onCancel: () => { dispatch(loadStop()); },
+    onDone: async selectedFormat => {
       // Check if we want to export private environments.
-      let environments;
-
-      if (workspace) {
-        const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
-        environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id) || [])];
-      } else {
-        environments = await models.environment.all();
-      }
+      const environments = await models.environment.all();
 
       let exportPrivateEnvironments = false;
-      const privateEnvironments = environments.filter(e => e.isPrivate);
+      const privateEnvironments = environments.filter(environment => environment.isPrivate);
 
       if (privateEnvironments.length) {
-        const names = privateEnvironments.map(e => e.name).join(', ');
+        const names = privateEnvironments.map(environment => environment.name).join(', ');
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
-      const fileNamePrefix = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
-      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: 'Insomnia-All',
+        selectedFormat,
+      });
 
       if (!fileName) {
         // Cancelled.
@@ -601,25 +620,15 @@ export const exportWorkspacesToFile = (workspaceId: string | undefined = undefin
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportWorkspacesHAR(
-              workspace,
-              exportPrivateEnvironments,
-            );
+            stringifiedExport = await exportWorkspacesHAR(null, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'yaml',
-            );
+            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'yaml');
             break;
+
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'json',
-            );
+            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'json');
             break;
         }
       } catch (err) {
@@ -640,14 +649,14 @@ export const exportWorkspacesToFile = (workspaceId: string | undefined = undefin
         dispatch(loadStop());
       });
     },
-  );
+  });
 };
 
-export const exportRequestsToFile = (requestIds: string[]) => async dispatch => {
+export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
-  showSelectExportTypeModal(
-    () => dispatch(loadStop()),
-    async (selectedFormat: SelectedFormat) => {
+  showSelectExportTypeModal({
+    onCancel: () => { dispatch(loadStop()); },
+    onDone: async selectedFormat => {
       const requests: (GrpcRequest | Request)[] = [];
       const privateEnvironments: Environment[] = [];
       const workspaceLookup = {};
@@ -685,8 +694,10 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
-      const fileNamePrefix = 'Insomnia';
-      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: 'Insomnia',
+        selectedFormat,
+      });
 
       if (!fileName) {
         // Cancelled.
@@ -699,26 +710,15 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportRequestsHAR(
-              requests,
-              exportPrivateEnvironments,
-            );
+            stringifiedExport = await exportRequestsHAR(requests, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportRequestsData(
-              requests,
-              exportPrivateEnvironments,
-              'yaml',
-            );
+            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportRequestsData(
-              requests,
-              exportPrivateEnvironments,
-              'json',
-            );
+            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'json');
             break;
         }
       } catch (err) {
@@ -739,7 +739,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
         dispatch(loadStop());
       });
     },
-  );
+  });
 };
 
 export function initActiveSpace() {

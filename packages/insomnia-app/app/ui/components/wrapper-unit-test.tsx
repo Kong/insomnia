@@ -21,7 +21,7 @@ import { generate, runTests, Test } from 'insomnia-testing';
 import { showAlert, showModal, showPrompt } from './modals';
 import Editable from './base/editable';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
-import SelectModal from './modals/select-modal';
+import { SelectModal } from './modals/select-modal';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
 import { getSendRequestCallback } from '../../common/send-request';
 import type { GlobalActivity } from '../../common/constants';
@@ -115,7 +115,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                   value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
-              onDone: v => resolve(v),
+              onDone: value => resolve(value),
             });
           });
         },

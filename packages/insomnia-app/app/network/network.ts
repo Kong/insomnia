@@ -74,7 +74,7 @@ export interface ResponsePatch {
   bytesContent?: number;
   bytesRead?: number;
   contentType?: string;
-  elapsedTime?: number;
+  elapsedTime: number;
   environmentId?: string | null;
   error?: string;
   headers?: ResponseHeader[];
@@ -212,7 +212,7 @@ export async function _actuallySend(
           url: renderedRequest.url,
           parentId: renderedRequest._id,
           error: err.message,
-          elapsedTime: 0,
+          elapsedTime: 0, // 0 because this path is hit during plugin calls
           statusMessage: 'Error',
           settingSendCookies: renderedRequest.settingSendCookies,
           settingStoreCookies: renderedRequest.settingStoreCookies,
@@ -818,8 +818,7 @@ export async function _actuallySend(
           bytesContent: responseBodyBytes,
           // @ts-expect-error -- TSCONVERSION appears to be a genuine error
           bytesRead: curl.getInfo(Curl.info.SIZE_DOWNLOAD),
-          // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) * 1000,
+          elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
           // @ts-expect-error -- TSCONVERSION appears to be a genuine error
           url: curl.getInfo(Curl.info.EFFECTIVE_URL),
         };
@@ -843,6 +842,7 @@ export async function _actuallySend(
           {
             statusMessage,
             error,
+            elapsedTime: curl.getInfo(Curl.info.TOTAL_TIME) as number * 1000,
           },
           null,
           true,
@@ -1002,7 +1002,7 @@ async function _applyRequestPluginHooks(
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...(pluginContexts.data.init() as Record<string, any>),
+      ...pluginContexts.data.init(),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
       ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
@@ -1030,7 +1030,7 @@ async function _applyResponsePluginHooks(
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...(pluginContexts.data.init() as Record<string, any>),
+      ...pluginContexts.data.init(),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.response.init(newResponse) as Record<string, any>),
       ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),

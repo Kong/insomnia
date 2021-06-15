@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import VCS from '../../../sync/vcs';
+import { VCS } from '../../../sync/vcs/vcs';
 import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomnia-components';
 import HelpTooltip from '../help-tooltip';
 import { strings } from '../../../common/strings';
