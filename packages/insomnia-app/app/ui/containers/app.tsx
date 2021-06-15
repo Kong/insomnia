@@ -55,6 +55,7 @@ import {
   selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
+  selectActiveSpace,
   selectActiveUnitTestResult,
   selectActiveUnitTests,
   selectActiveUnitTestSuite,
@@ -1687,6 +1688,8 @@ function mapStateToProps(state, props) {
   // Workspace stuff
 
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  const activeSpace = selectActiveSpace(state, props);
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const workspaces = selectWorkspacesForActiveSpace(state, props);
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state, props);
@@ -1749,6 +1752,7 @@ function mapStateToProps(state, props) {
   const activeUnitTestResult = selectActiveUnitTestResult(state, props);
   return Object.assign({}, state, {
     activity: activeActivity,
+    activeSpace,
     activeApiSpec,
     activeCookieJar,
     activeEnvironment,

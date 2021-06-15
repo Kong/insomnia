@@ -28,6 +28,7 @@ export const useRemoteSpaces = (vcs?: VCS) => {
     }
   }, [vcs]);
 
+  // If the refresh callback changes, refresh
   useEffect(() => {
     (async () => { await refresh(); })();
   }, [refresh]);

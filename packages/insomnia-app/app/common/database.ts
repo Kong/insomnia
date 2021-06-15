@@ -17,6 +17,7 @@ import { Environment } from '../models/environment';
 export interface Query {
   _id?: string | SpecificQuery;
   parentId?: string | null;
+  remoteId?: string | null;
   plugin?: string;
   key?: string;
   environmentId?: string | null;

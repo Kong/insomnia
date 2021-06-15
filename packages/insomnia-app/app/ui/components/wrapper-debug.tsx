@@ -58,7 +58,7 @@ interface Props {
 class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, syncItems } = this.props.wrapperProps;
+    const { vcs, activeWorkspace, activeSpace, syncItems } = this.props.wrapperProps;
     const collection = isCollection(activeWorkspace);
     const design = isDesign(activeWorkspace);
     const share = session.isLoggedIn() && collection && (
@@ -67,7 +67,7 @@ class WrapperDebug extends PureComponent<Props> {
       </Button>
     );
     const betaSync = collection && vcs && isLoggedIn() && (
-      <SyncDropdown workspace={activeWorkspace} vcs={vcs} syncItems={syncItems} />
+      <SyncDropdown workspace={activeWorkspace} space={activeSpace} vcs={vcs} syncItems={syncItems} />
     );
     const gitSync = design && gitSyncDropdown;
     const sync = betaSync || gitSync;

@@ -41,7 +41,7 @@ import PageLayout from './page-layout';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import RemoteWorkspacesDropdown from './dropdowns/remote-workspaces-dropdown';
+import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
 import { strings } from '../../common/strings';
@@ -335,7 +335,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { vcs, workspaces } = this.props.wrapperProps;
+    const { vcs } = this.props.wrapperProps;
     return (
       <div className="row row--right pad-left wide">
         <div
@@ -354,7 +354,7 @@ class WrapperHome extends PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        <RemoteWorkspacesDropdown vcs={vcs} workspaces={workspaces} className="margin-left" />
+        <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
       </div>
     );

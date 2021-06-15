@@ -1,6 +1,6 @@
 import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import { AUTOBIND_CFG, DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import classnames from 'classnames';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import type { Workspace } from '../../../models/workspace';
@@ -23,14 +23,16 @@ import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
+import { pullProject } from '../../../sync/vcs/pull-project';
+import { Space } from '../../../models/space';
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
 const REFRESH_PERIOD = 1000 * 60 * 1;
-const DEFAULT_BRANCH_NAME = 'master';
 
 interface Props {
   workspace: Workspace;
+  space: Space | null;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;
@@ -286,35 +288,12 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handleSetProject(p: Project) {
-    const { vcs } = this.props;
+    const { vcs, space } = this.props;
     this.setState({
       loadingProjectPull: true,
     });
-    await vcs.setProject(p);
-    await vcs.checkout([], DEFAULT_BRANCH_NAME);
-    const remoteBranches = await vcs.getRemoteBranches();
-    const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
-    // The default branch does not exist, so we create it and the workspace locally
-    if (defaultBranchMissing) {
-      const workspace: Workspace = await models.initModel(models.workspace.type, {
-        _id: p.rootDocumentId,
-        name: p.name,
-      });
-      await db.upsert(workspace);
-    } else {
-      // Pull changes
-      await vcs.pull([]); // There won't be any existing docs since it's a new pull
-
-      const flushId = await db.bufferChanges();
-
-      // @ts-expect-error -- TSCONVERSION
-      for (const doc of await vcs.allDocuments()) {
-        await db.upsert(doc);
-      }
-
-      await db.flushChanges(flushId);
-    }
+    await pullProject({ vcs, project: p, spaceId: space?._id });
 
     await this.refreshMainAttributes({
       loadingProjectPull: false,

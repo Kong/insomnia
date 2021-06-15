@@ -23,6 +23,7 @@ import {
   generateCandidateMap,
   getRootSnapshot,
   getStagable,
+  hash,
   hashDocument,
   preMergeCheck,
   stateDelta,
@@ -34,6 +35,7 @@ import * as crypt from '../../account/crypt';
 import * as session from '../../account/session';
 import * as fetch from '../../account/fetch';
 import { strings } from '../../common/strings';
+import { BaseModel } from '../../models';
 
 const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
@@ -154,10 +156,7 @@ export class VCS {
     return {
       stage,
       unstaged,
-      key: hashDocument({
-        stage,
-        unstaged,
-      }).hash,
+      key: hash({ stage, unstaged }).hash,
     };
   }
 
@@ -1541,9 +1540,9 @@ export class VCS {
     await this._store.setItem(paths.head(this._projectId()), head);
   }
 
-  async _getBlob(id: string) {
+  _getBlob(id: string) {
     const p = paths.blob(this._projectId(), id);
-    return this._store.getItem(p) as Record<string, any> | null;
+    return this._store.getItem(p) as Promise<BaseModel | null>;
   }
 
   async _getBlobs(ids: string[]) {
