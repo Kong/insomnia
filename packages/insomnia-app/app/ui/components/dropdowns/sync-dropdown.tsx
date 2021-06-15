@@ -26,6 +26,8 @@ import { strings } from '../../../common/strings';
 import { pullProject } from '../../../sync/vcs/pull-project';
 import { Space } from '../../../models/space';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
+import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
+
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
@@ -34,7 +36,7 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 interface Props {
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space: Space | null;
+  space?: Space;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;
@@ -82,20 +84,6 @@ class SyncDropdown extends PureComponent<Props, State> {
     remoteProjects: [],
   }
 
-  async pushSnapshotOnInitialize() {
-    const { vcs, workspace, workspaceMeta, space } = this.props;
-
-    const spaceId = space?._id;
-    const spaceRemoteId = space?.remoteId;
-    const spaceIsForWorkspace = spaceId === workspace.parentId;
-    const shouldPush = workspaceMeta?.pushSnapshotOnInitialize;
-
-    if (shouldPush && spaceIsForWorkspace && spaceId && spaceRemoteId) {
-      await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
-      await vcs.push(spaceRemoteId);
-    }
-  }
-
   async refreshMainAttributes(extraState: Partial<State> = {}) {
     const { vcs, syncItems, workspace } = this.props;
 
@@ -137,8 +125,10 @@ class SyncDropdown extends PureComponent<Props, State> {
       initializing: true,
     });
 
+    const { vcs, workspace, workspaceMeta, space } = this.props;
+
     try {
-      await this.pushSnapshotOnInitialize();
+      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, space });
       await this.refreshMainAttributes();
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);

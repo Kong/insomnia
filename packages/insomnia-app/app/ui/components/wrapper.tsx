@@ -173,10 +173,10 @@ export interface WrapperProps {
   requestVersions: RequestVersion[];
   unseenWorkspaces: Workspace[];
   workspaceChildren: (Request | RequestGroup)[];
-  activeWorkspaceMeta: WorkspaceMeta;
+  activeWorkspaceMeta?: WorkspaceMeta;
   environments: Environment[];
   activeApiSpec: ApiSpec;
-  activeSpace: Space | null;
+  activeSpace?: Space;
   activeUnitTestSuite: UnitTestSuite | null;
   activeRequestResponses: Response[];
   activeWorkspace: Workspace;

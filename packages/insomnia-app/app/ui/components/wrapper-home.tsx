@@ -52,8 +52,7 @@ import { createWorkspace } from '../redux/modules/workspace';
 import { cloneGitRepository } from '../redux/modules/git';
 import { MemClient } from '../../sync/git/mem-client';
 import { SpaceDropdown } from './dropdowns/space-dropdown';
-import { database } from '../../common/database';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
 
 interface RenderedCard {
   card: ReactNode;
@@ -110,24 +109,7 @@ class WrapperHome extends PureComponent<Props, State> {
 
         // Don't mark for sync if not logged in at the time of creation
         if (isLoggedIn && vcs && spaceRemoteId) {
-          const newVcs = vcs.newInstance();
-
-          // Create local project
-          await newVcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
-
-          const blankStage = {};
-          // Everything unstaged
-          const candidates = getStatusCandidates(await database.withDescendants(workspace));
-          const status = await newVcs.status(candidates, blankStage);
-
-          // Stage everything
-          const stage = await newVcs.stage(blankStage, Object.values(status.unstaged));
-
-          // Snapshot
-          await newVcs.takeSnapshot(stage, 'Initial Snapshot');
-
-          // Mark for pushing to the active space
-          await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
+          await initializeLocalProjectAndMarkForSync({ vcs, workspace });
         }
       },
     });
