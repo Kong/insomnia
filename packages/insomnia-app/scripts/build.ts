@@ -16,7 +16,12 @@ const { readFile, writeFile } = promises;
 // Start build if ran from CLI
 if (require.main === module) {
   process.nextTick(async () => {
-    await module.exports.start(false);
+    try {
+      await module.exports.start(false);
+    } catch (err) {
+      console.log('[build] ERROR:', err);
+      process.exit(1);
+    }
   });
 }
 

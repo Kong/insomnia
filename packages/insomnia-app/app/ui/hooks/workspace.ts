@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { isLoggedIn } from '../../account/session';
 import { Project } from '../../sync/types';
-import VCS from '../../sync/vcs';
+import { VCS } from '../../sync/vcs/vcs';
 import { pullProject } from '../../sync/vcs/pull-project';
 import { showAlert } from '../components/modals';
 import { selectActiveSpace, selectAllWorkspaces } from '../redux/selectors';
