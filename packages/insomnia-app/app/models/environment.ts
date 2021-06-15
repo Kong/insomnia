@@ -63,18 +63,18 @@ export function findByParentId(parentId: string) {
   );
 }
 
-export async function getOrCreateForParentId(workspaceId: string) {
+export async function getOrCreateForParentId(parentId: string) {
   const environments = await db.find<Environment>(type, {
-    parentId: workspaceId,
+    parentId,
   });
 
   if (!environments.length) {
     return create({
-      parentId: workspaceId,
+      parentId,
       name: 'Base Environment',
       // Deterministic base env ID. It helps reduce sync complexity since we won't have to
       // de-duplicate environments.
-      _id: `${prefix}_${crypto.createHash('sha1').update(workspaceId).digest('hex')}`,
+      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
   }
 
