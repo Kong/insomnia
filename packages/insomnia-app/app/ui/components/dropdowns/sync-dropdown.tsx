@@ -134,13 +134,15 @@ class SyncDropdown extends PureComponent<Props, State> {
     this.setState({
       initializing: true,
     });
-    this.refreshMainAttributes()
-      .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
-      .finally(() =>
-        this.setState({
-          initializing: false,
-        }),
-      );
+    try {
+      this.refreshMainAttributes();
+    } catch (err) {
+      console.log('[sync_menu] Error refreshing sync state', err);
+    } finally {
+      this.setState({
+        initializing: false,
+      });
+    }
 
     // Refresh but only if the user has been active in the last n minutes
     this.checkInterval = setInterval(async () => {
