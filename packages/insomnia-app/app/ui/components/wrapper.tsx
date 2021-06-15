@@ -155,6 +155,7 @@ export interface WrapperProps {
   apiSpecs: ApiSpec[];
   loadStartTime: number;
   isLoading: boolean;
+  isLoggedIn: boolean;
   paneWidth: number;
   paneHeight: number;
   responsePreviewMode: string;

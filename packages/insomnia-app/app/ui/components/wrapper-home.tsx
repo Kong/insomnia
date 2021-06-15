@@ -101,14 +101,15 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   async _handleCollectionCreate() {
-    const { handleCreateWorkspace, wrapperProps: { activeSpace, vcs } } = this.props;
+    const { handleCreateWorkspace, wrapperProps: { activeSpace, vcs, isLoggedIn } } = this.props;
 
     await handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
       onCreate: async workspace => {
         const spaceRemoteId = activeSpace?.remoteId;
 
-        if (vcs && spaceRemoteId) {
+        // Don't mark for sync if not logged in at the time of creation
+        if (isLoggedIn && vcs && spaceRemoteId) {
           const newVcs = vcs.newInstance();
 
           // Create local project
