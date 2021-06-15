@@ -82,33 +82,37 @@ class SyncDropdown extends PureComponent<Props, State> {
     remoteProjects: [],
   }
 
-  async refreshMainAttributes(extraState: Record<string, any> = {}) {
-    const { vcs, syncItems, workspace, workspaceMeta, space } = this.props;
+  async pushSnapshotOnInitialize() {
+    const { vcs, workspace, workspaceMeta, space } = this.props;
 
-    if (!vcs.hasProject() && session.isLoggedIn()) {
-      const spaceId = space?._id;
-      const spaceRemoteId = space?.remoteId;
-      const spaceIsForWorkspace = spaceId === workspace.parentId;
-      const shouldPush = workspaceMeta?.pushSnapshotOnInitialize;
+    const spaceId = space?._id;
+    const spaceRemoteId = space?.remoteId;
+    const spaceIsForWorkspace = spaceId === workspace.parentId;
+    const shouldPush = workspaceMeta?.pushSnapshotOnInitialize;
 
-      if (spaceId && spaceIsForWorkspace && shouldPush && spaceRemoteId) {
-        await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
-        await vcs.push(spaceRemoteId);
-      } else {
-        const remoteProjects = await vcs.remoteProjects();
-        const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
-        this.setState({
-          remoteProjects: matchedProjects,
-        });
-        return;
-      }
+    if (shouldPush && spaceIsForWorkspace && spaceId && spaceRemoteId) {
+      await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
+      await vcs.push(spaceRemoteId);
+    }
+  }
+
+  async refreshMainAttributes(extraState: Partial<State> = {}) {
+    const { vcs, syncItems, workspace } = this.props;
+
+    if (!vcs.hasProject()) {
+      const remoteProjects = await vcs.remoteProjects();
+      const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
+      this.setState({
+        remoteProjects: matchedProjects,
+      });
+      return;
     }
 
     const localBranches = (await vcs.getBranches()).sort();
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems, {});
-    const newState = {
+    const newState: Partial<State> = {
       status,
       historyCount,
       localBranches,
@@ -119,23 +123,23 @@ class SyncDropdown extends PureComponent<Props, State> {
     // Do the remote stuff
     if (session.isLoggedIn()) {
       try {
-        // @ts-expect-error -- TSCONVERSION
         newState.compare = await vcs.compareRemoteBranch();
       } catch (err) {
         console.log('Failed to compare remote branches', err.message);
       }
     }
 
-    // @ts-expect-error -- TSCONVERSION
-    this.setState(newState);
+    this.setState(prevState => ({ ...prevState, ...newState }));
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this.setState({
       initializing: true,
     });
+
     try {
-      this.refreshMainAttributes();
+      await this.pushSnapshotOnInitialize();
+      await this.refreshMainAttributes();
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);
     } finally {
