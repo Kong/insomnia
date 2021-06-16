@@ -25,6 +25,10 @@ interface BaseEnvironment {
 
 export type Environment = BaseModel & BaseEnvironment;
 
+export const isEnvironment = (obj: Pick<BaseModel, 'type'>): obj is Environment => (
+  obj.type === type
+);
+
 export function init() {
   return {
     name: 'New Environment',

@@ -117,7 +117,7 @@ import * as workspaceOperations from '../../models/helpers/workspace-operations'
 import { Settings } from '../../models/settings';
 import { isCollection, Workspace } from '../../models/workspace';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
-import { Environment } from '../../models/environment';
+import { Environment, isEnvironment } from '../../models/environment';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
@@ -1325,7 +1325,7 @@ class App extends PureComponent<Props, State> {
 
       // Force refresh if environment changes
       // TODO: Only do this for environments in this workspace (not easy because they're nested)
-      if (doc.type === models.environment.type) {
+      if (isEnvironment(doc)) {
         console.log('[App] Forcing update from environment change', change);
         needsRefresh = true;
       }
