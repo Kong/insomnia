@@ -79,6 +79,10 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
+export const isSettings = (obj: Pick<BaseModel, 'type'>): obj is Settings => (
+  obj.type === type
+);
+
 export function init(): BaseSettings {
   return {
     autoHideMenuBar: false,
