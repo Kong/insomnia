@@ -40,6 +40,10 @@ export const isDesign = (obj: Pick<Workspace, 'scope'>): obj is DesignWorkspace 
   obj.scope === WorkspaceScopeKeys.design
 );
 
+export const isCollection = (obj: Pick<Workspace, 'scope'>): obj is CollectionWorkspace => (
+  obj.scope === WorkspaceScopeKeys.collection
+);
+
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',

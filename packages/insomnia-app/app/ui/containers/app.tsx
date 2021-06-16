@@ -107,9 +107,6 @@ import { NeDBClient } from '../../sync/git/ne-db-client';
 import { fsClient } from '../../sync/git/fs-client';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
-import {
-  isCollection,
-} from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
@@ -118,7 +115,7 @@ import { trackSegmentEvent } from '../../common/analytics';
 import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { Settings } from '../../models/settings';
-import { Workspace } from '../../models/workspace';
+import { isCollection, Workspace } from '../../models/workspace';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { Environment } from '../../models/environment';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
