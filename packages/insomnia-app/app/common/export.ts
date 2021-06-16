@@ -30,6 +30,7 @@ import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
 import { isEnvironment } from '../models/environment';
 import { isUnitTestSuite } from '../models/unit-test-suite';
+import { isUnitTest } from '../models/unit-test';
 
 const EXPORT_FORMAT = 4;
 
@@ -170,7 +171,7 @@ export async function exportRequestsData(
         isEnvironment(d) ||
         isApiSpec(d) ||
         isUnitTestSuite(d) ||
-        d.type === models.unitTest.type ||
+        isUnitTest(d) ||
         isProtoFile(d) ||
         isProtoDirectory(d)
       );
@@ -184,7 +185,7 @@ export async function exportRequestsData(
       if (
         !(
           isUnitTestSuite(d) ||
-          d.type === models.unitTest.type ||
+          isUnitTest(d) ||
           isRequest(d) ||
           isGrpcRequest(d) ||
           isRequestGroup(d) ||
@@ -215,7 +216,7 @@ export async function exportRequestsData(
       } else if (isUnitTestSuite(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
-      } else if (d.type === models.unitTest.type) {
+      } else if (isUnitTest(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_UNIT_TEST;
       } else if (isRequestGroup(d)) {
