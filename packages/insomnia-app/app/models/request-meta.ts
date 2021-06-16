@@ -26,6 +26,10 @@ interface BaseRequestMeta {
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
 
+export const isRequestMeta = (obj: Pick<BaseModel, 'type'>): obj is RequestMeta => (
+  obj.type === type
+);
+
 export function init() {
   return {
     parentId: null,
