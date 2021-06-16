@@ -19,6 +19,10 @@ interface BaseGrpcRequestMeta {
 
 export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
 
+export const isGrpcRequestMeta = (obj: Pick<BaseModel, 'type'>): obj is GrpcRequestMeta => (
+  obj.type === type
+);
+
 export function init() {
   return {
     pinned: false,
