@@ -204,13 +204,13 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handlePushChanges() {
-    const { vcs } = this.props;
+    const { vcs, space: { remoteId } } = this.props;
     this.setState({
       loadingPush: true,
     });
 
     try {
-      await vcs.push(this.props.space.remoteId);
+      await vcs.push(remoteId);
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Push Error',
@@ -224,13 +224,13 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handlePullChanges() {
-    const { vcs, syncItems, space } = this.props;
+    const { vcs, syncItems, space: { remoteId } } = this.props;
     this.setState({
       loadingPull: true,
     });
 
     try {
-      const delta = await vcs.pull(syncItems, space.remoteId);
+      const delta = await vcs.pull(syncItems, remoteId);
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
