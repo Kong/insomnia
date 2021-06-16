@@ -65,18 +65,6 @@ describe('isRequest', () => {
     ).toBe(false);
   });
 });
-// describe('isRequestId', () => {
-//   const supported = [models.request.prefix];
-//   const unsupported = difference(allPrefixes, supported);
-//
-//   it.each(supported)('should return true if id is prefixed by "%s_"', prefix => {
-//     expect(isRequestId(generateId(prefix))).toBe(true);
-//   });
-//
-//   it.each(unsupported)('should return false if id is prefixed by "%s_"', prefix => {
-//     expect(isRequestId(generateId(prefix))).toBe(false);
-//   });
-// });
 
 describe('isRequestGroup', () => {
   const supported = [models.requestGroup.type];
