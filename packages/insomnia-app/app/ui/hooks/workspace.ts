@@ -59,7 +59,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
       // Remove all projects for workspace first
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
 
-      await pullProject({ vcs: newVCS, project, spaceId });
+      await pullProject({ vcs: newVCS, project, space: activeSpace });
 
       await refresh();
     } catch (err) {
@@ -70,7 +70,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     } finally {
       setPullingProjects(state => ({ ...state, [project.id]: false }));
     }
-  }, [vcs, refresh, spaceId]);
+  }, [vcs, refresh, activeSpace]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {
