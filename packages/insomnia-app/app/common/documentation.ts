@@ -12,3 +12,4 @@ export const docsGitAccessToken = {
   bitbucket: 'https://support.atlassian.com/bitbucket-cloud/docs/app-passwords/',
   bitbucketServer: 'https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html',
 };
+export const docsKeyMaps = insomniaDocs('article/203-key-maps');

@@ -32,6 +32,8 @@ import { connect } from 'react-redux';
 import { strings } from '../../../common/strings';
 import { snapNumberToLimits } from '../../../common/misc';
 import { restartApp } from '../../../common/electron-helpers';
+import Link from '../base/link';
+import { docsKeyMaps } from '../../../common/documentation';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -337,6 +339,15 @@ class General extends PureComponent<Props, State> {
           <div className="form-control form-control--outlined">
             <label>
               Text Editor Key Map
+              {isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
+                <HelpTooltip className="space-left">
+                  To improve the Vim experience another change may be necessary for MacOS
+                  <br />
+                  <Link href={docsKeyMaps}>
+                    Documentation <i className="fa fa-external-link-square" />
+                  </Link>
+                </HelpTooltip>
+              )}
               <select
                 defaultValue={settings.editorKeyMap}
                 name="editorKeyMap"
