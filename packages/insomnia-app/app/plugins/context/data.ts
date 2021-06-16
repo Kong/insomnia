@@ -9,7 +9,7 @@ interface PluginImportOptions {
 }
 
 interface InsomniaExport {
-  workspace: Workspace;
+  workspaces?: Workspace[];
   includePrivate?: boolean;
   format?: 'json' | 'yaml';
 }
@@ -35,20 +35,20 @@ export const init = () => ({
     },
     export: {
       insomnia: async ({
-        workspace,
+        workspaces = [],
         includePrivate,
         format,
-      }: InsomniaExport) => exportWorkspacesData(
-        [workspace],
+      }: InsomniaExport = {}) => exportWorkspacesData(
+        workspaces,
         Boolean(includePrivate),
         format || 'json',
       ),
 
       har: async ({
-        workspace,
+        workspaces = [],
         includePrivate,
-      }: HarExport) => exportWorkspacesHAR(
-        [workspace],
+      }: HarExport = {}) => exportWorkspacesHAR(
+        workspaces,
         Boolean(includePrivate),
       ),
     },

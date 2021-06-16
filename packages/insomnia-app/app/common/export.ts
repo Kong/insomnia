@@ -34,24 +34,21 @@ import { isUnitTest } from '../models/unit-test';
 
 const EXPORT_FORMAT = 4;
 
-async function getDocWithDescendants(
-  parentDoc: BaseModel,
-  includePrivateDocs = false,
-) {
+const getDocWithDescendants = (includePrivateDocs = false) => async (parentDoc: BaseModel | null) => {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(
     // Don't include if private, except if we want to
     doc => !doc?.isPrivate || includePrivateDocs,
   );
-}
+};
 
 export async function exportWorkspacesHAR(
   parentDocs: BaseModel[],
   includePrivateDocs = false,
 ) {
-  const docs = (await Promise.all(parentDocs.map(parentDoc => (
-    getDocWithDescendants(parentDoc, includePrivateDocs)
-  )))).flat();
+  const rootDocs: (BaseModel | null)[] = parentDocs.length === 0 ? [null] : parentDocs;
+  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
@@ -124,9 +121,9 @@ export async function exportWorkspacesData(
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  const docs = (await Promise.all(parentDocs.map(parentDoc => (
-    getDocWithDescendants(parentDoc, includePrivateDocs)
-  )))).flat();
+  const rootDocs: (BaseModel | null)[] = parentDocs.length === 0 ? [null] : parentDocs;
+  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
