@@ -29,6 +29,7 @@ import { isWorkspace } from '../models/workspace';
 import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
 import { isEnvironment } from '../models/environment';
+import { isUnitTestSuite } from '../models/unit-test-suite';
 
 const EXPORT_FORMAT = 4;
 
@@ -168,7 +169,7 @@ export async function exportRequestsData(
         isCookieJar(d) ||
         isEnvironment(d) ||
         isApiSpec(d) ||
-        d.type === models.unitTestSuite.type ||
+        isUnitTestSuite(d) ||
         d.type === models.unitTest.type ||
         isProtoFile(d) ||
         isProtoDirectory(d)
@@ -182,7 +183,7 @@ export async function exportRequestsData(
       // Only export these model types.
       if (
         !(
-          d.type === models.unitTestSuite.type ||
+          isUnitTestSuite(d) ||
           d.type === models.unitTest.type ||
           isRequest(d) ||
           isGrpcRequest(d) ||
@@ -211,7 +212,7 @@ export async function exportRequestsData(
       } else if (isEnvironment(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_ENVIRONMENT;
-      } else if (d.type === models.unitTestSuite.type) {
+      } else if (isUnitTestSuite(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
       } else if (d.type === models.unitTest.type) {
