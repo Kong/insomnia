@@ -18,6 +18,10 @@ interface BaseProtoDirectory {
 
 export type ProtoDirectory = BaseModel & BaseProtoDirectory;
 
+export const isProtoDirectory = (obj: Pick<BaseModel, 'type'>): obj is ProtoDirectory => (
+  obj.type === type
+);
+
 export function init(): BaseProtoDirectory {
   return {
     name: 'New Proto Directory',

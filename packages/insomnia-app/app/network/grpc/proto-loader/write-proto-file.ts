@@ -3,10 +3,10 @@ import os from 'os';
 import mkdirp from 'mkdirp';
 import fs from 'fs';
 import { isProtoFile, ProtoFile } from '../../../models/proto-file';
-import type { ProtoDirectory } from '../../../models/proto-directory';
+import { isProtoDirectory, ProtoDirectory } from '../../../models/proto-directory';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
-import { isProtoDirectory, isWorkspace } from '../../../models/helpers/is-model';
+import { isWorkspace } from '../../../models/helpers/is-model';
 import type { BaseModel } from '../../../models';
 import type { Workspace } from '../../../models/workspace';
 

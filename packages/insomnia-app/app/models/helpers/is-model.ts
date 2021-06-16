@@ -1,19 +1,12 @@
 import {
   BaseModel,
-  protoDirectory,
   workspace,
 } from '../index';
 
 import type { CollectionWorkspace, DesignWorkspace, Workspace } from '../workspace';
 import { WorkspaceScopeKeys } from '../../models/workspace';
-import { ProtoDirectory } from '../proto-directory';
-
 // TODO: Invalid until we can ensure all requests are prefixed by the id correctly INS-341
 // export const isRequestId = (id: string) => id.startsWith(`${request.prefix}_`);
-
-export const isProtoDirectory = (obj: Pick<BaseModel, 'type'>): obj is ProtoDirectory => (
-  obj.type === protoDirectory.type
-);
 
 export const isWorkspace = (obj: Pick<BaseModel, 'type'>): obj is Workspace => (
   obj.type === workspace.type

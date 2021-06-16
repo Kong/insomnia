@@ -21,6 +21,7 @@ import {
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
 import {
+  isProtoFile,
   isWorkspace,
 } from '../models/helpers/is-model';
 import { isGrpcRequest } from '../models/grpc-request';
