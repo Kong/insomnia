@@ -503,7 +503,6 @@ export class VCS {
     const localProject = await this._assertProject();
     let remoteProject = await this._queryProject();
 
-    // TODO do we need to ensure that if a remoteProject exists, it is within the expected team?
     if (!remoteProject) {
       remoteProject = await this._createRemoteProject(localProject, teamId);
     }
