@@ -341,10 +341,8 @@ class General extends PureComponent<Props, State> {
               Text Editor Key Map
               {isMac() && settings.editorKeyMap === EDITOR_KEY_MAP_VIM && (
                 <HelpTooltip className="space-left">
-                  To improve the Vim experience another change may be necessary for MacOS
-                  <br />
-                  <Link href={docsKeyMaps}>
-                    Documentation <i className="fa fa-external-link-square" />
+                  To enable key-repeating with Vim on macOS, see <Link href={docsKeyMaps}>
+                    documentation <i className="fa fa-external-link-square" />
                   </Link>
                 </HelpTooltip>
               )}
