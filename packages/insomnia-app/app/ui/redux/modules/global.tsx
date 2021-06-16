@@ -37,7 +37,7 @@ import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import type { GlobalActivity } from '../../../common/constants';
-import type { Workspace, WorkspaceScope } from '../../../models/workspace';
+import { isWorkspace, Workspace, WorkspaceScope } from '../../../models/workspace';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -673,7 +673,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
           models.workspace.type,
           models.requestGroup.type,
         ]);
-        const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+        const workspace = ancestors.find(isWorkspace);
 
         if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
           continue;

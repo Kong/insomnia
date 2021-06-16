@@ -1,6 +1,6 @@
 import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
 import type { Request, RequestHeader } from '../models/request';
-import type { Workspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import type { Settings } from '../models/settings';
 import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
 import {
@@ -872,7 +872,7 @@ export async function sendWithSettings(
     models.requestGroup.type,
     models.workspace.type,
   ]);
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceDoc = ancestors.find(isWorkspace);
   const workspaceId = workspaceDoc ? workspaceDoc._id : 'n/a';
   const workspace = await models.workspace.getById(workspaceId);
 
@@ -951,7 +951,7 @@ export async function send(
   );
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
-  const workspaceDoc = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspaceDoc = ancestors.find(isWorkspace);
   const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
 
   if (!workspace) {

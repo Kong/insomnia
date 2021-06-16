@@ -3,13 +3,12 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
-import * as models from '../../models';
 import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 import type { HandleImportFileCallback, HandleImportUriCallback, WrapperProps } from './wrapper';
 import { database as db } from '../../common/database';
 import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import OnboardingContainer from './onboarding-container';
-import { WorkspaceScopeKeys } from '../../models/workspace';
+import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
 import Analytics from './analytics';
 
 interface Props {
@@ -39,7 +38,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
 
   _handleDbChange(changes: [string, BaseModel, boolean][]) {
     for (const change of changes) {
-      if (change[1].type === models.workspace.type) {
+      if (isWorkspace(change[1])) {
         setTimeout(() => {
           this._handleDone();
         }, 400);

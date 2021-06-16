@@ -115,7 +115,7 @@ import { trackSegmentEvent } from '../../common/analytics';
 import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { Settings } from '../../models/settings';
-import { isCollection, Workspace } from '../../models/workspace';
+import { isCollection, isWorkspace, Workspace } from '../../models/workspace';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { Environment, isEnvironment } from '../../models/environment';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
@@ -1337,7 +1337,7 @@ class App extends PureComponent<Props, State> {
       }
 
       // Delete VCS project if workspace deleted
-      if (vcs && doc.type === models.workspace.type && type === db.CHANGE_REMOVE) {
+      if (vcs && isWorkspace(doc) && type === db.CHANGE_REMOVE) {
         await vcs.removeProjectsForRoot(doc._id);
       }
     }

@@ -9,7 +9,7 @@ import * as models from '../../../models';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
 import { database as db } from '../../../common/database';
-import type { Workspace } from '../../../models/workspace';
+import { isWorkspace, Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
@@ -204,7 +204,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
     const hasDescription = !!request.description;
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(request);
-    const doc = ancestors.find(doc => doc.type === models.workspace.type);
+    const doc = ancestors.find(isWorkspace);
     const workspaceId = doc ? doc._id : 'should-never-happen';
     const workspace = workspaces.find(w => w._id === workspaceId);
     this.setState(
