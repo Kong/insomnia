@@ -39,6 +39,10 @@ interface BaseWorkspaceMeta {
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
 
+export const isWorkspaceMeta = (obj: Pick<BaseModel, 'type'>): obj is WorkspaceMeta => (
+  obj.type === type
+);
+
 export function init(): BaseWorkspaceMeta {
   return {
     activeActivity: null,
