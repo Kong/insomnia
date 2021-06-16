@@ -25,7 +25,7 @@ import { isRequest } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isProtoDirectory } from '../models/proto-directory';
 import { isProtoFile } from '../models/proto-file';
-import { isWorkspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
 import { isEnvironment } from '../models/environment';
@@ -145,11 +145,11 @@ export async function exportRequestsData(
     resources: [],
   };
   const docs: BaseModel[] = [];
-  const workspaces: BaseModel[] = [];
-  const mapTypeAndIdToDoc: Record<string, any> = {};
+  const workspaces: Workspace[] = [];
+  const mapTypeAndIdToDoc: Record<string, BaseModel> = {};
 
-  for (const req of requests) {
-    const ancestors: BaseModel[] = clone(await db.withAncestors(req));
+  for (const request of requests) {
+    const ancestors = clone<BaseModel[]>(await db.withAncestors(request));
 
     for (const ancestor of ancestors) {
       const key = ancestor.type + '___' + ancestor._id;
@@ -168,7 +168,7 @@ export async function exportRequestsData(
   }
 
   for (const workspace of workspaces) {
-    const descendants: BaseModel[] = (await db.withDescendants(workspace)).filter(d => {
+    const descendants = (await db.withDescendants(workspace)).filter(d => {
       // Only interested in these additional model types.
       return (
         isCookieJar(d) ||
