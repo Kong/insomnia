@@ -17,6 +17,10 @@ interface BaseUnitTestResult {
 
 export type UnitTestResult = BaseModel & BaseUnitTestResult;
 
+export const isUnitTestResult = (obj: Pick<BaseModel, 'type'>): obj is UnitTestResult => (
+  obj.type === type
+);
+
 export function init() {
   return {
     results: null,
