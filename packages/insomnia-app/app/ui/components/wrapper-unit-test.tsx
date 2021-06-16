@@ -27,6 +27,8 @@ import { getSendRequestCallback } from '../../common/send-request';
 import type { GlobalActivity } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
 import { trackSegmentEvent } from '../../common/analytics';
+import { isRequestGroup } from '../../models/request-group';
+import { isRequest } from '../../models/request';
 
 interface Props {
   children: SidebarChildObjects;
@@ -313,12 +315,12 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
     const next = (p, children) => {
       for (const c of children) {
-        if (c.doc.type === models.request.type) {
+        if (isRequest(c.doc)) {
           selectableRequests.push({
             name: `${p} [${c.doc.method}] ${c.doc.name}`,
             request: c.doc,
           });
-        } else if (c.doc.type === models.requestGroup.type) {
+        } else if (isRequestGroup(c.doc)) {
           next(c.doc.name + ' / ', c.children);
         }
       }

@@ -20,14 +20,17 @@ import {
 } from './constants';
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
-import {
-  isGrpcRequest,
-  isProtoDirectory,
-  isProtoFile,
-  isRequest,
-  isRequestGroup,
-  isWorkspace,
-} from '../models/helpers/is-model';
+import { isGrpcRequest } from '../models/grpc-request';
+import { isRequest } from '../models/request';
+import { isRequestGroup } from '../models/request-group';
+import { isProtoDirectory } from '../models/proto-directory';
+import { isProtoFile } from '../models/proto-file';
+import { isWorkspace } from '../models/workspace';
+import { isApiSpec } from '../models/api-spec';
+import { isCookieJar } from '../models/cookie-jar';
+import { isEnvironment } from '../models/environment';
+import { isUnitTestSuite } from '../models/unit-test-suite';
+import { isUnitTest } from '../models/unit-test';
 
 const EXPORT_FORMAT = 4;
 
@@ -164,11 +167,11 @@ export async function exportRequestsData(
     const descendants: BaseModel[] = (await db.withDescendants(workspace)).filter(d => {
       // Only interested in these additional model types.
       return (
-        d.type === models.cookieJar.type ||
-        d.type === models.environment.type ||
-        d.type === models.apiSpec.type ||
-        d.type === models.unitTestSuite.type ||
-        d.type === models.unitTest.type ||
+        isCookieJar(d) ||
+        isEnvironment(d) ||
+        isApiSpec(d) ||
+        isUnitTestSuite(d) ||
+        isUnitTest(d) ||
         isProtoFile(d) ||
         isProtoDirectory(d)
       );
@@ -181,20 +184,17 @@ export async function exportRequestsData(
       // Only export these model types.
       if (
         !(
-          d.type === models.unitTestSuite.type ||
-          d.type === models.unitTest.type ||
+          isUnitTestSuite(d) ||
+          isUnitTest(d) ||
           isRequest(d) ||
           isGrpcRequest(d) ||
           isRequestGroup(d) ||
           isProtoFile(d) ||
           isProtoDirectory(d) ||
           isWorkspace(d) ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.cookieJar.type ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.environment.type ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.apiSpec.type
+          isCookieJar(d) ||
+          isEnvironment(d) ||
+          isApiSpec(d)
         )
       ) {
         return false;
@@ -207,16 +207,16 @@ export async function exportRequestsData(
       if (isWorkspace(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_WORKSPACE;
-      } else if (d.type === models.cookieJar.type) {
+      } else if (isCookieJar(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_COOKIE_JAR;
-      } else if (d.type === models.environment.type) {
+      } else if (isEnvironment(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_ENVIRONMENT;
-      } else if (d.type === models.unitTestSuite.type) {
+      } else if (isUnitTestSuite(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
-      } else if (d.type === models.unitTest.type) {
+      } else if (isUnitTest(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_UNIT_TEST;
       } else if (isRequestGroup(d)) {
@@ -234,8 +234,7 @@ export async function exportRequestsData(
       } else if (isProtoDirectory(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_PROTO_DIRECTORY;
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-      } else if (d.type === models.apiSpec.type) {
+      } else if (isApiSpec(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_API_SPEC;
       }

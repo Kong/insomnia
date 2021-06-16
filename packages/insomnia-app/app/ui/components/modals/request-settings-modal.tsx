@@ -11,8 +11,7 @@ import MarkdownEditor from '../markdown-editor';
 import { database as db } from '../../../common/database';
 import type { Workspace } from '../../../models/workspace';
 import type { Request } from '../../../models/request';
-import type { GrpcRequest } from '../../../models/grpc-request';
-import { isGrpcRequest } from '../../../models/helpers/is-model';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 

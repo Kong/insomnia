@@ -17,6 +17,7 @@ import type { RequestParameter } from '../models/request';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './electron-helpers';
 import Analytics from 'analytics-node';
 import { getAccountId } from '../account/session';
+import { isSettings } from '../models/settings';
 
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
@@ -316,7 +317,7 @@ db.onChange(async changes => {
   for (const change of changes) {
     const [event, doc] = change;
 
-    if (doc.type === models.settings.type && event === 'update') {
+    if (isSettings(doc) && event === 'update') {
       if (doc.enableAnalytics) {
         await _flushQueuedEvents();
       }

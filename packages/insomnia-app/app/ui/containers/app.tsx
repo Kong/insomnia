@@ -107,12 +107,6 @@ import { NeDBClient } from '../../sync/git/ne-db-client';
 import { fsClient } from '../../sync/git/fs-client';
 import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
-import {
-  isCollection,
-  isGrpcRequest,
-  isGrpcRequestId,
-  isRequestGroup,
-} from '../../models/helpers/is-model';
 import * as requestOperations from '../../models/helpers/request-operations';
 import { GrpcProvider } from '../context/grpc';
 import { sortMethodMap } from '../../common/sorting';
@@ -121,12 +115,12 @@ import { trackSegmentEvent } from '../../common/analytics';
 import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { Settings } from '../../models/settings';
-import { Workspace } from '../../models/workspace';
-import { GrpcRequest } from '../../models/grpc-request';
-import { Environment } from '../../models/environment';
+import { isCollection, Workspace } from '../../models/workspace';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { Environment, isEnvironment } from '../../models/environment';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';
-import { RequestGroup } from '../../models/request-group';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { ApiSpec } from '../../models/api-spec';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { GitRepository } from '../../models/git-repository';
@@ -1331,7 +1325,7 @@ class App extends PureComponent<Props, State> {
 
       // Force refresh if environment changes
       // TODO: Only do this for environments in this workspace (not easy because they're nested)
-      if (doc.type === models.environment.type) {
+      if (isEnvironment(doc)) {
         console.log('[App] Forcing update from environment change', change);
         needsRefresh = true;
       }

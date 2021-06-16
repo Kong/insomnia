@@ -8,8 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
 import ExportRequestsModal from '../modals/export-requests-modal';
 import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
-import { isDesign } from '../../../models/helpers/is-model';
 import { getAppName } from '../../../common/constants';
+import { isDesign } from '../../../models/workspace';
 
 interface Props {
   hideSettingsModal: () => void;

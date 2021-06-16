@@ -11,7 +11,7 @@ import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isRequestGroup } from '../models/helpers/is-model';
+import { isRequestGroup } from '../models/request-group';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';

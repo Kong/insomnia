@@ -57,6 +57,10 @@ interface BaseResponse {
 
 export type Response = BaseModel & BaseResponse;
 
+export const isResponse = (model: Pick<BaseModel, 'type'>): model is Response => (
+  model.type === type
+);
+
 export function init(): BaseResponse {
   return {
     statusCode: 0,

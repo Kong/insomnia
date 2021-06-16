@@ -8,14 +8,13 @@ import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
-import * as models from '../../../models';
 import { showError, showModal } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import type { Workspace } from '../../../models/workspace';
+import { isDesign, Workspace } from '../../../models/workspace';
 import { database as db } from '../../../common/database';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
@@ -24,8 +23,9 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { isDesign } from '../../../models/helpers/is-model';
 import { ApiSpec } from '../../../models/api-spec';
+import { isRequestGroup } from '../../../models/request-group';
+import { isRequest } from '../../../models/request';
 
 interface Props {
   displayName: string;
@@ -68,9 +68,9 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
       };
       const docs = await db.withDescendants(activeWorkspace);
       const requests = docs.filter(doc => (
-        doc.type === models.request.type && !doc.isPrivate
+        isRequest(doc) && !doc.isPrivate
       ));
-      const requestGroups = docs.filter(d => d.type === models.requestGroup.type);
+      const requestGroups = docs.filter(isRequestGroup);
       await p.action(context, {
         // @ts-expect-error -- TSCONVERSION
         requestGroups,

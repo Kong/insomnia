@@ -16,9 +16,8 @@ import * as requestOperations from '../../../models/helpers/request-operations';
 import GrpcSpinner from '../grpc-spinner';
 import { Environment } from '../../../models/environment';
 import { RequestGroup } from '../../../models/request-group';
-import { GrpcRequest } from '../../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
-import { isGrpcRequest } from '../../../models/helpers/is-model';
 import { HotKeyRegistry } from '../../../common/hotkeys';
 import { HandleRender } from '../../../common/render';
 
