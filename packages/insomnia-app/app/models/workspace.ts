@@ -3,8 +3,8 @@ import * as models from './index';
 import { database as db } from '../common/database';
 import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
-import { isSpaceId } from './helpers/is-model';
 import { Merge } from 'type-fest';
+import { isSpaceId } from './space';
 
 export const name = 'Workspace';
 export const type = 'Workspace';

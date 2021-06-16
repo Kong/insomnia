@@ -19,6 +19,10 @@ interface BaseSpace {
 
 export type Space = BaseModel & BaseSpace;
 
+export const isSpaceId = (id: string | null) => (
+  id?.startsWith(`${prefix}_`)
+);
+
 export function init(): BaseSpace {
   return {
     name: 'My Space',
