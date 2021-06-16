@@ -36,7 +36,7 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 interface Props {
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space?: Space;
+  space: Space;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;

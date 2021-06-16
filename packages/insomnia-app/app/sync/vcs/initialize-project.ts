@@ -33,19 +33,17 @@ export const pushSnapshotOnInitialize = async ({
   vcs,
   workspace,
   workspaceMeta,
-  space,
+  space: { _id: spaceId, remoteId: spaceRemoteId },
 }: {
   vcs: VCS;
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space?: Space;
+  space: Space;
 }) => {
-  const spaceId = space?._id;
-  const spaceRemoteId = space?.remoteId;
   const spaceIsForWorkspace = spaceId === workspace.parentId;
   const markedForPush = workspaceMeta?.pushSnapshotOnInitialize;
 
-  if (markedForPush && spaceIsForWorkspace && spaceId && spaceRemoteId) {
+  if (markedForPush && spaceIsForWorkspace && spaceRemoteId) {
     await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
     await vcs.push(spaceRemoteId);
   }

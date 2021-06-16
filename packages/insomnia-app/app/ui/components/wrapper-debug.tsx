@@ -12,11 +12,9 @@ import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants'
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
-import { isLoggedIn } from '../../account/session';
 import SyncDropdown from './dropdowns/sync-dropdown';
 import { Button } from 'insomnia-components';
 import { showSyncShareModal } from './modals/sync-share-modal';
-import * as session from '../../account/session';
 import { Settings } from '../../models/settings';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { isGrpcRequest } from '../../models/grpc-request';
@@ -59,15 +57,18 @@ interface Props {
 class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, activeWorkspaceMeta, activeSpace, syncItems } = this.props.wrapperProps;
+    const { vcs, activeWorkspace, activeWorkspaceMeta, activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
+
     const collection = isCollection(activeWorkspace);
     const design = isDesign(activeWorkspace);
-    const share = session.isLoggedIn() && collection && (
+
+    const share = isLoggedIn && collection && (
       <Button variant="contained" onClick={showSyncShareModal}>
         <i className="fa fa-globe pad-right-sm" /> Share
       </Button>
     );
-    const betaSync = collection && vcs && isLoggedIn() && (
+
+    const betaSync = collection && vcs && activeSpace?.remoteId && isLoggedIn && (
       <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}
@@ -75,8 +76,10 @@ class WrapperDebug extends PureComponent<Props> {
         vcs={vcs}
         syncItems={syncItems} />
     );
+
     const gitSync = design && gitSyncDropdown;
     const sync = betaSync || gitSync;
+
     return (
       <WorkspacePageHeader
         wrapperProps={wrapperProps}
