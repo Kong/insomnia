@@ -12,7 +12,6 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   const workspaces = useSelector(selectAllWorkspaces);
   const activeSpace = useSelector(selectActiveSpace);
   const spaceRemoteId = activeSpace?.remoteId || undefined;
-  const spaceId = activeSpace?._id;
 
   // Local state
   const [loading, setLoading] = useState(false);
