@@ -32,6 +32,10 @@ export const isGrpcRequest = (obj: Pick<BaseModel, 'type'>): obj is GrpcRequest 
   obj.type === type
 );
 
+export const isGrpcRequestId = (id: string | null) => (
+  id?.startsWith(`${prefix}_`)
+);
+
 export function init(): BaseGrpcRequest {
   return {
     url: '',

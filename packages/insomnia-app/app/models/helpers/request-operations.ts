@@ -1,7 +1,6 @@
-import { GrpcRequest, isGrpcRequest } from '../grpc-request';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../grpc-request';
 import { Request } from '../request';
 import * as models from '../index';
-import { isGrpcRequestId } from './is-model';
 
 export function getById(requestId: string): Promise<Request | GrpcRequest | null> {
   return isGrpcRequestId(requestId)

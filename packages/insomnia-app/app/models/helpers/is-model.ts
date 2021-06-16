@@ -1,7 +1,6 @@
 import {
   BaseModel,
   space,
-  grpcRequest,
   request,
   requestGroup,
   protoFile,
@@ -15,10 +14,6 @@ import { ProtoDirectory } from '../proto-directory';
 import { ProtoFile } from '../proto-file';
 import { RequestGroup } from '../request-group';
 import { Request } from '../request';
-
-export const isGrpcRequestId = (id: string | null) => (
-  id?.startsWith(`${grpcRequest.prefix}_`)
-);
 
 export const isSpaceId = (id: string | null) => (
   id?.startsWith(`${space.prefix}_`)
