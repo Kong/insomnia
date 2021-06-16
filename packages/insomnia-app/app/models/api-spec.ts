@@ -20,6 +20,10 @@ interface BaseApiSpec {
 
 export type ApiSpec = BaseModel & BaseApiSpec;
 
+export const isApiSpec = (obj: Pick<BaseModel, 'type'>): obj is ApiSpec => (
+  obj.type === type
+);
+
 export function init(): BaseApiSpec {
   return {
     fileName: `New ${strings.document.singular}`,

@@ -26,6 +26,7 @@ import { isRequestGroup } from '../models/request-group';
 import { isProtoDirectory } from '../models/proto-directory';
 import { isProtoFile } from '../models/proto-file';
 import { isWorkspace } from '../models/workspace';
+import { isApiSpec } from '../models/api-spec';
 
 const EXPORT_FORMAT = 4;
 
@@ -164,7 +165,7 @@ export async function exportRequestsData(
       return (
         d.type === models.cookieJar.type ||
         d.type === models.environment.type ||
-        d.type === models.apiSpec.type ||
+        isApiSpec(d) ||
         d.type === models.unitTestSuite.type ||
         d.type === models.unitTest.type ||
         isProtoFile(d) ||
@@ -191,8 +192,7 @@ export async function exportRequestsData(
           d.type === models.cookieJar.type ||
           // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
           d.type === models.environment.type ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.apiSpec.type
+          isApiSpec(d)
         )
       ) {
         return false;
@@ -232,8 +232,7 @@ export async function exportRequestsData(
       } else if (isProtoDirectory(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_PROTO_DIRECTORY;
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-      } else if (d.type === models.apiSpec.type) {
+      } else if (isApiSpec(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_API_SPEC;
       }
