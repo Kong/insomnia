@@ -391,7 +391,10 @@ class SyncDropdown extends PureComponent<Props, State> {
     }
 
     return (
-      <DropdownButton className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced">
+      <DropdownButton
+        className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced"
+        disabled={initializing}
+      >
         <div className="ellipsis">
           <i className="fa fa-code-fork space-right" />{' '}
           {initializing ? 'Initializing...' : currentBranch}
