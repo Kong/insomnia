@@ -328,10 +328,10 @@ async function updateWorkspaceScope(
   }
 }
 
-export function isApiSpecImport({ id }: ConvertResultType) {
-  return id === 'openapi3' || id === 'swagger2';
-}
+export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) => (
+  id === 'openapi3' || id === 'swagger2'
+);
 
-export function isInsomniaV4Import({ id }: ConvertResultType) {
-  return id === 'insomnia-4';
-}
+export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) => (
+  id === 'insomnia-4'
+);
