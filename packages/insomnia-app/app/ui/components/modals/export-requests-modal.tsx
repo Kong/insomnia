@@ -6,11 +6,11 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import Tree from '../export-requests/tree';
-import type { Request } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import * as models from '../../../models';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest, isRequestGroup } from '../../../models/helpers/is-model';
+import { isRequestGroup } from '../../../models/helpers/is-model';
 import { Child } from '../sidebar/sidebar-children';
 
 export interface Node {

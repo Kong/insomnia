@@ -12,8 +12,8 @@ import MethodTag from '../tags/method-tag';
 import { fuzzyMatchAll } from '../../../common/misc';
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
-import type { RequestGroup } from '../../../models/request-group';
-import type { Request } from '../../../models/request';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import { isRequest, Request } from '../../../models/request';
 import type { Workspace } from '../../../models/workspace';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
@@ -228,7 +228,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = workspaceChildren
-      .filter(d => d.type === models.request.type)
+      .filter(isRequest)
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;

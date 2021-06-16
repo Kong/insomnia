@@ -4,13 +4,13 @@ import {
   isDesign,
   isProtoDirectory,
   isProtoFile,
-  isRequest,
   isRequestGroup,
   isWorkspace,
 } from '../is-model';
 import { generateId } from '../../../common/misc';
 import { WorkspaceScopeKeys } from '../../workspace';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
+import { isRequest } from '../../request';
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);

@@ -3,7 +3,8 @@ import type { Response } from '../../models/response';
 import type { OAuth2Token } from '../../models/o-auth-2-token';
 import type { Workspace } from '../../models/workspace';
 import type { WorkspaceMeta } from '../../models/workspace-meta';
-import type {
+import {
+  isRequest,
   Request,
   RequestAuthentication,
   RequestBody,
@@ -440,7 +441,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
   async _handleActiveWorkspaceClearAllResponses() {
     const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
-    const requests = docs.filter(doc => doc.type === models.request.type);
+    const requests = docs.filter(isRequest);
 
     for (const req of requests) {
       await models.response.removeForRequest(req._id);

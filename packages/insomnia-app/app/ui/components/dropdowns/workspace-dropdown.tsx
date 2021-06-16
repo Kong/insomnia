@@ -8,7 +8,6 @@ import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownHint from '../base/dropdown/dropdown-hint';
 import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
-import * as models from '../../../models';
 import { showError, showModal } from '../modals';
 import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 import KeydownBinder from '../keydown-binder';
@@ -26,6 +25,8 @@ import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { isDesign } from '../../../models/helpers/is-model';
 import { ApiSpec } from '../../../models/api-spec';
+import { isRequestGroup } from '../../../models/request-group';
+import { isRequest } from '../../../models/request';
 
 interface Props {
   displayName: string;
@@ -68,7 +69,7 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
       };
       const docs = await db.withDescendants(activeWorkspace);
       const requests = docs.filter(doc => (
-        doc.type === models.request.type && !doc.isPrivate
+        isRequest(doc) && !doc.isPrivate
       ));
       const requestGroups = docs.filter(d => d.type === models.requestGroup.type);
       await p.action(context, {

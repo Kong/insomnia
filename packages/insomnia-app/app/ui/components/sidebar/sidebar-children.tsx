@@ -6,12 +6,11 @@ import SidebarRequestRow from './sidebar-request-row';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
-import type { Request } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { isRequest } from '../../../models/helpers/is-model';
 import { HandleRender } from '../../../common/render';
 
 export interface Child {

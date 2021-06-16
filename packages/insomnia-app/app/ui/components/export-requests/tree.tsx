@@ -2,9 +2,8 @@ import React, { PureComponent } from 'react';
 import RequestRow from './request-row';
 import RequestGroupRow from './request-group-row';
 import type { Node } from '../modals/export-requests-modal';
-import type { Request } from '../../../models/request';
+import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
-import { isRequest } from '../../../models/helpers/is-model';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 
 interface Props {

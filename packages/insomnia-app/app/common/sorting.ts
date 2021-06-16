@@ -9,10 +9,10 @@ import {
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
 } from './constants';
-import type { Request } from '../models/request';
+import { isRequest, Request } from '../models/request';
 import { GrpcRequest, isGrpcRequest } from '../models/grpc-request';
 import type { RequestGroup } from '../models/request-group';
-import { isRequest, isRequestGroup } from '../models/helpers/is-model';
+import { isRequestGroup } from '../models/helpers/is-model';
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction = (a: SortableModel, b: SortableModel) => number;

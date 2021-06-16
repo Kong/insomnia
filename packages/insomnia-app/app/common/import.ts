@@ -7,7 +7,7 @@ import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
 import { fnOrString, generateId, diffPatchObj } from './misc';
 import { trackEvent } from './analytics';
-import { isRequest, isWorkspace } from '../models/helpers/is-model';
+import { isWorkspace } from '../models/helpers/is-model';
 import type { Workspace } from '../models/workspace';
 import type { ApiSpec } from '../models/api-spec';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
@@ -17,6 +17,7 @@ import {
   EXPORT_TYPE_WORKSPACE,
   WORKSPACE_ID_KEY,
 } from './constants';
+import { isRequest } from '../models/request';
 
 export interface ImportResult {
   source: string;

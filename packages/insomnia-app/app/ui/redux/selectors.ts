@@ -1,6 +1,8 @@
 import { createSelector } from 'reselect';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { isRequest } from '../../models/request';
+import { isRequestGroup } from '../../models/request-group';
 import { Space } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { Workspace } from '../../models/workspace';
@@ -157,7 +159,7 @@ export const selectActiveWorkspaceEntities = createSelector(
     // @ts-expect-error -- TSCONVERSION
     const addChildrenOf = parent => {
       // Don't add children of requests (eg. auth requests)
-      if (parent.type === models.request.type) {
+      if (isRequest(parent)) {
         return [];
       }
 
@@ -197,7 +199,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
-      e => e.type === models.request.type || e.type === models.requestGroup.type,
+      e => isRequest(e) || e.type === models.requestGroup.type,
     );
   },
 );

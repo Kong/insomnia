@@ -1,6 +1,5 @@
 import {
   BaseModel,
-  request,
   requestGroup,
   protoFile,
   protoDirectory,
@@ -12,14 +11,9 @@ import { WorkspaceScopeKeys } from '../../models/workspace';
 import { ProtoDirectory } from '../proto-directory';
 import { ProtoFile } from '../proto-file';
 import { RequestGroup } from '../request-group';
-import { Request } from '../request';
 
 // TODO: Invalid until we can ensure all requests are prefixed by the id correctly INS-341
 // export const isRequestId = (id: string) => id.startsWith(`${request.prefix}_`);
-
-export const isRequest = (obj: Pick<BaseModel, 'type'>): obj is Request => (
-  obj.type === request.type
-);
 
 export const isRequestGroup = (obj: Pick<BaseModel, 'type'>): obj is RequestGroup => (
   obj.type === requestGroup.type
