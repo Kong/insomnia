@@ -1,6 +1,6 @@
 import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
-import { WorkspaceScopeKeys, Workspace } from '../workspace';
+import { WorkspaceScopeKeys } from '../workspace';
 import { database } from '../../common/database';
 import { WorkspaceMeta } from '../workspace-meta';
 import { Environment } from '../environment';
