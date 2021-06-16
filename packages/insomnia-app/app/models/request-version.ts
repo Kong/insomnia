@@ -32,6 +32,10 @@ const FIELDS_TO_IGNORE = [
   'name',
 ];
 
+export const isRequestVersion = (obj: Pick<BaseModel, 'type'>): obj is RequestVersion => (
+  obj.type === type
+);
+
 export function init() {
   return {
     compressedRequest: null,
