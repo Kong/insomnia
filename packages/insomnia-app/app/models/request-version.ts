@@ -32,8 +32,8 @@ const FIELDS_TO_IGNORE = [
   'name',
 ];
 
-export const isRequestVersion = (obj: Pick<BaseModel, 'type'>): obj is RequestVersion => (
-  obj.type === type
+export const isRequestVersion = (model: Pick<BaseModel, 'type'>): model is RequestVersion => (
+  model.type === type
 );
 
 export function init() {

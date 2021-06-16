@@ -20,8 +20,8 @@ interface BaseApiSpec {
 
 export type ApiSpec = BaseModel & BaseApiSpec;
 
-export const isApiSpec = (obj: Pick<BaseModel, 'type'>): obj is ApiSpec => (
-  obj.type === type
+export const isApiSpec = (model: Pick<BaseModel, 'type'>): model is ApiSpec => (
+  model.type === type
 );
 
 export function init(): BaseApiSpec {

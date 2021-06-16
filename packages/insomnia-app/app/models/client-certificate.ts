@@ -38,8 +38,8 @@ export function init(): BaseClientCertificate {
   };
 }
 
-export const isClientCertificate = (obj: Pick<BaseModel, 'type'>): obj is ClientCertificate => (
-  obj.type === type
+export const isClientCertificate = (model: Pick<BaseModel, 'type'>): model is ClientCertificate => (
+  model.type === type
 );
 
 export async function migrate(doc: ClientCertificate) {

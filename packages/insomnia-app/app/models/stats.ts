@@ -29,8 +29,8 @@ interface BaseStats {
 
 export type Stats = BaseModel & BaseStats;
 
-export const isStats = (obj: Pick<BaseModel, 'type'>): obj is Stats => (
-  obj.type === type
+export const isStats = (model: Pick<BaseModel, 'type'>): model is Stats => (
+  model.type === type
 );
 
 export function init(): BaseStats {

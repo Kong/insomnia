@@ -19,8 +19,8 @@ interface BaseSpace {
 
 export type Space = BaseModel & BaseSpace;
 
-export const isSpace = (obj: Pick<BaseModel, 'type'>): obj is Space => (
-  obj.type === type
+export const isSpace = (model: Pick<BaseModel, 'type'>): model is Space => (
+  model.type === type
 );
 
 export const isSpaceId = (id: string | null) => (

@@ -17,8 +17,8 @@ interface BaseRequestGroupMeta {
 
 export type RequestGroupMeta = BaseModel & BaseRequestGroupMeta;
 
-export const isRequestGroupMeta = (obj: Pick<BaseModel, 'type'>): obj is RequestGroupMeta => (
-  obj.type === type
+export const isRequestGroupMeta = (model: Pick<BaseModel, 'type'>): model is RequestGroupMeta => (
+  model.type === type
 );
 
 export function init() {

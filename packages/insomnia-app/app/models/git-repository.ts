@@ -38,8 +38,8 @@ interface BaseGitRepository {
   uriNeedsMigration: boolean;
 }
 
-export const isGitRepository = (obj: Pick<BaseModel, 'type'>): obj is GitRepository => (
-  obj.type === type
+export const isGitRepository = (model: Pick<BaseModel, 'type'>): model is GitRepository => (
+  model.type === type
 );
 
 export function migrate(doc: GitRepository) {

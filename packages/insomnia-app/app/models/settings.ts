@@ -79,8 +79,8 @@ export const canDuplicate = false;
 
 export const canSync = false;
 
-export const isSettings = (obj: Pick<BaseModel, 'type'>): obj is Settings => (
-  obj.type === type
+export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => (
+  model.type === type
 );
 
 export function init(): BaseSettings {

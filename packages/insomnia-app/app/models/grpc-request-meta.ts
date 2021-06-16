@@ -19,8 +19,8 @@ interface BaseGrpcRequestMeta {
 
 export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
 
-export const isGrpcRequestMeta = (obj: Pick<BaseModel, 'type'>): obj is GrpcRequestMeta => (
-  obj.type === type
+export const isGrpcRequestMeta = (model: Pick<BaseModel, 'type'>): model is GrpcRequestMeta => (
+  model.type === type
 );
 
 export function init() {

@@ -94,8 +94,8 @@ interface BaseRequest {
 
 export type Request = BaseModel & BaseRequest;
 
-export const isRequest = (obj: Pick<BaseModel, 'type'>): obj is Request => (
-  obj.type === type
+export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
+  model.type === type
 );
 
 export function init(): BaseRequest {

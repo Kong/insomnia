@@ -18,8 +18,8 @@ interface BaseUnitTest {
 
 export type UnitTest = BaseModel & BaseUnitTest;
 
-export const isUnitTest = (obj: Pick<BaseModel, 'type'>): obj is UnitTest => (
-  obj.type === type
+export const isUnitTest = (model: Pick<BaseModel, 'type'>): model is UnitTest => (
+  model.type === type
 );
 
 export function init() {

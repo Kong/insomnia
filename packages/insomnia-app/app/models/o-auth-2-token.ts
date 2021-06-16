@@ -28,8 +28,8 @@ interface BaseOAuth2Token {
   errorUri: string;
 }
 
-export const isOAuth2Token = (obj: Pick<BaseModel, 'type'>): obj is OAuth2Token => (
-  obj.type === type
+export const isOAuth2Token = (model: Pick<BaseModel, 'type'>): model is OAuth2Token => (
+  model.type === type
 );
 
 export function init(): BaseOAuth2Token {

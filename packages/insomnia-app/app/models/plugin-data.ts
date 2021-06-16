@@ -19,8 +19,8 @@ interface BasePluginData {
 
 export type PluginData = BaseModel & BasePluginData;
 
-export const isPluginData = (obj: Pick<BaseModel, 'type'>): obj is PluginData => (
-  obj.type === type
+export const isPluginData = (model: Pick<BaseModel, 'type'>): model is PluginData => (
+  model.type === type
 );
 
 export function init(): BasePluginData {

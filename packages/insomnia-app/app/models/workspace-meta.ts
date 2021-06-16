@@ -39,8 +39,8 @@ interface BaseWorkspaceMeta {
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
 
-export const isWorkspaceMeta = (obj: Pick<BaseModel, 'type'>): obj is WorkspaceMeta => (
-  obj.type === type
+export const isWorkspaceMeta = (model: Pick<BaseModel, 'type'>): model is WorkspaceMeta => (
+  model.type === type
 );
 
 export function init(): BaseWorkspaceMeta {

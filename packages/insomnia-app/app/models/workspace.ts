@@ -32,16 +32,16 @@ export const WorkspaceScopeKeys = {
 
 export type Workspace = BaseModel & BaseWorkspace;
 
-export const isWorkspace = (obj: Pick<BaseModel, 'type'>): obj is Workspace => (
-  obj.type === type
+export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => (
+  model.type === type
 );
 
-export const isDesign = (obj: Pick<Workspace, 'scope'>): obj is DesignWorkspace => (
-  obj.scope === WorkspaceScopeKeys.design
+export const isDesign = (workspace: Pick<Workspace, 'scope'>): workspace is DesignWorkspace => (
+  workspace.scope === WorkspaceScopeKeys.design
 );
 
-export const isCollection = (obj: Pick<Workspace, 'scope'>): obj is CollectionWorkspace => (
-  obj.scope === WorkspaceScopeKeys.collection
+export const isCollection = (workspace: Pick<Workspace, 'scope'>): workspace is CollectionWorkspace => (
+  workspace.scope === WorkspaceScopeKeys.collection
 );
 
 export const init = (): BaseWorkspace => ({
