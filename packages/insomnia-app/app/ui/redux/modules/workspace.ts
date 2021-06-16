@@ -38,7 +38,7 @@ export const createWorkspace = ({ scope, onCreate }: {
   scope: WorkspaceScope;
   onCreate?: OnWorkspaceCreateCallback;
 }) => {
-  return async (dispatch, getState) => {
+  return (dispatch, getState) => {
     const activeSpace = selectActiveSpace(getState());
     const parentId = activeSpace?._id || null;
 
@@ -48,7 +48,7 @@ export const createWorkspace = ({ scope, onCreate }: {
     const title = design ? 'Design Document' : 'Request Collection';
     const defaultValue = design ? 'my-spec.yaml' : 'My Collection';
     const segmentEvent = design ? 'Document Created' : 'Collection Created';
-    await showPrompt({
+    showPrompt({
       title: `Create New ${title}`,
       submitName: 'Create',
       placeholder: defaultValue,

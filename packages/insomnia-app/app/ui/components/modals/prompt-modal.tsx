@@ -51,7 +51,6 @@ export interface PromptModalOptions {
 class PromptModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
-  _promiseCallback: ((value: boolean | PromiseLike<boolean>) => void) | null = null;
 
   state: State = {
     title: 'Not Set',
@@ -77,8 +76,6 @@ class PromptModal extends PureComponent<{}, State> {
     const { onComplete, upperCase } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
     await onComplete?.(value);
-    this._promiseCallback?.(true);
-    this._promiseCallback = null;
     this.hide();
   }
 
@@ -89,8 +86,6 @@ class PromptModal extends PureComponent<{}, State> {
     }
 
     onCancel?.();
-    this._promiseCallback?.(false);
-    this._promiseCallback = null;
   }
 
   _setInputRef(n: HTMLInputElement) {
@@ -204,10 +199,6 @@ class PromptModal extends PureComponent<{}, State> {
 
       selectText && this._input && this._input.select();
     }, 100);
-
-    return new Promise<boolean>(resolve => {
-      this._promiseCallback = resolve;
-    });
   }
 
   _renderHintButton(hint: string) {
