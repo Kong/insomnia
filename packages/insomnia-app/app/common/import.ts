@@ -7,8 +7,7 @@ import AlertModal from '../ui/components/modals/alert-modal';
 import fs from 'fs';
 import { fnOrString, generateId, diffPatchObj } from './misc';
 import { trackEvent } from './analytics';
-import { isWorkspace } from '../models/helpers/is-model';
-import type { Workspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import type { ApiSpec } from '../models/api-spec';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
 import {

@@ -32,6 +32,10 @@ export const WorkspaceScopeKeys = {
 
 export type Workspace = BaseModel & BaseWorkspace;
 
+export const isWorkspace = (obj: Pick<BaseModel, 'type'>): obj is Workspace => (
+  obj.type === type
+);
+
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',

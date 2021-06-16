@@ -1,7 +1,6 @@
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
-import { isWorkspace } from '../../models/helpers/is-model';
-import { Workspace } from '../../models/workspace';
+import { isWorkspace, Workspace } from '../../models/workspace';
 import { Project } from '../types';
 import * as models from '../../models';
 import { database } from '../../common/database';

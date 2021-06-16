@@ -6,9 +6,8 @@ import { isProtoFile, ProtoFile } from '../../../models/proto-file';
 import { isProtoDirectory, ProtoDirectory } from '../../../models/proto-directory';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
-import { isWorkspace } from '../../../models/helpers/is-model';
 import type { BaseModel } from '../../../models';
-import type { Workspace } from '../../../models/workspace';
+import { isWorkspace, Workspace } from '../../../models/workspace';
 
 const getProtoTempFileName = ({ _id, modified }: ProtoFile): string => `${_id}.${modified}.proto`;
 

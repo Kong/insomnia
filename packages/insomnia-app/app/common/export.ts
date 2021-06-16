@@ -20,15 +20,12 @@ import {
 } from './constants';
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
-import {
-  isProtoFile,
-  isWorkspace,
-} from '../models/helpers/is-model';
 import { isGrpcRequest } from '../models/grpc-request';
 import { isRequest } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isProtoDirectory } from '../models/proto-directory';
 import { isProtoFile } from '../models/proto-file';
+import { isWorkspace } from '../models/workspace';
 
 const EXPORT_FORMAT = 4;
 
