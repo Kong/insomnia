@@ -27,6 +27,7 @@ import { isProtoDirectory } from '../models/proto-directory';
 import { isProtoFile } from '../models/proto-file';
 import { isWorkspace } from '../models/workspace';
 import { isApiSpec } from '../models/api-spec';
+import { isCookieJar } from '../models/cookie-jar';
 
 const EXPORT_FORMAT = 4;
 
@@ -163,7 +164,7 @@ export async function exportRequestsData(
     const descendants: BaseModel[] = (await db.withDescendants(workspace)).filter(d => {
       // Only interested in these additional model types.
       return (
-        d.type === models.cookieJar.type ||
+        isCookieJar(d) ||
         d.type === models.environment.type ||
         isApiSpec(d) ||
         d.type === models.unitTestSuite.type ||
@@ -188,8 +189,7 @@ export async function exportRequestsData(
           isProtoFile(d) ||
           isProtoDirectory(d) ||
           isWorkspace(d) ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.cookieJar.type ||
+          isCookieJar(d) ||
           // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
           d.type === models.environment.type ||
           isApiSpec(d)
@@ -205,7 +205,7 @@ export async function exportRequestsData(
       if (isWorkspace(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_WORKSPACE;
-      } else if (d.type === models.cookieJar.type) {
+      } else if (isCookieJar(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_COOKIE_JAR;
       } else if (d.type === models.environment.type) {

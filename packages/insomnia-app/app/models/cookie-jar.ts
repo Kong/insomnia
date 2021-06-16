@@ -36,6 +36,10 @@ interface BaseCookieJar {
 
 export type CookieJar = BaseModel & BaseCookieJar;
 
+export const isCookieJar = (obj: Pick<BaseModel, 'type'>): obj is CookieJar => (
+  obj.type === type
+);
+
 export function init() {
   return {
     name: 'Default Jar',
