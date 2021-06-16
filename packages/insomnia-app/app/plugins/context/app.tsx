@@ -77,7 +77,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
               reject(new Error(`Prompt ${title} cancelled`));
             },
 
-            async onComplete(value: string) {
+            onComplete(value: string) {
               resolve(value);
             },
           });
