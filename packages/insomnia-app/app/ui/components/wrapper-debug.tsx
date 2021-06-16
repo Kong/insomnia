@@ -62,23 +62,24 @@ class WrapperDebug extends PureComponent<Props> {
     const collection = isCollection(activeWorkspace);
     const design = isDesign(activeWorkspace);
 
-    const share = isLoggedIn && collection && (
-      <Button variant="contained" onClick={showSyncShareModal}>
-        <i className="fa fa-globe pad-right-sm" /> Share
-      </Button>
-    );
+    let share: ReactNode = null;
+    let insomniaSync: ReactNode = null;
 
-    const betaSync = collection && vcs && activeSpace?.remoteId && isLoggedIn && (
-      <SyncDropdown
+    if (isLoggedIn && collection && activeSpace?.remoteId && vcs) {
+      share = <Button variant="contained" onClick={showSyncShareModal}>
+        <i className="fa fa-globe pad-right-sm" /> Share
+      </Button>;
+
+      insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}
         space={activeSpace}
         vcs={vcs}
-        syncItems={syncItems} />
-    );
+        syncItems={syncItems} />;
+    }
 
     const gitSync = design && gitSyncDropdown;
-    const sync = betaSync || gitSync;
+    const sync = insomniaSync || gitSync;
 
     return (
       <WorkspacePageHeader
