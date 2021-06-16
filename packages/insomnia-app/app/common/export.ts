@@ -35,7 +35,7 @@ import { isUnitTest } from '../models/unit-test';
 const EXPORT_FORMAT = 4;
 
 async function getDocWithDescendants(
-  parentDoc: BaseModel | null = null,
+  parentDoc: BaseModel,
   includePrivateDocs = false,
 ) {
   const docs = await db.withDescendants(parentDoc);
@@ -46,10 +46,12 @@ async function getDocWithDescendants(
 }
 
 export async function exportWorkspacesHAR(
-  model: BaseModel | null = null,
+  parentDocs: BaseModel[],
   includePrivateDocs = false,
 ) {
-  const docs = await getDocWithDescendants(model, includePrivateDocs);
+  const docs = (await Promise.all(parentDocs.map(parentDoc => (
+    getDocWithDescendants(parentDoc, includePrivateDocs)
+  )))).flat();
   const requests = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
@@ -118,11 +120,13 @@ export async function exportRequestsHAR(
 }
 
 export async function exportWorkspacesData(
-  parentDoc: BaseModel | null,
+  parentDocs: BaseModel[],
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  const docs = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  const docs = (await Promise.all(parentDocs.map(parentDoc => (
+    getDocWithDescendants(parentDoc, includePrivateDocs)
+  )))).flat();
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
