@@ -5,21 +5,22 @@ import { Project } from '../types';
 import * as models from '../../models';
 import { database } from '../../common/database';
 import { VCS } from './vcs';
+import { Space } from '../../models/space';
 
 interface Options {
   vcs: VCS;
   project: Project;
-  spaceId?: string;
+  space?: Space;
 }
 
-export const pullProject = async ({ vcs, project, spaceId }: Options) => {
+export const pullProject = async ({ vcs, project, space }: Options) => {
   // Set project, checkout master, and pull
   await vcs.setProject(project);
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
   const remoteBranches = await vcs.getRemoteBranches();
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
-  const workspaceParentId = spaceId || null;
+  const workspaceParentId = space?._id || null;
 
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
@@ -30,7 +31,7 @@ export const pullProject = async ({ vcs, project, spaceId }: Options) => {
     });
     await database.upsert(workspace);
   } else {
-    await vcs.pull([]); // There won't be any existing docs since it's a new pull
+    await vcs.pull([], space?.remoteId); // There won't be any existing docs since it's a new pull
 
     const flushId = await database.bufferChanges();
 

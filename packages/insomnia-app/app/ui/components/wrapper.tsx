@@ -532,6 +532,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activeGitRepository,
       activeRequest,
       activeWorkspace,
+      activeSpace,
       activeApiSpec,
       activeWorkspaceClientCertificates,
       activity,
@@ -747,6 +748,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   workspace={activeWorkspace}
                   vcs={vcs}
+                  space={activeSpace}
                   syncItems={syncItems}
                 />
                 <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
