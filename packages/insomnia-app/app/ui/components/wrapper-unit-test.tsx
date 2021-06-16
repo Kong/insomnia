@@ -320,7 +320,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             name: `${p} [${c.doc.method}] ${c.doc.name}`,
             request: c.doc,
           });
-        } else if (c.doc.type === models.requestGroup.type) {
+        } else if (isRequestGroup(c.doc)) {
           next(c.doc.name + ' / ', c.children);
         }
       }

@@ -71,7 +71,7 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
       const requests = docs.filter(doc => (
         isRequest(doc) && !doc.isPrivate
       ));
-      const requestGroups = docs.filter(d => d.type === models.requestGroup.type);
+      const requestGroups = docs.filter(isRequestGroup);
       await p.action(context, {
         // @ts-expect-error -- TSCONVERSION
         requestGroups,

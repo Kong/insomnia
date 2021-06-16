@@ -20,6 +20,10 @@ interface BaseRequestGroup {
 
 export type RequestGroup = BaseModel & BaseRequestGroup;
 
+export const isRequestGroup = (obj: Pick<BaseModel, 'type'>): obj is RequestGroup => (
+  obj.type === type
+);
+
 export function init(): BaseRequestGroup {
   return {
     name: 'New Folder',

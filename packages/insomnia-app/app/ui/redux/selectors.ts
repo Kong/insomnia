@@ -199,7 +199,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
-      e => isRequest(e) || e.type === models.requestGroup.type,
+      e => isRequest(e) || isRequestGroup(e),
     );
   },
 );

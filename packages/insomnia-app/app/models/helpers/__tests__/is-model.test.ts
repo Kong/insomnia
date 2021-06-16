@@ -2,15 +2,15 @@ import * as models from '../../index';
 import { difference } from 'lodash';
 import {
   isDesign,
-  isProtoDirectory,
-  isProtoFile,
-  isRequestGroup,
   isWorkspace,
 } from '../is-model';
 import { generateId } from '../../../common/misc';
 import { WorkspaceScopeKeys } from '../../workspace';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
 import { isRequest } from '../../request';
+import { isProtoDirectory } from '../../proto-directory';
+import { isProtoFile } from '../../proto-file';
+import { isRequestGroup } from '../../request-group';
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);

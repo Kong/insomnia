@@ -167,12 +167,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   /** Return array of path segments for given request or folder */
   _groupOf(requestOrRequestGroup: BaseModel): string[] {
     const { workspaceChildren } = this.props;
-    const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
+    const requestGroups = workspaceChildren.filter(isRequestGroup);
     const matchedGroups = requestGroups.filter(g => g._id === requestOrRequestGroup.parentId);
-    const currentGroupName =
-      requestOrRequestGroup.type === models.requestGroup.type
-        ? `${requestOrRequestGroup.name}`
-        : '';
+    const currentGroupName = isRequestGroup(requestOrRequestGroup) ? `${requestOrRequestGroup.name}` : '';
 
     // It's the final parent
     if (matchedGroups.length === 0) {
@@ -381,7 +378,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       isModalVisible,
     } = this.state;
     const { workspaceChildren } = this.props;
-    const requestGroups = workspaceChildren.filter(d => d.type === models.requestGroup.type);
+    const requestGroups = workspaceChildren.filter(isRequestGroup);
     return (
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
         <Modal
