@@ -29,6 +29,10 @@ interface BaseStats {
 
 export type Stats = BaseModel & BaseStats;
 
+export const isStats = (obj: Pick<BaseModel, 'type'>): obj is Stats => (
+  obj.type === type
+);
+
 export function init(): BaseStats {
   return {
     currentLaunch: null,
