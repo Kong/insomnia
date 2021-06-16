@@ -9,7 +9,7 @@ import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
-import { isCollection, isDesign, isGrpcRequest } from '../../models/helpers/is-model';
+import { isCollection, isDesign } from '../../models/helpers/is-model';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
@@ -20,6 +20,7 @@ import { showSyncShareModal } from './modals/sync-share-modal';
 import * as session from '../../account/session';
 import { Settings } from '../../models/settings';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { isGrpcRequest } from '../../models/grpc-request';
 
 interface Props {
   forceRefreshKey: number;

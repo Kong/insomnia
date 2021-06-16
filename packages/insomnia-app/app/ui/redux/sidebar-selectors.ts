@@ -1,6 +1,6 @@
 import type { BaseModel } from '../../models';
 import type { Request } from '../../models/request';
-import type { GrpcRequest } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import type { RequestGroup } from '../../models/request-group';
 import { createSelector } from 'reselect';
 import { fuzzyMatchAll } from '../../common/misc';
@@ -11,7 +11,7 @@ import {
   selectEntitiesChildrenMap,
   selectPinnedRequests,
 } from './selectors';
-import { isGrpcRequest, isRequest, isRequestGroup } from '../../models/helpers/is-model';
+import { isRequest, isRequestGroup } from '../../models/helpers/is-model';
 
 type SidebarModels = Request | GrpcRequest | RequestGroup;
 

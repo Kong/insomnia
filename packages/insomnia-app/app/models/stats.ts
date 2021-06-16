@@ -2,8 +2,9 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
 import type { RequestGroup } from './request-group';
-import { isRequest, isGrpcRequest } from './helpers/is-model';
+import { isRequest } from './helpers/is-model';
 import { Space } from './space';
+import { isGrpcRequest } from './grpc-request';
 
 export const name = 'Stats';
 

@@ -2,7 +2,6 @@ import * as models from '../../index';
 import { difference } from 'lodash';
 import {
   isDesign,
-  isGrpcRequest,
   isGrpcRequestId,
   isProtoDirectory,
   isProtoFile,
@@ -12,6 +11,8 @@ import {
 } from '../is-model';
 import { generateId } from '../../../common/misc';
 import { WorkspaceScopeKeys } from '../../workspace';
+import { isGrpcRequest } from '../../grpc-request';
+
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);
 

@@ -21,13 +21,13 @@ import {
 import YAML from 'yaml';
 import { trackEvent } from './analytics';
 import {
-  isGrpcRequest,
   isProtoDirectory,
   isProtoFile,
   isRequest,
   isRequestGroup,
   isWorkspace,
 } from '../models/helpers/is-model';
+import { isGrpcRequest } from '../models/grpc-request';
 
 const EXPORT_FORMAT = 4;
 

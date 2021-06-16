@@ -28,6 +28,10 @@ interface BaseGrpcRequest {
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
 
+export const isGrpcRequest = (obj: Pick<BaseModel, 'type'>): obj is GrpcRequest => (
+  obj.type === type
+);
+
 export function init(): BaseGrpcRequest {
   return {
     url: '',

@@ -109,7 +109,6 @@ import { routableFSClient } from '../../sync/git/routable-fs-client';
 import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import {
   isCollection,
-  isGrpcRequest,
   isGrpcRequestId,
   isRequestGroup,
 } from '../../models/helpers/is-model';
@@ -122,7 +121,7 @@ import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { Settings } from '../../models/settings';
 import { Workspace } from '../../models/workspace';
-import { GrpcRequest } from '../../models/grpc-request';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { Environment } from '../../models/environment';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import { RequestMeta } from '../../models/request-meta';

@@ -10,8 +10,8 @@ import type { Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { isRequest } from '../../../models/helpers/is-model';
 import { HandleRender } from '../../../common/render';
 
 export interface Child {
