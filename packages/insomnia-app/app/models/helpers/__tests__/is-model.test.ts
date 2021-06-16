@@ -2,6 +2,7 @@ import * as models from '../../index';
 import { difference } from 'lodash';
 import {
   isDesign,
+  isRequestGroup,
   isWorkspace,
 } from '../is-model';
 import { generateId } from '../../../common/misc';
