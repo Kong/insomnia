@@ -8,7 +8,8 @@ import type { WrapperProps } from './wrapper';
 import { Header, Breadcrumb } from 'insomnia-components';
 import AccountDropdown from './dropdowns/account-dropdown';
 import SettingsButton from './buttons/settings-button';
-import { isCollection, isDesign } from '../../models/helpers/is-model';
+import { isCollection } from '../../models/helpers/is-model';
+import { isDesign } from '../../models/workspace';
 
 interface Props {
   wrapperProps: WrapperProps;

@@ -1,8 +1,7 @@
-import type { Workspace, WorkspaceScope } from '../../../models/workspace';
+import { isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
 import * as models from '../../../models';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
 import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
-import { isDesign } from '../../../models/helpers/is-model';
 import { showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveWorkspace } from './global';
 import { selectActiveSpace } from '../selectors';

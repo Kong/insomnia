@@ -1,10 +1,7 @@
 import * as models from '../../index';
 import { difference } from 'lodash';
-import {
-  isDesign,
-} from '../is-model';
 import { generateId } from '../../../common/misc';
-import { isWorkspace, WorkspaceScopeKeys } from '../../workspace';
+import { isDesign, isWorkspace, WorkspaceScopeKeys } from '../../workspace';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
 import { isRequest } from '../../request';
 import { isProtoDirectory } from '../../proto-directory';

@@ -36,6 +36,10 @@ export const isWorkspace = (obj: Pick<BaseModel, 'type'>): obj is Workspace => (
   obj.type === type
 );
 
+export const isDesign = (obj: Pick<Workspace, 'scope'>): obj is DesignWorkspace => (
+  obj.scope === WorkspaceScopeKeys.design
+);
+
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,
   description: '',
