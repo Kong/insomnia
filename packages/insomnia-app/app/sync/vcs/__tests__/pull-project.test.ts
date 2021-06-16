@@ -35,7 +35,7 @@ describe('pullProject()', () => {
     });
 
     afterEach(() => {
-      expect(vcs.pull).not.toHaveBeenCalledWith([]);
+      expect(vcs.pull).not.toHaveBeenCalledWith([], expect.anything());
     });
 
     it('should insert a workspace with no parent', async () => {
@@ -101,7 +101,6 @@ describe('pullProject()', () => {
     });
 
     afterEach(() => {
-      expect(vcs.pull).toHaveBeenCalledWith([]);
     });
 
     it('should overwrite the parentId only for a workspace with null', async () => {
@@ -130,11 +129,13 @@ describe('pullProject()', () => {
       expect(requests).toHaveLength(1);
       const request = requests[0];
       expect(request).toStrictEqual(existingReq);
+
+      expect(vcs.pull).toHaveBeenCalledWith([], undefined);
     });
 
     it('should overwrite the parentId only for a workspace with the space id', async () => {
       // Arrange
-      const space = await models.space.create();
+      const space = await models.space.create({ remoteId: 'abc' });
       const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
@@ -157,6 +158,8 @@ describe('pullProject()', () => {
       expect(requests).toHaveLength(1);
       const request = requests[0];
       expect(request).toStrictEqual(existingReq);
+
+      expect(vcs.pull).toHaveBeenCalledWith([], space.remoteId);
     });
   });
 });
