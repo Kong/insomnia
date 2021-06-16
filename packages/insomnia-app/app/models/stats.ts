@@ -2,8 +2,9 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 import type { Workspace } from './workspace';
 import type { RequestGroup } from './request-group';
-import { isRequest, isGrpcRequest } from './helpers/is-model';
 import { Space } from './space';
+import { isGrpcRequest } from './grpc-request';
+import { isRequest } from './request';
 
 export const name = 'Stats';
 
@@ -27,6 +28,10 @@ interface BaseStats {
 }
 
 export type Stats = BaseModel & BaseStats;
+
+export const isStats = (model: Pick<BaseModel, 'type'>): model is Stats => (
+  model.type === type
+);
 
 export function init(): BaseStats {
   return {

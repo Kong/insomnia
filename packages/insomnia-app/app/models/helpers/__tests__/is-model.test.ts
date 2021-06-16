@@ -1,17 +1,13 @@
 import * as models from '../../index';
 import { difference } from 'lodash';
-import {
-  isDesign,
-  isGrpcRequest,
-  isGrpcRequestId,
-  isProtoDirectory,
-  isProtoFile,
-  isRequest,
-  isRequestGroup,
-  isWorkspace,
-} from '../is-model';
 import { generateId } from '../../../common/misc';
-import { WorkspaceScopeKeys } from '../../workspace';
+import { isDesign, isWorkspace, WorkspaceScopeKeys } from '../../workspace';
+import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
+import { isRequest } from '../../request';
+import { isProtoDirectory } from '../../proto-directory';
+import { isProtoFile } from '../../proto-file';
+import { isRequestGroup } from '../../request-group';
+
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);
 
@@ -69,18 +65,6 @@ describe('isRequest', () => {
     ).toBe(false);
   });
 });
-// describe('isRequestId', () => {
-//   const supported = [models.request.prefix];
-//   const unsupported = difference(allPrefixes, supported);
-//
-//   it.each(supported)('should return true if id is prefixed by "%s_"', prefix => {
-//     expect(isRequestId(generateId(prefix))).toBe(true);
-//   });
-//
-//   it.each(unsupported)('should return false if id is prefixed by "%s_"', prefix => {
-//     expect(isRequestId(generateId(prefix))).toBe(false);
-//   });
-// });
 
 describe('isRequestGroup', () => {
   const supported = [models.requestGroup.type];

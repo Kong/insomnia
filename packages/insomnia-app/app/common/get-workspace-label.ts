@@ -1,5 +1,4 @@
-import type { Workspace } from '../models/workspace';
-import { isDesign } from '../models/helpers/is-model';
+import { isDesign, Workspace } from '../models/workspace';
 import { strings } from './strings';
 
 export const getWorkspaceLabel = (w: Workspace) =>

@@ -94,6 +94,10 @@ interface BaseRequest {
 
 export type Request = BaseModel & BaseRequest;
 
+export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
+  model.type === type
+);
+
 export function init(): BaseRequest {
   return {
     url: '',

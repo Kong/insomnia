@@ -37,7 +37,7 @@ import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import type { GlobalActivity } from '../../../common/constants';
-import type { Workspace, WorkspaceScope } from '../../../models/workspace';
+import { isWorkspace, Workspace, WorkspaceScope } from '../../../models/workspace';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -52,7 +52,7 @@ import { getDesignerDataDir } from '../../../common/electron-helpers';
 import { Settings } from '../../../models/settings';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
-import { Environment } from '../../../models/environment';
+import { Environment, isEnvironment } from '../../../models/environment';
 import { BASE_SPACE_ID } from '../../../models/space';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
@@ -673,7 +673,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
           models.workspace.type,
           models.requestGroup.type,
         ]);
-        const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+        const workspace = ancestors.find(isWorkspace);
 
         if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
           continue;
@@ -682,7 +682,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
         workspaceLookup[workspace._id] = true;
         const descendants = await database.withDescendants(workspace);
         const privateEnvs = descendants.filter(
-          descendant => descendant.type === models.environment.type && descendant.isPrivate,
+          descendant => isEnvironment(descendant) && descendant.isPrivate,
         );
         privateEnvironments.push(...privateEnvs);
       }

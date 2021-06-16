@@ -1,6 +1,5 @@
 import { BaseModel } from '../../models';
-import { isWorkspace } from '../../models/helpers/is-model';
-import { Workspace } from '../../models/workspace';
+import { isWorkspace, Workspace } from '../../models/workspace';
 
 // Key for VCS to delete before computing changes
 const DELETE_KEY: keyof BaseModel = 'modified';

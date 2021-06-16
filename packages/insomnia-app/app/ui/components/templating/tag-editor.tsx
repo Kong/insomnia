@@ -17,9 +17,8 @@ import { delay, fnOrString } from '../../../common/misc';
 import { metaSortKeySort } from '../../../common/sorting';
 import type { BaseModel } from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
-import type { Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import { isRequest, isRequestGroup } from '../../../models/helpers/is-model';
+import { isRequest, Request } from '../../../models/request';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
@@ -539,7 +538,7 @@ class TagEditor extends PureComponent<Props, State> {
           let namePrefix: string | null = null;
 
           // Show parent folder with name if it's a request
-          if (doc.type === models.request.type) {
+          if (isRequest(doc)) {
             const requests = allDocs[models.request.type] || [];
             const request: any = requests.find(r => r._id === doc._id);
             const method = request && typeof request.method === 'string' ? request.method : 'GET';

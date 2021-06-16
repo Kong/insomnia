@@ -1,4 +1,4 @@
-import type { ProtoFile } from '../../../models/proto-file';
+import { isProtoFile, ProtoFile } from '../../../models/proto-file';
 import { showAlert, showError } from '../../../ui/components/modals';
 import * as models from '../../../models';
 import React from 'react';
@@ -9,7 +9,6 @@ import ingestProtoDirectory from './ingest-proto-directory';
 import fs from 'fs';
 import path from 'path';
 import * as protoLoader from '../proto-loader';
-import { isProtoFile } from '../../../models/helpers/is-model';
 
 export async function deleteFile(protoFile: ProtoFile, callback: (arg0: string) => void) {
   showAlert({

@@ -18,6 +18,10 @@ interface BaseProtoFile {
 
 export type ProtoFile = BaseModel & BaseProtoFile;
 
+export const isProtoFile = (model: Pick<BaseModel, 'type'>): model is ProtoFile => (
+  model.type === type
+);
+
 export function init(): BaseProtoFile {
   return {
     name: 'New Proto File',

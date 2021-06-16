@@ -18,6 +18,10 @@ interface BaseUnitTest {
 
 export type UnitTest = BaseModel & BaseUnitTest;
 
+export const isUnitTest = (model: Pick<BaseModel, 'type'>): model is UnitTest => (
+  model.type === type
+);
+
 export function init() {
   return {
     requestId: null,

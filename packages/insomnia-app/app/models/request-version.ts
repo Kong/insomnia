@@ -3,7 +3,7 @@ import * as models from './index';
 import { database as db } from '../common/database';
 import { compressObject, decompressObject } from '../common/misc';
 import type { BaseModel } from './index';
-import type { Request } from './request';
+import { isRequest, Request } from './request';
 
 export const name = 'Request Version';
 
@@ -32,6 +32,10 @@ const FIELDS_TO_IGNORE = [
   'name',
 ];
 
+export const isRequestVersion = (model: Pick<BaseModel, 'type'>): model is RequestVersion => (
+  model.type === type
+);
+
 export function init() {
   return {
     compressedRequest: null,
@@ -47,8 +51,7 @@ export function getById(id: string) {
 }
 
 export async function create(request: Request) {
-  // @ts-expect-error -- TSCONVERSION
-  if (!request.type === models.request.type) {
+  if (!isRequest(request)) {
     throw new Error(`New ${type} was not given a valid ${models.request.type} instance`);
   }
 

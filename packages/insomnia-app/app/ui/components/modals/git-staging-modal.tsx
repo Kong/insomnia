@@ -18,6 +18,7 @@ import { gitRollback } from '../../../sync/git/git-rollback';
 import classnames from 'classnames';
 import parseGitPath from '../../../sync/git/parse-git-path';
 import { strings } from '../../../common/strings';
+import { isApiSpec } from '../../../models/api-spec';
 
 interface Item {
   path: string;
@@ -188,8 +189,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     this.statusNames = {};
 
     for (const doc of docs) {
-      // @ts-expect-error -- TSCONVERSION
-      const name = (doc.type === models.apiSpec.type && doc.fileName) || doc.name || '';
+      const name = (isApiSpec(doc) && doc.fileName) || doc.name || '';
       this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] = name;
       this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] = name;
     }

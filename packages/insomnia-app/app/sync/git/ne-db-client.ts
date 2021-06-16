@@ -56,7 +56,7 @@ export class NeDBClient {
     //
     // if (doc.type !== models.workspace.type) {
     //   const ancestors = await db.withAncestors(doc);
-    //   if (!ancestors.find(d => d.type === models.workspace.type)) {
+    //   if (!ancestors.find(isWorkspace)) {
     //     throw new Error(`Not found under workspace ${filePath}`);
     //   }
     // }

@@ -3,8 +3,8 @@ import * as models from './index';
 import { database as db } from '../common/database';
 import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
-import { isSpaceId } from './helpers/is-model';
 import { Merge } from 'type-fest';
+import { isSpaceId } from './space';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -31,6 +31,18 @@ export const WorkspaceScopeKeys = {
 } as const;
 
 export type Workspace = BaseModel & BaseWorkspace;
+
+export const isWorkspace = (model: Pick<BaseModel, 'type'>): model is Workspace => (
+  model.type === type
+);
+
+export const isDesign = (workspace: Pick<Workspace, 'scope'>): workspace is DesignWorkspace => (
+  workspace.scope === WorkspaceScopeKeys.design
+);
+
+export const isCollection = (workspace: Pick<Workspace, 'scope'>): workspace is CollectionWorkspace => (
+  workspace.scope === WorkspaceScopeKeys.collection
+);
 
 export const init = (): BaseWorkspace => ({
   name: `New ${strings.collection.singular}`,

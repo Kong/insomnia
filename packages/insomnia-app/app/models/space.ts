@@ -19,6 +19,14 @@ interface BaseSpace {
 
 export type Space = BaseModel & BaseSpace;
 
+export const isSpace = (model: Pick<BaseModel, 'type'>): model is Space => (
+  model.type === type
+);
+
+export const isSpaceId = (id: string | null) => (
+  id?.startsWith(`${prefix}_`)
+);
+
 export function init(): BaseSpace {
   return {
     name: 'My Space',

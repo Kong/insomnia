@@ -11,7 +11,8 @@ import type { Environment } from '../models/environment';
 import orderedJSON from 'json-order';
 import * as templatingUtils from '../templating/utils';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isRequestGroup } from '../models/helpers/is-model';
+import { isRequestGroup } from '../models/request-group';
+import { isWorkspace } from '../models/workspace';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';
@@ -289,7 +290,7 @@ export async function getRenderContext(
     ancestors = await _getRequestAncestors(request);
   }
 
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = ancestors.find(isWorkspace);
 
   if (!workspace) {
     throw new Error('Failed to render. Could not find workspace');
@@ -429,7 +430,7 @@ export async function getRenderedRequestAndContext(
   extraInfo?: ExtraRenderInfo,
 ) {
   const ancestors = await _getRequestAncestors(request);
-  const workspace = ancestors.find(doc => doc.type === models.workspace.type);
+  const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
   const renderContext = await getRenderContext(
