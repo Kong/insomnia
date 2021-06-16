@@ -109,7 +109,7 @@ class WrapperHome extends PureComponent<Props, State> {
 
         // Don't mark for sync if not logged in at the time of creation
         if (isLoggedIn && vcs && spaceRemoteId) {
-          await initializeLocalProjectAndMarkForSync({ vcs, workspace });
+          await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
     });

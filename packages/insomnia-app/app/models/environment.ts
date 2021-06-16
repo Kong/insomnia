@@ -85,6 +85,10 @@ export function getById(id: string): Promise<Environment | null> {
   return db.get(type, id);
 }
 
+export function getByParentId(parentId: string): Promise<Environment | null> {
+  return db.getWhere<Environment>(type, { parentId });
+}
+
 export async function duplicate(environment: Environment) {
   const name = `${environment.name} (Copy)`;
   // Get sort key of next environment

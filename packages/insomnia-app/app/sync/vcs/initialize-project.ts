@@ -9,21 +9,18 @@ import { VCS } from './vcs';
 const blankStage = {};
 
 export const initializeLocalProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace; }) => {
-  // Don't disturb the existing project
-  const newVcs = vcs.newInstance();
-
   // Create local project
-  await newVcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+  await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
 
   // Everything unstaged
   const candidates = getStatusCandidates(await database.withDescendants(workspace));
-  const status = await newVcs.status(candidates, blankStage);
+  const status = await vcs.status(candidates, blankStage);
 
   // Stage everything
-  const stage = await newVcs.stage(blankStage, Object.values(status.unstaged));
+  const stage = await vcs.stage(blankStage, Object.values(status.unstaged));
 
   // Snapshot
-  await newVcs.takeSnapshot(stage, 'Initial Snapshot');
+  await vcs.takeSnapshot(stage, 'Initial Snapshot');
 
   // Mark for pushing to the active space
   await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
