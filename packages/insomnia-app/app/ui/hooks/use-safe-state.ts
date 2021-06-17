@@ -12,7 +12,8 @@ export const useSafeState = <S>(initialValue: S | (() => S)) => {
     }
   }, [isMounted]);
 
-  const returnValue: [typeof state, typeof _setState] = [state, setState];
+  // This needs to happen to force a tuple return type
+  const returnValue: [typeof state, typeof setState] = [state, setState];
 
   return returnValue;
 };
