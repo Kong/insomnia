@@ -5,10 +5,10 @@ import { VCS } from '../../sync/vcs/vcs';
 import { useCallback, useEffect } from 'react';
 import { isLoggedIn } from '../../account/session';
 import { Space } from '../../models/space';
-import { useStateIfMounted } from './use-state-if-mounted';
+import { useSafeState } from './use-safe-state';
 
 export const useRemoteSpaces = (vcs?: VCS) => {
-  const [loading, setLoading] = useStateIfMounted(false);
+  const [loading, setLoading] = useSafeState(false);
 
   const refresh = useCallback(async () => {
     if (vcs && isLoggedIn()) {
