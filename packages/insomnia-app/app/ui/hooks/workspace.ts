@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { isLoggedIn } from '../../account/session';
 import { Project } from '../../sync/types';
@@ -6,6 +6,7 @@ import { VCS } from '../../sync/vcs/vcs';
 import { pullProject } from '../../sync/vcs/pull-project';
 import { showAlert } from '../components/modals';
 import { selectActiveSpace, selectAllWorkspaces } from '../redux/selectors';
+import { useStateIfMounted } from './use-state-if-mounted';
 
 export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
@@ -15,10 +16,10 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   const spaceId = activeSpace?._id;
 
   // Local state
-  const [loading, setLoading] = useState(false);
-  const [localProjects, setLocalProjects] = useState<Project[]>([]);
-  const [remoteProjects, setRemoteProjects] = useState<Project[]>([]);
-  const [pullingProjects, setPullingProjects] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useStateIfMounted(false);
+  const [localProjects, setLocalProjects] = useStateIfMounted<Project[]>([]);
+  const [remoteProjects, setRemoteProjects] = useStateIfMounted<Project[]>([]);
+  const [pullingProjects, setPullingProjects] = useStateIfMounted<Record<string, boolean>>({});
 
   // Refresh remote spaces
   const refresh = useCallback(async () => {
@@ -33,7 +34,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     setLocalProjects(local);
     setLoading(false);
   },
-  [spaceRemoteId, vcs]);
+  [setLoading, setLocalProjects, setRemoteProjects, spaceRemoteId, vcs]);
 
   // Find remote spaces that haven't been pulled
   const missingProjects = useMemo(() => remoteProjects.filter(({ id, rootDocumentId }) => {
@@ -70,7 +71,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     } finally {
       setPullingProjects(state => ({ ...state, [project.id]: false }));
     }
-  }, [vcs, refresh, spaceId]);
+  }, [vcs, setPullingProjects, spaceId, refresh]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {

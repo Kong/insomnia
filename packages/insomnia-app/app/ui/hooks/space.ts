@@ -2,12 +2,13 @@
 import * as models from '../../models';
 import { database } from '../../common/database';
 import { VCS } from '../../sync/vcs/vcs';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { isLoggedIn } from '../../account/session';
 import { Space } from '../../models/space';
+import { useStateIfMounted } from './use-state-if-mounted';
 
 export const useRemoteSpaces = (vcs?: VCS) => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useStateIfMounted(false);
 
   const refresh = useCallback(async () => {
     if (vcs && isLoggedIn()) {
@@ -26,7 +27,7 @@ export const useRemoteSpaces = (vcs?: VCS) => {
 
       setLoading(false);
     }
-  }, [vcs]);
+  }, [vcs, setLoading]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {
