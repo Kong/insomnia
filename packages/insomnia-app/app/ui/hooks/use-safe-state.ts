@@ -6,9 +6,9 @@ export const useSafeState = <S>(initialValue: S | (() => S)) => {
 
   const [state, _setState] = useState(initialValue);
 
-  const setState = useCallback<typeof _setState>(state => {
+  const setState = useCallback<typeof _setState>((...args) => {
     if (isMounted()) {
-      _setState(state);
+      _setState(...args);
     }
   }, [isMounted]);
 
