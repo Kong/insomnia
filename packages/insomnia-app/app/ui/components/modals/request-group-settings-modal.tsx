@@ -9,61 +9,60 @@ import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
-import * as db from '../../../common/database';
+import { database as db } from '../../../common/database';
 import type { Workspace } from '../../../models/workspace';
 import type { RequestGroup } from '../../../models/request-group';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
-type Props = {
-  editorFontSize: number,
-  editorIndentSize: number,
-  editorKeyMap: string,
-  editorLineWrapping: boolean,
-  nunjucksPowerUserMode: boolean,
-  isVariableUncovered: boolean,
-  handleRender: Function,
-  handleGetRenderContext: Function,
-  workspaces: Array<Workspace>,
-};
+interface Props {
+  editorFontSize: number;
+  editorIndentSize: number;
+  editorKeyMap: string;
+  editorLineWrapping: boolean;
+  nunjucksPowerUserMode: boolean;
+  isVariableUncovered: boolean;
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
+  workspaces: Workspace[];
+}
 
-type State = {
-  requestGroupGroup: RequestGroup | null,
-  showDescription: boolean,
-  defaultPreviewMode: boolean,
-  activeWorkspaceIdToCopyTo: string | null,
-  workspace: Workspace | null,
-  justCopied: boolean,
-  justMoved: boolean,
-};
+interface State {
+  requestGroup: RequestGroup | null;
+  showDescription: boolean;
+  defaultPreviewMode: boolean;
+  activeWorkspaceIdToCopyTo: string | null;
+  workspace?: Workspace;
+  workspaces: Workspace[];
+  justCopied: boolean;
+  justMoved: boolean;
+}
 
-type RequestGroupSettingsModalOptions = {
-  requestGroup: RequestGroup,
-  forceEditMode: boolean,
-};
+interface RequestGroupSettingsModalOptions {
+  requestGroup: RequestGroup;
+  forceEditMode: boolean;
+}
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
-  modal: ?Modal;
-  _editor: ?MarkdownEditor;
+  modal: Modal | null = null;
+  _editor: MarkdownEditor | null = null;
 
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      requestGroup: null,
-      showDescription: false,
-      defaultPreviewMode: false,
-      activeWorkspaceIdToCopyTo: null,
-      workspace: null,
-      workspaces: [],
-      justCopied: false,
-      justMoved: false,
-    };
-  }
+  state: State = {
+    requestGroup: null,
+    showDescription: false,
+    defaultPreviewMode: false,
+    activeWorkspaceIdToCopyTo: null,
+    workspace: undefined,
+    workspaces: [],
+    justCopied: false,
+    justMoved: false,
+  };
 
-  _setModalRef(n: ?Modal) {
+  _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setEditorRef(n: ?MarkdownEditor) {
+  _setEditorRef(n: MarkdownEditor) {
     this._editor = n;
   }
 
@@ -75,7 +74,10 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     }
     const patch = { name };
 
-    const updatedRequestGroup = models.requestGroup.update(originalRequestGroup, patch);
+    const updatedRequestGroup = await models.requestGroup.update(
+      originalRequestGroup,
+      patch,
+    );
     this.setState({ requestGroup: updatedRequestGroup });
   }
 
@@ -83,9 +85,12 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     if (!this.state.requestGroup) {
       return;
     }
-    const requestGroup = await models.requestGroup.update(this.state.requestGroup, {
-      description,
-    });
+    const requestGroup = await models.requestGroup.update(
+      this.state.requestGroup,
+      {
+        description,
+      },
+    );
     this.setState({ requestGroup, defaultPreviewMode: false });
   }
 
@@ -93,7 +98,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     this.setState({ showDescription: true });
   }
 
-  _handleUpdateMoveCopyWorkspace(e: SyntheticEvent<HTMLSelectElement>) {
+  _handleUpdateMoveCopyWorkspace(e: React.SyntheticEvent<HTMLSelectElement>) {
     const { value } = e.currentTarget;
     const workspaceId = value === '__NULL__' ? null : value;
     this.setState({ activeWorkspaceIdToCopyTo: workspaceId });
@@ -154,16 +159,19 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     models.stats.incrementCreatedRequests();
   }
 
-  async show({ requestGroup, forceEditMode }: RequestGroupSettingsModalOptions) {
+  async show({
+    requestGroup,
+    forceEditMode,
+  }: RequestGroupSettingsModalOptions) {
     const { workspaces } = this.props;
 
     const hasDescription = !!requestGroup.description;
 
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(requestGroup);
-    const doc = ancestors.find(doc => doc.type === models.workspace.type);
+    const doc = ancestors.find((doc) => doc.type === models.workspace.type);
     const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspaces.find(w => w._id === workspaceId);
+    const workspace = workspaces.find((w) => w._id === workspaceId);
 
     this.setState(
       {
@@ -189,7 +197,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     this.modal && this.modal.hide();
   }
 
-  _renderDescription(): React.Node {
+  _renderDescription() {
     const {
       editorLineWrapping,
       editorFontSize,
@@ -227,13 +235,14 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     ) : (
       <button
         onClick={this._handleAddDescription}
-        className="btn btn--outlined btn--super-duper-compact">
+        className="btn btn--outlined btn--super-duper-compact"
+      >
         Add Description
       </button>
     );
   }
 
-  _renderMoveCopy(): React.Node {
+  _renderMoveCopy() {
     const { workspaces } = this.props;
 
     const {
@@ -254,14 +263,15 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
           <label>
             Move/Copy to Workspace
             <HelpTooltip position="top" className="space-left">
-              Copy or move the current folder to a new workspace. It will be placed at the root of
-              the new workspace's folder structure.
+              Copy or move the current folder to a new workspace. It will be
+              placed at the root of the new workspace's folder structure.
             </HelpTooltip>
             <select
               value={activeWorkspaceIdToCopyTo || '__NULL__'}
-              onChange={this._handleUpdateMoveCopyWorkspace}>
+              onChange={this._handleUpdateMoveCopyWorkspace}
+            >
               <option value="__NULL__">-- Select Workspace --</option>
-              {workspaces.map(w => {
+              {workspaces.map((w) => {
                 if (workspace && workspace._id === w._id) {
                   return null;
                 }
@@ -279,7 +289,8 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
           <button
             disabled={justCopied || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleCopyToWorkspace}>
+            onClick={this._handleCopyToWorkspace}
+          >
             {justCopied ? 'Copied!' : 'Copy'}
           </button>
         </div>
@@ -287,7 +298,8 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
           <button
             disabled={justMoved || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleMoveToWorkspace}>
+            onClick={this._handleMoveToWorkspace}
+          >
             {justMoved ? 'Moved!' : 'Move'}
           </button>
         </div>
@@ -295,7 +307,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 
-  renderModalBody(): React.Node {
+  renderModalBody() {
     const { requestGroup } = this.state;
 
     if (!requestGroup) {
@@ -309,8 +321,9 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
             Name
             <DebouncedInput
               delay={500}
+              // @ts-expect-error -- TSCONVERSION props expand into an input but are difficult to type
               type="text"
-              placeholder={requestGroup.url || 'My Folder'}
+              placeholder={requestGroup.name || 'My Folder'}
               defaultValue={requestGroup.name}
               onChange={this._handleNameChange}
             />

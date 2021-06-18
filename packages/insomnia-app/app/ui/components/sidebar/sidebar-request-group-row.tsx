@@ -45,7 +45,7 @@ interface State {
 class SidebarRequestGroupRow extends PureComponent<Props, State> {
   state: State = {
     dragDirection: 0,
-  };
+  }
 
   _requestGroupActionsDropdown: RequestGroupActionsDropdown | null = null;
   _expandTag: HTMLDivElement | null = null;
@@ -63,11 +63,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
   }
 
   _handleCollapse() {
-    const {
-      requestGroup,
-      handleSetRequestGroupCollapsed,
-      isCollapsed,
-    } = this.props;
+    const { requestGroup, handleSetRequestGroupCollapsed, isCollapsed } = this.props;
     handleSetRequestGroupCollapsed(requestGroup._id, !isCollapsed);
   }
 
@@ -125,10 +121,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
     const button = connectDragSource(
       // @ts-expect-error -- TSCONVERSION
       connectDropTarget(
-        <button
-          onClick={this._handleCollapse}
-          onContextMenu={this._handleShowActions}
-        >
+        <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
           <div className="sidebar__clickable">
             <i
               className={classnames(
@@ -143,8 +136,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               ref={this._setExpandTagRef}
               className={classnames('sidebar__expand', {
                 'sidebar__expand-hint': isDraggingOver && isCollapsed,
-              })}
-            >
+              })}>
               <div className="tag tag--no-bg tag--small">
                 <span className="tag__inner">OPEN</span>
               </div>
@@ -158,8 +150,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
         <div
           className={classnames('sidebar__item sidebar__item--big', {
             'sidebar__item--active': isActive,
-          })}
-        >
+          })}>
           {button}
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
@@ -181,8 +172,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
         <ul
           className={classnames('sidebar__list', {
             'sidebar__list--collapsed': isCollapsed,
-          })}
-        >
+          })}>
           {!isCollapsed && React.Children.count(children) > 0 ? (
             children
           ) : (
@@ -241,8 +231,7 @@ function isOnExpandTag(monitor, component) {
 
 const dragTarget = {
   drop(props, monitor, component) {
-    const movingDoc =
-      monitor.getItem().requestGroup || monitor.getItem().request;
+    const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
     const parentId = props.requestGroup.parentId;
     const targetId = props.requestGroup._id;
 
@@ -255,10 +244,7 @@ const dragTarget = {
 
   hover(props, monitor, component) {
     if (props.isCollapsed && isOnExpandTag(monitor, component)) {
-      component.props.handleSetRequestGroupCollapsed(
-        props.requestGroup._id,
-        false,
-      );
+      component.props.handleSetRequestGroupCollapsed(props.requestGroup._id, false);
       component.setDragDirection(0);
     } else if (isAbove(monitor, component)) {
       component.setDragDirection(1);
@@ -282,13 +268,5 @@ function targetCollect(connect, monitor) {
   };
 }
 
-const source = DragSource(
-  'SIDEBAR_REQUEST_ROW',
-  dragSource,
-  sourceCollect,
-)(SidebarRequestGroupRow);
-export default DropTarget(
-  'SIDEBAR_REQUEST_ROW',
-  dragTarget,
-  targetCollect,
-)(source);
+const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
+export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);

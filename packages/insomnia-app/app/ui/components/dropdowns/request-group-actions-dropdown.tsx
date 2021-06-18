@@ -30,8 +30,7 @@ interface Props {
   activeEnvironment?: Environment | null;
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  // TODO: fix type, more explicit
-  handleShowSettings: Function,
+  handleShowSettings: (requestGroup: RequestGroup) => any,
   handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
 }
