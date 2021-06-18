@@ -17,6 +17,7 @@ import * as workspaceOperations from '../../../models/helpers/workspace-operatio
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import { useDispatch } from 'react-redux';
 import { setActiveWorkspace } from '../../redux/modules/global';
+import { useLoadingRecord } from '../../hooks/use-loading-record';
 
 interface Props {
   workspace: Workspace;
@@ -95,7 +96,7 @@ const useWorkspaceHandlers = ({ workspace, apiSpec, isLastWorkspace }: { workspa
 
 const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace; apiSpec: ApiSpec; }) => {
   const [actionPlugins, setActionPlugins] = useState<DocumentAction[]>([]);
-  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const { startLoading, stopLoading, isLoading } = useLoadingRecord();
 
   const refresh = useCallback(async () => {
     // Only load document plugins if the scope is designer, for now
@@ -105,7 +106,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
   }, [workspace.scope]);
 
   const handleClick = useCallback(async (p: DocumentAction) => {
-    setLoadingActions(prevState => ({ ...prevState, [p.label]: true }));
+    startLoading(p.label);
 
     try {
       const context = {
@@ -120,10 +121,10 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
         title: 'Document Action Failed',
         error: err,
       });
+    } finally {
+      stopLoading(p.label);
     }
-
-    setLoadingActions(prevState => ({ ...prevState, [p.label]: false }));
-  }, [apiSpec.contents]);
+  }, [apiSpec.contents, startLoading, stopLoading]);
 
   const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
     <DropdownItem
@@ -131,10 +132,10 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
       value={p}
       onClick={handleClick}
       stayOpenAfterClick={!p.hideAfterClick}>
-      {loadingActions[p.label] && spinner}
+      {isLoading(p.label) && spinner}
       {p.label}
     </DropdownItem>
-  )), [actionPlugins, handleClick, loadingActions]);
+  )), [actionPlugins, handleClick, isLoading]);
 
   return { renderPluginDropdownItems, refresh };
 };
