@@ -67,7 +67,7 @@ export const selectActiveSpace = createSelector<any, {}, string, Space | undefin
   },
 );
 
-const selectAllWorkspaces = createSelector(
+export const selectAllWorkspaces = createSelector(
   selectEntitiesLists,
   // @ts-expect-error -- TSCONVERSION
   entitiesLists => entitiesLists.workspaces as Workspace[],
