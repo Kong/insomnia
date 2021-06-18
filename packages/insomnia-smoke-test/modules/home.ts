@@ -44,8 +44,8 @@ export const expectTotalDocuments = async (app, count) => {
   await app.client.waitUntilTextExists('.document-listing__footer', `${count} ${label}`);
 };
 
-export const openDocumentMenuDropdown = async card => {
-  const dropdown = await card.react$('DocumentCardDropdown');
+export const openWorkspaceCardDropdown = async card => {
+  const dropdown = await card.react$('WorkspaceCardDropdown');
   await dropdown.click();
 };
 
