@@ -19,7 +19,6 @@ import {
   DropdownDivider,
   DropdownItem,
   Header,
-  SvgIcon,
 } from 'insomnia-components';
 import { DocumentCardDropdown } from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
@@ -161,7 +160,6 @@ class WrapperHome extends PureComponent<Props, State> {
     const {
       apiSpecs,
       workspaceMetas,
-      workspaces,
     } = this.props.wrapperProps;
     const { filter } = this.state;
     const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
@@ -232,14 +230,8 @@ class WrapperHome extends PureComponent<Props, State> {
       );
     }
 
-    const docMenu = (
-      <DocumentCardDropdown
-        apiSpec={apiSpec}
-        workspace={workspace}
-        isLastWorkspace={workspaces.length === 1}>
-        <SvgIcon icon="ellipsis" />
-      </DocumentCardDropdown>
-    );
+    const docMenu = <DocumentCardDropdown apiSpec={apiSpec} workspace={workspace} />
+    ;
     const version = spec?.info?.version || '';
     let label: string = strings.collection.singular;
     let format = '';

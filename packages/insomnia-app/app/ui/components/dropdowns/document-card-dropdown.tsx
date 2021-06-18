@@ -1,4 +1,4 @@
-import React, { FC, ReactNode, useCallback, useState } from 'react';
+import React, { FC, useCallback, useState } from 'react';
 import { getAppName } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
@@ -15,22 +15,22 @@ import type { Workspace } from '../../../models/workspace';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setActiveWorkspace } from '../../redux/modules/global';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
+import { selectIsLastWorkspace } from '../../redux/selectors';
+import { SvgIcon } from 'insomnia-components';
 
 interface Props {
   workspace: Workspace;
   apiSpec: ApiSpec;
-  isLastWorkspace: boolean;
-  children?: ReactNode | null;
-  className?: string;
 }
 
 const spinner = <i className="fa fa-refresh fa-spin" />;
 
-const useWorkspaceHandlers = ({ workspace, apiSpec, isLastWorkspace }: { workspace: Workspace; apiSpec: ApiSpec; isLastWorkspace: boolean; }) => {
+const useWorkspaceHandlers = ({ workspace, apiSpec }: { workspace: Workspace; apiSpec: ApiSpec; }) => {
   const dispatch = useDispatch();
+  const isLastWorkspace = useSelector(selectIsLastWorkspace);
 
   const handleDuplicate = useCallback(() => {
     showPrompt({
@@ -140,13 +140,13 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
   return { renderPluginDropdownItems, refresh };
 };
 
-export const DocumentCardDropdown: FC<Props> = ({ className, children, workspace, apiSpec, isLastWorkspace }) => {
-  const { handleDelete, handleDuplicate, handleRename } = useWorkspaceHandlers({ apiSpec, workspace, isLastWorkspace });
-  const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins({ apiSpec, workspace });
+export const DocumentCardDropdown: FC<Props> = props => {
+  const { handleDelete, handleDuplicate, handleRename } = useWorkspaceHandlers(props);
+  const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins(props);
 
   return (
     <Dropdown beside onOpen={refresh}>
-      <DropdownButton className={className}>{children}</DropdownButton>
+      <DropdownButton><SvgIcon icon="ellipsis" /></DropdownButton>
 
       <DropdownItem onClick={handleDuplicate}>Duplicate</DropdownItem>
       <DropdownItem onClick={handleRename}>Rename</DropdownItem>
