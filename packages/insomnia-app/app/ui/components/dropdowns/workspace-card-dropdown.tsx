@@ -99,7 +99,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
   const { startLoading, stopLoading, isLoading } = useLoadingRecord();
 
   const refresh = useCallback(async () => {
-    // Only load document plugins if the scope is designer, for now
+    // Only load document plugins if the scope is design, for now
     if (workspace.scope === WorkspaceScopeKeys.design) {
       setActionPlugins(await getDocumentActions());
     }
@@ -128,7 +128,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
 
   const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
     <DropdownItem
-      key={p.label}
+      key={`${p.plugin.name}:${p.label}`}
       value={p}
       onClick={handleClick}
       stayOpenAfterClick={!p.hideAfterClick}>
@@ -140,7 +140,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
   return { renderPluginDropdownItems, refresh };
 };
 
-export const DocumentCardDropdown: FC<Props> = props => {
+export const WorkspaceCardDropdown: FC<Props> = props => {
   const { handleDelete, handleDuplicate, handleRename } = useWorkspaceHandlers(props);
   const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins(props);
 
@@ -154,6 +154,7 @@ export const DocumentCardDropdown: FC<Props> = props => {
       {renderPluginDropdownItems()}
 
       <DropdownDivider />
+
       <DropdownItem className="danger" onClick={handleDelete}>Delete</DropdownItem>
     </Dropdown>
   );

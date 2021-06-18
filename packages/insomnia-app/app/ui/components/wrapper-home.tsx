@@ -20,7 +20,7 @@ import {
   DropdownItem,
   Header,
 } from 'insomnia-components';
-import { DocumentCardDropdown } from './dropdowns/document-card-dropdown';
+import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -230,7 +230,7 @@ class WrapperHome extends PureComponent<Props, State> {
       );
     }
 
-    const docMenu = <DocumentCardDropdown apiSpec={apiSpec} workspace={workspace} />
+    const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} />
     ;
     const version = spec?.info?.version || '';
     let label: string = strings.collection.singular;
