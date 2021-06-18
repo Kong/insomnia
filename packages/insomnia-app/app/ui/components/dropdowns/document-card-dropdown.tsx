@@ -1,6 +1,5 @@
-import React, { PureComponent, ReactNode } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, getAppName } from '../../../common/constants';
+import React, { FC, ReactNode, useCallback, useState } from 'react';
+import { getAppName } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import type { DocumentAction } from '../../../plugins';
@@ -16,66 +15,52 @@ import type { Workspace } from '../../../models/workspace';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { useDispatch } from 'react-redux';
+import { setActiveWorkspace } from '../../redux/modules/global';
 
 interface Props {
-  apiSpec?: ApiSpec | null;
-  children?: ReactNode | null;
   workspace: Workspace;
-  handleSetActiveWorkspace: (workspaceId: string) => void;
+  apiSpec: ApiSpec;
   isLastWorkspace: boolean;
+  children?: ReactNode | null;
   className?: string;
 }
 
-interface State {
-  actionPlugins: DocumentAction[];
-  loadingActions: Record<string, boolean>;
-}
+const spinner = <i className="fa fa-refresh fa-spin" />;
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class DocumentCardDropdown extends PureComponent<Props, State> {
-  state: State = {
-    actionPlugins: [],
-    loadingActions: {},
-  };
+const useWorkspaceHandlers = ({ workspace, apiSpec, isLastWorkspace }: { workspace: Workspace; apiSpec: ApiSpec; isLastWorkspace: boolean; }) => {
+  const dispatch = useDispatch();
 
-  _handleDuplicate() {
-    const { apiSpec, workspace, handleSetActiveWorkspace } = this.props;
+  const handleDuplicate = useCallback(() => {
     showPrompt({
       title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
-      // @ts-expect-error -- TSCONVERSION
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Create',
       selectText: true,
       label: 'New Name',
-      onComplete: newName => {
-        const newWorkspace = workspaceOperations.duplicate(workspace, newName);
-        // @ts-expect-error -- TSCONVERSION
-        handleSetActiveWorkspace(newWorkspace._id);
+      onComplete: async newName => {
+        const newWorkspace = await workspaceOperations.duplicate(workspace, newName);
+        dispatch(setActiveWorkspace(newWorkspace._id));
       },
     });
-  }
+  }, [apiSpec, workspace, dispatch]);
 
-  _handleRename() {
-    const { apiSpec, workspace } = this.props;
+  const handleRename = useCallback(() => {
     showPrompt({
       title: `Rename ${getWorkspaceLabel(workspace).singular}`,
-      // @ts-expect-error -- TSCONVERSION
       defaultValue: getWorkspaceName(workspace, apiSpec),
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
       onComplete: async name => {
-        // @ts-expect-error -- TSCONVERSION
         await workspaceOperations.rename(workspace, apiSpec, name);
       },
     });
-  }
+  }, [apiSpec, workspace]);
 
-  _handleDelete() {
-    const { apiSpec, workspace, isLastWorkspace } = this.props;
+  const handleDelete = useCallback(() => {
     const label = getWorkspaceLabel(workspace);
     const messages = [
-      // @ts-expect-error -- TSCONVERSION
       `Do you really want to delete "${getWorkspaceName(workspace, apiSpec)}"?`,
       isLastWorkspace
         ? ` This is the only ${label.singular.toLowerCase()} so a new one will be created for you.`
@@ -103,25 +88,26 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
         await models.workspace.remove(workspace);
       },
     });
-  }
+  }, [apiSpec, isLastWorkspace, workspace]);
 
-  async _onOpen() {
+  return { handleDelete, handleDuplicate, handleRename };
+};
+
+const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace; apiSpec: ApiSpec; }) => {
+  const [actionPlugins, setActionPlugins] = useState<DocumentAction[]>([]);
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+
+  const refresh = useCallback(async () => {
     // Only load document plugins if the scope is designer, for now
-    if (this.props.workspace.scope === WorkspaceScopeKeys.design) {
-      const plugins = await getDocumentActions();
-      this.setState({
-        actionPlugins: plugins,
-      });
+    if (workspace.scope === WorkspaceScopeKeys.design) {
+      setActionPlugins(await getDocumentActions());
     }
-  }
+  }, [workspace.scope]);
 
-  async _handlePluginClick(p: DocumentAction) {
-    this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [p.label]: true },
-    }));
+  const handleClick = useCallback(async (p: DocumentAction) => {
+    setLoadingActions(prevState => ({ ...prevState, [p.label]: true }));
 
     try {
-      const { apiSpec } = this.props;
       const context = {
         ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
         ...pluginContexts.data.init(),
@@ -136,41 +122,38 @@ class DocumentCardDropdown extends PureComponent<Props, State> {
       });
     }
 
-    this.setState(state => ({
-      loadingActions: { ...state.loadingActions, [p.label]: false },
-    }));
-    // @ts-expect-error -- TSCONVERSION appears to be genuine
-    this._dropdown?.hide();
-  }
+    setLoadingActions(prevState => ({ ...prevState, [p.label]: false }));
+  }, [apiSpec.contents]);
 
-  render() {
-    const { children, className } = this.props;
-    const { actionPlugins, loadingActions } = this.state;
-    return (
-      <Dropdown beside onOpen={this._onOpen}>
-        <DropdownButton className={className}>{children}</DropdownButton>
+  const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
+    <DropdownItem
+      key={p.label}
+      value={p}
+      onClick={handleClick}
+      stayOpenAfterClick={!p.hideAfterClick}>
+      {loadingActions[p.label] && spinner}
+      {p.label}
+    </DropdownItem>
+  )), [actionPlugins, handleClick, loadingActions]);
 
-        <DropdownItem onClick={this._handleDuplicate}>Duplicate</DropdownItem>
-        <DropdownItem onClick={this._handleRename}>Rename</DropdownItem>
+  return { renderPluginDropdownItems, refresh };
+};
 
-        {/* Render actions from plugins */}
-        {actionPlugins.map((p: DocumentAction) => (
-          <DropdownItem
-            key={p.label}
-            onClick={() => this._handlePluginClick(p)}
-            stayOpenAfterClick={!p.hideAfterClick}>
-            {loadingActions[p.label] && <i className="fa fa-refresh fa-spin" />}
-            {p.label}
-          </DropdownItem>
-        ))}
+export const DocumentCardDropdown: FC<Props> = ({ className, children, workspace, apiSpec, isLastWorkspace }) => {
+  const { handleDelete, handleDuplicate, handleRename } = useWorkspaceHandlers({ apiSpec, workspace, isLastWorkspace });
+  const { refresh, renderPluginDropdownItems } = useDocumentActionPlugins({ apiSpec, workspace });
 
-        <DropdownDivider />
-        <DropdownItem className="danger" onClick={this._handleDelete}>
-          Delete
-        </DropdownItem>
-      </Dropdown>
-    );
-  }
-}
+  return (
+    <Dropdown beside onOpen={refresh}>
+      <DropdownButton className={className}>{children}</DropdownButton>
 
-export default DocumentCardDropdown;
+      <DropdownItem onClick={handleDuplicate}>Duplicate</DropdownItem>
+      <DropdownItem onClick={handleRename}>Rename</DropdownItem>
+
+      {renderPluginDropdownItems()}
+
+      <DropdownDivider />
+      <DropdownItem className="danger" onClick={handleDelete}>Delete</DropdownItem>
+    </Dropdown>
+  );
+};

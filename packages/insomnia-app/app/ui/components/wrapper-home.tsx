@@ -7,8 +7,8 @@ import {
   AUTOBIND_CFG,
   isWorkspaceActivity,
 } from '../../common/constants';
-import type { Workspace } from '../../models/workspace';
-import { WorkspaceScopeKeys } from '../../models/workspace';
+import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
+
 import 'swagger-ui-react/swagger-ui.css';
 import {
   Breadcrumb,
@@ -21,7 +21,7 @@ import {
   Header,
   SvgIcon,
 } from 'insomnia-components';
-import DocumentCardDropdown from './dropdowns/document-card-dropdown';
+import { DocumentCardDropdown } from './dropdowns/document-card-dropdown';
 import KeydownBinder from './keydown-binder';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -160,18 +160,22 @@ class WrapperHome extends PureComponent<Props, State> {
   renderCard(workspace: Workspace) {
     const {
       apiSpecs,
-      handleSetActiveWorkspace,
       workspaceMetas,
       workspaces,
     } = this.props.wrapperProps;
     const { filter } = this.state;
     const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
+
+    // an apiSpec model will always exist because a migration in the workspace forces it to
+    if (!apiSpec) {
+      return null;
+    }
+
     let spec: ParsedApiSpec['contents'] = null;
     let specFormat: ParsedApiSpec['format'] = null;
     let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
 
     try {
-      // @ts-expect-error -- TSCONVERSION appears to be genuine
       const result = parseApiSpec(apiSpec.contents);
       spec = result.contents;
       specFormat = result.format;
@@ -186,17 +190,16 @@ class WrapperHome extends PureComponent<Props, State> {
     const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
     const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
     const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
+
     // WorkspaceMeta is a good proxy for last modified time
     const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
-    const modifiedLocally =
-      apiSpec && workspace.scope === WorkspaceScopeKeys.design
-        ? apiSpec.modified
-        : workspaceModified;
+    const modifiedLocally = isDesign(workspace) ? apiSpec.modified : workspaceModified;
+
     // Span spec, workspace and sync related timestamps for card last modified label and sort order
     const lastModifiedFrom = [
       workspace?.modified,
       workspaceMeta?.modified,
-      apiSpec?.modified,
+      apiSpec.modified,
       workspaceMeta?.cachedGitLastCommitTime,
     ];
     const lastModifiedTimestamp = lastModifiedFrom
@@ -207,10 +210,9 @@ class WrapperHome extends PureComponent<Props, State> {
     let branch = lastActiveBranch;
 
     if (
-      workspace.scope === WorkspaceScopeKeys.design &&
+      isDesign(workspace) &&
       lastCommitTime &&
-      // @ts-expect-error -- TSCONVERSION appears to be genuine
-      apiSpec?.modified > lastCommitTime
+      apiSpec.modified > lastCommitTime
     ) {
       // Show locally unsaved changes for spec
       // NOTE: this doesn't work for non-spec workspaces
@@ -234,7 +236,6 @@ class WrapperHome extends PureComponent<Props, State> {
       <DocumentCardDropdown
         apiSpec={apiSpec}
         workspace={workspace}
-        handleSetActiveWorkspace={handleSetActiveWorkspace}
         isLastWorkspace={workspaces.length === 1}>
         <SvgIcon icon="ellipsis" />
       </DocumentCardDropdown>
@@ -246,7 +247,7 @@ class WrapperHome extends PureComponent<Props, State> {
     let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
 
-    if (workspace.scope === WorkspaceScopeKeys.design) {
+    if (isDesign(workspace)) {
       label = strings.document.singular;
       labelIcon = <i className="fa fa-file-o" />;
 
@@ -258,7 +259,7 @@ class WrapperHome extends PureComponent<Props, State> {
       }
 
       defaultActivity = ACTIVITY_SPEC;
-      title = apiSpec?.fileName || title;
+      title = apiSpec.fileName || title;
     }
 
     // Filter the card by multiple different properties
@@ -274,7 +275,7 @@ class WrapperHome extends PureComponent<Props, State> {
 
     const card = (
       <Card
-        key={apiSpec?._id}
+        key={apiSpec._id}
         docBranch={branch ? <Highlight search={filter} text={branch} /> : undefined}
         docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
         docVersion={version ? <Highlight search={filter} text={`v${version}`} /> : undefined}
