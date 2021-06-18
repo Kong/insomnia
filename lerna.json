@@ -1,10 +1,10 @@
 {
   "tagVersionPrefix": "lib@",
-  "version": "2.2.35",
+  "version": "2.3.0-beta.3",
   "includeMergedTags": true,
   "command": {
     "version": {
-      "message": "publish npm packages %s"
+      "message": "version packages %s"
     }
   },
   "packages": [

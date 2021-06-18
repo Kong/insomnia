@@ -1,12 +1,16 @@
 {
   "name": "insomnia-plugin-os",
-  "version": "2.2.35",
-  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "version": "2.3.0-beta.2",
+  "author": "Kong <office@konghq.com>",
   "description": "Template tag to get information about the OS",
   "license": "MIT",
-  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-os",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "plugins/insomnia-plugin-os"
+  },
   "bugs": {
-    "url": "https://github.com/kong/insomnia"
+    "url": "https://github.com/Kong/insomnia/issues"
   },
   "main": "index.js",
   "insomnia": {

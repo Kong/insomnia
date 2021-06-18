@@ -8,7 +8,7 @@ module.exports = {
     styles: {
       appHeader: {
         background: {
-          default: '#695eb8',
+          default: '#fff',
         },
       },
       link: {

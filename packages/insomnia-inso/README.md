@@ -9,7 +9,7 @@
     <br />
   </h1>
   <h3>A CLI for <a href="https://insomnia.rest">Insomnia Designer</a></h3>
-  <pre>npm i -g <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
+  <pre>npm install --global <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
   <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/demo.gif" alt=""/>
   <br />
 </div>
@@ -41,7 +41,7 @@ If `inso` cannot find the `.insomnia` directory, it will try to run against the 
 
 Typically, Insomnia database id's are quite long, for example: `wrk_012d4860c7da418a85ffea7406e1292a` . When specifying an identifier for `inso` , similar to Git hashes, you may choose to concatenate and use the first x characters (for example, `wrk_012d486` ), which is very likely to be unique. If in the rare chance the short id is _not_ unique against the data, `inso` will inform as such.
 
-Additionally, if the `[identifier]` argument is ommitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
+Additionally, if the `[identifier]` argument is omitted from the command, `inso` will search in the database for the information it needs, and prompt the user. Prompts can be disabled with the `--ci` global option.
 
 ![](https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/ci-demo.gif)
 
@@ -71,10 +71,11 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 |- |- |- |
 | `--type <type>` | `-t` |type of configuration to generate, options are `kubernetes` and `declarative` (default: `declarative` ) |
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
+| `--tags <tags>` | |comma separated list of tags to apply to each entity|
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -97,10 +98,16 @@ inso generate config spec.yaml --workingDir another/dir
 
 ```
 
+Add tags
+```sh
+inso generate config spec.yaml --tags first
+inso generate config spec.yaml --tags "first,second"
+```
+
 Output to file
 
 ``` sh
-inso generate config spc_46c5a4 --output output.yaml 
+inso generate config spc_46c5a4 --output output.yaml
 inso generate config spc_46c5a4 > output.yaml
 ```
 
@@ -114,7 +121,7 @@ Designer has the ability to lint and validate your OpenAPI specification as you 
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -140,14 +147,14 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 |Option|Alias|Description|
 |- |- |- |
 | `--env <identifier>` | `-e` |the environment to use - an environment name or id |
-| `--reporter <value>` | `-r` |reporter to use, options are `dot, list, spec, min and progress` (default: `spec` )|
+| `--reporter <value>` | `-r` |reporter to use, options are `dot, list, min, progress, spec` (default: `spec` )|
 | `--testNamePattern <regex>` | `-t` | run tests that match the regex|
 | `--bail` | `-b` | abort ("bail") after the first test failure|
 | `--keepFile` | | do not delete the generated test file (useful for debugging)|
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -190,7 +197,7 @@ This command will extract and export the raw OpenAPI specification from the data
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory
 
 Not specifying any arguments will prompt
 
@@ -208,7 +215,7 @@ inso export spec "Sample Specification"
 Output to file
 
 ``` sh
-inso export spec spc_46c5a4 --output output.yaml 
+inso export spec spc_46c5a4 --output output.yaml
 inso export spec spc_46c5a4 > output.yaml
 ```
 
@@ -218,7 +225,7 @@ The `inso` [config file](#configuration) supports scripts, akin to NPM scripts d
 
 ### Examples
 
-When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/__fixtures__/git-repo">git-repo</a> directory, with the following inso config file.
+When running in the <a href="https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo">git-repo</a> directory, with the following inso config file.
 
 ``` yaml
 # .insorc.yaml
@@ -270,7 +277,7 @@ Alternatively, you can use the `--config <file>` global option to specify an exa
 
 Options from the config file are combined with option defaults and any explicit overrides specified in script or command invocations. This combination is in priority order: command options > config file options > default options.
 
-Any options specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command. 
+Any options specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command.
 
 Only [global options](#global-options) can be set in the config file.
 
@@ -290,7 +297,7 @@ scripts:
   test-spec:200s: inso testSpec --testNamePattern 200
   test-spec:404s: inso testSpec --testNamePattern 404
 
-  test-math-suites: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env DemoEnv 
+  test-math-suites: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env DemoEnv
   test-request-suite: inso run test uts_bce4af --env DemoEnv --bail
 
   lint: inso lint spec Demo # must be invoked as `inso script lint`
@@ -303,7 +310,7 @@ scripts:
 
 Git Bash on Windows is not interactive and therefore prompts from `inso` will not work as expected. You may choose to specify the identifiers for each command explicitly, or run `inso` using `winpty` :
 
-``` 
+```
 winpty inso.cmd generate config
 ```
 
@@ -326,7 +333,7 @@ jobs:
       - name: Install NodeJS
         uses: actions/setup-node@v1
       - name: Install inso
-        run: npm install -g insomnia-inso
+        run: npm install --global insomnia-inso
       - name: Lint
         run: inso lint spec "Designer Demo" --ci
       - name: Run test suites

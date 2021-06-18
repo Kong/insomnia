@@ -1,5 +1,5 @@
 {
-  "version": "2021.3.0",
+  "version": "2021.4.0-beta.1",
   "name": "insomnia",
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
@@ -13,7 +13,6 @@
   "theme": "default",
   "lightTheme": "studio-light",
   "darkTheme": "default",
-  "main": "main.min.js",
   "githubOrg": "Kong",
   "githubRepo": "insomnia",
   "gaId": "UA-8499472-34",

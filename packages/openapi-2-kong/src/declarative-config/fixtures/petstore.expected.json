@@ -1,0 +1,49 @@
+{
+  "services": [
+    {
+      "protocol": "http",
+      "host": "Swagger_Petstore",
+      "port": 80,
+      "path": "/v1",
+      "name": "Swagger_Petstore",
+      "plugins": [],
+      "routes": [
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
+          "name": "Swagger_Petstore-listPets",
+          "paths": ["/pets$"]
+        },
+        {
+          "methods": ["POST"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
+          "name": "Swagger_Petstore-createPets",
+          "paths": ["/pets$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
+          "name": "Swagger_Petstore-showPetById",
+          "paths": ["/pets/(?<petId>[^\\/\\s]+)$"]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_petstore.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
+      "name": "Swagger_Petstore",
+      "targets": [
+        {
+          "target": "petstore.swagger.io:80",
+          "tags": ["OAS3_import", "OAS3file_petstore.yaml"]
+        }
+      ]
+    }
+  ],
+  "_format_version": "1.1"
+}

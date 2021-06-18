@@ -32,11 +32,11 @@ npm run test:smoke:cli              # Run CLI tests
 npm run test:smoke:build       # Run Insomnia tests
 ```
 
-Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases (such as a [plugin installation](https://github.com/Kong/insomnia/blob/357b8f05f89fd5c07a75d8418670abe37b2882dc/packages/insomnia-smoke-test/designer/app.test.js#L36)), so we typically run tests against a build. To run packaged tests, from the root:
+Sometimes, you might need to run tests against a _packaged_ application. A packaged application is the final artifact which bundles all of the various resources together, and is created for distribution in the form of a `.dmg` or `.exe`, etc. Packaging takes longer to do and is only required for edge cases (such as a <!-- TODO(TSCONVERSION) update this link -->[plugin installation](https://github.com/Kong/insomnia/blob/357b8f05f89fd5c07a75d8418670abe37b2882dc/packages/insomnia-smoke-test/designer/app.test.js#L36)), so we typically run tests against a build. To run packaged tests, from the root:
 
 ``` sh
 npm run app-package:smoke      # Package Insomnia
-npm run test:smoke:package     # Run Insomnia tests 
+npm run test:smoke:package     # Run Insomnia tests
 ```
 
 Each of the above commands will automatically run the Express server, so you do not need to take any extra steps.
@@ -72,15 +72,15 @@ A test should not depend on any external services unless absolutely necessary. I
 ### Element selection
 Spectron is built heavily on top of WebdriverIO, and WebdriverIO's `browser` object is available under `app.client` ([docs](https://github.com/electron-userland/spectron#client)). This is the primary API you will need for user interactions, see examples with existing tests.
 
-Through WebdriverIO you can use a host of CSS or React selectors. There is no clear guideline about which selector to use, but whichever approach is used it must favour stablility and be understandable.
+Through WebdriverIO you can use a host of CSS or React selectors. There is no clear guideline about which selector to use, but whichever approach is used it must favour stability and be understandable.
 
 There are trade-offs with each selector approach but it's important to know how generic or specific a particular component or CSS class is, in order to ensure that the correct element is always selected as the application evolves.
 
 #### Select by component and props
 Sometimes selecting by a React component and props, directly from `app.client` is the cleanest approach, as the following two examples show:
 
-```js
-const waitUntilRequestIsActive = async (app, name) => {
+```ts
+const waitUntilRequestIsActive = async (app: Application, name: string) => {
   const request = await app.client.react$('SidebarRequestRow', {
     props: { isActive: true, request: { name } },
   });
@@ -103,8 +103,8 @@ It is important to scope an element to an appropriate ancestor. In a way the sel
 
 In the following example, it is possible for multiple buttons which match the `button#enabled` selector to exist on the page. By chaining a React and CSS selector, we can ensure the test runner will always click the expected button within the `BasicAuth` component.
 
-```js
-export const toggleBasicAuthEnabled = async app => {
+```ts
+export const toggleBasicAuthEnabled = async (app: Application) => {
   await app.client
     .react$('BasicAuth')
     .then(e => e.$('button#enabled'))
@@ -116,8 +116,8 @@ A similar approach can be achieved through a CSS selector. In the following exam
 
 These classes are fairly generic and could exist multiple times on the page, but the HTTP response code will always be in the response pane (`response-pane`) header (`pane__header`). As such, the selector is scoped to always select the expected element, wait for it to show, and ensure it has the expected text.
 
-```js
-export const expect200 = async app => {
+```ts
+export const expect200 = async (app: Application) => {
   const tag = await app.client.$('.response-pane .pane__header .tag.bg-success');
   await tag.waitForDisplayed();
   await expectText(tag, '200 OK');
@@ -130,8 +130,8 @@ As is common with all smoke testing frameworks, before interacting with an eleme
 Sometimes you will need to add explicit pauses to allow for UI to refresh or database writes to occur (`await app.client.pause(500)`). Try to keep these to a minimum, though, exploring all other avenues first, such as WebdriverIO's `waitFor*` functions. Avoiding explicit waits ensures each test runs in the short amount of time.
 
 When typing in the url bar for HTTP requests, we first wait for it to exist on the page before clicking on it and typing, because request activation can take some time.
-```js
-export const typeInUrlBar = async (app, url) => {
+```ts
+export const typeInUrlBar = async (app: Application, url: string) => {
   const urlEditor = await app.client.react$('RequestUrlBar');
   await urlEditor.waitForExist();
   await urlEditor.click();
@@ -140,7 +140,7 @@ export const typeInUrlBar = async (app, url) => {
 ```
 
 In addition, sometimes we want to wait for an element to hide instead of show. To achieve this, we can use the `reverse` option available through WebdriverIO, as shown in the following example.
-```js
+```ts
 // Wait for spinner to show
 const spinner = await app.client.react$('ResponseTimer');
 await spinner.waitForDisplayed();
@@ -149,10 +149,10 @@ await spinner.waitForDisplayed();
 await spinner.waitForDisplayed({ reverse: true });
 ```
 
-### Readability 
+### Readability
 It is important for a smoke test to be _readable_ so the flow can be understood, and the (often complicated) implementation details hidden, like in the example below.
 
-```js
+```ts
 import * as debug from '../modules/debug';
 
 it('sends request with basic authentication', async () => {
@@ -194,10 +194,10 @@ Unlike unit tests, the application startup time for a smoke test can sometimes b
 
 ## Contributing a smoke test?
 
-Smoke tests can potentially be flaky, and one attempt to avoid flaky tests in the default branch is to run the final implementation of a test atleast 20 times locally to prove its stability. If a test is unable to achieve this, it is very unlikely to be accepted into the test suite.
+Smoke tests can potentially be flaky, and one attempt to avoid flaky tests in the default branch is to run the final implementation of a test at least 20 times locally to prove its stability. If a test is unable to achieve this, it is very unlikely to be accepted into the test suite.
 
 You can repeat a test quickly by wrapping it with the following block:
-```js
+```ts
 describe.only.each(new Array(20).fill(1))('iteration %#', _ => {
   it('your test name', () => {
     //...

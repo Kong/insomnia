@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React from 'react';
 
 const ThemeProvider = props => {
   // Apply theme later because storybook adds its own `<body theme="...">` attribute too.

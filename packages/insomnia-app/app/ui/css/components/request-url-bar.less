@@ -26,8 +26,11 @@
   .urlbar__send-btn {
     padding-right: var(--padding-md);
     padding-left: var(--padding-md);
+    margin-left: 0.75em;
     min-width: 5em;
     text-align: center;
+    background: var(--color-surprise);
+    color: #fff;
   }
 
   form {
@@ -48,7 +51,7 @@
 
   button:focus,
   button:hover {
-    background-color: var(--hl-xs);
+    filter: brightness(0.8);
   }
 
   & > .dropdown > button {
