@@ -330,6 +330,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
           </label>
         </div>
         {this._renderDescription()}
+        <hr />
         {this._renderMoveCopy()}
       </div>
     );
