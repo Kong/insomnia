@@ -36,7 +36,7 @@ interface Child {
   children: Child[];
 }
 
-interface SidebarChildren {
+export interface SidebarChildren {
   all: Child[],
   pinned: Child[],
 }
