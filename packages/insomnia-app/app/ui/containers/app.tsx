@@ -126,7 +126,7 @@ import { Response } from '../../models/response';
 import { RenderContextAndKeys } from '../../common/render';
 import { RootState } from '../redux/modules';
 
-type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
   showDragOverlay: boolean,
@@ -145,7 +145,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class App extends PureComponent<Props, State> {
+class App extends PureComponent<AppProps, State> {
   private _getRenderContextPromiseCache: Object;
   private _savePaneWidth: (paneWidth: number) => void;
   private _savePaneHeight: (paneWidth: number) => void;
@@ -158,8 +158,9 @@ class App extends PureComponent<Props, State> {
   private _wrapper: Wrapper | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
-  constructor(props: Props) {
+  constructor(props: AppProps) {
     super(props);
+
     this.state = {
       showDragOverlay: false,
       draggingSidebar: false,
@@ -1162,7 +1163,7 @@ class App extends PureComponent<Props, State> {
     document.title = title || getAppName();
   }
 
-  componentDidUpdate(prevProps: Props) {
+  componentDidUpdate(prevProps: AppProps) {
     this._updateDocumentTitle();
 
     this._ensureWorkspaceChildren();
@@ -1465,15 +1466,13 @@ class App extends PureComponent<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    // @ts-expect-error -- TSCONVERSION this function doesn't even accept props but should it?
-    this._ensureWorkspaceChildren(nextProps);
+  UNSAFE_componentWillReceiveProps() {
+    this._ensureWorkspaceChildren();
   }
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillMount() {
-    // @ts-expect-error -- TSCONVERSION this function doesn't even accept props but should it?
-    this._ensureWorkspaceChildren(this.props);
+    this._ensureWorkspaceChildren();
   }
 
   render() {
@@ -1499,10 +1498,9 @@ class App extends PureComponent<Props, State> {
         <GrpcProvider>
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
-              {/* @ts-expect-error -- TSCONVERSION expected props are not received likely because of the this.props expansion */}
               <Wrapper
-                {...this.props}
                 ref={this._setWrapperRef}
+                {...this.props}
                 paneWidth={paneWidth}
                 paneHeight={paneHeight}
                 sidebarWidth={sidebarWidth}

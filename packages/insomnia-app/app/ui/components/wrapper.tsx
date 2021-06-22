@@ -1,8 +1,4 @@
-import type { Settings } from '../../models/settings';
 import type { Response } from '../../models/response';
-import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { Workspace } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 import {
   isRequest,
   Request,
@@ -11,7 +7,6 @@ import {
   RequestHeader,
   RequestParameter,
 } from '../../models/request';
-import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
@@ -64,21 +59,15 @@ import CodePromptModal from './modals/code-prompt-modal';
 import { database as db } from '../../common/database';
 import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
-import type { Cookie, CookieJar } from '../../models/cookie-jar';
-import type { Environment } from '../../models/environment';
+import type { Cookie } from '../../models/cookie-jar';
 import ErrorBoundary from './error-boundary';
-import type { ClientCertificate } from '../../models/client-certificate';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import { VCS } from '../../sync/vcs/vcs';
-import type { StatusCandidate } from '../../sync/types';
-import type { RequestMeta } from '../../models/request-meta';
-import type { RequestVersion } from '../../models/request-version';
 import type { ApiSpec } from '../../models/api-spec';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { trackPageView } from '../../common/analytics';
-import type { GitRepository } from '../../models/git-repository';
 import WrapperHome from './wrapper-home';
 import WrapperDesign from './wrapper-design';
 import WrapperUnitTest from './wrapper-unit-test';
@@ -87,9 +76,6 @@ import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
-import type { UnitTest } from '../../models/unit-test';
-import type { UnitTestResult } from '../../models/unit-test-result';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { GlobalActivity } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
@@ -100,23 +86,15 @@ import WrapperAnalytics from './wrapper-analytics';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { RequestGroup } from '../../models/request-group';
 import SpaceSettingsModal from './modals/space-settings-modal';
-import { Space } from '../../models/space';
+import { AppProps } from '../containers/app';
 
 const spectral = new Spectral();
 
-export interface WrapperProps {
-  // Helper Functions
+export type WrapperProps = AppProps & {
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
-  handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
-  handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
-  handleInitializeEntities: () => Promise<void>;
   handleShowSettingsModal: Function;
-  handleExportRequestsToFile: Function;
-  handleSetActiveWorkspace: (workspaceId: string | null) => void;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
-  handleMoveDoc: Function;
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
@@ -148,55 +126,14 @@ export interface WrapperProps {
   handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string) => Promise<Request | null>;
   handleUpdateDownloadPath: Function;
-  handleSetActiveActivity: (activity: GlobalActivity) => void;
-  handleGoToNextActivity: () => void;
-  // Properties
-  activity: GlobalActivity;
-  apiSpecs: ApiSpec[];
-  loadStartTime: number;
-  isLoading: boolean;
-  isLoggedIn: boolean;
+
   paneWidth: number;
   paneHeight: number;
-  responsePreviewMode: string;
-  responseFilter: string;
-  responseFilterHistory: string[];
-  responseDownloadPath: string | null;
   sidebarWidth: number;
-  sidebarHidden: boolean;
-  sidebarFilter: string;
-  sidebarChildren: SidebarChildObjects;
-  settings: Settings;
-  workspaces: Workspace[];
-  requestMetas: RequestMeta[];
-  requests: Request[];
-  requestVersions: RequestVersion[];
-  unseenWorkspaces: Workspace[];
-  workspaceChildren: (Request | RequestGroup)[];
-  activeWorkspaceMeta?: WorkspaceMeta;
-  environments: Environment[];
-  activeApiSpec: ApiSpec;
-  activeSpace?: Space;
-  activeUnitTestSuite: UnitTestSuite | null;
-  activeRequestResponses: Response[];
-  activeWorkspace: Workspace;
-  activeCookieJar: CookieJar;
-  activeEnvironment: Environment | null;
-  activeGitRepository: GitRepository | null;
-  activeUnitTestResult: UnitTestResult | null;
-  activeUnitTestSuites: UnitTestSuite[];
-  activeUnitTests: UnitTest[];
-  activeWorkspaceClientCertificates: ClientCertificate[];
   headerEditorKey: string;
   isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  gitRepositories: GitRepository[];
-  syncItems: StatusCandidate[];
-  oAuth2Token?: OAuth2Token | null;
-  activeRequest?: Request | null;
-  activeResponse?: Response | null;
-  workspaceMetas?: WorkspaceMeta[];
 }
 
 export type HandleImportFileCallback = (options?: ImportOptions) => void;
