@@ -81,7 +81,7 @@
     "class-autobind-decorator": "^3.0.1",
     "classnames": "^2.3.1",
     "clone": "^2.1.0",
-    "codemirror": "^5.61.0",
+    "codemirror": "^5.62.0",
     "codemirror-graphql": "^1.0.1",
     "color": "^3.1.2",
     "deep-equal": "^1.0.1",
