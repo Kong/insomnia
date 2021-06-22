@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useMountedState } from './use-mounted-state';
+import { useMountedState } from 'react-use';
 
 export const useSafeReducerDispatch = <A>(dispatch: (action: A) => void) => {
   const isMounted = useMountedState();
