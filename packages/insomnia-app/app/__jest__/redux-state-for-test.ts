@@ -1,9 +1,16 @@
+import { ACTIVITY_DEBUG } from '../common/constants';
+import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
 
-const reduxStateForTest = async (activeWorkspaceId: string): Promise<Record<string, any>> => ({
-  entities: entities.reducer({}, entities.initializeWith(await entities.allDocs())),
+const reduxStateForTest = async (activeWorkspaceId: string): Promise<RootState> => ({
+  entities: entities.reducer(entities.initialEntitiesState, entities.initializeWith(await entities.allDocs())),
   global: {
     activeWorkspaceId,
+    activeActivity: ACTIVITY_DEBUG,
+    activeSpaceId: null,
+    isLoading: false,
+    isLoggedIn: false,
+    loadingRequestIds: {},
   },
 });
 

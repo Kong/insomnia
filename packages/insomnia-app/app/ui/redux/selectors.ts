@@ -94,7 +94,6 @@ export const selectActiveWorkspace = createSelector(
     // Only return an active workspace if we're in an activity
     if (activeActivity && isWorkspaceActivity(activeActivity)) {
       const workspace = workspaces.find(w => w._id === activeWorkspaceId);
-      console.log('active', workspace);
       return workspace;
     }
 

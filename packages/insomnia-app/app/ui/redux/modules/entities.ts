@@ -71,7 +71,7 @@ export interface EntitiesState {
   grpcRequestMetas: EntityRecord<GrpcRequestMeta>
 }
 
-const initialState: EntitiesState = {
+export const initialEntitiesState: EntitiesState = {
   stats: {},
   settings: {},
   spaces: {},
@@ -99,10 +99,10 @@ const initialState: EntitiesState = {
   grpcRequestMetas: {},
 };
 
-export function reducer(state = initialState, action) {
+export function reducer(state = initialEntitiesState, action) {
   switch (action.type) {
     case ENTITY_INITIALIZE:
-      const freshState = clone(initialState);
+      const freshState = clone(initialEntitiesState);
       const { docs } = action;
 
       for (const doc of docs) {
