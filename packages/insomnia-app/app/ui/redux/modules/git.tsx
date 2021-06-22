@@ -130,7 +130,7 @@ const noDocumentFound = (gitRepo: GitRepository) => {
       okLabel: 'Yes',
       addCancel: true,
       message: `No ${strings.document.singular.toLowerCase()} found in the repository for import. Would you like to create a new one?`,
-      onConfirm: async () => await dispatch(createWorkspaceWithGitRepo(gitRepo)),
+      onConfirm: () => dispatch(createWorkspaceWithGitRepo(gitRepo)),
     });
   };
 };

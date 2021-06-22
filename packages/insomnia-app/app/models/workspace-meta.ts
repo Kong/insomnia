@@ -9,13 +9,9 @@ import {
 } from '../common/constants';
 
 export const name = 'Workspace Meta';
-
 export const type = 'WorkspaceMeta';
-
 export const prefix = 'wrkm';
-
 export const canDuplicate = false;
-
 export const canSync = false;
 
 interface BaseWorkspaceMeta {
@@ -35,6 +31,7 @@ interface BaseWorkspaceMeta {
   sidebarFilter: string;
   sidebarHidden: boolean;
   sidebarWidth: number;
+  pushSnapshotOnInitialize: boolean;
 }
 
 export type WorkspaceMeta = BaseWorkspaceMeta & BaseModel;
@@ -61,6 +58,7 @@ export function init(): BaseWorkspaceMeta {
     sidebarFilter: '',
     sidebarHidden: false,
     sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
+    pushSnapshotOnInitialize: false,
   };
 }
 
@@ -89,8 +87,8 @@ export function update(workspaceMeta: WorkspaceMeta, patch: Partial<WorkspaceMet
   return db.docUpdate<WorkspaceMeta>(workspaceMeta, patch);
 }
 
-export async function updateByParentId(workspaceId: string, patch: Partial<WorkspaceMeta> = {}) {
-  const meta = await getByParentId(workspaceId);
+export async function updateByParentId(parentId: string, patch: Partial<WorkspaceMeta> = {}) {
+  const meta = await getByParentId(parentId);
   // @ts-expect-error -- TSCONVERSION appears to be a genuine error not previously caught by Flow
   return db.docUpdate<WorkspaceMeta>(meta, patch);
 }

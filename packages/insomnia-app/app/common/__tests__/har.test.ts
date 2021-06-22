@@ -177,7 +177,7 @@ describe('exportHar()', () => {
       value: '3',
     });
     await models.request.create(req3);
-    const envBase = await models.environment.getOrCreateForWorkspace(workspace);
+    const envBase = await models.environment.getOrCreateForParentId(workspace._id);
     await models.environment.update(envBase, {
       data: {
         envvalue: '',

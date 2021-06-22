@@ -52,6 +52,7 @@ import { createWorkspace } from '../redux/modules/workspace';
 import { cloneGitRepository } from '../redux/modules/git';
 import { MemClient } from '../../sync/git/mem-client';
 import { SpaceDropdown } from './dropdowns/space-dropdown';
+import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
 
 interface RenderedCard {
   card: ReactNode;
@@ -99,8 +100,18 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   _handleCollectionCreate() {
-    this.props.handleCreateWorkspace({
+    const { handleCreateWorkspace, wrapperProps: { activeSpace, vcs, isLoggedIn } } = this.props;
+
+    handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
+      onCreate: async workspace => {
+        const spaceRemoteId = activeSpace?.remoteId;
+
+        // Don't mark for sync if not logged in at the time of creation
+        if (isLoggedIn && vcs && spaceRemoteId) {
+          await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+        }
+      },
     });
   }
 
