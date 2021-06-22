@@ -4,7 +4,7 @@ import { getBodyBuffer } from '../models/response';
 import { Settings } from '../models/settings';
 import { send } from '../network/network';
 import * as plugins from '../plugins';
-import { database as db } from './database';
+import { database } from './database';
 
 // The network layer uses settings from the settings model
 // We want to give inso the ability to override certain settings
@@ -12,7 +12,7 @@ type SettingsOverride = Pick<Settings, 'validateSSL'>;
 
 export async function getSendRequestCallbackMemDb(environmentId, memDB, settingsOverrides?: SettingsOverride) {
   // Initialize the DB in-memory and fill it with data if we're given one
-  await db.init(
+  await database.init(
     modelTypes(),
     {
       inMemoryOnly: true,
@@ -31,7 +31,7 @@ export async function getSendRequestCallbackMemDb(environmentId, memDB, settings
     }
   }
 
-  await db.batchModifyDocs({
+  await database.batchModifyDocs({
     upsert: docs,
     remove: [],
   });

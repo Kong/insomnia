@@ -25,6 +25,7 @@ export type RunTestsOptions = GlobalOptions & {
   bail?: boolean;
   keepFile?: boolean;
   testNamePattern?: string;
+  disableSSL?: boolean;
 };
 
 function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
@@ -55,7 +56,7 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern, disableSSL } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
@@ -93,7 +94,7 @@ export async function runInsomniaTests(
   // eslint-disable-next-line @typescript-eslint/no-var-requires -- Load lazily when needed, otherwise this require slows down the entire CLI.
   const { getSendRequestCallbackMemDb } = require('insomnia-send-request');
 
-  const sendRequest = await getSendRequestCallbackMemDb(environment._id, db);
+  const sendRequest = await getSendRequestCallbackMemDb(environment._id, db, { validateSSL: !disableSSL });
   return await noConsoleLog(() =>
     runTestsCli(testFileContents, {
       reporter,
