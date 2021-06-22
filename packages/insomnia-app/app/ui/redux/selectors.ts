@@ -1,8 +1,8 @@
 import { createSelector } from 'reselect';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
-import { isRequest } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
+import { isRequest, Request } from '../../models/request';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
@@ -203,7 +203,7 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   entities => {
     return entities.filter(
       e => isRequest(e) || isRequestGroup(e),
-    );
+    ) as (Request | RequestGroup)[];
   },
 );
 

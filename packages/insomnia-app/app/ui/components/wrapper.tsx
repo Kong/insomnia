@@ -208,6 +208,8 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleImport(text: string) {
+    const { activeRequest } = this.props;
+
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -215,9 +217,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       const { resources } = data;
       const r = resources[0];
 
-      if (r && r._type === 'request' && this.props.activeRequest) {
+      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
         // Only pull fields that we want to update
-        return this._handleForceUpdateRequest(this.props.activeRequest, {
+        return this._handleForceUpdateRequest(activeRequest, {
           url: r.url,
           method: r.method,
           headers: r.headers,
@@ -243,6 +245,10 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       await models.workspaceMeta.updateByParentId(workspaceId, {
         activeActivity: nextActivity,
       });
+    }
+
+    if (!activeApiSpec) {
+      return;
     }
 
     const notEditingASpec = activity !== ACTIVITY_SPEC;
@@ -300,15 +306,15 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   _handleImportFile(options?: ImportOptions) {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, options);
+    this.props.handleImportFileToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
   }
 
   _handleImportUri(uri: string, options?: ImportOptions) {
-    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, options);
+    this.props.handleImportUriToWorkspace(uri, { workspaceId: this.props.activeWorkspace?._id, ...options });
   }
 
   _handleImportClipBoard(options?: ImportOptions) {
-    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, options);
+    this.props.handleImportClipBoardToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
   }
 
   _handleSetActiveResponse(responseId: string | null) {
@@ -359,6 +365,10 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   async _handleRemoveActiveWorkspace() {
     const { workspaces, activeWorkspace } = this.props;
 
+    if (!activeWorkspace) {
+      return;
+    }
+
     if (workspaces.length <= 1) {
       showModal(AlertModal, {
         title: 'Deleting Last Workspace',
@@ -378,7 +388,13 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleActiveWorkspaceClearAllResponses() {
-    const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
+    const { activeWorkspace } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
+    const docs = await db.withDescendants(activeWorkspace, models.request.type);
     const requests = docs.filter(isRequest);
 
     for (const req of requests) {
@@ -422,11 +438,21 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
   _handleCreateRequestInWorkspace() {
     const { activeWorkspace, handleCreateRequest } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     handleCreateRequest(activeWorkspace._id);
   }
 
   _handleCreateRequestGroupInWorkspace() {
     const { activeWorkspace, handleCreateRequestGroup } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     handleCreateRequestGroup(activeWorkspace._id);
   }
 
@@ -490,10 +516,11 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       workspaceChildren,
       workspaces,
     } = this.props;
+
     // Setup git sync dropdown for use in Design/Debug pages
     let gitSyncDropdown: JSX.Element | null = null;
 
-    if (gitVCS) {
+    if (activeWorkspace && gitVCS) {
       gitSyncDropdown = (
         <GitSyncDropdown
           className="margin-left"
@@ -557,58 +584,59 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            {/* TODO: Figure out why cookieJar is sometimes null */}
-            {activeCookieJar ? (
-              <CookiesModal
-                handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-                handleRender={handleRender}
+            {activeWorkspace && <>
+              {/* TODO: Figure out why cookieJar is sometimes null */}
+              {activeCookieJar && <>
+                <CookiesModal
+                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
+                  handleRender={handleRender}
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  cookieJar={activeCookieJar}
+                />
+                <CookieModifyModal
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  ref={registerModal}
+                  cookieJar={activeCookieJar}
+                  workspace={activeWorkspace}
+                  isVariableUncovered={isVariableUncovered}
+                />
+              </>}
+
+              <NunjucksModal
+                uniqueKey={`key::${this.state.forceRefreshKey}`}
                 ref={registerModal}
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
                 workspace={activeWorkspace}
-                cookieJar={activeCookieJar}
               />
-            ) : null}
 
-            <CookieModifyModal
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              ref={registerModal}
-              cookieJar={activeCookieJar}
-              workspace={activeWorkspace}
-              isVariableUncovered={isVariableUncovered}
-            />
+              <MoveRequestGroupModal
+                ref={registerModal}
+                workspaces={workspaces}
+                activeWorkspace={activeWorkspace}
+              />
 
-            <NunjucksModal
-              uniqueKey={`key::${this.state.forceRefreshKey}`}
-              ref={registerModal}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              workspace={activeWorkspace}
-            />
-
-            <MoveRequestGroupModal
-              ref={registerModal}
-              workspaces={workspaces}
-              activeWorkspace={activeWorkspace}
-            />
-
-            <WorkspaceSettingsModal
-              ref={registerModal}
-              clientCertificates={activeWorkspaceClientCertificates}
-              workspace={activeWorkspace}
-              apiSpec={activeApiSpec}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
-              editorLineWrapping={settings.editorLineWrapping}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-              handleDuplicateWorkspace={handleDuplicateWorkspace}
-              handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
-              isVariableUncovered={isVariableUncovered}
-            />
+              {activeApiSpec && <WorkspaceSettingsModal
+                ref={registerModal}
+                clientCertificates={activeWorkspaceClientCertificates}
+                workspace={activeWorkspace}
+                apiSpec={activeApiSpec}
+                editorFontSize={settings.editorFontSize}
+                editorIndentSize={settings.editorIndentSize}
+                editorKeyMap={settings.editorKeyMap}
+                editorLineWrapping={settings.editorLineWrapping}
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
+                handleDuplicateWorkspace={handleDuplicateWorkspace}
+                handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
+                isVariableUncovered={isVariableUncovered}
+              />}
+            </>}
 
             <GenerateCodeModal
               ref={registerModal}
@@ -625,16 +653,17 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <ResponseDebugModal ref={registerModal} settings={settings} />
 
-            <RequestSwitcherModal
+            {activeWorkspace && <RequestSwitcherModal
               ref={registerModal}
               workspace={activeWorkspace}
               workspaces={workspaces}
               workspaceChildren={workspaceChildren}
-              activeRequest={activeRequest}
+              // the request switcher modal does not know about grpc requests yet
+              activeRequest={activeRequest && isRequest(activeRequest) ? activeRequest : undefined}
               activateRequest={handleActivateRequest}
               requestMetas={requestMetas}
               handleSetActiveWorkspace={handleSetActiveWorkspace}
-            />
+            />}
 
             <EnvironmentEditModal
               ref={registerModal}
@@ -649,7 +678,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            {gitVCS && (
+            {activeWorkspace && gitVCS && (
               <Fragment>
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
                 <GitLogModal ref={registerModal} vcs={gitVCS} />
@@ -666,7 +695,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               </Fragment>
             )}
 
-            {vcs && (
+            {activeWorkspace && vcs && (
               <Fragment>
                 <SyncStagingModal
                   ref={registerModal}

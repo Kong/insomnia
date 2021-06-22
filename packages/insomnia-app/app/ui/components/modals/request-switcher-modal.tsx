@@ -24,7 +24,7 @@ import { keyboardKeys } from '../../../common/keyboard-keys';
 interface Props {
   handleSetActiveWorkspace: (id: string) => void;
   activateRequest: (id: string) => void;
-  activeRequest?: Request | null;
+  activeRequest?: Request;
   workspaceChildren: (Request | RequestGroup)[];
   workspace: Workspace;
   workspaces: Workspace[];
