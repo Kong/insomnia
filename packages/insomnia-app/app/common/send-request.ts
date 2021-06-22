@@ -42,14 +42,14 @@ export async function getSendRequestCallbackMemDb(environmentId: string, memDB: 
   };
 }
 
-export function getSendRequestCallback(environmentId: string) {
+export function getSendRequestCallback(environmentId?: string) {
   return async function sendRequest(requestId: string) {
     stats.incrementExecutedRequests();
     return sendAndTransform(requestId, environmentId);
   };
 }
 
-async function sendAndTransform(requestId: string, environmentId: string) {
+async function sendAndTransform(requestId: string, environmentId?: string) {
   try {
     plugins.ignorePlugin('insomnia-plugin-kong-bundle');
     const res = await send(requestId, environmentId);
