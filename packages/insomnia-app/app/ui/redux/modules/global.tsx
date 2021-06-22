@@ -196,7 +196,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         ),
         addCancel: true,
       });
-      dispatch(importUri(args.workspaceId, args.uri));
+      dispatch(importUri(args.uri, { workspaceId: args.workspaceId }));
       break;
 
     case COMMAND_PLUGIN_INSTALL:
@@ -389,13 +389,13 @@ export const setActiveWorkspace = (workspaceId: string | null) => {
 };
 
 export interface ImportOptions {
+  workspaceId?: string
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
 }
 
 export const importFile = (
-  workspaceId: string,
-  { forceToScope, forceToWorkspace }: ImportOptions = {},
+  { workspaceId, forceToScope, forceToWorkspace }: ImportOptions = {},
 ) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
   const options: OpenDialogOptions = {
@@ -435,7 +435,7 @@ export const importFile = (
       const uri = `file://${filePath}`;
       const options: ImportRawConfig = {
         getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+        getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
       };
       const result = await _importUri(uri, options);
       handleImportResult(result, 'The file does not contain a valid specification.');
@@ -469,8 +469,7 @@ const handleImportResult = (result: ImportResult, errorMessage: string) => {
 };
 
 export const importClipBoard = (
-  workspaceId: string,
-  { forceToScope, forceToWorkspace }: ImportOptions = {},
+  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
 ) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
   const schema = electron.clipboard.readText();
@@ -487,7 +486,7 @@ export const importClipBoard = (
   try {
     const options: ImportRawConfig = {
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
     };
     const result = await importRaw(schema, options);
     handleImportResult(result, 'Your clipboard does not contain a valid specification.');
@@ -502,16 +501,15 @@ export const importClipBoard = (
 };
 
 export const importUri = (
-  workspaceId: string,
   uri: string,
-  { forceToScope, forceToWorkspace }: ImportOptions = {},
+  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
 ) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
 
   try {
     const options: ImportRawConfig = {
       getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
+      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
     };
     const result = await _importUri(uri, options);
     handleImportResult(result, 'The URI does not contain a valid specification.');

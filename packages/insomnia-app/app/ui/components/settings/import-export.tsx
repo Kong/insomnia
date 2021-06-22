@@ -9,7 +9,7 @@ import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/select
 import ExportRequestsModal from '../modals/export-requests-modal';
 import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
 import { getAppName } from '../../../common/constants';
-import { isDesign } from '../../../models/workspace';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 
 interface Props {
   hideSettingsModal: () => void;
@@ -19,7 +19,6 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
   const spaceName = useSelector(selectActiveSpaceName) ?? getAppName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
-  const activeResourceScope = isDesign(activeWorkspace) ? strings.document : strings.collection;
 
   const handleImportUri = useCallback(() => {
     const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
@@ -31,7 +30,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: (uri: string) => {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
-        dispatch(importUri(activeWorkspace._id, uri));
+        dispatch(importUri(uri, { workspaceId: activeWorkspace?._id }));
         hideSettingsModal();
       },
       ...defaultValue,
@@ -49,12 +48,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [hideSettingsModal, dispatch]);
 
   const handleImportFile = useCallback(() => {
-    dispatch(importFile(activeWorkspace._id));
+    dispatch(importFile({ workspaceId: activeWorkspace?._id }));
     hideSettingsModal();
   }, [hideSettingsModal, activeWorkspace, dispatch]);
 
   const handleImportClipBoard = useCallback(() => {
-    dispatch(importClipBoard(activeWorkspace._id));
+    dispatch(importClipBoard({ workspaceId: activeWorkspace?._id }));
     hideSettingsModal();
   }, [hideSettingsModal, activeWorkspace, dispatch]);
 
@@ -73,10 +72,10 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
               Export Data <i className="fa fa-caret-down" />
           </DropdownButton>
           <DropdownDivider>Choose Export Type</DropdownDivider>
-          <DropdownItem onClick={showExportRequestsModal}>
+          {activeWorkspace && <DropdownItem onClick={showExportRequestsModal}>
             <i className="fa fa-home" />
-              Export the "{activeWorkspace.name}" {activeResourceScope.singular}
-          </DropdownItem>
+              Export the "{activeWorkspace.name}" {getWorkspaceLabel(activeWorkspace).singular}
+          </DropdownItem>}
           <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />
               All {strings.document.plural} and {strings.collection.plural} from the "{spaceName}" {strings.space.singular}

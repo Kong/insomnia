@@ -64,6 +64,7 @@ import {
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
+  selectSettings,
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
@@ -167,7 +168,7 @@ class App extends PureComponent<Props, State> {
       sidebarWidth: props.sidebarWidth || DEFAULT_SIDEBAR_WIDTH,
       paneWidth: props.paneWidth || DEFAULT_PANE_WIDTH,
       paneHeight: props.paneHeight || DEFAULT_PANE_HEIGHT,
-      isVariableUncovered: props.isVariableUncovered || false,
+      isVariableUncovered: false,
       vcs: null,
       gitVCS: null,
       forceRefreshCounter: 0,
@@ -266,6 +267,10 @@ class App extends PureComponent<Props, State> {
         hotKeyRefs.REQUEST_QUICK_CREATE,
         async () => {
           const { activeRequest, activeWorkspace } = this.props;
+          if (!activeWorkspace) {
+            return;
+          }
+
           const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           const request = await models.request.create({
             parentId,
@@ -280,8 +285,11 @@ class App extends PureComponent<Props, State> {
         hotKeyRefs.REQUEST_SHOW_CREATE,
         () => {
           const { activeRequest, activeWorkspace } = this.props;
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          if (!activeWorkspace) {
+            return;
+          }
 
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           this._requestCreate(parentId);
         },
       ],
@@ -312,8 +320,11 @@ class App extends PureComponent<Props, State> {
         hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER,
         () => {
           const { activeRequest, activeWorkspace } = this.props;
-          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
+          if (!activeWorkspace) {
+            return;
+          }
 
+          const parentId = activeRequest ? activeRequest.parentId : activeWorkspace._id;
           this._requestGroupCreate(parentId);
         },
       ],
@@ -326,7 +337,7 @@ class App extends PureComponent<Props, State> {
       [
         hotKeyRefs.REQUEST_SHOW_DUPLICATE,
         async () => {
-          await this._requestDuplicate(this.props.activeRequest);
+          await this._requestDuplicate(this.props.activeRequest || undefined);
         },
       ],
       [
@@ -429,6 +440,10 @@ class App extends PureComponent<Props, State> {
   async _sortSidebar(order: SortOrder, parentId?: string) {
     let flushId: number | undefined;
 
+    if (!this.props.activeWorkspace) {
+      return;
+    }
+
     if (!parentId) {
       parentId = this.props.activeWorkspace._id;
       flushId = await db.bufferChanges();
@@ -512,18 +527,19 @@ class App extends PureComponent<Props, State> {
   }
 
   _workspaceDuplicate(callback: () => void) {
-    this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
+    if (this.props.activeWorkspace) {
+      this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
+    }
   }
 
   async _fetchRenderContext() {
     const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
     const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    const ancestors = await db.withAncestors(activeRequest || activeWorkspace, [
+    const ancestors = await db.withAncestors(activeRequest || activeWorkspace || null, [
       models.request.type,
       models.requestGroup.type,
       models.workspace.type,
     ]);
-    // @ts-expect-error -- TSCONVERSION null vs undefined :(
     return render.getRenderContext(activeRequest, environmentId, ancestors);
   }
 
@@ -596,7 +612,10 @@ class App extends PureComponent<Props, State> {
 
   async _updateActiveWorkspaceMeta(patch: Partial<WorkspaceMeta>) {
     const { activeWorkspaceMeta } = this.props;
-    return models.workspaceMeta.update(activeWorkspaceMeta, patch);
+
+    if (activeWorkspaceMeta) {
+      await models.workspaceMeta.update(activeWorkspaceMeta, patch);
+    }
   }
 
   static async _updateRequestMetaByParentId(requestId, patch) {
@@ -936,7 +955,9 @@ class App extends PureComponent<Props, State> {
   }
 
   _requestCreateForWorkspace() {
-    this._requestCreate(this.props.activeWorkspace._id);
+    if (this.props.activeWorkspace) {
+      this._requestCreate(this.props.activeWorkspace._id);
+    }
   }
 
   _startDragSidebar() {
@@ -1126,7 +1147,7 @@ class App extends PureComponent<Props, State> {
 
     if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
-    } else {
+    } else if (activeWorkspace && activeApiSpec) {
       title = isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
 
       if (activeEnvironment) {
@@ -1138,10 +1159,10 @@ class App extends PureComponent<Props, State> {
       }
     }
 
-    document.title = title;
+    document.title = title || getAppName();
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     this._updateDocumentTitle();
 
     this._ensureWorkspaceChildren();
@@ -1155,7 +1176,7 @@ class App extends PureComponent<Props, State> {
 
     // Check on VCS things
     const { activeWorkspace, activeGitRepository } = this.props;
-    const changingWorkspace = prevProps.activeWorkspace._id !== activeWorkspace._id;
+    const changingWorkspace = prevProps.activeWorkspace?._id !== activeWorkspace?._id;
 
     // Update VCS if needed
     if (changingWorkspace) {
@@ -1163,16 +1184,17 @@ class App extends PureComponent<Props, State> {
     }
 
     // Update Git VCS if needed
-    const thisGit = activeGitRepository || {};
-    const nextGit = prevProps.activeGitRepository || {};
+    const nextGit = activeGitRepository;
+    const prevGit = prevProps.activeGitRepository;
 
-    if (changingWorkspace || thisGit._id !== nextGit._id) {
+    if (changingWorkspace || prevGit?._id !== nextGit?._id) {
       this._updateGitVCS();
     }
   }
 
   async _updateGitVCS() {
     const { activeGitRepository, activeWorkspace } = this.props;
+
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
     this.setState({
@@ -1183,7 +1205,7 @@ class App extends PureComponent<Props, State> {
       gitVCS = new GitVCS();
     }
 
-    if (activeGitRepository) {
+    if (activeWorkspace && activeGitRepository) {
       // Create FS client
       const baseDir = path.join(
         getDataDirectory(),
@@ -1241,9 +1263,15 @@ class App extends PureComponent<Props, State> {
   }
 
   async _updateVCS() {
+    const { activeWorkspace } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     const lock = generateId();
     this._updateVCSLock = lock;
-    const { activeWorkspace } = this.props;
+
     // Get the vcs and set it to null in the state while we update it
     let vcs = this.state.vcs;
     this.setState({
@@ -1335,7 +1363,7 @@ class App extends PureComponent<Props, State> {
       const parsed = urlParse(commandUri, true);
       const command = `${parsed.hostname}${parsed.pathname}`;
       const args = JSON.parse(JSON.stringify(parsed.query));
-      args.workspaceId = args.workspaceId || this.props.activeWorkspace._id;
+      args.workspaceId = args.workspaceId || this.props.activeWorkspace?._id;
       this.props.handleCommand(command, args);
     });
     // NOTE: This is required for "drop" event to trigger.
@@ -1375,7 +1403,7 @@ class App extends PureComponent<Props, State> {
           ),
           addCancel: true,
         });
-        handleImportUriToWorkspace(activeWorkspace._id, uri);
+        handleImportUriToWorkspace(uri, { workspaceId: activeWorkspace?._id });
       },
       false,
     );
@@ -1403,6 +1431,11 @@ class App extends PureComponent<Props, State> {
       environments,
       activeApiSpec,
     } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     const baseEnvironments = environments.filter(e => e.parentId === activeWorkspace._id);
 
     // Nothing to do
@@ -1460,7 +1493,7 @@ class App extends PureComponent<Props, State> {
       forceRefreshCounter,
       forceRefreshHeaderCounter,
     } = this.state;
-    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace._id}`;
+    const uniquenessKey = `${forceRefreshCounter}::${activeWorkspace?._id || 'n/a'}`;
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
@@ -1626,9 +1659,10 @@ function mapStateToProps(state: RootState) {
     requests,
     workspaceMetas,
   } = entitiesLists;
-  const settings = entitiesLists.settings[0];
-  // Workspace stuff
 
+  const settings = selectSettings(state);
+
+  // Workspace stuff
   const activeSpace = selectActiveSpace(state);
   const workspaces = selectWorkspacesForActiveSpace(state);
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
@@ -1641,6 +1675,7 @@ function mapStateToProps(state: RootState) {
   const sidebarWidth = activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
   const paneWidth = activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH;
   const paneHeight = activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT;
+
   // Request stuff
   const requestMeta = selectActiveRequestMeta(state);
   const activeRequest = selectActiveRequest(state);
@@ -1649,24 +1684,32 @@ function mapStateToProps(state: RootState) {
   const responseFilter = requestMeta?.responseFilter || '';
   const responseFilterHistory = requestMeta?.responseFilterHistory || [];
   const responseDownloadPath = requestMeta?.downloadPath || null;
+
   // Cookie Jar
   const activeCookieJar = selectActiveCookieJar(state);
+
   // Response stuff
   const activeRequestResponses = selectActiveRequestResponses(state);
   const activeResponse = selectActiveResponse(state);
+
   // Environment stuff
   const activeEnvironment = selectActiveEnvironment(state);
+
   // OAuth2Token stuff
   const oAuth2Token = selectActiveOAuth2Token(state);
+
   // Find other meta things
   const loadStartTime = loadingRequestIds[activeRequest ? activeRequest._id : 'n/a'] || -1;
   const sidebarChildren = selectSidebarChildren(state);
   const workspaceChildren = selectWorkspaceRequestsAndRequestGroups(state);
   const unseenWorkspaces = selectUnseenWorkspaces(state);
+
   // Sync stuff
   const syncItems = selectSyncItems(state);
+
   // Api spec stuff
-  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace._id);
+  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace?._id);
+
   // Test stuff
   const activeUnitTests = selectActiveUnitTests(state);
   const activeUnitTestSuite = selectActiveUnitTestSuite(state);
