@@ -584,9 +584,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            {activeWorkspace && <>
+            {activeWorkspace ? <>
               {/* TODO: Figure out why cookieJar is sometimes null */}
-              {activeCookieJar && <>
+              {activeCookieJar ? <>
                 <CookiesModal
                   handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                   handleRender={handleRender}
@@ -603,7 +603,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                   workspace={activeWorkspace}
                   isVariableUncovered={isVariableUncovered}
                 />
-              </>}
+              </> : null}
 
               <NunjucksModal
                 uniqueKey={`key::${this.state.forceRefreshKey}`}
@@ -619,7 +619,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 activeWorkspace={activeWorkspace}
               />
 
-              {activeApiSpec && <WorkspaceSettingsModal
+              {activeApiSpec ? <WorkspaceSettingsModal
                 ref={registerModal}
                 clientCertificates={activeWorkspaceClientCertificates}
                 workspace={activeWorkspace}
@@ -635,8 +635,8 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 handleDuplicateWorkspace={handleDuplicateWorkspace}
                 handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
                 isVariableUncovered={isVariableUncovered}
-              />}
-            </>}
+              /> : null}
+            </> : null}
 
             <GenerateCodeModal
               ref={registerModal}
@@ -653,7 +653,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <ResponseDebugModal ref={registerModal} settings={settings} />
 
-            {activeWorkspace && <RequestSwitcherModal
+            {activeWorkspace ? <RequestSwitcherModal
               ref={registerModal}
               workspace={activeWorkspace}
               workspaces={workspaces}
@@ -663,7 +663,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               activateRequest={handleActivateRequest}
               requestMetas={requestMetas}
               handleSetActiveWorkspace={handleSetActiveWorkspace}
-            />}
+            /> : null}
 
             <EnvironmentEditModal
               ref={registerModal}
@@ -678,7 +678,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            {activeWorkspace && gitVCS && (
+            {activeWorkspace && gitVCS ? (
               <Fragment>
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
                 <GitLogModal ref={registerModal} vcs={gitVCS} />
@@ -693,9 +693,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                   />
                 )}
               </Fragment>
-            )}
+            ) : null}
 
-            {activeWorkspace && vcs && (
+            {activeWorkspace && vcs ? (
               <Fragment>
                 <SyncStagingModal
                   ref={registerModal}
@@ -719,7 +719,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               </Fragment>
-            )}
+            ) : null}
 
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
