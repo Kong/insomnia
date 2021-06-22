@@ -754,7 +754,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           </ErrorBoundary>
         </div>
         <Fragment key={`views::${this.state.activeGitBranch}`}>
-          {activity === ACTIVITY_HOME && (
+          {(activity === ACTIVITY_HOME || !activeWorkspace) && (
             <WrapperHome
               wrapperProps={this.props}
               handleImportFile={this._handleImportFile}

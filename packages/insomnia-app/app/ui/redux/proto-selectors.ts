@@ -25,9 +25,9 @@ export const selectExpandedActiveProtoDirectories = createSelector(
   selectAllProtoDirectories,
   (workspace, allFiles, allDirs): ExpandedProtoDirectory[] => {
     // Get files where the parent is the workspace
-    const individualFiles = allFiles.filter(pf => pf.parentId === workspace._id);
+    const individualFiles = allFiles.filter(pf => pf.parentId === workspace?._id);
     // Get directories where the parent is the workspace
-    const rootDirs = allDirs.filter(pd => pd.parentId === workspace._id);
+    const rootDirs = allDirs.filter(pd => pd.parentId === workspace?._id);
     // Expand each directory
     const expandedDirs = rootDirs.map(dir => expandDir(dir, allFiles, allDirs));
 
