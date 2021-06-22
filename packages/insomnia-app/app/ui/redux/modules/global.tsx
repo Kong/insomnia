@@ -74,7 +74,7 @@ const COMMAND_PLUGIN_THEME = 'plugins/theme';
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
-function activeActivityReducer(state = null, action) {
+function activeActivityReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
       return action.activity;
@@ -84,7 +84,7 @@ function activeActivityReducer(state = null, action) {
   }
 }
 
-function activeSpaceReducer(state = BASE_SPACE_ID, action) {
+function activeSpaceReducer(state: string | null = BASE_SPACE_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
       return action.spaceId;
@@ -94,7 +94,7 @@ function activeSpaceReducer(state = BASE_SPACE_ID, action) {
   }
 }
 
-function activeWorkspaceReducer(state = null, action) {
+function activeWorkspaceReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_WORKSPACE:
       return action.workspaceId;
@@ -117,7 +117,7 @@ function loadingReducer(state = false, action) {
   }
 }
 
-function loadingRequestsReducer(state = {}, action) {
+function loadingRequestsReducer(state: Record<string, number> = {}, action) {
   switch (action.type) {
     case LOAD_REQUEST_START:
       return Object.assign({}, state, {
@@ -144,7 +144,16 @@ function loginStateChangeReducer(state = false, action) {
   }
 }
 
-export const reducer = combineReducers({
+export interface GlobalState {
+  isLoading: boolean;
+  activeSpaceId: string | null;
+  activeWorkspaceId: string | null;
+  activeActivity: string | null,
+  isLoggedIn: boolean;
+  loadingRequestIds: Record<string, number>;
+}
+
+export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeSpaceId: activeSpaceReducer,

@@ -49,6 +49,7 @@ import { database as db } from '../../common/database';
 import * as models from '../../models';
 import {
   selectActiveCookieJar,
+  selectActiveEnvironment,
   selectActiveGitRepository,
   selectActiveOAuth2Token,
   selectActiveRequest,
@@ -127,6 +128,7 @@ import { GitRepository } from '../../models/git-repository';
 import { CookieJar } from '../../models/cookie-jar';
 import { Response } from '../../models/response';
 import { RenderContextAndKeys } from '../../common/render';
+import { RootState } from '../redux/modules';
 
 interface OwnProps {
   activeApiSpec: ApiSpec,
@@ -1651,31 +1653,21 @@ async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
   }
 }
 
-function mapStateToProps(state, props) {
-  const { entities, global } = state;
-  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = global;
+function mapStateToProps(state: RootState, props) {
+  const { activeActivity, isLoading, loadingRequestIds, isLoggedIn } = state.global;
   // Entities
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const entitiesLists = selectEntitiesLists(state, props);
   const {
-    // @ts-expect-error -- TSCONVERSION
     apiSpecs,
-    // @ts-expect-error -- TSCONVERSION
     environments,
-    // @ts-expect-error -- TSCONVERSION
     gitRepositories,
-    // @ts-expect-error -- TSCONVERSION
     requestGroups,
-    // @ts-expect-error -- TSCONVERSION
     requestMetas,
-    // @ts-expect-error -- TSCONVERSION
     requestVersions,
-    // @ts-expect-error -- TSCONVERSION
     requests,
-    // @ts-expect-error -- TSCONVERSION
     workspaceMetas,
   } = entitiesLists;
-  // @ts-expect-error -- TSCONVERSION
   const settings = entitiesLists.settings[0];
   // Workspace stuff
 
@@ -1691,32 +1683,33 @@ function mapStateToProps(state, props) {
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state, props);
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeGitRepository = selectActiveGitRepository(state, props);
-  const safeMeta = activeWorkspaceMeta || {};
-  const sidebarHidden = safeMeta.sidebarHidden || false;
-  const sidebarFilter = safeMeta.sidebarFilter || '';
-  const sidebarWidth = safeMeta.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
-  const paneWidth = safeMeta.paneWidth || DEFAULT_PANE_WIDTH;
-  const paneHeight = safeMeta.paneHeight || DEFAULT_PANE_HEIGHT;
+
+  const sidebarHidden = activeWorkspaceMeta?.sidebarHidden || false;
+  const sidebarFilter = activeWorkspaceMeta?.sidebarFilter || '';
+  const sidebarWidth = activeWorkspaceMeta?.sidebarWidth || DEFAULT_SIDEBAR_WIDTH;
+  const paneWidth = activeWorkspaceMeta?.paneWidth || DEFAULT_PANE_WIDTH;
+  const paneHeight = activeWorkspaceMeta?.paneHeight || DEFAULT_PANE_HEIGHT;
   // Request stuff
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
-  const requestMeta = selectActiveRequestMeta(state, props) || {};
+  const requestMeta = selectActiveRequestMeta(state, props);
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeRequest = selectActiveRequest(state, props);
-  const responsePreviewMode = requestMeta.previewMode || PREVIEW_MODE_SOURCE;
-  const responseFilter = requestMeta.responseFilter || '';
-  const responseFilterHistory = requestMeta.responseFilterHistory || [];
-  const responseDownloadPath = requestMeta.downloadPath || null;
+
+  const responsePreviewMode = requestMeta?.previewMode || PREVIEW_MODE_SOURCE;
+  const responseFilter = requestMeta?.responseFilter || '';
+  const responseFilterHistory = requestMeta?.responseFilterHistory || [];
+  const responseDownloadPath = requestMeta?.downloadPath || null;
   // Cookie Jar
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeCookieJar = selectActiveCookieJar(state, props);
   // Response stuff
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
-  const activeRequestResponses = selectActiveRequestResponses(state, props) || [];
+  const activeRequestResponses = selectActiveRequestResponses(state, props);
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
-  const activeResponse = selectActiveResponse(state, props) || null;
+  const activeResponse = selectActiveResponse(state, props);
   // Environment stuff
-  const activeEnvironmentId = safeMeta.activeEnvironmentId;
-  const activeEnvironment = entities.environments[activeEnvironmentId];
+  // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
+  const activeEnvironment = selectActiveEnvironment(state, props);
   // OAuth2Token stuff
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const oAuth2Token = selectActiveOAuth2Token(state, props);
@@ -1742,6 +1735,7 @@ function mapStateToProps(state, props) {
   const activeUnitTestSuites = selectActiveUnitTestSuites(state, props);
   // @ts-expect-error -- TSCONVERSION https://github.com/reduxjs/reselect#accessing-react-props-in-selectors
   const activeUnitTestResult = selectActiveUnitTestResult(state, props);
+
   return Object.assign({}, state, {
     activity: activeActivity,
     activeSpace,

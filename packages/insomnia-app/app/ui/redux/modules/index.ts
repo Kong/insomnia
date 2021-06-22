@@ -34,7 +34,13 @@ export async function init() {
 
   return store;
 }
+
 export const reducer = combineReducers({
   entities: entities.reducer,
   global: global.reducer,
 });
+
+export interface RootState {
+  entities: entities.EntitiesState
+  global: global.GlobalState,
+}

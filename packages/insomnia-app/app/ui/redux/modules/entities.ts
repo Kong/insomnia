@@ -2,6 +2,33 @@ import clone from 'clone';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models';
 import { pluralize } from '../../../common/misc';
+import { Stats } from '../../../models/stats';
+import { WorkspaceMeta } from '../../../models/workspace-meta';
+import { Environment } from '../../../models/environment';
+import { GitRepository } from '../../../models/git-repository';
+import { BaseModel } from '../../../models';
+import { Settings } from '../../../models/settings';
+import { Space } from '../../../models/space';
+import { Workspace } from '../../../models/workspace';
+import { CookieJar } from '../../../models/cookie-jar';
+import { ApiSpec } from '../../../models/api-spec';
+import { GrpcRequestMeta } from '../../../models/grpc-request-meta';
+import { GrpcRequest } from '../../../models/grpc-request';
+import { ProtoDirectory } from '../../../models/proto-directory';
+import { ProtoFile } from '../../../models/proto-file';
+import { UnitTest } from '../../../models/unit-test';
+import { UnitTestResult } from '../../../models/unit-test-result';
+import { UnitTestSuite } from '../../../models/unit-test-suite';
+import { PluginData } from '../../../models/plugin-data';
+import { ClientCertificate } from '../../../models/client-certificate';
+import { OAuth2Token } from '../../../models/o-auth-2-token';
+import { Response } from '../../../models/response';
+import { RequestMeta } from '../../../models/request-meta';
+import { RequestVersion } from '../../../models/request-version';
+import { Request } from '../../../models/request';
+import { RequestGroupMeta } from '../../../models/request-group-meta';
+import { RequestGroup } from '../../../models/request-group';
+
 const ENTITY_CHANGES = 'entities/changes';
 const ENTITY_INITIALIZE = 'entities/initialize';
 
@@ -14,11 +41,63 @@ function getReducerName(type) {
   return pluralize(lowerFirstLetter);
 }
 
-const initialState = {};
+type EntityRecord<T extends BaseModel> = Record<string, T>;
 
-for (const type of models.types()) {
-  initialState[getReducerName(type)] = {};
+export interface EntitiesState {
+  stats: EntityRecord<Stats>;
+  settings: EntityRecord<Settings>;
+  spaces: EntityRecord<Space>,
+  workspaces: EntityRecord<Workspace>,
+  workspaceMetas: EntityRecord<WorkspaceMeta>,
+  environments: EntityRecord<Environment>,
+  gitRepositories: EntityRecord<GitRepository>,
+  cookieJars: EntityRecord<CookieJar>,
+  apiSpecs: EntityRecord<ApiSpec>,
+  requestGroups: EntityRecord<RequestGroup>,
+  requestGroupMetas: EntityRecord<RequestGroupMeta>,
+  requests: EntityRecord<Request>,
+  requestVersions: EntityRecord<RequestVersion>,
+  requestMetas: EntityRecord<RequestMeta>,
+  responses: EntityRecord<Response>,
+  oAuth2Tokens: EntityRecord<OAuth2Token>,
+  clientCertificates: EntityRecord<ClientCertificate>,
+  pluginDatas: EntityRecord<PluginData>,
+  unitTestSuites: EntityRecord<UnitTestSuite>,
+  unitTestResults: EntityRecord<UnitTestResult>,
+  unitTests: EntityRecord<UnitTest>,
+  protoFiles: EntityRecord<ProtoFile>,
+  protoDirectories: EntityRecord<ProtoDirectory>,
+  grpcRequests: EntityRecord<GrpcRequest>,
+  grpcRequestMetas: EntityRecord<GrpcRequestMeta>
 }
+
+const initialState: EntitiesState = {
+  stats: {},
+  settings: {},
+  spaces: {},
+  workspaces: {},
+  workspaceMetas: {},
+  environments: {},
+  gitRepositories: {},
+  cookieJars: {},
+  apiSpecs: {},
+  requestGroups: {},
+  requestGroupMetas: {},
+  requests: {},
+  requestVersions: {},
+  requestMetas: {},
+  responses: {},
+  oAuth2Tokens: {},
+  clientCertificates: {},
+  pluginDatas: {},
+  unitTestSuites: {},
+  unitTestResults: {},
+  unitTests: {},
+  protoFiles: {},
+  protoDirectories: {},
+  grpcRequests: {},
+  grpcRequestMetas: {},
+};
 
 export function reducer(state = initialState, action) {
   switch (action.type) {
