@@ -23,7 +23,7 @@ import { isCollection, isDesign } from '../../models/workspace';
 interface Props {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   handleChangeEnvironment: Function;
   handleDeleteResponse: Function;
   handleDeleteResponses: Function;
@@ -58,6 +58,10 @@ class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
     const { vcs, activeWorkspace, activeWorkspaceMeta, activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return null;
+    }
 
     const collection = isCollection(activeWorkspace);
     const design = isDesign(activeWorkspace);
@@ -127,6 +131,11 @@ class WrapperDebug extends PureComponent<Props> {
       sidebarHidden,
       sidebarWidth,
     } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return null;
+    }
+
     return (
       <Fragment>
         <div className="sidebar__menu">
@@ -218,6 +227,10 @@ class WrapperDebug extends PureComponent<Props> {
       responseDownloadPath,
       settings,
     } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return null;
+    }
 
     // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
     // The RequestPane and ResponsePane components already handle the case where activeRequest is null

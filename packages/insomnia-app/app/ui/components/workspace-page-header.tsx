@@ -12,7 +12,7 @@ import { isCollection, isDesign } from '../../models/workspace';
 
 interface Props {
   wrapperProps: WrapperProps;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   gridRight: ReactNode;
 }
 
@@ -28,12 +28,17 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
     isLoading,
   },
 }) => {
+  const homeCallback = useCallback(
+    () => handleActivityChange({ workspaceId: activeWorkspace?._id, nextActivity: ACTIVITY_HOME }),
+    [activeWorkspace, handleActivityChange],
+  );
+
+  if (!activeWorkspace || !activeApiSpec || !activity) {
+    return null;
+  }
+
   const collection = isCollection(activeWorkspace);
   const design = isDesign(activeWorkspace);
-  const homeCallback = useCallback(
-    () => handleActivityChange(activeWorkspace._id, ACTIVITY_HOME),
-    [activeWorkspace._id, handleActivityChange],
-  );
 
   const workspace = (
     <WorkspaceDropdown

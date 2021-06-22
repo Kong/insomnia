@@ -237,24 +237,24 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange(workspaceId: string, nextActivity: GlobalActivity) {
+  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: {workspaceId?: string, nextActivity: GlobalActivity}) {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
-    if (nextActivity !== ACTIVITY_HOME) {
+    if (workspaceId && nextActivity !== ACTIVITY_HOME) {
       await models.workspaceMeta.updateByParentId(workspaceId, {
         activeActivity: nextActivity,
       });
-    }
-
-    if (!activeApiSpec) {
-      return;
     }
 
     const notEditingASpec = activity !== ACTIVITY_SPEC;
 
     if (notEditingASpec) {
       handleSetActiveActivity(nextActivity);
+      return;
+    }
+
+    if (!activeApiSpec || !workspaceId) {
       return;
     }
 

@@ -148,7 +148,7 @@ export interface GlobalState {
   isLoading: boolean;
   activeSpaceId: string | null;
   activeWorkspaceId: string | null;
-  activeActivity: string | null,
+  activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
   loadingRequestIds: Record<string, number>;
 }
