@@ -86,8 +86,8 @@ describe('VCS', () => {
         {},
       );
       expect(Object.keys(status1.unstaged)).toEqual(['a', 'b', 'c']);
-      await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b, status1.unstaged.c]);
-      await v.takeSnapshot(status1.stage, 'Add a/b/c');
+      const stageResult = await v.stage(status1.stage, [status1.unstaged.a, status1.unstaged.b, status1.unstaged.c]);
+      await v.takeSnapshot(stageResult, 'Add a/b/c');
       const history = await v.getHistory();
       expect(history.length).toBe(1);
       expect(history).toEqual([
@@ -95,7 +95,7 @@ describe('VCS', () => {
           created: expect.any(Date),
           description: '',
           author: '',
-          id: 'a5fb7270c060c0387967c6db725fdf07e9594911',
+          id: 'fe64d760642ce1b2fafb8e3d8ceef4096cd996dc',
           name: 'Add a/b/c',
           parent: '0000000000000000000000000000000000000000',
           state: [
