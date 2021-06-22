@@ -87,14 +87,8 @@ export const selectWorkspacesForActiveSpace = createSelector(
 
 export const selectActiveWorkspace = createSelector(
   selectAllWorkspaces,
-  selectWorkspacesForActiveSpace,
   (state: RootState) => state.global.activeWorkspaceId,
-  (allWorkspaces, workspaces, activeWorkspaceId) => {
-    const activeWorkspace = workspaces.find(w => w._id === activeWorkspaceId) || workspaces[0];
-    // This fallback is needed because while a space may not have any workspaces
-    // The app still _needs_ an active workspace.
-    return activeWorkspace || allWorkspaces[0];
-  },
+  (allWorkspaces, activeWorkspaceId) => allWorkspaces.find(w => w._id === activeWorkspaceId),
 );
 
 export const selectActiveWorkspaceMeta = createSelector(
@@ -121,7 +115,7 @@ export const selectActiveEnvironment = createSelector(
 export const selectActiveWorkspaceClientCertificates = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
-  (entities, activeWorkspace) => entities.clientCertificates.filter(c => c.parentId === activeWorkspace._id),
+  (entities, activeWorkspace) => entities.clientCertificates.filter(c => c.parentId === activeWorkspace?._id),
 );
 
 export const selectActiveGitRepository = createSelector(
@@ -160,6 +154,10 @@ export const selectActiveWorkspaceEntities = createSelector(
   selectActiveWorkspace,
   selectEntitiesChildrenMap,
   (activeWorkspace, childrenMap) => {
+    if (!activeWorkspace) {
+      return [];
+    }
+
     const descendants: BaseModel[] = [activeWorkspace];
 
     const addChildrenOf = parent => {
@@ -228,7 +226,7 @@ export const selectActiveCookieJar = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, workspace) => {
-    const cookieJar = entities.cookieJars.find(cj => cj.parentId === workspace._id);
+    const cookieJar = entities.cookieJars.find(cj => cj.parentId === workspace?._id);
     return cookieJar || null;
   },
 );
@@ -304,6 +302,10 @@ export const selectActiveUnitTestResult = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
+    if (!activeWorkspace) {
+      return null;
+    }
+
     let recentResult: UnitTestResult | null = null;
 
     for (const r of entities.unitTestResults) {
@@ -359,7 +361,7 @@ export const selectActiveUnitTestSuites = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
-    return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace._id);
+    return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace?._id);
   },
 );
 

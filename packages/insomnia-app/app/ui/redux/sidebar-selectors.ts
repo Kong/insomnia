@@ -12,15 +12,15 @@ import {
   selectPinnedRequests,
 } from './selectors';
 
-type SidebarModels = Request | GrpcRequest | RequestGroup;
+type SidebarModel = Request | GrpcRequest | RequestGroup;
 
 export const shouldShowInSidebar = (model: BaseModel): boolean =>
   isRequest(model) || isGrpcRequest(model) || isRequestGroup(model);
 
-export const shouldIgnoreChildrenOf = (model: SidebarModels): boolean =>
+export const shouldIgnoreChildrenOf = (model: SidebarModel): boolean =>
   isRequest(model) || isGrpcRequest(model);
 
-export const sortByMetaKeyOrId = (a: SidebarModels, b: SidebarModels): number => {
+export const sortByMetaKeyOrId = (a: SidebarModel, b: SidebarModel): number => {
   if (a.metaSortKey === b.metaSortKey) {
     return a._id > b._id ? -1 : 1; // ascending
   } else {
@@ -28,27 +28,45 @@ export const sortByMetaKeyOrId = (a: SidebarModels, b: SidebarModels): number =>
   }
 };
 
+interface Child {
+  doc: SidebarModel,
+  hidden: boolean,
+  collapsed: boolean,
+  pinned: boolean;
+  children: Child[];
+}
+
+interface SidebarChildren {
+  all: Child[],
+  pinned: Child[],
+}
+
 export const selectSidebarChildren = createSelector(
   selectCollapsedRequestGroups,
   selectPinnedRequests,
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,
   selectEntitiesChildrenMap,
-  (collapsed, pinned, activeWorkspace, activeWorkspaceMeta, childrenMap) => {
+  (collapsed, pinned, activeWorkspace, activeWorkspaceMeta, childrenMap): SidebarChildren => {
+    if (!activeWorkspace) {
+      return { all: [], pinned: [] };
+    }
+
     const sidebarFilter = activeWorkspaceMeta ? activeWorkspaceMeta.sidebarFilter : '';
 
-    function next(parentId, pinnedChildren) {
-      const children: SidebarModels[] = (childrenMap[parentId] || [])
+    function next(parentId: string, pinnedChildren: Child[]) {
+      const children: SidebarModel[] = (childrenMap[parentId] || [])
         .filter(shouldShowInSidebar)
         .sort(sortByMetaKeyOrId);
 
       if (children.length > 0) {
         return children.map(c => {
-          const child = {
+          const child: Child = {
             doc: c,
             hidden: false,
             collapsed: !!collapsed[c._id],
             pinned: !!pinned[c._id],
+            children: [],
           };
 
           if (child.pinned) {
@@ -56,16 +74,15 @@ export const selectSidebarChildren = createSelector(
           }
 
           // Don't add children of requests
-          // @ts-expect-error -- TSCONVERSION
           child.children = shouldIgnoreChildrenOf(c) ? [] : next(c._id, pinnedChildren);
           return child;
         });
       } else {
-        return children;
+        return [];
       }
     }
 
-    function matchChildren(children, parentNames: string[] = []) {
+    function matchChildren(children: Child[], parentNames: string[] = []) {
       // Bail early if no filter defined
       if (!sidebarFilter) {
         return children;
@@ -77,7 +94,7 @@ export const selectSidebarChildren = createSelector(
         const hasMatchedChildren = child.children.find(c => c.hidden === false);
         // Try to match request attributes
         const name = child.doc.name;
-        const method = isGrpcRequest(child.doc) ? 'gRPC' : child.doc.method;
+        const method = isGrpcRequest(child.doc) ? 'gRPC' : isRequest(child.doc) ? child.doc.method : '';
         const match = fuzzyMatchAll(sidebarFilter, [name, method, ...parentNames], {
           splitSpace: true,
         });
@@ -89,9 +106,10 @@ export const selectSidebarChildren = createSelector(
       return children;
     }
 
-    const pinnedChildren = [];
+    const pinnedChildren: Child[] = [];
     const childrenTree = next(activeWorkspace._id, pinnedChildren);
     const matchedChildren = matchChildren(childrenTree);
+
     return {
       pinned: pinnedChildren,
       all: matchedChildren,
