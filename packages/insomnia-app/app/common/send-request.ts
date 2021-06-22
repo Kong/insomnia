@@ -7,10 +7,10 @@ import * as plugins from '../plugins';
 import { database } from './database';
 
 // The network layer uses settings from the settings model
-// We want to give inso the ability to override certain settings
+// We want to give consumers the ability to override certain settings
 type SettingsOverride = Pick<Settings, 'validateSSL'>;
 
-export async function getSendRequestCallbackMemDb(environmentId, memDB, settingsOverrides?: SettingsOverride) {
+export async function getSendRequestCallbackMemDb(environmentId: string, memDB: any, settingsOverrides?: SettingsOverride) {
   // Initialize the DB in-memory and fill it with data if we're given one
   await database.init(
     modelTypes(),
@@ -37,18 +37,19 @@ export async function getSendRequestCallbackMemDb(environmentId, memDB, settings
   });
 
   // Return callback helper to send requests
-  return async function sendRequest(requestId) {
+  return async function sendRequest(requestId: string) {
     return sendAndTransform(requestId, environmentId);
   };
 }
-export function getSendRequestCallback(environmentId) {
-  return async function sendRequest(requestId) {
+
+export function getSendRequestCallback(environmentId: string) {
+  return async function sendRequest(requestId: string) {
     stats.incrementExecutedRequests();
     return sendAndTransform(requestId, environmentId);
   };
 }
 
-async function sendAndTransform(requestId, environmentId) {
+async function sendAndTransform(requestId: string, environmentId: string) {
   try {
     plugins.ignorePlugin('insomnia-plugin-kong-bundle');
     const res = await send(requestId, environmentId);
