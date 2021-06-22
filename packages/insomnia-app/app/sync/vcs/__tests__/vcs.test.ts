@@ -2,11 +2,14 @@ import { VCS } from '../vcs';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { describeChanges } from '../util';
 import { globalBeforeEach } from '../../../__jest__/before-each';
+import { createBuilder } from '@develohpanda/fluent-builder';
+import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+
+const baseModelBuilder = createBuilder(baseModelSchema);
+const workspaceModelBuilder = createBuilder(workspaceModelSchema);
 
 function newDoc(id) {
-  return {
-    id,
-  };
+  return baseModelBuilder.reset()._id(id).build();
 }
 
 async function vcs(branch) {
@@ -42,21 +45,21 @@ describe('VCS', () => {
         {},
       );
       expect(status).toEqual({
-        key: '0cffac636df909fb4f8e9a25570e5012846b46fd',
+        key: 'a156b75bc8fd5ad4e0e3da036c30667af631cf2b',
         stage: {},
         unstaged: {
           foo: {
             added: true,
             key: 'foo',
-            blobContent: '{"id":"bar"}',
-            blobId: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
+            blobContent: '{"_id":"bar","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            blobId: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
             name: 'Foo',
           },
           baz: {
             added: true,
             key: 'baz',
-            blobContent: '{"id":"qux"}',
-            blobId: 'dc61fb5cb183286293dc7f0e8499b4e1e09eef05',
+            blobContent: '{"_id":"qux","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            blobId: 'aee296597cedfbfe6c961b0c48a5e05c6acb1da3',
             name: 'Baz',
           },
         },
@@ -95,22 +98,22 @@ describe('VCS', () => {
           created: expect.any(Date),
           description: '',
           author: '',
-          id: 'fe64d760642ce1b2fafb8e3d8ceef4096cd996dc',
+          id: '9578a1809f33ba28620ca51369fe2f68e7a677fc',
           name: 'Add a/b/c',
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: '210be55f7998bb55805f9d65c5345103e7957929',
+              blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
               key: 'a',
               name: 'A',
             },
             {
-              blob: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
+              blob: 'd42a1e9b61f31d85f54981d976aea411864c13c0',
               key: 'b',
               name: 'B',
             },
             {
-              blob: 'ce29c03e80866a215004d55f160a9a7b510ceacb',
+              blob: 'c9b7e11ac4cc98b32962b059f6526e186d0a810a',
               key: 'c',
               name: 'C',
             },
@@ -144,12 +147,12 @@ describe('VCS', () => {
         {},
       );
       expect(status).toEqual({
-        key: '80834d815272c73192291477f70dce8a7c8bc424',
+        key: 'dc9ac9680eabf62d94d63c862d5b863453c4fc72',
         stage: {},
         unstaged: {
           a: {
             deleted: true,
-            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
+            blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             key: 'a',
             name: 'A',
           },
@@ -157,22 +160,22 @@ describe('VCS', () => {
             added: true,
             key: 'notA',
             name: 'Not A',
-            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
-            blobContent: '{"id":"aaa"}',
+            blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
+            blobContent: '{"_id":"aaa","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
           c: {
             modified: true,
             key: 'c',
             name: 'C',
-            blobId: 'c32090250612936632fa4a3127507aa0694ba375',
-            blobContent: '{"id":"modified"}',
+            blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
+            blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
           d: {
             added: true,
             key: 'd',
             name: 'D',
-            blobId: 'd4d10ce251d7184fa14587796aed6e06c549f7a4',
-            blobContent: '{"id":"ddd"}',
+            blobId: 'cb6c7a2814104ff614133076245ae32fe9a62c8f',
+            blobContent: '{"_id":"ddd","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
         },
       });
@@ -208,34 +211,34 @@ describe('VCS', () => {
         newStage,
       );
       expect(status2).toEqual({
-        key: '4a0e8fd9ee30acb9c8ff4eb2f73e413ff7175a8c',
+        key: 'fa7e77538196bd6c337d9271b2a3af87abde3e15',
         stage: {
           a: {
             deleted: true,
-            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
+            blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             key: 'a',
             name: 'A',
           },
           notA: {
             added: true,
-            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
+            blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             key: 'notA',
             name: 'Not A',
-            blobContent: '{"id":"aaa"}',
+            blobContent: '{"_id":"aaa","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
           c: {
             modified: true,
-            blobId: 'c32090250612936632fa4a3127507aa0694ba375',
+            blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
             key: 'c',
             name: 'C',
-            blobContent: '{"id":"modified"}',
+            blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
           d: {
             added: true,
-            blobId: 'd4d10ce251d7184fa14587796aed6e06c549f7a4',
+            blobId: 'cb6c7a2814104ff614133076245ae32fe9a62c8f',
             key: 'd',
             name: 'D',
-            blobContent: '{"id":"ddd"}',
+            blobContent: '{"_id":"ddd","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
         },
         unstaged: {},
@@ -276,30 +279,30 @@ describe('VCS', () => {
         stage,
       );
       expect(status2).toEqual({
-        key: '886337817e3c1ff7df3fcfa7c30192eb854b45cf',
+        key: 'f92908bb0e471e61e0903b8c669f9d20e8d7c8f0',
         stage: {
           a: {
             added: true,
-            blobId: '210be55f7998bb55805f9d65c5345103e7957929',
+            blobId: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
             name: 'A',
             key: 'a',
-            blobContent: '{"id":"aaa"}',
+            blobContent: '{"_id":"aaa","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
         },
         unstaged: {
           a: {
             added: true,
-            blobId: 'c32090250612936632fa4a3127507aa0694ba375',
+            blobId: '87a13a793c6bc2137732ba4f8dc8d877fc143bad',
             key: 'a',
             name: 'A',
-            blobContent: '{"id":"modified"}',
+            blobContent: '{"_id":"modified","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
           b: {
             added: true,
-            blobId: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
+            blobId: 'd42a1e9b61f31d85f54981d976aea411864c13c0',
             name: 'B',
             key: 'b',
-            blobContent: '{"id":"bbb"}',
+            blobContent: '{"_id":"bbb","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
           },
         },
       });
@@ -360,8 +363,8 @@ describe('VCS', () => {
         foo: {
           key: 'foo',
           name: 'Foo',
-          blobContent: '{"id":"bar"}',
-          blobId: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
+          blobContent: '{"_id":"bar","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+          blobId: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
           added: true,
         },
       });
@@ -381,13 +384,13 @@ describe('VCS', () => {
         stage,
       );
       expect(status2).toEqual({
-        key: '19c281e6bbbebec0143491bf14f9a013a4114125',
+        key: '83dfd47a77c5015169d611f6559b18ea588ad89a',
         stage: {
           foo: {
             name: 'Foo',
             key: 'foo',
-            blobContent: '{"id":"bar"}',
-            blobId: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
+            blobContent: '{"_id":"bar","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            blobId: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
             added: true,
           },
         },
@@ -395,8 +398,8 @@ describe('VCS', () => {
           baz: {
             key: 'baz',
             name: 'Baz',
-            blobContent: '{"id":"qux"}',
-            blobId: 'dc61fb5cb183286293dc7f0e8499b4e1e09eef05',
+            blobContent: '{"_id":"qux","created":1234,"isPrivate":false,"name":"name","parentId":"","type":"base"}',
+            blobId: 'aee296597cedfbfe6c961b0c48a5e05c6acb1da3',
             added: true,
           },
         },
@@ -422,7 +425,7 @@ describe('VCS', () => {
       const history = await v.getHistory();
       expect(history).toEqual([
         {
-          id: '24b4888f4cecc5a1ac272eb1641cb5aa102c1675',
+          id: '0cf92e06b012c7868eb132741505541a2ed251fa',
           author: '',
           created: expect.any(Date),
           name: 'Add foo',
@@ -430,7 +433,7 @@ describe('VCS', () => {
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
+              blob: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
               key: 'foo',
               name: 'Foo',
             },
@@ -456,7 +459,7 @@ describe('VCS', () => {
       const history = await v.getHistory();
       expect(history).toEqual([
         {
-          id: '365c4341f6d57e18994df2429387b78f2c9a31cb',
+          id: 'a3f9bf26f8c1faac67f6b740f255f5c7f3bb8297',
           author: '',
           created: expect.any(Date),
           name: 'Add foo',
@@ -464,7 +467,7 @@ describe('VCS', () => {
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
+              blob: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
               key: 'foo',
               name: 'Foo',
             },
@@ -477,7 +480,7 @@ describe('VCS', () => {
       const history2 = await v.getHistory();
       expect(history2).toEqual([
         {
-          id: '365c4341f6d57e18994df2429387b78f2c9a31cb',
+          id: 'a3f9bf26f8c1faac67f6b740f255f5c7f3bb8297',
           author: '',
           created: expect.any(Date),
           name: 'Add foo',
@@ -485,19 +488,19 @@ describe('VCS', () => {
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
+              blob: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
               key: 'foo',
               name: 'Foo',
             },
           ],
         },
         {
-          id: '42f5b05d004f99e875a7eb3fe24ad7f94ad3e0c5',
+          id: '334636a325ea1a8f4578b8fc59653ec6a6421f20',
           author: '',
           created: expect.any(Date),
           name: 'Delete foo',
           description: '',
-          parent: '365c4341f6d57e18994df2429387b78f2c9a31cb',
+          parent: 'a3f9bf26f8c1faac67f6b740f255f5c7f3bb8297',
           state: [],
         },
       ]);
@@ -520,6 +523,7 @@ describe('VCS', () => {
       let didError = false;
 
       try {
+        // @ts-expect-error intentionally invalid
         await v.removeBranch();
       } catch (err) {
         didError = true;
@@ -590,14 +594,14 @@ describe('VCS', () => {
       expect(history).toEqual([
         {
           created: expect.any(Date),
-          id: 'e1afd0f5607d8da06b4360eb22d41650262f6dc5',
+          id: 'ef8dbe0689eaea5394e40687f25214a1db994156',
           author: '',
           parent: '0000000000000000000000000000000000000000',
           name: 'Add foo',
           description: '',
           state: [
             {
-              blob: 'b933e3dbd1d218e2763de8e3ece6147527d046af',
+              blob: 'f084c7823f01300890d0d6539cfaffa5e2398da1',
               key: 'foo',
               name: 'Foo',
             },
@@ -713,7 +717,7 @@ describe('VCS', () => {
       await v.takeSnapshot(stage, 'Add A');
       expect(await v.getHistory()).toEqual([
         {
-          id: 'c0b75a0cb27c946e376326b963ce544af08b680a',
+          id: '03ac0d9058614e1cafc6c53553bd0924b03f0b53',
           author: '',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
@@ -721,7 +725,7 @@ describe('VCS', () => {
           description: '',
           state: [
             {
-              blob: '210be55f7998bb55805f9d65c5345103e7957929',
+              blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
               key: 'a',
               name: 'A',
             },
@@ -746,7 +750,7 @@ describe('VCS', () => {
       await v.takeSnapshot(stage2, 'Add B');
       expect(await v.getHistory()).toEqual([
         {
-          id: 'c0b75a0cb27c946e376326b963ce544af08b680a',
+          id: '03ac0d9058614e1cafc6c53553bd0924b03f0b53',
           author: '',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
@@ -754,27 +758,27 @@ describe('VCS', () => {
           description: '',
           state: [
             {
-              blob: '210be55f7998bb55805f9d65c5345103e7957929',
+              blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
               key: 'a',
               name: 'A',
             },
           ],
         },
         {
-          id: 'b0fb09c8ac80b34f94dc6751da6b5aa634682f45',
+          id: '4a193e0464ce2846b011301febc65513f81ca43e',
           author: '',
           created: expect.any(Date),
-          parent: 'c0b75a0cb27c946e376326b963ce544af08b680a',
+          parent: '03ac0d9058614e1cafc6c53553bd0924b03f0b53',
           name: 'Add B',
           description: '',
           state: [
             {
-              blob: '210be55f7998bb55805f9d65c5345103e7957929',
+              blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
               key: 'a',
               name: 'A',
             },
             {
-              blob: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
+              blob: 'd42a1e9b61f31d85f54981d976aea411864c13c0',
               key: 'b',
               name: 'B',
             },
@@ -787,7 +791,7 @@ describe('VCS', () => {
       await v.merge([], 'new-branch');
       expect(await v.getHistory()).toEqual([
         {
-          id: 'c0b75a0cb27c946e376326b963ce544af08b680a',
+          id: '03ac0d9058614e1cafc6c53553bd0924b03f0b53',
           author: '',
           created: expect.any(Date),
           parent: '0000000000000000000000000000000000000000',
@@ -795,27 +799,27 @@ describe('VCS', () => {
           description: '',
           state: [
             {
-              blob: '210be55f7998bb55805f9d65c5345103e7957929',
+              blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
               key: 'a',
               name: 'A',
             },
           ],
         },
         {
-          id: 'b0fb09c8ac80b34f94dc6751da6b5aa634682f45',
+          id: '4a193e0464ce2846b011301febc65513f81ca43e',
           author: '',
           created: expect.any(Date),
-          parent: 'c0b75a0cb27c946e376326b963ce544af08b680a',
+          parent: '03ac0d9058614e1cafc6c53553bd0924b03f0b53',
           name: 'Add B',
           description: '',
           state: [
             {
-              blob: '210be55f7998bb55805f9d65c5345103e7957929',
+              blob: '4a1582f059cf4cc4c4dcd56e893b9ae88f32125d',
               key: 'a',
               name: 'A',
             },
             {
-              blob: '8ce1aded8fa999d1c5632ff993b56dd9aa1f4880',
+              blob: 'd42a1e9b61f31d85f54981d976aea411864c13c0',
               key: 'b',
               name: 'B',
             },
@@ -827,48 +831,21 @@ describe('VCS', () => {
 
   describe('describeChanges()', () => {
     it('works with same object structure', async () => {
-      const a = {
-        foo: 'bar',
-        nested: {
-          baz: 10,
-        },
-      };
-      const b = {
-        foo: 'baz',
-        nested: {
-          baz: 11,
-        },
-      };
-      expect(describeChanges(a, b)).toEqual(['foo', 'nested']);
+      const a = workspaceModelBuilder.reset().name('foo').certificates({ baz: 10 }).build();
+      const b = workspaceModelBuilder.reset().name('baz').certificates({ baz: 11 }).build();
+      expect(describeChanges(a, b)).toEqual(['name', 'certificates']);
     });
 
     it('ignores modified key', () => {
-      const a = {
-        foo: 'bar',
-        nested: {
-          baz: 10,
-        },
-        modified: 10,
-      };
-      const b = {
-        foo: 'baz',
-        nested: {
-          baz: 11,
-        },
-        modified: 12,
-      };
-      expect(describeChanges(a, b)).toEqual(['foo', 'nested']);
+      const a = workspaceModelBuilder.reset().name('foo').certificates({ baz: 10 }).modified(10).build();
+      const b = workspaceModelBuilder.reset().name('baz').certificates({ baz: 11 }).modified(12).build();
+      expect(describeChanges(a, b)).toEqual(['name', 'certificates']);
     });
 
     it('skips invalid values', () => {
       const a = null;
-      const b = {
-        foo: 'baz',
-        nested: {
-          baz: 11,
-        },
-        modified: 12,
-      };
+      const b = workspaceModelBuilder.reset().name('baz').certificates({ baz: 11 }).modified(12).build();
+      // @ts-expect-error intentionally invalid
       expect(describeChanges(a, b)).toEqual([]);
     });
   });
@@ -910,12 +887,12 @@ describe('VCS', () => {
           author: '',
           created: expect.any(Date),
           description: '',
-          id: 'f271aed3e12317215491ca1545770bd8289948e1',
+          id: '226811e0115cfb3254b01b012de1ceeb6059e3c2',
           name: 'Add foo',
           parent: '0000000000000000000000000000000000000000',
           state: [
             {
-              blob: 'f3827e9fdf461634c4ce528b88ced46fecf6509c',
+              blob: '863157e3f6c69379105291f0af83a70992922d00',
               key: 'foo',
               name: 'Foo',
             },
@@ -925,17 +902,17 @@ describe('VCS', () => {
           author: '',
           created: expect.any(Date),
           description: '',
-          id: '3acf54915cd8d34a9cd9ea4ac3a988105b483869',
+          id: 'e0631e398809cbd4157f180a3e045e5f8fb9db4e',
           name: 'Add bar',
-          parent: 'f271aed3e12317215491ca1545770bd8289948e1',
+          parent: '226811e0115cfb3254b01b012de1ceeb6059e3c2',
           state: [
             {
-              blob: 'f3827e9fdf461634c4ce528b88ced46fecf6509c',
+              blob: '863157e3f6c69379105291f0af83a70992922d00',
               key: 'foo',
               name: 'Foo',
             },
             {
-              blob: '2d1f409ab33b0b997d6c239a7754d24875570c2d',
+              blob: 'aa111c748fec72729b19f3c018d1d2c98af2c0a1',
               key: 'bar',
               name: 'Bar',
             },
