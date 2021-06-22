@@ -305,9 +305,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
           <DropdownButton
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
-            onClick={this._handleClickSend}
-            // @ts-expect-error -- TSCONVERSION type doesn't exist
-            type="button">
+            onClick={this._handleClickSend}>
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>

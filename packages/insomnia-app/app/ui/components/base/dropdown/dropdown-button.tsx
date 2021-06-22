@@ -1,6 +1,6 @@
-import React, { HTMLAttributes, PureComponent, ReactNode } from 'react';
+import React, { ButtonHTMLAttributes, PureComponent, ReactNode } from 'react';
 
-interface Props extends HTMLAttributes<HTMLButtonElement> {
+interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode,
   noWrap?: boolean,
   className?: string,

@@ -30,7 +30,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       parentId: wrk1._id,
       metaSortKey: 1,
     });
-    let env1Base = await models.environment.getOrCreateForWorkspace(wrk1);
+    let env1Base = await models.environment.getOrCreateForParentId(wrk1._id);
     env1Base = await models.environment.update(env1Base, {
       data: {
         envvalue: 'base1',
@@ -135,7 +135,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         },
       ],
     });
-    let env1Base = await models.environment.getOrCreateForWorkspace(wrk1);
+    let env1Base = await models.environment.getOrCreateForParentId(wrk1._id);
     env1Base = await models.environment.update(env1Base, {
       data: {
         envvalue: 'base1',
@@ -148,7 +148,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
         envvalue: 'public1',
       },
     });
-    const env2Base = await models.environment.getOrCreateForWorkspace(wrk2);
+    const env2Base = await models.environment.getOrCreateForParentId(wrk2._id);
     await models.environment.update(env2Base, {
       data: {
         envvalue: 'base2',
@@ -248,7 +248,7 @@ describe('export', () => {
       name: 'Request 2',
       parentId: f2._id,
     });
-    const eBase = await models.environment.getOrCreateForWorkspace(w);
+    const eBase = await models.environment.getOrCreateForParentId(w._id);
     const ePub = await models.environment.create({
       name: 'Public',
       parentId: eBase._id,
@@ -407,7 +407,7 @@ describe('export', () => {
       name: 'Unit Test One',
       parentId: uts1._id,
     });
-    const eBase = await models.environment.getOrCreateForWorkspace(w);
+    const eBase = await models.environment.getOrCreateForParentId(w._id);
     const ePub = await models.environment.create({
       name: 'Public',
       parentId: eBase._id,

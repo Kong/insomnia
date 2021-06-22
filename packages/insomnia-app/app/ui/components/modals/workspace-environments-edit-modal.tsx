@@ -187,7 +187,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       return;
     }
 
-    const rootEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+    const rootEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
     const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
     let selectedEnvironmentId;
 

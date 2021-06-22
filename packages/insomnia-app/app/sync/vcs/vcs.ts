@@ -499,29 +499,29 @@ export class VCS {
     console.log(`[sync] Unshared project ${this._projectId()}`);
   }
 
-  async _getOrCreateRemoteProject() {
+  async _getOrCreateRemoteProject(teamId?: string) {
     const localProject = await this._assertProject();
-    let project = await this._queryProject();
+    let remoteProject = await this._queryProject();
 
-    if (!project) {
-      project = await this._createRemoteProject(localProject.rootDocumentId, localProject.name);
+    if (!remoteProject) {
+      remoteProject = await this._createRemoteProject(localProject, teamId);
     }
 
-    await this._storeProject(project);
-    return project;
+    await this._storeProject(remoteProject);
+    return remoteProject;
   }
 
-  async _createRemoteProject(workspaceId: string, workspaceName: string, teamId?: string) {
+  async _createRemoteProject({ rootDocumentId, name }: Project, teamId?: string) {
     if (teamId) {
       const teamKeys = await this._queryTeamMemberKeys(teamId);
-      return this._queryCreateProject(workspaceId, workspaceName, teamId, teamKeys.memberKeys);
+      return this._queryCreateProject(rootDocumentId, name, teamId, teamKeys.memberKeys);
     }
 
-    return this._queryCreateProject(workspaceId, workspaceName);
+    return this._queryCreateProject(rootDocumentId, name);
   }
 
-  async push() {
-    await this._getOrCreateRemoteProject();
+  async push(teamId?: string) {
+    await this._getOrCreateRemoteProject(teamId);
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;

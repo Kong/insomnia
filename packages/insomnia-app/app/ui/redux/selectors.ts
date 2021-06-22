@@ -3,10 +3,10 @@ import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
+import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { Space } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { Workspace } from '../../models/workspace';
-import { StatusCandidate } from '../../sync/types';
 
 // ~~~~~~~~~ //
 // Selectors //
@@ -361,12 +361,5 @@ export const selectActiveUnitTestSuites = createSelector(
 
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
-  workspaceEntities =>
-    workspaceEntities
-      .filter(models.canSync)
-      .map<StatusCandidate>(doc => ({
-        key: doc._id,
-        name: doc.name || '',
-        document: doc,
-      })),
+  getStatusCandidates,
 );

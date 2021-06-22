@@ -155,6 +155,7 @@ export interface WrapperProps {
   apiSpecs: ApiSpec[];
   loadStartTime: number;
   isLoading: boolean;
+  isLoggedIn: boolean;
   paneWidth: number;
   paneHeight: number;
   responsePreviewMode: string;
@@ -175,7 +176,7 @@ export interface WrapperProps {
   activeWorkspaceMeta?: WorkspaceMeta;
   environments: Environment[];
   activeApiSpec: ApiSpec;
-  activeSpace: Space | null;
+  activeSpace?: Space;
   activeUnitTestSuite: UnitTestSuite | null;
   activeRequestResponses: Response[];
   activeWorkspace: Workspace;
