@@ -1,6 +1,6 @@
 import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, AUTOBIND_CFG, GlobalActivity, isWorkspaceActivity } from '../../../common/constants';
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import Button from '../base/button';
@@ -14,19 +14,21 @@ import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
 import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { isRequest, Request } from '../../../models/request';
-import type { Workspace } from '../../../models/workspace';
+import { isDesign, Workspace } from '../../../models/workspace';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import KeydownBinder from '../keydown-binder';
 import type { RequestMeta } from '../../../models/request-meta';
 import { keyboardKeys } from '../../../common/keyboard-keys';
+import { setActiveActivity, setActiveWorkspace } from '../../redux/modules/global';
 
 interface Props {
-  handleSetActiveWorkspace: (id: string) => void;
+  handleSetActiveWorkspace: typeof setActiveWorkspace;
+  handleSetActiveActivity: typeof setActiveActivity;
   activateRequest: (id: string) => void;
   activeRequest?: Request;
   workspaceChildren: (Request | RequestGroup)[];
-  workspace: Workspace;
+  workspace?: Workspace;
   workspaces: Workspace[];
   requestMetas: RequestMeta[];
 }
@@ -135,6 +137,11 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   async _createRequestFromSearch() {
     const { activeRequest, workspace } = this.props;
     const { searchString } = this.state;
+
+    if (!workspace) {
+      return;
+    }
+
     // Create the request if nothing matched
     const parentId = activeRequest ? activeRequest.parentId : workspace._id;
     const patch = {
@@ -146,8 +153,20 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this._activateRequest(request);
   }
 
-  _activateWorkspace(workspace: Workspace) {
+  async _activateWorkspace(workspace: Workspace) {
+    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+
+    let goToActivity: GlobalActivity;
+
+    if (activeActivity && isWorkspaceActivity(activeActivity)) {
+      goToActivity = activeActivity;
+    } else {
+      goToActivity = isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG;
+    }
+
+    this.props.handleSetActiveActivity(goToActivity);
     this.props.handleSetActiveWorkspace(workspace._id);
+
     this.modal && this.modal.hide();
   }
 
@@ -254,7 +273,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
 
     const matchedWorkspaces = workspaces
-      .filter(w => w._id !== workspace._id)
+      .filter(w => w._id !== workspace?._id)
       .filter(w => {
         const name = w.name.toLowerCase();
         const toMatch = searchString.toLowerCase();
@@ -377,7 +396,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       title,
       isModalVisible,
     } = this.state;
-    const { workspaceChildren } = this.props;
+    const { workspaceChildren, workspace } = this.props;
     const requestGroups = workspaceChildren.filter(isRequestGroup);
     return (
       <KeydownBinder onKeydown={this._handleKeydown} onKeyup={this._handleKeyup}>
@@ -474,12 +493,12 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                   No matches found for <strong>{searchString}</strong>
                 </p>
 
-                <button
+                {workspace ? <button
                   className="btn btn--outlined btn--compact"
                   disabled={!searchString}
                   onClick={this._activateCurrentIndex}>
                   Create a request named {searchString}
-                </button>
+                </button> : null}
               </div>
             )}
           </ModalBody>

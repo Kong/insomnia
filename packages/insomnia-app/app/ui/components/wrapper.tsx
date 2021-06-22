@@ -506,6 +506,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       handleInitializeEntities,
       handleRender,
       handleSetActiveWorkspace,
+      handleSetActiveActivity,
       handleSidebarSort,
       isVariableUncovered,
       requestMetas,
@@ -653,7 +654,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <ResponseDebugModal ref={registerModal} settings={settings} />
 
-            {activeWorkspace ? <RequestSwitcherModal
+            <RequestSwitcherModal
               ref={registerModal}
               workspace={activeWorkspace}
               workspaces={workspaces}
@@ -663,7 +664,8 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               activateRequest={handleActivateRequest}
               requestMetas={requestMetas}
               handleSetActiveWorkspace={handleSetActiveWorkspace}
-            /> : null}
+              handleSetActiveActivity={handleSetActiveActivity}
+            />
 
             <EnvironmentEditModal
               ref={registerModal}

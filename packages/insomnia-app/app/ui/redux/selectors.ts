@@ -7,6 +7,7 @@ import { getStatusCandidates } from '../../models/helpers/get-status-candidates'
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 import { ValueOf } from 'type-fest';
+import { isWorkspaceActivity } from '../../common/constants';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
@@ -86,9 +87,19 @@ export const selectWorkspacesForActiveSpace = createSelector(
 );
 
 export const selectActiveWorkspace = createSelector(
-  selectAllWorkspaces,
+  selectWorkspacesForActiveSpace,
   (state: RootState) => state.global.activeWorkspaceId,
-  (allWorkspaces, activeWorkspaceId) => allWorkspaces.find(w => w._id === activeWorkspaceId),
+  (state: RootState) => state.global.activeActivity,
+  (workspaces, activeWorkspaceId, activeActivity) => {
+    // Only return an active workspace if we're in an activity
+    if (activeActivity && isWorkspaceActivity(activeActivity)) {
+      const workspace = workspaces.find(w => w._id === activeWorkspaceId);
+      console.log('active', workspace);
+      return workspace;
+    }
+
+    return undefined;
+  },
 );
 
 export const selectActiveWorkspaceMeta = createSelector(
