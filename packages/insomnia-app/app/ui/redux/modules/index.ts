@@ -10,7 +10,7 @@ import * as fetch from '../../../account/fetch';
 export async function init() {
   const store = configureStore();
   // Do things that must happen before initial render
-  const { addChanges, initializeWith: initEntities } = bindActionCreators(entities, store.dispatch);
+  const { addChanges, initializeWith: initEntities } = bindActionCreators({ addChanges: entities.addChanges, initializeWith: entities.initializeWith }, store.dispatch);
 
   // @ts-expect-error -- TSCONVERSION
   const { newCommand, loginStateChange } = bindActionCreators(global, store.dispatch);

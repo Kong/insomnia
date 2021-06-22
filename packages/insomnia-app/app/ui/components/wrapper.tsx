@@ -680,11 +680,12 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
+            <GitRepositorySettingsModal ref={registerModal} />
+
             {activeWorkspace && gitVCS ? (
               <Fragment>
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
                 <GitLogModal ref={registerModal} vcs={gitVCS} />
-                <GitRepositorySettingsModal ref={registerModal} />
                 {activeGitRepository !== null && (
                   <GitBranchesModal
                     ref={registerModal}
