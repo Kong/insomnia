@@ -15,10 +15,10 @@ export interface HotKeyDefinition {
  * The combination of key presses that will activate a hotkey if pressed.
  */
 export interface KeyCombination {
-  ctrl: boolean;
-  alt: boolean;
-  shift: boolean;
-  meta: boolean;
+  ctrl?: boolean;
+  alt?: boolean;
+  shift?: boolean;
+  meta?: boolean;
   keyCode: number;
 }
 
@@ -41,40 +41,6 @@ function defineHotKey(id: string, description: string): HotKeyDefinition {
   return {
     id: id,
     description: description,
-  };
-}
-
-function keyComb(
-  ctrl: boolean,
-  alt: boolean,
-  shift: boolean,
-  meta: boolean,
-  keyCode: number,
-): KeyCombination {
-  return {
-    ctrl,
-    alt,
-    shift,
-    meta,
-    keyCode,
-  };
-}
-
-function keyBinds(
-  mac: KeyCombination | KeyCombination[],
-  winLinux: KeyCombination | KeyCombination[],
-): KeyBindings {
-  if (!Array.isArray(mac)) {
-    mac = [mac];
-  }
-
-  if (!Array.isArray(winLinux)) {
-    winLinux = [winLinux];
-  }
-
-  return {
-    macKeys: mac,
-    winLinuxKeys: winLinux,
   };
 }
 
@@ -127,173 +93,313 @@ export const hotKeyRefs = {
  * The default key bindings values of all available hotkeys.
  */
 const defaultRegistry: HotKeyRegistry = {
-  [hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.comma.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.comma.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_SHOW_SETTINGS.id]: keyBinds(
-    keyComb(false, true, true, true, keyboardKeys.comma.keyCode),
-    keyComb(true, true, true, false, keyboardKeys.comma.keyCode),
-  ),
-  [hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS.id]: keyBinds(
-    keyComb(true, false, true, true, keyboardKeys.forwardslash.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.forwardslash.keyCode),
-  ),
-  [hotKeyRefs.PREFERENCES_SHOW_GENERAL.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.comma.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.comma.keyCode),
-  ),
-  [hotKeyRefs.TOGGLE_MAIN_MENU.id]: keyBinds(
-    keyComb(false, true, false, true, keyboardKeys.comma.keyCode),
-    keyComb(true, true, false, false, keyboardKeys.comma.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_QUICK_SWITCH.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.p.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.p.keyCode),
-  ),
-  [hotKeyRefs.SHOW_RECENT_REQUESTS.id]: keyBinds(
-    keyComb(true, false, false, false, keyboardKeys.tab.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.tab.keyCode),
-  ),
-  [hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS.id]: keyBinds(
-    keyComb(true, false, true, false, keyboardKeys.tab.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.tab.keyCode),
-  ),
-  [hotKeyRefs.PLUGIN_RELOAD.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.r.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.r.keyCode),
-  ),
-  [hotKeyRefs.SHOW_AUTOCOMPLETE.id]: keyBinds(
-    keyComb(true, false, false, false, keyboardKeys.space.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.space.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_SEND.id]: keyBinds(
-    [
-      keyComb(false, false, false, true, keyboardKeys.enter.keyCode),
-      keyComb(false, false, false, true, keyboardKeys.r.keyCode),
-      keyComb(false, false, false, false, keyboardKeys.f5.keyCode),
+  [hotKeyRefs.WORKSPACE_SHOW_SETTINGS.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.comma.keyCode },
     ],
-    [
-      keyComb(true, false, false, false, keyboardKeys.enter.keyCode),
-      keyComb(true, false, false, false, keyboardKeys.r.keyCode),
-      keyComb(false, false, false, false, keyboardKeys.f5.keyCode),
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.comma.keyCode },
     ],
-  ),
-  [hotKeyRefs.REQUEST_SHOW_OPTIONS.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.enter.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.enter.keyCode),
-  ),
-  [hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.e.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.e.keyCode),
-  ),
-  [hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.e.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.e.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.l.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.l.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_TOGGLE_HISTORY.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.h.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.h.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_FOCUS_URL.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.l.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.l.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.g.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.g.keyCode),
-  ),
-  [hotKeyRefs.SIDEBAR_FOCUS_FILTER.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.f.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.f.keyCode),
-  ),
-  [hotKeyRefs.SIDEBAR_TOGGLE.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.backslash.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.backslash.keyCode),
-  ),
-  [hotKeyRefs.RESPONSE_FOCUS.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.singlequote.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.singlequote.keyCode),
-  ),
-  [hotKeyRefs.SHOW_COOKIES_EDITOR.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.k.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.k.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_SHOW_CREATE.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.n.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.n.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_QUICK_CREATE.id]: keyBinds(
-    keyComb(false, true, false, true, keyboardKeys.n.keyCode),
-    keyComb(true, true, false, false, keyboardKeys.n.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_SHOW_DELETE.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.delete.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.delete.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.n.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.n.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.d.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.d.keyCode),
-  ),
-  [hotKeyRefs.REQUEST_TOGGLE_PIN.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.p.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.p.keyCode),
-  ),
-  [hotKeyRefs.CLOSE_DROPDOWN.id]: keyBinds(
-    keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
-    keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
-  ),
-  [hotKeyRefs.CLOSE_MODAL.id]: keyBinds(
-    keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
-    keyComb(false, false, false, false, keyboardKeys.esc.keyCode),
-  ),
-  [hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES.id]: keyBinds(
-    keyComb(false, true, true, false, keyboardKeys.u.keyCode),
-    keyComb(false, true, true, false, keyboardKeys.u.keyCode),
-  ),
-  [hotKeyRefs.SHOW_SPEC_EDITOR.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.s.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.s.keyCode),
-  ),
-  [hotKeyRefs.SHOW_TEST.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.t.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.t.keyCode),
-  ),
-  [hotKeyRefs.SHOW_MONITOR.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.m.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.m.keyCode),
-  ),
-  [hotKeyRefs.SHOW_HOME.id]: keyBinds(
-    keyComb(false, false, true, true, keyboardKeys.h.keyCode),
-    keyComb(true, false, true, false, keyboardKeys.h.keyCode),
-  ),
-  [hotKeyRefs.FILTER_DOCUMENTS.id]: keyBinds(
-    keyComb(false, false, false, true, keyboardKeys.f.keyCode),
-    keyComb(true, false, false, false, keyboardKeys.f.keyCode),
-  ),
+  },
+  [hotKeyRefs.REQUEST_SHOW_SETTINGS.id]: {
+    macKeys: [
+      { alt: true, shift: true, meta: true, keyCode: keyboardKeys.comma.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, alt: true, shift: true, keyCode: keyboardKeys.comma.keyCode },
+    ],
+  },
+  [hotKeyRefs.PREFERENCES_SHOW_KEYBOARD_SHORTCUTS.id]: {
+    macKeys: [
+      { ctrl: true, shift: true, meta: true, keyCode: keyboardKeys.forwardslash.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.forwardslash.keyCode },
+    ],
+  },
+  [hotKeyRefs.PREFERENCES_SHOW_GENERAL.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.comma.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.comma.keyCode },
+    ],
+  },
+  [hotKeyRefs.TOGGLE_MAIN_MENU.id]: {
+    macKeys: [
+      { alt: true, meta: true, keyCode: keyboardKeys.comma.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, alt: true, keyCode: keyboardKeys.comma.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_QUICK_SWITCH.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.p.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.p.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_RECENT_REQUESTS.id]: {
+    macKeys: [
+      { ctrl: true, keyCode: keyboardKeys.tab.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.tab.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_RECENT_REQUESTS_PREVIOUS.id]: {
+    macKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.tab.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.tab.keyCode },
+    ],
+  },
+  [hotKeyRefs.PLUGIN_RELOAD.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.r.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.r.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_AUTOCOMPLETE.id]: {
+    macKeys: [
+      { ctrl: true, keyCode: keyboardKeys.space.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.space.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_SEND.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.enter.keyCode },
+      { meta: true, keyCode: keyboardKeys.r.keyCode },
+      { keyCode: keyboardKeys.f5.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.enter.keyCode },
+      { ctrl: true, keyCode: keyboardKeys.r.keyCode },
+      { keyCode: keyboardKeys.f5.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_SHOW_OPTIONS.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.enter.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.enter.keyCode },
+    ],
+  },
+  [hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.e.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.e.keyCode },
+    ],
+  },
+  [hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.e.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.e.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.l.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.l.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_TOGGLE_HISTORY.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.h.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.h.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_FOCUS_URL.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.l.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.l.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_SHOW_GENERATE_CODE_EDITOR.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.g.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.g.keyCode },
+    ],
+  },
+  [hotKeyRefs.SIDEBAR_FOCUS_FILTER.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.f.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.f.keyCode },
+    ],
+  },
+  [hotKeyRefs.SIDEBAR_TOGGLE.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.backslash.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.backslash.keyCode },
+    ],
+  },
+  [hotKeyRefs.RESPONSE_FOCUS.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.singlequote.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.singlequote.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_COOKIES_EDITOR.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.k.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.k.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_SHOW_CREATE.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.n.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.n.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_QUICK_CREATE.id]: {
+    macKeys: [
+      { alt: true, meta: true, keyCode: keyboardKeys.n.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, alt: true, keyCode: keyboardKeys.n.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_SHOW_DELETE.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.delete.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.delete.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_SHOW_CREATE_FOLDER.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.n.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.n.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_SHOW_DUPLICATE.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.d.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.d.keyCode },
+    ],
+  },
+  [hotKeyRefs.REQUEST_TOGGLE_PIN.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.p.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.p.keyCode },
+    ],
+  },
+  [hotKeyRefs.CLOSE_DROPDOWN.id]: {
+    macKeys: [
+      { keyCode: keyboardKeys.esc.keyCode },
+    ],
+    winLinuxKeys: [
+      { keyCode: keyboardKeys.esc.keyCode },
+    ],
+  },
+  [hotKeyRefs.CLOSE_MODAL.id]: {
+    macKeys: [
+      { keyCode: keyboardKeys.esc.keyCode },
+    ],
+    winLinuxKeys: [
+      { keyCode: keyboardKeys.esc.keyCode },
+    ],
+  },
+  [hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES.id]: {
+    macKeys: [
+      { alt: true, shift: true, keyCode: keyboardKeys.u.keyCode },
+    ],
+    winLinuxKeys: [
+      { alt: true, shift: true, keyCode: keyboardKeys.u.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_SPEC_EDITOR.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.s.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.s.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_TEST.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.t.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.t.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_MONITOR.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.m.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.m.keyCode },
+    ],
+  },
+  [hotKeyRefs.SHOW_HOME.id]: {
+    macKeys: [
+      { shift: true, meta: true, keyCode: keyboardKeys.h.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, shift: true, keyCode: keyboardKeys.h.keyCode },
+    ],
+  },
+  [hotKeyRefs.FILTER_DOCUMENTS.id]: {
+    macKeys: [
+      { meta: true, keyCode: keyboardKeys.f.keyCode },
+    ],
+    winLinuxKeys: [
+      { ctrl: true, keyCode: keyboardKeys.f.keyCode },
+    ],
+  },
   ...(isDevelopment() ? {
-    [hotKeyRefs.TOGGLE_DEVTOOLS.id]: keyBinds(
-      keyComb(false, false, false, false, keyboardKeys.f12.keyCode),
-      keyComb(false, false, false, false, keyboardKeys.f12.keyCode),
-    ),
+    [hotKeyRefs.TOGGLE_DEVTOOLS.id]: {
+      macKeys: [
+        { keyCode: keyboardKeys.f12.keyCode },
+      ],
+      winLinuxKeys: [
+        { keyCode: keyboardKeys.f12.keyCode },
+      ],
+    },
   } : {}),
 };
 
-function copyKeyCombs(sources: KeyCombination[]): KeyCombination[] {
-  const targets: KeyCombination[] = [];
-  sources.forEach(keyComb => {
-    targets.push(Object.assign({}, keyComb));
-  });
-  return targets;
-}
+const copyKeyCombs = (sources: KeyCombination[]) => sources.map(source => ({
+  ...source,
+}));
 
 /**
  * Get a new copy of key bindings with default key combinations.
