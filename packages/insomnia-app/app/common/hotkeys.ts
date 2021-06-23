@@ -52,11 +52,11 @@ function keyComb(
   keyCode: number,
 ): KeyCombination {
   return {
-    ctrl: ctrl,
-    alt: alt,
-    shift: shift,
-    meta: meta,
-    keyCode: keyCode,
+    ctrl,
+    alt,
+    shift,
+    meta,
+    keyCode,
   };
 }
 
@@ -82,40 +82,25 @@ function keyBinds(
  * The collection of available hotkeys' and their definitions.
  */
 // Not using dot, because NeDB prohibits field names to contain dots.
-export const hotKeyRefs: Record<string, HotKeyDefinition> = {
-  WORKSPACE_SHOW_SETTINGS: defineHotKey(
-    'workspace_showSettings',
-    `Show ${strings.document.singular} / ${strings.collection.singular} Settings`,
-  ),
+export const hotKeyRefs = {
+  WORKSPACE_SHOW_SETTINGS: defineHotKey('workspace_showSettings', `Show ${strings.document.singular} / ${strings.collection.singular} Settings`),
   REQUEST_SHOW_SETTINGS: defineHotKey('request_showSettings', 'Show Request Settings'),
-  PREFERENCES_SHOW_KEYBOARD_SHORTCUTS: defineHotKey(
-    'preferences_showKeyboardShortcuts',
-    'Show Keyboard Shortcuts',
-  ),
+  PREFERENCES_SHOW_KEYBOARD_SHORTCUTS: defineHotKey('preferences_showKeyboardShortcuts', 'Show Keyboard Shortcuts'),
   PREFERENCES_SHOW_GENERAL: defineHotKey('preferences_showGeneral', 'Show App Preferences'),
   TOGGLE_MAIN_MENU: defineHotKey('toggleMainMenu', 'Toggle Main Menu'),
   REQUEST_QUICK_SWITCH: defineHotKey('request_quickSwitch', 'Switch Requests'),
   SHOW_RECENT_REQUESTS: defineHotKey('request_showRecent', 'Show Recent Requests'),
-  SHOW_RECENT_REQUESTS_PREVIOUS: defineHotKey(
-    'request_showRecentPrevious',
-    'Show Recent Requests (Previous)',
-  ),
+  SHOW_RECENT_REQUESTS_PREVIOUS: defineHotKey('request_showRecentPrevious', 'Show Recent Requests (Previous)'),
   PLUGIN_RELOAD: defineHotKey('plugin_reload', 'Reload Plugins'),
   SHOW_AUTOCOMPLETE: defineHotKey('showAutocomplete', 'Show Autocomplete'),
   REQUEST_SEND: defineHotKey('request_send', 'Send Request'),
   REQUEST_SHOW_OPTIONS: defineHotKey('request_showOptions', 'Send Request (Options)'),
   ENVIRONMENT_SHOW_EDITOR: defineHotKey('environment_showEditor', 'Show Environment Editor'),
   ENVIRONMENT_SHOW_SWITCH_MENU: defineHotKey('environment_showSwitchMenu', 'Switch Environments'),
-  REQUEST_TOGGLE_HTTP_METHOD_MENU: defineHotKey(
-    'request_toggleHttpMethodMenu',
-    'Change HTTP Method',
-  ),
+  REQUEST_TOGGLE_HTTP_METHOD_MENU: defineHotKey('request_toggleHttpMethodMenu', 'Change HTTP Method'),
   REQUEST_TOGGLE_HISTORY: defineHotKey('request_toggleHistory', 'Show Request History'),
   REQUEST_FOCUS_URL: defineHotKey('request_focusUrl', 'Focus URL'),
-  REQUEST_SHOW_GENERATE_CODE_EDITOR: defineHotKey(
-    'request_showGenerateCodeEditor',
-    'Generate Code',
-  ),
+  REQUEST_SHOW_GENERATE_CODE_EDITOR: defineHotKey('request_showGenerateCodeEditor', 'Generate Code'),
   SIDEBAR_FOCUS_FILTER: defineHotKey('sidebar_focusFilter', 'Filter Sidebar'),
   SIDEBAR_TOGGLE: defineHotKey('sidebar_toggle', 'Toggle Sidebar'),
   RESPONSE_FOCUS: defineHotKey('response_focus', 'Focus Response'),
@@ -312,11 +297,9 @@ function copyKeyCombs(sources: KeyCombination[]): KeyCombination[] {
 
 /**
  * Get a new copy of key bindings with default key combinations.
- * @param hotKeyRefId
- * @returns {KeyBindings}
  */
 export function newDefaultKeyBindings(hotKeyRefId: string): KeyBindings {
-  const keyBindings: KeyBindings = defaultRegistry[hotKeyRefId];
+  const keyBindings = defaultRegistry[hotKeyRefId];
   return {
     macKeys: copyKeyCombs(keyBindings.macKeys),
     winLinuxKeys: copyKeyCombs(keyBindings.winLinuxKeys),
@@ -325,9 +308,8 @@ export function newDefaultKeyBindings(hotKeyRefId: string): KeyBindings {
 
 /**
  * Get a new copy of hotkey registry with default values.
- * @returns {HotKeyRegistry}
  */
-export function newDefaultRegistry(): HotKeyRegistry {
+export function newDefaultRegistry() {
   const newDefaults: HotKeyRegistry = {};
 
   for (const refId in defaultRegistry) {
@@ -343,10 +325,8 @@ export function newDefaultRegistry(): HotKeyRegistry {
 
 /**
  * Get the key combinations based on the current platform.
- * @param bindings
- * @returns {Array<KeyCombination>}
  */
-export function getPlatformKeyCombinations(bindings: KeyBindings): KeyCombination[] {
+export function getPlatformKeyCombinations(bindings: KeyBindings) {
   if (isMac()) {
     return bindings.macKeys;
   }
@@ -482,25 +462,20 @@ export function constructKeyCombinationDisplay(
 
 /**
  * Construct the display string for a key combination
- *
- * @param hotKeyDef
- * @param hotKeyRegistry
- * @param mustUsePlus
- * @returns {string} – key combination as string or empty string if not found
+ * @returns key combination as string or empty string if not found
  */
 export function getHotKeyDisplay(
   hotKeyDef: HotKeyDefinition,
   hotKeyRegistry: HotKeyRegistry,
   mustUsePlus: boolean,
 ) {
-  const hotKey: KeyBindings | null | undefined = hotKeyRegistry[hotKeyDef.id];
+  const hotKey = hotKeyRegistry[hotKeyDef.id];
 
   if (!hotKey) {
     return '';
   }
 
-  const keyCombs: KeyCombination[] = getPlatformKeyCombinations(hotKey);
-
+  const keyCombs = getPlatformKeyCombinations(hotKey);
   if (keyCombs.length === 0) {
     return '';
   }

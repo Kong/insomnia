@@ -1,4 +1,4 @@
-export const keyboardKeys: Record<string, any> = {
+export const keyboardKeys = {
   backspace: {
     keyCode: 8,
     label: 'Backspace',
