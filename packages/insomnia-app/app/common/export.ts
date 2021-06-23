@@ -43,10 +43,10 @@ const getDocWithDescendants = (includePrivateDocs = false) => async (parentDoc: 
 };
 
 export async function exportWorkspacesHAR(
-  parentDocs: BaseModel[],
+  workspaces: Workspace[],
   includePrivateDocs = false,
 ) {
-  const rootDocs: (BaseModel | null)[] = parentDocs.length === 0 ? [null] : parentDocs;
+  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
   const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(isRequest);
@@ -117,11 +117,11 @@ export async function exportRequestsHAR(
 }
 
 export async function exportWorkspacesData(
-  parentDocs: BaseModel[],
+  workspaces: Workspace[],
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  const rootDocs: (BaseModel | null)[] = parentDocs.length === 0 ? [null] : parentDocs;
+  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
   const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
