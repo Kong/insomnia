@@ -58,3 +58,8 @@ export function restartApp() {
   app.relaunch();
   app.exit();
 }
+
+export const toggleDevTools = () => {
+  const { getCurrentWebContents } = electron.remote || electron;
+  getCurrentWebContents().toggleDevTools();
+};

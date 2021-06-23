@@ -14,7 +14,7 @@ import {
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
-import { clickLink, getDataDirectory, restartApp } from '../common/electron-helpers';
+import { clickLink, getDataDirectory, restartApp, toggleDevTools } from '../common/electron-helpers';
 import * as log from '../common/log';
 import * as os from 'os';
 import { docsBase } from '../common/documentation';
@@ -284,10 +284,9 @@ export function createWindow() {
         },
       },
       {
-        label: `Toggle ${MNEMONIC_SYM}DevTools`,
+        label: `Toggle Chrome ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
-        // @ts-expect-error -- TSCONVERSION needs global module augmentation
-        click: () => mainWindow?.toggleDevTools(),
+        click: toggleDevTools,
       },
     ],
   };

@@ -1,5 +1,5 @@
 import { keyboardKeys } from './keyboard-keys';
-import { ALT_SYM, CTRL_SYM, isMac, META_SYM, SHIFT_SYM } from './constants';
+import { ALT_SYM, CTRL_SYM, isDevelopment, isMac, META_SYM, SHIFT_SYM } from './constants';
 import { strings } from './strings';
 
 /**
@@ -135,6 +135,7 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   SHOW_MONITOR: defineHotKey('activity_monitor', 'Show Monitor Activity'),
   SHOW_HOME: defineHotKey('activity_home', 'Show Home Activity'),
   FILTER_DOCUMENTS: defineHotKey('documents_filter', 'Focus Documents Filter'),
+  TOGGLE_DEVTOOLS: defineHotKey('toggle-devtools', 'Toggle Chrome DevTools'),
 };
 
 /**
@@ -293,6 +294,12 @@ const defaultRegistry: HotKeyRegistry = {
     keyComb(false, false, false, true, keyboardKeys.f.keyCode),
     keyComb(true, false, false, false, keyboardKeys.f.keyCode),
   ),
+  ...(isDevelopment() ? {
+    [hotKeyRefs.TOGGLE_DEVTOOLS.id]: keyBinds(
+      keyComb(false, false, false, false, keyboardKeys.f12.keyCode),
+      keyComb(false, false, false, false, keyboardKeys.f12.keyCode),
+    ),
+  } : {}),
 };
 
 function copyKeyCombs(sources: KeyCombination[]): KeyCombination[] {
