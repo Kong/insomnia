@@ -154,7 +154,7 @@ export async function importRaw(
   // Contains the ID of the base environment to be used with the import
   generatedIds[BASE_ENVIRONMENT_ID_KEY] = async () => {
     const parentId = await fnOrString(generatedIds[WORKSPACE_ID_KEY]);
-    const baseEnvironment = await models.environment.getOrCreateForWorkspaceId(parentId);
+    const baseEnvironment = await models.environment.getOrCreateForParentId(parentId);
     // Update this fn so it doesn't run again
     generatedIds[BASE_ENVIRONMENT_ID_KEY] = baseEnvironment._id;
     return baseEnvironment._id;

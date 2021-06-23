@@ -5,12 +5,24 @@ import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveWorkspace } from './global';
 import { selectActiveSpace } from '../selectors';
+import { Dispatch } from 'redux';
+import { database } from '../../../common/database';
 
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
+const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
+  const flushId = await database.bufferChanges();
+
+  const workspace = await models.workspace.create(patch);
+  await models.workspace.ensureChildren(workspace);
+
+  await database.flushChanges(flushId);
+  return workspace;
+};
+
 const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
-  return async dispatch => {
-    const workspace = await models.workspace.create(patch);
+  return async (dispatch: Dispatch) => {
+    const workspace = await createWorkspaceAndChildren(patch);
 
     if (onCreate) {
       await onCreate(workspace);

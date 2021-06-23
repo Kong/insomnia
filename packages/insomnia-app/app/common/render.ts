@@ -296,7 +296,7 @@ export async function getRenderContext(
     throw new Error('Failed to render. Could not find workspace');
   }
 
-  const rootEnvironment = await models.environment.getOrCreateForWorkspaceId(
+  const rootEnvironment = await models.environment.getOrCreateForParentId(
     workspace ? workspace._id : 'n/a',
   );
   const subEnvironment = await models.environment.getById(environmentId || 'n/a');

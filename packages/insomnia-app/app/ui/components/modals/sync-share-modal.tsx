@@ -125,7 +125,6 @@ class SyncShareModal extends PureComponent<Props, State> {
             <Dropdown outline>
               <DropdownDivider>Teams</DropdownDivider>
               {selectedTeam ? (
-              // @ts-expect-error -- TSCONVERSION
                 <DropdownButton className="btn btn--clicky" disabled={loading}>
                   {loading ? (
                     <i className="fa fa-refresh fa-spin" />
@@ -136,7 +135,7 @@ class SyncShareModal extends PureComponent<Props, State> {
                   <i className="fa fa-caret-down" />
                 </DropdownButton>
               ) : (
-                // @ts-expect-error -- TSCONVERSION
+
                 <DropdownButton className="btn btn--clicky" disabled={loading}>
                   {loading ? (
                     <i className="fa fa-refresh fa-spin" />

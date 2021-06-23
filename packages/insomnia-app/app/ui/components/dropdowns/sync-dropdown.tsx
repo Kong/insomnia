@@ -25,6 +25,9 @@ import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import { pullProject } from '../../../sync/vcs/pull-project';
 import { Space } from '../../../models/space';
+import { WorkspaceMeta } from '../../../models/workspace-meta';
+import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
+
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
@@ -32,7 +35,8 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 
 interface Props {
   workspace: Workspace;
-  space: Space | null;
+  workspaceMeta?: WorkspaceMeta;
+  space: Space;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;
@@ -80,7 +84,7 @@ class SyncDropdown extends PureComponent<Props, State> {
     remoteProjects: [],
   }
 
-  async refreshMainAttributes(extraState: Record<string, any> = {}) {
+  async refreshMainAttributes(extraState: Partial<State> = {}) {
     const { vcs, syncItems, workspace } = this.props;
 
     if (!vcs.hasProject()) {
@@ -96,7 +100,7 @@ class SyncDropdown extends PureComponent<Props, State> {
     const currentBranch = await vcs.getBranch();
     const historyCount = await vcs.getHistoryCount();
     const status = await vcs.status(syncItems, {});
-    const newState = {
+    const newState: Partial<State> = {
       status,
       historyCount,
       localBranches,
@@ -107,28 +111,33 @@ class SyncDropdown extends PureComponent<Props, State> {
     // Do the remote stuff
     if (session.isLoggedIn()) {
       try {
-        // @ts-expect-error -- TSCONVERSION
         newState.compare = await vcs.compareRemoteBranch();
       } catch (err) {
         console.log('Failed to compare remote branches', err.message);
       }
     }
 
-    // @ts-expect-error -- TSCONVERSION
-    this.setState(newState);
+    this.setState(prevState => ({ ...prevState, ...newState }));
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this.setState({
       initializing: true,
     });
-    this.refreshMainAttributes()
-      .catch(err => console.log('[sync_menu] Error refreshing sync state', err))
-      .finally(() =>
-        this.setState({
-          initializing: false,
-        }),
-      );
+
+    const { vcs, workspace, workspaceMeta, space } = this.props;
+
+    try {
+      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, space });
+      await this.refreshMainAttributes();
+    } catch (err) {
+      console.log('[sync_menu] Error refreshing sync state', err);
+    } finally {
+      this.setState({
+        initializing: false,
+      });
+    }
+
     // Refresh but only if the user has been active in the last n minutes
     this.checkInterval = setInterval(async () => {
       if (Date.now() - this.lastUserActivity < REFRESH_USER_ACTIVITY) {
@@ -382,7 +391,10 @@ class SyncDropdown extends PureComponent<Props, State> {
     }
 
     return (
-      <DropdownButton className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced">
+      <DropdownButton
+        className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced"
+        disabled={initializing}
+      >
         <div className="ellipsis">
           <i className="fa fa-code-fork space-right" />{' '}
           {initializing ? 'Initializing...' : currentBranch}
