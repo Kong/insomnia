@@ -95,7 +95,7 @@ export type WrapperProps = AppProps & {
   handleSetSidebarFilter: (value: string) => Promise<void>;
   handleShowSettingsModal: Function;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
-  handleCreateRequest: (id: string) => any;
+  handleCreateRequest: (id: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
   handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
