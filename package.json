@@ -32,7 +32,8 @@
     "app-package:smoke": "cross-env SMOKE_TEST=true npm run app-package",
     "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test",
     "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test",
-    "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test"
+    "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test",
+    "hard-reset": "npm run clean && npm run bootstrap && npm run app-start"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
