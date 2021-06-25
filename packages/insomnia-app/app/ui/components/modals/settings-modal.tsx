@@ -50,10 +50,6 @@ class SettingsModal extends PureComponent<Props, State> {
     });
   }
 
-  hideSettingsModal() {
-    this.modal?.hide();
-  }
-
   async _handleChangeTheme(themeName, colorScheme, persist = true) {
     const { settings } = this.props;
     let patch;
@@ -165,7 +161,7 @@ class SettingsModal extends PureComponent<Props, State> {
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
-                hideSettingsModal={this.hideSettingsModal}
+                hideSettingsModal={this.hide}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
