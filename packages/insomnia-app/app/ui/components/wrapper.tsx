@@ -47,6 +47,7 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import RequestSettingsModal from './modals/request-settings-modal';
+import RequestGroupSettingsModal from './modals/request-group-settings-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
 import GitStagingModal from './modals/git-staging-modal';
@@ -68,7 +69,6 @@ import type { Cookie, CookieJar } from '../../models/cookie-jar';
 import type { Environment } from '../../models/environment';
 import ErrorBoundary from './error-boundary';
 import type { ClientCertificate } from '../../models/client-certificate';
-import MoveRequestGroupModal from './modals/move-request-group-modal';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import { VCS } from '../../sync/vcs/vcs';
@@ -120,7 +120,6 @@ export interface WrapperProps {
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
   handleDuplicateWorkspace: Function;
   handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
@@ -620,6 +619,19 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
+            <RequestGroupSettingsModal
+              ref={registerModal}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              workspaces={workspaces}
+              isVariableUncovered={isVariableUncovered}
+            />
+
             {/* TODO: Figure out why cookieJar is sometimes null */}
             {activeCookieJar ? (
               <CookiesModal
@@ -647,12 +659,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               handleRender={handleRender}
               handleGetRenderContext={handleGetRenderContext}
               workspace={activeWorkspace}
-            />
-
-            <MoveRequestGroupModal
-              ref={registerModal}
-              workspaces={workspaces}
-              activeWorkspace={activeWorkspace}
             />
 
             <WorkspaceSettingsModal
