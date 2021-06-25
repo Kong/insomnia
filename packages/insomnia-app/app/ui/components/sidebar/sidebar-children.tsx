@@ -32,7 +32,6 @@ interface Props {
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleRender: HandleRender;
@@ -82,7 +81,6 @@ class SidebarChildren extends PureComponent<Props> {
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
       handleGenerateCode,
       handleCopyAsCurl,
       handleRender,
@@ -151,7 +149,6 @@ class SidebarChildren extends PureComponent<Props> {
           handleActivateRequest={handleActivateRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
           handleRender={handleRender}
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest}
