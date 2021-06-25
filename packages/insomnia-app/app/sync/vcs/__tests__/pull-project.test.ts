@@ -35,15 +35,15 @@ describe('pullProject()', () => {
     });
 
     afterEach(() => {
-      expect(vcs.pull).not.toHaveBeenCalledWith([]);
+      expect(vcs.pull).not.toHaveBeenCalledWith([], expect.anything());
     });
 
     it('should insert a workspace with no parent', async () => {
       // Arrange
-      const spaceId = undefined;
+      const space = undefined;
 
       // Act
-      await pullProject({ vcs, project, spaceId });
+      await pullProject({ vcs, project, space });
 
       // Assert
       const workspaces = await models.workspace.all();
@@ -59,10 +59,10 @@ describe('pullProject()', () => {
 
     it('should insert a workspace with parent', async () => {
       // Arrange
-      const spaceId = 'spaceId';
+      const space = await models.space.create();
 
       // Act
-      await pullProject({ vcs, project, spaceId });
+      await pullProject({ vcs, project, space });
 
       // Assert
       const workspaces = await models.workspace.all();
@@ -71,17 +71,17 @@ describe('pullProject()', () => {
       expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
         _id: project.rootDocumentId,
         name: project.name,
-        parentId: spaceId,
+        parentId: space._id,
       }));
     });
 
     it('should update a workspace if the name or parentId is different', async () => {
       // Arrange
       await models.workspace.create({ _id: project.rootDocumentId, name: 'someName' });
-      const spaceId = 'spaceId';
+      const space = await models.space.create();
 
       // Act
-      await pullProject({ vcs, project, spaceId });
+      await pullProject({ vcs, project, space });
 
       // Assert
       const workspaces = await models.workspace.all();
@@ -90,7 +90,7 @@ describe('pullProject()', () => {
       expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
         _id: project.rootDocumentId,
         name: project.name,
-        parentId: spaceId,
+        parentId: space._id,
       }));
     });
   });
@@ -101,19 +101,18 @@ describe('pullProject()', () => {
     });
 
     afterEach(() => {
-      expect(vcs.pull).toHaveBeenCalledWith([]);
     });
 
     it('should overwrite the parentId only for a workspace with null', async () => {
       // Arrange
-      const spaceId = undefined;
+      const space = undefined;
       const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
-      await pullProject({ vcs, project, spaceId });
+      await pullProject({ vcs, project, space });
 
       // Assert
       const workspaces = await models.workspace.all();
@@ -130,18 +129,20 @@ describe('pullProject()', () => {
       expect(requests).toHaveLength(1);
       const request = requests[0];
       expect(request).toStrictEqual(existingReq);
+
+      expect(vcs.pull).toHaveBeenCalledWith([], undefined);
     });
 
     it('should overwrite the parentId only for a workspace with the space id', async () => {
       // Arrange
-      const spaceId = 'spaceId';
+      const space = await models.space.create({ remoteId: 'abc' });
       const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
-      await pullProject({ vcs, project, spaceId });
+      await pullProject({ vcs, project, space });
 
       // Assert
       const workspaces = await models.workspace.all();
@@ -150,13 +151,15 @@ describe('pullProject()', () => {
       expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
         _id: project.rootDocumentId,
         name: project.name,
-        parentId: spaceId,
+        parentId: space._id,
       }));
 
       const requests = await models.request.all();
       expect(requests).toHaveLength(1);
       const request = requests[0];
       expect(request).toStrictEqual(existingReq);
+
+      expect(vcs.pull).toHaveBeenCalledWith([], space.remoteId);
     });
   });
 });

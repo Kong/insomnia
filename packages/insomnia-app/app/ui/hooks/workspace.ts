@@ -48,7 +48,6 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   const workspaces = useSelector(selectAllWorkspaces);
   const activeSpace = useSelector(selectActiveSpace);
   const spaceRemoteId = activeSpace?.remoteId || undefined;
-  const spaceId = activeSpace?._id;
 
   // Local state
   const [{ loading, localProjects, remoteProjects, pullingProjects }, _dispatch] = useReducer(reducer, initialState);
@@ -90,7 +89,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
       // Remove all projects for workspace first
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
 
-      await pullProject({ vcs: newVCS, project, spaceId });
+      await pullProject({ vcs: newVCS, project, space: activeSpace });
 
       await refresh();
     } catch (err) {
@@ -101,7 +100,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     } finally {
       dispatch({ type: 'stopPullingProject', projectId: project.id });
     }
-  }, [vcs, dispatch, spaceId, refresh]);
+  }, [vcs, refresh, activeSpace, dispatch]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {

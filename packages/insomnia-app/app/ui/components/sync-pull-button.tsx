@@ -3,10 +3,12 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { VCS } from '../../sync/vcs/vcs';
 import { showError } from './modals';
+import { Space } from '../../models/space';
 
 interface Props {
   vcs: VCS;
   branch: string;
+  space?: Space;
   onPull: (...args: any[]) => any;
   disabled?: boolean;
   className?: string;
@@ -26,7 +28,7 @@ class SyncPullButton extends PureComponent<Props, State> {
   };
 
   async _handleClick() {
-    const { vcs, onPull, branch } = this.props;
+    const { vcs, onPull, branch, space } = this.props;
     this.setState({
       loading: true,
     });
@@ -37,7 +39,7 @@ class SyncPullButton extends PureComponent<Props, State> {
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
       await newVCS.checkout([], branch);
-      await newVCS.pull([]);
+      await newVCS.pull([], space?.remoteId);
     } catch (err) {
       showError({
         title: 'Pull Error',
