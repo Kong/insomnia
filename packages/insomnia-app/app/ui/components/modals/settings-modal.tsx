@@ -10,7 +10,7 @@ import SettingsShortcuts from '../settings/shortcuts';
 import General from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import Plugins from '../settings/plugins';
-import Theme from '../settings/theme';
+import { Theme } from '../settings/theme';
 import * as models from '../../../models/index';
 import { Curl } from 'node-libcurl';
 import Tooltip from '../tooltip';

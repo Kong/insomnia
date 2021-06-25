@@ -5,23 +5,68 @@ import Button from '../base/button';
 import type { Theme as ThemeType, ColorScheme } from '../../../plugins';
 import { getThemes } from '../../../plugins';
 import HelpTooltip from '../help-tooltip';
+import styled from 'styled-components';
 const THEMES_PER_ROW = 5;
+
+const RootWrapper = styled.div`${() => ({
+  paddingTop: 10,
+})}`;
+
+const ThemeButton = styled(Button)<{ $isActive: boolean }>(({ $isActive }) => ({
+  position: 'relative',
+  margin: 'var(--padding-md) var(--padding-md)',
+  fontSize: 0,
+  borderRadius: 'var(--radius-md)',
+  overflow: 'hidden',
+  boxShadow: '0 0 0 1px var(--hl-sm)',
+  ...($isActive ? {
+    boxShadow: '0 0 0 var(--padding-xs) var(--color-surprise)',
+    transform: 'scale(1.05)',
+    transition: 'all 50ms ease-out',
+  } : {}),
+  '&:hover': {
+    transform: 'scale(1.05)',
+  },
+}));
 
 interface Props {
   handleChangeTheme: (arg0: string, arg1: ColorScheme) => void;
-  activeTheme: string;
+  activeTheme: ThemeType;
   handleAutoDetectColorSchemeChange: (arg0: boolean) => void;
   autoDetectColorScheme: boolean;
-  activeLightTheme: string;
-  activeDarkTheme: string;
+  activeLightTheme: ThemeType;
+  activeDarkTheme: ThemeType;
 }
 
 interface State {
   themes: ThemeType[];
 }
 
+const SunSvg = () => (
+  <svg
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+  >
+    <path
+      d="M256 160c-52.9 0-96 43.1-96 96s43.1 96 96 96 96-43.1 96-96-43.1-96-96-96zm246.4 80.5l-94.7-47.3 33.5-100.4c4.5-13.6-8.4-26.5-21.9-21.9l-100.4 33.5-47.4-94.8c-6.4-12.8-24.6-12.8-31 0l-47.3 94.7L92.7 70.8c-13.6-4.5-26.5 8.4-21.9 21.9l33.5 100.4-94.7 47.4c-12.8 6.4-12.8 24.6 0 31l94.7 47.3-33.5 100.5c-4.5 13.6 8.4 26.5 21.9 21.9l100.4-33.5 47.3 94.7c6.4 12.8 24.6 12.8 31 0l47.3-94.7 100.4 33.5c13.6 4.5 26.5-8.4 21.9-21.9l-33.5-100.4 94.7-47.3c13-6.5 13-24.7.2-31.1zm-155.9 106c-49.9 49.9-131.1 49.9-181 0-49.9-49.9-49.9-131.1 0-181 49.9-49.9 131.1-49.9 181 0 49.9 49.9 49.9 131.1 0 181z"
+    />
+  </svg>
+);
+
+const MoonSvg = () => (
+  <svg
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+  >
+    <path
+      d="M283.211 512c78.962 0 151.079-35.925 198.857-94.792 7.068-8.708-.639-21.43-11.562-19.35-124.203 23.654-238.262-71.576-238.262-196.954 0-72.222 38.662-138.635 101.498-174.394 9.686-5.512 7.25-20.197-3.756-22.23A258.156 258.156 0 0 0 283.211 0c-141.309 0-256 114.511-256 256 0 141.309 114.511 256 256 256z" />
+  </svg>
+);
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Theme extends PureComponent<Props, State> {
+export class Theme extends PureComponent<Props, State> {
   state: State = {
     themes: [],
   }
@@ -32,187 +77,215 @@ class Theme extends PureComponent<Props, State> {
 
   async _loadThemes() {
     const themes = await getThemes();
-    this.setState({
-      themes,
-    });
+    this.setState({ themes });
   }
 
-  renderThemePreview(themeName: string) {
+  renderThemePreview(themeType: ThemeType) {
+    const {
+      autoDetectColorScheme,
+      activeLightTheme,
+      activeDarkTheme,
+    } = this.props;
+
+    const isOSDarkTheme = themeType === activeDarkTheme;
+    const isOSLightTheme = themeType === activeLightTheme;
+
+    const isActive = this.isThemeActive(themeType);
+    console.log({
+      autoDetectColorScheme,
+      themeName: themeType,
+      activeDarkTheme,
+      isOSDarkTheme,
+      activeLightTheme,
+      isOSLightTheme,
+      isOSTheme: isActive,
+    });
+
     return (
-      /* @ts-expect-error -- TSCONVERSION */
-      <svg theme={themeName} width="100%" height="100%" viewBox="0 0 500 300">
-        {/*
-          A WORD TO THE WISE: If you, dear traveler from the future, are here
-          for the purpose of theming things due to changes in the app structure,
-          please remember to add `--sub` to your classes or else the selected class'
-          theme variables will apply to all theme previews.  Search your codebase
-          for `--sub` to see more.
-        */}
+      <div
+        style={{
+          position: 'relative',
+        }}
+      >
+        {isActive && autoDetectColorScheme ? (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              width: 10,
+              height: 10,
+              fill: 'white',
+              padding: 4,
+              background: 'var(--color-surprise)',
+              ...(isOSDarkTheme ? {
+                right: 0,
+                borderBottomLeftRadius: 'var(--radius-md)',
+              } : {
+                left: 0,
+                borderBottomRightRadius: 'var(--radius-md)',
+              }),
+            }}
+          >
+            {isOSDarkTheme ? <MoonSvg /> : <SunSvg />}
+          </div>
+        ) : null}
 
-        {/* @ts-expect-error -- TSCONVERSION */}
-        <g subtheme={themeName}>
-          {/* App Header */}
-          <g className="theme--app-header--sub">
-            <rect x="0" y="0" width="100%" height="10%" className="bg-fill" />
-          </g>
+        <svg
+        /* @ts-expect-error -- TSCONVERSION */
+          theme={themeType}
+          width="100%"
+          height="100%"
+          viewBox="0 0 500 300"
+        >
+          {/*
+            A WORD TO THE WISE: If you, dear traveler from the future, are here
+            for the purpose of theming things due to changes in the app structure,
+            please remember to add `--sub` to your classes or else the selected class'
+            theme variables will apply to all theme previews.  Search your codebase
+            for `--sub` to see more.
+          */}
 
-          {/* Panes */}
-          <g className="theme--pane--sub">
-            {/* Response Area */}
-            <rect x="0" y="10%" width="100%" height="100%" className="bg-fill" />
-
-            {/* URL Bars */}
-            <rect
-              x="25%"
-              y="10%"
-              width="100%"
-              height="10%"
-              className="theme--pane__header--sub bg-fill"
-            />
-            {/* Send Button */}
-            <g>
-              <rect x="53%" y="10%" width="9%" height="10%" className="surprise-fill" />
+          {/* @ts-expect-error -- TSCONVERSION */}
+          <g subtheme={themeType}>
+            {/* App Header */}
+            <g className="theme--app-header--sub">
+              <rect x="0" y="0" width="100%" height="10%" style={{ fill: 'var(--color-bg)' }} />
             </g>
+
+            {/* Panes */}
+            <g className="theme--pane--sub">
+              {/* Response Area */}
+              <rect x="0" y="10%" width="100%" height="100%" style={{ fill: 'var(--color-bg)' }} />
+
+              {/* URL Bars */}
+              <rect
+                x="25%"
+                y="10%"
+                width="100%"
+                height="10%"
+                className="theme--pane__header--sub"
+                style={{ fill: 'var(--color-bg)' }}
+              />
+              {/* Send Button */}
+              <g>
+                <rect x="53%" y="10%" width="9%" height="10%" style={{ fill: 'var(--color-surprise)' }} />
+              </g>
+            </g>
+
+            {/* Sidebar */}
+            <g className="theme--sidebar--sub">
+              <rect x="0" y="10%" width="25%" height="100%" style={{ fill: 'var(--color-bg)' }} />
+            </g>
+
+            {/* Lines */}
+            <line x1="0%" x2="100%" y1="10%" y2="10%" strokeWidth="1" style={{ stroke: 'var(--hl-md)' }} />
+            <line x1="25%" x2="100%" y1="20%" y2="20%" strokeWidth="1" style={{ stroke: 'var(--hl-md)' }} />
+            <line x1="62%" x2="62%" y1="10%" y2="100%" strokeWidth="1" style={{ stroke: 'var(--hl-md)' }} />
+            <line x1="25%" x2="25%" y1="10%" y2="100%" strokeWidth="1" style={{ stroke: 'var(--hl-md)' }} />
+
+            {/* Color Squares */}
+            <rect x="40%" y="85%" width="5%" height="8%" style={{ fill: 'var(--color-success)' }} />
+            <rect x="50%" y="85%" width="5%" height="8%" style={{ fill: 'var(--color-info)' }} />
+            <rect x="60%" y="85%" width="5%" height="8%" style={{ fill: 'var(--color-warning)' }} />
+            <rect x="70%" y="85%" width="5%" height="8%" style={{ fill: 'var(--color-danger)' }} />
+            <rect x="80%" y="85%" width="5%" height="8%" style={{ fill: 'var(--color-surprise)' }} />
+            <rect x="90%" y="85%" width="5%" height="8%" style={{ fill: 'var(--color-info)' }} />
           </g>
-
-          {/* Sidebar */}
-          <g className="theme--sidebar--sub">
-            <rect x="0" y="10%" width="25%" height="100%" className="bg-fill" />
-          </g>
-
-          {/* Lines */}
-          <line x1="0%" x2="100%" y1="10%" y2="10%" strokeWidth="1" className="hl-stroke" />
-          <line x1="25%" x2="100%" y1="20%" y2="20%" strokeWidth="1" className="hl-stroke" />
-          <line x1="62%" x2="62%" y1="10%" y2="100%" strokeWidth="1" className="hl-stroke" />
-          <line x1="25%" x2="25%" y1="10%" y2="100%" strokeWidth="1" className="hl-stroke" />
-
-          {/* Color Squares */}
-          <rect x="40%" y="85%" width="5%" height="8%" className="success-fill" />
-          <rect x="50%" y="85%" width="5%" height="8%" className="info-fill" />
-          <rect x="60%" y="85%" width="5%" height="8%" className="warning-fill" />
-          <rect x="70%" y="85%" width="5%" height="8%" className="danger-fill" />
-          <rect x="80%" y="85%" width="5%" height="8%" className="surprise-fill" />
-          <rect x="90%" y="85%" width="5%" height="8%" className="info-fill" />
-        </g>
-      </svg>
+        </svg>
+      </div>
     );
+  }
+
+  isThemeActive(theme: ThemeType) {
+    const { autoDetectColorScheme, activeTheme, activeLightTheme, activeDarkTheme } = this.props;
+    if (autoDetectColorScheme) {
+      return theme === activeLightTheme || theme === activeDarkTheme;
+    }
+    return theme === activeTheme;
   }
 
   renderTheme(theme: ThemeType) {
-    const { handleChangeTheme, activeTheme, autoDetectColorScheme } = this.props;
-    const isActive = activeTheme === theme.theme.name;
-    const disabled = autoDetectColorScheme;
+    const { handleChangeTheme } = this.props;
+    const isActive = this.isThemeActive(theme.theme.name as unknown as ThemeType);
+    const onClick = () => {
+      handleChangeTheme(theme.theme.name, 'default');
+    };
+
     return (
       <div
         key={theme.theme.name}
-        className="themes__theme"
         style={{
           maxWidth: `${100 / THEMES_PER_ROW}%`,
-        }}>
-        <h2 className="txt-lg">{theme.theme.displayName}</h2>
-        <Button
-          disabled={disabled}
-          onClick={() => handleChangeTheme(theme.theme.name, 'default')}
-          className={isActive ? 'active' : ''}>
-          {this.renderThemePreview(theme.theme.name)}
-        </Button>
+          paddingBottom: 'var(--padding-lg)',
+          textAlign: 'center',
+        }}
+      >
+        <h2
+          style={{
+            marginTop: 0,
+            marginBottom: 'var(--padding-xs)',
+            fontSize: 'var(--font-size-md)',
+          }}
+        >
+          {theme.theme.displayName}
+        </h2>
+
+        <div>
+
+          <ThemeButton
+            onClick={onClick}
+            $isActive={isActive}
+          >
+            {this.renderThemePreview(theme.theme.name as unknown as ThemeType)}
+          </ThemeButton>
+        </div>
       </div>
     );
   }
 
-  renderThemeRows() {
-    const { themes } = this.state;
-    const rows: ThemeType[][] = [];
-    let row: ThemeType[] = [];
-
-    for (const theme of themes) {
-      row.push(theme);
-
-      if (row.length === THEMES_PER_ROW) {
-        rows.push(row);
-        row = [];
-      }
-    }
-
-    // Push the last row if it wasn't finished
-    if (row.length) {
-      rows.push(row);
-    }
-
-    return rows.map((row, i) => (
-      <div key={i} className="themes__row">
-        {row.map(this.renderTheme)}
+  renderOsThemeCheckbox() {
+    const { autoDetectColorScheme, handleAutoDetectColorSchemeChange } = this.props;
+    return (
+      <div className="form-control form-control--thin">
+        <label className="inline-block">
+          Use OS color scheme
+          <HelpTooltip className="space-left">
+            Lets you choose one theme for light mode and one for dark mode.
+          </HelpTooltip>
+          <input
+            type="checkbox"
+            name="autoDetectColorScheme"
+            checked={autoDetectColorScheme}
+            onChange={event => {
+              handleAutoDetectColorSchemeChange(event.target.checked);
+            }}
+          />
+        </label>
       </div>
-    ));
+    );
   }
 
-  renderThemeSelect(scheme: 'light' | 'dark') {
-    const {
-      activeLightTheme,
-      activeDarkTheme,
-      handleChangeTheme,
-      autoDetectColorScheme,
-    } = this.props;
+  renderThemes() {
     const { themes } = this.state;
-    const activeColorTheme =
-      scheme === 'light' ? activeLightTheme : activeDarkTheme;
     return (
-      <div>
-        <div className="form-control form-control--outlined">
-          <label>
-            Preferred {scheme} color scheme
-            <HelpTooltip className="space-left">
-              Lets you choose the color scheme that is used in {scheme} mode.
-            </HelpTooltip>
-            <select
-              value={activeColorTheme}
-              onChange={(e) => handleChangeTheme(e.target.value, scheme)}
-            >
-              {themes.map((theme) => (
-                <option key={theme.theme.name} value={theme.theme.name}>
-                  {theme.theme.displayName}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <div className="themes select__preview">
-          <div className="themes__theme" style={{ maxWidth: '50%' }}>
-            <Button disabled={!autoDetectColorScheme}>
-              {this.renderThemePreview(activeColorTheme)}
-            </Button>
-          </div>
-        </div>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          paddingTop: 'var(--padding-lg)',
+        }}
+      >
+        {themes.map(this.renderTheme)}
       </div>
     );
   }
 
   render() {
-    const { autoDetectColorScheme, handleAutoDetectColorSchemeChange } = this.props;
     return (
-      <>
-        <div className="themes general__preview">{this.renderThemeRows()}</div>
-        <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Use OS color scheme
-            <HelpTooltip className="space-left">
-              Lets you choose one theme for light mode and one for dark mode.
-            </HelpTooltip>
-            <input
-              type="checkbox"
-              name="autoDetectColorScheme"
-              checked={autoDetectColorScheme}
-              onChange={e => handleAutoDetectColorSchemeChange(e.target.checked)}
-            />
-          </label>
-        </div>
-        <div className="form-row">
-          {this.renderThemeSelect('light')}
-          {this.renderThemeSelect('dark')}
-        </div>
-      </>
+      <RootWrapper>
+        {this.renderOsThemeCheckbox()}
+        {this.renderThemes()}
+      </RootWrapper>
     );
   }
 }
-
-export default Theme;
