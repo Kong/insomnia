@@ -8,6 +8,8 @@ import Highlight from '../base/highlight';
 import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
 import SidebarRequestRow from './sidebar-request-row';
 import * as misc from '../../../common/misc';
+import { showModal } from '../modals';
+import RequestGroupSettingsModal from '../modals/request-group-settings-modal';
 import { RequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
 import { Environment } from '../../../models/environment';
@@ -17,7 +19,6 @@ import { HandleRender } from '../../../common/render';
 interface Props {
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
   moveDoc: Function;
   handleActivateRequest: Function;
   handleCreateRequest: (id: string) => any;
@@ -80,6 +81,12 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
     }
   }
 
+  _handleShowRequestGroupSettings() {
+    showModal(RequestGroupSettingsModal, {
+      requestGroup: this.props.requestGroup,
+    });
+  }
+
   render() {
     const {
       connectDragSource,
@@ -93,7 +100,6 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
       handleRender,
       isDragging,
       isDraggingOver,
@@ -152,7 +158,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-              handleMoveRequestGroup={handleMoveRequestGroup}
+              handleShowSettings={this._handleShowRequestGroupSettings}
               workspace={workspace}
               requestGroup={requestGroup}
               hotKeyRegistry={hotKeyRegistry}

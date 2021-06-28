@@ -42,6 +42,7 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import SettingsModal from './modals/settings-modal';
 import FilterHelpModal from './modals/filter-help-modal';
 import RequestSettingsModal from './modals/request-settings-modal';
+import RequestGroupSettingsModal from './modals/request-group-settings-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
 import GitStagingModal from './modals/git-staging-modal';
@@ -62,6 +63,7 @@ import * as importers from 'insomnia-importers';
 import type { Cookie } from '../../models/cookie-jar';
 import ErrorBoundary from './error-boundary';
 import MoveRequestGroupModal from './modals/move-request-group-modal';
+import type { ClientCertificate } from '../../models/client-certificate';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import { VCS } from '../../sync/vcs/vcs';
@@ -98,7 +100,6 @@ export type WrapperProps = AppProps & {
   handleCreateRequest: (id: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
   handleDuplicateWorkspace: Function;
   handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
@@ -495,6 +496,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activeGitRepository,
       activeRequest,
       activeWorkspace,
+      activeSpace,
       activeApiSpec,
       activeWorkspaceClientCertificates,
       activity,
@@ -573,6 +575,19 @@ class Wrapper extends PureComponent<WrapperProps, State> {
             />
 
             <RequestSettingsModal
+              ref={registerModal}
+              editorFontSize={settings.editorFontSize}
+              editorIndentSize={settings.editorIndentSize}
+              editorKeyMap={settings.editorKeyMap}
+              editorLineWrapping={settings.editorLineWrapping}
+              handleRender={handleRender}
+              handleGetRenderContext={handleGetRenderContext}
+              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+              workspaces={workspaces}
+              isVariableUncovered={isVariableUncovered}
+            />
+
+            <RequestGroupSettingsModal
               ref={registerModal}
               editorFontSize={settings.editorFontSize}
               editorIndentSize={settings.editorIndentSize}
@@ -716,6 +731,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   workspace={activeWorkspace}
                   vcs={vcs}
+                  space={activeSpace}
                   syncItems={syncItems}
                 />
                 <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />

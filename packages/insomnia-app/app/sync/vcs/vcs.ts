@@ -457,8 +457,8 @@ export class VCS {
     console.log(`[sync] Created snapshot ${snapshot.id} (${name})`);
   }
 
-  async pull(candidates: StatusCandidate[]) {
-    await this._getOrCreateRemoteProject();
+  async pull(candidates: StatusCandidate[], teamId: string | undefined | null) {
+    await this._getOrCreateRemoteProject(teamId || '');
     const localBranch = await this._getCurrentBranch();
     const tmpBranchForRemote = await this._fetch(localBranch.name + '.hidden', localBranch.name);
     // Merge branch and ensure that we use the remote's history when merging
@@ -501,7 +501,7 @@ export class VCS {
     console.log(`[sync] Unshared project ${this._projectId()}`);
   }
 
-  async _getOrCreateRemoteProject(teamId?: string) {
+  async _getOrCreateRemoteProject(teamId: string) {
     const localProject = await this._assertProject();
     let remoteProject = await this._queryProject();
 
@@ -513,17 +513,17 @@ export class VCS {
     return remoteProject;
   }
 
-  async _createRemoteProject({ rootDocumentId, name }: Project, teamId?: string) {
-    if (teamId) {
-      const teamKeys = await this._queryTeamMemberKeys(teamId);
-      return this._queryCreateProject(rootDocumentId, name, teamId, teamKeys.memberKeys);
+  async _createRemoteProject({ rootDocumentId, name }: Project, teamId: string) {
+    if (!teamId) {
+      throw new Error('teamId should be defined');
     }
 
-    return this._queryCreateProject(rootDocumentId, name);
+    const teamKeys = await this._queryTeamMemberKeys(teamId);
+    return this._queryCreateProject(rootDocumentId, name, teamId, teamKeys.memberKeys);
   }
 
-  async push(teamId?: string) {
-    await this._getOrCreateRemoteProject(teamId);
+  async push(teamId: string | undefined | null) {
+    await this._getOrCreateRemoteProject(teamId || '');
     const branch = await this._getCurrentBranch();
     // Check branch history to make sure there are no conflicts
     let lastMatchingIndex = 0;
@@ -1203,7 +1203,7 @@ export class VCS {
   async _queryCreateProject(
     workspaceId: string,
     workspaceName: string,
-    teamId?: string,
+    teamId: string,
     teamPublicKeys?: {
       accountId: string;
       publicKey: string;

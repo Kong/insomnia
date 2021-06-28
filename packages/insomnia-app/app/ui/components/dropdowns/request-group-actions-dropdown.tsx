@@ -12,7 +12,7 @@ import {
 import Dropdown from '../base/dropdown/dropdown';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 import * as models from '../../../models';
-import { showError, showModal, showPrompt } from '../modals';
+import { showError, showModal } from '../modals';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import type { RequestGroupAction } from '../../../plugins';
@@ -30,6 +30,7 @@ interface Props {
   activeEnvironment?: Environment | null;
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
+  handleShowSettings: (requestGroup: RequestGroup) => any,
   handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
 }
@@ -51,29 +52,12 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
     this._dropdown = n;
   }
 
-  _handleRename() {
-    const { requestGroup } = this.props;
-    showPrompt({
-      title: 'Rename Folder',
-      defaultValue: requestGroup.name,
-      onComplete: name => {
-        models.requestGroup.update(requestGroup, {
-          name,
-        });
-      },
-    });
-  }
-
   async _handleRequestCreate() {
     this.props.handleCreateRequest(this.props.requestGroup._id);
   }
 
   _handleRequestGroupDuplicate() {
     this.props.handleDuplicateRequestGroup(this.props.requestGroup);
-  }
-
-  _handleRequestGroupMove() {
-    this.props.handleMoveRequestGroup(this.props.requestGroup);
   }
 
   async _handleRequestGroupCreate() {
@@ -160,14 +144,8 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
         <DropdownItem onClick={this._handleRequestGroupDuplicate}>
           <i className="fa fa-copy" /> Duplicate
         </DropdownItem>
-        <DropdownItem onClick={this._handleRename}>
-          <i className="fa fa-edit" /> Rename
-        </DropdownItem>
         <DropdownItem onClick={this._handleEditEnvironment}>
           <i className="fa fa-code" /> Environment
-        </DropdownItem>
-        <DropdownItem onClick={this._handleRequestGroupMove}>
-          <i className="fa fa-exchange" /> Move
         </DropdownItem>
         <DropdownItem buttonClass={PromptButton} addIcon onClick={this._handleDeleteFolder}>
           <i className="fa fa-trash-o" /> Delete
@@ -183,6 +161,10 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
             {p.label}
           </DropdownItem>
         ))}
+        <DropdownDivider />
+        <DropdownItem onClick={this.props.handleShowSettings}>
+          <i className="fa fa-wrench" /> Settings
+        </DropdownItem>
       </Dropdown>
     );
   }
