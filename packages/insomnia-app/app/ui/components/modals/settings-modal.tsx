@@ -10,7 +10,7 @@ import SettingsShortcuts from '../settings/shortcuts';
 import General from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import Plugins from '../settings/plugins';
-import { Theme } from '../settings/theme';
+import { ThemePanel } from '../settings/theme-panel';
 import * as models from '../../../models/index';
 import { Curl } from 'node-libcurl';
 import Tooltip from '../tooltip';
@@ -48,38 +48,6 @@ class SettingsModal extends PureComponent<Props, State> {
     return models.settings.update(this.props.settings, {
       [key]: value,
     });
-  }
-
-  async _handleChangeTheme(themeName, colorScheme, persist = true) {
-    const { settings } = this.props;
-    let patch;
-
-    switch (colorScheme) {
-      case 'light':
-        patch = {
-          lightTheme: themeName,
-        };
-        break;
-
-      case 'dark':
-        patch = {
-          darkTheme: themeName,
-        };
-        break;
-
-      case 'default':
-      default:
-        patch = {
-          theme: themeName,
-        };
-        break;
-    }
-
-    applyColorScheme({ ...settings, ...patch });
-
-    if (persist) {
-      await models.settings.update(settings, patch);
-    }
   }
 
   async _handleAutoDetectColorSchemeChange(autoDetectColorScheme, persist = true) {
@@ -165,9 +133,9 @@ class SettingsModal extends PureComponent<Props, State> {
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Theme
-                handleChangeTheme={this._handleChangeTheme}
+              <ThemePanel
                 activeTheme={settings.theme}
+                settings={settings}
                 handleAutoDetectColorSchemeChange={this._handleAutoDetectColorSchemeChange}
                 autoDetectColorScheme={settings.autoDetectColorScheme}
                 activeLightTheme={settings.lightTheme}

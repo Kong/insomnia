@@ -1,9 +1,11 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ColorScheme, getThemes } from '../../../plugins';
-import { PluginTheme } from '../../../plugins/misc';
+import { applyColorScheme, PluginTheme } from '../../../plugins/misc';
 import Button from '../base/button';
 import HelpTooltip from '../help-tooltip';
+import * as models from '../../../models';
+
 const THEMES_PER_ROW = 5;
 
 const RootWrapper = styled.div({
@@ -13,7 +15,6 @@ const RootWrapper = styled.div({
 const Themes = styled.div({
   display: 'flex',
   flexWrap: 'wrap',
-  paddingTop: 'var(--padding-lg)',
 });
 
 const ThemeButton = styled(Button)<{ $isActive: boolean }>(({ $isActive }) => ({
@@ -31,6 +32,9 @@ const ThemeButton = styled(Button)<{ $isActive: boolean }>(({ $isActive }) => ({
   '&:hover': {
     transform: 'scale(1.05)',
   },
+  '&:hover .overlay-wrapper': {
+    display: 'flex',
+  },
 }));
 
 const ThemeTitle = styled.h2({
@@ -41,11 +45,13 @@ const ThemeTitle = styled.h2({
 
 const ThemeWrapper = styled.div({
   maxWidth: `${100 / THEMES_PER_ROW}%`,
-  paddingBottom: 'var(--padding-lg)',
+  minWidth: 110,
+  marginBottom: 'var(--padding-md)',
+  marginTop: 'var(--padding-md)',
   textAlign: 'center',
 });
 
-const ColorSchemeBadge = styled.div<{ $isOSDarkTheme: boolean }>(({ $isOSDarkTheme }) => ({
+const ColorSchemeBadge = styled.div<{ $isDark?: boolean; $isLight?: boolean }>(({ $isDark, $isLight }) => ({
   position: 'absolute',
   top: 0,
   width: 10,
@@ -53,22 +59,80 @@ const ColorSchemeBadge = styled.div<{ $isOSDarkTheme: boolean }>(({ $isOSDarkThe
   fill: 'white',
   padding: 4,
   background: 'var(--color-surprise)',
-  ...($isOSDarkTheme ? {
+  ...($isDark ? {
     right: 0,
     borderBottomLeftRadius: 'var(--radius-md)',
-  } : {
+  } : {}),
+  ...($isLight ? {
     left: 0,
     borderBottomRightRadius: 'var(--radius-md)',
-  }),
+  } : {}),
 }));
 
+const OverlayWrapper = styled.div({
+  position: 'absolute',
+  height: '100%',
+  width: '100%',
+  alignItems: 'center',
+  flexWrap: 'nowrap',
+  justifyContent: 'space-evenly',
+  boxSizing: 'border-box',
+  border: '1px solid var(--color-fg)',
+  borderRadius: 'var(--radius-md)',
+
+  display: 'none', // controlled by hover on the ThemeWrapper
+  // display: 'flex', // toggle to debug
+});
+
+const OverlayTheme = styled.div<{ $isDark?: boolean }>({
+  display: 'flex',
+  cursor: 'pointer',
+  flexGrow: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 1, // to get over the Overlay
+  height: '100%',
+  '& svg': {
+    opacity: 0.5,
+    fill: 'black',
+    height: 20,
+  },
+  '&:hover svg': {
+    opacity: 1,
+    fill: 'var(--color-surprise)',
+  },
+  '&:hover': {
+    fill: 'var(--color-surprise)',
+  },
+});
+
+const Overlay = styled.div({
+  opacity: 0.75,
+  background: 'white',
+  position: 'absolute',
+  height: '100%',
+  width: '100%',
+  border: '1px solid var(--hl-sm)',
+  borderRadius: 'var(--radius-md)',
+});
+
+const VerticalDivider = styled.div({
+  position: 'absolute',
+  width: '1px',
+  background: 'var(--hl-sm)',
+  height: '100%',
+  left: '50%',
+  right: '50%',
+  zIndex: 1, // to make sure the color isn't washed out by the overlay
+});
+
 interface Props {
-  handleChangeTheme: (arg0: string, arg1: ColorScheme) => void;
   activeTheme: PluginTheme['name'];
   handleAutoDetectColorSchemeChange: (arg0: boolean) => void;
   autoDetectColorScheme: boolean;
   activeLightTheme: PluginTheme['name'];
   activeDarkTheme: PluginTheme['name'];
+  settings: any; // TODO
 }
 
 const SunSvg = () => (
@@ -159,12 +223,74 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
   </svg>
 );
 
-export const Theme: FC<Props> = ({
+const IndividualTheme: FC<{
+  isActive: boolean;
+  isDark: boolean;
+  isLight: boolean;
+  isInOsThemeMode: boolean;
+  onChangeTheme: (name: string, mode: ColorScheme) => void;
+  theme: PluginTheme
+}> = ({
+  isActive,
+  isDark,
+  isLight,
+  isInOsThemeMode,
+  onChangeTheme: _onChangeTheme,
+  theme,
+}) => {
+  const { displayName, name } = theme;
+
+  const onChangeTheme = useCallback((mode: ColorScheme) => () => {
+    _onChangeTheme(name, mode);
+  }, [name, _onChangeTheme]);
+
+  const onClickThemeButton = useCallback(() => {
+    if (isInOsThemeMode) {
+      // The overlays handle this behavior in OS theme mode.
+      // React's event bubbling means that this will be fired when you click on an overlay, so we need to turn it off when in this mode.
+      // Even still, we don't want to risk some potnetial subpixel or z-index nonsense accidentally setting the default when know we shouldn't.
+      return;
+    }
+    onChangeTheme('default')();
+  }, [onChangeTheme, isInOsThemeMode]);
+
+  return (
+    <ThemeWrapper>
+      <ThemeTitle>{displayName}</ThemeTitle>
+
+      <ThemeButton
+        onClick={onClickThemeButton}
+        $isActive={isActive}
+      >
+        {isInOsThemeMode ? (
+          <>
+            <OverlayWrapper className="overlay-wrapper">
+              <OverlayTheme onClick={onChangeTheme('light')}><SunSvg /></OverlayTheme>
+              <OverlayTheme onClick={onChangeTheme('dark')}><MoonSvg /></OverlayTheme>
+              <Overlay><VerticalDivider /></Overlay>
+            </OverlayWrapper>
+
+            {isActive && isDark ? (
+              <ColorSchemeBadge $isDark><MoonSvg /></ColorSchemeBadge>
+            ) : null}
+            {isActive && isLight ? (
+              <ColorSchemeBadge $isLight><SunSvg /></ColorSchemeBadge>
+            ) : null}
+          </>
+        ) : null}
+
+        <ThemePreview theme={theme} />
+      </ThemeButton>
+    </ThemeWrapper>
+  );
+};
+
+export const ThemePanel: FC<Props> = ({
   activeDarkTheme,
   activeLightTheme,
   activeTheme,
   autoDetectColorScheme,
-  handleChangeTheme,
+  settings,
   handleAutoDetectColorSchemeChange,
 }) => {
   const [themes, setThemes] = useState<PluginTheme[]>([]);
@@ -173,42 +299,14 @@ export const Theme: FC<Props> = ({
     getThemes().then(pluginThemes => {
       setThemes(pluginThemes.map(({ theme }) => theme));
     });
-  }, []);
+  }, [activeDarkTheme, activeLightTheme, activeTheme, autoDetectColorScheme, settings]);
 
-  const isThemeActive = (theme: PluginTheme) => {
+  const isThemeActive = useCallback((theme: PluginTheme) => {
     if (autoDetectColorScheme) {
       return theme.name === activeLightTheme || theme.name === activeDarkTheme;
     }
     return theme.name === activeTheme;
-  };
-
-  const renderTheme = (theme: PluginTheme) => {
-    const { displayName, name } = theme;
-    const isActive = isThemeActive(theme);
-    const isOSDarkTheme = theme.name === activeDarkTheme;
-    const onClick = () => {
-      handleChangeTheme(name, 'default');
-    };
-
-    return (
-      <ThemeWrapper key={theme.name}>
-        <ThemeTitle>{displayName}</ThemeTitle>
-
-        <ThemeButton
-          onClick={onClick}
-          $isActive={isActive}
-        >
-          {isActive && autoDetectColorScheme ? (
-            <ColorSchemeBadge $isOSDarkTheme={isOSDarkTheme}>
-              {isOSDarkTheme ? <MoonSvg /> : <SunSvg />}
-            </ColorSchemeBadge>
-          ) : null}
-
-          <ThemePreview theme={theme} />
-        </ThemeButton>
-      </ThemeWrapper>
-    );
-  };
+  }, [activeLightTheme, activeDarkTheme, activeTheme, autoDetectColorScheme]);
 
   const osThemeCheckbox = (
     <div className="form-control form-control--thin">
@@ -229,12 +327,58 @@ export const Theme: FC<Props> = ({
     </div>
   );
 
+  const onChangeTheme = useCallback((themeName: string, colorScheme: ColorScheme) => {
+    let patch;
+
+    switch (colorScheme) {
+      case 'light':
+        patch = {
+          lightTheme: themeName,
+        };
+        break;
+
+      case 'dark':
+        patch = {
+          darkTheme: themeName,
+        };
+        break;
+
+      case 'default':
+      default:
+        patch = {
+          theme: themeName,
+        };
+        break;
+    }
+
+    applyColorScheme({
+      ...settings,
+      ...patch,
+    }).then(() => {
+      models.settings.update(settings, patch).then(() => {
+        getThemes().then(pluginThemes => {
+          setThemes(pluginThemes.map(({ theme }) => theme));
+        });
+      });
+    });
+  }, [settings]);
+
   return (
     <RootWrapper>
       {osThemeCheckbox}
 
       <Themes>
-        {themes.map(renderTheme)}
+        {themes.map(theme => (
+          <IndividualTheme
+            key={theme.name}
+            theme={theme}
+            isActive={isThemeActive(theme)}
+            isDark={theme.name === activeDarkTheme}
+            isLight={theme.name === activeLightTheme}
+            onChangeTheme={onChangeTheme}
+            isInOsThemeMode={autoDetectColorScheme}
+          />
+        ))}
       </Themes>
     </RootWrapper>
   );
