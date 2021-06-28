@@ -62,8 +62,6 @@ import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
 import type { Cookie } from '../../models/cookie-jar';
 import ErrorBoundary from './error-boundary';
-import MoveRequestGroupModal from './modals/move-request-group-modal';
-import type { ClientCertificate } from '../../models/client-certificate';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import { VCS } from '../../sync/vcs/vcs';
@@ -627,12 +625,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 handleRender={handleRender}
                 handleGetRenderContext={handleGetRenderContext}
                 workspace={activeWorkspace}
-              />
-
-              <MoveRequestGroupModal
-                ref={registerModal}
-                workspaces={workspaces}
-                activeWorkspace={activeWorkspace}
               />
 
               {activeApiSpec ? <WorkspaceSettingsModal
