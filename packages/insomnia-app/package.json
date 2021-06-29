@@ -142,6 +142,7 @@
     "pdfjs-dist": "^2.5.207",
     "react": "^16.8.3",
     "react-animated-tree": "^1.0.10",
+    "react-dom": "^16.8.3",
     "react-dnd": "^7.4.5",
     "react-dnd-html5-backend": "^7.4.4",
     "react-redux": "^7.0.1",
