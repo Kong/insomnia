@@ -5,8 +5,11 @@ import { applyColorScheme, PluginTheme } from '../../../plugins/misc';
 import Button from '../base/button';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
+import { RequireExactlyOne } from 'type-fest';
 
 const THEMES_PER_ROW = 5;
+
+type DarkOrLight = RequireExactlyOne<{ $isDark: boolean; $isLight: boolean }>
 
 const RootWrapper = styled.div({
   paddingTop: 'var(--padding-lg)',
@@ -17,7 +20,7 @@ const Themes = styled.div({
   flexWrap: 'wrap',
 });
 
-const ThemeButton = styled(Button)<{ $isActive: boolean }>(({ $isActive }) => ({
+const ThemeButton = styled(Button)<{ $isActive: boolean; $isInOsThemeMode: boolean }>(({ $isActive, $isInOsThemeMode }) => ({
   position: 'relative',
   margin: 'var(--padding-md) var(--padding-md)',
   fontSize: 0,
@@ -30,7 +33,8 @@ const ThemeButton = styled(Button)<{ $isActive: boolean }>(({ $isActive }) => ({
     transition: 'all 50ms ease-out',
   } : {}),
   '&:hover': {
-    transform: 'scale(1.05)',
+    transform: 'scale(1.051)',
+    ...($isInOsThemeMode ? { boxShadow: 'none' } : {}),
   },
   '&:hover .overlay-wrapper': {
     display: 'flex',
@@ -51,7 +55,7 @@ const ThemeWrapper = styled.div({
   textAlign: 'center',
 });
 
-const ColorSchemeBadge = styled.div<{ $isDark?: boolean; $isLight?: boolean }>(({ $isDark, $isLight }) => ({
+const ColorSchemeBadge = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
   position: 'absolute',
   top: 0,
   width: 10,
@@ -76,55 +80,45 @@ const OverlayWrapper = styled.div({
   alignItems: 'center',
   flexWrap: 'nowrap',
   justifyContent: 'space-evenly',
-  boxSizing: 'border-box',
-  border: '1px solid var(--color-fg)',
-  borderRadius: 'var(--radius-md)',
+  boxSizing: 'content-box',
 
   display: 'none', // controlled by hover on the ThemeWrapper
   // display: 'flex', // toggle to debug
 });
 
-const OverlayTheme = styled.div<{ $isDark?: boolean }>({
+const OverlaySide = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
   display: 'flex',
   cursor: 'pointer',
   flexGrow: 1,
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 1, // to get over the Overlay
   height: '100%',
+  background: 'var(--color-bg)',
   '& svg': {
-    opacity: 0.5,
-    fill: 'black',
+    opacity: 0.4,
+    fill: 'var(--color-fg)',
     height: 20,
   },
   '&:hover svg': {
     opacity: 1,
     fill: 'var(--color-surprise)',
   },
-  '&:hover': {
-    fill: 'var(--color-surprise)',
-  },
-});
-
-const Overlay = styled.div({
-  opacity: 0.75,
-  background: 'white',
-  position: 'absolute',
-  height: '100%',
-  width: '100%',
+  boxSizing: 'border-box',
   border: '1px solid var(--hl-sm)',
-  borderRadius: 'var(--radius-md)',
-});
-
-const VerticalDivider = styled.div({
-  position: 'absolute',
-  width: '1px',
-  background: 'var(--hl-sm)',
-  height: '100%',
-  left: '50%',
-  right: '50%',
-  zIndex: 1, // to make sure the color isn't washed out by the overlay
-});
+  ...($isDark ? {
+    borderTopRightRadius: 'var(--radius-md)',
+    borderBottomRightRadius: 'var(--radius-md)',
+    borderLeftStyle: 'none',
+  } : {}),
+  ...($isLight ? {
+    borderTopLeftRadius: 'var(--radius-md)',
+    borderBottomLeftRadius: 'var(--radius-md)',
+    borderRightStyle: 'none',
+  } : {}),
+  '&:hover': {
+    border: '1px solid var(--color-surprise)',
+  },
+}));
 
 interface Props {
   activeTheme: PluginTheme['name'];
@@ -137,25 +131,30 @@ interface Props {
 
 const SunSvg = () => (
   <svg
-    role="img"
+    viewBox="0 0 24 25"
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 512 512"
   >
     <path
-      d="M256 160c-52.9 0-96 43.1-96 96s43.1 96 96 96 96-43.1 96-96-43.1-96-96-96zm246.4 80.5l-94.7-47.3 33.5-100.4c4.5-13.6-8.4-26.5-21.9-21.9l-100.4 33.5-47.4-94.8c-6.4-12.8-24.6-12.8-31 0l-47.3 94.7L92.7 70.8c-13.6-4.5-26.5 8.4-21.9 21.9l33.5 100.4-94.7 47.4c-12.8 6.4-12.8 24.6 0 31l94.7 47.3-33.5 100.5c-4.5 13.6 8.4 26.5 21.9 21.9l100.4-33.5 47.3 94.7c6.4 12.8 24.6 12.8 31 0l47.3-94.7 100.4 33.5c13.6 4.5 26.5-8.4 21.9-21.9l-33.5-100.4 94.7-47.3c13-6.5 13-24.7.2-31.1zm-155.9 106c-49.9 49.9-131.1 49.9-181 0-49.9-49.9-49.9-131.1 0-181 49.9-49.9 131.1-49.9 181 0 49.9 49.9 49.9 131.1 0 181z"
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12.0002 0.337891C11.5268 0.337891 11.143 0.721647 11.143 1.19503V2.95566C11.143 3.42905 11.5268 3.8128 12.0002 3.8128C12.4736 3.8128 12.8573 3.42905 12.8573 2.95566V1.19504C12.8573 0.721648 12.4736 0.337891 12.0002 0.337891ZM18.857 12.5001C18.857 16.3384 15.787 19.4499 11.9999 19.4499C8.21275 19.4499 5.14269 16.3384 5.14269 12.5001C5.14269 8.66182 8.21275 5.55028 11.9999 5.55028C15.787 5.55028 18.857 8.66182 18.857 12.5001ZM11.1429 22.0444C11.1429 21.5711 11.5267 21.1873 12.0001 21.1873C12.4735 21.1873 12.8572 21.5711 12.8572 22.0444V23.8051C12.8572 24.2785 12.4735 24.6622 12.0001 24.6622C11.5267 24.6622 11.1429 24.2785 11.1429 23.8051V22.0444ZM2.55985 11.6314C3.03964 11.6314 3.42858 12.0204 3.42858 12.5002C3.42858 12.9799 3.03964 13.3689 2.55985 13.3689H0.868728C0.388942 13.3689 0 12.9799 0 12.5002C0 12.0204 0.388943 11.6314 0.868728 11.6314H2.55985ZM24.0006 12.5002C24.0006 12.0204 23.6117 11.6314 23.1319 11.6314H21.4408C20.961 11.6314 20.572 12.0204 20.572 12.5002C20.572 12.9799 20.961 13.3689 21.4407 13.3689H23.1319C23.6117 13.3689 24.0006 12.9799 24.0006 12.5002ZM5.93919 5.12888C6.27392 5.46814 6.27392 6.01818 5.93919 6.35744C5.60445 6.6967 5.06174 6.6967 4.727 6.35744L3.51481 5.12888C3.18008 4.78962 3.18008 4.23957 3.51481 3.90031C3.84955 3.56105 4.39226 3.56105 4.727 3.90031L5.93919 5.12888ZM20.4856 21.1001C20.8203 20.7608 20.8203 20.2108 20.4856 19.8715L19.2734 18.643C18.9387 18.3037 18.3959 18.3037 18.0612 18.643C17.7265 18.9822 17.7265 19.5323 18.0612 19.8715L19.2734 21.1001C19.6081 21.4394 20.1508 21.4394 20.4856 21.1001ZM19.2734 6.35711C18.9387 6.69636 18.396 6.69636 18.0613 6.35711C17.7265 6.01785 17.7265 5.4678 18.0613 5.12854L19.2734 3.89997C19.6082 3.56071 20.1509 3.56071 20.4856 3.89997C20.8204 4.23923 20.8204 4.78928 20.4856 5.12854L19.2734 6.35711ZM3.51511 21.1C3.84985 21.4393 4.39256 21.4393 4.7273 21.1L5.93949 19.8714C6.27422 19.5322 6.27422 18.9821 5.93949 18.6429C5.60475 18.3036 5.06204 18.3036 4.7273 18.6429L3.51511 19.8714C3.18038 20.2107 3.18038 20.7607 3.51511 21.1Z"
     />
   </svg>
+
 );
 
 const MoonSvg = () => (
   <svg
-    role="img"
+    viewBox="0 0 24 25"
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 512 512"
   >
     <path
-      d="M283.211 512c78.962 0 151.079-35.925 198.857-94.792 7.068-8.708-.639-21.43-11.562-19.35-124.203 23.654-238.262-71.576-238.262-196.954 0-72.222 38.662-138.635 101.498-174.394 9.686-5.512 7.25-20.197-3.756-22.23A258.156 258.156 0 0 0 283.211 0c-141.309 0-256 114.511-256 256 0 141.309 114.511 256 256 256z" />
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M5.84271 19.1418C12.8622 19.1418 18.5526 13.3745 18.5526 6.26012C18.5526 4.12486 18.04 2.11095 17.1327 0.33788C21.2127 2.48191 24.0004 6.8015 24.0004 11.781C24.0004 18.8953 18.3099 24.6626 11.2905 24.6626C6.37777 24.6626 2.11607 21.8378 0.000447253 17.7032C1.74963 18.6225 3.73633 19.1418 5.84271 19.1418Z"
+    />
   </svg>
+
 );
 
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }) => (
@@ -261,13 +260,13 @@ const IndividualTheme: FC<{
       <ThemeButton
         onClick={onClickThemeButton}
         $isActive={isActive}
+        $isInOsThemeMode={isInOsThemeMode}
       >
         {isInOsThemeMode ? (
           <>
             <OverlayWrapper className="overlay-wrapper">
-              <OverlayTheme onClick={onChangeTheme('light')}><SunSvg /></OverlayTheme>
-              <OverlayTheme onClick={onChangeTheme('dark')}><MoonSvg /></OverlayTheme>
-              <Overlay><VerticalDivider /></Overlay>
+              <OverlaySide $isLight onClick={onChangeTheme('light')}><SunSvg /></OverlaySide>
+              <OverlaySide $isDark onClick={onChangeTheme('dark')}><MoonSvg /></OverlaySide>
             </OverlayWrapper>
 
             {isActive && isDark ? (
