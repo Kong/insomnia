@@ -35,7 +35,7 @@ xdescribe('Application launch', function() {
     await settings.closeModal(app);
 
     // Open card dropdown for any card
-    const dd = await home.openDocumentMenuDropdown(app);
+    const dd = await home.openWorkspaceCardDropdown(app);
 
     // Click the "Deploy to Portal" button, installed from that plugin
     await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');

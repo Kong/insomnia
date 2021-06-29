@@ -134,7 +134,7 @@ describe('Application launch', function() {
 
     // Open card dropdown for the document
     const card = await home.findCardWithTitle(app, docName);
-    await home.openDocumentMenuDropdown(card);
+    await home.openWorkspaceCardDropdown(card);
 
     // Click the "Deploy to Portal" button, installed from that plugin
     await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Portal');
@@ -170,7 +170,7 @@ describe('Application launch', function() {
     await home.cardHasBadge(collCard, 'Collection');
 
     // Delete the collection
-    await home.openDocumentMenuDropdown(collCard);
+    await home.openWorkspaceCardDropdown(collCard);
     await dropdown.clickDropdownItemByText(collCard, 'Delete');
     await modal.waitUntilOpened(app, { title: 'Delete Collection' });
     await modal.clickModalFooterByText(app, 'Yes');
