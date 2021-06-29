@@ -284,7 +284,7 @@ export function createWindow() {
         },
       },
       {
-        label: `Toggle Chrome ${MNEMONIC_SYM}DevTools`,
+        label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
         click: toggleDevTools,
       },
