@@ -15,7 +15,6 @@ import {
   ACTIVITY_HOME,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
-  getAppName,
   SortOrder,
   ACTIVITY_MIGRATION,
   ACTIVITY_ONBOARDING,
@@ -362,27 +361,17 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleRemoveActiveWorkspace() {
-    const { workspaces, activeWorkspace } = this.props;
+    const { workspaces, activeWorkspace, handleSetActiveActivity } = this.props;
 
     if (!activeWorkspace) {
       return;
     }
 
+    await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
+    await models.workspace.remove(activeWorkspace);
+
     if (workspaces.length <= 1) {
-      showModal(AlertModal, {
-        title: 'Deleting Last Workspace',
-        message: 'Since you deleted your only workspace, a new one has been created for you.',
-        onConfirm: async () => {
-          await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
-          await models.workspace.create({
-            name: getAppName(),
-          });
-          await models.workspace.remove(activeWorkspace);
-        },
-      });
-    } else {
-      await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
-      await models.workspace.remove(activeWorkspace);
+      handleSetActiveActivity(ACTIVITY_HOME);
     }
   }
 
