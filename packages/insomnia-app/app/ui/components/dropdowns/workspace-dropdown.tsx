@@ -67,14 +67,14 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
       const docs = await db.withDescendants(activeWorkspace);
-      const requests = docs.filter(doc => (
-        isRequest(doc) && !doc.isPrivate
-      ));
+      const requests = docs
+        .filter(isRequest)
+        .filter(doc => (
+          !doc.isPrivate
+        ));
       const requestGroups = docs.filter(isRequestGroup);
       await p.action(context, {
-        // @ts-expect-error -- TSCONVERSION
         requestGroups,
-        // @ts-expect-error -- TSCONVERSION
         requests,
         workspace: activeWorkspace,
       });

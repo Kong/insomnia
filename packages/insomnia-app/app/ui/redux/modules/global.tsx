@@ -688,8 +688,8 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
 
         workspaceLookup[workspace._id] = true;
         const descendants = await database.withDescendants(workspace);
-        const privateEnvs = descendants.filter(
-          descendant => isEnvironment(descendant) && descendant.isPrivate,
+        const privateEnvs = descendants.filter(isEnvironment).filter(
+          descendant => descendant.isPrivate,
         );
         privateEnvironments.push(...privateEnvs);
       }
