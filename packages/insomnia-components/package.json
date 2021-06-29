@@ -1,6 +1,6 @@
 {
   "name": "insomnia-components",
-  "version": "2.3.0-beta.4",
+  "version": "2.3.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
