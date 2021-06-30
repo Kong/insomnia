@@ -62,7 +62,7 @@ export const loadDb = async ({
   let db: Database | null = null;
 
   // try load from git
-  if (!appDataDir) {
+  if (!appDataDir && !src) {
     const dir = workingDir || '.';
     db = await gitAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from git repository at \`${path.resolve(dir)}\``);
@@ -76,11 +76,11 @@ export const loadDb = async ({
 
   // try load from nedb
   if (!db) {
-    const dir = appDataDir || getAppDataDir(getDefaultAppName());
+    const dir = src || appDataDir || getAppDataDir(getDefaultAppName());
     db = await neDbAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
 
-    if (!db && !appDataDir) {
+    if (!db && !appDataDir && !src) {
       const designerDir = getAppDataDir('Insomnia Designer');
       db = await neDbAdapter(designerDir);
       db &&
@@ -92,8 +92,7 @@ export const loadDb = async ({
     }
   } // return empty db
 
-  appDataDir &&
-  logger.warn(
+  appDataDir && logger.warn(
     'The option --app-data-dir has been deprecated and will be removed in future releases.\n' +
     'Please, consider using --src as alternative',
   );

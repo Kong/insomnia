@@ -26,7 +26,7 @@ describe('runInsomniaTests()', () => {
 
   const base: RunTestsOptions = {
     reporter: 'spec',
-    appDataDir: 'src/db/fixtures/nedb',
+    src: 'src/db/fixtures/nedb',
     ci: true,
   };
 

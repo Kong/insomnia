@@ -61,6 +61,20 @@ describe('loadDb()', () => {
     expect(neDbAdapter).not.toHaveBeenCalled();
   });
 
+  it('should load nedb from src', async () => {
+    gitAdapter.mockResolvedValue(emptyDb());
+    neDbAdapter.mockResolvedValue(emptyDb());
+    await loadDb({
+      src: 'dir',
+      filterTypes: ['Environment'],
+    });
+    expect(logger.__getLogs().debug).toEqual([
+      `Data store configured from app data directory at \`${path.resolve('dir')}\``,
+    ]);
+    expect(gitAdapter).not.toHaveBeenCalled();
+    expect(neDbAdapter).toHaveBeenCalledWith('dir', ['Environment']);
+  });
+
   it('should load nedb from appDataDir', async () => {
     gitAdapter.mockResolvedValue(emptyDb());
     neDbAdapter.mockResolvedValue(emptyDb());
@@ -73,6 +87,18 @@ describe('loadDb()', () => {
     ]);
     expect(gitAdapter).not.toHaveBeenCalled();
     expect(neDbAdapter).toHaveBeenCalledWith('dir', ['Environment']);
+  });
+
+  it('should not load from git if src is defined', async () => {
+    neDbAdapter.mockResolvedValue(emptyDb());
+    await loadDb({
+      src: 'dir',
+    });
+    expect(logger.__getLogs().debug).toEqual([
+      `Data store configured from app data directory at \`${path.resolve('dir')}\``,
+    ]);
+    expect(gitAdapter).not.toHaveBeenCalled();
+    expect(neDbAdapter).toHaveBeenCalled();
   });
 
   it('should not load from git if appDataDir is defined', async () => {
