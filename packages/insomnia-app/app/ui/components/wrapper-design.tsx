@@ -109,7 +109,7 @@ class WrapperDesign extends PureComponent<Props, State> {
     const { activeApiSpec } = this.props.wrapperProps;
 
     // Lint only if spec has content
-    if (activeApiSpec.contents.length !== 0) {
+    if (activeApiSpec && activeApiSpec.contents.length !== 0) {
       const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError);
       this.setState({
         lintMessages: results.map(r => ({
