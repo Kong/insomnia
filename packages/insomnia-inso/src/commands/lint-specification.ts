@@ -1,4 +1,4 @@
-import { Spectral } from '@stoplight/spectral';
+import { Spectral, isOpenApiv2, isOpenApiv3 } from '@stoplight/spectral';
 import type { GlobalOptions } from '../get-options';
 import { loadDb } from '../db';
 import { loadApiSpec, promptApiSpec } from '../db/models/api-spec';
@@ -48,7 +48,13 @@ export async function lintSpecification(
   }
 
   const spectral = new Spectral();
-  const results = await spectral.run(specContent);
+  spectral.registerFormat('oas2', isOpenApiv2);
+  spectral.registerFormat('oas3', isOpenApiv3);
+  await spectral.loadRuleset('spectral:oas');
+
+  const results = (await spectral.run(specContent)).filter(result => (
+    result.severity === 0 // filter for errors only
+  ));
 
   if (results.length) {
     logger.log(`${results.length} lint errors found. \n`);

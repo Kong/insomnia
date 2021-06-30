@@ -75,7 +75,7 @@
   ],
   "dependencies": {
     "@hot-loader/react-dom": "^16.8.6",
-    "@stoplight/spectral": "^4.1.1",
+    "@stoplight/spectral": "^5.9.0",
     "analytics-node": "^4.0.1",
     "aws4": "^1.9.0",
     "axios": "^0.21.1",

@@ -6,7 +6,6 @@ import { Button, NoticeTable } from 'insomnia-components';
 import ErrorBoundary from './error-boundary';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import CodeEditor from './codemirror/code-editor';
-import { Spectral } from '@stoplight/spectral';
 import SwaggerUI from 'swagger-ui-react';
 import type { ApiSpec } from '../../models/api-spec';
 import previewIcon from '../images/icn-eye.svg';
@@ -15,8 +14,9 @@ import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
 import WorkspacePageHeader from './workspace-page-header';
+import { initializeSpectral, isLintError } from '../../common/spectral';
 
-const spectral = new Spectral();
+const spectral = initializeSpectral();
 
 interface Props {
   gitSyncDropdown: ReactNode;
@@ -110,7 +110,7 @@ class WrapperDesign extends PureComponent<Props, State> {
 
     // Lint only if spec has content
     if (activeApiSpec && activeApiSpec.contents.length !== 0) {
-      const results = await spectral.run(activeApiSpec.contents);
+      const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError);
       this.setState({
         lintMessages: results.map(r => ({
           type: r.severity === 0 ? 'error' : 'warning',
