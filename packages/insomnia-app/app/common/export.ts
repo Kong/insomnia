@@ -25,7 +25,7 @@ import { isRequest } from '../models/request';
 import { isRequestGroup } from '../models/request-group';
 import { isProtoDirectory } from '../models/proto-directory';
 import { isProtoFile } from '../models/proto-file';
-import { isWorkspace } from '../models/workspace';
+import { isWorkspace, Workspace } from '../models/workspace';
 import { isApiSpec } from '../models/api-spec';
 import { isCookieJar } from '../models/cookie-jar';
 import { isEnvironment } from '../models/environment';
@@ -34,22 +34,22 @@ import { isUnitTest } from '../models/unit-test';
 
 const EXPORT_FORMAT = 4;
 
-async function getDocWithDescendants(
-  parentDoc: BaseModel | null = null,
-  includePrivateDocs = false,
-) {
+const getDocWithDescendants = (includePrivateDocs = false) => async (parentDoc: BaseModel | null) => {
   const docs = await db.withDescendants(parentDoc);
   return docs.filter(
     // Don't include if private, except if we want to
     doc => !doc?.isPrivate || includePrivateDocs,
   );
-}
+};
 
 export async function exportWorkspacesHAR(
-  model: BaseModel | null = null,
+  workspaces: Workspace[],
   includePrivateDocs = false,
 ) {
-  const docs = await getDocWithDescendants(model, includePrivateDocs);
+  // regarding `[null]`, see the comment here in `exportWorkspacesData`
+  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
+  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
 }
@@ -118,11 +118,14 @@ export async function exportRequestsHAR(
 }
 
 export async function exportWorkspacesData(
-  parentDoc: BaseModel | null,
+  workspaces: Workspace[],
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  const docs = await getDocWithDescendants(parentDoc, includePrivateDocs);
+  // Semantically, if an empty array is passed, then nothing will be returned.  What an empty array really signifies is "no parent", which, at the database layer is the same as "parentId === null", hence we add null in ourselves.
+  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
+  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
 }
@@ -141,11 +144,11 @@ export async function exportRequestsData(
     resources: [],
   };
   const docs: BaseModel[] = [];
-  const workspaces: BaseModel[] = [];
-  const mapTypeAndIdToDoc: Record<string, any> = {};
+  const workspaces: Workspace[] = [];
+  const mapTypeAndIdToDoc: Record<string, BaseModel> = {};
 
-  for (const req of requests) {
-    const ancestors: BaseModel[] = clone(await db.withAncestors(req));
+  for (const request of requests) {
+    const ancestors = clone<BaseModel[]>(await db.withAncestors(request));
 
     for (const ancestor of ancestors) {
       const key = ancestor.type + '___' + ancestor._id;
@@ -164,7 +167,7 @@ export async function exportRequestsData(
   }
 
   for (const workspace of workspaces) {
-    const descendants: BaseModel[] = (await db.withDescendants(workspace)).filter(d => {
+    const descendants = (await db.withDescendants(workspace)).filter(d => {
       // Only interested in these additional model types.
       return (
         isCookieJar(d) ||

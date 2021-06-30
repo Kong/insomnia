@@ -1,5 +1,4 @@
 import * as plugin from '../data';
-import * as modals from '../../../ui/components/modals';
 import path from 'path';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models/index';
@@ -8,21 +7,13 @@ import fs from 'fs';
 import { getAppVersion } from '../../../common/constants';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 
-const PLUGIN = {
-  name: 'my-plugin',
-  version: '1.0.0',
-  directory: '/plugins/my-plugin',
-  module: {},
-};
+jest.mock('../../../ui/components/modals');
 
 describe('init()', () => {
   beforeEach(globalBeforeEach);
 
   it('initializes correctly', async () => {
-    // @ts-expect-error -- TSCONVERSION genuine, plugin.init doesn't take any arguments
-    const { data } = plugin.init({
-      name: PLUGIN,
-    });
+    const { data } = plugin.init();
     expect(Object.keys(data)).toEqual(['import', 'export']);
     expect(Object.keys(data.export).sort()).toEqual(['har', 'insomnia']);
     expect(Object.keys(data.import).sort()).toEqual(['raw', 'uri']);
@@ -40,13 +31,10 @@ describe('app.import.*', () => {
   });
 
   it('uri', async () => {
-    // @ts-expect-error -- TSCONVERSION mocking with jest function
-    modals.showModal = jest.fn();
     const workspace = await models.workspace.getById('wrk_1');
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
     expect(await db.count(models.request.type)).toBe(0);
-    // @ts-expect-error -- TSCONVERSION genuine, plugin.init doesn't take any arguments
-    const { data } = plugin.init(PLUGIN);
+    const { data } = plugin.init();
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await data.import.uri(`file://${filename}`);
     const allWorkspaces = await db.all(models.workspace.type);
@@ -91,13 +79,10 @@ describe('app.import.*', () => {
   });
 
   it('importRaw', async () => {
-    // @ts-expect-error -- TSCONVERSION mocking with jest function
-    modals.showModal = jest.fn();
     const workspace = await models.workspace.getById('wrk_1');
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
     expect(await db.count(models.request.type)).toBe(0);
-    // @ts-expect-error -- TSCONVERSION genuine, plugin.init doesn't take any arguments
-    const { data } = plugin.init(PLUGIN);
+    const { data } = plugin.init();
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await data.import.raw(fs.readFileSync(filename, 'utf8'));
     const allWorkspaces = await db.all(models.workspace.type);
@@ -167,10 +152,7 @@ describe('app.export.*', () => {
   });
 
   it('insomnia', async () => {
-    // @ts-expect-error -- TSCONVERSION mocking with jest function
-    modals.showModal = jest.fn();
-    // @ts-expect-error -- TSCONVERSION genuine, plugin.init doesn't take any arguments
-    const { data } = plugin.init(PLUGIN);
+    const { data } = plugin.init();
     const exported = await data.export.insomnia();
     const exportedData = JSON.parse(exported);
     expect(typeof exportedData.__export_date).toBe('string');
@@ -219,10 +201,7 @@ describe('app.export.*', () => {
   });
 
   it('har', async () => {
-    // @ts-expect-error -- TSCONVERSION mocking with jest function
-    modals.showModal = jest.fn();
-    // @ts-expect-error -- TSCONVERSION genuine, plugin.init doesn't take any arguments
-    const { data } = plugin.init(PLUGIN);
+    const { data } = plugin.init();
     const exported = await data.export.har();
     const exportedData = JSON.parse(exported);
     exportedData.log.entries[0].startedDateTime = '2017-11-24T18:12:12.849Z';

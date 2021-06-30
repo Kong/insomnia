@@ -47,7 +47,7 @@ import {
   DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
-import { selectSettings } from '../selectors';
+import { selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
 import { getDesignerDataDir } from '../../../common/electron-helpers';
 import { Settings } from '../../../models/settings';
 import { GrpcRequest } from '../../../models/grpc-request';
@@ -595,11 +595,12 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportAllToFile = () => async (dispatch: Dispatch) => {
+export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
   showSelectExportTypeModal({
     onCancel: () => { dispatch(loadStop()); },
     onDone: async selectedFormat => {
+      const state = getState();
       // Check if we want to export private environments.
       const environments = await models.environment.all();
 
@@ -622,20 +623,22 @@ export const exportAllToFile = () => async (dispatch: Dispatch) => {
         return;
       }
 
+      const workspaces = selectWorkspacesForActiveSpace(state);
+
       let stringifiedExport;
 
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await exportWorkspacesHAR(null, exportPrivateEnvironments);
+            stringifiedExport = await exportWorkspacesHAR(workspaces, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'yaml');
+            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await exportWorkspacesData(null, exportPrivateEnvironments, 'json');
+            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'json');
             break;
         }
       } catch (err) {

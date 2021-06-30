@@ -9,7 +9,7 @@ interface PluginImportOptions {
 }
 
 interface InsomniaExport {
-  workspace?: Workspace | null;
+  workspace?: Workspace;
   includePrivate?: boolean;
   format?: 'json' | 'yaml';
 }
@@ -39,7 +39,7 @@ export const init = () => ({
         includePrivate,
         format,
       }: InsomniaExport = {}) => exportWorkspacesData(
-        workspace || null,
+        workspace ? [workspace] : [],
         Boolean(includePrivate),
         format || 'json',
       ),
@@ -48,7 +48,7 @@ export const init = () => ({
         workspace,
         includePrivate,
       }: HarExport = {}) => exportWorkspacesHAR(
-        workspace || null,
+        workspace ? [workspace] : [],
         Boolean(includePrivate),
       ),
     },
