@@ -484,6 +484,8 @@ export function createWindow() {
   return mainWindow;
 }
 
+export const getMainWindow = () => mainWindow;
+
 async function showUnresponsiveModal() {
   const id = await dialog.showMessageBox({
     type: 'info',

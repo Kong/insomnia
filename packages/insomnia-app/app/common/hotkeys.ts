@@ -86,7 +86,7 @@ export const hotKeyRefs = {
   SHOW_MONITOR: defineHotKey('activity_monitor', 'Show Monitor Activity'),
   SHOW_HOME: defineHotKey('activity_home', 'Show Home Activity'),
   FILTER_DOCUMENTS: defineHotKey('documents_filter', 'Focus Documents Filter'),
-  TOGGLE_DEVTOOLS: defineHotKey('toggle-devtools', 'Toggle Chrome DevTools'),
+  TOGGLE_DEVTOOLS: defineHotKey('toggle_devtools', 'Toggle Chrome DevTools'),
 };
 
 /**
@@ -385,16 +385,14 @@ const defaultRegistry: HotKeyRegistry = {
       { ctrl: true, keyCode: keyboardKeys.f.keyCode },
     ],
   },
-  ...(isDevelopment() ? {
-    [hotKeyRefs.TOGGLE_DEVTOOLS.id]: {
-      macKeys: [
-        { keyCode: keyboardKeys.f12.keyCode },
-      ],
-      winLinuxKeys: [
-        { keyCode: keyboardKeys.f12.keyCode },
-      ],
-    },
-  } : {}),
+  [hotKeyRefs.TOGGLE_DEVTOOLS.id]: {
+    macKeys: [
+      { keyCode: keyboardKeys.f12.keyCode },
+    ],
+    winLinuxKeys: [
+      { keyCode: keyboardKeys.f12.keyCode },
+    ],
+  },
 };
 
 const copyKeyCombs = (sources: KeyCombination[]) => sources.map(source => ({
@@ -433,6 +431,8 @@ export function newDefaultRegistry() {
  * Get the key combinations based on the current platform.
  */
 export function getPlatformKeyCombinations(bindings: KeyBindings) {
+  console.log(JSON.parse(JSON.stringify({ bindings })));
+
   if (isMac()) {
     return bindings.macKeys;
   }

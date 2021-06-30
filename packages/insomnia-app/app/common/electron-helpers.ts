@@ -2,6 +2,7 @@ import * as electron from 'electron';
 import { join } from 'path';
 import appConfig from '../../config/config.json';
 import mkdirp from 'mkdirp';
+import { getMainWindow } from '../main/window-utils';
 
 export function clickLink(href: string) {
   const { protocol } = new URL(href);
@@ -60,6 +61,13 @@ export function restartApp() {
 }
 
 export const toggleDevTools = () => {
-  const { getCurrentWebContents } = electron.remote || electron;
-  getCurrentWebContents().toggleDevTools();
+  const mainWindow = getMainWindow();
+
+  if (!mainWindow) {
+    console.error("couldn't toggle DevTools");
+    return;
+  }
+
+  // @ts-expect-error TODO needs module augmentation
+  mainWindow.toggleDevTools();
 };
