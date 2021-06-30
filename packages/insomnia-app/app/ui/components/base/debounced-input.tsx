@@ -13,7 +13,7 @@ type InheritedAttributes = Omit<InputHTMLAttributes<TargetElement>, keyof Extend
 
 interface Props extends InheritedAttributes, ExtendedAttributes {
   textarea?: boolean;
-  delay?: number;
+  delay: number;
 }
 
 interface State {
@@ -27,14 +27,14 @@ export class DebouncedInput extends PureComponent<Props, State> {
   _input: HTMLTextAreaElement | HTMLInputElement | null = null;
 
   state: State = {
-    delay: this.props.delay ?? 500,
-    onChange: this.props.delay ? debounce(this.props.onChange, this.props.delay) : this.props.onChange,
+    delay: this.props.delay,
+    onChange: debounce(this.props.onChange, this.props.delay),
   }
 
   static getDerivedStateFromProps(props: Props, state: State) {
     if (state.delay !== props.delay || state.onChange !== props.onChange) {
       return {
-        onChange: props.delay ? debounce(props.onChange, props.delay) : props.onChange,
+        onChange: debounce(props.onChange, props.delay),
         delay: props.delay,
       };
     }

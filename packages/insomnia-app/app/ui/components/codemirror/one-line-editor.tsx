@@ -403,6 +403,7 @@ class OneLineEditor extends PureComponent<Props, State> {
           ref={ref => { this._input = ref; }}
           id={id}
           type={type}
+          delay={500}
           className={className}
           style={{
             // background: 'rgba(255, 0, 0, 0.05)', // For debugging
