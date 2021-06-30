@@ -11,10 +11,10 @@ export const queryAllWorkspaceUrls = async (
   const docs = await db.withDescendants(workspace, reqType);
   const urls = docs
     .filter(
-      d =>
+      (d: Request | GrpcRequest) =>
         d.type === reqType &&
         d._id !== reqId && // Not current request
-        ((d as Request | GrpcRequest).url || ''), // Only ones with non-empty URLs
+        (d.url || ''), // Only ones with non-empty URLs
     )
     .map((r: Request | GrpcRequest) => (r.url || '').trim());
   return Array.from(new Set(urls));
