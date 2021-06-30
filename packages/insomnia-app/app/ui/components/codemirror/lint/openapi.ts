@@ -1,15 +1,10 @@
 import CodeMirror from 'codemirror';
-import { isOpenApiv2, isOpenApiv3, Spectral } from '@stoplight/spectral';
+import { isLintError, initializeSpectral } from '../../../../common/spectral';
 
-const spectral = new Spectral();
-spectral.registerFormat('oas2', isOpenApiv2);
-spectral.registerFormat('oas3', isOpenApiv3);
-spectral.loadRuleset('spectral:oas');
+const spectral = initializeSpectral();
 
 CodeMirror.registerHelper('lint', 'openapi', async function(text) {
-  const results = (await spectral.run(text)).filter(result => (
-    result.severity === 0 // filter for errors only
-  ));
+  const results = (await spectral.run(text)).filter(isLintError);
 
   return results.map(result => ({
     from: CodeMirror.Pos(result.range.start.line, result.range.start.character),

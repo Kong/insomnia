@@ -51,6 +51,7 @@ export async function lintSpecification(
   spectral.registerFormat('oas2', isOpenApiv2);
   spectral.registerFormat('oas3', isOpenApiv3);
   await spectral.loadRuleset('spectral:oas');
+
   const results = (await spectral.run(specContent)).filter(result => (
     result.severity === 0 // filter for errors only
   ));
