@@ -72,8 +72,8 @@ jobs:
       - name: Release app
         run: npm run app-release
         env:
-          CSC_LINK: ${{ secrets.CORE_WINDOWS_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CORE_WINDOWS_CSC_KEY_PASSWORD }}
+          CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
   Mac:
     needs: [ npm ]
     name: Mac
