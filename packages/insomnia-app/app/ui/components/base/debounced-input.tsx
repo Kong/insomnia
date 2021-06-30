@@ -19,7 +19,6 @@ interface Props extends InheritedAttributes, ExtendedAttributes {
 interface State {
   delay: number;
   onChange: ExtendedAttributes['onChange'];
-  debouncedOnChange: ExtendedAttributes['onChange'];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -29,15 +28,13 @@ export class DebouncedInput extends PureComponent<Props, State> {
 
   state: State = {
     delay: this.props.delay ?? 500,
-    onChange: this.props.onChange,
-    debouncedOnChange: debounce(this.props.onChange, this.props.delay),
+    onChange: this.props.delay ? debounce(this.props.onChange, this.props.delay) : this.props.onChange,
   }
 
   static getDerivedStateFromProps(props: Props, state: State) {
     if (state.delay !== props.delay || state.onChange !== props.onChange) {
       return {
-        onChange: props.onChange,
-        debouncedOnChange: debounce(props.onChange, props.delay),
+        onChange: props.delay ? debounce(props.onChange, props.delay) : props.onChange,
         delay: props.delay,
       };
     }
@@ -45,14 +42,9 @@ export class DebouncedInput extends PureComponent<Props, State> {
   }
 
   _handleChange(event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    const { delay } = this.props;
-    const { onChange, debouncedOnChange } = this.state;
+    const { onChange } = this.state;
     const { value } = event.target;
-    if (!delay) {
-      onChange(value);
-    } else {
-      debouncedOnChange(value);
-    }
+    onChange(value);
   }
 
   _handleFocus(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
