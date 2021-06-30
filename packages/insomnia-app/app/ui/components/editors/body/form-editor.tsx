@@ -7,7 +7,7 @@ import { RequestBodyParameter } from '../../../../models/request';
 
 interface Props {
   onChange: (parameters: RequestBodyParameter[]) => void,
-  parameters: any[],
+  parameters: RequestBodyParameter[],
   nunjucksPowerUserMode: boolean,
   isVariableUncovered: boolean,
   handleRender?: HandleRender,

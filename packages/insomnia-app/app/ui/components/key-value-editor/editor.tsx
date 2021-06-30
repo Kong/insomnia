@@ -22,7 +22,7 @@ const RIGHT = 39;
 
 interface Props {
   onChange: (headers: RequestHeader[]) => void;
-  pairs: any[];
+  pairs: RequestHeader[];
   handleRender?: HandleRender;
   handleGetRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
