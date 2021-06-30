@@ -2,7 +2,6 @@ import React, { FC, useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ColorScheme, getThemes } from '../../../plugins';
 import { applyColorScheme, PluginTheme } from '../../../plugins/misc';
-import Button from '../base/button';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import { RequireExactlyOne } from 'type-fest';
@@ -20,25 +19,30 @@ const Themes = styled.div({
   flexWrap: 'wrap',
 });
 
-const ThemeButton = styled(Button)<{ $isActive: boolean; $isInOsThemeMode: boolean }>(({ $isActive, $isInOsThemeMode }) => ({
+const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }>(({ $isActive, $isInOsThemeMode }) => ({
   position: 'relative',
   margin: 'var(--padding-md) var(--padding-md)',
   fontSize: 0,
   borderRadius: 'var(--radius-md)',
   overflow: 'hidden',
   boxShadow: '0 0 0 1px var(--hl-sm)',
+  transition: 'all 50ms ease-out',
   ...($isActive ? {
     boxShadow: '0 0 0 var(--padding-xs) var(--color-surprise)',
     transform: 'scale(1.05)',
-    transition: 'all 50ms ease-out',
   } : {}),
   '&:hover': {
-    transform: 'scale(1.051)',
+    transform: 'scale(1.05)',
     ...($isInOsThemeMode ? { boxShadow: 'none' } : {}),
   },
-  '&:hover .overlay-wrapper': {
-    display: 'flex',
-  },
+  ...($isInOsThemeMode ? {
+    '&:hover .overlay-wrapper': {
+      display: 'flex',
+    },
+    '&:hover .theme-preview': {
+      visibility: 'hidden', // this prevents alpha-blending problems with the underlying svg bleeding through
+    },
+  } : {}),
 }));
 
 const ThemeTitle = styled.h2({
@@ -161,6 +165,7 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
   <svg
     /* @ts-expect-error -- TSCONVERSION */
     theme={themeName}
+    className="theme-preview"
     width="100%"
     height="100%"
     viewBox="0 0 500 300"
