@@ -22,24 +22,22 @@ interface State {
   debouncedOnChange: ExtendedAttributes['onChange'];
 }
 
-const defaultDelay = 500;
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class DebouncedInput extends PureComponent<Props, State> {
   _hasFocus = false;
   _input: HTMLTextAreaElement | HTMLInputElement | null = null;
 
   state: State = {
-    delay: defaultDelay,
+    delay: this.props.delay ?? 500,
     onChange: this.props.onChange,
-    debouncedOnChange: debounce(this.props.onChange, this.props.delay || defaultDelay),
+    debouncedOnChange: debounce(this.props.onChange, this.props.delay),
   }
 
   static getDerivedStateFromProps(props: Props, state: State) {
     if (state.delay !== props.delay || state.onChange !== props.onChange) {
       return {
         onChange: props.onChange,
-        debouncedOnChange: debounce(props.onChange, props.delay || defaultDelay),
+        debouncedOnChange: debounce(props.onChange, props.delay),
         delay: props.delay,
       };
     }
