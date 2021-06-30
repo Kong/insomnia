@@ -1,6 +1,8 @@
 import { askToImportIntoWorkspace, ForceToWorkspaceKeys } from '../helpers';
 import * as modals from '../../../components/modals';
 
+jest.mock('../../../components/modals');
+
 describe('askToImportIntoWorkspace', () => {
   it('should return null if no active workspace', () => {
     const func = askToImportIntoWorkspace({ workspaceId: undefined, forceToWorkspace: ForceToWorkspaceKeys.new });
@@ -19,7 +21,6 @@ describe('askToImportIntoWorkspace', () => {
   });
 
   it('should prompt the user if not forcing', () => {
-    (modals as any).showModal = jest.fn();
     const currentWorkspaceId = 'current';
     const func = askToImportIntoWorkspace({ workspaceId: currentWorkspaceId });
     func();
