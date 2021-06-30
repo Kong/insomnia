@@ -6,7 +6,7 @@ import type { Workspace } from '../../models/workspace';
 
 interface Props {
   activity: GlobalActivity;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   workspace: Workspace;
 }
 
@@ -25,11 +25,11 @@ const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChan
       value: ACTIVITY_UNIT_TEST,
     },
   ];
+
   return (
     <MultiSwitch
       name="activity-toggle"
-      // @ts-expect-error -- TSCONVERSION
-      onChange={a => handleActivityChange(workspace._id, a)}
+      onChange={(nextActivity: GlobalActivity) => handleActivityChange({ workspaceId: workspace._id, nextActivity })}
       choices={choices}
       selectedValue={activity}
     />

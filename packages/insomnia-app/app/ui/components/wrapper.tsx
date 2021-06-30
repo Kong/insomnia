@@ -1,8 +1,4 @@
-import type { Settings } from '../../models/settings';
 import type { Response } from '../../models/response';
-import type { OAuth2Token } from '../../models/o-auth-2-token';
-import type { Workspace } from '../../models/workspace';
-import type { WorkspaceMeta } from '../../models/workspace-meta';
 import {
   isRequest,
   Request,
@@ -11,7 +7,6 @@ import {
   RequestHeader,
   RequestParameter,
 } from '../../models/request';
-import type { SidebarChildObjects } from './sidebar/sidebar-children';
 import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
@@ -20,7 +15,6 @@ import {
   ACTIVITY_HOME,
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
-  getAppName,
   SortOrder,
   ACTIVITY_MIGRATION,
   ACTIVITY_ONBOARDING,
@@ -65,20 +59,14 @@ import CodePromptModal from './modals/code-prompt-modal';
 import { database as db } from '../../common/database';
 import * as models from '../../models/index';
 import * as importers from 'insomnia-importers';
-import type { Cookie, CookieJar } from '../../models/cookie-jar';
-import type { Environment } from '../../models/environment';
+import type { Cookie } from '../../models/cookie-jar';
 import ErrorBoundary from './error-boundary';
-import type { ClientCertificate } from '../../models/client-certificate';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
 import { VCS } from '../../sync/vcs/vcs';
-import type { StatusCandidate } from '../../sync/types';
-import type { RequestMeta } from '../../models/request-meta';
-import type { RequestVersion } from '../../models/request-version';
 import type { ApiSpec } from '../../models/api-spec';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { trackPageView } from '../../common/analytics';
-import type { GitRepository } from '../../models/git-repository';
 import WrapperHome from './wrapper-home';
 import WrapperDesign from './wrapper-design';
 import WrapperUnitTest from './wrapper-unit-test';
@@ -87,9 +75,6 @@ import WrapperDebug from './wrapper-debug';
 import { importRaw } from '../../common/import';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import { DropdownButton } from './base/dropdown';
-import type { UnitTest } from '../../models/unit-test';
-import type { UnitTestResult } from '../../models/unit-test-result';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
 import type { GlobalActivity } from '../../common/constants';
 import { Spectral } from '@stoplight/spectral';
 import ProtoFilesModal from './modals/proto-files-modal';
@@ -100,24 +85,16 @@ import WrapperAnalytics from './wrapper-analytics';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { RequestGroup } from '../../models/request-group';
 import SpaceSettingsModal from './modals/space-settings-modal';
-import { Space } from '../../models/space';
+import { AppProps } from '../containers/app';
 
 const spectral = new Spectral();
 
-export interface WrapperProps {
-  // Helper Functions
+export type WrapperProps = AppProps & {
   handleActivateRequest: (activeRequestId: string) => void;
   handleSetSidebarFilter: (value: string) => Promise<void>;
-  handleImportFileToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
-  handleImportClipBoardToWorkspace: (workspaceId: string, options?: ImportOptions) => void;
-  handleImportUriToWorkspace: (workspaceId: string, uri: string, options?: ImportOptions) => void;
-  handleInitializeEntities: () => Promise<void>;
   handleShowSettingsModal: Function;
-  handleExportRequestsToFile: Function;
-  handleSetActiveWorkspace: (workspaceId: string | null) => void;
   handleSetActiveEnvironment: (environmentId: string | null) => Promise<void>;
-  handleMoveDoc: Function;
-  handleCreateRequest: (id: string) => any;
+  handleCreateRequest: (id: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
   handleDuplicateWorkspace: Function;
@@ -147,55 +124,14 @@ export interface WrapperProps {
   handleSendAndDownloadRequestWithEnvironment: Function;
   handleUpdateRequestMimeType: (mimeType: string) => Promise<Request | null>;
   handleUpdateDownloadPath: Function;
-  handleSetActiveActivity: (activity: GlobalActivity) => void;
-  handleGoToNextActivity: () => void;
-  // Properties
-  activity: GlobalActivity;
-  apiSpecs: ApiSpec[];
-  loadStartTime: number;
-  isLoading: boolean;
-  isLoggedIn: boolean;
+
   paneWidth: number;
   paneHeight: number;
-  responsePreviewMode: string;
-  responseFilter: string;
-  responseFilterHistory: string[];
-  responseDownloadPath: string | null;
   sidebarWidth: number;
-  sidebarHidden: boolean;
-  sidebarFilter: string;
-  sidebarChildren: SidebarChildObjects;
-  settings: Settings;
-  workspaces: Workspace[];
-  requestMetas: RequestMeta[];
-  requests: Request[];
-  requestVersions: RequestVersion[];
-  unseenWorkspaces: Workspace[];
-  workspaceChildren: (Request | RequestGroup)[];
-  activeWorkspaceMeta?: WorkspaceMeta;
-  environments: Environment[];
-  activeApiSpec: ApiSpec;
-  activeSpace?: Space;
-  activeUnitTestSuite: UnitTestSuite | null;
-  activeRequestResponses: Response[];
-  activeWorkspace: Workspace;
-  activeCookieJar: CookieJar;
-  activeEnvironment: Environment | null;
-  activeGitRepository: GitRepository | null;
-  activeUnitTestResult: UnitTestResult | null;
-  activeUnitTestSuites: UnitTestSuite[];
-  activeUnitTests: UnitTest[];
-  activeWorkspaceClientCertificates: ClientCertificate[];
   headerEditorKey: string;
   isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-  gitRepositories: GitRepository[];
-  syncItems: StatusCandidate[];
-  oAuth2Token?: OAuth2Token | null;
-  activeRequest?: Request | null;
-  activeResponse?: Response | null;
-  workspaceMetas?: WorkspaceMeta[];
 }
 
 export type HandleImportFileCallback = (options?: ImportOptions) => void;
@@ -270,6 +206,8 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleImport(text: string) {
+    const { activeRequest } = this.props;
+
     // Allow user to paste any import file into the url. If it results in
     // only one item, it will overwrite the current request.
     try {
@@ -277,9 +215,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       const { resources } = data;
       const r = resources[0];
 
-      if (r && r._type === 'request' && this.props.activeRequest) {
+      if (r && r._type === 'request' && activeRequest && isRequest(activeRequest)) {
         // Only pull fields that we want to update
-        return this._handleForceUpdateRequest(this.props.activeRequest, {
+        return this._handleForceUpdateRequest(activeRequest, {
           url: r.url,
           method: r.method,
           headers: r.headers,
@@ -297,11 +235,11 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange(workspaceId: string, nextActivity: GlobalActivity) {
+  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: {workspaceId?: string, nextActivity: GlobalActivity}) {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME
-    if (nextActivity !== ACTIVITY_HOME) {
+    if (workspaceId && nextActivity !== ACTIVITY_HOME) {
       await models.workspaceMeta.updateByParentId(workspaceId, {
         activeActivity: nextActivity,
       });
@@ -311,6 +249,10 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
     if (notEditingASpec) {
       handleSetActiveActivity(nextActivity);
+      return;
+    }
+
+    if (!activeApiSpec || !workspaceId) {
       return;
     }
 
@@ -362,15 +304,15 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   _handleImportFile(options?: ImportOptions) {
-    this.props.handleImportFileToWorkspace(this.props.activeWorkspace._id, options);
+    this.props.handleImportFileToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
   }
 
   _handleImportUri(uri: string, options?: ImportOptions) {
-    this.props.handleImportUriToWorkspace(this.props.activeWorkspace._id, uri, options);
+    this.props.handleImportUriToWorkspace(uri, { workspaceId: this.props.activeWorkspace?._id, ...options });
   }
 
   _handleImportClipBoard(options?: ImportOptions) {
-    this.props.handleImportClipBoardToWorkspace(this.props.activeWorkspace._id, options);
+    this.props.handleImportClipBoardToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
   }
 
   _handleSetActiveResponse(responseId: string | null) {
@@ -419,28 +361,28 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   }
 
   async _handleRemoveActiveWorkspace() {
-    const { workspaces, activeWorkspace } = this.props;
+    const { workspaces, activeWorkspace, handleSetActiveActivity } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
+    await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
+    await models.workspace.remove(activeWorkspace);
 
     if (workspaces.length <= 1) {
-      showModal(AlertModal, {
-        title: 'Deleting Last Workspace',
-        message: 'Since you deleted your only workspace, a new one has been created for you.',
-        onConfirm: async () => {
-          await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
-          await models.workspace.create({
-            name: getAppName(),
-          });
-          await models.workspace.remove(activeWorkspace);
-        },
-      });
-    } else {
-      await models.stats.incrementDeletedRequestsForDescendents(activeWorkspace);
-      await models.workspace.remove(activeWorkspace);
+      handleSetActiveActivity(ACTIVITY_HOME);
     }
   }
 
   async _handleActiveWorkspaceClearAllResponses() {
-    const docs = await db.withDescendants(this.props.activeWorkspace, models.request.type);
+    const { activeWorkspace } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
+    const docs = await db.withDescendants(activeWorkspace, models.request.type);
     const requests = docs.filter(isRequest);
 
     for (const req of requests) {
@@ -484,11 +426,21 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
   _handleCreateRequestInWorkspace() {
     const { activeWorkspace, handleCreateRequest } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     handleCreateRequest(activeWorkspace._id);
   }
 
   _handleCreateRequestGroupInWorkspace() {
     const { activeWorkspace, handleCreateRequestGroup } = this.props;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     handleCreateRequestGroup(activeWorkspace._id);
   }
 
@@ -543,6 +495,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       handleInitializeEntities,
       handleRender,
       handleSetActiveWorkspace,
+      handleSetActiveActivity,
       handleSidebarSort,
       isVariableUncovered,
       requestMetas,
@@ -553,10 +506,11 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       workspaceChildren,
       workspaces,
     } = this.props;
+
     // Setup git sync dropdown for use in Design/Debug pages
     let gitSyncDropdown: JSX.Element | null = null;
 
-    if (gitVCS) {
+    if (activeWorkspace && gitVCS) {
       gitSyncDropdown = (
         <GitSyncDropdown
           className="margin-left"
@@ -633,52 +587,53 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            {/* TODO: Figure out why cookieJar is sometimes null */}
-            {activeCookieJar ? (
-              <CookiesModal
-                handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
-                handleRender={handleRender}
+            {activeWorkspace ? <>
+              {/* TODO: Figure out why cookieJar is sometimes null */}
+              {activeCookieJar ? <>
+                <CookiesModal
+                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
+                  handleRender={handleRender}
+                  ref={registerModal}
+                  workspace={activeWorkspace}
+                  cookieJar={activeCookieJar}
+                />
+                <CookieModifyModal
+                  handleRender={handleRender}
+                  handleGetRenderContext={handleGetRenderContext}
+                  nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                  ref={registerModal}
+                  cookieJar={activeCookieJar}
+                  workspace={activeWorkspace}
+                  isVariableUncovered={isVariableUncovered}
+                />
+              </> : null}
+
+              <NunjucksModal
+                uniqueKey={`key::${this.state.forceRefreshKey}`}
                 ref={registerModal}
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
                 workspace={activeWorkspace}
-                cookieJar={activeCookieJar}
               />
-            ) : null}
 
-            <CookieModifyModal
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              ref={registerModal}
-              cookieJar={activeCookieJar}
-              workspace={activeWorkspace}
-              isVariableUncovered={isVariableUncovered}
-            />
-
-            <NunjucksModal
-              uniqueKey={`key::${this.state.forceRefreshKey}`}
-              ref={registerModal}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              workspace={activeWorkspace}
-            />
-
-            <WorkspaceSettingsModal
-              ref={registerModal}
-              clientCertificates={activeWorkspaceClientCertificates}
-              workspace={activeWorkspace}
-              apiSpec={activeApiSpec}
-              editorFontSize={settings.editorFontSize}
-              editorIndentSize={settings.editorIndentSize}
-              editorKeyMap={settings.editorKeyMap}
-              editorLineWrapping={settings.editorLineWrapping}
-              handleRender={handleRender}
-              handleGetRenderContext={handleGetRenderContext}
-              nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-              handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-              handleDuplicateWorkspace={handleDuplicateWorkspace}
-              handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
-              isVariableUncovered={isVariableUncovered}
-            />
+              {activeApiSpec ? <WorkspaceSettingsModal
+                ref={registerModal}
+                clientCertificates={activeWorkspaceClientCertificates}
+                workspace={activeWorkspace}
+                apiSpec={activeApiSpec}
+                editorFontSize={settings.editorFontSize}
+                editorIndentSize={settings.editorIndentSize}
+                editorKeyMap={settings.editorKeyMap}
+                editorLineWrapping={settings.editorLineWrapping}
+                handleRender={handleRender}
+                handleGetRenderContext={handleGetRenderContext}
+                nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
+                handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
+                handleDuplicateWorkspace={handleDuplicateWorkspace}
+                handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
+                isVariableUncovered={isVariableUncovered}
+              /> : null}
+            </> : null}
 
             <GenerateCodeModal
               ref={registerModal}
@@ -700,10 +655,12 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               workspace={activeWorkspace}
               workspaces={workspaces}
               workspaceChildren={workspaceChildren}
-              activeRequest={activeRequest}
+              // the request switcher modal does not know about grpc requests yet
+              activeRequest={activeRequest && isRequest(activeRequest) ? activeRequest : undefined}
               activateRequest={handleActivateRequest}
               requestMetas={requestMetas}
               handleSetActiveWorkspace={handleSetActiveWorkspace}
+              handleSetActiveActivity={handleSetActiveActivity}
             />
 
             <EnvironmentEditModal
@@ -719,11 +676,12 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               isVariableUncovered={isVariableUncovered}
             />
 
-            {gitVCS && (
+            <GitRepositorySettingsModal ref={registerModal} />
+
+            {activeWorkspace && gitVCS ? (
               <Fragment>
                 <GitStagingModal ref={registerModal} workspace={activeWorkspace} vcs={gitVCS} />
                 <GitLogModal ref={registerModal} vcs={gitVCS} />
-                <GitRepositorySettingsModal ref={registerModal} />
                 {activeGitRepository !== null && (
                   <GitBranchesModal
                     ref={registerModal}
@@ -734,9 +692,9 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                   />
                 )}
               </Fragment>
-            )}
+            ) : null}
 
-            {vcs && (
+            {activeWorkspace && vcs ? (
               <Fragment>
                 <SyncStagingModal
                   ref={registerModal}
@@ -761,7 +719,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               </Fragment>
-            )}
+            ) : null}
 
             <WorkspaceEnvironmentsEditModal
               ref={registerModal}
@@ -796,7 +754,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           </ErrorBoundary>
         </div>
         <Fragment key={`views::${this.state.activeGitBranch}`}>
-          {activity === ACTIVITY_HOME && (
+          {(activity === ACTIVITY_HOME || !activeWorkspace) && (
             <WrapperHome
               wrapperProps={this.props}
               handleImportFile={this._handleImportFile}

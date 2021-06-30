@@ -26,9 +26,10 @@ import type {
   SetupGitRepositoryCallback,
   UpdateGitRepositoryCallback,
 } from '../../redux/modules/git';
+import { initialize as initializeEntities } from '../../redux/modules/entities';
 
 interface Props {
-  handleInitializeEntities: () => Promise<void>;
+  handleInitializeEntities: typeof initializeEntities;
   handleGitBranchChanged: (branch: string) => void;
   workspace: Workspace;
   vcs: GitVCS;

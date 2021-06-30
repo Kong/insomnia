@@ -41,7 +41,7 @@ interface Props {
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
   activeEnvironment?: Environment | null;
-  activeRequest?: Request | null;
+  activeRequest?: Request | GrpcRequest | null;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

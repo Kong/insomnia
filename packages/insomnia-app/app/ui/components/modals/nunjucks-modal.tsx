@@ -8,12 +8,13 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { Workspace } from '../../../models/workspace';
 
 interface Props {
   uniqueKey: string;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
-  workspace: any;
+  workspace: Workspace;
 }
 
 interface State {

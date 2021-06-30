@@ -1,19 +1,28 @@
 import { createSelector } from 'reselect';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
-import { isRequest } from '../../models/request';
-import { isRequestGroup } from '../../models/request-group';
+import { isRequest, Request } from '../../models/request';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { Space } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
-import { Workspace } from '../../models/workspace';
+import { RootState } from './modules';
+import { ValueOf } from 'type-fest';
+import { isWorkspaceActivity } from '../../common/constants';
+
+type EntitiesLists = {
+  [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
+}
 
 // ~~~~~~~~~ //
 // Selectors //
 // ~~~~~~~~~ //
+export const selectEntities = createSelector(
+  (state: RootState) => state.entities,
+  entities => entities,
+);
+
 export const selectEntitiesLists = createSelector(
-  // @ts-expect-error -- TSCONVERSION
-  state => state.entities,
+  selectEntities,
   entities => {
     const entitiesLists = {};
 
@@ -22,9 +31,10 @@ export const selectEntitiesLists = createSelector(
       entitiesLists[k] = Object.keys(entityMap).map(id => entityMap[id]);
     }
 
-    return entitiesLists;
+    return entitiesLists as EntitiesLists;
   },
 );
+
 export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, entities => {
   const parentLookupMap = {};
 
@@ -45,31 +55,30 @@ export const selectEntitiesChildrenMap = createSelector(selectEntitiesLists, ent
   return parentLookupMap;
 });
 
-export const selectSettings = createSelector(selectEntitiesLists, entities => {
-  // @ts-expect-error -- TSCONVERSION
-  return entities.settings[0] || models.settings.init();
-});
+export const selectSettings = createSelector(
+  selectEntitiesLists,
+  entities => entities.settings[0] || models.settings.init());
 
 export const selectSpaces = createSelector(
-  // @ts-expect-error -- TSCONVERSION
-  state => selectEntitiesLists(state).spaces as Space[],
-  (spaces) => {
-    return spaces;
+  selectEntitiesLists,
+  entities => entities.spaces,
+);
+
+export const selectActiveSpace = createSelector(
+  selectEntities,
+  (state: RootState) => state.global.activeSpaceId,
+  (entities, activeSpaceId) => {
+    return entities.spaces[activeSpaceId || 'n/a'];
   },
 );
 
-export const selectActiveSpace = createSelector<any, {}, string, Space | undefined>(
-  state => state.entities,
-  state => state.global.activeSpaceId,
-  (entities, activeSpaceId) => {
-    // @ts-expect-error -- TSCONVERSION
-    return entities.spaces[activeSpaceId];
-  },
+export const selectAllWorkspaces = createSelector(
+  selectEntitiesLists,
+  entities => entities.workspaces,
 );
 
 export const selectWorkspacesForActiveSpace = createSelector(
-  // @ts-expect-error -- TSCONVERSION
-  state => selectEntitiesLists(state).workspaces as Workspace[],
+  selectAllWorkspaces,
   selectActiveSpace,
   (workspaces, activeSpace) => {
     const parentId = activeSpace?._id || null;
@@ -78,15 +87,17 @@ export const selectWorkspacesForActiveSpace = createSelector(
 );
 
 export const selectActiveWorkspace = createSelector(
-  // @ts-expect-error -- TSCONVERSION
-  state => selectEntitiesLists(state).workspaces as Workspace[],
   selectWorkspacesForActiveSpace,
-  state => state.global.activeWorkspaceId,
-  (allWorkspaces, workspaces, activeWorkspaceId) => {
-    const activeWorkspace = workspaces.find(w => w._id === activeWorkspaceId) || workspaces[0];
-    // This fallback is needed because while a space may not have any workspaces
-    // The app still _needs_ an active workspace.
-    return activeWorkspace || allWorkspaces[0];
+  (state: RootState) => state.global.activeWorkspaceId,
+  (state: RootState) => state.global.activeActivity,
+  (workspaces, activeWorkspaceId, activeActivity) => {
+    // Only return an active workspace if we're in an activity
+    if (activeActivity && isWorkspaceActivity(activeActivity)) {
+      const workspace = workspaces.find(w => w._id === activeWorkspaceId);
+      return workspace;
+    }
+
+    return undefined;
   },
 );
 
@@ -95,10 +106,10 @@ export const selectActiveWorkspaceMeta = createSelector(
   selectEntitiesLists,
   (activeWorkspace, entities) => {
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
-    // @ts-expect-error -- TSCONVERSION
     return entities.workspaceMetas.find(m => m.parentId === id);
   },
 );
+
 export const selectActiveEnvironment = createSelector(
   selectActiveWorkspaceMeta,
   selectEntitiesLists,
@@ -107,18 +118,16 @@ export const selectActiveEnvironment = createSelector(
       return null;
     }
 
-    // @ts-expect-error -- TSCONVERSION
     return entities.environments.find(e => e._id === meta.activeEnvironmentId) || null;
   },
 );
+
 export const selectActiveWorkspaceClientCertificates = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
-  (entities, activeWorkspace) => {
-    // @ts-expect-error -- TSCONVERSION
-    return entities.clientCertificates.filter(c => c.parentId === activeWorkspace._id);
-  },
+  (entities, activeWorkspace) => entities.clientCertificates.filter(c => c.parentId === activeWorkspace?._id),
 );
+
 export const selectActiveGitRepository = createSelector(
   selectEntitiesLists,
   selectActiveWorkspaceMeta,
@@ -128,39 +137,43 @@ export const selectActiveGitRepository = createSelector(
     }
 
     const id = activeWorkspaceMeta ? activeWorkspaceMeta.gitRepositoryId : 'n/a';
-    // @ts-expect-error -- TSCONVERSION
     const repo = entities.gitRepositories.find(r => r._id === id);
     return repo || null;
   },
 );
-export const selectCollapsedRequestGroups = createSelector(selectEntitiesLists, entities => {
-  const collapsed = {};
 
-  // Default all to collapsed
-  // @ts-expect-error -- TSCONVERSION
-  for (const requestGroup of entities.requestGroups) {
-    collapsed[requestGroup._id] = true;
-  }
+export const selectCollapsedRequestGroups = createSelector(
+  selectEntitiesLists,
+  entities => {
+    const collapsed: Record<string, boolean> = {};
 
-  // Update those that have metadata (not all do)
-  // @ts-expect-error -- TSCONVERSION
-  for (const meta of entities.requestGroupMetas) {
-    collapsed[meta.parentId] = meta.collapsed;
-  }
+    // Default all to collapsed
+    for (const requestGroup of entities.requestGroups) {
+      collapsed[requestGroup._id] = true;
+    }
 
-  return collapsed;
-});
+    // Update those that have metadata (not all do)
+    for (const meta of entities.requestGroupMetas) {
+      collapsed[meta.parentId] = meta.collapsed;
+    }
+
+    return collapsed;
+  });
+
 export const selectActiveWorkspaceEntities = createSelector(
   selectActiveWorkspace,
   selectEntitiesChildrenMap,
   (activeWorkspace, childrenMap) => {
+    if (!activeWorkspace) {
+      return [];
+    }
+
     const descendants: BaseModel[] = [activeWorkspace];
 
-    // @ts-expect-error -- TSCONVERSION
     const addChildrenOf = parent => {
       // Don't add children of requests (eg. auth requests)
       if (isRequest(parent)) {
-        return [];
+        return;
       }
 
       const children = childrenMap[parent._id] || [];
@@ -176,11 +189,10 @@ export const selectActiveWorkspaceEntities = createSelector(
     return descendants;
   },
 );
+
 export const selectPinnedRequests = createSelector(selectEntitiesLists, entities => {
-  const pinned = {};
-  // @ts-expect-error -- TSCONVERSION
+  const pinned: Record<string, boolean> = {};
   const requests = [...entities.requests, ...entities.grpcRequests];
-  // @ts-expect-error -- TSCONVERSION
   const requestMetas = [...entities.requestMetas, ...entities.grpcRequestMetas];
 
   // Default all to unpinned
@@ -195,67 +207,68 @@ export const selectPinnedRequests = createSelector(selectEntitiesLists, entities
 
   return pinned;
 });
+
 export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
       e => isRequest(e) || isRequestGroup(e),
-    );
+    ) as (Request | RequestGroup)[];
   },
 );
+
 export const selectActiveRequest = createSelector(
-  // @ts-expect-error -- TSCONVERSION
-  state => state.entities,
+  selectEntities,
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
-    const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
-    return entities.requests[id] || entities.grpcRequests[id] || null;
+    const id = workspaceMeta?.activeRequestId || 'n/a';
+    if (id in entities.requests) {
+      return entities.requests[id];
+    } else if (id in entities.grpcRequests) {
+      return entities.grpcRequests[id];
+    } else {
+      return null;
+    }
   },
 );
+
 export const selectActiveCookieJar = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, workspace) => {
-    // @ts-expect-error -- TSCONVERSION
-    const cookieJar = entities.cookieJars.find(cj => cj.parentId === workspace._id);
+    const cookieJar = entities.cookieJars.find(cj => cj.parentId === workspace?._id);
     return cookieJar || null;
   },
 );
+
 export const selectActiveOAuth2Token = createSelector(
   selectEntitiesLists,
   selectActiveWorkspaceMeta,
   (entities, workspaceMeta) => {
-    const id = workspaceMeta ? workspaceMeta.activeRequestId : 'n/a';
-    // @ts-expect-error -- TSCONVERSION
+    const id = workspaceMeta?.activeRequestId || 'n/a';
     return entities.oAuth2Tokens.find(t => t.parentId === id);
   },
 );
 
-export const selectAllWorkspaces = createSelector<any, {}, Workspace[]>(
+export const selectUnseenWorkspaces = createSelector(
   selectEntitiesLists,
   entities => {
-  // @ts-expect-error -- TSCONVERSION
-    const { workspaces } = entities;
-    return workspaces;
+    const { workspaces, workspaceMetas } = entities;
+    return workspaces.filter(workspace => {
+      const meta = workspaceMetas.find(m => m.parentId === workspace._id);
+      return !!(meta && !meta.hasSeen);
+    });
   });
 
-export const selectUnseenWorkspaces = createSelector(selectEntitiesLists, entities => {
-  // @ts-expect-error -- TSCONVERSION
-  const { workspaces, workspaceMetas } = entities;
-  return workspaces.filter(workspace => {
-    const meta = workspaceMetas.find(m => m.parentId === workspace._id);
-    return !!(meta && !meta.hasSeen);
-  });
-});
 export const selectActiveRequestMeta = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
   (activeRequest, entities) => {
-    const id = activeRequest ? activeRequest._id : 'n/a';
-    // @ts-expect-error -- TSCONVERSION
+    const id = activeRequest?._id || 'n/a';
     return entities.requestMetas.find(m => m.parentId === id);
   },
 );
+
 export const selectActiveRequestResponses = createSelector(
   selectActiveRequest,
   selectEntitiesLists,
@@ -264,7 +277,6 @@ export const selectActiveRequestResponses = createSelector(
   (activeRequest, entities, activeEnvironment, settings) => {
     const requestId = activeRequest ? activeRequest._id : 'n/a';
     // Filter responses down if the setting is enabled
-    // @ts-expect-error -- TSCONVERSION
     return entities.responses
       .filter(response => {
         const requestMatches = requestId === response.parentId;
@@ -280,6 +292,7 @@ export const selectActiveRequestResponses = createSelector(
       .sort((a, b) => (a.created > b.created ? -1 : 1));
   },
 );
+
 export const selectActiveResponse = createSelector(
   selectActiveRequestMeta,
   selectActiveRequestResponses,
@@ -294,13 +307,17 @@ export const selectActiveResponse = createSelector(
     return responses[0] || null;
   },
 );
+
 export const selectActiveUnitTestResult = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
+    if (!activeWorkspace) {
+      return null;
+    }
+
     let recentResult: UnitTestResult | null = null;
 
-    // @ts-expect-error -- TSCONVERSION
     for (const r of entities.unitTestResults) {
       if (r.parentId !== activeWorkspace._id) {
         continue;
@@ -319,6 +336,7 @@ export const selectActiveUnitTestResult = createSelector(
     return recentResult;
   },
 );
+
 export const selectActiveUnitTestSuite = createSelector(
   selectEntitiesLists,
   selectActiveWorkspaceMeta,
@@ -328,10 +346,10 @@ export const selectActiveUnitTestSuite = createSelector(
     }
 
     const id = activeWorkspaceMeta.activeUnitTestSuiteId;
-    // @ts-expect-error -- TSCONVERSION
     return entities.unitTestSuites.find(s => s._id === id) || null;
   },
 );
+
 export const selectActiveUnitTests = createSelector(
   selectEntitiesLists,
   selectActiveUnitTestSuite,
@@ -340,7 +358,6 @@ export const selectActiveUnitTests = createSelector(
       return [];
     }
 
-    // @ts-expect-error -- TSCONVERSION
     return entities.unitTests.filter(s => s.parentId === activeUnitTestSuite._id);
   },
 );
@@ -354,8 +371,7 @@ export const selectActiveUnitTestSuites = createSelector(
   selectEntitiesLists,
   selectActiveWorkspace,
   (entities, activeWorkspace) => {
-    // @ts-expect-error -- TSCONVERSION
-    return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace._id);
+    return entities.unitTestSuites.filter(s => s.parentId === activeWorkspace?._id);
   },
 );
 

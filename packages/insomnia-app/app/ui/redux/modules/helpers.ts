@@ -11,8 +11,12 @@ export const ForceToWorkspaceKeys = {
 export type ForceToWorkspace = ValueOf<typeof ForceToWorkspaceKeys>;
 
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
-export function askToImportIntoWorkspace(workspaceId: string, forceToWorkspace?: ForceToWorkspace): ImportToWorkspacePrompt {
+export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; }): ImportToWorkspacePrompt {
   return function() {
+    if (!workspaceId) {
+      return null;
+    }
+
     switch (forceToWorkspace) {
       case ForceToWorkspaceKeys.new:
         return null;

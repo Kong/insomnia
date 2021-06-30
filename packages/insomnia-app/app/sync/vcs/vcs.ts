@@ -137,8 +137,8 @@ export class VCS {
     return this._getBlob(entry.blob);
   }
 
-  async status(candidates: StatusCandidate[], baseStage: Stage) {
-    const stage = clone(baseStage);
+  async status(candidates: StatusCandidate[], baseStage: Readonly<Stage>) {
+    const stage = clone<Stage>(baseStage);
     const branch = await this._getCurrentBranch();
     const snapshot: Snapshot | null = await this._getLatestSnapshot(branch.name);
     const state = snapshot ? snapshot.state : [];
@@ -160,7 +160,8 @@ export class VCS {
     };
   }
 
-  async stage(stage: Stage, stageEntries: StageEntry[]) {
+  async stage(baseStage: Readonly<Stage>, stageEntries: StageEntry[]) {
+    const stage = clone<Stage>(baseStage);
     const blobsToStore: Record<string, string> = {};
 
     for (const entry of stageEntries) {
@@ -179,7 +180,8 @@ export class VCS {
     return stage;
   }
 
-  async unstage(stage: Stage, stageEntries: StageEntry[]) {
+  async unstage(baseStage: Readonly<Stage>, stageEntries: StageEntry[]) {
+    const stage = clone<Stage>(baseStage);
     for (const entry of stageEntries) {
       delete stage[entry.key];
     }

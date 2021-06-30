@@ -1,6 +1,6 @@
 import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, ACTIVITY_HOME } from '../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
 import PageLayout from './page-layout';
 import {
@@ -33,7 +33,7 @@ import { isRequest } from '../../models/request';
 interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   wrapperProps: WrapperProps;
 }
 
@@ -127,6 +127,11 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   async _handleCreateTestSuite() {
     const { activeWorkspace } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     showPrompt({
       title: 'New Test Suite',
       defaultValue: 'New Suite',
@@ -167,14 +172,6 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     await models.unitTest.update(unitTest, {
       code: v,
     });
-  }
-
-  async _handleBreadcrumb() {
-    const {
-      handleActivityChange,
-      wrapperProps: { activeWorkspace },
-    } = this.props;
-    await handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
   }
 
   async _handleRunTests() {
@@ -232,6 +229,11 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite) {
     const { activeWorkspace } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
       activeUnitTestSuiteId: unitTestSuite._id,
     });
@@ -253,6 +255,11 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   async _runTests(unitTests: UnitTest[]) {
     const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     this.setState({
       testsRunning: unitTests,
       resultsError: null,
