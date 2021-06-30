@@ -213,6 +213,7 @@
     "@types/vkbeautify": "^0.99.2",
     "@types/webpack": "^5.28.0",
     "@types/webpack-dev-server": "^3.11.3",
+    "@types/webpack-env": "^1.16.0",
     "@types/yaml": "^1.9.7",
     "concurrently": "^3.5.0",
     "cross-env": "^2.0.0",
