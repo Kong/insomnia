@@ -5,6 +5,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import CodeEditor from './code-editor';
 import { DebouncedInput } from '../base/debounced-input';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -28,8 +29,8 @@ interface ExtendedAttributes {
 interface Props extends InheritedAttributes, ExtendedAttributes {
   defaultValue: string;
   mode?: string;
-  render?: Function;
-  getRenderContext?: Function;
+  render?: HandleRender;
+  getRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
   getAutocompleteConstants?: Function | null;
   forceEditor?: boolean;

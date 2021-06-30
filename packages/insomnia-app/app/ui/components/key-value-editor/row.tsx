@@ -104,7 +104,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _sendChange(patch) {
     const pair = Object.assign({}, this.props.pair, patch);
-    this.props.onChange && this.props.onChange(pair);
+    this.props.onChange?.(pair);
   }
 
   _handleNameChange(name: string) {
@@ -518,10 +518,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 }
 
 const dragSource = {
-  beginDrag(props: Props) {
-    return {
-      pair: props.pair,
-    };
+  beginDrag({ pair }: Props) {
+    return { pair };
   },
 };
 
