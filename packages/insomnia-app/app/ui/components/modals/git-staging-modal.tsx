@@ -231,12 +231,13 @@ class GitStagingModal extends PureComponent<Props, State> {
 
       const added = status.includes('added');
       let staged = !added;
-      // We want to enforce that the workspace is committed because otherwise
-      // others won't be able to clone from it. So here we're preventing
-      // people from un-staging the workspace if it's not added yet.
       let editable = true;
 
-      if (type === models.workspace.type && added) {
+      // We want to enforce that workspace changes are always committed because otherwise
+      // others won't be able to clone from it. We also make fundamental migrations to the
+      // scope property which need to be committed.
+      // So here we're preventing people from un-staging the workspace.
+      if (type === models.workspace.type) {
         editable = false;
         staged = true;
       }
