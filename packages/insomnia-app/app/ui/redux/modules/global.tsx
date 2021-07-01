@@ -43,6 +43,7 @@ import { Settings } from '../../../models/settings';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { Environment } from '../../../models/environment';
+import { unreachableCase } from 'ts-assert-unreachable';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -489,24 +490,27 @@ export const importUri = (
 };
 
 function showSelectExportTypeModal(onCancel: () => void, onDone: (selectedFormat: SelectedFormat) => void) {
+  const options = [
+    {
+      name: 'Insomnia v4 (JSON)',
+      value: VALUE_JSON,
+    },
+    {
+      name: 'Insomnia v4 (YAML)',
+      value: VALUE_YAML,
+    },
+    {
+      name: 'HAR – HTTP Archive Format',
+      value: VALUE_HAR,
+    },
+  ];
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  const defaultValue = options.map(({ value }) => value).includes(lastFormat) ? lastFormat : VALUE_JSON;
+
   showModal(SelectModal, {
     title: 'Select Export Type',
-    value: lastFormat,
-    options: [
-      {
-        name: 'Insomnia v4 (JSON)',
-        value: VALUE_JSON,
-      },
-      {
-        name: 'Insomnia v4 (YAML)',
-        value: VALUE_YAML,
-      },
-      {
-        name: 'HAR – HTTP Archive Format',
-        value: VALUE_HAR,
-      },
-    ],
+    value: defaultValue,
+    options,
     message: 'Which format would you like to export as?',
     onCancel,
     onDone: (selectedFormat: SelectedFormat) => {
@@ -599,6 +603,9 @@ export const exportWorkspacesToFile = (workspaceId: string | undefined = undefin
               'json',
             );
             break;
+
+          default:
+            unreachableCase(`selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
@@ -698,6 +705,9 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
             'json',
           );
           break;
+
+          default:
+            unreachableCase(`selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
