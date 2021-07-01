@@ -40,9 +40,10 @@ export default async function(
 
     case GRANT_TYPE_PASSWORD:
       return _getOAuth2PasswordHeader(requestId, authentication, forceRefresh);
-  }
 
-  return null;
+    default:
+      return null;
+  }
 }
 
 async function _getOAuth2AuthorizationCodeHeader(
