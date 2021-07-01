@@ -8,21 +8,24 @@ import parseGitPath from './parse-git-path';
 import { BufferEncoding } from './utils';
 import { SystemError } from './system-error';
 import { resetKeys } from '../vcs/ignore-keys';
+import { isWorkspace } from '../../models/workspace';
 
 export class NeDBClient {
   _workspaceId: string;
+  _spaceId: string | null;
 
-  constructor(workspaceId: string) {
+  constructor(workspaceId: string, spaceId?: string) {
     if (!workspaceId) {
       throw new Error('Cannot use NeDBClient without workspace ID');
     }
 
     this._workspaceId = workspaceId;
+    this._spaceId = spaceId || null;
   }
 
-  static createClient(workspaceId: string) {
+  static createClient(workspaceId: string, spaceId?: string) {
     return {
-      promises: new NeDBClient(workspaceId),
+      promises: new NeDBClient(workspaceId, spaceId),
     };
   }
 
@@ -89,6 +92,11 @@ export class NeDBClient {
 
     if (type !== doc.type) {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+    }
+
+    if (isWorkspace(doc)) {
+      // @ts-expect-error parentId can be string or null for a workspace
+      doc.parentId = this._spaceId;
     }
 
     await db.upsert(doc, true);
