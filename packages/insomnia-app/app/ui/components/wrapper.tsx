@@ -245,14 +245,22 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       });
     }
 
-    const notEditingASpec = activity !== ACTIVITY_SPEC;
+    const editingASpec = activity === ACTIVITY_SPEC;
 
-    if (notEditingASpec) {
+    if (!editingASpec) {
       handleSetActiveActivity(nextActivity);
       return;
     }
 
     if (!activeApiSpec || !workspaceId) {
+      return;
+    }
+
+    const goingToDebugOrTest = nextActivity === ACTIVITY_DEBUG || nextActivity === ACTIVITY_UNIT_TEST;
+
+    // If editing a spec and not going to debug or test, don't regenerate anything
+    if (editingASpec && !goingToDebugOrTest) {
+      handleSetActiveActivity(nextActivity);
       return;
     }
 
