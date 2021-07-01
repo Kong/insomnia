@@ -1,5 +1,6 @@
 import { Schema } from '@develohpanda/fluent-builder';
-import { BaseModel, workspace } from '..';
+import { BaseModel, gitRepository, workspace } from '..';
+import { GitRepository } from '../git-repository';
 import { Workspace } from '../workspace';
 
 export const baseModelSchema: Schema<BaseModel> = {
@@ -18,4 +19,14 @@ export const workspaceModelSchema: Schema<Workspace> = {
   description: () => '',
   certificates: () => undefined,
   scope: () => 'collection',
+};
+
+export const gitRepositorySchema: Schema<GitRepository> = {
+  ...baseModelSchema,
+  type: () => gitRepository.type,
+  author: () => ({ name: '', email: '' }),
+  credentials: () => null,
+  uri: () => '',
+  needsFullClone: () => false,
+  uriNeedsMigration: () => true,
 };

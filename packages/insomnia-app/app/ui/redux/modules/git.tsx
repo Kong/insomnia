@@ -256,7 +256,7 @@ export const cloneGitRepository = ({ createFsClient }: {
                 const doc = YAML.parse(docYaml.toString());
                 if (isWorkspace(doc)) {
                   // @ts-expect-error parentId can be string or null for a workspace
-                  doc.parentId = activeSpace?._id;
+                  doc.parentId = activeSpace?._id || null;
                 }
                 await db.upsert(doc);
               }
