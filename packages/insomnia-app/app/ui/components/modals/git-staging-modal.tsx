@@ -295,10 +295,12 @@ class GitStagingModal extends PureComponent<Props, State> {
 
   async _handleRollback(items: Item[]) {
     const { vcs } = this.props;
-    const files = items.map(i => ({
-      filePath: i.path,
-      status: i.status,
-    }));
+    const files = items
+      .filter(i => i.editable) // only rollback if editable
+      .map(i => ({
+        filePath: i.path,
+        status: i.status,
+      }));
     await gitRollback(vcs, files);
     await this._refresh();
   }
@@ -322,13 +324,13 @@ class GitStagingModal extends PureComponent<Props, State> {
           </label>
         </td>
         <td className="text-right">
-          <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
+          {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
             <button
               className="btn btn--micro space-right"
               onClick={() => this._handleRollback([item])}>
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </button>
-          </Tooltip>
+          </Tooltip>}
           {this.renderOperation(item)}
         </td>
       </tr>
