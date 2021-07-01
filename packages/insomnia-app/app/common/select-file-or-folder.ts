@@ -40,7 +40,7 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
           return 'openDirectory';
 
         default:
-          unreachableCase(type, `unrecognized file type: "${type}"`);
+          unreachableCase(type, `unrecognized item type: "${type}"`);
       }
     }),
     // @ts-expect-error https://github.com/electron/electron/pull/29322
