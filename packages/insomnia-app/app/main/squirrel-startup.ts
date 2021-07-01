@@ -31,7 +31,8 @@ export function checkIfRestartNeeded() {
     case '--squirrel-obsolete':
       app.quit();
       return true;
-  }
 
-  return false;
+    default:
+      return false;
+  }
 }
