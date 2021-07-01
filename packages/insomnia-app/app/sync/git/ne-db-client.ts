@@ -7,6 +7,7 @@ import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import { BufferEncoding } from './utils';
 import { SystemError } from './system-error';
+import { resetKeys } from '../vcs/ignore-keys';
 
 export class NeDBClient {
   _workspaceId: string;
@@ -49,6 +50,8 @@ export class NeDBClient {
     if (!doc || doc.isPrivate) {
       throw this._errMissing(filePath);
     }
+
+    resetKeys(doc);
 
     // It would be nice to be able to add this check here but we can't since
     // isomorphic-git may have just deleted the workspace from the FS. This
