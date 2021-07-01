@@ -707,7 +707,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
           break;
 
           default:
-            unreachableCase(`selected export format "${selectedFormat}" is invalid`);
+            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
