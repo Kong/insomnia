@@ -605,7 +605,7 @@ export const exportWorkspacesToFile = (workspaceId: string | undefined = undefin
             break;
 
           default:
-            unreachableCase(`selected export format "${selectedFormat}" is invalid`);
+            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
