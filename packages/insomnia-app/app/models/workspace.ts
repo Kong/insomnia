@@ -1,7 +1,6 @@
 import type { BaseModel } from './index';
 import * as models from './index';
 import { database as db } from '../common/database';
-import { getAppName } from '../common/constants';
 import { strings } from '../common/strings';
 import { Merge } from 'type-fest';
 import { isSpaceId } from './space';
@@ -70,18 +69,7 @@ export async function create(patch: Partial<Workspace> = {}) {
 }
 
 export async function all() {
-  const workspaces = await db.all<Workspace>(type);
-
-  if (workspaces.length > 0) {
-    return workspaces;
-  }
-
-  // Create default workspace
-  await create({
-    name: getAppName(),
-    scope: WorkspaceScopeKeys.collection,
-  });
-  return db.all<Workspace>(type);
+  return await db.all<Workspace>(type);
 }
 
 export function count() {
