@@ -27,6 +27,7 @@ module.exports = {
     'filenames',
     'react-hooks',
     'import',
+    'simple-import-sort',
   ],
   globals: {
     __DEV__: true,
@@ -107,6 +108,6 @@ module.exports = {
     '@typescript-eslint/no-use-before-define': 'error',
     '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
 
-    'import/order': ['error', { alphabetize: { order: 'asc', caseInsensitive: false }, warnOnUnassignedImports: true }],
+    'simple-import-sort/imports': 'error',
   },
 };
