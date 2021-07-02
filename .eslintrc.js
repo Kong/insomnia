@@ -15,7 +15,6 @@ module.exports = {
   extends: [
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
-    'semistandard',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
   ],
