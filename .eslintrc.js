@@ -26,6 +26,7 @@ module.exports = {
     'json',
     'filenames',
     'react-hooks',
+    'import',
   ],
   globals: {
     __DEV__: true,
@@ -105,5 +106,7 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
     '@typescript-eslint/no-use-before-define': 'error',
     '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
+
+    'import/order': ['error', { alphabetize: { order: 'asc', caseInsensitive: false }, warnOnUnassignedImports: true }],
   },
 };
