@@ -31,7 +31,7 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
   handleChangeProtoFile,
 }) => {
   const dropdownButton = useMemo(
-    () => () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
+    () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TSCONVERSION this error appears to be correct, actually
     [selectedMethod?.path],
   );
