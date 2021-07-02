@@ -16,7 +16,5 @@ module.exports = {
       property: 'openExternal',
       message: 'use the `clickLink` function in `electron-helpers.ts` instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
     }],
-    'default-case': 'error',
-    'default-case-last': 'error',
   },
 };

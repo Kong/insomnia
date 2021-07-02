@@ -57,6 +57,8 @@ module.exports = {
     'camelcase': ['error', { allow: ['__export_format', '__export_date', '__export_source'] }],
     'comma-dangle': ['error', 'always-multiline'],
     'comma-spacing': 'error',
+    'default-case': 'error',
+    'default-case-last': 'error',
     'filenames/match-exported': ['error', 'kebab'],
     'indent': ['error', 2, { SwitchCase: 1 }],
     'no-async-promise-executor': 'off',
