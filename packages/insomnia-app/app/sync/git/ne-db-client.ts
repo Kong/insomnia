@@ -11,6 +11,7 @@ import { resetKeys } from '../ignore-keys';
 import { isWorkspace } from '../../models/workspace';
 import { BaseModel } from '../../models';
 import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
+import { PromiseFsClient } from 'isomorphic-git';
 
 export class NeDBClient {
   _workspaceId: string;
@@ -25,7 +26,7 @@ export class NeDBClient {
     this._spaceId = spaceId || null;
   }
 
-  static createClient(workspaceId: string, spaceId?: string) {
+  static createClient(workspaceId: string, spaceId?: string): PromiseFsClient {
     return {
       promises: new NeDBClient(workspaceId, spaceId),
     };
