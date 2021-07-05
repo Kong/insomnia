@@ -7,7 +7,7 @@ import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
 import { BufferEncoding } from './utils';
 import { SystemError } from './system-error';
-import { resetKeys } from '../vcs/ignore-keys';
+import { resetKeys } from '../ignore-keys';
 import { isWorkspace } from '../../models/workspace';
 import { BaseModel } from '../../models';
 import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
