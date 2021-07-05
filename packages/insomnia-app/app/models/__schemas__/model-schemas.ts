@@ -32,6 +32,7 @@ export const baseModelSchema: Schema<BaseModel> = {
 export const workspaceModelSchema: Schema<Workspace> = {
   ...baseModelSchema,
   ...toSchema(workspace.init()),
+  certificates: () => undefined,
   type: () => workspace.type,
 
 };
