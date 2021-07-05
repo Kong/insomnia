@@ -72,7 +72,7 @@ describe('NeDBClient', () => {
           parentId: null,
         }),
       );
-      expect(YAML.parse((await (await pNeDB.readFile(req1Yml, 'utf8')).toString()))).toEqual(
+      expect(YAML.parse((await pNeDB.readFile(req1Yml, 'utf8')).toString())).toEqual(
         expect.objectContaining({
           _id: 'req_1',
           parentId: 'wrk_1',
