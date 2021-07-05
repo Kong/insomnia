@@ -178,7 +178,7 @@ export class NeDBClient {
         type: 'file',
         mode: 0o777,
         size: fileBuff.length,
-        // @ts-expect-error should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino I think flow should have detected this
+        // @ts-expect-error should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino
         ino: doc._id,
         mtimeMs: doc.modified,
       });
