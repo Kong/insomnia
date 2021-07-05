@@ -231,12 +231,13 @@ class GitStagingModal extends PureComponent<Props, State> {
 
       const added = status.includes('added');
       let staged = !added;
-      // We want to enforce that the workspace is committed because otherwise
-      // others won't be able to clone from it. So here we're preventing
-      // people from un-staging the workspace if it's not added yet.
       let editable = true;
 
-      if (type === models.workspace.type && added) {
+      // We want to enforce that workspace changes are always committed because otherwise
+      // others won't be able to clone from it. We also make fundamental migrations to the
+      // scope property which need to be committed.
+      // So here we're preventing people from un-staging the workspace.
+      if (type === models.workspace.type) {
         editable = false;
         staged = true;
       }
@@ -294,10 +295,12 @@ class GitStagingModal extends PureComponent<Props, State> {
 
   async _handleRollback(items: Item[]) {
     const { vcs } = this.props;
-    const files = items.map(i => ({
-      filePath: i.path,
-      status: i.status,
-    }));
+    const files = items
+      .filter(i => i.editable) // only rollback if editable
+      .map(i => ({
+        filePath: i.path,
+        status: i.status,
+      }));
     await gitRollback(vcs, files);
     await this._refresh();
   }
@@ -321,13 +324,13 @@ class GitStagingModal extends PureComponent<Props, State> {
           </label>
         </td>
         <td className="text-right">
-          <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
+          {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
             <button
               className="btn btn--micro space-right"
               onClick={() => this._handleRollback([item])}>
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </button>
-          </Tooltip>
+          </Tooltip>}
           {this.renderOperation(item)}
         </td>
       </tr>

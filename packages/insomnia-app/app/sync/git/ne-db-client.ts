@@ -9,6 +9,8 @@ import { BufferEncoding } from './utils';
 import { SystemError } from './system-error';
 import { resetKeys } from '../vcs/ignore-keys';
 import { isWorkspace } from '../../models/workspace';
+import { BaseModel } from '../../models';
+import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
 
 export class NeDBClient {
   _workspaceId: string;
@@ -84,7 +86,7 @@ export class NeDBClient {
       return;
     }
 
-    const doc = YAML.parse(data.toString());
+    const doc: BaseModel = YAML.parse(data.toString());
 
     if (id !== doc._id) {
       throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
@@ -102,6 +104,8 @@ export class NeDBClient {
       // @ts-expect-error parentId can be string or null for a workspace
       doc.parentId = this._spaceId;
     }
+
+    forceWorkspaceScopeToDesign(doc);
 
     await db.upsert(doc, true);
   }
@@ -126,45 +130,32 @@ export class NeDBClient {
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
     const { root, type, id } = parseGitPath(filePath);
-    let docs = [];
-    let otherFolders = [];
+    let docs: BaseModel[] = [];
+    let otherFolders: string[] = [];
 
     if (root === null && id === null && type === null) {
-      // @ts-expect-error -- TSCONVERSION
       otherFolders = [GIT_INSOMNIA_DIR_NAME];
     } else if (id === null && type === null) {
       otherFolders = [
-        // @ts-expect-error -- TSCONVERSION
         models.workspace.type,
-        // @ts-expect-error -- TSCONVERSION
         models.environment.type,
-        // @ts-expect-error -- TSCONVERSION
         models.requestGroup.type,
-        // @ts-expect-error -- TSCONVERSION
         models.request.type,
-        // @ts-expect-error -- TSCONVERSION
         models.apiSpec.type,
-        // @ts-expect-error -- TSCONVERSION
         models.unitTestSuite.type,
-        // @ts-expect-error -- TSCONVERSION
         models.unitTest.type,
-        // @ts-expect-error -- TSCONVERSION
         models.grpcRequest.type,
-        // @ts-expect-error -- TSCONVERSION
         models.protoFile.type,
-        // @ts-expect-error -- TSCONVERSION
         models.protoDirectory.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
-      // @ts-expect-error -- TSCONVERSION
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);
     }
 
-    // @ts-expect-error -- TSCONVERSION
     const ids = docs.map(d => `${d._id}.yml`);
     return [...ids, ...otherFolders].sort();
   }
@@ -197,13 +188,13 @@ export class NeDBClient {
     }
 
     if (fileBuff) {
-      const doc = YAML.parse(fileBuff.toString());
+      const doc: BaseModel = YAML.parse(fileBuff.toString());
       return new Stat({
         type: 'file',
         mode: 0o777,
         size: fileBuff.length,
+        // @ts-expect-error should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino
         ino: doc._id,
-        // should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino I think flow should have detected this
         mtimeMs: doc.modified,
       });
     } else {

@@ -76,10 +76,9 @@ class ResponseTimelineViewer extends PureComponent<Props, State> {
       case 'TEXT':
         prefix = '* ';
         break;
-    }
 
-    if (prefix === null) {
-      return null;
+      default:
+        return null;
     }
 
     const lines = (value + '').replace(/\n$/, '').split('\n');

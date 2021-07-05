@@ -19,6 +19,8 @@ import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
 import * as git from 'isomorphic-git';
 import { RootState } from '.';
 import { selectActiveSpace } from '../selectors';
+import { BaseModel } from '../../../models';
+import { forceWorkspaceScopeToDesign } from '../../../sync/git/force-workspace-scope-to-design';
 
 export type UpdateGitRepositoryCallback = (arg0: { gitRepository: GitRepository }) => void;
 
@@ -253,11 +255,12 @@ export const cloneGitRepository = ({ createFsClient }: {
               for (const docFileName of await fsClient.promises.readdir(modelDir)) {
                 const docPath = path.join(modelDir, docFileName);
                 const docYaml = await fsClient.promises.readFile(docPath);
-                const doc = YAML.parse(docYaml.toString());
+                const doc: BaseModel = YAML.parse(docYaml.toString());
                 if (isWorkspace(doc)) {
                   // @ts-expect-error parentId can be string or null for a workspace
                   doc.parentId = activeSpace?._id || null;
                 }
+                forceWorkspaceScopeToDesign(doc);
                 await db.upsert(doc);
               }
             }

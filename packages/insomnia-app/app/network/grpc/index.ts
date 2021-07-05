@@ -170,6 +170,9 @@ export const start = async (
     case GrpcMethodTypeEnum.bidi:
       call = _makeBidiStreamRequest(requestParams);
       break;
+
+    default:
+      return;
   }
 
   if (!call) {

@@ -54,6 +54,7 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { Environment, isEnvironment } from '../../../models/environment';
 import { BASE_SPACE_ID } from '../../../models/space';
+import { unreachableCase } from 'ts-assert-unreachable';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -640,6 +641,9 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
           case VALUE_JSON:
             stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'json');
             break;
+
+          default:
+            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
@@ -730,6 +734,9 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
           case VALUE_JSON:
             stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'json');
             break;
+
+          default:
+            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
