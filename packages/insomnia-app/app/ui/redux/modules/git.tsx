@@ -3,8 +3,8 @@ import type { GitRepository } from '../../../models/git-repository';
 import { showAlert, showError, showModal } from '../../components/modals';
 import GitRepositorySettingsModal from '../../components/modals/git-repository-settings-modal';
 import * as models from '../../../models';
-import type { Workspace } from '../../../models/workspace';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { Workspace, WorkspaceScopeKeys } from '../../../models/workspace';
+
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
 import path from 'path';
 import { loadStart, loadStop, setActiveWorkspace } from './global';
@@ -17,6 +17,8 @@ import { database as db } from '../../../common/database';
 import { createWorkspace } from './workspace';
 import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
 import * as git from 'isomorphic-git';
+import { BaseModel } from '../../../models';
+import { forceWorkspaceScopeToDesign } from '../../../sync/git/force-workspace-scope-to-design';
 
 export type UpdateGitRepositoryCallback = (arg0: { gitRepository: GitRepository }) => void;
 
@@ -249,7 +251,8 @@ export const cloneGitRepository = ({ createFsClient }: {
               for (const docFileName of await fsClient.promises.readdir(modelDir)) {
                 const docPath = path.join(modelDir, docFileName);
                 const docYaml = await fsClient.promises.readFile(docPath);
-                const doc = YAML.parse(docYaml.toString());
+                const doc: BaseModel = YAML.parse(docYaml.toString());
+                forceWorkspaceScopeToDesign(doc);
                 await db.upsert(doc);
               }
             }
