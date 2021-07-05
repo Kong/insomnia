@@ -99,8 +99,8 @@ export class NeDBClient {
     if (isWorkspace(doc)) {
       console.log('[git] setting workspace parent to be that of the active space', { original: doc.parentId, new: this._spaceId });
       // Whenever we write a workspace into nedb we should set the parentId to be that of the current space
-      // This is because the parentId is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the space
-      // In order to reproduce this bug, comment out the following line, then clone a repository into a local space, then open the workspace
+      // This is because the parentId (or a space) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the space on the client
+      // In order to reproduce this bug, comment out the following line, then clone a repository into a local space, then open the workspace, you'll notice it will have moved into the base space
       // @ts-expect-error parentId can be string or null for a workspace
       doc.parentId = this._spaceId;
     }
