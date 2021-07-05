@@ -56,6 +56,7 @@ export class NeDBClient {
       throw this._errMissing(filePath);
     }
 
+    // When git is reading from NeDb, reset keys we wish to ignore to their original values
     resetKeys(doc);
 
     // It would be nice to be able to add this check here but we can't since
