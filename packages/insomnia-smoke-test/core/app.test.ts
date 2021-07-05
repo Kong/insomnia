@@ -59,6 +59,7 @@ describe('Application launch', function() {
       // Click dropdown and open import modal
       await home.documentListingShown(app);
       await home.createNewCollection(app);
+      await debug.pageDisplayed(app);
       const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
       await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
 
@@ -155,6 +156,8 @@ describe('Application launch', function() {
     // Expect one document at home
     await home.documentListingShown(app);
     const collectionName = await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
+
     await debug.goToDashboard(app);
     await home.expectTotalDocuments(app, 1);
     await home.expectDocumentWithTitle(app, collectionName);
