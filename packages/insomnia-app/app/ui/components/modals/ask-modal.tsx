@@ -14,6 +14,14 @@ interface State {
   loading: boolean;
 }
 
+interface AskModalOptions {
+  title?: string;
+  message?: string;
+  onDone?: (success: boolean) => Promise<void>;
+  yesText?: string;
+  noText?: string;
+}
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class AskModal extends PureComponent<{}, State> {
   state: State = {
@@ -26,8 +34,9 @@ class AskModal extends PureComponent<{}, State> {
 
   modal: Modal | null = null;
   yesButton: HTMLButtonElement | null = null;
-  _doneCallback: Function = () => {};
-  _promiseCallback: Function = () => {};
+
+  _doneCallback: AskModalOptions['onDone'];
+  _promiseCallback: (value: boolean | PromiseLike<boolean>) => void = () => {};
 
   _setModalRef(m: Modal) {
     this.modal = m;
@@ -42,19 +51,17 @@ class AskModal extends PureComponent<{}, State> {
       loading: true,
     });
 
-    if (this._doneCallback) {
-      // Wait for the callback to finish before closing
-      await this._doneCallback(true);
-    }
+    // Wait for the callback to finish before closing
+    await this._doneCallback?.(true);
 
     this._promiseCallback(true);
 
     this.hide();
   }
 
-  _handleNo() {
+  async _handleNo() {
     this.hide();
-    this?._doneCallback(false);
+    await this._doneCallback?.(false);
 
     this._promiseCallback(false);
   }
@@ -63,8 +70,7 @@ class AskModal extends PureComponent<{}, State> {
     this.modal?.hide();
   }
 
-  show(options: any = {}) {
-    const { title, message, onDone, yesText, noText } = options;
+  show({ title, message, onDone, yesText, noText }: AskModalOptions = {}) {
     this._doneCallback = onDone;
     this.setState({
       title: title || 'Confirm',
@@ -74,10 +80,12 @@ class AskModal extends PureComponent<{}, State> {
       loading: false,
     });
     this.modal?.show();
+
     setTimeout(() => {
       this.yesButton && this.yesButton.focus();
     }, 100);
-    return new Promise(resolve => {
+
+    return new Promise<boolean>(resolve => {
       this._promiseCallback = resolve;
     });
   }
