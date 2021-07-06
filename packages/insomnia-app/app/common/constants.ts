@@ -205,6 +205,7 @@ export const PREVIEW_MODES = Object.keys(previewModeMap);
 
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
+export const CONTENT_TYPE_TEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'text/yaml';
 export const CONTENT_TYPE_EDN = 'application/edn';
@@ -221,6 +222,7 @@ const contentTypesMap = {
   [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
   [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
   [CONTENT_TYPE_OTHER]: ['Other', 'Other'],
+  [CONTENT_TYPE_TEXT]: ['Plain', 'Plain'],
   [CONTENT_TYPE_XML]: ['XML', 'XML'],
   [CONTENT_TYPE_YAML]: ['YAML', 'YAML'],
 };

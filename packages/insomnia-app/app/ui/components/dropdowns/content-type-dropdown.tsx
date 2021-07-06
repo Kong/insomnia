@@ -101,6 +101,7 @@ class ContentTypeDropdown extends PureComponent<Props> {
             <i className="fa fa-code" /> Text
           </span>
         </DropdownDivider>
+		{this._renderDropdownItem(CONTENT_TYPE_TEXT)}
         {this._renderDropdownItem(CONTENT_TYPE_JSON)}
         {this._renderDropdownItem(CONTENT_TYPE_XML)}
         {this._renderDropdownItem(CONTENT_TYPE_YAML)}
