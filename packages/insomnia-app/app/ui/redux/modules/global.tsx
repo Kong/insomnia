@@ -1,16 +1,10 @@
-import electron, { OpenDialogOptions } from 'electron';
+import electron from 'electron';
 import React, { Fragment } from 'react';
 import { combineReducers, Dispatch } from 'redux';
 import fs, { NoParamCallback } from 'fs';
 import path from 'path';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import moment from 'moment';
-import {
-  ImportRawConfig,
-  ImportResult,
-  importRaw,
-  importUri as _importUri,
-} from '../../../common/import';
 import {
   exportRequestsData,
   exportRequestsHAR,
@@ -31,13 +25,11 @@ import SettingsModal, {
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
 import install from '../../../plugins/install';
-import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace, askToSetWorkspaceScope } from './helpers';
 import { createPlugin } from '../../../plugins/create';
 import { reloadPlugins } from '../../../plugins';
 import { setTheme } from '../../../plugins/misc';
 import type { GlobalActivity } from '../../../common/constants';
-import { isWorkspace, Workspace, WorkspaceScope } from '../../../models/workspace';
+import { isWorkspace } from '../../../models/workspace';
 import {
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
@@ -55,6 +47,7 @@ import { Request } from '../../../models/request';
 import { Environment, isEnvironment } from '../../../models/environment';
 import { BASE_SPACE_ID } from '../../../models/space';
 import { unreachableCase } from 'ts-assert-unreachable';
+import { importUri } from './import';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -387,141 +380,6 @@ export const setActiveWorkspace = (workspaceId: string | null) => {
     type: SET_ACTIVE_WORKSPACE,
     workspaceId,
   };
-};
-
-export interface ImportOptions {
-  workspaceId?: string
-  forceToWorkspace?: ForceToWorkspace;
-  forceToScope?: WorkspaceScope;
-}
-
-export const importFile = (
-  { workspaceId, forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
-  dispatch(loadStart());
-  const options: OpenDialogOptions = {
-    title: 'Import Insomnia Data',
-    buttonLabel: 'Import',
-    properties: ['openFile'],
-    filters: [
-      // @ts-expect-error https://github.com/electron/electron/pull/29322
-      {
-        extensions: [
-          '',
-          'sh',
-          'txt',
-          'json',
-          'har',
-          'curl',
-          'bash',
-          'shell',
-          'yaml',
-          'yml',
-          'wsdl',
-        ],
-      },
-    ],
-  };
-  const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
-
-  if (canceled) {
-    // It was cancelled, so let's bail out
-    dispatch(loadStop());
-    return;
-  }
-
-  // Let's import all the files!
-  for (const filePath of filePaths) {
-    try {
-      const uri = `file://${filePath}`;
-      const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-      };
-      const result = await _importUri(uri, options);
-      handleImportResult(result, 'The file does not contain a valid specification.');
-    } catch (err) {
-      showModal(AlertModal, {
-        title: 'Import Failed',
-        message: err + '',
-      });
-    } finally {
-      dispatch(loadStop());
-    }
-  }
-};
-
-const handleImportResult = (result: ImportResult, errorMessage: string) => {
-  const { error, summary } = result;
-
-  if (error) {
-    showError({
-      title: 'Import Failed',
-      message: errorMessage,
-      error,
-    });
-    return [];
-  }
-
-  models.stats.incrementRequestStats({
-    createdRequests: summary[models.request.type].length + summary[models.grpcRequest.type].length,
-  });
-  return (summary[models.workspace.type] as Workspace[]) || [];
-};
-
-export const importClipBoard = (
-  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
-  dispatch(loadStart());
-  const schema = electron.clipboard.readText();
-
-  if (!schema) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: 'Your clipboard appears to be empty.',
-    });
-    return;
-  }
-
-  // Let's import all the paths!
-  try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    };
-    const result = await importRaw(schema, options);
-    handleImportResult(result, 'Your clipboard does not contain a valid specification.');
-  } catch (err) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: 'Your clipboard does not contain a valid specification.',
-    });
-  } finally {
-    dispatch(loadStop());
-  }
-};
-
-export const importUri = (
-  uri: string,
-  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
-  dispatch(loadStart());
-
-  try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    };
-    const result = await _importUri(uri, options);
-    handleImportResult(result, 'The URI does not contain a valid specification.');
-  } catch (err) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: err + '',
-    });
-  } finally {
-    dispatch(loadStop());
-  }
 };
 
 const VALUE_JSON = 'json';
