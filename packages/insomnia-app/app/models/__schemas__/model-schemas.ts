@@ -34,7 +34,6 @@ export const workspaceModelSchema: Schema<Workspace> = {
   ...toSchema(workspace.init()),
   certificates: () => undefined,
   type: () => workspace.type,
-
 };
 
 export const requestModelSchema: Schema<Request> = {

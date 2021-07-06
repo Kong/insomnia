@@ -152,7 +152,7 @@ describe('NeDBClient', () => {
       const upsertSpy = jest.spyOn(db, 'upsert');
 
       // @ts-expect-error not sure why scope is being typed as never
-      workspaceBuilder._id(workspaceId).scope('design');
+      workspaceBuilder._id(workspaceId).scope('design').certificates(null);
 
       // @ts-expect-error parentId can be string or null for a workspace
       const workspaceInFile = workspaceBuilder.parentId(null).build();
@@ -178,7 +178,7 @@ describe('NeDBClient', () => {
       const neDbClient = new NeDBClient(workspaceId, spaceId);
       const upsertSpy = jest.spyOn(db, 'upsert');
 
-      workspaceBuilder._id(workspaceId).parentId(spaceId);
+      workspaceBuilder._id(workspaceId).parentId(spaceId).certificates(null);
 
       // @ts-expect-error not sure why scope is being typed as never
       const workspaceInFile = workspaceBuilder.scope('collection').build();
