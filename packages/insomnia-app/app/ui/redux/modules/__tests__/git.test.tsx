@@ -22,6 +22,7 @@ import { mocked } from 'ts-jest/utils';
 import { PromiseFsClient } from 'isomorphic-git';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
+import reduxStateForTest from '../../../../__jest__/redux-state-for-test';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');
@@ -38,7 +39,7 @@ describe('git', () => {
   let store;
   beforeEach(async () => {
     await globalBeforeEach();
-    store = mockStore({ entities: { spaces: [] }, global: {} });
+    store = mockStore(await reduxStateForTest());
     gitRepoBuilder.reset();
   });
 

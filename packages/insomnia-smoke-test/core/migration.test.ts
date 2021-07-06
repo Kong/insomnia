@@ -27,8 +27,7 @@ describe('Migration', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    await home.expectTotalDocuments(app, 1);
-    await home.expectDocumentWithTitle(app, 'Insomnia');
+    await home.expectTotalDocuments(app, 0);
 
     await app.restart();
     await client.focusAfterRestart(app);
@@ -55,8 +54,7 @@ describe('Migration', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    await home.expectTotalDocuments(app, 2);
-    await home.expectDocumentWithTitle(app, 'Insomnia');
+    await home.expectTotalDocuments(app, 1);
     await home.expectDocumentWithTitle(app, 'BASIC-DESIGNER-FIXTURE'); // imported from fixture
 
     await app.restart();
