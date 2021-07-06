@@ -12,6 +12,8 @@ import AlertModal from '../../components/modals/alert-modal';
 import { loadStart, loadStop } from './global';
 import { ForceToWorkspace, askToSetWorkspaceScope, askToImportIntoWorkspace } from './helpers';
 import * as models from '../../../models';
+import { GetState, RootState } from '.';
+import { selectActiveSpace } from '../selectors';
 
 export interface ImportOptions {
   workspaceId?: string;
@@ -37,11 +39,17 @@ const handleImportResult = (result: ImportResult, errorMessage: string) => {
   return (summary[models.workspace.type] as Workspace[]) || [];
 };
 
-export const importFile = (
-  { workspaceId, forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
+const convertToRawConfig = ({ forceToScope, forceToWorkspace, workspaceId }: ImportOptions, state: RootState): ImportRawConfig => ({
+  getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+  getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
+  // Currently, just return the active space instead of prompting for which space to import into
+  getSpaceId: () => selectActiveSpace(state)?._id || null,
+});
+
+export const importFile = (options: ImportOptions = {}) => async (dispatch: Dispatch, getState: GetState) => {
   dispatch(loadStart());
-  const options: OpenDialogOptions = {
+
+  const openDialogOptions: OpenDialogOptions = {
     title: 'Import Insomnia Data',
     buttonLabel: 'Import',
     properties: ['openFile'],
@@ -64,7 +72,7 @@ export const importFile = (
       },
     ],
   };
-  const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
+  const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(openDialogOptions);
 
   if (canceled) {
     // It was cancelled, so let's bail out
@@ -76,11 +84,8 @@ export const importFile = (
   for (const filePath of filePaths) {
     try {
       const uri = `file://${filePath}`;
-      const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-      };
-      const result = await _importUri(uri, options);
+      const config = convertToRawConfig(options, getState());
+      const result = await _importUri(uri, config);
       handleImportResult(result, 'The file does not contain a valid specification.');
     } catch (err) {
       showModal(AlertModal, {
@@ -93,9 +98,7 @@ export const importFile = (
   }
 };
 
-export const importClipBoard = (
-  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
+export const importClipBoard = (options: ImportOptions = {}) => async (dispatch: Dispatch, getState: GetState) => {
   dispatch(loadStart());
   const schema = electron.clipboard.readText();
 
@@ -109,11 +112,8 @@ export const importClipBoard = (
 
   // Let's import all the paths!
   try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    };
-    const result = await importRaw(schema, options);
+    const config = convertToRawConfig(options, getState());
+    const result = await importRaw(schema, config);
     handleImportResult(result, 'Your clipboard does not contain a valid specification.');
   } catch (err) {
     showModal(AlertModal, {
@@ -127,16 +127,12 @@ export const importClipBoard = (
 
 export const importUri = (
   uri: string,
-  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
+  options: ImportOptions = {},
+) => async (dispatch: Dispatch, getState: GetState) => {
   dispatch(loadStart());
-
   try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    };
-    const result = await _importUri(uri, options);
+    const config = convertToRawConfig(options, getState());
+    const result = await _importUri(uri, config);
     handleImportResult(result, 'The URI does not contain a valid specification.');
   } catch (err) {
     showModal(AlertModal, {
