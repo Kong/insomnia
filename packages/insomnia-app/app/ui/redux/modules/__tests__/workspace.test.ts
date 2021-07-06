@@ -13,6 +13,7 @@ import { Environment } from '../../../../models/environment';
 import { CookieJar } from '../../../../models/cookie-jar';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { ApiSpec } from '../../../../models/api-spec';
+import reduxStateForTest from '../../../../__jest__/redux-state-for-test';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
@@ -111,9 +112,7 @@ describe('workspace', () => {
     });
 
     it('should create with no space', async () => {
-      const entities = { spaces: {} };
-      const global = { };
-      const store = mockStore({ entities, global });
+      const store = mockStore(await reduxStateForTest());
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
