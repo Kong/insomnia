@@ -8,7 +8,7 @@ import { ACTIVITY_HOME } from '../../../../common/constants';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE } from '../global';
 import { getAndClearShowAlertMockArgs, getAndClearShowPromptMockArgs } from '../../../../test-utils';
 import { BASE_SPACE_ID } from '../../../../models/space';
-import reduxStateForTest from '../../../../__jest__/redux-state-for-test';
+import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');

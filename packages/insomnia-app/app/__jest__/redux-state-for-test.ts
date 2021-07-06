@@ -3,7 +3,7 @@ import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
 import { GlobalState } from '../ui/redux/modules/global';
 
-const reduxStateForTest = async (global: Partial<GlobalState> = {}): Promise<RootState> => ({
+export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Promise<RootState> => ({
   entities: entities.reducer(entities.initialEntitiesState, entities.initializeWith(await entities.allDocs())),
   global: {
     activeWorkspaceId: null,
@@ -15,5 +15,3 @@ const reduxStateForTest = async (global: Partial<GlobalState> = {}): Promise<Roo
     ...global,
   },
 });
-
-export default reduxStateForTest;
