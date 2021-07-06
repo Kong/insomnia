@@ -4,17 +4,18 @@ import 'swagger-ui-react/swagger-ui.css';
 import { showPrompt } from './modals';
 import type { BaseModel } from '../../models';
 import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
-import type { HandleImportFileCallback, HandleImportUriCallback, WrapperProps } from './wrapper';
+import type { WrapperProps } from './wrapper';
 import { database as db } from '../../common/database';
-import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import OnboardingContainer from './onboarding-container';
 import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
 import Analytics from './analytics';
+import { bindActionCreators } from 'redux';
+import { importFile, importUri } from '../redux/modules/import';
+import { connect } from 'react-redux';
+import { ForceToWorkspace } from '../redux/modules/helpers';
 
-interface Props {
+interface Props extends ReturnType<typeof mapDispatchToProps> {
   wrapperProps: WrapperProps;
-  handleImportFile: HandleImportFileCallback;
-  handleImportUri: HandleImportUriCallback;
 }
 
 interface State {
@@ -64,9 +65,8 @@ class WrapperOnboarding extends PureComponent<Props, State> {
   }
 
   _handleImportFile() {
-    const { handleImportFile } = this.props;
-    handleImportFile({
-      forceToWorkspace: ForceToWorkspaceKeys.new,
+    this.props.handleImportFile({
+      forceToWorkspace: ForceToWorkspace.new,
       forceToScope: WorkspaceScopeKeys.design,
     });
   }
@@ -80,7 +80,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
       label: 'URI to Import',
       onComplete: value => {
         handleImportUri(value, {
-          forceToWorkspace: ForceToWorkspaceKeys.new,
+          forceToWorkspace: ForceToWorkspace.new,
           forceToScope: WorkspaceScopeKeys.design,
         });
       },
@@ -160,4 +160,16 @@ class WrapperOnboarding extends PureComponent<Props, State> {
   }
 }
 
-export default WrapperOnboarding;
+const mapDispatchToProps = (dispatch) => {
+  const bound = bindActionCreators({
+    importFile,
+    importUri,
+  }, dispatch);
+
+  return ({
+    handleImportFile: bound.importFile,
+    handleImportUri: bound.importUri,
+  });
+};
+
+export default connect(null, mapDispatchToProps)(WrapperOnboarding);

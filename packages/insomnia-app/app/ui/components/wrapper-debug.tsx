@@ -1,7 +1,7 @@
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import PageLayout from './page-layout';
-import type { HandleImportFileCallback, WrapperProps } from './wrapper';
+import type { WrapperProps } from './wrapper';
 import RequestPane from './panes/request-pane';
 import ErrorBoundary from './error-boundary';
 import ResponsePane from './panes/response-pane';
@@ -30,7 +30,6 @@ interface Props {
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleImportFile: HandleImportFileCallback;
   handleRequestCreate: () => void;
   handleRequestGroupCreate: () => void;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
@@ -196,7 +195,6 @@ class WrapperDebug extends PureComponent<Props> {
       handleForceUpdateRequest,
       handleForceUpdateRequestHeaders,
       handleImport,
-      handleImportFile,
       handleSendAndDownloadRequestWithActiveEnvironment,
       handleSendRequestWithActiveEnvironment,
       handleUpdateRequestAuthentication,
@@ -261,7 +259,6 @@ class WrapperDebug extends PureComponent<Props> {
           handleGenerateCode={handleGenerateCodeForActiveRequest}
           handleGetRenderContext={handleGetRenderContext}
           handleImport={handleImport}
-          handleImportFile={handleImportFile}
           handleRender={handleRender}
           handleSend={handleSendRequestWithActiveEnvironment}
           handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}

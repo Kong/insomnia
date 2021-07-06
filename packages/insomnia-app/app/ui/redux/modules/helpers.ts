@@ -1,14 +1,11 @@
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
-import { ValueOf } from 'type-fest';
 
-export const ForceToWorkspaceKeys = {
-  new: 'new',
-  current: 'current',
-} as const;
-
-export type ForceToWorkspace = ValueOf<typeof ForceToWorkspaceKeys>;
+export enum ForceToWorkspace {
+  new = 'new',
+  current = 'current'
+}
 
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
 export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; }): ImportToWorkspacePrompt {
@@ -18,10 +15,10 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { wo
     }
 
     switch (forceToWorkspace) {
-      case ForceToWorkspaceKeys.new:
+      case ForceToWorkspace.new:
         return null;
 
-      case ForceToWorkspaceKeys.current:
+      case ForceToWorkspace.current:
         return workspaceId;
 
       default:
