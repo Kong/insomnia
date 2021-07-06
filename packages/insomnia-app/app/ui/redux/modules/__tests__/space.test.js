@@ -8,6 +8,7 @@ import { ACTIVITY_HOME } from '../../../../common/constants';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE } from '../global';
 import { getAndClearShowAlertMockArgs, getAndClearShowPromptMockArgs } from '../../../../test-utils';
 import { BASE_SPACE_ID } from '../../../../models/space';
+import reduxStateForTest from '../../../../__jest__/redux-state-for-test';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
@@ -19,7 +20,7 @@ describe('space', () => {
   beforeEach(globalBeforeEach);
   describe('createSpace', () => {
     it('should create space', async () => {
-      const store = mockStore();
+      const store = mockStore(await reduxStateForTest());
       store.dispatch(createSpace());
 
       const {
@@ -63,7 +64,7 @@ describe('space', () => {
 
   describe('removeSpace', () => {
     it('should remove space', async () => {
-      const store = mockStore();
+      const store = mockStore(await reduxStateForTest());
       const spaceOne = await models.space.create({ name: 'My Space' });
       const spaceTwo = await models.space.create();
 
