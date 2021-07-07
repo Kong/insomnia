@@ -135,12 +135,7 @@ class SettingsModal extends PureComponent<Props, State> {
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ThemePanel
-                activeTheme={settings.theme}
-                settings={settings}
                 handleAutoDetectColorSchemeChange={this._handleAutoDetectColorSchemeChange}
-                autoDetectColorScheme={settings.autoDetectColorScheme}
-                activeLightTheme={settings.lightTheme}
-                activeDarkTheme={settings.darkTheme}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">

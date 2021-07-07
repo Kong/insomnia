@@ -6,6 +6,8 @@ import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import { RequireExactlyOne } from 'type-fest';
 import { Settings } from '../../../models/settings';
+import { useSelector } from 'react-redux';
+import { selectSettings } from '../../redux/selectors';
 
 const THEMES_PER_ROW = 5;
 
@@ -126,12 +128,7 @@ const OverlaySide = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
 }));
 
 interface Props {
-  activeTheme: PluginTheme['name'];
   handleAutoDetectColorSchemeChange: (arg0: boolean) => void;
-  autoDetectColorScheme: boolean;
-  activeLightTheme: PluginTheme['name'];
-  activeDarkTheme: PluginTheme['name'];
-  settings: Settings;
 }
 
 const SunSvg = () => (
@@ -291,14 +288,16 @@ const IndividualTheme: FC<{
 };
 
 export const ThemePanel: FC<Props> = ({
-  activeDarkTheme,
-  activeLightTheme,
-  activeTheme,
-  autoDetectColorScheme,
-  settings,
   handleAutoDetectColorSchemeChange,
 }) => {
   const [themes, setThemes] = useState<PluginTheme[]>([]);
+  const settings = useSelector(selectSettings);
+  const {
+    autoDetectColorScheme,
+    theme: activeTheme,
+    lightTheme: activeLightTheme,
+    darkTheme: activeDarkTheme,
+  } = settings;
 
   useEffect(() => {
     getThemes().then(pluginThemes => {
