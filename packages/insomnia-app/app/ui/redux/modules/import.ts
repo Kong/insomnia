@@ -1,5 +1,5 @@
 import electron, { OpenDialogOptions } from 'electron';
-import { Dispatch } from 'redux';
+import { AnyAction } from 'redux';
 import {
   ImportRawConfig,
   ImportResult,
@@ -12,8 +12,9 @@ import AlertModal from '../../components/modals/alert-modal';
 import { loadStart, loadStop } from './global';
 import { ForceToWorkspace, askToSetWorkspaceScope, askToImportIntoWorkspace } from './helpers';
 import * as models from '../../../models';
-import { GetState, RootState } from '.';
+import { RootState } from '.';
 import { selectActiveSpace } from '../selectors';
+import { ThunkAction } from 'redux-thunk';
 
 export interface ImportOptions {
   workspaceId?: string;
@@ -46,7 +47,9 @@ const convertToRawConfig = ({ forceToScope, forceToWorkspace, workspaceId }: Imp
   getSpaceId: () => selectActiveSpace(state)?._id || null,
 });
 
-export const importFile = (options: ImportOptions = {}) => async (dispatch: Dispatch, getState: GetState) => {
+export const importFile = (
+  options: ImportOptions = {},
+): ThunkAction<void, RootState, void, AnyAction> => async (dispatch, getState) => {
   dispatch(loadStart());
 
   const openDialogOptions: OpenDialogOptions = {
@@ -98,7 +101,9 @@ export const importFile = (options: ImportOptions = {}) => async (dispatch: Disp
   }
 };
 
-export const importClipBoard = (options: ImportOptions = {}) => async (dispatch: Dispatch, getState: GetState) => {
+export const importClipBoard = (
+  options: ImportOptions = {},
+): ThunkAction<void, RootState, void, AnyAction> => async (dispatch, getState) => {
   dispatch(loadStart());
   const schema = electron.clipboard.readText();
 
@@ -128,7 +133,7 @@ export const importClipBoard = (options: ImportOptions = {}) => async (dispatch:
 export const importUri = (
   uri: string,
   options: ImportOptions = {},
-) => async (dispatch: Dispatch, getState: GetState) => {
+): ThunkAction<void, RootState, void, AnyAction> => async (dispatch, getState) => {
   dispatch(loadStart());
   try {
     const config = convertToRawConfig(options, getState());

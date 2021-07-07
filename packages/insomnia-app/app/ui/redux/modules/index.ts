@@ -44,5 +44,3 @@ export interface RootState {
   entities: entities.EntitiesState
   global: global.GlobalState,
 }
-
-export type GetState = () => RootState;
