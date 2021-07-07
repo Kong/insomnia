@@ -14,7 +14,9 @@ import { importFile, importUri } from '../redux/modules/import';
 import { connect } from 'react-redux';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 
-interface Props extends ReturnType<typeof mapDispatchToProps> {
+type ReduxProps = ReturnType<typeof mapDispatchToProps>;
+
+interface Props extends ReduxProps {
   wrapperProps: WrapperProps;
 }
 
