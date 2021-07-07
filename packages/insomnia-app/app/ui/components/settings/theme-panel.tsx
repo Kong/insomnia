@@ -5,6 +5,7 @@ import { applyColorScheme, PluginTheme } from '../../../plugins/misc';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
 import { RequireExactlyOne } from 'type-fest';
+import { Settings } from '../../../models/settings';
 
 const THEMES_PER_ROW = 5;
 
@@ -130,7 +131,7 @@ interface Props {
   autoDetectColorScheme: boolean;
   activeLightTheme: PluginTheme['name'];
   activeDarkTheme: PluginTheme['name'];
-  settings: any; // TODO
+  settings: Settings;
 }
 
 const SunSvg = () => (

@@ -18,6 +18,7 @@ import { applyColorScheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Account from '../settings/account';
 import { showModal } from './index';
+import { Settings } from '../../../models/settings';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
@@ -25,7 +26,7 @@ export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
 interface Props {
-  settings: any;
+  settings: Settings;
 }
 
 interface State {
