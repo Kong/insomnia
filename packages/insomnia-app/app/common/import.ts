@@ -39,7 +39,7 @@ interface ConvertResult {
 
 export interface ImportRawConfig {
   getWorkspaceId: ImportToWorkspacePrompt;
-  getSpaceId: () => string | null;
+  getSpaceId?: () => string | null;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
@@ -335,11 +335,13 @@ async function updateWorkspaceScope(
 
 async function createWorkspaceInSpace(
   resource: Workspace,
-  getSpaceId: () => string | null,
+  getSpaceId?: () => string | null,
 ) {
-  // Set the workspace parent if creating a new workspace during import
-  // @ts-expect-error workspace parent can be null or string
-  resource.parentId = getSpaceId();
+  if (getSpaceId) {
+    // Set the workspace parent if creating a new workspace during import
+    // @ts-expect-error workspace parent can be null or string
+    resource.parentId = getSpaceId();
+  }
 }
 
 export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) => (
