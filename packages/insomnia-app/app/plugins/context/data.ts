@@ -5,7 +5,6 @@ import type { ImportRawConfig } from '../../common/import';
 
 interface PluginImportOptions {
   workspaceId?: string;
-  spaceId?: string;
   scope?: WorkspaceScope;
 }
 
@@ -22,7 +21,6 @@ const buildImportRawConfig = (options: PluginImportOptions): ImportRawConfig => 
   getWorkspaceScope: options.scope && (() => (
     Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
   ),
-  getSpaceId: () => options.spaceId || null,
 });
 
 export const init = () => ({
