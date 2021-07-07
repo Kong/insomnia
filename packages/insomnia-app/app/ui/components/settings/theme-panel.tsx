@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useEffect, useState } from 'react';
+import React, { ChangeEvent, FC, useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ColorScheme, getThemes } from '../../../plugins';
 import { applyColorScheme, PluginTheme } from '../../../plugins/misc';
@@ -126,10 +126,6 @@ const OverlaySide = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
     border: '1px solid var(--color-surprise)',
   },
 }));
-
-interface Props {
-  handleAutoDetectColorSchemeChange: (arg0: boolean) => void;
-}
 
 const SunSvg = () => (
   <svg
@@ -287,9 +283,7 @@ const IndividualTheme: FC<{
   );
 };
 
-export const ThemePanel: FC<Props> = ({
-  handleAutoDetectColorSchemeChange,
-}) => {
+export const ThemePanel: FC = () => {
   const [themes, setThemes] = useState<PluginTheme[]>([]);
   const settings = useSelector(selectSettings);
   const {
@@ -312,6 +306,19 @@ export const ThemePanel: FC<Props> = ({
     return theme.name === activeTheme;
   }, [activeLightTheme, activeDarkTheme, activeTheme, autoDetectColorScheme]);
 
+  const onChangeAutoDetectColorScheme = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const autoDetectColorScheme = event.target.checked;
+    applyColorScheme({
+      ...settings,
+      autoDetectColorScheme,
+    }).then(() => {
+      models.settings.update(settings, {
+        autoDetectColorScheme,
+      });
+    });
+
+  }, [settings]);
+
   const osThemeCheckbox = (
     <div className="form-control form-control--thin">
       <label className="inline-block">
@@ -323,9 +330,7 @@ export const ThemePanel: FC<Props> = ({
           type="checkbox"
           name="autoDetectColorScheme"
           checked={autoDetectColorScheme}
-          onChange={event => {
-            handleAutoDetectColorSchemeChange(event.target.checked);
-          }}
+          onChange={onChangeAutoDetectColorScheme}
         />
       </label>
     </div>

@@ -51,17 +51,6 @@ class SettingsModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleAutoDetectColorSchemeChange(autoDetectColorScheme, persist = true) {
-    const { settings } = this.props;
-    applyColorScheme({ ...settings, autoDetectColorScheme });
-
-    if (persist) {
-      models.settings.update(settings, {
-        autoDetectColorScheme,
-      });
-    }
-  }
-
   async _handleUpdateKeyBindings(hotKeyRegistry) {
     models.settings.update(this.props.settings, {
       hotKeyRegistry,
@@ -134,9 +123,7 @@ class SettingsModal extends PureComponent<Props, State> {
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <ThemePanel
-                handleAutoDetectColorSchemeChange={this._handleAutoDetectColorSchemeChange}
-              />
+              <ThemePanel />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <SettingsShortcuts
