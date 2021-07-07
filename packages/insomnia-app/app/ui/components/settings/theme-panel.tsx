@@ -333,7 +333,7 @@ export const ThemePanel: FC<Props> = ({
   );
 
   const onChangeTheme = useCallback((themeName: string, colorScheme: ColorScheme) => {
-    let patch;
+    let patch: Partial<Settings>;
 
     switch (colorScheme) {
       case 'light':
