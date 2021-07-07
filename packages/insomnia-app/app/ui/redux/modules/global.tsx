@@ -538,24 +538,28 @@ const showSelectExportTypeModal = ({ onCancel, onDone }: {
   onCancel: () => void;
   onDone: (selectedFormat: SelectedFormat) => Promise<void>;
 }) => {
+  const options = [
+    {
+      name: 'Insomnia v4 (JSON)',
+      value: VALUE_JSON,
+    },
+    {
+      name: 'Insomnia v4 (YAML)',
+      value: VALUE_YAML,
+    },
+    {
+      name: 'HAR – HTTP Archive Format',
+      value: VALUE_HAR,
+    },
+  ];
+
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_JSON;
+
   showModal(SelectModal, {
     title: 'Select Export Type',
-    value: lastFormat,
-    options: [
-      {
-        name: 'Insomnia v4 (JSON)',
-        value: VALUE_JSON,
-      },
-      {
-        name: 'Insomnia v4 (YAML)',
-        value: VALUE_YAML,
-      },
-      {
-        name: 'HAR – HTTP Archive Format',
-        value: VALUE_HAR,
-      },
-    ],
+    value: defaultValue,
+    options,
     message: 'Which format would you like to export as?',
     onCancel,
     onDone: async (selectedFormat: SelectedFormat) => {
