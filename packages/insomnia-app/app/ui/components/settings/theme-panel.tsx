@@ -1,17 +1,16 @@
-import React, { ChangeEvent, FC, useCallback, useEffect, useState } from 'react';
+import React, { ChangeEvent, FC, useCallback } from 'react';
 import styled from 'styled-components';
-import { ColorScheme, getThemes } from '../../../plugins';
-import { applyColorScheme, PluginTheme } from '../../../plugins/misc';
+import { ColorScheme } from '../../../plugins';
+import { PluginTheme } from '../../../plugins/misc';
 import HelpTooltip from '../help-tooltip';
-import * as models from '../../../models';
-import { RequireExactlyOne } from 'type-fest';
-import { Settings } from '../../../models/settings';
 import { useSelector } from 'react-redux';
 import { selectSettings } from '../../redux/selectors';
+import { useThemePlugins } from '../../hooks/theme'; import { unreachableCase } from 'ts-assert-unreachable';
 
 const THEMES_PER_ROW = 5;
 
-type DarkOrLight = RequireExactlyOne<{ $isDark: boolean; $isLight: boolean }>
+const isDark = (theme: string) => theme === 'dark';
+const isLight = (theme: string) => theme === 'light';
 
 const RootWrapper = styled.div({
   paddingTop: 'var(--padding-lg)',
@@ -62,7 +61,7 @@ const ThemeWrapper = styled.div({
   textAlign: 'center',
 });
 
-const ColorSchemeBadge = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
+const ColorSchemeBadge = styled.div<{ $theme: 'dark' | 'light'}>(({ $theme }) => ({
   position: 'absolute',
   top: 0,
   width: 10,
@@ -70,11 +69,11 @@ const ColorSchemeBadge = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
   fill: 'white',
   padding: 4,
   background: 'var(--color-surprise)',
-  ...($isDark ? {
+  ...(isDark($theme) ? {
     right: 0,
     borderBottomLeftRadius: 'var(--radius-md)',
   } : {}),
-  ...($isLight ? {
+  ...(isLight($theme) ? {
     left: 0,
     borderBottomRightRadius: 'var(--radius-md)',
   } : {}),
@@ -90,10 +89,9 @@ const OverlayWrapper = styled.div({
   boxSizing: 'content-box',
 
   display: 'none', // controlled by hover on the ThemeWrapper
-  // display: 'flex', // toggle to debug
 });
 
-const OverlaySide = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
+const OverlaySide = styled.div<{ $theme: 'dark' | 'light' }>(({ $theme }) => ({
   display: 'flex',
   cursor: 'pointer',
   flexGrow: 1,
@@ -112,12 +110,12 @@ const OverlaySide = styled.div<DarkOrLight>(({ $isDark, $isLight }) => ({
   },
   boxSizing: 'border-box',
   border: '1px solid var(--hl-sm)',
-  ...($isDark ? {
+  ...(isDark($theme) ? {
     borderTopRightRadius: 'var(--radius-md)',
     borderBottomRightRadius: 'var(--radius-md)',
     borderLeftStyle: 'none',
   } : {}),
-  ...($isLight ? {
+  ...(isLight($theme) ? {
     borderTopLeftRadius: 'var(--radius-md)',
     borderBottomLeftRadius: 'var(--radius-md)',
     borderRightStyle: 'none',
@@ -138,7 +136,6 @@ const SunSvg = () => (
       d="M12.0002 0.337891C11.5268 0.337891 11.143 0.721647 11.143 1.19503V2.95566C11.143 3.42905 11.5268 3.8128 12.0002 3.8128C12.4736 3.8128 12.8573 3.42905 12.8573 2.95566V1.19504C12.8573 0.721648 12.4736 0.337891 12.0002 0.337891ZM18.857 12.5001C18.857 16.3384 15.787 19.4499 11.9999 19.4499C8.21275 19.4499 5.14269 16.3384 5.14269 12.5001C5.14269 8.66182 8.21275 5.55028 11.9999 5.55028C15.787 5.55028 18.857 8.66182 18.857 12.5001ZM11.1429 22.0444C11.1429 21.5711 11.5267 21.1873 12.0001 21.1873C12.4735 21.1873 12.8572 21.5711 12.8572 22.0444V23.8051C12.8572 24.2785 12.4735 24.6622 12.0001 24.6622C11.5267 24.6622 11.1429 24.2785 11.1429 23.8051V22.0444ZM2.55985 11.6314C3.03964 11.6314 3.42858 12.0204 3.42858 12.5002C3.42858 12.9799 3.03964 13.3689 2.55985 13.3689H0.868728C0.388942 13.3689 0 12.9799 0 12.5002C0 12.0204 0.388943 11.6314 0.868728 11.6314H2.55985ZM24.0006 12.5002C24.0006 12.0204 23.6117 11.6314 23.1319 11.6314H21.4408C20.961 11.6314 20.572 12.0204 20.572 12.5002C20.572 12.9799 20.961 13.3689 21.4407 13.3689H23.1319C23.6117 13.3689 24.0006 12.9799 24.0006 12.5002ZM5.93919 5.12888C6.27392 5.46814 6.27392 6.01818 5.93919 6.35744C5.60445 6.6967 5.06174 6.6967 4.727 6.35744L3.51481 5.12888C3.18008 4.78962 3.18008 4.23957 3.51481 3.90031C3.84955 3.56105 4.39226 3.56105 4.727 3.90031L5.93919 5.12888ZM20.4856 21.1001C20.8203 20.7608 20.8203 20.2108 20.4856 19.8715L19.2734 18.643C18.9387 18.3037 18.3959 18.3037 18.0612 18.643C17.7265 18.9822 17.7265 19.5323 18.0612 19.8715L19.2734 21.1001C19.6081 21.4394 20.1508 21.4394 20.4856 21.1001ZM19.2734 6.35711C18.9387 6.69636 18.396 6.69636 18.0613 6.35711C17.7265 6.01785 17.7265 5.4678 18.0613 5.12854L19.2734 3.89997C19.6082 3.56071 20.1509 3.56071 20.4856 3.89997C20.8204 4.23923 20.8204 4.78928 20.4856 5.12854L19.2734 6.35711ZM3.51511 21.1C3.84985 21.4393 4.39256 21.4393 4.7273 21.1L5.93949 19.8714C6.27422 19.5322 6.27422 18.9821 5.93949 18.6429C5.60475 18.3036 5.06204 18.3036 4.7273 18.6429L3.51511 19.8714C3.18038 20.2107 3.18038 20.7607 3.51511 21.1Z"
     />
   </svg>
-
 );
 
 const MoonSvg = () => (
@@ -152,7 +149,6 @@ const MoonSvg = () => (
       d="M5.84271 19.1418C12.8622 19.1418 18.5526 13.3745 18.5526 6.26012C18.5526 4.12486 18.04 2.11095 17.1327 0.33788C21.2127 2.48191 24.0004 6.8015 24.0004 11.781C24.0004 18.8953 18.3099 24.6626 11.2905 24.6626C6.37777 24.6626 2.11607 21.8378 0.000447253 17.7032C1.74963 18.6225 3.73633 19.1418 5.84271 19.1418Z"
     />
   </svg>
-
 );
 
 const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }) => (
@@ -264,15 +260,16 @@ const IndividualTheme: FC<{
         {isInOsThemeMode ? (
           <>
             <OverlayWrapper className="overlay-wrapper">
-              <OverlaySide $isLight onClick={onChangeTheme('light')}><SunSvg /></OverlaySide>
-              <OverlaySide $isDark onClick={onChangeTheme('dark')}><MoonSvg /></OverlaySide>
+              <OverlaySide $theme="light" onClick={onChangeTheme('light')}><SunSvg /></OverlaySide>
+              <OverlaySide $theme="dark" onClick={onChangeTheme('dark')}><MoonSvg /></OverlaySide>
             </OverlayWrapper>
 
             {isActive && isDark ? (
-              <ColorSchemeBadge $isDark><MoonSvg /></ColorSchemeBadge>
+              <ColorSchemeBadge $theme="dark"><MoonSvg /></ColorSchemeBadge>
             ) : null}
+
             {isActive && isLight ? (
-              <ColorSchemeBadge $isLight><SunSvg /></ColorSchemeBadge>
+              <ColorSchemeBadge $theme="light"><SunSvg /></ColorSchemeBadge>
             ) : null}
           </>
         ) : null}
@@ -284,37 +281,22 @@ const IndividualTheme: FC<{
 };
 
 export const ThemePanel: FC = () => {
-  const [themes, setThemes] = useState<PluginTheme[]>([]);
   const settings = useSelector(selectSettings);
   const {
     autoDetectColorScheme,
-    theme: activeTheme,
     lightTheme: activeLightTheme,
     darkTheme: activeDarkTheme,
   } = settings;
 
-  useEffect(() => {
-    getThemes().then(pluginThemes => {
-      setThemes(pluginThemes.map(({ theme }) => theme));
-    });
-  }, [activeDarkTheme, activeLightTheme, activeTheme, autoDetectColorScheme, settings]);
+  const {
+    isThemeActive,
+    themes,
+    patchTheme,
+  } = useThemePlugins(settings);
 
-  const isThemeActive = useCallback((theme: PluginTheme) => {
-    if (autoDetectColorScheme) {
-      return theme.name === activeLightTheme || theme.name === activeDarkTheme;
-    }
-    return theme.name === activeTheme;
-  }, [activeLightTheme, activeDarkTheme, activeTheme, autoDetectColorScheme]);
-
-  const onChangeAutoDetectColorScheme = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const patch: Partial<Settings> = {
-      autoDetectColorScheme: event.target.checked,
-    };
-
-    applyColorScheme({ ...settings, ...patch }).then(() => {
-      models.settings.update(settings, patch);
-    });
-  }, [settings]);
+  const onChangeAutoDetectColorScheme = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    patchTheme({ autoDetectColorScheme: event.target.checked });
+  }, [patchTheme]);
 
   const osThemeCheckbox = (
     <div className="form-control form-control--thin">
@@ -333,38 +315,24 @@ export const ThemePanel: FC = () => {
     </div>
   );
 
-  const onChangeTheme = useCallback((themeName: string, colorScheme: ColorScheme) => {
-    let patch: Partial<Settings>;
-
+  const onChangeTheme = useCallback(async (themeName: string, colorScheme: ColorScheme) => {
     switch (colorScheme) {
       case 'light':
-        patch = {
-          lightTheme: themeName,
-        };
+        patchTheme({ lightTheme: themeName });
         break;
 
       case 'dark':
-        patch = {
-          darkTheme: themeName,
-        };
+        patchTheme({ darkTheme: themeName });
         break;
 
       case 'default':
-      default:
-        patch = {
-          theme: themeName,
-        };
+        patchTheme({ theme: themeName });
         break;
-    }
 
-    applyColorScheme({ ...settings, ...patch }).then(() => {
-      models.settings.update(settings, patch).then(() => {
-        getThemes().then(pluginThemes => {
-          setThemes(pluginThemes.map(({ theme }) => theme));
-        });
-      });
-    });
-  }, [settings]);
+      default:
+        unreachableCase(colorScheme);
+    }
+  }, [patchTheme]);
 
   return (
     <RootWrapper>

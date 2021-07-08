@@ -14,7 +14,6 @@ import { ThemePanel } from '../settings/theme-panel';
 import * as models from '../../../models/index';
 import { Curl } from 'node-libcurl';
 import Tooltip from '../tooltip';
-import { applyColorScheme } from '../../../plugins/misc';
 import * as session from '../../../account/session';
 import Account from '../settings/account';
 import { showModal } from './index';

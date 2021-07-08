@@ -4,6 +4,7 @@ import { getThemes } from './index';
 import type { Theme } from './index';
 import { getAppDefaultTheme } from '../common/constants';
 import { Settings } from '../models/settings';
+import { unreachableCase } from 'ts-assert-unreachable';
 
 interface ThemeBlock {
   background?: {
@@ -222,8 +223,8 @@ function wrapStyles(theme: string, selector: string, styles: string) {
   ].join('\n');
 }
 
-export function getColorScheme(settings: Settings) {
-  if (!settings.autoDetectColorScheme) {
+export function getColorScheme({ autoDetectColorScheme }: Pick<Settings, 'autoDetectColorScheme'>) {
+  if (!autoDetectColorScheme) {
     return 'default';
   }
 
@@ -238,15 +239,26 @@ export function getColorScheme(settings: Settings) {
   return 'default';
 }
 
-export async function applyColorScheme(settings: Settings) {
+export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme' | 'darkTheme' | 'theme'>;
+
+export async function applyColorScheme(settings: ThemeSettings) {
   const scheme = getColorScheme(settings);
 
-  if (scheme === 'light') {
-    await setTheme(settings.lightTheme);
-  } else if (scheme === 'dark') {
-    await setTheme(settings.darkTheme);
-  } else {
-    await setTheme(settings.theme);
+  switch (scheme) {
+    case 'light':
+      await setTheme(settings.lightTheme);
+      break;
+
+    case 'dark':
+      await setTheme(settings.darkTheme);
+      break;
+
+    case 'default':
+      await setTheme(settings.theme);
+      break;
+
+    default:
+      unreachableCase(scheme);
   }
 }
 
