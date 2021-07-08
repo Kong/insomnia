@@ -85,6 +85,7 @@ export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[];
         onDone: selectedSpaceId => {
           resolve(selectedSpaceId === BASE_SPACE_ID ? null : selectedSpaceId);
         },
+        // TODO: handle onCancel (or prevent it)
       });
     });
   };
