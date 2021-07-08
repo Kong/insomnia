@@ -307,16 +307,13 @@ export const ThemePanel: FC = () => {
   }, [activeLightTheme, activeDarkTheme, activeTheme, autoDetectColorScheme]);
 
   const onChangeAutoDetectColorScheme = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const autoDetectColorScheme = event.target.checked;
-    applyColorScheme({
-      ...settings,
-      autoDetectColorScheme,
-    }).then(() => {
-      models.settings.update(settings, {
-        autoDetectColorScheme,
-      });
-    });
+    const patch: Partial<Settings> = {
+      autoDetectColorScheme: event.target.checked,
+    };
 
+    applyColorScheme({ ...settings, ...patch }).then(() => {
+      models.settings.update(settings, patch);
+    });
   }, [settings]);
 
   const osThemeCheckbox = (
@@ -360,10 +357,7 @@ export const ThemePanel: FC = () => {
         break;
     }
 
-    applyColorScheme({
-      ...settings,
-      ...patch,
-    }).then(() => {
+    applyColorScheme({ ...settings, ...patch }).then(() => {
       models.settings.update(settings, patch).then(() => {
         getThemes().then(pluginThemes => {
           setThemes(pluginThemes.map(({ theme }) => theme));
