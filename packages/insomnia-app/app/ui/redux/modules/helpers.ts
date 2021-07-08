@@ -1,6 +1,9 @@
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
+import { showSelectModal } from '../../components/modals/select-modal';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { getAppName } from '../../../common/constants';
 
 export enum ForceToWorkspace {
   new = 'new',
@@ -58,5 +61,31 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
           });
         });
     }
+  };
+}
+
+export type SetSpaceIdPrompt = () => Promise<string | null>;
+export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[]; activeSpace?: Space; }): SetSpaceIdPrompt {
+  return function() {
+    return new Promise(resolve => {
+      // If no spaces exist, return null (indicating no parent/space)
+      if (spaces.length === 0) {
+        return resolve(null);
+      }
+
+      const options = [{ name: getAppName(), value: BASE_SPACE_ID }, ...spaces.map(space => ({ name: space.name, value: space._id }))];
+
+      const defaultValue = activeSpace?._id || options[0].value;
+
+      showSelectModal({
+        title: 'Import',
+        message: 'Select a space to import into',
+        options,
+        value: defaultValue,
+        onDone: selectedSpaceId => {
+          resolve(selectedSpaceId === BASE_SPACE_ID ? null : selectedSpaceId);
+        },
+      });
+    });
   };
 }

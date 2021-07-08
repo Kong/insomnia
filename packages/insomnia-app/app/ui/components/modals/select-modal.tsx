@@ -5,11 +5,12 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { showModal } from '.';
 
 export interface SelectModalShowOptions {
   message: string | null;
   onCancel?: () => void;
-  onDone?: (selectedValue: string | null) => Promise<void>;
+  onDone?: (selectedValue: string | null) => void | Promise<void>;
   options: {
     name: string;
     value: string;
@@ -88,3 +89,5 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
     );
   }
 }
+
+export const showSelectModal = (opts: SelectModalShowOptions) => showModal(SelectModal, opts);

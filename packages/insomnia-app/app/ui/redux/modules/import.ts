@@ -10,14 +10,15 @@ import { WorkspaceScope, Workspace } from '../../../models/workspace';
 import { showModal, showError } from '../../components/modals';
 import AlertModal from '../../components/modals/alert-modal';
 import { loadStart, loadStop } from './global';
-import { ForceToWorkspace, askToSetWorkspaceScope, askToImportIntoWorkspace } from './helpers';
+import { ForceToWorkspace, askToSetWorkspaceScope, askToImportIntoWorkspace, askToImportIntoSpace } from './helpers';
 import * as models from '../../../models';
 import { RootState } from '.';
-import { selectActiveSpace } from '../selectors';
+import { selectActiveSpace, selectSpaces } from '../selectors';
 import { ThunkAction } from 'redux-thunk';
 
 export interface ImportOptions {
   workspaceId?: string;
+  forceToSpace?: 'active' | 'prompt';
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
 }
@@ -40,12 +41,23 @@ const handleImportResult = (result: ImportResult, errorMessage: string) => {
   return (summary[models.workspace.type] as Workspace[]) || [];
 };
 
-const convertToRawConfig = ({ forceToScope, forceToWorkspace, workspaceId }: ImportOptions, state: RootState): ImportRawConfig => ({
-  getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-  getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-  // Currently, just return the active space instead of prompting for which space to import into
-  getSpaceId: () => selectActiveSpace(state)?._id || null,
-});
+const convertToRawConfig = ({
+  forceToScope,
+  forceToWorkspace,
+  workspaceId,
+  forceToSpace,
+}: ImportOptions,
+state: RootState): ImportRawConfig => {
+  const activeSpace = selectActiveSpace(state);
+  const spaces = selectSpaces(state);
+
+  return ({
+    getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
+    getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
+    // Currently, just return the active space instead of prompting for which space to import into
+    getSpaceId: forceToSpace === 'prompt' ? askToImportIntoSpace({ spaces, activeSpace }) : () => Promise.resolve(activeSpace?._id || null),
+  });
+};
 
 export const importFile = (
   options: ImportOptions = {},
