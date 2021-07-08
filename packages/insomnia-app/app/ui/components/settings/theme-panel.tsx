@@ -303,7 +303,7 @@ export const ThemePanel: FC = () => {
       <label className="inline-block">
         Use OS color scheme
         <HelpTooltip className="space-left">
-          Lets you choose one theme for light mode and one for dark mode.
+          Pick your prefered themes for light and dark
         </HelpTooltip>
         <input
           type="checkbox"
