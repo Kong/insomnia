@@ -32,7 +32,7 @@ export const ResponseTimer: FunctionComponent<Props> = ({ handleCancel, loadStar
   const seconds = milliseconds / 1000;
   return (
     <div className="overlay theme--transparent-overlay">
-      <h2>
+      <h2 style={{ fontVariantNumeric: 'tabular-nums' }}>
         {seconds >= REQUEST_TIME_TO_SHOW_COUNTER ? `${seconds.toFixed(1)} seconds` : 'Loading'}...
       </h2>
       <div className="pad">
