@@ -52,6 +52,10 @@ const configuration: Configuration = {
           },
         ],
       },
+      {
+        test: /node_modules[\\|/]vscode-languageserver-types/,
+        use: { loader: 'umd-compat-loader' },
+      },
     ],
   },
   resolve: {

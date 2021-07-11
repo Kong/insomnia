@@ -243,6 +243,7 @@
     "tsconfig-paths": "^3.9.0",
     "type-fest": "^1.0.2",
     "typescript": "4.2.3",
+    "umd-compat-loader": "^2.1.2",
     "url-loader": "^1.1.2",
     "val-loader": "^2.1.2",
     "webpack": "^4.44.1",
