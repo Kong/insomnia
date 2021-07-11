@@ -17,6 +17,8 @@ import {
   PREVIEW_MODE_SOURCE,
   ACTIVITY_MIGRATION,
   SortOrder,
+  GlobalActivity,
+  isDevelopment,
 } from '../../common/constants';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
@@ -82,7 +84,7 @@ import {
   generateId,
   getContentDispositionHeader,
 } from '../../common/misc';
-import { getDataDirectory } from '../../common/electron-helpers';
+import { getDataDirectory, toggleDevTools } from '../../common/electron-helpers';
 import * as mime from 'mime-types';
 import * as path from 'path';
 import * as render from '../../common/render';
@@ -370,6 +372,10 @@ class App extends PureComponent<AppProps, State> {
           this._handleToggleSidebar();
         },
       ],
+      ...(isDevelopment() ? [[
+        hotKeyRefs.TOGGLE_DEVTOOLS,
+        toggleDevTools,
+      ]] : []),
     ];
   }
 

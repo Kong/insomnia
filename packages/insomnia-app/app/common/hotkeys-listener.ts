@@ -30,7 +30,8 @@ export const pressedHotKey = async (
   event: KeyboardEvent,
   definition: HotKeyDefinition,
 ) => {
-  const settings = await models.settings.getOrCreate();
+  const settings = await models.settings.getOrCreate(); // see comment in this function
+  console.log({ event, registry: settings.hotKeyRegistry, definition });
   return _pressedHotKey(event, settings.hotKeyRegistry[definition.id]);
 };
 
