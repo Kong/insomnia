@@ -105,21 +105,17 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   );
 
   const requests: ImportRequest[] = [];
-  endpointsSchemas.map((endpointSchema) => {
+  endpointsSchemas.forEach((endpointSchema) => {
     let { tags } = endpointSchema;
     if (!tags || tags.length === 0) tags = [''];
-    tags.forEach((tag, index) => {
-      const requestId = endpointSchema.operationId
-        ? `${endpointSchema.operationId}${index > 0 ? index : ''}`
-        : `__REQUEST_${requestCount++}__`;
-
+    tags.forEach(tag => {
       const parentId = folderLookup[tag] || defaultParent;
       requests.push(
         importRequest(
           document,
           endpointSchema,
           globalMimeTypes,
-          requestId,
+          `__REQ_${requestCount++}__`,
           parentId,
         ),
       );
