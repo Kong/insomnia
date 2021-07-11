@@ -5,7 +5,7 @@ import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   content?: string;
-  handleChange?: (arg0: string) => void;
+  handleChange?: (value: string) => void;
   settings: Settings;
   readOnly?: boolean;
   handleRender?: HandleRender;

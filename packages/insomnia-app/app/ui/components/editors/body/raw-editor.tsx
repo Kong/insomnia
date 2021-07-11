@@ -1,11 +1,11 @@
 import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import CodeEditor, { CodeEditorOnChange } from '../../codemirror/code-editor';
+import CodeEditor from '../../codemirror/code-editor';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
-  onChange: CodeEditorOnChange;
+  onChange: (value: string) => void;
   content: string;
   contentType: string;
   fontSize: number;

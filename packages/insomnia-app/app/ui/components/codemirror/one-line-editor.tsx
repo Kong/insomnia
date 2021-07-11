@@ -1,38 +1,44 @@
-import React, { Fragment, PureComponent } from 'react';
+import React, { Fragment, InputHTMLAttributes, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import CodeEditor from './code-editor';
-import Input from '../base/debounced-input';
+import { DebouncedInput } from '../base/debounced-input';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
 const NUNJUCKS_REGEX = /({%|%}|{{|}})/;
 
-interface Props {
+type InheritedAttributes = Pick<InputHTMLAttributes<HTMLInputElement>,
+  | 'onPaste'
+  | 'onFocus'
+  | 'className'
+  | 'placeholder'
+  | 'type'
+  | 'id'
+>
+
+interface ExtendedAttributes {
+  onKeyDown?: (event: React.KeyboardEvent, value?: string) => void;
+  onChange?: (value: string) => void;
+  onBlur?: () => void;
+}
+
+interface Props extends InheritedAttributes, ExtendedAttributes {
   defaultValue: string;
-  id?: string;
-  type?: string;
   mode?: string;
-  onBlur?: Function;
-  onKeyDown?: Function;
-  onFocus?: Function;
-  onChange?: Function;
-  onPaste?: Function;
-  render?: Function;
-  getRenderContext?: Function;
+  render?: HandleRender;
+  getRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
   getAutocompleteConstants?: Function | null;
-  placeholder?: string;
-  className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
   isVariableUncovered?: boolean;
   // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
   disabled?: boolean;
 }
-
 interface State {
   mode: string;
 }
@@ -40,7 +46,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class OneLineEditor extends PureComponent<Props, State> {
   _editor: CodeEditor | null = null;
-  _input: Input | null = null;
+  _input: DebouncedInput | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -324,10 +330,6 @@ class OneLineEditor extends PureComponent<Props, State> {
     this._editor = n;
   }
 
-  _setInputRef(n: Input) {
-    this._input = n;
-  }
-
   _mayContainNunjucks(text) {
     // Not sure, but sometimes this isn't a string
     if (typeof text !== 'string') {
@@ -381,7 +383,6 @@ class OneLineEditor extends PureComponent<Props, State> {
             onKeyDown={this._handleKeyDown}
             onFocus={this._handleEditorFocus}
             onMouseLeave={this._handleEditorMouseLeave}
-            // @ts-expect-error -- TSCONVERSION
             onChange={onChange}
             // @ts-expect-error -- TSCONVERSION
             render={render}
@@ -398,11 +399,11 @@ class OneLineEditor extends PureComponent<Props, State> {
       );
     } else {
       return (
-        <Input
-          ref={this._setInputRef}
-          // @ts-expect-error -- TSCONVERSION
+        <DebouncedInput
+          ref={ref => { this._input = ref; }}
           id={id}
           type={type}
+          delay={500}
           className={className}
           style={{
             // background: 'rgba(255, 0, 0, 0.05)', // For debugging

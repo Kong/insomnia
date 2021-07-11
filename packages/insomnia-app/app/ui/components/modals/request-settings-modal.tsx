@@ -6,7 +6,7 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import * as models from '../../../models';
-import DebouncedInput from '../base/debounced-input';
+import { DebouncedInput } from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
 import { database as db } from '../../../common/database';
 import { isWorkspace, Workspace } from '../../../models/workspace';
@@ -452,7 +452,6 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             <span className="txt-sm faint italic">(also rename by double-clicking in sidebar)</span>
             <DebouncedInput
               delay={500}
-              // @ts-expect-error -- TSCONVERSION props expand into an input but are difficult to type
               type="text"
               placeholder={request.url || 'My Request'}
               defaultValue={request.name}

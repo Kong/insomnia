@@ -35,8 +35,8 @@ import AskModal from '../../modals/ask-modal';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
-  onChange: (r: Request, body: RequestBody) => Promise<Request>;
-  onChangeHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
+  onChange: (request: Request, body: RequestBody) => Promise<Request>;
+  onChangeHeaders: (request: Request, headers: RequestHeader[]) => Promise<Request>;
   handleUpdateRequestMimeType: (mimeType: string | null) => Promise<Request | null>;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;

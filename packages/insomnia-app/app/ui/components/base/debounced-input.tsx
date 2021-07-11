@@ -1,34 +1,50 @@
-import React, { PureComponent } from 'react';
+import React, { ChangeEvent, InputHTMLAttributes, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { debounce } from '../../../common/misc';
 
-interface Props {
-  onChange: (value: string) => void;
-  onFocus?: Function;
-  onBlur?: Function;
+type TargetElement = HTMLTextAreaElement | HTMLInputElement;
+
+interface ExtendedAttributes {
+  onChange: (value?: string) => void;
+}
+
+type InheritedAttributes = Omit<InputHTMLAttributes<TargetElement>, keyof ExtendedAttributes>
+
+interface Props extends InheritedAttributes, ExtendedAttributes {
   textarea?: boolean;
-  delay?: number;
+  delay: number;
+}
+
+interface State {
+  delay: number;
+  onChange: ExtendedAttributes['onChange'];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class DebouncedInput extends PureComponent<Props> {
+export class DebouncedInput extends PureComponent<Props, State> {
   _hasFocus = false;
   _input: HTMLTextAreaElement | HTMLInputElement | null = null;
-  _handleValueChange: Props['onChange'] | null = null;
 
-  constructor(props: Props) {
-    super(props);
-
-    if (!props.delay) {
-      this._handleValueChange = props.onChange;
-    } else {
-      this._handleValueChange = debounce(props.onChange, props.delay || 500);
-    }
+  state: State = {
+    delay: this.props.delay,
+    onChange: debounce(this.props.onChange, this.props.delay),
   }
 
-  _handleChange(e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-    this._handleValueChange?.(e.target.value);
+  static getDerivedStateFromProps(props: Props, state: State) {
+    if (state.delay !== props.delay || state.onChange !== props.onChange) {
+      return {
+        onChange: debounce(props.onChange, props.delay),
+        delay: props.delay,
+      };
+    }
+    return null;
+  }
+
+  _handleChange(event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    const { onChange } = this.state;
+    const { value } = event.target;
+    onChange(value);
   }
 
   _handleFocus(e: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement>) {
@@ -78,30 +94,23 @@ class DebouncedInput extends PureComponent<Props> {
   }
 
   focus() {
-    if (this._input) {
-      this._input.focus();
-    }
+    this._input?.focus();
   }
 
   focusEnd() {
     if (this._input) {
       // Hack to focus the end (set value to current value);
       this._input.value = this.getValue();
-
-      this._input.focus();
     }
+    this._input?.focus();
   }
 
   blur() {
-    if (this._input) {
-      this._input.blur();
-    }
+    this._input?.blur();
   }
 
   select() {
-    if (this._input) {
-      this._input.select();
-    }
+    this._input?.select();
   }
 
   getValue() {
@@ -149,5 +158,3 @@ class DebouncedInput extends PureComponent<Props> {
     }
   }
 }
-
-export default DebouncedInput;

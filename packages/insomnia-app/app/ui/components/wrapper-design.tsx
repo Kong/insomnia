@@ -67,7 +67,7 @@ class WrapperDesign extends PureComponent<Props, State> {
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
   }
 
-  _handleOnChange(v: string) {
+  _handleOnChange(contents: string) {
     const {
       wrapperProps: { activeApiSpec },
       handleUpdateApiSpec,
@@ -84,7 +84,7 @@ class WrapperDesign extends PureComponent<Props, State> {
     }
 
     this.debounceTimeout = setTimeout(async () => {
-      await handleUpdateApiSpec({ ...activeApiSpec, contents: v });
+      await handleUpdateApiSpec({ ...activeApiSpec, contents });
     }, 500);
   }
 

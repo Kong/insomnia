@@ -3,10 +3,11 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import KeyValueEditor from '../../key-value-editor/editor';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import { RequestBodyParameter } from '../../../../models/request';
 
 interface Props {
-  onChange: Function;
-  parameters: any[];
+  onChange: (parameters: RequestBodyParameter[]) => void;
+  parameters: RequestBodyParameter[];
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   handleRender?: HandleRender;
