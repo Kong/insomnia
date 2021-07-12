@@ -220,21 +220,19 @@ const IndividualTheme: FC<{
   isDark: boolean;
   isLight: boolean;
   isInOsThemeMode: boolean;
-  onChangeTheme: (name: string, mode: ColorScheme) => void;
+  onChangeTheme: (name: string, mode: ColorScheme) => Promise<void>;
   theme: PluginTheme
 }> = ({
   isActive,
   isDark,
   isLight,
   isInOsThemeMode,
-  onChangeTheme: _onChangeTheme,
+  onChangeTheme,
   theme,
 }) => {
   const { displayName, name } = theme;
 
-  const onChangeTheme = useCallback((mode: ColorScheme) => () => {
-    _onChangeTheme(name, mode);
-  }, [name, _onChangeTheme]);
+  const createChangeHandler = useCallback((mode: ColorScheme) => () => onChangeTheme(name, mode), [name, onChangeTheme]);
 
   const onClickThemeButton = useCallback(() => {
     if (isInOsThemeMode) {
@@ -243,8 +241,8 @@ const IndividualTheme: FC<{
       // Even still, we don't want to risk some potnetial subpixel or z-index nonsense accidentally setting the default when know we shouldn't.
       return;
     }
-    onChangeTheme('default')();
-  }, [onChangeTheme, isInOsThemeMode]);
+    return createChangeHandler('default')();
+  }, [createChangeHandler, isInOsThemeMode]);
 
   return (
     <ThemeWrapper>
@@ -258,8 +256,8 @@ const IndividualTheme: FC<{
         {isInOsThemeMode ? (
           <>
             <OverlayWrapper className="overlay-wrapper">
-              <OverlaySide $theme="light" onClick={onChangeTheme('light')}><SunSvg /></OverlaySide>
-              <OverlaySide $theme="dark" onClick={onChangeTheme('dark')}><MoonSvg /></OverlaySide>
+              <OverlaySide $theme="light" onClick={createChangeHandler('light')}><SunSvg /></OverlaySide>
+              <OverlaySide $theme="dark" onClick={createChangeHandler('dark')}><MoonSvg /></OverlaySide>
             </OverlayWrapper>
 
             {isActive && isDark ? (
