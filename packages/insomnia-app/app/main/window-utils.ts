@@ -272,6 +272,9 @@ export function createWindow() {
         },
       },
       {
+        type: 'separator',
+      },
+      {
         label: 'Toggle Sidebar',
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
@@ -336,6 +339,9 @@ export function createWindow() {
         },
       },
       {
+        type: 'separator',
+      },
+      {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
           const directory = getDataDirectory();
@@ -348,6 +354,9 @@ export function createWindow() {
           const directory = log.getLogDirectory();
           shell.showItemInFolder(directory);
         },
+      },
+      {
+        type: 'separator',
       },
       {
         label: 'Show Open Source Licenses',
@@ -410,6 +419,9 @@ export function createWindow() {
   } else {
     // @ts-expect-error -- TSCONVERSION type splitting
     helpMenu.submenu?.push({
+      type: 'separator',
+    },
+    {
       label: `${MNEMONIC_SYM}About`,
       click: aboutMenuClickHandler,
     });
