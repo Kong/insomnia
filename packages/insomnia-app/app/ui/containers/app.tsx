@@ -1395,7 +1395,7 @@ class App extends PureComponent<AppProps, State> {
           ),
           addCancel: true,
         });
-        handleImportUri(uri, { workspaceId: activeWorkspace?._id, forceToSpace: 'prompt' });
+        handleImportUri(uri, { workspaceId: activeWorkspace?._id });
       },
       false,
     );
