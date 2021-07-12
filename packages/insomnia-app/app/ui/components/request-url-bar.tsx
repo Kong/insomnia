@@ -59,6 +59,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
 
   _lastPastedText: string | null = null;
 
+  _inputHadFocus: boolean | undefined = false;
+
   _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
   }
@@ -108,6 +110,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
       // Update depending on whether something was imported
       if (!importedRequest) {
         this.props.onUrlChange(this.props.request, url);
+      } else {
+        this.props.onUrlChange(this.props.request, importedRequest.url);
       }
     }, DEBOUNCE_MILLIS);
   }
@@ -263,11 +267,20 @@ class RequestUrlBar extends PureComponent<Props, State> {
     this._handleSend();
   }
 
+  componentDidUpdate(previousProps: Props) {
+    if (this._inputHadFocus && this.props.uniquenessKey !== previousProps.uniquenessKey) {
+      // Timeout used to wait for children to render before focusing on editor.
+      setTimeout(() => this._input?._editor?.focusEnd(), 100);
+    }
+  }
+
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
     if (nextProps.request._id !== this.props.request._id) {
       this._handleResetTimeouts();
     }
+
+    this._inputHadFocus = this._input?._editor?.hasFocus();
   }
 
   renderSendButton() {
