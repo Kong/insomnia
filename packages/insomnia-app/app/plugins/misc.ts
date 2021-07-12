@@ -1,9 +1,9 @@
 import Color from 'color';
 import { render, THROW_ON_ERROR } from '../common/render';
-import { getThemes } from './index';
+import { ColorScheme, getThemes } from './index';
 import type { Theme } from './index';
 import { getAppDefaultTheme } from '../common/constants';
-import { Settings } from '../models/settings';
+import { ThemeSettings } from '../models/settings';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 interface ThemeBlock {
@@ -223,7 +223,7 @@ function wrapStyles(theme: string, selector: string, styles: string) {
   ].join('\n');
 }
 
-export function getColorScheme({ autoDetectColorScheme }: Pick<Settings, 'autoDetectColorScheme'>) {
+export function getColorScheme({ autoDetectColorScheme }: ThemeSettings): ColorScheme {
   if (!autoDetectColorScheme) {
     return 'default';
   }
@@ -238,8 +238,6 @@ export function getColorScheme({ autoDetectColorScheme }: Pick<Settings, 'autoDe
 
   return 'default';
 }
-
-export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme' | 'darkTheme' | 'theme'>;
 
 export async function applyColorScheme(settings: ThemeSettings) {
   const scheme = getColorScheme(settings);

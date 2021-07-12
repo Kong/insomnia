@@ -1,16 +1,14 @@
-import React, { ChangeEvent, FC, useCallback } from 'react';
+import React, { FC, useCallback } from 'react';
 import styled from 'styled-components';
 import { ColorScheme } from '../../../plugins';
 import { PluginTheme } from '../../../plugins/misc';
 import HelpTooltip from '../help-tooltip';
-import { useSelector } from 'react-redux';
-import { selectSettings } from '../../redux/selectors';
-import { useThemePlugins } from '../../hooks/theme'; import { unreachableCase } from 'ts-assert-unreachable';
+import { useThemes } from '../../hooks/theme';
 
 const THEMES_PER_ROW = 5;
 
-const isDark = (theme: string) => theme === 'dark';
-const isLight = (theme: string) => theme === 'light';
+const isDark = (mode: 'dark' | 'light') => mode === 'dark';
+const isLight = (mode: 'dark' | 'light') => mode === 'light';
 
 const RootWrapper = styled.div({
   paddingTop: 'var(--padding-lg)',
@@ -281,72 +279,42 @@ const IndividualTheme: FC<{
 };
 
 export const ThemePanel: FC = () => {
-  const settings = useSelector(selectSettings);
   const {
-    autoDetectColorScheme,
-    lightTheme: activeLightTheme,
-    darkTheme: activeDarkTheme,
-  } = settings;
-
-  const {
-    isThemeActive,
     themes,
-    patchTheme,
-  } = useThemePlugins(settings);
-
-  const onChangeAutoDetectColorScheme = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    patchTheme({ autoDetectColorScheme: event.target.checked });
-  }, [patchTheme]);
-
-  const osThemeCheckbox = (
-    <div className="form-control form-control--thin">
-      <label className="inline-block">
-        Use OS color scheme
-        <HelpTooltip className="space-left">
-          Pick your prefered themes for light and dark
-        </HelpTooltip>
-        <input
-          type="checkbox"
-          name="autoDetectColorScheme"
-          checked={autoDetectColorScheme}
-          onChange={onChangeAutoDetectColorScheme}
-        />
-      </label>
-    </div>
-  );
-
-  const onChangeTheme = useCallback(async (themeName: string, colorScheme: ColorScheme) => {
-    switch (colorScheme) {
-      case 'light':
-        patchTheme({ lightTheme: themeName });
-        break;
-
-      case 'dark':
-        patchTheme({ darkTheme: themeName });
-        break;
-
-      case 'default':
-        patchTheme({ theme: themeName });
-        break;
-
-      default:
-        unreachableCase(colorScheme);
-    }
-  }, [patchTheme]);
+    activate,
+    changeAutoDetect,
+    isActive,
+    isActiveDark,
+    isActiveLight,
+    autoDetectColorScheme,
+  } = useThemes();
 
   return (
     <RootWrapper>
-      {osThemeCheckbox}
+      <div className="form-control form-control--thin">
+        <label className="inline-block">
+          Use OS color scheme
+          <HelpTooltip className="space-left">
+            Pick your prefered themes for light and dark
+          </HelpTooltip>
+          <input
+            type="checkbox"
+            name="autoDetectColorScheme"
+            checked={autoDetectColorScheme}
+            onChange={changeAutoDetect}
+          />
+        </label>
+      </div>
 
       <Themes>
         {themes.map(theme => (
           <IndividualTheme
             key={theme.name}
             theme={theme}
-            isActive={isThemeActive(theme)}
-            isDark={theme.name === activeDarkTheme}
-            isLight={theme.name === activeLightTheme}
-            onChangeTheme={onChangeTheme}
+            isActive={isActive(theme)}
+            onChangeTheme={activate}
+            isDark={isActiveDark(theme)}
+            isLight={isActiveLight(theme)}
             isInOsThemeMode={autoDetectColorScheme}
           />
         ))}
