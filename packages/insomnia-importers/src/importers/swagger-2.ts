@@ -15,7 +15,6 @@ const SUPPORTED_MIME_TYPES = [
   MIMETYPE_MULTIPART,
 ];
 const WORKSPACE_ID = '__WORKSPACE_ID__';
-let requestCount = 1;
 export const id = 'swagger2';
 export const name = 'Swagger 2.0';
 export const description = 'Importer for Swagger 2.0 specification (json/yaml)';
@@ -59,7 +58,7 @@ const parseDocument = (rawData: string) => {
 const parseEndpoints = (document: OpenAPIV2.Document) => {
   const defaultParent = WORKSPACE_ID;
   const globalMimeTypes = document.consumes ?? [];
-  const endpointsSchemas: OpenAPIV2.OperationObject[] = Object.keys(
+  const endpointsSchemas: OpenAPIV2.OperationObject<{ method?: string; path?: string }>[] = Object.keys(
     document.paths,
   )
     .map((path: keyof OpenAPIV2.PathsObject) => {
@@ -73,7 +72,7 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
           ...(schemasPerMethod[method] as OpenAPIV2.OperationObject),
           path,
           method,
-        }));
+        }) as OpenAPIV2.OperationObject<{ method?: string; path?: string }>);
     })
     .flat();
 
@@ -108,14 +107,15 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   endpointsSchemas.forEach((endpointSchema) => {
     let { tags } = endpointSchema;
     if (!tags || tags.length === 0) tags = [''];
-    tags.forEach(tag => {
+    tags.forEach((tag, index) => {
+      const requestId = `${generateUniqueRequestId(endpointSchema)}_${index > 0 ? index : ''}`;
       const parentId = folderLookup[tag] || defaultParent;
       requests.push(
         importRequest(
           document,
           endpointSchema,
           globalMimeTypes,
-          `__REQ_${requestCount++}__`,
+          requestId,
           parentId,
         ),
       );
@@ -123,6 +123,21 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   });
 
   return [...folders, ...requests];
+};
+
+const generateUniqueRequestId = (
+  endpointSchema: OpenAPIV2.OperationObject<{ method?: string; path?: string }>,
+) => {
+  // `operationId` is already unique to the workspace, so we can just use that, combined with the workspace id to get something globally unique
+  const uniqueKey = endpointSchema.operationId || `[${endpointSchema.method}]${endpointSchema.path}`;
+
+  const hash = crypto
+    .createHash('sha1')
+    .update(uniqueKey)
+    .digest('hex')
+    .slice(0, 8);
+
+  return `req_${WORKSPACE_ID}${hash}`;
 };
 
 const importRequest = (
@@ -534,8 +549,6 @@ const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
 };
 
 export const convert: Converter = async (rawData) => {
-  requestCount = 1; // Validate
-
   let api = await parseDocument(rawData);
 
   if (!api || api.swagger !== SUPPORTED_SWAGGER_VERSION) {
