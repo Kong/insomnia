@@ -40,7 +40,7 @@ export const useThemes = () => {
 
   // Apply the theme and update settings
   const apply = useCallback(async (patch: Partial<ThemeSettings>) => {
-    await applyColorScheme({
+    applyColorScheme({
       theme,
       autoDetectColorScheme,
       darkTheme,
@@ -56,15 +56,15 @@ export const useThemes = () => {
   const activate = useCallback(async (themeName: string, colorScheme: ColorScheme) => {
     switch (colorScheme) {
       case 'light':
-        apply({ lightTheme: themeName });
+        await apply({ lightTheme: themeName });
         break;
 
       case 'dark':
-        apply({ darkTheme: themeName });
+        await apply({ darkTheme: themeName });
         break;
 
       case 'default':
-        apply({ theme: themeName });
+        await apply({ theme: themeName });
         break;
 
       default:
