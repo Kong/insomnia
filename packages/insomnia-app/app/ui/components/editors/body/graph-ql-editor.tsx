@@ -324,10 +324,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   async _loadAndSetLocalSchema() {
-    const newState = {
-      schema: this.state.schema,
-      schemaFetchError: null as any,
-      schemaLastFetchTime: this.state.schemaLastFetchTime,
+    const newState: Partial<State> = {
+      schemaFetchError: null,
       schemaIsFetching: false,
     };
 
@@ -369,7 +367,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     }
 
     if (this._isMounted) {
-      this.setState(newState);
+      this.setState(existingState => ({ ...existingState, ...newState }));
     }
   }
 
@@ -432,7 +430,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  async _handleToggleAutomaticFetching(): Promise<void> {
+  async _handleToggleAutomaticFetching() {
     const automaticFetch = !this.state.automaticFetch;
     this.setState({
       automaticFetch,
