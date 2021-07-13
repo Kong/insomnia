@@ -28,7 +28,7 @@ const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }
   borderRadius: 'var(--radius-md)',
   overflow: 'hidden',
   boxShadow: '0 0 0 1px var(--hl-sm)',
-  transition: 'all 50ms ease-out',
+  transition: 'all 150ms ease-out',
   ...($isActive ? {
     boxShadow: '0 0 0 var(--padding-xs) var(--color-surprise)',
     transform: 'scale(1.05)',
