@@ -1,4 +1,4 @@
-import React, { FC, useCallback } from 'react';
+import React, { FC } from 'react';
 import styled from 'styled-components';
 import { ColorScheme } from '../../../plugins';
 import { PluginTheme } from '../../../plugins/misc';
@@ -232,17 +232,15 @@ const IndividualTheme: FC<{
 }) => {
   const { displayName, name } = theme;
 
-  const createChangeHandler = useCallback((mode: ColorScheme) => () => onChangeTheme(name, mode), [name, onChangeTheme]);
-
-  const onClickThemeButton = useCallback(() => {
+  const onClickThemeButton = () => {
     if (isInOsThemeMode) {
       // The overlays handle this behavior in OS theme mode.
       // React's event bubbling means that this will be fired when you click on an overlay, so we need to turn it off when in this mode.
       // Even still, we don't want to risk some potnetial subpixel or z-index nonsense accidentally setting the default when know we shouldn't.
       return;
     }
-    return createChangeHandler('default')();
-  }, [createChangeHandler, isInOsThemeMode]);
+    return onChangeTheme(name, 'default');
+  };
 
   return (
     <ThemeWrapper>
@@ -256,8 +254,8 @@ const IndividualTheme: FC<{
         {isInOsThemeMode ? (
           <>
             <OverlayWrapper className="overlay-wrapper">
-              <OverlaySide $theme="light" onClick={createChangeHandler('light')}><SunSvg /></OverlaySide>
-              <OverlaySide $theme="dark" onClick={createChangeHandler('dark')}><MoonSvg /></OverlaySide>
+              <OverlaySide $theme="light" onClick={() => { onChangeTheme(name, 'light'); }}><SunSvg /></OverlaySide>
+              <OverlaySide $theme="dark" onClick={() => { onChangeTheme(name, 'dark'); }}><MoonSvg /></OverlaySide>
             </OverlayWrapper>
 
             {isActive && isDark ? (
