@@ -24,7 +24,7 @@ const runInternal = async <T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type not available, and postponing anyway until the impending move to all jest (and no mocha)
   extractResult: (runner: { [key: string]: any }) => T,
 ): Promise<T> => new Promise((resolve, reject) => {
-  const { bail, keepFile, testFilter } = options;
+  const { bail, keepFile, testFilter, timeout } = options;
 
   // Add global `insomnia` helper.
   // This is the only way to add new globals to the Mocha environment as far as I can tell
@@ -32,7 +32,7 @@ const runInternal = async <T>(
   global.chai = chai;
 
   const mocha: Mocha = new Mocha({
-    timeout: 5000,
+    timeout: timeout || 5000,
     globals: ['insomnia', 'chai'],
     bail,
     reporter,

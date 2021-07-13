@@ -58,6 +58,7 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
     .description('Run Insomnia unit test suites')
     .option('-e, --env <identifier>', 'environment to use')
     .option('-t, --testNamePattern <regex>', 'run tests that match the regex')
+    .option('--timeout <ms>', 'timeout in milliseconds (set to 0 to)')
     .option(
       '-r, --reporter <reporter>',
       `reporter to use, options are [${reporterTypes.join(', ')}] (default: ${defaultReporter})`,
