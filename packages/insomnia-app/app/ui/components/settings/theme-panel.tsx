@@ -10,8 +10,10 @@ const THEMES_PER_ROW = 5;
 const isDark = (mode: 'dark' | 'light') => mode === 'dark';
 const isLight = (mode: 'dark' | 'light') => mode === 'light';
 
-const RootWrapper = styled.div({
-  paddingTop: 'var(--padding-lg)',
+const RootWrapper = styled.div({});
+
+const CheckboxWrapper = styled.div({
+  marginLeft: 'var(--padding-md)',
 });
 
 const Themes = styled.div({
@@ -287,7 +289,7 @@ export const ThemePanel: FC = () => {
 
   return (
     <RootWrapper>
-      <div className="form-control form-control--thin">
+      <CheckboxWrapper className="form-control form-control--thin">
         <label className="inline-block">
           Use OS color scheme
           <HelpTooltip className="space-left">
@@ -300,7 +302,7 @@ export const ThemePanel: FC = () => {
             onChange={changeAutoDetect}
           />
         </label>
-      </div>
+      </CheckboxWrapper>
 
       <Themes>
         {themes.map(theme => (
