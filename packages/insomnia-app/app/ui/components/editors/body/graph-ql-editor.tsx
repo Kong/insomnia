@@ -334,8 +334,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
       buttonLabel: 'Import',
       properties: ['openFile'],
       filters: [
+        // @ts-expect-error https://github.com/electron/electron/pull/29322
         {
-          name: 'GraphQL file',
           extensions: ['', 'json'],
         },
       ],
