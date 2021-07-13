@@ -18,6 +18,7 @@ const WORKSPACE_ID = '__WORKSPACE_ID__';
 export const id = 'swagger2';
 export const name = 'Swagger 2.0';
 export const description = 'Importer for Swagger 2.0 specification (json/yaml)';
+let requestCounts: Record<string, number> = {};
 
 /* eslint-disable camelcase -- this file uses camel case too often */
 
@@ -107,8 +108,8 @@ const parseEndpoints = (document: OpenAPIV2.Document) => {
   endpointsSchemas.forEach((endpointSchema) => {
     let { tags } = endpointSchema;
     if (!tags || tags.length === 0) tags = [''];
-    tags.forEach((tag, index) => {
-      const requestId = `${generateUniqueRequestId(endpointSchema)}_${index > 0 ? index : ''}`;
+    tags.forEach(tag => {
+      const requestId = generateUniqueRequestId(endpointSchema);
       const parentId = folderLookup[tag] || defaultParent;
       requests.push(
         importRequest(
@@ -137,7 +138,12 @@ const generateUniqueRequestId = (
     .digest('hex')
     .slice(0, 8);
 
-  return `req_${WORKSPACE_ID}${hash}`;
+  if (requestCounts.hasOwnProperty(hash)) {
+    requestCounts[hash] += 1;
+  } else {
+    requestCounts[hash] = 0;
+  }
+  return `req_${WORKSPACE_ID}${hash}${requestCounts[hash] || ''}`;
 };
 
 const importRequest = (
@@ -549,6 +555,9 @@ const convertParameters = (parameters?: OpenAPIV2.Parameter[]) => {
 };
 
 export const convert: Converter = async (rawData) => {
+  // Reset
+  requestCounts = {};
+
   let api = await parseDocument(rawData);
 
   if (!api || api.swagger !== SUPPORTED_SWAGGER_VERSION) {
