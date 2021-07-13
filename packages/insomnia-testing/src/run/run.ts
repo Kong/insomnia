@@ -32,7 +32,7 @@ const runInternal = async <T>(
   global.chai = chai;
 
   const mocha: Mocha = new Mocha({
-    timeout: timeout || 5000,
+    timeout: timeout ?? 5000,
     globals: ['insomnia', 'chai'],
     bail,
     reporter,
