@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import styled, { css } from 'styled-components';
 
 const StyledDivider = styled.div<{ hasName: boolean }>`
-  border-bottom: 1px solid var(--hl-lg);
+  border-bottom: 1px solid var(--hl-sm);
   overflow: visible !important;
   height: 0;
   margin: var(--padding-md) var(--padding-md) var(--padding-md) var(--padding-md);
