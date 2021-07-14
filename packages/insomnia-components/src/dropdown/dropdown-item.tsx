@@ -126,7 +126,7 @@ export class DropdownItem extends PureComponent<DropdownItemProps> {
     );
     return (
       <StyledButton
-        className={buttonClass}
+        className={`${className} ${buttonClass}`.trim()}
         type="button"
         onClick={this._handleClick}
         disabled={disabled}

@@ -1,6 +1,7 @@
-import { Dropdown, DropdownDivider, DropdownItem } from 'insomnia-components';
+import { Dropdown, DropdownDivider, DropdownItem, SvgIcon } from 'insomnia-components';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import styled from 'styled-components';
 import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import { BASE_SPACE_ID, Space } from '../../../models/space';
@@ -20,11 +21,19 @@ const defaultSpace: SpaceSubset = {
   remoteId: null,
 };
 
-const check = <i className="fa fa-check" />;
 const cog = <i className="fa fa-cog" />;
-const plus = <i className="fa fa-plus" />;
+const plus = <SvgIcon icon="plus" />;
 const spinner = <i className="fa fa-spin fa-refresh" />;
-const home = <i className="fa fa-home" />;
+const home = <SvgIcon icon="home" />;
+const globe = <SvgIcon icon="globe" />;
+
+const Checkmark = styled(SvgIcon)({
+  fill: 'var(--color-surprise)',
+});
+
+const SpaceItem = styled(DropdownItem)({
+  fontWeight: 500,
+});
 
 interface Props {
   vcs?: VCS;
@@ -48,15 +57,15 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   const showSettings = useCallback(() => showModal(SpaceSettingsModal), []);
 
   const renderDropdownItem = useCallback(({ _id, name }: SpaceSubset) => (
-    <DropdownItem
+    <SpaceItem
       key={_id}
-      icon={_id === defaultSpace._id && home}
-      right={_id === selectedSpace._id && check}
+      icon={_id === defaultSpace._id ? home : globe}
+      right={_id === selectedSpace._id && <Checkmark icon='checkmark' />}
       value={_id}
       onClick={setActive}
     >
       {name}
-    </DropdownItem>),
+    </SpaceItem>),
   [selectedSpace, setActive]);
 
   // dropdown button
@@ -71,16 +80,19 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
     <Dropdown renderButton={button} onOpen={refresh}>
       {renderDropdownItem(defaultSpace)}
       <DropdownDivider>All spaces{' '}{loading && spinner}</DropdownDivider>
+
       {spaces.map(renderDropdownItem)}
+
       {spaceHasSettings && <>
         <DropdownDivider />
         <DropdownItem icon={cog} onClick={showSettings}>
           {strings.space.singular} Settings
         </DropdownItem>
       </>}
+
       <DropdownDivider />
       <DropdownItem icon={plus} onClick={createNew}>
-        Create new {strings.space.singular.toLowerCase()}
+        Create or join a {strings.space.singular.toLowerCase()}
       </DropdownItem>
     </Dropdown>
   );
