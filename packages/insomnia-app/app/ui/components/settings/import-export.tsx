@@ -7,9 +7,10 @@ import { strings } from '../../../common/strings';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
 import ExportRequestsModal from '../modals/export-requests-modal';
-import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
+import { exportAllToFile } from '../../redux/modules/global';
 import { getAppName } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
 
 interface Props {
   hideSettingsModal: () => void;
