@@ -54,10 +54,12 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern, src } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
+    filterTypes: [],
+    src,
   });
 
   // Find suites

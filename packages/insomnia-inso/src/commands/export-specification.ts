@@ -10,12 +10,13 @@ export type ExportSpecificationOptions = GlobalOptions & {
 
 export async function exportSpecification(
   identifier: string | null | undefined,
-  { output, workingDir, appDataDir, ci }: ExportSpecificationOptions,
+  { output, workingDir, appDataDir, ci, src }: ExportSpecificationOptions,
 ) {
   const db = await loadDb({
     workingDir,
     appDataDir,
     filterTypes: ['ApiSpec'],
+    src,
   });
   const specFromDb = identifier ? loadApiSpec(db, identifier) : await promptApiSpec(db, !!ci);
 

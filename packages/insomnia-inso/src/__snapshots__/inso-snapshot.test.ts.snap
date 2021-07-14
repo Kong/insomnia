@@ -8,9 +8,11 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead)
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
+  --src <file|dir>        set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
@@ -32,9 +34,11 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead)
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
+  --src <file|dir>        set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command
@@ -105,9 +109,11 @@ A CLI for Insomnia!
 Options:
   -v, --version           output the version number
   -w, --workingDir <dir>  set working directory
-  -a, --appDataDir <dir>  set the app data directory
+  -a, --appDataDir <dir>  set the app data directory (deprecated; use --src
+                          instead)
   --config <path>         path to configuration file
   --verbose               show additional logs while running the command
+  --src <file|dir>        set the app data source
   --printOptions          print the loaded options
   --ci                    run in CI, disables all prompts
   -h, --help              display help for command

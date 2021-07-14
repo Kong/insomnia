@@ -1,15 +1,18 @@
 import { emptyDb, loadDb } from './index';
 import _gitAdapter from './adapters/git-adapter';
 import _neDbAdapter from './adapters/ne-db-adapter';
+import _insomniaAdapter from './adapters/insomnia-adapter';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import path from 'path';
 
 jest.mock('./adapters/git-adapter');
 jest.mock('./adapters/ne-db-adapter');
+jest.mock('./adapters/insomnia-adapter');
 
 const gitAdapter = _gitAdapter as jest.MockedFunction<typeof _gitAdapter>;
 const neDbAdapter = _neDbAdapter as jest.MockedFunction<typeof _neDbAdapter>;
+const insomniaAdapter = _insomniaAdapter as jest.MockedFunction<typeof _insomniaAdapter>;
 
 describe('loadDb()', () => {
   beforeAll(() => {
@@ -19,6 +22,14 @@ describe('loadDb()', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     globalBeforeEach();
+  });
+
+  it('should load database from file if --src is provided', async () => {
+    insomniaAdapter.mockResolvedValue(emptyDb());
+    await loadDb({ src: '.' });
+    expect(logger.__getLogs().debug).toEqual([
+      `Data store configured from file at \`${path.resolve('.')}\``,
+    ]);
   });
 
   it('should default to current directory if working dir not defined', async () => {
@@ -46,6 +57,20 @@ describe('loadDb()', () => {
     expect(neDbAdapter).not.toHaveBeenCalled();
   });
 
+  it('should load nedb from src', async () => {
+    gitAdapter.mockResolvedValue(emptyDb());
+    neDbAdapter.mockResolvedValue(emptyDb());
+    await loadDb({
+      src: 'dir',
+      filterTypes: ['Environment'],
+    });
+    expect(logger.__getLogs().debug).toEqual([
+      `Data store configured from app data directory at \`${path.resolve('dir')}\``,
+    ]);
+    expect(gitAdapter).not.toHaveBeenCalled();
+    expect(neDbAdapter).toHaveBeenCalledWith('dir', ['Environment']);
+  });
+
   it('should load nedb from appDataDir', async () => {
     gitAdapter.mockResolvedValue(emptyDb());
     neDbAdapter.mockResolvedValue(emptyDb());
@@ -58,6 +83,18 @@ describe('loadDb()', () => {
     ]);
     expect(gitAdapter).not.toHaveBeenCalled();
     expect(neDbAdapter).toHaveBeenCalledWith('dir', ['Environment']);
+  });
+
+  it('should not load from git if src is defined', async () => {
+    neDbAdapter.mockResolvedValue(emptyDb());
+    await loadDb({
+      src: 'dir',
+    });
+    expect(logger.__getLogs().debug).toEqual([
+      `Data store configured from app data directory at \`${path.resolve('dir')}\``,
+    ]);
+    expect(gitAdapter).not.toHaveBeenCalled();
+    expect(neDbAdapter).toHaveBeenCalled();
   });
 
   it('should not load from git if appDataDir is defined', async () => {
@@ -89,7 +126,7 @@ describe('loadDb()', () => {
     neDbAdapter.mockResolvedValue(null);
     const db = await loadDb();
     expect(logger.__getLogs().warn).toEqual([
-      'No git or app data store found, re-run `inso` with `--verbose` to see tracing information',
+      'No git, app data store or Insomnia V4 export file found, re-run `inso` with `--verbose` to see tracing information',
     ]);
     expect(db).toEqual(emptyDb());
   });
