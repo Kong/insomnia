@@ -42,7 +42,7 @@ interface Props {
 export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   const { loading, refresh } = useRemoteSpaces(vcs);
 
-  // get list of spaces
+  // get list of spaces (which doesn't include the base space)
   const spaces = useSelector(selectSpaces);
 
   // figure out which space is selected
