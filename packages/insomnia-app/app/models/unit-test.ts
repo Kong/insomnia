@@ -2,18 +2,16 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Unit Test';
-
 export const type = 'UnitTest';
-
 export const prefix = 'ut';
-
 export const canDuplicate = true;
-
 export const canSync = true;
+
 interface BaseUnitTest {
   name: string;
   code: string;
   requestId: string | null;
+  timeoutMs: number | null;
 }
 
 export type UnitTest = BaseModel & BaseUnitTest;
@@ -24,6 +22,7 @@ export const isUnitTest = (model: Pick<BaseModel, 'type'>): model is UnitTest =>
 
 export function init() {
   return {
+    timeoutMs: null,
     requestId: null,
     name: 'My Test',
     code: '',

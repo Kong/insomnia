@@ -24,6 +24,7 @@ export type RunTestsOptions = GlobalOptions & {
   bail?: boolean;
   keepFile?: boolean;
   testNamePattern?: string;
+  timeout?: number;
 };
 
 function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
@@ -38,10 +39,11 @@ function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
 const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite => ({
   name: dbSuite.name,
   suites: [],
-  tests: dbTests.map(({ name, code, requestId }) => ({
+  tests: dbTests.map(({ name, code, requestId, timeoutMs }) => ({
     name,
     code,
-    defaultRequestId: requestId,
+    defaultRequestId: requestId || undefined,
+    timeoutMs: timeoutMs || undefined,
   })),
 });
 
@@ -54,7 +56,7 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern, timeout } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
@@ -100,6 +102,7 @@ export async function runInsomniaTests(
       keepFile,
       sendRequest,
       testFilter: testNamePattern,
+      timeout,
     }),
   );
 }

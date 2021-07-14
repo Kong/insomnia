@@ -164,6 +164,7 @@ Run Insomnia unit test suites
 Options:
   -e, --env <identifier>         environment to use
   -t, --testNamePattern <regex>  run tests that match the regex
+  --timeout <ms>                 timeout in milliseconds (set to 0 to)
   -r, --reporter <reporter>      reporter to use, options are [dot, list, min,
                                  progress, spec] (default: spec)
   -b, --bail                     abort (\\"bail\\") after first test failure

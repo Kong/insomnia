@@ -37,6 +37,7 @@ export interface InsomniaOptions {
   bail?: boolean;
   keepFile?: boolean;
   testFilter?: string;
+  timeout?: number;
 }
 
 /**

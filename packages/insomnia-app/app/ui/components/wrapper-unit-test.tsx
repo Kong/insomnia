@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, PureComponent, ReactNode, useCallback, useState } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
@@ -270,7 +270,8 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       tests.push({
         name: t.name,
         code: t.code,
-        defaultRequestId: t.requestId,
+        defaultRequestId: t.requestId || undefined,
+        timeoutMs: t.timeoutMs || undefined,
       });
     }
 
@@ -431,6 +432,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             value={unitTest.name}
           />
         }>
+        <TimeoutSelector unitTest={unitTest} />
         <CodeEditor
           dynamicHeight
           manualPrettify
@@ -554,13 +556,54 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
-        renderPageSidebar={this._renderPageSidebar}
-        renderPaneOne={this._renderTestSuite}
-        renderPaneTwo={this._renderResults}
-        renderPageHeader={this._renderPageHeader}
+        renderPageSidebar={() => this._renderPageSidebar()}
+        renderPaneOne={() => this._renderTestSuite()}
+        renderPaneTwo={() => this._renderResults()}
+        renderPageHeader={() => this._renderPageHeader()}
       />
     );
   }
 }
 
 export default WrapperUnitTest;
+
+const TimeoutSelector: FC<{unitTest: UnitTest}> = ({ unitTest }) => {
+  const [overrideTimeout, toggleTimeoutOverride] = useState(false);
+  const defaultTimeout = 5000;
+
+  const handleToggleTimeoutEnabled = useCallback(async (enabled: boolean) => {
+    toggleTimeoutOverride(enabled);
+    await models.unitTest.update(unitTest, { timeoutMs: enabled ? defaultTimeout : null });
+  }, [unitTest]);
+
+  const handleSetTimeout = useCallback(async (value: number) => {
+    await models.unitTest.update(unitTest, { timeoutMs: value });
+  }, [unitTest]);
+
+  const toggleElement = (<div className="form-control form-control--thin">
+    <label className="inline-block">
+      Override timeout?
+      <input
+        type="checkbox"
+        checked={overrideTimeout}
+        onChange={e => handleToggleTimeoutEnabled(e.target.checked)}
+      />
+    </label>
+  </div>);
+
+  const numberElement = (<div className="form-control form-control--thin">
+    <label className="inline-block">
+      Timeout (in ms)
+      <input
+        type="number"
+        value={unitTest.timeoutMs || defaultTimeout}
+        onChange={e => handleSetTimeout(Number(e.target.value))}
+      />
+    </label>
+  </div>);
+
+  return <div className="form-row">
+    {toggleElement}
+    {overrideTimeout && numberElement}
+  </div>;
+};
