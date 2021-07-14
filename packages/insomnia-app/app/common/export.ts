@@ -31,7 +31,7 @@ import { isCookieJar } from '../models/cookie-jar';
 import { isEnvironment } from '../models/environment';
 import { isUnitTestSuite } from '../models/unit-test-suite';
 import { isUnitTest } from '../models/unit-test';
-import { resetKeys } from '../sync/vcs/ignore-keys';
+import { resetKeys } from '../sync/ignore-keys';
 
 const EXPORT_FORMAT = 4;
 

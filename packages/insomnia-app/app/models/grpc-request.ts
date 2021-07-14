@@ -2,13 +2,9 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'gRPC Request';
-
 export const type = 'GrpcRequest';
-
 export const prefix = 'greq';
-
 export const canDuplicate = true;
-
 export const canSync = true;
 
 export interface GrpcRequestBody {

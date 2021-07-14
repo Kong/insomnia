@@ -1,3 +1,4 @@
+import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import Stat from './stat';
 import { SystemError } from './system-error';
@@ -36,7 +37,7 @@ export class MemClient {
   __fs: FSEntry;
   __ino: 0;
 
-  static createClient() {
+  static createClient(): PromiseFsClient {
     return {
       promises: new MemClient(),
     };

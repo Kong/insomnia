@@ -1167,7 +1167,7 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Check on VCS things
-    const { activeWorkspace, activeGitRepository } = this.props;
+    const { activeWorkspace, activeSpace, activeGitRepository } = this.props;
     const changingWorkspace = prevProps.activeWorkspace?._id !== activeWorkspace?._id;
 
     // Update VCS if needed
@@ -1176,16 +1176,16 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Update Git VCS if needed
-    const nextGit = activeGitRepository;
-    const prevGit = prevProps.activeGitRepository;
+    const changingSpace = prevProps.activeSpace?._id !== activeSpace?._id;
+    const changingGit = prevProps.activeGitRepository?._id !== activeGitRepository?._id;
 
-    if (changingWorkspace || prevGit?._id !== nextGit?._id) {
+    if (changingWorkspace || changingSpace || changingGit) {
       this._updateGitVCS();
     }
   }
 
   async _updateGitVCS() {
-    const { activeGitRepository, activeWorkspace } = this.props;
+    const { activeGitRepository, activeWorkspace, activeSpace } = this.props;
 
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
@@ -1205,7 +1205,7 @@ class App extends PureComponent<AppProps, State> {
       );
 
       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-      const neDbClient = NeDBClient.createClient(activeWorkspace._id);
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeSpace?._id);
 
       /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
       const gitDataClient = fsClient(baseDir);

@@ -8,6 +8,7 @@ import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 import { ValueOf } from 'type-fest';
 import { isWorkspaceActivity } from '../../common/constants';
+import { Space } from '../../models/space';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
@@ -67,7 +68,7 @@ export const selectSpaces = createSelector(
 export const selectActiveSpace = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeSpaceId,
-  (entities, activeSpaceId) => {
+  (entities, activeSpaceId): Space | undefined => {
     return entities.spaces[activeSpaceId || 'n/a'];
   },
 );
