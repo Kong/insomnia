@@ -40,10 +40,11 @@ function validateOptions({ reporter }: Partial<RunTestsOptions>): boolean {
 const createTestSuite = (dbSuite: UnitTestSuite, dbTests: UnitTest[]): TestSuite => ({
   name: dbSuite.name,
   suites: [],
-  tests: dbTests.map(({ name, code, requestId }) => ({
+  tests: dbTests.map(({ name, code, requestId, timeoutMs }) => ({
     name,
     code,
-    defaultRequestId: requestId,
+    defaultRequestId: requestId || undefined,
+    timeoutMs: timeoutMs || undefined,
   })),
 });
 

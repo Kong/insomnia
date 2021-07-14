@@ -3,9 +3,10 @@ import { writeFile } from 'fs';
 import { escapeJsStr, indent } from './util';
 
 export interface Test {
-  name: string
-  code: string
-  defaultRequestId: string | null
+  name: string;
+  code: string;
+  defaultRequestId?: string;
+  timeoutMs?: number;
 }
 
 export interface TestSuite {
@@ -94,7 +95,7 @@ const generateTestLines = (n: number, test?: Test | null) => {
   lines.push(indent(n, `it('${escapeJsStr(test.name)}', async () => {`));
 
   // Add helper variables that are necessary
-  const { defaultRequestId } = test;
+  const { defaultRequestId, timeoutMs } = test;
 
   if (typeof defaultRequestId === 'string') {
     lines.push(indent(n, '// Set active request on global insomnia object'));
@@ -107,6 +108,10 @@ const generateTestLines = (n: number, test?: Test | null) => {
   test.code && lines.push(indent(n + 1, test.code));
 
   // Close the it() block
-  lines.push(indent(n, '});'));
+  if (typeof timeoutMs === 'number') {
+    lines.push(indent(n, `}).timeout(${timeoutMs});`));
+  } else {
+    lines.push(indent(n, '});'));
+  }
   return lines;
 };

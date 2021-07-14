@@ -23,6 +23,7 @@ interface BaseUnitTest {
     name: string
     code: string
     requestId: string | null
+    timeoutMs: number | null
 }
 
 export type UnitTest = BaseModel & BaseUnitTest

@@ -123,7 +123,9 @@ export const UnitTestItem: FunctionComponent<UnitTestItemProps> = ({
           delay: 0,
         }}
       >
-        {isToggled && <div>{children}</div>}
+        {isToggled && <div>
+          {children}
+        </div>}
       </StyledUnitTestContent>
     </StyledResultListItem>
   );
