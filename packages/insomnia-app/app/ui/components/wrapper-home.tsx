@@ -30,14 +30,10 @@ import TimeFromNow from './time-from-now';
 import Highlight from './base/highlight';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import type {
-  HandleImportClipboardCallback,
-  HandleImportFileCallback,
-  HandleImportUriCallback,
   WrapperProps,
 } from './wrapper';
 import Notice from './notice';
 import PageLayout from './page-layout';
-import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
@@ -52,22 +48,16 @@ import { cloneGitRepository } from '../redux/modules/git';
 import { MemClient } from '../../sync/git/mem-client';
 import { SpaceDropdown } from './dropdowns/space-dropdown';
 import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
+import { importClipBoard, importFile, importUri } from '../redux/modules/import';
+import { ForceToWorkspace } from '../redux/modules/helpers';
 
 interface RenderedCard {
   card: ReactNode;
   lastModifiedTimestamp?: number | null;
 }
 
-interface ReduxDispatchProps {
-  handleCreateWorkspace: typeof createWorkspace;
-  handleGitCloneWorkspace: typeof cloneGitRepository;
-}
-
-interface Props extends ReduxDispatchProps {
+interface Props extends ReturnType<typeof mapDispatchToProps> {
   wrapperProps: WrapperProps;
-  handleImportFile: HandleImportFileCallback;
-  handleImportUri: HandleImportUriCallback;
-  handleImportClipboard: HandleImportClipboardCallback;
 }
 
 interface State {
@@ -116,13 +106,13 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _handleImportFile() {
     this.props.handleImportFile({
-      forceToWorkspace: ForceToWorkspaceKeys.new,
+      forceToWorkspace: ForceToWorkspace.new,
     });
   }
 
   _handleImportClipBoard() {
     this.props.handleImportClipboard({
-      forceToWorkspace: ForceToWorkspaceKeys.new,
+      forceToWorkspace: ForceToWorkspace.new,
     });
   }
 
@@ -134,7 +124,7 @@ class WrapperHome extends PureComponent<Props, State> {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         this.props.handleImportUri(uri, {
-          forceToWorkspace: ForceToWorkspaceKeys.new,
+          forceToWorkspace: ForceToWorkspace.new,
         });
       },
     });
@@ -421,9 +411,22 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 }
 
-const mapDispatchToProps = (dispatch): ReduxDispatchProps => ({
-  handleCreateWorkspace: bindActionCreators(createWorkspace, dispatch),
-  handleGitCloneWorkspace: bindActionCreators(cloneGitRepository, dispatch),
-});
+const mapDispatchToProps = (dispatch) => {
+  const bound = bindActionCreators({
+    createWorkspace,
+    cloneGitRepository,
+    importFile,
+    importClipBoard,
+    importUri,
+  }, dispatch);
+
+  return ({
+    handleCreateWorkspace: bound.createWorkspace,
+    handleGitCloneWorkspace: bound.cloneGitRepository,
+    handleImportFile: bound.importFile,
+    handleImportUri: bound.importUri,
+    handleImportClipboard: bound.importClipBoard,
+  });
+};
 
 export default connect(null, mapDispatchToProps)(WrapperHome);

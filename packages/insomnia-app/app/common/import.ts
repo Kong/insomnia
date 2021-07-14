@@ -39,6 +39,7 @@ interface ConvertResult {
 
 export interface ImportRawConfig {
   getWorkspaceId: ImportToWorkspacePrompt;
+  getSpaceId?: () => Promise<string | null>;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
@@ -112,6 +113,7 @@ export async function importRaw(
   {
     getWorkspaceId,
     getWorkspaceScope,
+    getSpaceId,
     enableDiffBasedPatching,
     enableDiffDeep,
     bypassDiffProps,
@@ -246,15 +248,18 @@ export async function importRaw(
         updateDoc.url = resource.url;
       }
 
-      // If workspace, don't overwrite the existing scope
+      // If workspace preserve the scope and parentId of the existing workspace while importing
       if (isWorkspace(model)) {
         (updateDoc as Workspace).scope = (existingDoc as Workspace).scope;
+        (updateDoc as Workspace).parentId = (existingDoc as Workspace).parentId;
       }
 
       newDoc = await db.docUpdate(existingDoc, updateDoc);
     } else {
+      // If workspace, check and set the scope and parentId while importing a new workspace
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
+        await createWorkspaceInSpace(resource as Workspace, getSpaceId);
       }
 
       newDoc = await db.docCreate(model.type, resource);
@@ -306,7 +311,7 @@ async function updateWorkspaceScope(
   resultType: ConvertResultType,
   getWorkspaceScope?: SetWorkspaceScopePrompt,
 ) {
-  // Set the workspace scope if creating a new workspace
+  // Set the workspace scope if creating a new workspace during import
   //  IF is creating a new workspace
   //  AND imported resource has no preset scope property OR scope is null
   //  AND we have a function to get scope
@@ -325,6 +330,17 @@ async function updateWorkspaceScope(
 
     const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
     resource.scope = await getWorkspaceScope(nameToPrompt);
+  }
+}
+
+async function createWorkspaceInSpace(
+  resource: Workspace,
+  getSpaceId?: () => Promise<string | null>,
+) {
+  if (getSpaceId) {
+    // Set the workspace parent if creating a new workspace during import
+    // @ts-expect-error workspace parent can be null or string
+    resource.parentId = await getSpaceId();
   }
 }
 

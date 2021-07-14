@@ -5,17 +5,19 @@ import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { showModal } from '.';
 
 export interface SelectModalShowOptions {
   message: string | null;
   onCancel?: () => void;
-  onDone?: (selectedValue: string | null) => Promise<void>;
+  onDone?: (selectedValue: string | null) => void | Promise<void>;
   options: {
     name: string;
     value: string;
   }[];
   title: string | null;
   value: string | null;
+  noEscape?: boolean;
 }
 
 const initialState: SelectModalShowOptions = {
@@ -47,6 +49,7 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
     options,
     title,
     value,
+    noEscape,
   }: SelectModalShowOptions = initialState) {
     this.setState({
       message,
@@ -55,6 +58,7 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
       options,
       title,
       value,
+      noEscape,
     });
     this.modal.current?.show();
     setTimeout(() => {
@@ -63,9 +67,10 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
   }
 
   render() {
-    const { message, title, options, value, onCancel } = this.state;
+    const { message, title, options, value, onCancel, noEscape } = this.state;
+
     return (
-      <Modal ref={this.modal} onCancel={onCancel}>
+      <Modal ref={this.modal} onCancel={onCancel} noEscape={noEscape}>
         <ModalHeader>{title || 'Confirm?'}</ModalHeader>
         <ModalBody className="wide pad">
           <p>{message}</p>
@@ -88,3 +93,5 @@ export class SelectModal extends PureComponent<{}, SelectModalShowOptions> {
     );
   }
 }
+
+export const showSelectModal = (opts: SelectModalShowOptions) => showModal(SelectModal, opts);

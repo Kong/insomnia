@@ -30,7 +30,6 @@ import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import classnames from 'classnames';
 import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import type { HandleImportFileCallback } from '../wrapper';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
@@ -55,7 +54,6 @@ interface Props {
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleImport: Function;
-  handleImportFile: HandleImportFileCallback;
   workspace: Workspace;
   settings: Settings;
   isVariableUncovered: boolean;
@@ -132,7 +130,6 @@ class RequestPane extends PureComponent<Props> {
       handleGenerateCode,
       handleGetRenderContext,
       handleImport,
-      handleImportFile,
       handleCreateRequest,
       handleRender,
       handleSend,
@@ -161,7 +158,6 @@ class RequestPane extends PureComponent<Props> {
       return (
         <PlaceholderRequestPane
           hotKeyRegistry={hotKeyRegistry}
-          handleImportFile={handleImportFile}
           handleCreateRequest={handleCreateRequest}
         />
       );

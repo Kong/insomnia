@@ -79,7 +79,6 @@ import type { GlobalActivity } from '../../common/constants';
 import ProtoFilesModal from './modals/proto-files-modal';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
 import WrapperMigration from './wrapper-migration';
-import type { ImportOptions } from '../redux/modules/global';
 import WrapperAnalytics from './wrapper-analytics';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { RequestGroup } from '../../models/request-group';
@@ -133,10 +132,6 @@ export type WrapperProps = AppProps & {
   vcs: VCS | null;
   gitVCS: GitVCS | null;
 }
-
-export type HandleImportFileCallback = (options?: ImportOptions) => void;
-export type HandleImportClipboardCallback = (options?: ImportOptions) => void;
-export type HandleImportUriCallback = (uri: string, options?: ImportOptions) => void;
 
 interface State {
   forceRefreshKey: number;
@@ -308,18 +303,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
   _handleUpdateSettingsUseBulkParametersEditor(useBulkParametersEditor: boolean) {
     return models.settings.update(this.props.settings, { useBulkParametersEditor });
-  }
-
-  _handleImportFile(options?: ImportOptions) {
-    this.props.handleImportFileToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
-  }
-
-  _handleImportUri(uri: string, options?: ImportOptions) {
-    this.props.handleImportUriToWorkspace(uri, { workspaceId: this.props.activeWorkspace?._id, ...options });
-  }
-
-  _handleImportClipBoard(options?: ImportOptions) {
-    this.props.handleImportClipBoardToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
   }
 
   _handleSetActiveResponse(responseId: string | null) {
@@ -764,9 +747,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           {(activity === ACTIVITY_HOME || !activeWorkspace) && (
             <WrapperHome
               wrapperProps={this.props}
-              handleImportFile={this._handleImportFile}
-              handleImportUri={this._handleImportUri}
-              handleImportClipboard={this._handleImportClipBoard}
             />
           )}
 
@@ -800,7 +780,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               handleForceUpdateRequest={this._handleForceUpdateRequest}
               handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
               handleImport={this._handleImport}
-              handleImportFile={this._handleImportFile}
               handleRequestCreate={this._handleCreateRequestInWorkspace}
               handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
               handleSendAndDownloadRequestWithActiveEnvironment={
@@ -835,11 +814,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_ANALYTICS && <WrapperAnalytics wrapperProps={this.props} />}
 
           {(activity === ACTIVITY_ONBOARDING || activity === null) && (
-            <WrapperOnboarding
-              wrapperProps={this.props}
-              handleImportFile={this._handleImportFile}
-              handleImportUri={this._handleImportUri}
-            />
+            <WrapperOnboarding wrapperProps={this.props} />
           )}
         </Fragment>
       </Fragment>

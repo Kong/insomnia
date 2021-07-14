@@ -32,15 +32,12 @@ import CookiesModal from '../components/modals/cookies-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
 import {
-  importUri,
   loadRequestStart,
   loadRequestStop,
   newCommand,
   setActiveWorkspace,
   setActiveActivity,
   goToNextActivity,
-  importFile,
-  importClipBoard,
   exportRequestsToFile,
 } from '../redux/modules/global';
 import { initialize } from '../redux/modules/entities';
@@ -124,6 +121,7 @@ import { WorkspaceMeta } from '../../models/workspace-meta';
 import { Response } from '../../models/response';
 import { RenderContextAndKeys } from '../../common/render';
 import { RootState } from '../redux/modules';
+import { importUri } from '../redux/modules/import';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -1372,7 +1370,7 @@ class App extends PureComponent<AppProps, State> {
       'drop',
       async e => {
         e.preventDefault();
-        const { activeWorkspace, handleImportUriToWorkspace } = this.props;
+        const { activeWorkspace, handleImportUri } = this.props;
 
         if (!activeWorkspace) {
           return;
@@ -1397,7 +1395,7 @@ class App extends PureComponent<AppProps, State> {
           ),
           addCancel: true,
         });
-        handleImportUriToWorkspace(uri, { workspaceId: activeWorkspace?._id });
+        handleImportUri(uri, { workspaceId: activeWorkspace?._id });
       },
       false,
     );
@@ -1755,15 +1753,13 @@ function mapStateToProps(state: RootState) {
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {
-    importUri: handleImportUriToWorkspace,
+    importUri: handleImportUri,
     loadRequestStart: handleStartLoading,
     loadRequestStop: handleStopLoading,
     setActiveWorkspace: handleSetActiveWorkspace,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
     goToNextActivity: handleGoToNextActivity,
-    importFile: handleImportFileToWorkspace,
-    importClipBoard: handleImportClipBoardToWorkspace,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1774,21 +1770,17 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     setActiveWorkspace,
     setActiveActivity,
     goToNextActivity,
-    importFile,
-    importClipBoard,
     exportRequestsToFile,
     initialize,
   }, dispatch);
   return {
     handleCommand,
-    handleImportUriToWorkspace,
+    handleImportUri,
     handleSetActiveWorkspace,
     handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,
     handleGoToNextActivity,
-    handleImportFileToWorkspace,
-    handleImportClipBoardToWorkspace,
     handleExportRequestsToFile,
     handleInitializeEntities,
     handleMoveDoc: _moveDoc, // TODO this doesn't use dispatch.. it's unclear why it needs to be here.

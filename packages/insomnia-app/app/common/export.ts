@@ -31,6 +31,7 @@ import { isCookieJar } from '../models/cookie-jar';
 import { isEnvironment } from '../models/environment';
 import { isUnitTestSuite } from '../models/unit-test-suite';
 import { isUnitTest } from '../models/unit-test';
+import { resetKeys } from '../sync/vcs/ignore-keys';
 
 const EXPORT_FORMAT = 4;
 
@@ -210,6 +211,8 @@ export async function exportRequestsData(
       if (isWorkspace(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_WORKSPACE;
+        // reset the parentId of a workspace
+        resetKeys(d);
       } else if (isCookieJar(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_COOKIE_JAR;
