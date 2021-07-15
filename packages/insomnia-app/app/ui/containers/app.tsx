@@ -32,7 +32,6 @@ import {
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
-import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
@@ -48,9 +47,7 @@ import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as requestOperations from '../../models/helpers/request-operations';
-import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
@@ -499,32 +496,6 @@ class App extends PureComponent<AppProps, State> {
         models.stats.incrementCreatedRequests();
       },
     });
-  }
-
-  _workspaceDuplicateById(callback: () => void, workspaceId: string) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
-    showPrompt({
-      // @ts-expect-error -- TSCONVERSION workspace can be null
-      title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
-      // @ts-expect-error -- TSCONVERSION workspace can be null
-      defaultValue: getWorkspaceName(workspace, apiSpec),
-      submitName: 'Create',
-      selectText: true,
-      label: 'New Name',
-      onComplete: async name => {
-        // @ts-expect-error -- TSCONVERSION workspace can be null
-        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
-        await this.props.handleSetActiveWorkspace(newWorkspace._id);
-        callback();
-      },
-    });
-  }
-
-  _workspaceDuplicate(callback: () => void) {
-    if (this.props.activeWorkspace) {
-      this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
-    }
   }
 
   async _fetchRenderContext() {
@@ -1566,7 +1537,6 @@ class App extends PureComponent<AppProps, State> {
                 handleGetRenderContext={this._handleGetRenderContext}
                 handleDuplicateRequest={this._requestDuplicate}
                 handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                handleDuplicateWorkspace={this._workspaceDuplicate}
                 handleCreateRequestGroup={this._requestGroupCreate}
                 handleGenerateCode={App._handleGenerateCode}
                 handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}

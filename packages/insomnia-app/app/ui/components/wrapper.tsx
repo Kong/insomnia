@@ -76,6 +76,7 @@ import SyncHistoryModal from './modals/sync-history-modal';
 import SyncMergeModal from './modals/sync-merge-modal';
 import SyncShareModal from './modals/sync-share-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
+import { WorkspaceDuplicateModal } from './modals/workspace-duplicate-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
 import WrapperModal from './modals/wrapper-modal';
@@ -97,7 +98,6 @@ export type WrapperProps = AppProps & {
   handleCreateRequest: (id: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
-  handleDuplicateWorkspace: Function;
   handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
@@ -480,7 +480,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activity,
       gitVCS,
       handleActivateRequest,
-      handleDuplicateWorkspace,
       handleExportRequestsToFile,
       handleGetRenderContext,
       handleInitializeEntities,
@@ -539,6 +538,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} settings={settings} />
             <SpaceSettingsModal ref={registerModal} />
+            <WorkspaceDuplicateModal ref={registerModal} />
 
             <CodePromptModal
               ref={registerModal}
@@ -620,7 +620,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 handleGetRenderContext={handleGetRenderContext}
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-                handleDuplicateWorkspace={handleDuplicateWorkspace}
                 handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
                 isVariableUncovered={isVariableUncovered}
               /> : null}

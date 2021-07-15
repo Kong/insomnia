@@ -3,9 +3,9 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
-import { BASE_SPACE_ID, isBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/space';
+import { defaultSpace, SpaceSubset } from '../../../models/helpers/default-space';
+import { isBaseSpace, isRemoteSpace, spaceHasSettings } from '../../../models/space';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteSpaces } from '../../hooks/space';
 import { setActiveSpace } from '../../redux/modules/global';
@@ -13,14 +13,6 @@ import { createSpace } from '../../redux/modules/space';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/space-settings-modal';
-
-type SpaceSubset = Pick<Space, '_id' | 'name' | 'remoteId'>;
-
-const baseSpace: SpaceSubset = {
-  _id: BASE_SPACE_ID,
-  name: getAppName(),
-  remoteId: null,
-};
 
 const svgPlacementHack = {
   // This is a bit of a hack/workaround to avoid some larger changes that we'd need to do with dropdown item icons and tooltips.
@@ -95,7 +87,7 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   // get list of spaces (which doesn't include the base space)
   const spaces = useSelector(selectSpaces);
 
-  const activeSpace = useSelector(selectActiveSpace) || baseSpace;
+  const activeSpace = useSelector(selectActiveSpace) || defaultSpace;
   const dispatch = useDispatch();
   const setActive = useCallback((spaceId: string) => dispatch(setActiveSpace(spaceId)), [dispatch]);
   const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
@@ -112,9 +104,9 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
       <SpaceDropdownItem
-        isActive={baseSpace._id === activeSpace._id}
+        isActive={defaultSpace._id === activeSpace._id}
         setActive={setActive}
-        space={baseSpace}
+        space={defaultSpace}
       />
 
       <DropdownDivider>All spaces{' '}{loading && spinner}</DropdownDivider>

@@ -79,6 +79,11 @@ export const selectAllWorkspaces = createSelector(
   entities => entities.workspaces,
 );
 
+export const selectAllApiSpecs = createSelector(
+  selectEntitiesLists,
+  entities => entities.apiSpecs,
+);
+
 export const selectWorkspacesForActiveSpace = createSelector(
   selectAllWorkspaces,
   selectActiveSpace,
