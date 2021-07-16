@@ -7,22 +7,17 @@ import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import * as models from '../../../models/index';
-import { Space } from '../../../models/space';
+import { isBaseSpace, isRemoteSpace } from '../../../models/space';
 import { strings } from '../../../common/strings';
 import { selectActiveSpace } from '../../redux/selectors';
 import { bindActionCreators } from 'redux';
 import * as spaceActions from '../../redux/modules/space';
 import { connect } from 'react-redux';
+import { RootState } from '../../redux/modules';
 
-interface ReduxStateProps {
-  space?: Space;
-}
+export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
-interface ReduxDispatchProps {
-  handleRemoveSpace: (space: Space) => void;
-}
-
-interface Props extends ReduxStateProps, ReduxDispatchProps { }
+type Props = ReduxProps
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class SpaceSettingsModal extends PureComponent<Props> {
@@ -33,32 +28,26 @@ class SpaceSettingsModal extends PureComponent<Props> {
   }
 
   _handleRemoveSpace() {
-    if (this.props.space) {
-      this.props.handleRemoveSpace(this.props.space);
-    }
-
+    this.props.handleRemoveSpace(this.props.space);
     this.hide();
   }
 
   async _handleRename(name: string) {
     const { space } = this.props;
-
-    if (space) {
-      await models.space.update(space, { name });
-    }
+    await models.space.update(space, { name });
   }
 
   show() {
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
     const { space } = this.props;
-    if (!space) {
+    if (isBaseSpace(space) || isRemoteSpace(space)) {
       return null;
     }
 
@@ -97,12 +86,12 @@ class SpaceSettingsModal extends PureComponent<Props> {
   }
 }
 
-const mapStateToProps = (state): ReduxStateProps => {
+const mapStateToProps = (state: RootState) => {
   const space = selectActiveSpace(state);
   return { space };
 };
 
-const mapDispatchToProps = (dispatch): ReduxDispatchProps => {
+const mapDispatchToProps = dispatch => {
   const boundSpaceActions = bindActionCreators(spaceActions, dispatch);
   return {
     handleRemoveSpace: boundSpaceActions.removeSpace,

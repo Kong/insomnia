@@ -30,7 +30,7 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   // figure out which space is selected
   const activeSpace = useSelector(selectActiveSpace);
   const selectedSpace = activeSpace;
-  const spaceHasSettings = isBaseSpace(selectedSpace) && isLocalSpace(selectedSpace);
+  const spaceHasSettings = isNotBaseSpace(selectedSpace) && isLocalSpace(selectedSpace);
 
   // select a new space
   const dispatch = useDispatch();
