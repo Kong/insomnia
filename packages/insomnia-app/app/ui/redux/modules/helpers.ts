@@ -2,7 +2,7 @@ import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showSelectModal } from '../../components/modals/select-modal';
-import { BASE_SPACE_ID, isBaseSpace, Space } from '../../../models/space';
+import { Space } from '../../../models/space';
 
 export enum ForceToWorkspace {
   new = 'new',
@@ -67,9 +67,9 @@ export type SetSpaceIdPrompt = () => Promise<string>;
 export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[]; activeSpace: Space; }): SetSpaceIdPrompt {
   return function() {
     return new Promise(resolve => {
-      // If only one space exists, and it's the base space, return that
-      if (spaces.length === 1 && spaces.find(isBaseSpace)) {
-        return resolve(BASE_SPACE_ID);
+      // If only one space exists, return that
+      if (spaces.length === 1) {
+        return resolve(spaces[0]._id);
       }
 
       const options = spaces.map(space => ({ name: space.name, value: space._id }));
