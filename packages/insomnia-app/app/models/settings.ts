@@ -68,16 +68,13 @@ interface BaseSettings {
 }
 
 export type Settings = BaseModel & BaseSettings;
-
 export const name = 'Settings';
-
 export const type = 'Settings';
-
 export const prefix = 'set';
-
 export const canDuplicate = false;
-
 export const canSync = false;
+
+export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme' | 'darkTheme' | 'theme'>;
 
 export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => (
   model.type === type
