@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { forwardRef, PureComponent, createRef, useCallback, RefObject } from 'react';
+import React, { forwardRef, PureComponent, createRef, useCallback, ForwardRefRenderFunction } from 'react';
+
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { showModal } from '.';
@@ -32,7 +33,7 @@ interface Props extends Options {
   hide: () => void,
 }
 
-const WorkspaceDuplicateModalInternalWithRef = ({ workspace, apiSpec, onDone, hide }: Props, ref: RefObject<Modal>) => {
+const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, Props> = ({ workspace, apiSpec, onDone, hide }, ref) => {
   const dispatch = useDispatch();
 
   const spaces = useSelector(selectSpaces);
