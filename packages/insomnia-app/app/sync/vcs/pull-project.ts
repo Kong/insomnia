@@ -10,7 +10,7 @@ import { Space } from '../../models/space';
 interface Options {
   vcs: VCS;
   project: Project;
-  space?: Space;
+  space: Space;
 }
 
 export const pullProject = async ({ vcs, project, space }: Options) => {
@@ -20,7 +20,7 @@ export const pullProject = async ({ vcs, project, space }: Options) => {
   const remoteBranches = await vcs.getRemoteBranches();
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
-  const workspaceParentId = space?._id || null;
+  const workspaceParentId = space._id;
 
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
@@ -38,7 +38,6 @@ export const pullProject = async ({ vcs, project, space }: Options) => {
     // @ts-expect-error -- TSCONVERSION
     for (const doc of (await vcs.allDocuments() || [])) {
       if (isWorkspace(doc)) {
-        // @ts-expect-error parent id is optional for workspaces
         doc.parentId = workspaceParentId;
       }
       await database.upsert(doc);

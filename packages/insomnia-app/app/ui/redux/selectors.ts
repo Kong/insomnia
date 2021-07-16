@@ -8,6 +8,7 @@ import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 import { ValueOf } from 'type-fest';
 import { isWorkspaceActivity } from '../../common/constants';
+import { BASE_SPACE_ID } from '../../models/space';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
@@ -68,7 +69,7 @@ export const selectActiveSpace = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeSpaceId,
   (entities, activeSpaceId) => {
-    return activeSpaceId ? entities.spaces[activeSpaceId] : undefined;
+    return entities.spaces[activeSpaceId] || entities.spaces[BASE_SPACE_ID];
   },
 );
 
@@ -80,10 +81,7 @@ export const selectAllWorkspaces = createSelector(
 export const selectWorkspacesForActiveSpace = createSelector(
   selectAllWorkspaces,
   selectActiveSpace,
-  (workspaces, activeSpace) => {
-    const parentId = activeSpace?._id || null;
-    return workspaces.filter(w => w.parentId === parentId);
-  },
+  (workspaces, activeSpace) => workspaces.filter(w => w.parentId === activeSpace._id),
 );
 
 export const selectActiveWorkspace = createSelector(

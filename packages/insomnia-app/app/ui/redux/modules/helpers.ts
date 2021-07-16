@@ -2,8 +2,7 @@ import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showSelectModal } from '../../components/modals/select-modal';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
-import { getAppName } from '../../../common/constants';
+import { BASE_SPACE_ID, isBaseSpace, Space } from '../../../models/space';
 
 export enum ForceToWorkspace {
   new = 'new',
@@ -64,18 +63,17 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
   };
 }
 
-export type SetSpaceIdPrompt = () => Promise<string | null>;
-export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[]; activeSpace?: Space; }): SetSpaceIdPrompt {
+export type SetSpaceIdPrompt = () => Promise<string>;
+export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[]; activeSpace: Space; }): SetSpaceIdPrompt {
   return function() {
     return new Promise(resolve => {
-      // If no spaces exist, return null (indicating no parent/space)
-      if (spaces.length === 0) {
-        return resolve(null);
+      // If only one space exists, and it's the base space, return that
+      if (spaces.length === 1 && spaces.find(isBaseSpace)) {
+        return resolve(BASE_SPACE_ID);
       }
 
-      const options = [{ name: getAppName(), value: BASE_SPACE_ID }, ...spaces.map(space => ({ name: space.name, value: space._id }))];
-
-      const defaultValue = activeSpace?._id || options[0].value;
+      const options = spaces.map(space => ({ name: space.name, value: space._id }));
+      const defaultValue = activeSpace._id;
 
       showSelectModal({
         title: 'Import',
@@ -84,7 +82,8 @@ export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[];
         value: defaultValue,
         noEscape: true,
         onDone: selectedSpaceId => {
-          resolve(selectedSpaceId === BASE_SPACE_ID ? null : selectedSpaceId);
+          // @ts-expect-error onDone can return null
+          resolve(selectedSpaceId);
         },
       });
     });

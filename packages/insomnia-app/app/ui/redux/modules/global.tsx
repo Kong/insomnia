@@ -78,7 +78,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeSpaceReducer(state: string | null = BASE_SPACE_ID, action) {
+function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
       return action.spaceId;
@@ -140,7 +140,7 @@ function loginStateChangeReducer(state = false, action) {
 
 export interface GlobalState {
   isLoading: boolean;
-  activeSpaceId: string | null;
+  activeSpaceId: string;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
