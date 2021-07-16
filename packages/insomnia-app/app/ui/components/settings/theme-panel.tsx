@@ -26,7 +26,6 @@ const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }
   margin: 'var(--padding-md) var(--padding-md)',
   fontSize: 0,
   borderRadius: 'var(--radius-md)',
-  overflow: 'hidden',
   boxShadow: '0 0 0 1px var(--hl-sm)',
   transition: 'all 150ms ease-out',
   ...($isActive ? {
@@ -43,6 +42,19 @@ const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }
     },
     '&:hover .theme-preview': {
       visibility: 'hidden', // this prevents alpha-blending problems with the underlying svg bleeding through
+    },
+  } : {}),
+  // This is a workaround for some anti-aliasing artifacts that impact the color scheme badges.
+  ...($isActive && $isInOsThemeMode ? {
+    '&:not(:hover):before': {
+      display: 'block',
+      position: 'absolute',
+      margin: '-1px 0 0 -1px',
+      border: '2px solid var(--color-surprise)',
+      borderRadius: 'var(--radius-md)',
+      width: 'calc(100% - 2px)',
+      height: 'calc(100% - 2px)',
+      content: "''",
     },
   } : {}),
 }));
@@ -71,10 +83,12 @@ const ColorSchemeBadge = styled.div<{ $theme: 'dark' | 'light'}>(({ $theme }) =>
   background: 'var(--color-surprise)',
   ...(isDark($theme) ? {
     right: 0,
+    borderTopRightRadius: 'var(--radius-md)',
     borderBottomLeftRadius: 'var(--radius-md)',
   } : {}),
   ...(isLight($theme) ? {
     left: 0,
+    borderTopLeftRadius: 'var(--radius-md)',
     borderBottomRightRadius: 'var(--radius-md)',
   } : {}),
 }));
@@ -155,6 +169,7 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
     width="100%"
     height="100%"
     viewBox="0 0 500 300"
+    style={{ borderRadius: 'var(--radius-md)' }}
   >
     {/*
       A WORD TO THE WISE: If you, dear traveler from the future, are here
