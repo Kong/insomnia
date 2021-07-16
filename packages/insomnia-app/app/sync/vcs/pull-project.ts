@@ -31,7 +31,7 @@ export const pullProject = async ({ vcs, project, space }: Options) => {
     });
     await database.upsert(workspace);
   } else {
-    await vcs.pull([], space?.remoteId); // There won't be any existing docs since it's a new pull
+    await vcs.pull([], space.remoteId); // There won't be any existing docs since it's a new pull
 
     const flushId = await database.bufferChanges();
 

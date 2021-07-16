@@ -14,6 +14,7 @@ import { CookieJar } from '../../../../models/cookie-jar';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { ApiSpec } from '../../../../models/api-spec';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
+import { BASE_SPACE_ID } from '../../../../models/space';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
@@ -30,7 +31,7 @@ const createStoreWithSpace = async () => {
   return { store, space };
 };
 
-const expectedModelsCreated = async (name: string, scope: WorkspaceScope, parentId: string | null = null) => {
+const expectedModelsCreated = async (name: string, scope: WorkspaceScope, parentId: string) => {
   const workspaces = await models.workspace.all();
   expect(workspaces).toHaveLength(1);
   const workspace = workspaces[0];
@@ -39,7 +40,6 @@ const expectedModelsCreated = async (name: string, scope: WorkspaceScope, parent
 
   expect(descendents).toHaveLength(5);
   expect(descendents).toStrictEqual(expect.arrayContaining([
-    // @ts-expect-error parentId is nullable for workspaces
     expect.objectContaining<Partial<Workspace>>({ name, scope, parentId, type: models.workspace.type }),
     expect.objectContaining<Partial<ApiSpec>>({ parentId: workspace._id, type: models.apiSpec.type }),
     expect.objectContaining<Partial<Environment>>({ parentId: workspace._id, type: models.environment.type }),
@@ -124,7 +124,7 @@ describe('workspace', () => {
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
 
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection);
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, BASE_SPACE_ID);
 
       expect(trackSegmentEvent).toHaveBeenCalledWith('Collection Created');
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');

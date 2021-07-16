@@ -942,8 +942,7 @@ describe('util', () => {
 
     it('shouldnt change the hash of a workspace after a parent id is added and ignored', () => {
       // Arrange
-      // @ts-expect-error parent id should be nullable
-      const originalSyncedWorkspace = workspaceModelBuilder.parentId(null).build();
+      const originalSyncedWorkspace = workspaceModelBuilder.parentId('').build();
 
       // Existing synced workspaces do not have a modified field
       // @ts-expect-error delete non-optional
