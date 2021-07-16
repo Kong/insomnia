@@ -263,8 +263,10 @@ describe('_repairDatabase()', () => {
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
+    const space = await models.space.create();
     const workspace = await models.workspace.create({
       _id: 'w1',
+      parentId: space._id,
     });
     const spec = await models.apiSpec.getByParentId(workspace._id);
     expect((await db.withDescendants(workspace)).length).toBe(2);
@@ -326,7 +328,7 @@ describe('_repairDatabase()', () => {
       {
         _id: 'w1',
         data: null,
-        parentId: null,
+        parentId: workspace.parentId,
       },
       {
         _id: 'b1',
@@ -392,7 +394,7 @@ describe('_repairDatabase()', () => {
       {
         _id: 'w1',
         data: null,
-        parentId: null,
+        parentId: workspace.parentId,
       },
       {
         _id: 'b1',
@@ -442,8 +444,10 @@ describe('_repairDatabase()', () => {
 
   it('fixes duplicate cookie jars', async () => {
     // Create Workspace with no children
+    const space = await models.space.create();
     const workspace = await models.workspace.create({
       _id: 'w1',
+      parentId: space._id,
     });
     const spec = await models.apiSpec.getByParentId(workspace._id);
     expect((await db.withDescendants(workspace)).length).toBe(2);
@@ -496,7 +500,7 @@ describe('_repairDatabase()', () => {
       {
         _id: 'w1',
         cookies: null,
-        parentId: null,
+        parentId: workspace.parentId,
       },
       {
         _id: 'j1',
@@ -548,7 +552,7 @@ describe('_repairDatabase()', () => {
       {
         _id: 'w1',
         cookies: null,
-        parentId: null,
+        parentId: workspace.parentId,
       },
       {
         _id: 'j1',
@@ -713,7 +717,10 @@ describe('withAncestors()', () => {
   beforeEach(globalBeforeEach);
 
   it('should return itself and all parents but exclude siblings', async () => {
-    const wrk = await models.workspace.create();
+    const spc = await models.space.create();
+    const wrk = await models.workspace.create({
+      parentId: spc._id,
+    });
     const wrkReq = await models.request.create({
       parentId: wrk._id,
     });
@@ -730,14 +737,14 @@ describe('withAncestors()', () => {
       parentId: grp._id,
     });
     // Workspace child searching for ancestors
-    await expect(db.withAncestors(wrk)).resolves.toStrictEqual([wrk]);
-    await expect(db.withAncestors(wrkReq)).resolves.toStrictEqual([wrkReq, wrk]);
-    await expect(db.withAncestors(wrkGrpcReq)).resolves.toStrictEqual([wrkGrpcReq, wrk]);
+    await expect(db.withAncestors(wrk)).resolves.toStrictEqual([wrk, spc]);
+    await expect(db.withAncestors(wrkReq)).resolves.toStrictEqual([wrkReq, wrk, spc]);
+    await expect(db.withAncestors(wrkGrpcReq)).resolves.toStrictEqual([wrkGrpcReq, wrk, spc]);
     // Group searching for ancestors
-    await expect(db.withAncestors(grp)).resolves.toStrictEqual([grp, wrk]);
+    await expect(db.withAncestors(grp)).resolves.toStrictEqual([grp, wrk, spc]);
     // Group child searching for ancestors
-    await expect(db.withAncestors(grpReq)).resolves.toStrictEqual([grpReq, grp, wrk]);
-    await expect(db.withAncestors(grpGrpcReq)).resolves.toStrictEqual([grpGrpcReq, grp, wrk]);
+    await expect(db.withAncestors(grpReq)).resolves.toStrictEqual([grpReq, grp, wrk, spc]);
+    await expect(db.withAncestors(grpGrpcReq)).resolves.toStrictEqual([grpGrpcReq, grp, wrk, spc]);
     // Group child searching for ancestors with filters
     await expect(db.withAncestors(grpGrpcReq, [models.requestGroup.type])).resolves.toStrictEqual([
       grpGrpcReq,

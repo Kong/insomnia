@@ -6,6 +6,7 @@ import { database as db } from '../../../common/database';
 import fs from 'fs';
 import { getAppVersion } from '../../../common/constants';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { BASE_SPACE_ID } from '../../../models/space';
 
 jest.mock('../../../ui/components/modals');
 
@@ -23,10 +24,12 @@ describe('init()', () => {
 describe('app.import.*', () => {
   beforeEach(async () => {
     await globalBeforeEach();
+    const spc = await models.space.create();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
       modified: 222,
+      parentId: spc._id,
     });
   });
 
@@ -46,7 +49,7 @@ describe('app.import.*', () => {
         modified: 999,
         description: '',
         name: 'New',
-        parentId: null,
+        parentId: BASE_SPACE_ID,
         type: 'Workspace',
         scope: WorkspaceScopeKeys.collection,
       },
@@ -94,7 +97,7 @@ describe('app.import.*', () => {
         modified: 999,
         description: '',
         name: 'New',
-        parentId: null,
+        parentId: BASE_SPACE_ID,
         type: 'Workspace',
         scope: WorkspaceScopeKeys.collection,
       },

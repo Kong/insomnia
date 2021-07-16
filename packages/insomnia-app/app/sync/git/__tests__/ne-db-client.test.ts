@@ -8,6 +8,7 @@ import path from 'path';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
 import { createBuilder } from '@develohpanda/fluent-builder';
 import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { BASE_SPACE_ID } from '../../../models/space';
 
 const workspaceBuilder = createBuilder(workspaceModelSchema);
 
@@ -69,7 +70,7 @@ describe('NeDBClient', () => {
       expect(YAML.parse((await pNeDB.readFile(wrk1Yml, 'utf8')).toString())).toEqual(
         expect.objectContaining({
           _id: 'wrk_1',
-          parentId: null,
+          parentId: BASE_SPACE_ID,
         }),
       );
       expect(YAML.parse((await pNeDB.readFile(req1Yml, 'utf8')).toString())).toEqual(

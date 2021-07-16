@@ -5,7 +5,7 @@ import { VCS } from '../../../sync/vcs/vcs';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { useRemoteSpaces } from '../space';
 import * as models from '../../../models';
-import { Space } from '../../../models/space';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
 import { mocked } from 'ts-jest/utils';
 
 jest.mock('../../../account/session', () => ({
@@ -35,7 +35,7 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs.teams).not.toHaveBeenCalled();
     expect(result.current.loading).toBe(false);
-    await expect(models.space.all()).resolves.toHaveLength(0);
+    await expect(models.space.all()).resolves.toHaveLength(1);
   });
 
   it('should load teams each time VCS changes', async () => {
@@ -65,8 +65,11 @@ describe('useRemoteSpaces', () => {
     expect(vcs2.teams).toHaveBeenCalledTimes(1);
 
     const allSpaces = await models.space.all();
-    expect(allSpaces).toHaveLength(2);
+    expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
+      expect.objectContaining<Partial<Space>>({
+        _id: BASE_SPACE_ID,
+      }),
       expect.objectContaining<Partial<Space>>({
         remoteId: team1.id,
         name: team1.name,
@@ -91,7 +94,7 @@ describe('useRemoteSpaces', () => {
     await waitFor(() => result.current.loading === false);
 
     expect(vcs.teams).toHaveBeenCalledTimes(1);
-    await expect(models.space.all()).resolves.toHaveLength(0);
+    await expect(models.space.all()).resolves.toHaveLength(1);
 
     const team1 = { id: 'id1', name: 'team1' };
     const team2 = { id: 'id2', name: 'team2' };
@@ -104,8 +107,11 @@ describe('useRemoteSpaces', () => {
     expect(vcs.teams).toHaveBeenCalledTimes(3);
 
     const allSpaces = await models.space.all();
-    expect(allSpaces).toHaveLength(2);
+    expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
+      expect.objectContaining<Partial<Space>>({
+        _id: BASE_SPACE_ID,
+      }),
       expect.objectContaining<Partial<Space>>({
         remoteId: team1.id,
         name: team1.name,
