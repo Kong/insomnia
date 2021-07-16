@@ -29,6 +29,7 @@ import { SvgIcnHome } from './assets/svgr/IcnHome';
 import { SvgIcnIndentation } from './assets/svgr/IcnIndentation';
 import { SvgIcnInfo } from './assets/svgr/IcnInfo';
 import { SvgIcnKey } from './assets/svgr/IcnKey';
+import { SvgIcnLaptop } from './assets/svgr/IcnLaptop';
 import { SvgIcnMinusCircle } from './assets/svgr/IcnMinusCircle';
 import { SvgIcnMinusCircleFill } from './assets/svgr/IcnMinusCircleFill';
 import { SvgIcnPlaceholder } from './assets/svgr/IcnPlaceholder';
@@ -92,6 +93,7 @@ export const IconEnum = {
   info: 'info',
   home: 'home',
   key: 'key',
+  laptop: 'laptop',
   minusCircle: 'minus-circle',
   minusCircleFill: 'minus-circle-fill',
   placeholder: 'placeholder',
@@ -188,6 +190,7 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.indentation]: [ThemeEnum.default, SvgIcnIndentation],
     [IconEnum.info]: [ThemeEnum.highlight, SvgIcnInfo],
     [IconEnum.key]: [ThemeEnum.default, SvgIcnKey],
+    [IconEnum.laptop]: [ThemeEnum.default, SvgIcnLaptop],
     [IconEnum.minusCircleFill]: [ThemeEnum.default, SvgIcnMinusCircleFill],
     [IconEnum.minusCircle]: [ThemeEnum.default, SvgIcnMinusCircle],
     [IconEnum.placeholder]: [ThemeEnum.default, SvgIcnPlaceholder],

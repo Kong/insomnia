@@ -209,7 +209,7 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
   }
 
   render() {
-    const { children, message, className, selectable, wide } = this.props;
+    const { children, message, className, selectable, wide, style } = this.props;
     const { visible } = this.state;
 
     if (!message) {
@@ -228,7 +228,9 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
         ref={ref => { this._tooltip = ref; }}
         id={this._id}
         onMouseEnter={this._handleMouseEnter}
-        onMouseLeave={this._handleMouseLeave}>
+        onMouseLeave={this._handleMouseLeave}
+        style={style}
+      >
         <StyledTooltipBubble
           className={bubbleClasses}
           onClick={this._handleStopClick}
