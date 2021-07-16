@@ -15,7 +15,7 @@ import { Space } from '../../../models/space';
 
 interface Props {
   workspace: Workspace;
-  space?: Space;
+  space: Space;
   syncItems: StatusCandidate[];
   vcs: VCS;
 }
