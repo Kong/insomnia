@@ -84,7 +84,7 @@ describe('NeDBClient', () => {
 
   describe('stat()', () => {
     it('stats a dir', async () => {
-      // Assemble
+      // Arrange
       const reqDir = path.join(GIT_INSOMNIA_DIR, models.request.type);
       const wrkDir = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
       const dirType = expect.objectContaining({
@@ -106,7 +106,7 @@ describe('NeDBClient', () => {
 
   describe('writeFile()', () => {
     it('should ignore files not in GIT_INSOMNIA_DIR directory', async () => {
-      // Assemble
+      // Arrange
       const upsertSpy = jest.spyOn(db, 'upsert');
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
@@ -125,7 +125,7 @@ describe('NeDBClient', () => {
     });
 
     it('should write files in GIT_INSOMNIA_DIR directory to db', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
       const upsertSpy = jest.spyOn(db, 'upsert');
@@ -145,7 +145,7 @@ describe('NeDBClient', () => {
     });
 
     it('should set workspace parentId to the space', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const spaceId = 'sp_1';
       const neDbClient = new NeDBClient(workspaceId, spaceId);
@@ -172,7 +172,7 @@ describe('NeDBClient', () => {
     });
 
     it('should force to a design workspace when writing', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const spaceId = 'sp_1';
       const neDbClient = new NeDBClient(workspaceId, spaceId);
@@ -199,7 +199,7 @@ describe('NeDBClient', () => {
     });
 
     it('should throw error if id does not match', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
       const env = {
@@ -217,7 +217,7 @@ describe('NeDBClient', () => {
     });
 
     it('should throw error if type does not match', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
       const env = {
