@@ -22,8 +22,10 @@ import type { Workspace } from '../../../models/workspace';
 import * as pluginContexts from '../../../plugins/context/index';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
+import { Space } from '../../../models/space';
 
 interface Props {
+  space: Space;
   workspace: Workspace;
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
@@ -90,11 +92,11 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
     }));
 
     try {
-      const { activeEnvironment, requestGroup } = this.props;
+      const { activeEnvironment, requestGroup, space } = this.props;
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(space._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };

@@ -26,12 +26,14 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { ApiSpec } from '../../../models/api-spec';
 import { isRequestGroup } from '../../../models/request-group';
 import { isRequest } from '../../../models/request';
+import { Space } from '../../../models/space';
 
 interface Props {
   displayName: string;
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
   activeApiSpec: ApiSpec;
+  activeSpace: Space;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
   className?: string;
@@ -56,13 +58,13 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: true },
     }));
-    const { activeEnvironment, activeWorkspace } = this.props;
+    const { activeEnvironment, activeWorkspace, activeSpace } = this.props;
 
     try {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(activeSpace._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };

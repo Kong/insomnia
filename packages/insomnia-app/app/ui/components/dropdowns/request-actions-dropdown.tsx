@@ -25,6 +25,7 @@ import { showError } from '../modals';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import classnames from 'classnames';
 import { GrpcRequest } from '../../../models/grpc-request';
+import { Space } from '../../../models/space';
 
 interface Props extends Partial<DropdownProps> {
   handleDuplicateRequest: Function;
@@ -37,6 +38,7 @@ interface Props extends Partial<DropdownProps> {
   hotKeyRegistry: HotKeyRegistry;
   handleSetRequestPinned: Function;
   activeEnvironment?: Environment | null;
+  activeSpace: Space;
 }
 
 // Setup state for plugin actions
@@ -100,11 +102,11 @@ class RequestActionsDropdown extends PureComponent<Props, State> {
     }));
 
     try {
-      const { activeEnvironment, request, requestGroup } = this.props;
+      const { activeEnvironment, activeSpace, request, requestGroup } = this.props;
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(activeSpace._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
