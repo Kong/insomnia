@@ -468,7 +468,7 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
     dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
-      message: `There are no workspaces to export in the active space '${activeSpaceName}'.`,
+      message: <>There are no workspaces to export in the <strong>{activeSpaceName}</strong> space.</>,
     });
     return;
   }
