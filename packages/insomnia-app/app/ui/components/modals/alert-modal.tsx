@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
@@ -8,7 +8,7 @@ import ModalFooter from '../base/modal-footer';
 
 export interface AlertModalOptions {
   title?: string;
-  message?: React.ReactChild;
+  message?: ReactNode;
   addCancel?: boolean;
   okLabel?: string;
   onConfirm?: () => void | Promise<void>;
