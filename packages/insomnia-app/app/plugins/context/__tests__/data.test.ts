@@ -6,7 +6,7 @@ import { database as db } from '../../../common/database';
 import fs from 'fs';
 import { getAppVersion } from '../../../common/constants';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
-import { BASE_SPACE_ID } from '../../../models/space';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
 
 jest.mock('../../../ui/components/modals');
 
@@ -14,7 +14,7 @@ describe('init()', () => {
   beforeEach(globalBeforeEach);
 
   it('initializes correctly', async () => {
-    const { data } = plugin.init();
+    const { data } = plugin.init(BASE_SPACE_ID);
     expect(Object.keys(data)).toEqual(['import', 'export']);
     expect(Object.keys(data.export).sort()).toEqual(['har', 'insomnia']);
     expect(Object.keys(data.import).sort()).toEqual(['raw', 'uri']);
@@ -22,12 +22,16 @@ describe('init()', () => {
 });
 
 describe('app.import.*', () => {
+  let space: Space;
+
   beforeEach(async () => {
     await globalBeforeEach();
+    space = await models.space.create();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
       modified: 222,
+      parentId: space._id,
     });
   });
 
@@ -35,7 +39,7 @@ describe('app.import.*', () => {
     const workspace = await models.workspace.getById('wrk_1');
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
     expect(await db.count(models.request.type)).toBe(0);
-    const { data } = plugin.init();
+    const { data } = plugin.init(space._id);
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await data.import.uri(`file://${filename}`);
     const allWorkspaces = await db.all(models.workspace.type);
@@ -83,7 +87,7 @@ describe('app.import.*', () => {
     const workspace = await models.workspace.getById('wrk_1');
     expect(await db.all(models.workspace.type)).toEqual([workspace]);
     expect(await db.count(models.request.type)).toBe(0);
-    const { data } = plugin.init();
+    const { data } = plugin.init(space._id);
     const filename = path.resolve(__dirname, '../__fixtures__/basic-import.json');
     await data.import.raw(fs.readFileSync(filename, 'utf8'));
     const allWorkspaces = await db.all(models.workspace.type);
@@ -129,12 +133,15 @@ describe('app.import.*', () => {
 });
 
 describe('app.export.*', () => {
+  let space: Space;
   beforeEach(async () => {
     await globalBeforeEach();
+    space = await models.space.create();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
       modified: 222,
+      parentId: space._id,
     });
     await models.request.create({
       _id: 'req_1',
@@ -153,7 +160,7 @@ describe('app.export.*', () => {
   });
 
   it('insomnia', async () => {
-    const { data } = plugin.init();
+    const { data } = plugin.init(space._id);
     const exported = await data.export.insomnia();
     const exportedData = JSON.parse(exported);
     expect(typeof exportedData.__export_date).toBe('string');
@@ -202,7 +209,7 @@ describe('app.export.*', () => {
   });
 
   it('har', async () => {
-    const { data } = plugin.init();
+    const { data } = plugin.init(space._id);
     const exported = await data.export.har();
     const exportedData = JSON.parse(exported);
     exportedData.log.entries[0].startedDateTime = '2017-11-24T18:12:12.849Z';
