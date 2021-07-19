@@ -17,7 +17,7 @@ import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { SelectModal } from '../../components/modals/select-modal';
-import { showError, showModal } from '../../components/modals/index';
+import { showAlert, showError, showModal } from '../../components/modals/index';
 import { database } from '../../../common/database';
 import { trackEvent } from '../../../common/analytics';
 import SettingsModal, {
@@ -39,7 +39,7 @@ import {
   DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
-import { selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
+import { selectActiveSpaceName, selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
 import { getDesignerDataDir } from '../../../common/electron-helpers';
 import { Settings } from '../../../models/settings';
 import { GrpcRequest } from '../../../models/grpc-request';
@@ -460,10 +460,22 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
 
 export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
+  const state = getState();
+  const activeSpaceName = selectActiveSpaceName(state);
+  const workspaces = selectWorkspacesForActiveSpace(state);
+
+  if (!workspaces.length) {
+    dispatch(loadStop());
+    showAlert({
+      title: 'Cannot export',
+      message: `There are no workspaces to export in the active space '${activeSpaceName}'.`,
+    });
+    return;
+  }
+
   showSelectExportTypeModal({
     onCancel: () => { dispatch(loadStop()); },
     onDone: async selectedFormat => {
-      const state = getState();
       // Check if we want to export private environments.
       const environments = await models.environment.all();
 
@@ -485,8 +497,6 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
         dispatch(loadStop());
         return;
       }
-
-      const workspaces = selectWorkspacesForActiveSpace(state);
 
       let stringifiedExport;
 

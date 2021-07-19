@@ -362,7 +362,7 @@ export const selectActiveUnitTests = createSelector(
 
 export const selectActiveSpaceName = createSelector(
   selectActiveSpace,
-  activeSpace => activeSpace?.name,
+  activeSpace => activeSpace.name,
 );
 
 export const selectActiveUnitTestSuites = createSelector(

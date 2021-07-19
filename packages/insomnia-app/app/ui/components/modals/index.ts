@@ -1,5 +1,5 @@
 import PromptModal, { PromptModalOptions } from './prompt-modal';
-import AlertModal from './alert-modal';
+import AlertModal, { AlertModalOptions } from './alert-modal';
 import ErrorModal from './error-modal';
 import { trackEvent } from '../../../common/analytics';
 import type { ErrorModalOptions } from './error-modal';
@@ -24,7 +24,7 @@ export function showPrompt(config: PromptModalOptions) {
   return showModal(PromptModal, config);
 }
 
-export function showAlert(config) {
+export function showAlert(config: AlertModalOptions) {
   return showModal(AlertModal, config);
 }
 

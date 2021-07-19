@@ -123,9 +123,7 @@ export async function exportWorkspacesData(
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  // Semantically, if an empty array is passed, then nothing will be returned.  What an empty array really signifies is "no parent", which, at the database layer is the same as "parentId === null", hence we add null in ourselves.
-  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
-  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);

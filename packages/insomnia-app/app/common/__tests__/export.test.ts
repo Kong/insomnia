@@ -171,7 +171,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       activeEnvironmentId: env2Private._id,
     });
     const includePrivateDocs = false;
-    const json = await exportWorkspacesHAR([], includePrivateDocs);
+    const json = await exportWorkspacesHAR([wrk1, wrk2], includePrivateDocs);
     const data = JSON.parse(json);
     expect(data).toMatchObject({
       log: {
@@ -259,8 +259,8 @@ describe('export', () => {
       parentId: eBase._id,
     });
     // Test export whole workspace.
-    const exportedWorkspacesJson = await exportWorkspacesData([], false, 'json');
-    const exportedWorkspacesYaml = await exportWorkspacesData([], false, 'yaml');
+    const exportedWorkspacesJson = await exportWorkspacesData([w], false, 'json');
+    const exportedWorkspacesYaml = await exportWorkspacesData([w], false, 'yaml');
     const exportWorkspacesDataJson = JSON.parse(exportedWorkspacesJson);
     const exportWorkspacesDataYaml = YAML.parse(exportedWorkspacesYaml);
     // Ensure JSON is the same as YAML
