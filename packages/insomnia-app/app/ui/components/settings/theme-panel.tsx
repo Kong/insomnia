@@ -26,15 +26,34 @@ const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }
   margin: 'var(--padding-md) var(--padding-md)',
   fontSize: 0,
   borderRadius: 'var(--radius-md)',
-  boxShadow: '0 0 0 1px var(--hl-sm)',
   transition: 'all 150ms ease-out',
+  // This is a workaround for some anti-aliasing artifacts that impact the color scheme badges.
+  // The box shadow is placed on a pseudo-element. When it is active, it is configured to overlap
+  // 1px with the underlying geometry to prevent gaps caused by anti-aliasing.
+  '&:before': {
+    display: 'block',
+    position: 'absolute',
+    boxShadow: '0 0 0 1px var(--hl-sm)',
+    transition: 'all 150ms ease-out',
+    borderRadius: 'var(--radius-md)',
+    width: '100%',
+    height: '100%',
+    content: "''",
+    ...($isActive ? {
+      boxShadow: '0 0 0 var(--padding-xs) var(--color-surprise)',
+      width: 'calc(100% - 2px)',
+      height: 'calc(100% - 2px)',
+      margin: '1px',
+    } : {}),
+  },
+  '&:hover:before': {
+    ...($isInOsThemeMode ? { boxShadow: 'none' } : {}),
+  },
   ...($isActive ? {
-    boxShadow: '0 0 0 var(--padding-xs) var(--color-surprise)',
     transform: 'scale(1.05)',
   } : {}),
   '&:hover': {
     transform: 'scale(1.05)',
-    ...($isInOsThemeMode ? { boxShadow: 'none' } : {}),
   },
   ...($isInOsThemeMode ? {
     '&:hover .overlay-wrapper': {
@@ -42,19 +61,6 @@ const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }
     },
     '&:hover .theme-preview': {
       visibility: 'hidden', // this prevents alpha-blending problems with the underlying svg bleeding through
-    },
-  } : {}),
-  // This is a workaround for some anti-aliasing artifacts that impact the color scheme badges.
-  ...($isActive && $isInOsThemeMode ? {
-    '&:not(:hover):before': {
-      display: 'block',
-      position: 'absolute',
-      margin: '-1px 0 0 -1px',
-      border: '2px solid var(--color-surprise)',
-      borderRadius: 'var(--radius-md)',
-      width: 'calc(100% - 2px)',
-      height: 'calc(100% - 2px)',
-      content: "''",
     },
   } : {}),
 }));
@@ -80,7 +86,8 @@ const ColorSchemeBadge = styled.div<{ $theme: 'dark' | 'light'}>(({ $theme }) =>
   height: 12,
   fill: 'white',
   padding: 4,
-  background: 'var(--color-surprise)',
+  transition: 'background-color 150ms ease-out',
+  backgroundColor: 'var(--color-surprise)',
   ...(isDark($theme) ? {
     right: 0,
     borderTopRightRadius: 'var(--radius-md)',
