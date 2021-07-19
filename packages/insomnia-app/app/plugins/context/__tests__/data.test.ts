@@ -24,12 +24,10 @@ describe('init()', () => {
 describe('app.import.*', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    const spc = await models.space.create();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
       modified: 222,
-      parentId: spc._id,
     });
   });
 

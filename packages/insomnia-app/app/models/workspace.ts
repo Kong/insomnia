@@ -64,6 +64,10 @@ export function getById(id?: string) {
   return db.get<Workspace>(type, id);
 }
 
+export function findByParentId(parentId: string) {
+  return db.find<Workspace>(type, { parentId });
+}
+
 export async function create(patch: Partial<Workspace> = {}) {
   expectParentToBeSpace(patch.parentId);
   return db.docCreate<Workspace>(type, patch);

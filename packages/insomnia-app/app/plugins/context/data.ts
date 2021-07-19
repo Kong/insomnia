@@ -2,6 +2,8 @@ import { exportWorkspacesHAR, exportWorkspacesData } from '../../common/export';
 import { importRaw, importUri } from '../../common/import';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 import type { ImportRawConfig } from '../../common/import';
+import * as models from '../../models';
+import { BASE_SPACE_ID } from '../../models/space';
 
 interface PluginImportOptions {
   workspaceId?: string;
@@ -23,6 +25,10 @@ const buildImportRawConfig = (options: PluginImportOptions): ImportRawConfig => 
   ),
 });
 
+// Preserve existing behavior by getting workspaces in the base space if no workspace is provided to the export helpers
+// This is done to avoid a breaking change to the plugin API at this time but ideally we should improve the API when the time comes
+const getWorkspacesInBaseSpace = () => models.workspace.findByParentId(BASE_SPACE_ID);
+
 export const init = () => ({
   data: {
     import: {
@@ -39,7 +45,7 @@ export const init = () => ({
         includePrivate,
         format,
       }: InsomniaExport = {}) => exportWorkspacesData(
-        workspace ? [workspace] : [],
+        workspace ? [workspace] : await getWorkspacesInBaseSpace(),
         Boolean(includePrivate),
         format || 'json',
       ),
@@ -48,7 +54,7 @@ export const init = () => ({
         workspace,
         includePrivate,
       }: HarExport = {}) => exportWorkspacesHAR(
-        workspace ? [workspace] : [],
+        workspace ? [workspace] : await getWorkspacesInBaseSpace(),
         Boolean(includePrivate),
       ),
     },
