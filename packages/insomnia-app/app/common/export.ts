@@ -47,9 +47,7 @@ export async function exportWorkspacesHAR(
   workspaces: Workspace[],
   includePrivateDocs = false,
 ) {
-  // regarding `[null]`, see the comment here in `exportWorkspacesData`
-  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
-  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
