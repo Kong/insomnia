@@ -27,6 +27,7 @@ const buildImportRawConfig = (options: PluginImportOptions): ImportRawConfig => 
 
 // Preserve existing behavior by getting workspaces in the base space if no workspace is provided to the export helpers
 // This is done to avoid a breaking change to the plugin API at this time but ideally we should improve the API when the time comes
+// TODO: should we add metrics here to track how frequently this fallback is being used?
 const getWorkspacesInBaseSpace = () => models.workspace.findByParentId(BASE_SPACE_ID);
 
 export const init = () => ({
