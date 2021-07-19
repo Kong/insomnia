@@ -53,10 +53,17 @@ export type HandleGetRenderContext = () => Promise<RenderContextAndKeys>;
 export type HandleRender = <T>(object: T, contextCacheKey?: string | null) => Promise<T>;
 
 export async function buildRenderContext(
-  ancestors: BaseModel[] | null,
-  rootEnvironment: Environment | null,
-  subEnvironment: Environment | null,
-  baseContext: Record<string, any> = {},
+  {
+    ancestors,
+    rootEnvironment,
+    subEnvironment,
+    baseContext = {},
+  }: {
+    ancestors?: BaseModel[];
+    rootEnvironment?: Environment;
+    subEnvironment?: Environment;
+    baseContext?: Record<string, any>;
+  },
 ) {
   const envObjects: Record<string, any>[] = [];
 
@@ -280,11 +287,19 @@ export async function render<T>(
 }
 
 export async function getRenderContext(
-  request: Request | GrpcRequest | null,
-  environmentId: string | null,
-  ancestors: BaseModel[] | null = null,
-  purpose: RenderPurpose | null = null,
-  extraInfo: ExtraRenderInfo | null = null,
+  {
+    request,
+    environmentId,
+    ancestors,
+    purpose,
+    extraInfo,
+  }: {
+    request?: Request | GrpcRequest;
+    environmentId?: string;
+    ancestors?: BaseModel[];
+    purpose?: RenderPurpose;
+    extraInfo?: ExtraRenderInfo;
+  },
 ): Promise<Record<string, any>> {
   if (!ancestors) {
     ancestors = await _getRequestAncestors(request);
@@ -373,23 +388,25 @@ export async function getRenderContext(
   baseContext.getEnvironmentId = () => environmentId;
 
   // Generate the context we need to render
-  return buildRenderContext(ancestors, rootEnvironment, subEnvironment, baseContext);
+  return buildRenderContext({ ancestors, rootEnvironment, subEnvironment: subEnvironment || undefined, baseContext });
 }
 
 export async function getRenderedGrpcRequest(
-  request: GrpcRequest,
-  environmentId: string | null,
-  purpose?: RenderPurpose,
-  extraInfo?: ExtraRenderInfo,
-  skipBody?: boolean,
-) {
-  const renderContext = await getRenderContext(
+  {
+    purpose,
+    extraInfo,
     request,
     environmentId,
-    null,
-    purpose,
-    extraInfo || null,
-  );
+    skipBody,
+  }: {
+    request: GrpcRequest,
+    environmentId?: string,
+    purpose?: RenderPurpose,
+    extraInfo?: ExtraRenderInfo,
+    skipBody?: boolean,
+  },
+) {
+  const renderContext = await getRenderContext({ request, environmentId, purpose, extraInfo });
   const description = request.description;
   // Render description separately because it's lower priority
   request.description = '';
@@ -406,40 +423,42 @@ export async function getRenderedGrpcRequest(
 }
 
 export async function getRenderedGrpcRequestMessage(
-  request: GrpcRequest,
-  environmentId: string | null,
-  purpose?: RenderPurpose,
-  extraInfo?: ExtraRenderInfo,
-) {
-  const renderContext = await getRenderContext(
-    request,
+  {
     environmentId,
-    null,
+    request,
+    extraInfo,
     purpose,
-    extraInfo || null,
-  );
+  }: {
+    request: GrpcRequest;
+    environmentId?: string;
+    purpose?: RenderPurpose;
+    extraInfo?: ExtraRenderInfo;
+  },
+) {
+  const renderContext = await getRenderContext({ request, environmentId, purpose, extraInfo });
   // Render request body
   const renderedBody: RenderedGrpcRequestBody = await render(request.body, renderContext);
   return renderedBody;
 }
 
 export async function getRenderedRequestAndContext(
-  request: Request,
-  environmentId?: string | null,
-  purpose?: RenderPurpose,
-  extraInfo?: ExtraRenderInfo,
+  {
+    request,
+    environmentId,
+    extraInfo,
+    purpose,
+  }: {
+    request: Request;
+    environmentId?: string;
+    purpose?: RenderPurpose;
+    extraInfo?: ExtraRenderInfo;
+  },
 ) {
   const ancestors = await _getRequestAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
-  const renderContext = await getRenderContext(
-    request,
-    environmentId || null,
-    ancestors,
-    purpose,
-    extraInfo || null,
-  );
+  const renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo });
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895
@@ -538,8 +557,8 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-async function _getRequestAncestors(request: Request | GrpcRequest | null): Promise<BaseModel[]> {
-  return await db.withAncestors(request, [
+async function _getRequestAncestors(request?: Request | GrpcRequest): Promise<BaseModel[]> {
+  return await db.withAncestors(request || null, [
     models.request.type,
     models.grpcRequest.type,
     models.requestGroup.type,

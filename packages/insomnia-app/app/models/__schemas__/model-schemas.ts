@@ -1,11 +1,12 @@
 import { Schema } from '@develohpanda/fluent-builder';
-import { BaseModel, gitRepository, grpcRequest, request, requestGroup, workspace } from '..';
+import { BaseModel, environment, gitRepository, grpcRequest, request, requestGroup, workspace } from '..';
 import { GitRepository } from '../git-repository';
 import { Workspace } from '../workspace';
 import { Request } from '../request';
 import clone from 'clone';
 import { GrpcRequest } from '../grpc-request';
 import { RequestGroup } from '../request-group';
+import { Environment } from '../environment';
 
 // move into fluent-builder
 const toSchema = <T>(obj: T): Schema<T> => {
@@ -62,4 +63,10 @@ export const gitRepositorySchema: Schema<GitRepository> = {
   uri: () => '',
   needsFullClone: () => false,
   uriNeedsMigration: () => true,
+};
+
+export const environmentModelSchema: Schema<Environment> = {
+  ...baseModelSchema,
+  ...toSchema(environment.init()),
+  type: () => environment.type,
 };

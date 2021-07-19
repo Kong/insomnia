@@ -2,13 +2,17 @@ import { prepareGrpcMessage, prepareGrpcRequest } from '../prepare';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
 import {
-  getRenderedGrpcRequest,
-  getRenderedGrpcRequestMessage,
+  getRenderedGrpcRequest as _getRenderedGrpcRequest,
+  getRenderedGrpcRequestMessage as _getRenderedGrpcRequestMessage,
   RENDER_PURPOSE_SEND,
 } from '../../../common/render';
 import { GrpcMethodTypeEnum } from '../method';
+import { mocked } from 'ts-jest/utils';
 
 jest.mock('../../../common/render');
+
+const getRenderedGrpcRequest = mocked(_getRenderedGrpcRequest);
+const getRenderedGrpcRequestMessage = mocked(_getRenderedGrpcRequestMessage);
 
 describe('prepareGrpcRequest', () => {
   beforeEach(globalBeforeEach);
@@ -26,11 +30,12 @@ describe('prepareGrpcRequest', () => {
       getRenderedGrpcRequest.mockResolvedValue(gr);
       const result = await prepareGrpcRequest(gr._id, env._id, methodType);
       expect(getRenderedGrpcRequest).toHaveBeenLastCalledWith(
-        gr,
-        env,
-        RENDER_PURPOSE_SEND,
-        {},
-        false,
+        {
+          request: gr,
+          environmentId: env._id,
+          purpose: RENDER_PURPOSE_SEND,
+          skipBody: false,
+        },
       );
       expect(result).toEqual({
         request: gr,
@@ -51,11 +56,12 @@ describe('prepareGrpcRequest', () => {
       getRenderedGrpcRequest.mockResolvedValue(gr);
       const result = await prepareGrpcRequest(gr._id, env._id, methodType);
       expect(getRenderedGrpcRequest).toHaveBeenLastCalledWith(
-        gr,
-        env,
-        RENDER_PURPOSE_SEND,
-        {},
-        true,
+        {
+          request: gr,
+          environmentId: env._id,
+          purpose: RENDER_PURPOSE_SEND,
+          skipBody: true,
+        },
       );
       expect(result).toEqual({
         request: gr,
@@ -78,10 +84,11 @@ describe('prepareGrpcMessage', () => {
     getRenderedGrpcRequestMessage.mockResolvedValue(gr.body);
     const result = await prepareGrpcMessage(gr._id, env._id);
     expect(getRenderedGrpcRequestMessage).toHaveBeenLastCalledWith(
-      gr,
-      env,
-      RENDER_PURPOSE_SEND,
-      {},
+      {
+        request: gr,
+        environmentId: env._id,
+        purpose: RENDER_PURPOSE_SEND,
+      },
     );
     expect(result).toEqual({
       body: gr.body,

@@ -894,7 +894,7 @@ export async function sendWithSettings(
   };
 
   try {
-    renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
+    renderResult = await getRenderedRequestAndContext({ request: newRequest, environmentId });
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
@@ -945,10 +945,12 @@ export async function send(
 
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const renderResult = await getRenderedRequestAndContext(
-    request,
-    environmentId || null,
-    RENDER_PURPOSE_SEND,
-    extraInfo,
+    {
+      request,
+      environmentId,
+      purpose: RENDER_PURPOSE_SEND,
+      extraInfo,
+    },
   );
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;

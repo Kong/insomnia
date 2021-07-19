@@ -427,7 +427,7 @@ describe('exportHarWithRequest()', () => {
         password: 'pass',
       },
     });
-    const { request: renderedRequest } = await render.getRenderedRequestAndContext(request);
+    const { request: renderedRequest } = await render.getRenderedRequestAndContext({ request });
     const har = await harUtils.exportHarWithRequest(renderedRequest);
     expect(har.cookies.length).toBe(1);
     expect(har).toEqual({
@@ -507,7 +507,7 @@ describe('exportHarWithRequest()', () => {
       url: 'http://example.com/post',
       authentication: {},
     });
-    const { request: renderedRequest } = await render.getRenderedRequestAndContext(request);
+    const { request: renderedRequest } = await render.getRenderedRequestAndContext({ request });
     const har = await harUtils.exportHarWithRequest(renderedRequest);
     expect(har).toEqual({
       bodySize: -1,

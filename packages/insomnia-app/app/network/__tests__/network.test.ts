@@ -18,7 +18,7 @@ import { globalBeforeEach } from '../../__jest__/before-each';
 import { DEFAULT_BOUNDARY } from '../multipart';
 const CONTEXT = {};
 
-const getRenderedRequest = async (...args) => (await getRenderedRequestAndContext(...args)).request;
+const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
 describe('actuallySend()', () => {
   beforeEach(globalBeforeEach);
@@ -89,7 +89,7 @@ describe('actuallySend()', () => {
         password: 'pass',
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -164,7 +164,7 @@ describe('actuallySend()', () => {
       },
       url: 'http://localhost',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -264,7 +264,7 @@ describe('actuallySend()', () => {
       settingStoreCookies: false,
       settingSendCookies: false,
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -324,7 +324,7 @@ describe('actuallySend()', () => {
         fileName,
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -404,7 +404,7 @@ describe('actuallySend()', () => {
         ],
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -465,7 +465,7 @@ describe('actuallySend()', () => {
       url: 'http://unix:/my/socket:/my/path',
       method: 'GET',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -505,7 +505,7 @@ describe('actuallySend()', () => {
       url: 'http://localhost:3000/foo/bar',
       method: 'HEAD',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -544,7 +544,7 @@ describe('actuallySend()', () => {
       url: 'http://unix:3000/my/path',
       method: 'GET',
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -584,7 +584,7 @@ describe('actuallySend()', () => {
         type: AUTH_NETRC,
       },
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const response = await networkUtils._actuallySend(
       renderedRequest,
       CONTEXT,
@@ -622,7 +622,7 @@ describe('actuallySend()', () => {
       _id: 'req_123',
       parentId: workspace._id,
     });
-    const renderedRequest = await getRenderedRequest(request);
+    const renderedRequest = await getRenderedRequest({ request });
     const responseV1 = await networkUtils._actuallySend(renderedRequest, CONTEXT, workspace, {
       ...settings,
       preferredHttpVersion: HttpVersions.V1_0,
@@ -673,8 +673,8 @@ describe('actuallySend()', () => {
       url: 'http://unix:3000/requestB',
       method: 'GET',
     });
-    const renderedRequest1 = await getRenderedRequest(request1);
-    const renderedRequest2 = await getRenderedRequest(request2);
+    const renderedRequest1 = await getRenderedRequest({ request: request1 });
+    const renderedRequest2 = await getRenderedRequest({ request: request2 });
 
     // WHEN
     const response1Promise = networkUtils._actuallySend(
