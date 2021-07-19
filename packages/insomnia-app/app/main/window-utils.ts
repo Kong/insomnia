@@ -92,6 +92,8 @@ export function createWindow() {
       nodeIntegration: true,
       webviewTag: true,
       enableRemoteModule: true,
+      // TODO: enable context isolation
+      contextIsolation: false,
     },
   });
 

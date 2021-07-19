@@ -26,16 +26,34 @@ const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }
   margin: 'var(--padding-md) var(--padding-md)',
   fontSize: 0,
   borderRadius: 'var(--radius-md)',
-  overflow: 'hidden',
-  boxShadow: '0 0 0 1px var(--hl-sm)',
   transition: 'all 150ms ease-out',
+  // This is a workaround for some anti-aliasing artifacts that impact the color scheme badges.
+  // The box shadow is placed on a pseudo-element. When it is active, it is configured to overlap
+  // 1px with the underlying geometry to prevent gaps caused by anti-aliasing.
+  '&:before': {
+    display: 'block',
+    position: 'absolute',
+    boxShadow: '0 0 0 1px var(--hl-sm)',
+    transition: 'all 150ms ease-out',
+    borderRadius: 'var(--radius-md)',
+    width: '100%',
+    height: '100%',
+    content: "''",
+    ...($isActive ? {
+      boxShadow: '0 0 0 var(--padding-xs) var(--color-surprise)',
+      width: 'calc(100% - 2px)',
+      height: 'calc(100% - 2px)',
+      margin: '1px',
+    } : {}),
+  },
+  '&:hover:before': {
+    ...($isInOsThemeMode ? { boxShadow: '0 0 0 0 var(--color-surprise)' } : {}),
+  },
   ...($isActive ? {
-    boxShadow: '0 0 0 var(--padding-xs) var(--color-surprise)',
     transform: 'scale(1.05)',
   } : {}),
   '&:hover': {
     transform: 'scale(1.05)',
-    ...($isInOsThemeMode ? { boxShadow: 'none' } : {}),
   },
   ...($isInOsThemeMode ? {
     '&:hover .overlay-wrapper': {
@@ -68,13 +86,16 @@ const ColorSchemeBadge = styled.div<{ $theme: 'dark' | 'light'}>(({ $theme }) =>
   height: 12,
   fill: 'white',
   padding: 4,
-  background: 'var(--color-surprise)',
+  transition: 'background-color 150ms ease-out',
+  backgroundColor: 'var(--color-surprise)',
   ...(isDark($theme) ? {
     right: 0,
+    borderTopRightRadius: 'var(--radius-md)',
     borderBottomLeftRadius: 'var(--radius-md)',
   } : {}),
   ...(isLight($theme) ? {
     left: 0,
+    borderTopLeftRadius: 'var(--radius-md)',
     borderBottomRightRadius: 'var(--radius-md)',
   } : {}),
 }));
@@ -155,6 +176,7 @@ const ThemePreview: FC<{ theme: PluginTheme }> = ({ theme: { name: themeName } }
     width="100%"
     height="100%"
     viewBox="0 0 500 300"
+    style={{ borderRadius: 'var(--radius-md)' }}
   >
     {/*
       A WORD TO THE WISE: If you, dear traveler from the future, are here
