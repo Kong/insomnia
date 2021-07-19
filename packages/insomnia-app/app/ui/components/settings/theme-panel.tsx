@@ -47,7 +47,7 @@ const ThemeButton = styled.div<{ $isActive: boolean; $isInOsThemeMode: boolean }
     } : {}),
   },
   '&:hover:before': {
-    ...($isInOsThemeMode ? { boxShadow: 'none' } : {}),
+    ...($isInOsThemeMode ? { boxShadow: '0 0 0 0 var(--color-surprise)' } : {}),
   },
   ...($isActive ? {
     transform: 'scale(1.05)',
