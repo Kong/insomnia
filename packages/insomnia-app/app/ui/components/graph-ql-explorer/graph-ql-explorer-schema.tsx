@@ -1,11 +1,12 @@
-import type { GraphQLSchema, GraphQLType } from 'graphql';
 import React, { Fragment, PureComponent } from 'react';
+import type { GraphQLSchema, GraphQLType } from 'graphql';
 import GraphQLExplorerSearchResults from './graph-ql-explorer-search-results';
+import { GraphQLFieldWithParentName } from './graph-ql-explorer-type';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 
 interface Props {
   onNavigateType: (type: GraphQLType) => void;
-  onNavigateField: (field: Record<string, any>) => void;
+  onNavigateField: (field: GraphQLFieldWithParentName) => void;
   schema: GraphQLSchema;
   filter: string;
 }

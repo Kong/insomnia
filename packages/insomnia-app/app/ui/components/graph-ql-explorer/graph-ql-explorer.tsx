@@ -1,15 +1,15 @@
+import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { AUTOBIND_CFG } from '../../../common/constants';
+import GraphQLExplorerField from './graph-ql-explorer-field';
+import GraphQLExplorerType, { GraphQLFieldWithParentName } from './graph-ql-explorer-type';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
-import React, { PureComponent } from 'react';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import GraphQLExplorerEnum from './graph-ql-explorer-enum';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import KeydownBinder from '../keydown-binder';
-import GraphQLExplorerEnum from './graph-ql-explorer-enum';
-import GraphQLExplorerField from './graph-ql-explorer-field';
-import GraphQLExplorerSchema from './graph-ql-explorer-schema';
-import GraphQLExplorerType from './graph-ql-explorer-type';
 
 interface Props {
   handleClose: () => void;
@@ -46,11 +46,11 @@ class GraphQLExplorer extends PureComponent<Props, State> {
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
       this._navigateToSchema();
-      this._focus_and_select_filter_input();
+      this._focusAndSelectFilterInput();
     });
   }
 
-  _focus_and_select_filter_input() {
+  _focusAndSelectFilterInput() {
     if (this._inputRef.current) {
       this._inputRef.current.focus();
       this._inputRef.current.select();
@@ -65,7 +65,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     });
   }
 
-  _handleNavigateType(type: GraphQLType | GraphQLEnumType) {
+  _handleNavigateType(type: GraphQLType) {
     this.setState({
       currentType: type,
       currentField: null,
@@ -73,7 +73,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     });
   }
 
-  _handleNavigateField(field: GraphQLField<any, any>) {
+  _handleNavigateField(field: GraphQLFieldWithParentName) {
     this.setState({
       currentType: field.type,
       currentField: field,
@@ -118,10 +118,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     const { type, field } = nextProps.reference;
     const { currentType, currentField } = this.state;
 
-    const compare = <T extends { name: string } | null, U extends { name: string } | null>(
-      a: T,
-      b: U,
-    ) => (!a && !b) || (a && b && a.name === b.name);
+    const compare = <T extends { name: string } | null, U extends { name: string } | null>(a: T, b: U) => (!a && !b) || (a && b && a.name === b.name);
 
     // @ts-expect-error -- needs generic for `name`
     const sameType = compare(currentType, type);
@@ -153,8 +150,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
             e.preventDefault();
 
             this._handlePopHistory();
-          }}
-        >
+          }}>
           <i className="fa--skinny fa fa-angle-left" /> Schema
         </a>
       );
@@ -182,8 +178,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
           e.preventDefault();
 
           this._handlePopHistory();
-        }}
-      >
+        }}>
         <i className="fa--skinny fa fa-angle-left" /> {name}
       </a>
     );

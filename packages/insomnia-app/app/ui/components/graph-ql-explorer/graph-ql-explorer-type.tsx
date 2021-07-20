@@ -80,9 +80,9 @@ class GraphQLExplorerType extends PureComponent<Props> {
   }
 
   static renderFieldsList(
-    fields: Array<GraphQLFieldWithParentName>,
-    onNavigateType: (type: Record<string, any>) => void,
-    onNavigateField: (field: Record<string, any>) => void,
+    fields: GraphQLFieldWithParentName[],
+    onNavigateType: (type: GraphQLType) => void,
+    onNavigateField: (field: GraphQLFieldWithParentName) => void,
   ) {
     return (
       <ul className="graphql-explorer__defs">
@@ -106,11 +106,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
           }
 
           const fieldLink = (
-            <GraphQLExplorerFieldLink
-              onNavigate={onNavigateField}
-              field={field}
-              parentName={field.parentName}
-            />
+            <GraphQLExplorerFieldLink onNavigate={onNavigateField} field={field} />
           );
           const typeLink = (
             <GraphQLExplorerTypeLink onNavigate={onNavigateType} type={field.type} />
@@ -151,7 +147,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
     }
 
     // @ts-expect-error -- TSCONVERSION
-    const fields: Array<GraphQLField<any, any>> = type.getFields();
+    const fields: GraphQLField<any, any>[] = type.getFields();
     const sortedFields = Object.values(fields).sort((a, b) => a.name.localeCompare(b.name));
     return (
       <Fragment>

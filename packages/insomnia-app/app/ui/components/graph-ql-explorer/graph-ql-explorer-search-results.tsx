@@ -1,4 +1,4 @@
-import type { GraphQLField, GraphQLSchema } from 'graphql';
+import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import React, { PureComponent } from 'react';
 import GraphQLExplorerType, { GraphQLFieldWithParentName } from './graph-ql-explorer-type';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
@@ -7,8 +7,8 @@ import { debounce } from 'lodash';
 interface Props {
   schema: GraphQLSchema;
   filter: string;
-  onNavigateType: (type: Record<string, any>) => void;
-  onNavigateField: (field: Record<string, any>) => void;
+  onNavigateType: (type: GraphQLType) => void;
+  onNavigateField: (field: GraphQLFieldWithParentName) => void;
 }
 
 interface State {
@@ -84,8 +84,8 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
         return acc;
       }
 
-      const fields: Array<GraphQLField<any, any>> = type.getFields();
-      const relevantFields: Array<GraphQLFieldWithParentName> = Object.values(fields)
+      const fields: GraphQLField<any, any>[] = type.getFields();
+      const relevantFields: GraphQLFieldWithParentName[] = Object.values(fields)
         .filter(
           field =>
             field.name.toLowerCase().includes(filter.toLowerCase()) ||
