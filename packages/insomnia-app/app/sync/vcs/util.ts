@@ -14,7 +14,7 @@ import type {
   StatusCandidate,
   StatusCandidateMap,
 } from '../types';
-import { deleteKeys, resetKeys, shouldIgnoreKey } from './ignore-keys';
+import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {

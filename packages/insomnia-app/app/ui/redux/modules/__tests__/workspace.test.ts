@@ -13,7 +13,7 @@ import { Environment } from '../../../../models/environment';
 import { CookieJar } from '../../../../models/cookie-jar';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { ApiSpec } from '../../../../models/api-spec';
-import reduxStateForTest from '../../../../__jest__/redux-state-for-test';
+import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');

@@ -6,11 +6,16 @@ import { assertAsyncError, setupDateMocks } from './util';
 import { NeDBClient } from '../ne-db-client';
 import path from 'path';
 import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../git-vcs';
+import { createBuilder } from '@develohpanda/fluent-builder';
+import { workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+
+const workspaceBuilder = createBuilder(workspaceModelSchema);
 
 describe('NeDBClient', () => {
   afterAll(() => jest.restoreAllMocks());
   beforeEach(async () => {
     await globalBeforeEach();
+    workspaceBuilder.reset();
     setupDateMocks();
     // Create some sample models
     await models.workspace.create({
@@ -26,7 +31,7 @@ describe('NeDBClient', () => {
     });
     // Shouldn't list private docs
     await models.request.create({
-      id: 'req_x',
+      _id: 'req_x',
       isPrivate: true,
       parentId: 'wrk_1',
     });
@@ -61,13 +66,13 @@ describe('NeDBClient', () => {
       const req1Yml = path.join(GIT_INSOMNIA_DIR, models.request.type, 'req_1.yml');
       const reqXYml = path.join(GIT_INSOMNIA_DIR, models.request.type, 'req_x.yml');
       const pNeDB = new NeDBClient('wrk_1');
-      expect(YAML.parse(await pNeDB.readFile(wrk1Yml, 'utf8'))).toEqual(
+      expect(YAML.parse((await pNeDB.readFile(wrk1Yml, 'utf8')).toString())).toEqual(
         expect.objectContaining({
           _id: 'wrk_1',
           parentId: null,
         }),
       );
-      expect(YAML.parse(await pNeDB.readFile(req1Yml, 'utf8'))).toEqual(
+      expect(YAML.parse((await pNeDB.readFile(req1Yml, 'utf8')).toString())).toEqual(
         expect.objectContaining({
           _id: 'req_1',
           parentId: 'wrk_1',
@@ -79,7 +84,7 @@ describe('NeDBClient', () => {
 
   describe('stat()', () => {
     it('stats a dir', async () => {
-      // Assemble
+      // Arrange
       const reqDir = path.join(GIT_INSOMNIA_DIR, models.request.type);
       const wrkDir = path.join(GIT_INSOMNIA_DIR, models.workspace.type);
       const dirType = expect.objectContaining({
@@ -101,7 +106,7 @@ describe('NeDBClient', () => {
 
   describe('writeFile()', () => {
     it('should ignore files not in GIT_INSOMNIA_DIR directory', async () => {
-      // Assemble
+      // Arrange
       const upsertSpy = jest.spyOn(db, 'upsert');
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
@@ -120,7 +125,7 @@ describe('NeDBClient', () => {
     });
 
     it('should write files in GIT_INSOMNIA_DIR directory to db', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
       const upsertSpy = jest.spyOn(db, 'upsert');
@@ -139,8 +144,62 @@ describe('NeDBClient', () => {
       upsertSpy.mockRestore();
     });
 
+    it('should set workspace parentId to the space', async () => {
+      // Arrange
+      const workspaceId = 'wrk_1';
+      const spaceId = 'sp_1';
+      const neDbClient = new NeDBClient(workspaceId, spaceId);
+      const upsertSpy = jest.spyOn(db, 'upsert');
+
+      // @ts-expect-error not sure why scope is being typed as never
+      workspaceBuilder._id(workspaceId).scope('design').certificates(null);
+
+      // @ts-expect-error parentId can be string or null for a workspace
+      const workspaceInFile = workspaceBuilder.parentId(null).build();
+      const workspaceInDb = workspaceBuilder.parentId(spaceId).build();
+
+      const filePath = path.join(GIT_INSOMNIA_DIR, models.workspace.type, `${workspaceId}.yml`);
+
+      // Act
+      await neDbClient.writeFile(filePath, YAML.stringify(workspaceInFile));
+
+      // Assert
+      expect(upsertSpy).toHaveBeenCalledTimes(1);
+      expect(upsertSpy).toHaveBeenCalledWith(workspaceInDb, true);
+
+      // Cleanup
+      upsertSpy.mockRestore();
+    });
+
+    it('should force to a design workspace when writing', async () => {
+      // Arrange
+      const workspaceId = 'wrk_1';
+      const spaceId = 'sp_1';
+      const neDbClient = new NeDBClient(workspaceId, spaceId);
+      const upsertSpy = jest.spyOn(db, 'upsert');
+
+      workspaceBuilder._id(workspaceId).parentId(spaceId).certificates(null);
+
+      // @ts-expect-error not sure why scope is being typed as never
+      const workspaceInFile = workspaceBuilder.scope('collection').build();
+      // @ts-expect-error not sure why scope is being typed as never
+      const workspaceInDb = workspaceBuilder.scope('design').build();
+
+      const filePath = path.join(GIT_INSOMNIA_DIR, models.workspace.type, `${workspaceId}.yml`);
+
+      // Act
+      await neDbClient.writeFile(filePath, YAML.stringify(workspaceInFile));
+
+      // Assert
+      expect(upsertSpy).toHaveBeenCalledTimes(1);
+      expect(upsertSpy).toHaveBeenCalledWith(workspaceInDb, true);
+
+      // Cleanup
+      upsertSpy.mockRestore();
+    });
+
     it('should throw error if id does not match', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
       const env = {
@@ -158,7 +217,7 @@ describe('NeDBClient', () => {
     });
 
     it('should throw error if type does not match', async () => {
-      // Assemble
+      // Arrange
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
       const env = {
@@ -180,7 +239,7 @@ describe('NeDBClient', () => {
     it('should throw error', async () => {
       const workspaceId = 'wrk_1';
       const neDbClient = new NeDBClient(workspaceId);
-      const promiseResult = neDbClient.mkdir('', '');
+      const promiseResult = neDbClient.mkdir();
       await expect(promiseResult).rejects.toThrowError('NeDBClient is not writable');
     });
   });

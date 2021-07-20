@@ -68,7 +68,7 @@ export const selectActiveSpace = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeSpaceId,
   (entities, activeSpaceId) => {
-    return entities.spaces[activeSpaceId || 'n/a'];
+    return activeSpaceId ? entities.spaces[activeSpaceId] : undefined;
   },
 );
 
