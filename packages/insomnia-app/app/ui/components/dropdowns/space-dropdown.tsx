@@ -21,17 +21,21 @@ const baseSpace: SpaceSubset = {
   remoteId: null,
 };
 
-const Checkmark = styled(SvgIcon)({
-  // this is a bit of a hack/workaround to avoid some larger changes that we'd need to do with dropdown item icons
+const svgPlacementHack = {
+  // This is a bit of a hack/workaround to avoid some larger changes that we'd need to do with dropdown item icons and tooltips.
+  // Without this, the icon is too high with respect to the text because of Tooltip introducing some changes to the placement of the icon.
   marginTop: 1,
+};
+
+const Checkmark = styled(SvgIcon)({
+  ...svgPlacementHack,
   '& svg': {
     fill: 'var(--color-surprise)',
   },
 });
 
 const StyledSvgIcon = styled(SvgIcon)({
-  // this is a bit of a hack/workaround to avoid some larger changes that we'd need to do with dropdown item icons
-  marginTop: 1,
+  ...svgPlacementHack,
   '& svg': {
     fill: 'var(--hl)',
   },
