@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
-import { BASE_SPACE_ID, isRemoteSpace, Space } from '../../../models/space';
+import { BASE_SPACE_ID, isBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/space';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteSpaces } from '../../hooks/space';
 import { setActiveSpace } from '../../redux/modules/global';
@@ -56,25 +56,23 @@ const BoldDropdownItem = styled(DropdownItem)({
   fontWeight: 500,
 });
 
-const SpaceDropdownItem: FC<{ space: SpaceSubset }> = ({ space }) => {
-  const {
-    _id: spaceId,
-    name,
-  } = space;
-  const dispatch = useDispatch();
-  const setActive = useCallback((id: string) => dispatch(setActiveSpace(id)), [dispatch]);
-  const activeSpace = useSelector(selectActiveSpace);
-  const selectedSpace = activeSpace || baseSpace;
-  const isActiveSpace = spaceId === selectedSpace._id;
-  const isBaseSpace = spaceId === baseSpace._id;
+const SpaceDropdownItem: FC<{
+  space: SpaceSubset;
+  activeSpace: SpaceSubset;
+  setActive: (spaceId: string) => void;
+}> = ({ activeSpace, space, setActive }) => {
+  const { _id, name } = space;
+  const isActive = _id === activeSpace._id;
+  const isBase = isBaseSpace(space);
   const isRemote = isRemoteSpace(space);
 
   return (
     <BoldDropdownItem
-      key={spaceId}
-      icon={isBaseSpace ? home : isRemote ? remoteSpace : localSpace}
-      right={isActiveSpace && <Checkmark icon="checkmark" />}
-      value={spaceId}
+      key={_id}
+      icon={isBase ? home : isRemote ? remoteSpace : localSpace}
+      right={isActive && <Checkmark icon="checkmark" />}
+      // @ts-expect-error DropdownItem's relationship between `value` and the `onClick` callback still needs some work
+      value={_id}
       onClick={setActive}
     >
       {name}
@@ -89,37 +87,40 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   // get list of spaces (which doesn't include the base space)
   const spaces = useSelector(selectSpaces);
 
-  // figure out which space is selected
-  const activeSpace = useSelector(selectActiveSpace);
-  const selectedSpace = activeSpace || baseSpace;
-  const spaceHasSettings = selectedSpace !== baseSpace && selectedSpace.remoteId === null;
-
-  // select a new space
+  const activeSpace = useSelector(selectActiveSpace) || baseSpace;
   const dispatch = useDispatch();
+  const setActive = useCallback((spaceId: string) => dispatch(setActiveSpace(spaceId)), [dispatch]);
   const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
   const showSettings = useCallback(() => showModal(SpaceSettingsModal), []);
 
   // dropdown button
   const button = useMemo(() => (
-    <button type="button" className="row" title={selectedSpace.name}>
-      {selectedSpace.name}
+    <button type="button" className="row" title={activeSpace.name}>
+      {activeSpace.name}
       <i className="fa fa-caret-down space-left" />
     </button>
-  ), [selectedSpace]);
+  ), [activeSpace]);
 
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      <SpaceDropdownItem space={baseSpace} />
+      <SpaceDropdownItem
+        space={baseSpace}
+        activeSpace={activeSpace}
+        setActive={setActive}
+      />
 
       <DropdownDivider>All spaces{' '}{loading && spinner}</DropdownDivider>
 
-      {spaces.map(space => {
-        return (
-          <SpaceDropdownItem key={space._id} space={space} />
-        );
-      })}
+      {spaces.map(space => (
+        <SpaceDropdownItem
+          key={space._id}
+          space={space}
+          activeSpace={activeSpace}
+          setActive={setActive}
+        />
+      ))}
 
-      {spaceHasSettings && <>
+      {spaceHasSettings(activeSpace) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>
           {strings.space.singular} Settings

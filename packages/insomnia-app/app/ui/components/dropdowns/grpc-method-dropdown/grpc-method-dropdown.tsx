@@ -38,6 +38,7 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
   const groupedByPkg = useMemo(() => groupGrpcMethodsByPackage(methods), [methods]);
   return (
     <Dropdown className="tall wide" renderButton={dropdownButton}>
+      {/* @ts-expect-error this appears to be a genuine error since value is not defined the argument passed will not be a string (as these types specify), but rather an event */}
       <DropdownItem onClick={handleChangeProtoFile}>
         <em>Click to change proto file</em>
       </DropdownItem>
