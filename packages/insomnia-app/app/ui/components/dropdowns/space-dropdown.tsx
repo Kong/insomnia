@@ -65,10 +65,6 @@ interface Props {
   vcs?: VCS;
 }
 
-const BoldDropdownItem = styled(DropdownItem)({
-  fontWeight: 500,
-});
-
 const SpaceDropdownItem: FC<{
   space: SpaceSubset;
   activeSpace: SpaceSubset;
@@ -80,7 +76,7 @@ const SpaceDropdownItem: FC<{
   const isRemote = isRemoteSpace(space);
 
   return (
-    <BoldDropdownItem
+    <DropdownItem
       key={_id}
       icon={isBase ? home : isRemote ? remoteSpace : localSpace}
       right={isActive && <Checkmark icon="checkmark" />}
@@ -89,7 +85,7 @@ const SpaceDropdownItem: FC<{
       onClick={setActive}
     >
       {name}
-    </BoldDropdownItem>
+    </DropdownItem>
   );
 };
 SpaceDropdownItem.displayName = DropdownItem.name; // This is required because the Dropdown component will otherwise silently disregard this component.
