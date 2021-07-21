@@ -1,6 +1,7 @@
 import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import styled, { css } from 'styled-components';
+import classnames from 'classnames';
 
 export interface DropdownItemProps {
   buttonClass?: string,
@@ -126,7 +127,7 @@ export class DropdownItem extends PureComponent<DropdownItemProps> {
     );
     return (
       <StyledButton
-        className={`${className} ${buttonClass}`.trim()}
+        className={classnames(className, buttonClass)}
         type="button"
         onClick={this._handleClick}
         disabled={disabled}
