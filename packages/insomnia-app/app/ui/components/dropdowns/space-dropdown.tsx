@@ -81,7 +81,7 @@ const SpaceDropdownItem: FC<{ space: SpaceSubset }> = ({ space }) => {
     </BoldDropdownItem>
   );
 };
-SpaceDropdownItem.displayName = 'DropdownItem';
+SpaceDropdownItem.displayName = DropdownItem.name; // This is required because the Dropdown component will otherwise silently disregard this component.
 
 export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   const { loading, refresh } = useRemoteSpaces(vcs);
