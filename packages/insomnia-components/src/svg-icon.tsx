@@ -1,4 +1,4 @@
-import React, { Component, NamedExoticComponent, ReactNode, SVGProps } from 'react';
+import React, { CSSProperties, Component, NamedExoticComponent, ReactNode, SVGProps } from 'react';
 import styled from 'styled-components';
 
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
@@ -23,10 +23,13 @@ import { SvgIcnGear } from './assets/svgr/IcnGear';
 import { SvgIcnGitBranch } from './assets/svgr/IcnGitBranch';
 import { SvgIcnGithubLogo } from './assets/svgr/IcnGithubLogo';
 import { SvgIcnGitlabLogo } from './assets/svgr/IcnGitlabLogo';
+import { SvgIcnGlobe } from './assets/svgr/IcnGlobe';
 import { SvgIcnGui } from './assets/svgr/IcnGui';
+import { SvgIcnHome } from './assets/svgr/IcnHome';
 import { SvgIcnIndentation } from './assets/svgr/IcnIndentation';
 import { SvgIcnInfo } from './assets/svgr/IcnInfo';
 import { SvgIcnKey } from './assets/svgr/IcnKey';
+import { SvgIcnLaptop } from './assets/svgr/IcnLaptop';
 import { SvgIcnMinusCircle } from './assets/svgr/IcnMinusCircle';
 import { SvgIcnMinusCircleFill } from './assets/svgr/IcnMinusCircleFill';
 import { SvgIcnPlaceholder } from './assets/svgr/IcnPlaceholder';
@@ -84,10 +87,13 @@ export const IconEnum = {
   gitBranch: 'git-branch',
   github: 'github',
   gitlabLogo: 'gitlab-logo',
+  globe: 'globe',
   gui: 'gui',
   indentation: 'indentation',
   info: 'info',
+  home: 'home',
   key: 'key',
+  laptop: 'laptop',
   minusCircle: 'minus-circle',
   minusCircleFill: 'minus-circle-fill',
   placeholder: 'placeholder',
@@ -116,11 +122,13 @@ export type IconId = ValueOf<typeof IconEnum>;
 export interface SvgIconProps {
   icon: IconId;
   label?: ReactNode;
+  className?: string;
+  style?: CSSProperties;
 }
 
 const SvgIconStyled = styled.div<{
-  theme: ThemeKeys;
-  hasLabel: boolean;
+  $theme: ThemeKeys;
+  $hasLabel: boolean;
 }>`
   display: inline-flex;
   align-items: center;
@@ -129,16 +137,16 @@ const SvgIconStyled = styled.div<{
   svg {
     flex-shrink: 0;
     user-select: none;
-    ${({ hasLabel }) => (hasLabel ? 'margin-right: var(--padding-xs);' : null)}
-    ${({ theme }) => {
-    switch (theme) {
+    ${({ $hasLabel }) => ($hasLabel ? 'margin-right: var(--padding-xs);' : null)}
+    ${({ $theme }) => {
+    switch ($theme) {
       case ThemeEnum.danger:
       case ThemeEnum.info:
       case ThemeEnum.notice:
       case ThemeEnum.success:
       case ThemeEnum.surprise:
       case ThemeEnum.warning:
-        return `fill: var(--color-${theme}); color: var(--color-font-${theme});`;
+        return `fill: var(--color-${$theme}); color: var(--color-font-${$theme});`;
 
       case ThemeEnum.highlight:
         return 'fill: var(--hl); color: var(--color-font-danger);';
@@ -176,10 +184,13 @@ export class SvgIcon extends Component<SvgIconProps> {
     [IconEnum.gitBranch]: [ThemeEnum.default, SvgIcnGitBranch],
     [IconEnum.github]: [ThemeEnum.default, SvgIcnGithubLogo],
     [IconEnum.gitlabLogo]: [ThemeEnum.default, SvgIcnGitlabLogo],
+    [IconEnum.globe]: [ThemeEnum.default, SvgIcnGlobe],
     [IconEnum.gui]: [ThemeEnum.default, SvgIcnGui],
+    [IconEnum.home]: [ThemeEnum.default, SvgIcnHome],
     [IconEnum.indentation]: [ThemeEnum.default, SvgIcnIndentation],
     [IconEnum.info]: [ThemeEnum.highlight, SvgIcnInfo],
     [IconEnum.key]: [ThemeEnum.default, SvgIcnKey],
+    [IconEnum.laptop]: [ThemeEnum.default, SvgIcnLaptop],
     [IconEnum.minusCircleFill]: [ThemeEnum.default, SvgIcnMinusCircleFill],
     [IconEnum.minusCircle]: [ThemeEnum.default, SvgIcnMinusCircle],
     [IconEnum.placeholder]: [ThemeEnum.default, SvgIcnPlaceholder],
@@ -201,7 +212,7 @@ export class SvgIcon extends Component<SvgIconProps> {
   };
 
   render() {
-    const { icon, label } = this.props;
+    const { icon, label, className, style } = this.props;
 
     if (!SvgIcon.icons[icon]) {
       throw new Error(
@@ -211,7 +222,12 @@ export class SvgIcon extends Component<SvgIconProps> {
 
     const [theme, Svg] = SvgIcon.icons[icon];
     return (
-      <SvgIconStyled theme={theme} hasLabel={!!label}>
+      <SvgIconStyled
+        className={className}
+        style={style}
+        $theme={theme}
+        $hasLabel={!!label}
+      >
         <Svg />
         {label}
       </SvgIconStyled>
