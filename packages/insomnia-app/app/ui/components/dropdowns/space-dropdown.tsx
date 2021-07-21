@@ -128,7 +128,7 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
 
       <DropdownDivider />
       <DropdownItem icon={<StyledSvgIcon icon="plus" />} onClick={createNew}>
-        Create or join a {strings.space.singular.toLowerCase()}
+        Create new {strings.space.singular.toLowerCase()}
       </DropdownItem>
     </Dropdown>
   );
