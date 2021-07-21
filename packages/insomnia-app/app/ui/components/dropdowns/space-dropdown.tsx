@@ -27,6 +27,11 @@ const svgPlacementHack = {
   marginTop: 1,
 };
 
+const tooltipIconPlacementHack = {
+  // see above comment for `svgPlacementHack`.
+  marginTop: 3,
+};
+
 const Checkmark = styled(SvgIcon)({
   ...svgPlacementHack,
   '& svg': {
@@ -41,10 +46,14 @@ const StyledSvgIcon = styled(SvgIcon)({
   },
 });
 
+const StyledTooltip = styled(Tooltip)({
+  ...tooltipIconPlacementHack,
+});
+
 const TooltipIcon = ({ message, icon }: { message: string, icon: SvgIconProps['icon'] }) => (
-  <Tooltip message={message} style={{ display: 'flex' }}>
+  <StyledTooltip message={message}>
     <StyledSvgIcon icon={icon} />
-  </Tooltip>
+  </StyledTooltip>
 );
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
