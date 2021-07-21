@@ -12,6 +12,11 @@ export const canSync = false;
 // Using this instead of null.
 export const BASE_SPACE_ID = 'base-space';
 
+export const isBaseSpace = ({ _id }: Pick<Space, '_id'>) => _id === BASE_SPACE_ID;
+export const isNotBaseSpace = (space: Pick<Space, '_id'>) => !isBaseSpace(space);
+export const isLocalSpace = ({ remoteId }: Pick<Space, 'remoteId'>) => remoteId === null;
+export const isRemoteSpace = (space: Pick<Space, 'remoteId'>) => !isLocalSpace(space);
+
 interface BaseSpace {
   name: string;
   remoteId: string | null;

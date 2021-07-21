@@ -73,11 +73,6 @@ export const selectActiveSpace = createSelector(
   },
 );
 
-export const selectIsRemoteSpace = (spaceId: string) => createSelector(
-  selectSpaces,
-  spaces => Boolean(spaces.find(({ _id }) => _id === spaceId)?.remoteId),
-);
-
 export const selectAllWorkspaces = createSelector(
   selectEntitiesLists,
   entities => entities.workspaces,

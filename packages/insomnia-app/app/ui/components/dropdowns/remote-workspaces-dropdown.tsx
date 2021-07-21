@@ -6,7 +6,8 @@ import { strings } from '../../../common/strings';
 import { isLoggedIn } from '../../../account/session';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { useSelector } from 'react-redux';
-import { selectActiveSpace, selectIsRemoteSpace } from '../../redux/selectors';
+import { selectActiveSpace } from '../../redux/selectors';
+import { isRemoteSpace } from '../../../models/space';
 
 interface Props {
   className?: string;
@@ -30,10 +31,14 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
   } = useRemoteWorkspaces(vcs || undefined);
 
   const space = useSelector(selectActiveSpace);
-  const isRemoteSpace = useSelector(selectIsRemoteSpace(space?._id));
+  if (!space) {
+    return null;
+  }
+
+  const isRemote = isRemoteSpace(space);
 
   // Don't show the pull dropdown if we are not in a remote space
-  if (!isRemoteSpace) {
+  if (!isRemote) {
     return null;
   }
 

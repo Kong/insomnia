@@ -4,12 +4,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { BASE_SPACE_ID, isRemoteSpace, Space } from '../../../models/space';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteSpaces } from '../../hooks/space';
 import { setActiveSpace } from '../../redux/modules/global';
 import { createSpace } from '../../redux/modules/space';
-import { selectActiveSpace, selectIsRemoteSpace, selectSpaces } from '../../redux/selectors';
+import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/space-settings-modal';
 
@@ -56,20 +56,18 @@ const BoldDropdownItem = styled(DropdownItem)({
   fontWeight: 500,
 });
 
-const SpaceDropdownItem: FC<{ space: SpaceSubset }> = ({
-  space: {
+const SpaceDropdownItem: FC<{ space: SpaceSubset }> = ({ space }) => {
+  const {
     _id: spaceId,
     name,
-  },
-}) => {
+  } = space;
   const dispatch = useDispatch();
   const setActive = useCallback((id: string) => dispatch(setActiveSpace(id)), [dispatch]);
-  const isRemote = useSelector(selectIsRemoteSpace(spaceId));
-
   const activeSpace = useSelector(selectActiveSpace);
   const selectedSpace = activeSpace || baseSpace;
   const isActiveSpace = spaceId === selectedSpace._id;
   const isBaseSpace = spaceId === baseSpace._id;
+  const isRemote = isRemoteSpace(space);
 
   return (
     <BoldDropdownItem
