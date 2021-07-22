@@ -80,7 +80,6 @@ const SpaceDropdownItem: FC<{
       key={_id}
       icon={isBase ? home : isRemote ? remoteSpace : localSpace}
       right={isActive && <Checkmark icon="checkmark" />}
-      // @ts-expect-error DropdownItem's relationship between `value` and the `onClick` callback still needs some work
       value={_id}
       onClick={setActive}
     >
