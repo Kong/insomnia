@@ -1,30 +1,31 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
 import clone from 'clone';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { delay, fnOrString } from '../../../common/misc';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { metaSortKeySort } from '../../../common/sorting';
+import * as models from '../../../models';
+import type { BaseModel } from '../../../models/index';
+import { isRequest, Request } from '../../../models/request';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
+import type { Workspace } from '../../../models/workspace';
+import { getTemplateTags } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context';
 import * as templating from '../../../templating';
+import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import type {
   NunjucksActionTag,
   NunjucksParsedTag,
   NunjucksParsedTagArg,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
-import { database as db } from '../../../common/database';
-import * as models from '../../../models';
-import HelpTooltip from '../help-tooltip';
-import { delay, fnOrString } from '../../../common/misc';
-import { metaSortKeySort } from '../../../common/sorting';
-import type { BaseModel } from '../../../models/index';
-import type { Workspace } from '../../../models/workspace';
-import { isRequest, Request } from '../../../models/request';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
-import type { PluginArgumentEnumOption } from '../../../templating/extensions/index';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
-import { getTemplateTags } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import HelpTooltip from '../help-tooltip';
 
 interface Props {
   handleRender: HandleRender;

@@ -1,22 +1,23 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import moment from 'moment';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
-import StatusTag from '../tags/status-tag';
-import URLTag from '../tags/url-tag';
-import PromptButton from '../base/prompt-button';
-import KeydownBinder from '../keydown-binder';
-import TimeTag from '../tags/time-tag';
-import SizeTag from '../tags/size-tag';
-import { executeHotKey } from '../../../common/hotkeys-listener';
+import React, { Fragment, PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
-import TimeFromNow from '../time-from-now';
-import type { Response } from '../../../models/response';
-import type { RequestVersion } from '../../../models/request-version';
+import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
+import type { RequestVersion } from '../../../models/request-version';
+import type { Response } from '../../../models/response';
+import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
+import PromptButton from '../base/prompt-button';
+import KeydownBinder from '../keydown-binder';
+import SizeTag from '../tags/size-tag';
+import StatusTag from '../tags/status-tag';
+import TimeTag from '../tags/time-tag';
+import URLTag from '../tags/url-tag';
+import TimeFromNow from '../time-from-now';
 
 interface Props {
   handleSetActiveResponse: Function;

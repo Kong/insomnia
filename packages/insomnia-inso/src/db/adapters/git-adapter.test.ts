@@ -1,4 +1,5 @@
 import path from 'path';
+
 import gitAdapter from './git-adapter';
 
 describe('gitAdapter()', () => {

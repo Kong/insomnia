@@ -1,11 +1,11 @@
-import * as misc from '../misc';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import * as misc from '../misc';
 import {
+  convertEpochToMilliseconds,
   diffPatchObj,
   isNotNullOrUndefined,
   pluralize,
   snapNumberToLimits,
-  convertEpochToMilliseconds,
 } from '../misc';
 
 describe('hasAuthHeader()', () => {

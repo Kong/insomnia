@@ -1,11 +1,12 @@
-import React, { FunctionComponent } from 'react';
 import { CircleButton, SvgIcon, Tooltip } from 'insomnia-components';
-import { showSettingsModal } from '../modals/settings-modal';
+import React, { FunctionComponent } from 'react';
+import { connect } from 'react-redux';
+
+import { hotKeyRefs } from '../../../common/hotkeys';
 import type { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
-import { connect } from 'react-redux';
 import Hotkey from '../hotkey';
-import { hotKeyRefs } from '../../../common/hotkeys';
+import { showSettingsModal } from '../modals/settings-modal';
 
 interface Props {
   className?: string;

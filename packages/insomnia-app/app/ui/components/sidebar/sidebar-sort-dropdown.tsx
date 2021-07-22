@@ -1,5 +1,6 @@
 import React, { FunctionComponent } from 'react';
-import { SortOrder, sortOrderName, SORT_ORDERS } from '../../../common/constants';
+
+import { SORT_ORDERS, SortOrder, sortOrderName } from '../../../common/constants';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 
 interface Props {

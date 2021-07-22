@@ -1,10 +1,11 @@
+import _enquirer from 'enquirer';
+
+import { globalBeforeAll, globalBeforeEach } from '../../jest/before';
 import type { Database } from '../index';
 import { emptyDb } from '../index';
+import { loadEnvironment, promptEnvironment } from './environment';
 import type { Environment, Workspace } from './types';
 import { generateIdIsh } from './util';
-import _enquirer from 'enquirer';
-import { loadEnvironment, promptEnvironment } from './environment';
-import { globalBeforeAll, globalBeforeEach } from '../../jest/before';
 
 jest.mock('enquirer');
 const enquirer = _enquirer as jest.MockedClass<typeof _enquirer> & {

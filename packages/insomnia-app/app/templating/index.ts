@@ -1,8 +1,9 @@
 import nunjucks from 'nunjucks';
+
+import type { TemplateTag } from '../plugins/index';
+import * as plugins from '../plugins/index';
 import BaseExtension from './base-extension';
 import type { NunjucksParsedTag } from './utils';
-import * as plugins from '../plugins/index';
-import type { TemplateTag } from '../plugins/index';
 
 export class RenderError extends Error {
   message: string;

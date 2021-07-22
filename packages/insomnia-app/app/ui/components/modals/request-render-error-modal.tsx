@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import jq from 'jsonpath';
-import RequestSettingsModal from '../modals/request-settings-modal';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { docsTemplateTags } from '../../../common/documentation';
+import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
+import RequestSettingsModal from '../modals/request-settings-modal';
 import { showModal } from './index';
-import Link from '../base/link';
-import { docsTemplateTags } from '../../../common/documentation';
 
 interface State {
   error: Error | null;

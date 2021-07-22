@@ -1,4 +1,5 @@
 import { createBuilder, Schema } from '@develohpanda/fluent-builder';
+
 import { baseModelSchema } from '../../models/__schemas__/model-schemas';
 import { Branch, MergeConflict, Project, SnapshotStateEntry, StatusCandidate } from '../types';
 

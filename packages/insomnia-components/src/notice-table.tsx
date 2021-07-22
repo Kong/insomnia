@@ -1,8 +1,9 @@
 import React, { PureComponent } from 'react';
-import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
-import { Button } from './button';
 import styled from 'styled-components';
-import { SvgIcon, IconEnum } from './svg-icon';
+
+import { Button } from './button';
+import { IconEnum, SvgIcon } from './svg-icon';
+import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 
 export interface Notice {
   type: 'warning' | 'error';

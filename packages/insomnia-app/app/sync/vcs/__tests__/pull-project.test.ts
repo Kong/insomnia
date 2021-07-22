@@ -1,12 +1,13 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { mocked } from 'ts-jest/utils';
+
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
 import { Workspace } from '../../../models/workspace';
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import { projectSchema } from '../../__schemas__/type-schemas';
-import { pullProject } from '../pull-project';
-import { mocked } from 'ts-jest/utils';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import { pullProject } from '../pull-project';
 import { VCS } from '../vcs';
 
 jest.mock('../vcs');

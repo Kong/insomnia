@@ -1,9 +1,10 @@
-import type { Database } from '../index';
-import type { Environment } from './types';
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
-import { ensureSingle, generateIdIsh, getDbChoice, matchIdIsh } from './util';
+
 import { logger } from '../../logger';
+import type { Database } from '../index';
+import type { Environment } from './types';
+import { ensureSingle, generateIdIsh, getDbChoice, matchIdIsh } from './util';
 
 const loadBaseEnvironmentForWorkspace = (db: Database, workspaceId: string): Environment => {
   logger.trace(

@@ -1,17 +1,18 @@
+import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
+import YAML from 'yaml';
+
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import YAML from 'yaml';
-import Stat from './stat';
+import { BaseModel } from '../../models';
+import { isWorkspace } from '../../models/workspace';
+import { resetKeys } from '../ignore-keys';
+import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
-import { BufferEncoding } from './utils';
+import Stat from './stat';
 import { SystemError } from './system-error';
-import { resetKeys } from '../ignore-keys';
-import { isWorkspace } from '../../models/workspace';
-import { BaseModel } from '../../models';
-import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
-import { PromiseFsClient } from 'isomorphic-git';
+import { BufferEncoding } from './utils';
 
 export class NeDBClient {
   _workspaceId: string;

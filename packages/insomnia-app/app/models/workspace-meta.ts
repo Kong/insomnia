@@ -1,12 +1,12 @@
-import type { BaseModel } from './index';
-import { database as db } from '../common/database';
 import {
-  DEFAULT_SIDEBAR_WIDTH,
-  DEFAULT_PANE_WIDTH,
-  DEFAULT_PANE_HEIGHT,
   ACTIVITY_DEBUG,
+  DEFAULT_PANE_HEIGHT,
+  DEFAULT_PANE_WIDTH,
+  DEFAULT_SIDEBAR_WIDTH,
   DEPRECATED_ACTIVITY_INSOMNIA,
 } from '../common/constants';
+import { database as db } from '../common/database';
+import type { BaseModel } from './index';
 
 export const name = 'Workspace Meta';
 export const type = 'WorkspaceMeta';

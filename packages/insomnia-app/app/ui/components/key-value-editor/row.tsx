@@ -1,19 +1,20 @@
 // eslint-disable-next-line filenames/match-exported
-import React, { PureComponent } from 'react';
-import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
-import FileInputButton from '../base/file-input-button';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
-import PromptButton from '../base/prompt-button';
-import CodePromptModal from '../modals/code-prompt-modal';
-import Button from '../base/button';
-import OneLineEditor from '../codemirror/one-line-editor';
-import { showModal } from '../modals/index';
+import React, { PureComponent } from 'react';
+import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
+import ReactDOM from 'react-dom';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import Button from '../base/button';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
+import FileInputButton from '../base/file-input-button';
+import PromptButton from '../base/prompt-button';
+import OneLineEditor from '../codemirror/one-line-editor';
+import CodePromptModal from '../modals/code-prompt-modal';
+import { showModal } from '../modals/index';
 
 interface Props {
   onChange: Function,

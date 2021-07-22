@@ -1,7 +1,8 @@
-import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
-import GrpcSendButton from '../grpc-send-button';
+import React from 'react';
+
 import { GrpcMethodTypeEnum } from '../../../../network/grpc/method';
+import GrpcSendButton from '../grpc-send-button';
 
 describe('<GrpcSendButton />', () => {
   it('should render as disabled if no method is selected', () => {

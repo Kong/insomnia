@@ -1,5 +1,6 @@
 import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
+
 import Stat from './stat';
 import { SystemError } from './system-error';
 import { BufferEncoding } from './utils';

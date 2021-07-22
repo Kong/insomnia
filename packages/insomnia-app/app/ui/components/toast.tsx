@@ -1,21 +1,22 @@
-import React, { PureComponent } from 'react';
-import * as electron from 'electron';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import styled from 'styled-components';
 import classnames from 'classnames';
-import Link from './base/link';
-import * as models from '../../models/index';
+import * as electron from 'electron';
+import React, { PureComponent } from 'react';
+import styled from 'styled-components';
+
+import * as fetch from '../../account/fetch';
+import * as session from '../../account/session';
 import {
   AUTOBIND_CFG,
+  getAppId,
   getAppName,
   getAppPlatform,
-  getAppId,
   getAppVersion,
   updatesSupported,
 } from '../../common/constants';
-import * as session from '../../account/session';
-import * as fetch from '../../account/fetch';
+import * as models from '../../models/index';
 import imgSrcCore from '../images/insomnia-core-logo.png';
+import Link from './base/link';
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
 export interface ToastNotification {

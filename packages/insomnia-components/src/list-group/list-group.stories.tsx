@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ListGroupItem } from './list-group-item';
+
 import { ListGroup } from './list-group';
+import { ListGroupItem } from './list-group-item';
 import { UnitTestItem } from './unit-test-item';
 import { UnitTestResultItem } from './unit-test-result-item';
 

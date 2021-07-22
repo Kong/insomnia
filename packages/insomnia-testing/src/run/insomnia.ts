@@ -1,5 +1,4 @@
 import axios, { Method } from 'axios';
-
 // @ts-expect-error we're pulling straight out of the lib here in a way that is not intended, but axios does not directly expose this adapter
 import httpAdapter from 'axios/lib/adapters/http';
 

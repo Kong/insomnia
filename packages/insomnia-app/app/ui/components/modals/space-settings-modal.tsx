@@ -1,18 +1,19 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import * as models from '../../../models/index';
+import { Space } from '../../../models/space';
+import * as spaceActions from '../../redux/modules/space';
+import { selectActiveSpace } from '../../redux/selectors';
 import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
-import * as models from '../../../models/index';
-import { Space } from '../../../models/space';
-import { strings } from '../../../common/strings';
-import { selectActiveSpace } from '../../redux/selectors';
-import { bindActionCreators } from 'redux';
-import * as spaceActions from '../../redux/modules/space';
-import { connect } from 'react-redux';
 
 interface ReduxStateProps {
   space?: Space;

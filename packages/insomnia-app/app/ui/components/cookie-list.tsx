@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
-import * as uuid from 'uuid';
-import * as toughCookie from 'tough-cookie';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';
-import PromptButton from './base/prompt-button';
-import RenderedText from './rendered-text';
-import type { Cookie } from '../../models/cookie-jar';
-import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
+import React, { PureComponent } from 'react';
+import * as toughCookie from 'tough-cookie';
+import * as uuid from 'uuid';
+
 import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleRender } from '../../common/render';
+import type { Cookie } from '../../models/cookie-jar';
+import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
+import PromptButton from './base/prompt-button';
+import RenderedText from './rendered-text';
 
 export interface CookieListProps {
   handleCookieAdd: Function;

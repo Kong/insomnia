@@ -1,6 +1,6 @@
-import React, { CSSProperties, MouseEvent, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import React, { CSSProperties, MouseEvent, PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import styled from 'styled-components';
 

@@ -1,6 +1,6 @@
+import * as misc from '../../common/misc';
 import type { RenderedRequest } from '../../common/render';
 import type { RequestBody } from '../../models/request';
-import * as misc from '../../common/misc';
 
 export function init(
   renderedRequest: RenderedRequest | null,

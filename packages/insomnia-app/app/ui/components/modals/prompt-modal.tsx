@@ -1,12 +1,13 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import Button from '../base/button';
+import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 
 interface State {

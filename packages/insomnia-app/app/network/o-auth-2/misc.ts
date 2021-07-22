@@ -1,6 +1,6 @@
 import electron from 'electron';
-import * as uuid from 'uuid';
 import querystring from 'querystring';
+import * as uuid from 'uuid';
 
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 let authWindowSessionId;

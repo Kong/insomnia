@@ -1,10 +1,11 @@
-import React, { CSSProperties, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import KeydownBinder from '../keydown-binder';
+import React, { CSSProperties, PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { pressedHotKey } from '../../../common/hotkeys-listener';
+import KeydownBinder from '../keydown-binder';
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;

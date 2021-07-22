@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useEffect, useReducer, Reducer } from 'react';
+import { Reducer, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useSelector } from 'react-redux';
+
 import { isLoggedIn } from '../../account/session';
 import { Project } from '../../sync/types';
-import { VCS } from '../../sync/vcs/vcs';
 import { pullProject } from '../../sync/vcs/pull-project';
+import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
 import { selectActiveSpace, selectAllWorkspaces } from '../redux/selectors';
 import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';

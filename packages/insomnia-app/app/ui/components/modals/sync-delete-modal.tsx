@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { Button } from 'insomnia-components';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import type { Workspace } from '../../../models/workspace';
+import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import { Button } from 'insomnia-components';
-import { strings } from '../../../common/strings';
 
 interface Props {
   workspace: Workspace;

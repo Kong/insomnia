@@ -1,16 +1,17 @@
 import * as grpc from '@grpc/grpc-js';
+import { Call, ServiceError } from '@grpc/grpc-js';
+import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
+
+import { trackSegmentEvent } from '../../common/analytics';
 import * as models from '../../models';
-import * as protoLoader from './proto-loader';
+import type { GrpcRequest } from '../../models/grpc-request';
 import callCache from './call-cache';
+import type { GrpcMethodDefinition } from './method';
+import { getMethodType, GrpcMethodTypeEnum } from './method';
 import parseGrpcUrl from './parse-grpc-url';
 import type { GrpcIpcMessageParams, GrpcIpcRequestParams } from './prepare';
+import * as protoLoader from './proto-loader';
 import { ResponseCallbacks } from './response-callbacks';
-import { getMethodType, GrpcMethodTypeEnum } from './method';
-import type { GrpcRequest } from '../../models/grpc-request';
-import type { GrpcMethodDefinition } from './method';
-import { trackSegmentEvent } from '../../common/analytics';
-import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
-import { Call, ServiceError } from '@grpc/grpc-js';
 
 const _createClient = (
   req: GrpcRequest,

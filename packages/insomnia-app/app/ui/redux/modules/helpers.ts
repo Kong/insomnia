@@ -1,9 +1,9 @@
+import { getAppName } from '../../../common/constants';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
-import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showSelectModal } from '../../components/modals/select-modal';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
-import { getAppName } from '../../../common/constants';
 
 export enum ForceToWorkspace {
   new = 'new',

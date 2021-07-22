@@ -1,18 +1,19 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import CodeEditor from '../codemirror/code-editor';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import CopyButton from '../base/copy-button';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
-import DropdownItem from '../base/dropdown/dropdown-item';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
+import DropdownItem from '../base/dropdown/dropdown-item';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import CodeEditor from '../codemirror/code-editor';
 import MarkdownEditor from '../markdown-editor';
-import CopyButton from '../base/copy-button';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 const MODES = {
   'text/plain': 'Plain Text',

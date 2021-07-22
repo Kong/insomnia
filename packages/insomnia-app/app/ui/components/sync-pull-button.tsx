@@ -1,9 +1,10 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../common/constants';
+import { Space } from '../../models/space';
 import { VCS } from '../../sync/vcs/vcs';
 import { showError } from './modals';
-import { Space } from '../../models/space';
 
 interface Props {
   vcs: VCS;

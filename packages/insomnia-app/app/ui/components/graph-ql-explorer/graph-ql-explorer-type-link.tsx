@@ -1,8 +1,9 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { GraphQLList, GraphQLNonNull } from 'graphql';
 import type { GraphQLType } from 'graphql';
+import { GraphQLList, GraphQLNonNull } from 'graphql';
+import React, { Fragment, PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props {
   onNavigate: (type: Record<string, any>) => void;

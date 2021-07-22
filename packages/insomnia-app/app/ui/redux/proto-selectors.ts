@@ -1,7 +1,8 @@
 import { createSelector } from 'reselect';
-import { selectActiveWorkspace, selectEntitiesLists } from './selectors';
+
 import type { ProtoDirectory } from '../../models/proto-directory';
 import type { ProtoFile } from '../../models/proto-file';
+import { selectActiveWorkspace, selectEntitiesLists } from './selectors';
 
 export interface ExpandedProtoDirectory {
   files: ProtoFile[];

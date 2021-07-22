@@ -1,26 +1,27 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, AUTOBIND_CFG, GlobalActivity, isWorkspaceActivity } from '../../../common/constants';
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import Button from '../base/button';
-import Highlight from '../base/highlight';
-import Modal from '../base/modal';
-import ModalHeader from '../base/modal-header';
-import ModalBody from '../base/modal-body';
-import MethodTag from '../tags/method-tag';
+import React, { Fragment, PureComponent } from 'react';
+
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, AUTOBIND_CFG, GlobalActivity, isWorkspaceActivity } from '../../../common/constants';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import { keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { isRequest, Request } from '../../../models/request';
-import { isDesign, Workspace } from '../../../models/workspace';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
-import KeydownBinder from '../keydown-binder';
+import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import type { RequestMeta } from '../../../models/request-meta';
-import { keyboardKeys } from '../../../common/keyboard-keys';
+import { isDesign, Workspace } from '../../../models/workspace';
 import { setActiveActivity, setActiveWorkspace } from '../../redux/modules/global';
+import Button from '../base/button';
+import Highlight from '../base/highlight';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
+import KeydownBinder from '../keydown-binder';
+import MethodTag from '../tags/method-tag';
 
 interface Props {
   handleSetActiveWorkspace: typeof setActiveWorkspace;

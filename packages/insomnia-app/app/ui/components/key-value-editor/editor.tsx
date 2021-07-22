@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
-import Lazy from '../base/lazy';
-import KeyValueEditorRow from './row';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { generateId, nullFn } from '../../../common/misc';
-import { Dropdown, DropdownItem, DropdownButton } from '../base/dropdown';
-import PromptButton from '../base/prompt-button';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import Lazy from '../base/lazy';
+import PromptButton from '../base/prompt-button';
+import KeyValueEditorRow from './row';
 
 const NAME = 'name';
 const VALUE = 'value';

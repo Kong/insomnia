@@ -1,5 +1,5 @@
-import { askToImportIntoWorkspace, ForceToWorkspace } from '../helpers';
 import * as modals from '../../../components/modals';
+import { askToImportIntoWorkspace, ForceToWorkspace } from '../helpers';
 
 jest.mock('../../../components/modals');
 

@@ -1,10 +1,10 @@
 import { database as db } from '../common/database';
+import { isGrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
-import type { Workspace } from './workspace';
+import { isRequest } from './request';
 import type { RequestGroup } from './request-group';
 import { Space } from './space';
-import { isGrpcRequest } from './grpc-request';
-import { isRequest } from './request';
+import type { Workspace } from './workspace';
 
 export const name = 'Stats';
 

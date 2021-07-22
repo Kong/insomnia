@@ -1,5 +1,5 @@
-import { ResponseCallbacks } from '../response-callbacks';
 import { GrpcResponseEventEnum } from '../../../common/grpc-events';
+import { ResponseCallbacks } from '../response-callbacks';
 
 describe('response-callbacks', () => {
   const event = {

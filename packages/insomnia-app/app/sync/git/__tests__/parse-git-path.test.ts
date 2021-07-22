@@ -1,6 +1,6 @@
-import parseGitPath from '../parse-git-path';
-import { GIT_INSOMNIA_DIR } from '../git-vcs';
 import * as models from '../../../models';
+import { GIT_INSOMNIA_DIR } from '../git-vcs';
+import parseGitPath from '../parse-git-path';
 
 describe('parseGitPath', () => {
   it('should parse a git path into its root, type and id', () => {

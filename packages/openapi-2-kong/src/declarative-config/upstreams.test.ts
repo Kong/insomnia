@@ -1,7 +1,7 @@
 import { DCUpstream } from '../types';
 import { xKongUpstreamDefaults } from '../types/kong';
+import { getSpec, tags } from './jest/test-helpers';
 import { generateUpstreams } from './upstreams';
-import { tags, getSpec } from './jest/test-helpers';
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 const getSpecResult = (): DCUpstream =>

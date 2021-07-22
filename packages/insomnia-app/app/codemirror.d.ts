@@ -1,4 +1,5 @@
 import 'codemirror';
+
 import { HandleGetRenderContext, HandleRender } from './common/render';
 
 type LinkClickCallback = (url: string) => void;

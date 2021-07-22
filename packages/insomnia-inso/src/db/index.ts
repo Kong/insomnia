@@ -1,3 +1,10 @@
+import path from 'path';
+
+import { getAppDataDir } from '../data-directory';
+import { logger } from '../logger';
+import { getDefaultAppName } from '../util';
+import gitAdapter from './adapters/git-adapter';
+import neDbAdapter from './adapters/ne-db-adapter';
 import type {
   ApiSpec,
   BaseModel,
@@ -6,12 +13,6 @@ import type {
   UnitTestSuite,
   Workspace,
 } from './models/types';
-import gitAdapter from './adapters/git-adapter';
-import neDbAdapter from './adapters/ne-db-adapter';
-import { getDefaultAppName } from '../util';
-import { getAppDataDir } from '../data-directory';
-import { logger } from '../logger';
-import path from 'path';
 
 export interface Database {
   ApiSpec: ApiSpec[];

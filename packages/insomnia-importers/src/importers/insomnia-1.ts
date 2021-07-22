@@ -1,10 +1,10 @@
 import {
   Converter,
+  Header,
+  ImportRequest,
+  Parameter,
   UNKNOWN,
   UNKNOWN_OBJ,
-  ImportRequest,
-  Header,
-  Parameter,
 } from '../entities';
 
 export const id = 'insomnia-1';

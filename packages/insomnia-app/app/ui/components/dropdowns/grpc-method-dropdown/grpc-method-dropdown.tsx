@@ -1,14 +1,15 @@
+import { Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, useMemo } from 'react';
-import { Dropdown, DropdownItem, DropdownDivider, Tooltip } from 'insomnia-components';
-import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import styled from 'styled-components';
-import GrpcMethodTag from '../../tags/grpc-method-tag';
+
+import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import {
   getShortGrpcPath,
   groupGrpcMethodsByPackage,
   NO_PACKAGE_KEY,
 } from '../../../../common/grpc-paths';
-import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
+import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
+import GrpcMethodTag from '../../tags/grpc-method-tag';
 import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
 
 interface Props {

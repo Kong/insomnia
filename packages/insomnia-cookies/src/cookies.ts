@@ -1,4 +1,4 @@
-import { CookieJar, Cookie, CookieJSON } from 'tough-cookie';
+import { Cookie, CookieJar, CookieJSON } from 'tough-cookie';
 
 /**
  * Get a list of cookie objects from a request.jar()

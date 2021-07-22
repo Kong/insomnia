@@ -1,12 +1,13 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import highlight from 'highlight.js';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import classnames from 'classnames';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
 import { AUTOBIND_CFG } from '../../common/constants';
-import highlight from 'highlight.js';
+import { clickLink } from '../../common/electron-helpers';
 import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
-import { clickLink } from '../../common/electron-helpers';
 
 interface Props {
   markdown: string,

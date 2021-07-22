@@ -1,7 +1,8 @@
 import fs from 'fs';
-import path from 'path';
 import mkdirp from 'mkdirp';
+import path from 'path';
 import rimraf from 'rimraf';
+
 import { PLUGIN_PATH } from '../common/constants';
 
 export async function createPlugin(

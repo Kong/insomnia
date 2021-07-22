@@ -1,23 +1,24 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { Curl } from 'node-libcurl';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
+import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
-import Modal from '../base/modal';
+import * as models from '../../../models/index';
+import { Settings } from '../../../models/settings';
 import Button from '../base/button';
+import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import SettingsShortcuts from '../settings/shortcuts';
+import Account from '../settings/account';
 import General from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import Plugins from '../settings/plugins';
+import SettingsShortcuts from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import * as models from '../../../models/index';
-import { Curl } from 'node-libcurl';
 import Tooltip from '../tooltip';
-import * as session from '../../../account/session';
-import Account from '../settings/account';
 import { showModal } from './index';
-import { Settings } from '../../../models/settings';
 
 export const TAB_INDEX_EXPORT = 1;
 export const TAB_INDEX_SHORTCUTS = 3;
