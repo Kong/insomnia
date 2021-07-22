@@ -1005,7 +1005,7 @@ async function _applyRequestPluginHooks(
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
+      ...pluginContexts.data.init(renderedContext.getSpaceId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
       ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
@@ -1033,7 +1033,7 @@ async function _applyResponsePluginHooks(
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
+      ...pluginContexts.data.init(renderedContext.getSpaceId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.response.init(newResponse) as Record<string, any>),
       ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),

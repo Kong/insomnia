@@ -3,7 +3,6 @@ import { importRaw, importUri } from '../../common/import';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 import type { ImportRawConfig } from '../../common/import';
 import * as models from '../../models';
-import { BASE_SPACE_ID } from '../../models/space';
 
 interface PluginImportOptions {
   workspaceId?: string;
