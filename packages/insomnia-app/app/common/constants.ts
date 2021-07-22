@@ -82,6 +82,7 @@ export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
 export const EDITOR_KEY_MAP_VIM = 'vim';
 
 // Hotkey
+// For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
 export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
 export const ALT_SYM = isMac() ? '⌥' : 'Alt';

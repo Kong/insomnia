@@ -461,7 +461,19 @@ export function createWindow() {
         },
       },
       {
-        label: `${MNEMONIC_SYM}Restart`,
+        label: `${MNEMONIC_SYM}Clear a model`,
+        click: function(_menuItem, window) {
+          window?.webContents?.send('clear-model');
+        },
+      },
+      {
+        label: `Clear ${MNEMONIC_SYM}all models`,
+        click: function(_menuItem, window) {
+          window?.webContents?.send('clear-all-models');
+        },
+      },
+      {
+        label: `R${MNEMONIC_SYM}estart`,
         click: restartApp,
       },
     ],

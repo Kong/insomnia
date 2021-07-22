@@ -17,6 +17,7 @@ import {
   PREVIEW_MODE_SOURCE,
   ACTIVITY_MIGRATION,
   SortOrder,
+  isDevelopment,
 } from '../../common/constants';
 import fs from 'fs';
 import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
@@ -122,6 +123,7 @@ import { Response } from '../../models/response';
 import { RenderContextAndKeys } from '../../common/render';
 import { RootState } from '../redux/modules';
 import { importUri } from '../redux/modules/import';
+import { showSelectModal } from '../components/modals/select-modal';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -1347,6 +1349,56 @@ class App extends PureComponent<AppProps, State> {
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
+
+    if (isDevelopment()) {
+      ipcRenderer.on('clear-model', () => {
+        const options = models
+          .types()
+          .filter(t => t !== models.settings.type) // don't clear settings
+          .map(t => ({ name: t, value: t }));
+
+        showSelectModal({
+          title: 'Clear a model',
+          message: 'Select a model to clear; this operation cannot be undone.',
+          value: options[0].value,
+          options,
+          onDone: async type => {
+            if (type) {
+              const bufferId = await db.bufferChanges();
+              console.log(`[developer] clearing all "${type}" entities`);
+              const allEntities = await db.all(type);
+              await db.batchModifyDocs({ remove: allEntities });
+              db.flushChanges(bufferId);
+            }
+          },
+        });
+      });
+
+      ipcRenderer.on('clear-all-models', () => {
+        showModal(AskModal, {
+          title: 'Clear all models',
+          message: 'Are you sure you want to clear all models? This operation cannot be undone.',
+          yesText: 'Yes',
+          noText: 'No',
+          onDone: async yes => {
+            if (yes) {
+              const bufferId = await db.bufferChanges();
+              const promises = models
+                .types()
+                .filter(t => t !== models.settings.type) // don't clear settings
+                .reverse().map(async type => {
+                  console.log(`[developer] clearing all "${type}" entities`);
+                  const allEntities = await db.all(type);
+                  await db.batchModifyDocs({ remove: allEntities });
+                });
+              await Promise.all(promises);
+              db.flushChanges(bufferId);
+            }
+          },
+        });
+      });
+    }
+
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
