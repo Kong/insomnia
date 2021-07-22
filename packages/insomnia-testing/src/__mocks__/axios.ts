@@ -1,4 +1,4 @@
-import type { AxiosStatic, Method, AxiosResponse, AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig, AxiosResponse, AxiosStatic, Method } from 'axios';
 
 const mockResponses: { [key: string]: AxiosResponse } = {};
 

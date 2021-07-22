@@ -1,16 +1,17 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import {
   AUTOBIND_CFG,
   HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
 } from '../../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import Button from '../../base/button';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
-import Button from '../../base/button';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
   request: Request;

@@ -1,6 +1,7 @@
 import { Configuration, DefinePlugin, HotModuleReplacementPlugin, LoaderOptionsPlugin } from 'webpack';
-import baseConfig from './webpack.config.base';
+
 import packageJSON from '../package.json';
+import baseConfig from './webpack.config.base';
 
 const PORT = packageJSON.dev['dev-server-port'];
 

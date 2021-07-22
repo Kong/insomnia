@@ -1,23 +1,24 @@
+import { SvgIcon } from 'insomnia-components';
 import React, { FC, useCallback, useState } from 'react';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showError, showModal, showPrompt } from '../modals';
+import { useDispatch } from 'react-redux';
+
+import { parseApiSpec } from '../../../common/api-specs';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import * as models from '../../../models';
+import type { ApiSpec } from '../../../models/api-spec';
+import getWorkspaceName from '../../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../../models/helpers/workspace-operations';
+import type { Workspace } from '../../../models/workspace';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import type { ApiSpec } from '../../../models/api-spec';
-import { parseApiSpec } from '../../../common/api-specs';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import * as models from '../../../models';
-import AskModal from '../modals/ask-modal';
-import type { Workspace } from '../../../models/workspace';
-import getWorkspaceName from '../../../models/helpers/get-workspace-name';
-import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
-import { useDispatch } from 'react-redux';
-import { setActiveWorkspace } from '../../redux/modules/global';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { SvgIcon } from 'insomnia-components';
+import { setActiveWorkspace } from '../../redux/modules/global';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { showError, showModal, showPrompt } from '../modals';
+import AskModal from '../modals/ask-modal';
 
 interface Props {
   workspace: Workspace;

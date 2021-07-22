@@ -1,10 +1,11 @@
-import React, { FunctionComponent } from 'react';
-import type { ProtoFile } from '../../../models/proto-file';
 import { ListGroup, ListGroupItem } from 'insomnia-components';
-import ProtoFileListItem from './proto-file-list-item';
+import React, { FunctionComponent } from 'react';
+
+import { ProtoDirectory } from '../../../models/proto-directory';
+import type { ProtoFile } from '../../../models/proto-file';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
 import ProtoDirectoryListItem from './proto-directory-list-item';
-import { ProtoDirectory } from '../../../models/proto-directory';
+import ProtoFileListItem from './proto-file-list-item';
 
 export type SelectProtoFileHandler = (id: string) => void;
 export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;

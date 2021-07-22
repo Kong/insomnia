@@ -1,11 +1,12 @@
-import * as plugin from '../data';
-import path from 'path';
-import { globalBeforeEach } from '../../../__jest__/before-each';
-import * as models from '../../../models/index';
-import { database as db } from '../../../common/database';
 import fs from 'fs';
+import path from 'path';
+
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import * as models from '../../../models/index';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
+import * as plugin from '../data';
 
 jest.mock('../../../ui/components/modals');
 

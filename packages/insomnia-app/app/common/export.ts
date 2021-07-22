@@ -1,9 +1,22 @@
-import { Insomnia4Data } from 'insomnia-importers';
 import clone from 'clone';
-import { database as db } from './database';
-import * as har from './har';
+import { Insomnia4Data } from 'insomnia-importers';
+import YAML from 'yaml';
+
+import { isApiSpec } from '../models/api-spec';
+import { isCookieJar } from '../models/cookie-jar';
+import { isEnvironment } from '../models/environment';
+import { isGrpcRequest } from '../models/grpc-request';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
+import { isProtoDirectory } from '../models/proto-directory';
+import { isProtoFile } from '../models/proto-file';
+import { isRequest } from '../models/request';
+import { isRequestGroup } from '../models/request-group';
+import { isUnitTest } from '../models/unit-test';
+import { isUnitTestSuite } from '../models/unit-test-suite';
+import { isWorkspace, Workspace } from '../models/workspace';
+import { resetKeys } from '../sync/ignore-keys';
+import { trackEvent } from './analytics';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -18,20 +31,8 @@ import {
   EXPORT_TYPE_WORKSPACE,
   getAppVersion,
 } from './constants';
-import YAML from 'yaml';
-import { trackEvent } from './analytics';
-import { isGrpcRequest } from '../models/grpc-request';
-import { isRequest } from '../models/request';
-import { isRequestGroup } from '../models/request-group';
-import { isProtoDirectory } from '../models/proto-directory';
-import { isProtoFile } from '../models/proto-file';
-import { isWorkspace, Workspace } from '../models/workspace';
-import { isApiSpec } from '../models/api-spec';
-import { isCookieJar } from '../models/cookie-jar';
-import { isEnvironment } from '../models/environment';
-import { isUnitTestSuite } from '../models/unit-test-suite';
-import { isUnitTest } from '../models/unit-test';
-import { resetKeys } from '../sync/ignore-keys';
+import { database as db } from './database';
+import * as har from './har';
 
 const EXPORT_FORMAT = 4;
 

@@ -1,5 +1,5 @@
-import * as utils from '../utils';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import * as utils from '../utils';
 
 describe('getKeys()', () => {
   beforeEach(globalBeforeEach);

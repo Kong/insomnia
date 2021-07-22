@@ -1,13 +1,26 @@
-import React, { PureComponent, RefObject } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
+import fs from 'fs';
+import HTTPSnippet from 'httpsnippet';
+import * as mime from 'mime-types';
+import * as path from 'path';
+import React, { PureComponent, RefObject } from 'react';
+import ReactDOM from 'react-dom';
+import { connect } from 'react-redux';
+import { Action, bindActionCreators, Dispatch } from 'redux';
+import { parse as urlParse } from 'url';
+
+import { trackSegmentEvent } from '../../common/analytics';
 import {
-  AUTOBIND_CFG,
   ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
   getAppName,
+  isDevelopment,
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
@@ -15,35 +28,78 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
-  ACTIVITY_MIGRATION,
   SortOrder,
-  isDevelopment,
 } from '../../common/constants';
-import fs from 'fs';
-import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
-import { parse as urlParse } from 'url';
-import HTTPSnippet from 'httpsnippet';
-import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import { Action, bindActionCreators, Dispatch } from 'redux';
-import Wrapper from '../components/wrapper';
-import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
-import Toast from '../components/toast';
-import CookiesModal from '../components/modals/cookies-modal';
-import RequestSwitcherModal from '../components/modals/request-switcher-modal';
-import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { database as db } from '../../common/database';
+import { getDataDirectory } from '../../common/electron-helpers';
+import { getWorkspaceLabel } from '../../common/get-workspace-label';
+import { exportHarRequest } from '../../common/har';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
 import {
+  debounce,
+  generateId,
+  getContentDispositionHeader,
+} from '../../common/misc';
+import * as render from '../../common/render';
+import { RenderContextAndKeys } from '../../common/render';
+import { sortMethodMap } from '../../common/sorting';
+import * as models from '../../models';
+import { isEnvironment } from '../../models/environment';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequestMeta } from '../../models/grpc-request-meta';
+import getWorkspaceName from '../../models/helpers/get-workspace-name';
+import * as requestOperations from '../../models/helpers/request-operations';
+import * as workspaceOperations from '../../models/helpers/workspace-operations';
+import { Request, updateMimeType } from '../../models/request';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { RequestMeta } from '../../models/request-meta';
+import { Response } from '../../models/response';
+import { isCollection, isWorkspace } from '../../models/workspace';
+import { WorkspaceMeta } from '../../models/workspace-meta';
+import * as network from '../../network/network';
+import * as plugins from '../../plugins';
+import * as themes from '../../plugins/misc';
+import { fsClient } from '../../sync/git/fs-client';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
+import { NeDBClient } from '../../sync/git/ne-db-client';
+import { routableFSClient } from '../../sync/git/routable-fs-client';
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import { VCS } from '../../sync/vcs/vcs';
+import * as templating from '../../templating/index';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
+import { getKeys } from '../../templating/utils';
+import ErrorBoundary from '../components/error-boundary';
+import KeydownBinder from '../components/keydown-binder';
+import AskModal from '../components/modals/ask-modal';
+import CookiesModal from '../components/modals/cookies-modal';
+import GenerateCodeModal from '../components/modals/generate-code-modal';
+import { showAlert, showModal, showPrompt } from '../components/modals/index';
+import RequestCreateModal from '../components/modals/request-create-modal';
+import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
+import RequestSettingsModal from '../components/modals/request-settings-modal';
+import RequestSwitcherModal from '../components/modals/request-switcher-modal';
+import { showSelectModal } from '../components/modals/select-modal';
+import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import SyncMergeModal from '../components/modals/sync-merge-modal';
+import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
+import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
+import Toast from '../components/toast';
+import Wrapper from '../components/wrapper';
+import withDragDropContext from '../context/app/drag-drop-context';
+import { GrpcProvider } from '../context/grpc';
+import { RootState } from '../redux/modules';
+import { initialize } from '../redux/modules/entities';
+import {
+  exportRequestsToFile,
+  goToNextActivity,
   loadRequestStart,
   loadRequestStop,
   newCommand,
-  setActiveWorkspace,
   setActiveActivity,
-  goToNextActivity,
-  exportRequestsToFile,
+  setActiveWorkspace,
 } from '../redux/modules/global';
-import { initialize } from '../redux/modules/entities';
-import { database as db } from '../../common/database';
-import * as models from '../../models';
+import { importUri } from '../redux/modules/import';
 import {
   selectActiveCookieJar,
   selectActiveEnvironment,
@@ -69,61 +125,6 @@ import {
   selectWorkspacesForActiveSpace,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
-import RequestCreateModal from '../components/modals/request-create-modal';
-import GenerateCodeModal from '../components/modals/generate-code-modal';
-import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
-import RequestSettingsModal from '../components/modals/request-settings-modal';
-import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
-import * as network from '../../network/network';
-import {
-  debounce,
-  generateId,
-  getContentDispositionHeader,
-} from '../../common/misc';
-import { getDataDirectory } from '../../common/electron-helpers';
-import * as mime from 'mime-types';
-import * as path from 'path';
-import * as render from '../../common/render';
-import { getKeys } from '../../templating/utils';
-import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { exportHarRequest } from '../../common/har';
-import { hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
-import KeydownBinder from '../components/keydown-binder';
-import ErrorBoundary from '../components/error-boundary';
-import * as plugins from '../../plugins';
-import * as templating from '../../templating/index';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import AskModal from '../components/modals/ask-modal';
-import { Request, updateMimeType } from '../../models/request';
-import * as themes from '../../plugins/misc';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { VCS } from '../../sync/vcs/vcs';
-import SyncMergeModal from '../components/modals/sync-merge-modal';
-import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
-import { NeDBClient } from '../../sync/git/ne-db-client';
-import { fsClient } from '../../sync/git/fs-client';
-import { routableFSClient } from '../../sync/git/routable-fs-client';
-import { getWorkspaceLabel } from '../../common/get-workspace-label';
-import * as requestOperations from '../../models/helpers/request-operations';
-import { GrpcProvider } from '../context/grpc';
-import { sortMethodMap } from '../../common/sorting';
-import withDragDropContext from '../context/app/drag-drop-context';
-import { trackSegmentEvent } from '../../common/analytics';
-import getWorkspaceName from '../../models/helpers/get-workspace-name';
-import * as workspaceOperations from '../../models/helpers/workspace-operations';
-import { isCollection, isWorkspace } from '../../models/workspace';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
-import { isEnvironment } from '../../models/environment';
-import { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import { RequestMeta } from '../../models/request-meta';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { WorkspaceMeta } from '../../models/workspace-meta';
-import { Response } from '../../models/response';
-import { RenderContextAndKeys } from '../../common/render';
-import { RootState } from '../redux/modules';
-import { importUri } from '../redux/modules/import';
-import { showSelectModal } from '../components/modals/select-modal';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 

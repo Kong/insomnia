@@ -1,12 +1,13 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent } from 'react';
+
+import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Link from '../base/link';
-import LoginModal from '../modals/login-modal';
-import { hideAllModals, showModal } from '../modals/index';
 import PromptButton from '../base/prompt-button';
-import * as session from '../../../account/session';
 import HelpTooltip from '../help-tooltip';
+import { hideAllModals, showModal } from '../modals/index';
+import LoginModal from '../modals/login-modal';
 
 interface State {
   code: string;

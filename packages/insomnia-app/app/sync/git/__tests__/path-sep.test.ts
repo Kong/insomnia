@@ -1,4 +1,5 @@
 import path from 'path';
+
 import { convertToOsSep, convertToPosixSep } from '../path-sep';
 
 jest.mock('path');

@@ -1,9 +1,10 @@
+import { number, select, withKnobs } from '@storybook/addon-knobs';
 import React, { Fragment } from 'react';
-import { select, number, withKnobs } from '@storybook/addon-knobs';
-import { Button } from './index';
 import styled from 'styled-components';
-import { SvgIcon, IconEnum } from '../svg-icon';
+
+import { IconEnum, SvgIcon } from '../svg-icon';
 import { ButtonSizeEnum, ButtonThemeEnum, ButtonVariantEnum } from './button';
+import { Button } from './index';
 
 export default {
   title: 'Buttons | Button',

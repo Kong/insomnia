@@ -1,26 +1,26 @@
 import { Converter, ImportRequest, Parameter } from '../entities';
 import {
-  HttpsSchemaGetpostmanComJsonCollectionV200 as V200Schema,
-  Variable2 as V200Variable2,
   Auth as V200Auth,
+  Folder as V200Folder,
+  FormParameter as V200FormParameter,
+  Header as V200Header,
+  HttpsSchemaGetpostmanComJsonCollectionV200 as V200Schema,
+  Item as V200Item,
   Request1 as V200Request1,
   UrlEncodedParameter as V200UrlEncodedParameter,
-  FormParameter as V200FormParameter,
-  Item as V200Item,
-  Folder as V200Folder,
-  Header as V200Header,
+  Variable2 as V200Variable2,
 } from './postman-2.0.types';
 import {
-  HttpsSchemaGetpostmanComJsonCollectionV210 as V210Schema,
-  Variable2 as V210Variable2,
   Auth as V210Auth,
-  Request1 as V210Request1,
   Auth1 as V210Auth1,
-  UrlEncodedParameter as V210UrlEncodedParameter,
-  FormParameter as V210FormParameter,
-  Item as V210Item,
   Folder as V210Folder,
+  FormParameter as V210FormParameter,
   Header as V210Header,
+  HttpsSchemaGetpostmanComJsonCollectionV210 as V210Schema,
+  Item as V210Item,
+  Request1 as V210Request1,
+  UrlEncodedParameter as V210UrlEncodedParameter,
+  Variable2 as V210Variable2,
 } from './postman-2.1.types';
 
 export const id = 'postman';

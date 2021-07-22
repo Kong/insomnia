@@ -1,5 +1,6 @@
-import React, { CSSProperties, Component, NamedExoticComponent, ReactNode, SVGProps } from 'react';
+import React, { Component, CSSProperties, NamedExoticComponent, ReactNode, SVGProps } from 'react';
 import styled from 'styled-components';
+import { ValueOf } from 'type-fest';
 
 import { SvgIcnArrowRight } from './assets/svgr/IcnArrowRight';
 import { SvgIcnBitbucketLogo } from './assets/svgr/IcnBitbucketLogo';
@@ -48,7 +49,6 @@ import { SvgIcnUser } from './assets/svgr/IcnUser';
 import { SvgIcnWarning } from './assets/svgr/IcnWarning';
 import { SvgIcnWarningCircle } from './assets/svgr/IcnWarningCircle';
 import { SvgIcnX } from './assets/svgr/IcnX';
-import { ValueOf } from 'type-fest';
 
 export const ThemeEnum = {
   default: 'default',

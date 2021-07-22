@@ -1,5 +1,6 @@
-import { readdirSync, promises } from 'fs';
+import { promises, readdirSync } from 'fs';
 import path from 'path';
+
 import { generate } from '../generate';
 import { DCService, DeclarativeConfig } from '../types/declarative-config';
 import { DeclarativeConfigResult } from '../types/outputs';

@@ -1,4 +1,5 @@
-import { parse as urlParse, format as urlFormat } from 'url';
+import { format as urlFormat, parse as urlParse } from 'url';
+
 import { setDefaultProtocol } from './protocol';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;

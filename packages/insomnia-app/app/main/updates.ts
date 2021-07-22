@@ -1,16 +1,17 @@
 import electron from 'electron';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
+
 import {
   CHECK_FOR_UPDATES_INTERVAL,
-  getAppVersion,
   getAppId,
+  getAppVersion,
   isDevelopment,
   UPDATE_URL_MAC,
   UPDATE_URL_WINDOWS,
   updatesSupported,
 } from '../common/constants';
-import * as models from '../models/index';
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import { delay } from '../common/misc';
+import * as models from '../models/index';
 const { autoUpdater, BrowserWindow, ipcMain } = electron;
 
 async function getUpdateUrl(force: boolean): Promise<string | null> {

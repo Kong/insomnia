@@ -1,3 +1,6 @@
+import * as Hawk from 'hawk';
+import jwtAuthentication from 'jwt-authentication';
+
 import {
   AUTH_ASAP,
   AUTH_BASIC,
@@ -6,13 +9,11 @@ import {
   AUTH_OAUTH_1,
   AUTH_OAUTH_2,
 } from '../common/constants';
-import getOAuth2Token from './o-auth-2/get-token';
-import getOAuth1Token from './o-auth-1/get-token';
-import * as Hawk from 'hawk';
-import jwtAuthentication from 'jwt-authentication';
 import type { RenderedRequest } from '../common/render';
 import { getBasicAuthHeader } from './basic-auth/get-header';
 import { getBearerAuthHeader } from './bearer-auth/get-header';
+import getOAuth1Token from './o-auth-1/get-token';
+import getOAuth2Token from './o-auth-2/get-token';
 
 interface Header {
   name: string;

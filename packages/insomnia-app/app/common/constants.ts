@@ -1,6 +1,7 @@
-import appConfig from '../../config/config.json';
 import path from 'path';
 import { ValueOf } from 'type-fest';
+
+import appConfig from '../../config/config.json';
 import { getDataDirectory } from './electron-helpers';
 
 // App Stuff

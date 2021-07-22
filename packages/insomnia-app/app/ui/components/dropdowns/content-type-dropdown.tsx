@@ -1,25 +1,26 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
+import { trackEvent } from '../../../common/analytics';
 import {
   AUTOBIND_CFG,
+  CONTENT_TYPE_EDN,
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
   CONTENT_TYPE_JSON,
-  CONTENT_TYPE_YAML,
-  CONTENT_TYPE_PLAINTEXT,
   CONTENT_TYPE_OTHER,
+  CONTENT_TYPE_PLAINTEXT,
   CONTENT_TYPE_XML,
-  CONTENT_TYPE_EDN,
+  CONTENT_TYPE_YAML,
   getContentTypeName,
 } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { showModal } from '../modals/index';
-import AlertModal from '../modals/alert-modal';
 import type { Request, RequestBody } from '../../../models/request';
-import { trackEvent } from '../../../common/analytics';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { DropdownProps } from '../base/dropdown/dropdown';
+import AlertModal from '../modals/alert-modal';
+import { showModal } from '../modals/index';
 
 interface Props extends DropdownProps {
   onChange: (mimeType: string | null) => void;

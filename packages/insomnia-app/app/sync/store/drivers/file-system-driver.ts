@@ -1,6 +1,7 @@
 import fs from 'fs';
-import path from 'path';
 import mkdirp from 'mkdirp';
+import path from 'path';
+
 import type { BaseDriver } from './base';
 
 export default class FileSystemDriver implements BaseDriver {

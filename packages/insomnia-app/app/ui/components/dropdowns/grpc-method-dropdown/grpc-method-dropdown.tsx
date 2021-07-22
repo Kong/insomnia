@@ -1,14 +1,15 @@
+import { Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, useMemo } from 'react';
-import { Dropdown, DropdownItem, DropdownDivider, Tooltip } from 'insomnia-components';
-import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import styled from 'styled-components';
-import GrpcMethodTag from '../../tags/grpc-method-tag';
+
+import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import {
   getShortGrpcPath,
   groupGrpcMethodsByPackage,
   NO_PACKAGE_KEY,
 } from '../../../../common/grpc-paths';
-import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
+import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
+import GrpcMethodTag from '../../tags/grpc-method-tag';
 import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
 
 interface Props {
@@ -31,7 +32,7 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
   handleChangeProtoFile,
 }) => {
   const dropdownButton = useMemo(
-    () => () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
+    () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TSCONVERSION this error appears to be correct, actually
     [selectedMethod?.path],
   );

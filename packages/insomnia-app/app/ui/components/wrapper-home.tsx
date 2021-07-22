@@ -1,15 +1,6 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import {
-  GlobalActivity,
-  ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
-  AUTOBIND_CFG,
-  isWorkspaceActivity,
-} from '../../common/constants';
-import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
-
 import 'swagger-ui-react/swagger-ui.css';
+
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   Breadcrumb,
   Button,
@@ -20,36 +11,46 @@ import {
   DropdownItem,
   Header,
 } from 'insomnia-components';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_SPEC,
+  AUTOBIND_CFG,
+  GlobalActivity,
+  isWorkspaceActivity,
+} from '../../common/constants';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
+import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
+import { descendingNumberSort } from '../../common/sorting';
+import { strings } from '../../common/strings';
+import * as models from '../../models';
+import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
+import { MemClient } from '../../sync/git/mem-client';
+import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
+import coreLogo from '../images/insomnia-core-logo.png';
+import { cloneGitRepository } from '../redux/modules/git';
+import { ForceToWorkspace } from '../redux/modules/helpers';
+import { importClipBoard, importFile, importUri } from '../redux/modules/import';
+import { createWorkspace } from '../redux/modules/workspace';
+import Highlight from './base/highlight';
+import SettingsButton from './buttons/settings-button';
+import AccountDropdown from './dropdowns/account-dropdown';
+import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
+import { SpaceDropdown } from './dropdowns/space-dropdown';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
 import KeydownBinder from './keydown-binder';
-import { executeHotKey } from '../../common/hotkeys-listener';
-import { hotKeyRefs } from '../../common/hotkeys';
 import { showPrompt } from './modals';
-import * as models from '../../models';
+import Notice from './notice';
+import PageLayout from './page-layout';
 import TimeFromNow from './time-from-now';
-import Highlight from './base/highlight';
-import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import type {
   WrapperProps,
 } from './wrapper';
-import Notice from './notice';
-import PageLayout from './page-layout';
-import coreLogo from '../images/insomnia-core-logo.png';
-import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import SettingsButton from './buttons/settings-button';
-import AccountDropdown from './dropdowns/account-dropdown';
-import { strings } from '../../common/strings';
-import { descendingNumberSort } from '../../common/sorting';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { createWorkspace } from '../redux/modules/workspace';
-import { cloneGitRepository } from '../redux/modules/git';
-import { MemClient } from '../../sync/git/mem-client';
-import { SpaceDropdown } from './dropdowns/space-dropdown';
-import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
-import { importClipBoard, importFile, importUri } from '../redux/modules/import';
-import { ForceToWorkspace } from '../redux/modules/helpers';
 
 interface RenderedCard {
   card: ReactNode;

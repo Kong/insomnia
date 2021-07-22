@@ -1,7 +1,7 @@
-import * as plugin from '../request';
-import * as models from '../../../models';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { CONTENT_TYPE_FORM_URLENCODED } from '../../../common/constants';
+import * as models from '../../../models';
+import * as plugin from '../request';
 
 const CONTEXT = {
   user_key: 'my_user_key',

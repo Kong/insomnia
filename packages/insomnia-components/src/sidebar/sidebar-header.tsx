@@ -1,7 +1,8 @@
+import { motion } from 'framer-motion';
 import React, { FunctionComponent, ReactNode } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { SvgIcon, IconEnum } from '../svg-icon';
+
+import { IconEnum, SvgIcon } from '../svg-icon';
 
 export interface SidebarHeaderProps {
   headerTitle: string;

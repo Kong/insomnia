@@ -1,8 +1,9 @@
-import React, { PureComponent } from 'react';
-import { EventEmitter } from 'events';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import contextMenu from 'electron-context-menu';
+import { EventEmitter } from 'events';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props {
   body: string;

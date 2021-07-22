@@ -1,17 +1,18 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { Space } from '../../../models/space';
+import type { Workspace } from '../../../models/workspace';
+import type { StatusCandidate } from '../../../sync/types';
+import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import { database as db } from '../../../common/database';
-import type { StatusCandidate } from '../../../sync/types';
 import PromptButton from '../base/prompt-button';
 import SyncPullButton from '../sync-pull-button';
-import { Space } from '../../../models/space';
 
 interface Props {
   workspace: Workspace;

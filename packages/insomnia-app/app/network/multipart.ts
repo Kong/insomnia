@@ -1,7 +1,8 @@
 import * as electron from 'electron';
-import mimes from 'mime-types';
 import fs from 'fs';
+import mimes from 'mime-types';
 import path from 'path';
+
 import type { RequestBodyParameter } from '../models/request';
 
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';

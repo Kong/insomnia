@@ -1,7 +1,8 @@
+import YAML from 'yaml';
+
+import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
 import { getAppVersion } from '../constants';
-import { globalBeforeEach } from '../../__jest__/before-each';
-import YAML from 'yaml';
 import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWorkspacesHAR } from '../export';
 
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {

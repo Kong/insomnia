@@ -1,28 +1,29 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
-import { globalBeforeEach } from '../../../../__jest__/before-each';
-import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
-import * as models from '../../../../models';
-import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
-import { ACTIVITY_SPEC } from '../../../../common/constants';
-import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
-import { MemClient } from '../../../../sync/git/mem-client';
-import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
+import { createBuilder } from '@develohpanda/fluent-builder';
+import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import React, { Fragment } from 'react';
-import { cloneGitRepository, setupGitRepository } from '../git';
+import configureMockStore from 'redux-mock-store';
+import thunk from 'redux-thunk';
+import { mocked } from 'ts-jest/utils';
+
+import { globalBeforeEach } from '../../../../__jest__/before-each';
+import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
+import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { ACTIVITY_SPEC } from '../../../../common/constants';
+import * as models from '../../../../models';
+import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
+import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
+import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
+import { MemClient } from '../../../../sync/git/mem-client';
+import { shallowClone as _shallowClone } from '../../../../sync/git/shallow-clone';
 import {
   getAndClearShowAlertMockArgs,
   getAndClearShowErrorMockArgs,
   getAndClearShowModalMockArgs,
   getAndClearShowPromptMockArgs,
 } from '../../../../test-utils';
-import { shallowClone as _shallowClone } from '../../../../sync/git/shallow-clone';
-import { mocked } from 'ts-jest/utils';
-import { PromiseFsClient } from 'isomorphic-git';
-import { createBuilder } from '@develohpanda/fluent-builder';
-import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
-import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
+import { cloneGitRepository, setupGitRepository } from '../git';
+import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');

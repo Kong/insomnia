@@ -1,7 +1,7 @@
-import { exportWorkspacesHAR, exportWorkspacesData } from '../../common/export';
+import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
+import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
-import type { ImportRawConfig } from '../../common/import';
 
 interface PluginImportOptions {
   workspaceId?: string;

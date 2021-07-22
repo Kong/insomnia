@@ -1,5 +1,5 @@
 import { OA3ServerVariable } from '../types/openapi3';
-import { resolveUrlVariables, resolveVariables, pathVariablesToWildcard } from './variables';
+import { pathVariablesToWildcard, resolveUrlVariables, resolveVariables } from './variables';
 
 describe('variables', () => {
   describe('resolveVariables()', () => {

@@ -1,8 +1,8 @@
-import { database as db } from './database';
-import { types as modelTypes, stats, BaseModel } from '../models';
-import { send } from '../network/network';
+import { BaseModel, stats, types as modelTypes } from '../models';
 import { getBodyBuffer } from '../models/response';
+import { send } from '../network/network';
 import * as plugins from '../plugins';
+import { database as db } from './database';
 
 export async function getSendRequestCallbackMemDb(environmentId, memDB) {
   // Initialize the DB in-memory and fill it with data if we're given one

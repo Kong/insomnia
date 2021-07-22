@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
-import type { BaseModel } from './index';
 import { generateId } from '../common/misc';
+import type { BaseModel } from './index';
 
 export const name = 'Space';
 export const type = 'Space';

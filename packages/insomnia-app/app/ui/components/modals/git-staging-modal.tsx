@@ -1,24 +1,25 @@
-import YAML from 'yaml';
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import classnames from 'classnames';
 import path from 'path';
+import React, { Fragment, PureComponent } from 'react';
+import YAML from 'yaml';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { strings } from '../../../common/strings';
 import * as models from '../../../models';
+import { isApiSpec } from '../../../models/api-spec';
+import type { Workspace } from '../../../models/workspace';
+import { gitRollback } from '../../../sync/git/git-rollback';
+import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/git/git-vcs';
+import parseGitPath from '../../../sync/git/parse-git-path';
+import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { GitVCS, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
-import { database as db } from '../../../common/database';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
-import Tooltip from '../tooltip';
+import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
-import { gitRollback } from '../../../sync/git/git-rollback';
-import classnames from 'classnames';
-import parseGitPath from '../../../sync/git/parse-git-path';
-import { strings } from '../../../common/strings';
-import { isApiSpec } from '../../../models/api-spec';
+import Tooltip from '../tooltip';
 
 interface Item {
   path: string;

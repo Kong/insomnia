@@ -1,8 +1,9 @@
 import React, { Component, ReactNode } from 'react';
-import { SidebarItem } from './sidebar-item';
-import { SvgIcon, IconEnum } from '../svg-icon';
-import { SidebarSection } from './sidebar-section';
+
+import { IconEnum, SvgIcon } from '../svg-icon';
 import { SidebarInvalidSection } from './sidebar-invalid-section';
+import { SidebarItem } from './sidebar-item';
+import { SidebarSection } from './sidebar-section';
 
 export interface SidebarSchemasProps {
   schemas: Record<string, any>;

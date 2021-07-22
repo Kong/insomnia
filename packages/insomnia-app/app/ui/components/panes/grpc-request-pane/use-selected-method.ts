@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+
+import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { GrpcMethodDefinition, GrpcMethodType } from '../../../../network/grpc/method';
 import {
   canClientStream,
   getMethodType,
   GrpcMethodTypeName,
 } from '../../../../network/grpc/method';
-import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { GrpcRequestState } from '../../../context/grpc';
 
 interface MethodSelection {

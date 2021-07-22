@@ -1,12 +1,13 @@
+import { createBuilder } from '@develohpanda/fluent-builder';
+import { difference } from 'lodash';
+
 import * as models from '../../../models';
+import { baseModelSchema, grpcRequestModelSchema, requestGroupModelSchema, requestModelSchema } from '../../../models/__schemas__/model-schemas';
 import {
   shouldIgnoreChildrenOf,
   shouldShowInSidebar,
   sortByMetaKeyOrId,
 } from '../sidebar-selectors';
-import { difference } from 'lodash';
-import { createBuilder } from '@develohpanda/fluent-builder';
-import { baseModelSchema, grpcRequestModelSchema, requestGroupModelSchema, requestModelSchema } from '../../../models/__schemas__/model-schemas';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const requestModelBuilder = createBuilder(requestModelSchema);

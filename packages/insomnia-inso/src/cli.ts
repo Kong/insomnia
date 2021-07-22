@@ -1,17 +1,18 @@
-import { ConversionOption, conversionOptions, generateConfig } from './commands/generate-config';
-import { getVersion, logErrorExit1, exit } from './util';
-import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
-import { lintSpecification } from './commands/lint-specification';
-import { exportSpecification } from './commands/export-specification';
-import { parseArgsStringToArgv } from 'string-argv';
 import commander from 'commander';
-import { logger, configureLogger } from './logger';
-import type { GenerateConfigOptions } from './commands/generate-config';
-import type { RunTestsOptions } from './commands/run-tests';
-import type { LintSpecificationOptions } from './commands/lint-specification';
+import { parseArgsStringToArgv } from 'string-argv';
+
 import type { ExportSpecificationOptions } from './commands/export-specification';
+import { exportSpecification } from './commands/export-specification';
+import type { GenerateConfigOptions } from './commands/generate-config';
+import { ConversionOption, conversionOptions, generateConfig } from './commands/generate-config';
+import type { LintSpecificationOptions } from './commands/lint-specification';
+import { lintSpecification } from './commands/lint-specification';
+import type { RunTestsOptions } from './commands/run-tests';
+import { reporterTypes, runInsomniaTests, TestReporter } from './commands/run-tests';
 import { getOptions } from './get-options';
+import { configureLogger, logger } from './logger';
 import { UNKNOWN_OBJ } from './types';
+import { exit, getVersion, logErrorExit1 } from './util';
 
 const prepareCommand = (options: Partial<GenerateConfigOptions>) => {
   configureLogger(options.verbose, options.ci);

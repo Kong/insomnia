@@ -1,7 +1,8 @@
-import { Dropdown, Tooltip, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps } from 'insomnia-components';
+import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps, Tooltip } from 'insomnia-components';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
+
 import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import { BASE_SPACE_ID, isBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/space';

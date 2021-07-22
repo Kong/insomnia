@@ -1,10 +1,11 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
-import { AUTOBIND_CFG } from '../../common/constants';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   wrapperProps: WrapperProps;

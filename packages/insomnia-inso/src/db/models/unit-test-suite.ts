@@ -1,9 +1,11 @@
-import type { Database } from '../index';
-import type { UnitTestSuite } from './types';
-import { loadApiSpec } from './api-spec';
 // @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
 import { AutoComplete } from 'enquirer';
 import flattenDeep from 'lodash.flattendeep';
+
+import { logger } from '../../logger';
+import type { Database } from '../index';
+import { loadApiSpec } from './api-spec';
+import type { UnitTestSuite } from './types';
 import {
   ensureSingleOrNone,
   generateIdIsh,
@@ -11,7 +13,6 @@ import {
   matchIdIsh,
 } from './util';
 import { loadWorkspace } from './workspace';
-import { logger } from '../../logger';
 
 export const loadUnitTestSuite = (
   db: Database,

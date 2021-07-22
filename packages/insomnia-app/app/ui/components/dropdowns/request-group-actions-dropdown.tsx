@@ -1,8 +1,18 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import PromptButton from '../base/prompt-button';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import * as models from '../../../models';
+import type { Environment } from '../../../models/environment';
+import type { RequestGroup } from '../../../models/request-group';
+import type { Workspace } from '../../../models/workspace';
+import type { RequestGroupAction } from '../../../plugins';
+import { getRequestGroupActions } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context/index';
 import {
   DropdownButton,
   DropdownDivider,
@@ -10,18 +20,9 @@ import {
   DropdownItem,
 } from '../base/dropdown';
 import Dropdown from '../base/dropdown/dropdown';
-import EnvironmentEditModal from '../modals/environment-edit-modal';
-import * as models from '../../../models';
+import PromptButton from '../base/prompt-button';
 import { showError, showModal } from '../modals';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import type { RequestGroupAction } from '../../../plugins';
-import { getRequestGroupActions } from '../../../plugins';
-import type { RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
-import * as pluginContexts from '../../../plugins/context/index';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import type { Environment } from '../../../models/environment';
+import EnvironmentEditModal from '../modals/environment-edit-modal';
 
 interface Props {
   workspace: Workspace;

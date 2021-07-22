@@ -1,8 +1,9 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
+
 import { ListGroupItem } from './list-group-item';
-import { UnitTestResultTimestamp } from './unit-test-result-timestamp';
 import { UnitTestResultBadge } from './unit-test-result-badge';
+import { UnitTestResultTimestamp } from './unit-test-result-timestamp';
 
 export interface UnitTestResultItemProps {
   item: {

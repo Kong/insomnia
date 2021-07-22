@@ -1,7 +1,7 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import styled, { css } from 'styled-components';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+import styled, { css } from 'styled-components';
 
 interface ControlledDropdown<T> {
   value: T;

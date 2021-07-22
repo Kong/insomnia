@@ -1,4 +1,27 @@
-import type { Response } from '../../models/response';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import * as importers from 'insomnia-importers';
+import React, { Fragment, PureComponent } from 'react';
+
+import { trackPageView } from '../../common/analytics';
+import type { GlobalActivity } from '../../common/constants';
+import {
+  ACTIVITY_ANALYTICS,
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  AUTOBIND_CFG,
+  SortOrder,
+} from '../../common/constants';
+import { database as db } from '../../common/database';
+import { importRaw } from '../../common/import';
+import { HandleGetRenderContext, HandleRender } from '../../common/render';
+import { initializeSpectral, isLintError } from '../../common/spectral';
+import type { ApiSpec } from '../../models/api-spec';
+import type { Cookie } from '../../models/cookie-jar';
+import * as models from '../../models/index';
 import {
   isRequest,
   Request,
@@ -7,84 +30,62 @@ import {
   RequestHeader,
   RequestParameter,
 } from '../../models/request';
-import React, { Fragment, PureComponent } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import {
-  AUTOBIND_CFG,
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-  SortOrder,
-  ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
-  ACTIVITY_ANALYTICS,
-} from '../../common/constants';
-import { registerModal, showModal } from './modals/index';
-import AlertModal from './modals/alert-modal';
-import WrapperModal from './modals/wrapper-modal';
-import ErrorModal from './modals/error-modal';
-import CookiesModal from './modals/cookies-modal';
+import { RequestGroup } from '../../models/request-group';
+import type { Response } from '../../models/response';
+import { GitVCS } from '../../sync/git/git-vcs';
+import { VCS } from '../../sync/vcs/vcs';
 import CookieModifyModal from '../components/modals/cookie-modify-modal';
-import EnvironmentEditModal from './modals/environment-edit-modal';
-import GenerateCodeModal from './modals/generate-code-modal';
-import LoginModal from './modals/login-modal';
-import ResponseDebugModal from './modals/response-debug-modal';
-import PaymentNotificationModal from './modals/payment-notification-modal';
-import NunjucksModal from './modals/nunjucks-modal';
-import PromptModal from './modals/prompt-modal';
-import AskModal from './modals/ask-modal';
-import GenerateConfigModal from './modals/generate-config-modal';
-import { SelectModal } from './modals/select-modal';
-import RequestCreateModal from './modals/request-create-modal';
-import RequestSwitcherModal from './modals/request-switcher-modal';
-import SettingsModal from './modals/settings-modal';
-import FilterHelpModal from './modals/filter-help-modal';
-import RequestSettingsModal from './modals/request-settings-modal';
-import RequestGroupSettingsModal from './modals/request-group-settings-modal';
-import SyncStagingModal from './modals/sync-staging-modal';
-import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
-import GitStagingModal from './modals/git-staging-modal';
-import GitBranchesModal from './modals/git-branches-modal';
-import GitLogModal from './modals/git-log-modal';
-import SyncMergeModal from './modals/sync-merge-modal';
-import SyncHistoryModal from './modals/sync-history-modal';
-import SyncShareModal from './modals/sync-share-modal';
-import SyncBranchesModal from './modals/sync-branches-modal';
-import SyncDeleteModal from './modals/sync-delete-modal';
-import RequestRenderErrorModal from './modals/request-render-error-modal';
-import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
-import WorkspaceSettingsModal from './modals/workspace-settings-modal';
-import CodePromptModal from './modals/code-prompt-modal';
-import { database as db } from '../../common/database';
-import * as models from '../../models/index';
-import * as importers from 'insomnia-importers';
-import type { Cookie } from '../../models/cookie-jar';
+import { AppProps } from '../containers/app';
+import { GrpcDispatchModalWrapper } from '../context/grpc';
+import { DropdownButton } from './base/dropdown';
+import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import ErrorBoundary from './error-boundary';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
+import AlertModal from './modals/alert-modal';
+import AskModal from './modals/ask-modal';
+import CodePromptModal from './modals/code-prompt-modal';
+import CookiesModal from './modals/cookies-modal';
+import EnvironmentEditModal from './modals/environment-edit-modal';
+import ErrorModal from './modals/error-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
-import { VCS } from '../../sync/vcs/vcs';
-import type { ApiSpec } from '../../models/api-spec';
-import { GitVCS } from '../../sync/git/git-vcs';
-import { trackPageView } from '../../common/analytics';
-import WrapperHome from './wrapper-home';
-import WrapperDesign from './wrapper-design';
-import WrapperUnitTest from './wrapper-unit-test';
-import WrapperOnboarding from './wrapper-onboarding';
-import WrapperDebug from './wrapper-debug';
-import { importRaw } from '../../common/import';
-import GitSyncDropdown from './dropdowns/git-sync-dropdown';
-import { DropdownButton } from './base/dropdown';
-import type { GlobalActivity } from '../../common/constants';
+import FilterHelpModal from './modals/filter-help-modal';
+import GenerateCodeModal from './modals/generate-code-modal';
+import GenerateConfigModal from './modals/generate-config-modal';
+import GitBranchesModal from './modals/git-branches-modal';
+import GitLogModal from './modals/git-log-modal';
+import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
+import GitStagingModal from './modals/git-staging-modal';
+import { registerModal, showModal } from './modals/index';
+import LoginModal from './modals/login-modal';
+import NunjucksModal from './modals/nunjucks-modal';
+import PaymentNotificationModal from './modals/payment-notification-modal';
+import PromptModal from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
-import { GrpcDispatchModalWrapper } from '../context/grpc';
-import WrapperMigration from './wrapper-migration';
-import WrapperAnalytics from './wrapper-analytics';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
-import { RequestGroup } from '../../models/request-group';
+import RequestCreateModal from './modals/request-create-modal';
+import RequestGroupSettingsModal from './modals/request-group-settings-modal';
+import RequestRenderErrorModal from './modals/request-render-error-modal';
+import RequestSettingsModal from './modals/request-settings-modal';
+import RequestSwitcherModal from './modals/request-switcher-modal';
+import ResponseDebugModal from './modals/response-debug-modal';
+import { SelectModal } from './modals/select-modal';
+import SettingsModal from './modals/settings-modal';
 import SpaceSettingsModal from './modals/space-settings-modal';
-import { AppProps } from '../containers/app';
-import { initializeSpectral, isLintError } from '../../common/spectral';
+import SyncBranchesModal from './modals/sync-branches-modal';
+import SyncDeleteModal from './modals/sync-delete-modal';
+import SyncHistoryModal from './modals/sync-history-modal';
+import SyncMergeModal from './modals/sync-merge-modal';
+import SyncShareModal from './modals/sync-share-modal';
+import SyncStagingModal from './modals/sync-staging-modal';
+import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
+import WorkspaceSettingsModal from './modals/workspace-settings-modal';
+import WrapperModal from './modals/wrapper-modal';
+import WrapperAnalytics from './wrapper-analytics';
+import WrapperDebug from './wrapper-debug';
+import WrapperDesign from './wrapper-design';
+import WrapperHome from './wrapper-home';
+import WrapperMigration from './wrapper-migration';
+import WrapperOnboarding from './wrapper-onboarding';
+import WrapperUnitTest from './wrapper-unit-test';
 
 const spectral = initializeSpectral();
 

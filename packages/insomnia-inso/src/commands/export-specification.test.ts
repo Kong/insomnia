@@ -1,7 +1,7 @@
-import { exportSpecification } from './export-specification';
-import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
+import { writeFileWithCliOptions as _writeFileWithCliOptions } from '../write-file';
+import { exportSpecification } from './export-specification';
 
 jest.mock('../write-file');
 

@@ -1,7 +1,7 @@
 import * as models from '../../models';
-import { strings } from '../strings';
-import { getWorkspaceLabel } from '../get-workspace-label';
 import { WorkspaceScopeKeys } from '../../models/workspace';
+import { getWorkspaceLabel } from '../get-workspace-label';
+import { strings } from '../strings';
 
 describe('getWorkspaceLabel', () => {
   it('should return document label', () => {

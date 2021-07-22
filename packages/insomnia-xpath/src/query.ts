@@ -1,5 +1,5 @@
-import xpath, { SelectedValue } from 'xpath';
 import { DOMParser } from 'xmldom';
+import xpath, { SelectedValue } from 'xpath';
 
 /**
  * Query an XML blob with XPath

@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS } from '../../../common/constants';
 import Tooltip from '../tooltip';
 

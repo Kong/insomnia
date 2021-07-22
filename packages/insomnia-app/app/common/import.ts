@@ -1,22 +1,23 @@
+import fs from 'fs';
 import { convert } from 'insomnia-importers';
-import { database as db } from './database';
+
+import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
-import { showError, showModal } from '../ui/components/modals/index';
-import AlertModal from '../ui/components/modals/alert-modal';
-import fs from 'fs';
-import { fnOrString, generateId, diffPatchObj } from './misc';
-import { trackEvent } from './analytics';
+import { isRequest } from '../models/request';
 import { isWorkspace, Workspace } from '../models/workspace';
-import type { ApiSpec } from '../models/api-spec';
+import AlertModal from '../ui/components/modals/alert-modal';
+import { showError, showModal } from '../ui/components/modals/index';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
+import { trackEvent } from './analytics';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
   EXPORT_TYPE_WORKSPACE,
   WORKSPACE_ID_KEY,
 } from './constants';
-import { isRequest } from '../models/request';
+import { database as db } from './database';
+import { diffPatchObj, fnOrString, generateId } from './misc';
 
 export interface ImportResult {
   source: string;

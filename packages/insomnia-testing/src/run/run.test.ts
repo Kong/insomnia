@@ -1,6 +1,6 @@
-import { runTests } from './run';
 import { TestResults } from './entities';
 import { SendRequestCallback } from './insomnia';
+import { runTests } from './run';
 
 const exampleTest = `
 const { expect } = chai;

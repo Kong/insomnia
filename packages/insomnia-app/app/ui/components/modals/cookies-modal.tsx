@@ -1,17 +1,18 @@
-import React, { ChangeEvent, PureComponent } from 'react';
-import deepEqual from 'deep-equal';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import deepEqual from 'deep-equal';
+import React, { ChangeEvent, PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal, { ModalProps } from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import CookieList, { CookieListProps } from '../cookie-list';
+import { fuzzyMatch } from '../../../common/misc';
+import { HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
-import { fuzzyMatch } from '../../../common/misc';
-import { HandleRender } from '../../../common/render';
+import Modal, { ModalProps } from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import CookieList, { CookieListProps } from '../cookie-list';
 
 interface Props extends ModalProps {
   handleShowModifyCookieModal: CookieListProps['handleShowModifyCookieModal'];

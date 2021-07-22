@@ -1,4 +1,4 @@
-import { getName, parseUrl, fillServerVariables } from '../common';
+import { fillServerVariables, getName, parseUrl } from '../common';
 import { DCUpstream } from '../types/declarative-config';
 import { xKongUpstreamDefaults } from '../types/kong';
 import { OpenApi3Spec } from '../types/openapi3';

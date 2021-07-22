@@ -1,12 +1,13 @@
-import { isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
-import * as models from '../../../models';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
-import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
-import { showPrompt } from '../../components/modals';
-import { setActiveActivity, setActiveWorkspace } from './global';
-import { selectActiveSpace } from '../selectors';
 import { Dispatch } from 'redux';
+
+import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
 import { database } from '../../../common/database';
+import * as models from '../../../models';
+import { isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
+import { showPrompt } from '../../components/modals';
+import { selectActiveSpace } from '../selectors';
+import { setActiveActivity, setActiveWorkspace } from './global';
 
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 

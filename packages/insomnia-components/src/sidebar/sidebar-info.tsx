@@ -1,6 +1,7 @@
 import React, { FunctionComponent } from 'react';
-import { SidebarPanel } from './sidebar-panel';
+
 import { SidebarItem } from './sidebar-item';
+import { SidebarPanel } from './sidebar-panel';
 import { SidebarTextItem } from './sidebar-text-item';
 
 export interface SidebarInfoType {

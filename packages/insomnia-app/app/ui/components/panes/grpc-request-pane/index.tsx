@@ -1,20 +1,21 @@
 import React, { FunctionComponent } from 'react';
-import { Pane, PaneBody, PaneHeader } from '../pane';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import styled from 'styled-components';
+
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { GrpcRequest } from '../../../../models/grpc-request';
+import type { Settings } from '../../../../models/settings';
+import { useGrpc } from '../../../context/grpc';
+import GrpcSendButton from '../../buttons/grpc-send-button';
+import OneLineEditor from '../../codemirror/one-line-editor';
 import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown';
 import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import type { Settings } from '../../../../models/settings';
-import type { GrpcRequest } from '../../../../models/grpc-request';
-import GrpcSendButton from '../../buttons/grpc-send-button';
-import { useGrpc } from '../../../context/grpc';
-import useChangeHandlers from './use-change-handlers';
-import useSelectedMethod from './use-selected-method';
-import useProtoFileReload from './use-proto-file-reload';
-import styled from 'styled-components';
+import { Pane, PaneBody, PaneHeader } from '../pane';
 import useActionHandlers from './use-action-handlers';
+import useChangeHandlers from './use-change-handlers';
 import useExistingGrpcUrls from './use-existing-grpc-urls';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import useProtoFileReload from './use-proto-file-reload';
+import useSelectedMethod from './use-selected-method';
 
 interface Props {
   forceRefreshKey: number;
