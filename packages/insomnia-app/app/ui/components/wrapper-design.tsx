@@ -1,20 +1,21 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { WrapperProps } from './wrapper';
-import PageLayout from './page-layout';
 import { Button, NoticeTable } from 'insomnia-components';
-import ErrorBoundary from './error-boundary';
-import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
-import CodeEditor from './codemirror/code-editor';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import SwaggerUI from 'swagger-ui-react';
-import type { ApiSpec } from '../../models/api-spec';
-import previewIcon from '../images/icn-eye.svg';
-import * as models from '../../models/index';
+
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
-import WorkspacePageHeader from './workspace-page-header';
 import { initializeSpectral, isLintError } from '../../common/spectral';
+import type { ApiSpec } from '../../models/api-spec';
+import * as models from '../../models/index';
+import previewIcon from '../images/icn-eye.svg';
+import CodeEditor from './codemirror/code-editor';
+import ErrorBoundary from './error-boundary';
+import PageLayout from './page-layout';
+import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
+import WorkspacePageHeader from './workspace-page-header';
+import type { WrapperProps } from './wrapper';
 
 const spectral = initializeSpectral();
 

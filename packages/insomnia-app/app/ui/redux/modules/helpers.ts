@@ -1,8 +1,8 @@
+import { Space } from '../../../models/space';
+import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
-import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showSelectModal } from '../../components/modals/select-modal';
-import { Space } from '../../../models/space';
 
 export enum ForceToWorkspace {
   new = 'new',

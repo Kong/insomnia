@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import React, { FunctionComponent, ReactNode } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
 
 export interface SidebarPanelProps {
   children: ReactNode;

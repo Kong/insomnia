@@ -1,3 +1,7 @@
+// @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
+import { AutoComplete } from 'enquirer';
+
+import { logger } from '../../logger';
 import type { Database } from '../index';
 import type { ApiSpec } from './types';
 import {
@@ -6,9 +10,6 @@ import {
   getDbChoice,
   matchIdIsh,
 } from './util';
-// @ts-expect-error the enquirer types are incomplete https://github.com/enquirer/enquirer/pull/307
-import { AutoComplete } from 'enquirer';
-import { logger } from '../../logger';
 const entity = 'api specification';
 
 export const loadApiSpec = (

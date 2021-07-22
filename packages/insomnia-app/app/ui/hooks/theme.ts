@@ -1,6 +1,7 @@
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { unreachableCase } from 'ts-assert-unreachable';
+
 import * as models from '../../models';
 import { ThemeSettings } from '../../models/settings';
 import { ColorScheme, getThemes } from '../../plugins';

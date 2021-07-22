@@ -1,11 +1,12 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { DropdownHint, DropdownButton, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RequestGroup } from '../../../models/request-group';
+import { DropdownButton, DropdownHint, DropdownItem } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
 
 interface Props {
   handleCreateRequest: (id: string) => any;

@@ -1,4 +1,5 @@
 import type { Schema } from '@develohpanda/fluent-builder';
+
 import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 
 export const grpcMethodDefinitionSchema: Schema<GrpcMethodDefinition> = {

@@ -1,24 +1,25 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import PageLayout from './page-layout';
-import type { WrapperProps } from './wrapper';
-import RequestPane from './panes/request-pane';
+import { Button } from 'insomnia-components';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
+import { isGrpcRequest } from '../../models/grpc-request';
+import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { Settings } from '../../models/settings';
+import { isCollection, isDesign } from '../../models/workspace';
+import EnvironmentsDropdown from './dropdowns/environments-dropdown';
+import SyncDropdown from './dropdowns/sync-dropdown';
 import ErrorBoundary from './error-boundary';
+import { showSyncShareModal } from './modals/sync-share-modal';
+import PageLayout from './page-layout';
+import GrpcRequestPane from './panes/grpc-request-pane';
+import GrpcResponsePane from './panes/grpc-response-pane';
+import RequestPane from './panes/request-pane';
 import ResponsePane from './panes/response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
-import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
-import GrpcRequestPane from './panes/grpc-request-pane';
-import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
-import SyncDropdown from './dropdowns/sync-dropdown';
-import { Button } from 'insomnia-components';
-import { showSyncShareModal } from './modals/sync-share-modal';
-import { Settings } from '../../models/settings';
-import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
-import { isGrpcRequest } from '../../models/grpc-request';
-import { isCollection, isDesign } from '../../models/workspace';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   forceRefreshKey: number;

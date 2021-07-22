@@ -1,10 +1,16 @@
-import type { BaseDriver } from '../store/drivers/base';
-import path from 'path';
 import clone from 'clone';
-import Store from '../store';
 import crypto from 'crypto';
+import path from 'path';
+
+import * as crypt from '../../account/crypt';
+import * as fetch from '../../account/fetch';
+import * as session from '../../account/session';
+import { chunkArray, generateId } from '../../common/misc';
+import { strings } from '../../common/strings';
+import { BaseModel } from '../../models';
+import Store from '../store';
+import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';
-import * as paths from './paths';
 import type {
   Branch,
   DocumentKey,
@@ -18,6 +24,7 @@ import type {
   StatusCandidate,
   Team,
 } from '../types';
+import * as paths from './paths';
 import {
   compareBranches,
   generateCandidateMap,
@@ -30,12 +37,6 @@ import {
   threeWayMerge,
   updateStateWithConflictResolutions,
 } from './util';
-import { chunkArray, generateId } from '../../common/misc';
-import * as crypt from '../../account/crypt';
-import * as session from '../../account/session';
-import * as fetch from '../../account/fetch';
-import { strings } from '../../common/strings';
-import { BaseModel } from '../../models';
 
 const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 

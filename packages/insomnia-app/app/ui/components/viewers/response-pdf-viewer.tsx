@@ -1,7 +1,8 @@
-import React, { CSSProperties, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import * as PDF from 'pdfjs-dist/webpack';
+import React, { CSSProperties, PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props {
   body: Buffer;

@@ -1,4 +1,5 @@
 import React, { FunctionComponent } from 'react';
+
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {

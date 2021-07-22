@@ -1,7 +1,6 @@
-import React, { createRef, FunctionComponent, useLayoutEffect } from 'react';
-
-import styled from 'styled-components';
 import { motion } from 'framer-motion';
+import React, { createRef, FunctionComponent, useLayoutEffect } from 'react';
+import styled from 'styled-components';
 
 export interface SidebarFilterProps {
   filter: boolean;

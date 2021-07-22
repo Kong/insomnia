@@ -1,14 +1,15 @@
+import { Breadcrumb, Header } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'react';
+
 import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
-import coreLogo from '../images/insomnia-core-logo.png';
 import { strings } from '../../common/strings';
-import WorkspaceDropdown from './dropdowns/workspace-dropdown';
-import ActivityToggle from './activity-toggle';
-import type { WrapperProps } from './wrapper';
-import { Header, Breadcrumb } from 'insomnia-components';
-import AccountDropdown from './dropdowns/account-dropdown';
-import SettingsButton from './buttons/settings-button';
 import { isCollection, isDesign } from '../../models/workspace';
+import coreLogo from '../images/insomnia-core-logo.png';
+import ActivityToggle from './activity-toggle';
+import SettingsButton from './buttons/settings-button';
+import AccountDropdown from './dropdowns/account-dropdown';
+import WorkspaceDropdown from './dropdowns/workspace-dropdown';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   wrapperProps: WrapperProps;

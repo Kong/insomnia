@@ -1,11 +1,11 @@
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
+import { database } from '../../common/database';
+import * as models from '../../models';
+import { Space } from '../../models/space';
 import { isWorkspace, Workspace } from '../../models/workspace';
 import { Project } from '../types';
-import * as models from '../../models';
-import { database } from '../../common/database';
 import { VCS } from './vcs';
-import { Space } from '../../models/space';
 
 interface Options {
   vcs: VCS;

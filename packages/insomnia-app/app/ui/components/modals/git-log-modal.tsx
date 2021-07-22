@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
 import ModalFooter from '../base/modal-footer';
-import Tooltip from '../tooltip';
+import ModalHeader from '../base/modal-header';
 import TimeFromNow from '../time-from-now';
+import Tooltip from '../tooltip';
 
 interface Props {
   vcs: GitVCS;

@@ -1,20 +1,21 @@
 import electron, { OpenDialogOptions } from 'electron';
 import { AnyAction } from 'redux';
+import { ThunkAction } from 'redux-thunk';
+
 import {
+  importRaw,
   ImportRawConfig,
   ImportResult,
-  importRaw,
   importUri as _importUri,
 } from '../../../common/import';
-import { WorkspaceScope, Workspace } from '../../../models/workspace';
-import { showModal, showError } from '../../components/modals';
-import AlertModal from '../../components/modals/alert-modal';
-import { loadStart, loadStop } from './global';
-import { ForceToWorkspace, askToSetWorkspaceScope, askToImportIntoWorkspace, askToImportIntoSpace } from './helpers';
 import * as models from '../../../models';
-import { RootState } from '.';
+import { Workspace, WorkspaceScope } from '../../../models/workspace';
+import { showError, showModal } from '../../components/modals';
+import AlertModal from '../../components/modals/alert-modal';
 import { selectActiveSpace, selectSpaces } from '../selectors';
-import { ThunkAction } from 'redux-thunk';
+import { RootState } from '.';
+import { loadStart, loadStop } from './global';
+import { askToImportIntoSpace, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
 
 export interface ImportOptions {
   workspaceId?: string;
@@ -49,6 +50,7 @@ const convertToRawConfig = ({
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
   const activeSpace = selectActiveSpace(state);
+  // WARNING: this selector does not include the base space
   const spaces = selectSpaces(state);
 
   return ({

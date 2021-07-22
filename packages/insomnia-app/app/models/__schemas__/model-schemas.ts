@@ -1,12 +1,13 @@
 import { Schema } from '@develohpanda/fluent-builder';
-import { BaseModel, environment, gitRepository, grpcRequest, request, requestGroup, workspace } from '..';
-import { GitRepository } from '../git-repository';
-import { Workspace } from '../workspace';
-import { Request } from '../request';
 import clone from 'clone';
-import { GrpcRequest } from '../grpc-request';
-import { RequestGroup } from '../request-group';
+
+import { BaseModel, environment, gitRepository, grpcRequest, request, requestGroup, workspace } from '..';
 import { Environment } from '../environment';
+import { GitRepository } from '../git-repository';
+import { GrpcRequest } from '../grpc-request';
+import { Request } from '../request';
+import { RequestGroup } from '../request-group';
+import { Workspace } from '../workspace';
 
 // move into fluent-builder
 const toSchema = <T>(obj: T): Schema<T> => {

@@ -1,3 +1,14 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
+import React, { PureComponent } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+
+import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as models from '../../../models';
+import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import type { OAuth2Token } from '../../../models/o-auth-2-token';
 import type {
   Request,
   RequestAuthentication,
@@ -5,32 +16,22 @@ import type {
   RequestHeader,
   RequestParameter,
 } from '../../../models/request';
+import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
-import type { OAuth2Token } from '../../../models/o-auth-2-token';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
-import React, { PureComponent } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import * as models from '../../../models';
 import AuthDropdown from '../dropdowns/auth-dropdown';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import AuthWrapper from '../editors/auth/auth-wrapper';
 import BodyEditor from '../editors/body/body-editor';
 import RequestHeadersEditor from '../editors/request-headers-editor';
+import RequestParametersEditor from '../editors/request-parameters-editor';
 import ErrorBoundary from '../error-boundary';
 import MarkdownPreview from '../markdown-preview';
 import { showModal } from '../modals';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import RenderedQueryString from '../rendered-query-string';
 import RequestUrlBar from '../request-url-bar';
-import type { Settings } from '../../../models/settings';
-import RequestParametersEditor from '../editors/request-parameters-editor';
-import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
-import classnames from 'classnames';
-import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import PlaceholderRequestPane from './placeholder-request-pane';
 
 interface Props {
   // Functions

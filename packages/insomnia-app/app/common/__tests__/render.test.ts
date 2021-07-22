@@ -1,10 +1,11 @@
-import * as renderUtils from '../render';
-import * as models from '../../models';
-import { globalBeforeEach } from '../../__jest__/before-each';
 import { createBuilder } from '@develohpanda/fluent-builder';
+
+import { globalBeforeEach } from '../../__jest__/before-each';
+import * as models from '../../models';
 import { environmentModelSchema, requestGroupModelSchema } from '../../models/__schemas__/model-schemas';
-import { Workspace } from '../../models/workspace';
 import { Environment } from '../../models/environment';
+import { Workspace } from '../../models/workspace';
+import * as renderUtils from '../render';
 
 jest.mock('electron');
 

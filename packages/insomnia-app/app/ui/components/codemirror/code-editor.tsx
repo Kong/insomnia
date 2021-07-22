@@ -1,31 +1,34 @@
-import React, { Component, CSSProperties, ReactNode } from 'react';
+import './base-imports';
+
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import clone from 'clone';
+import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
+import deepEqual from 'deep-equal';
+import { json as jsonPrettify } from 'insomnia-prettify';
+import { query as queryXPath } from 'insomnia-xpath';
+import jq from 'jsonpath';
+import React, { Component, CSSProperties, ReactNode } from 'react';
+import vkBeautify from 'vkbeautify';
+import zprint from 'zprint-clj';
+
 import {
   AUTOBIND_CFG,
   DEBOUNCE_MILLIS,
   EDITOR_KEY_MAP_VIM,
   isMac,
 } from '../../../common/constants';
-import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
-import classnames from 'classnames';
-import clone from 'clone';
-import jq from 'jsonpath';
-import vkBeautify from 'vkbeautify';
-import { showModal } from '../modals/index';
-import FilterHelpModal from '../modals/filter-help-modal';
-import * as misc from '../../../common/misc';
-import { json as jsonPrettify } from 'insomnia-prettify';
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
-import './base-imports';
+import * as misc from '../../../common/misc';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
+import { NunjucksParsedTag } from '../../../templating/utils';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
-import { query as queryXPath } from 'insomnia-xpath';
-import deepEqual from 'deep-equal';
-import zprint from 'zprint-clj';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import { NunjucksParsedTag } from '../../../templating/utils';
+import FilterHelpModal from '../modals/filter-help-modal';
+import { showModal } from '../modals/index';
+
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
 const MAX_SIZE_FOR_LINTING = 1000000; // Around 1MB

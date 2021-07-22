@@ -1,13 +1,14 @@
-import { prepareGrpcMessage, prepareGrpcRequest } from '../prepare';
+import { mocked } from 'ts-jest/utils';
+
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import * as models from '../../../models';
 import {
   getRenderedGrpcRequest as _getRenderedGrpcRequest,
   getRenderedGrpcRequestMessage as _getRenderedGrpcRequestMessage,
   RENDER_PURPOSE_SEND,
 } from '../../../common/render';
+import * as models from '../../../models';
 import { GrpcMethodTypeEnum } from '../method';
-import { mocked } from 'ts-jest/utils';
+import { prepareGrpcMessage, prepareGrpcRequest } from '../prepare';
 
 jest.mock('../../../common/render');
 

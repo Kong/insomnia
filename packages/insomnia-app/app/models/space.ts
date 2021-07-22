@@ -1,7 +1,7 @@
-import { database as db } from '../common/database';
-import type { BaseModel } from './index';
-import { generateId } from '../common/misc';
 import { getAppName } from '../common/constants';
+import { database as db } from '../common/database';
+import { generateId } from '../common/misc';
+import type { BaseModel } from './index';
 
 export const name = 'Space';
 export const type = 'Space';
@@ -10,6 +10,12 @@ export const canDuplicate = false;
 export const canSync = false;
 
 export const BASE_SPACE_ID = `${prefix}_base-space`;
+
+export const isBaseSpace = ({ _id }: Space) => _id === BASE_SPACE_ID;
+export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
+export const isLocalSpace = ({ remoteId }: Space) => remoteId === null;
+export const isRemoteSpace = (space: Space) => !isLocalSpace(space);
+export const spaceHasSettings = (space: Space) => isLocalSpace(space) && !isBaseSpace(space);
 
 interface BaseSpace {
   name: string;
@@ -25,11 +31,6 @@ export const isSpace = (model: Pick<BaseModel, 'type'>): model is Space => (
 export const isSpaceId = (id: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
-
-export const isBaseSpace = ({ _id }: Space) => _id === BASE_SPACE_ID;
-export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
-export const isLocalSpace = ({ remoteId }: Space) => remoteId === null;
-export const isRemoteSpace = (space: Space) => !isLocalSpace(space);
 
 export function init(): BaseSpace {
   return {

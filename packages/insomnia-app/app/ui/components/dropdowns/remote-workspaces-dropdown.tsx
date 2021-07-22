@@ -1,12 +1,14 @@
+import { Button, Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
 import React, { FC } from 'react';
-import { VCS } from '../../../sync/vcs/vcs';
-import { Dropdown, DropdownDivider, DropdownItem, Button, Tooltip } from 'insomnia-components';
-import HelpTooltip from '../help-tooltip';
-import { strings } from '../../../common/strings';
-import { isLoggedIn } from '../../../account/session';
-import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { useSelector } from 'react-redux';
+
+import { isLoggedIn } from '../../../account/session';
+import { strings } from '../../../common/strings';
+import { isRemoteSpace } from '../../../models/space';
+import { VCS } from '../../../sync/vcs/vcs';
+import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { selectActiveSpace } from '../../redux/selectors';
+import HelpTooltip from '../help-tooltip';
 
 interface Props {
   className?: string;
@@ -29,10 +31,15 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
-  const isRemoteSpace = Boolean(useSelector(selectActiveSpace)?.remoteId);
+  const space = useSelector(selectActiveSpace);
+  if (!space) {
+    return null;
+  }
+
+  const isRemote = isRemoteSpace(space);
 
   // Don't show the pull dropdown if we are not in a remote space
-  if (!isRemoteSpace) {
+  if (!isRemote) {
     return null;
   }
 

@@ -1,5 +1,6 @@
-import { CookieJar, Cookie, CookieSerialized } from 'tough-cookie';
-import { jarFromCookies, cookiesFromJar } from './cookies';
+import { Cookie, CookieJar, CookieSerialized } from 'tough-cookie';
+
+import { cookiesFromJar, jarFromCookies } from './cookies';
 
 describe('jarFromCookies()', () => {
   it('returns valid cookies', done => {

@@ -1,12 +1,13 @@
-import url from 'url';
 import slugify from 'slugify';
+import url from 'url';
+
+import { xKongName } from './types/kong';
 import {
-  OpenApi3Spec,
+  OA3Operation,
   OA3PathItem,
   OA3Server,
-  OA3Operation,
+  OpenApi3Spec,
 } from './types/openapi3';
-import { xKongName } from './types/kong';
 
 export const getServers = (obj: OpenApi3Spec | OA3PathItem) => obj.servers || [];
 

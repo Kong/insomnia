@@ -1,10 +1,11 @@
 
-import * as models from '../../models';
-import { database } from '../../common/database';
-import { VCS } from '../../sync/vcs/vcs';
 import { useCallback, useEffect } from 'react';
+
 import { isLoggedIn } from '../../account/session';
+import { database } from '../../common/database';
+import * as models from '../../models';
 import { Space } from '../../models/space';
+import { VCS } from '../../sync/vcs/vcs';
 import { useSafeState } from './use-safe-state';
 
 export const useRemoteSpaces = (vcs?: VCS) => {

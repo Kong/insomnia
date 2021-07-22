@@ -1,18 +1,19 @@
-import type { Request } from '../models/request';
-import { setDefaultProtocol } from 'insomnia-url';
 import clone from 'clone';
+import { setDefaultProtocol } from 'insomnia-url';
+import orderedJSON from 'json-order';
+
 import * as models from '../models';
-import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
-import { database as db } from './database';
-import * as templating from '../templating';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
-import orderedJSON from 'json-order';
-import * as templatingUtils from '../templating/utils';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import type { Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
-import { isWorkspace, Workspace } from '../models/workspace';
 import { isSpace, Space } from '../models/space';
+import { isWorkspace, Workspace } from '../models/workspace';
+import * as templating from '../templating';
+import * as templatingUtils from '../templating/utils';
+import { CONTENT_TYPE_GRAPHQL, JSON_ORDER_SEPARATOR } from './constants';
+import { database as db } from './database';
 
 export const KEEP_ON_ERROR = 'keep';
 export const THROW_ON_ERROR = 'throw';

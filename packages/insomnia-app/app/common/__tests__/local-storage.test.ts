@@ -1,7 +1,8 @@
-import path from 'path';
 import fs from 'fs';
-import LocalStorage from '../../main/local-storage';
+import path from 'path';
+
 import { globalBeforeEach } from '../../__jest__/before-each';
+import LocalStorage from '../../main/local-storage';
 
 describe('LocalStorage()', () => {
   beforeEach(async () => {

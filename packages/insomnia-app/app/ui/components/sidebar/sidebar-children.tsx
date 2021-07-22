@@ -1,18 +1,19 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import SidebarRequestRow from './sidebar-request-row';
-import SidebarRequestGroupRow from './sidebar-request-group-row';
-import type { RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
-import { isRequest, Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
-import type { Environment } from '../../../models/environment';
-import SidebarCreateDropdown from './sidebar-create-dropdown';
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { HandleRender } from '../../../common/render';
+import type { Environment } from '../../../models/environment';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { isRequest, Request } from '../../../models/request';
+import type { RequestGroup } from '../../../models/request-group';
 import { Space } from '../../../models/space';
+import type { Workspace } from '../../../models/workspace';
+import SidebarCreateDropdown from './sidebar-create-dropdown';
+import SidebarRequestGroupRow from './sidebar-request-group-row';
+import SidebarRequestRow from './sidebar-request-row';
 
 export interface Child {
   doc: Request | GrpcRequest | RequestGroup;

@@ -1,4 +1,5 @@
 import { Application } from 'spectron';
+
 import findAsync from './find-async';
 
 interface WaitUntilOpenedOptions {modalName?: string, title?: string}

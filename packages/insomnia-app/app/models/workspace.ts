@@ -1,8 +1,9 @@
-import type { BaseModel } from './index';
-import * as models from './index';
+import { Merge } from 'type-fest';
+
 import { database as db } from '../common/database';
 import { strings } from '../common/strings';
-import { Merge } from 'type-fest';
+import type { BaseModel } from './index';
+import * as models from './index';
 import { BASE_SPACE_ID, isSpaceId } from './space';
 
 export const name = 'Workspace';

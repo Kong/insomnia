@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import type { Workspace } from '../../../models/workspace';
+import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
+import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
 import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
 
 interface Props {
   workspace: Workspace;

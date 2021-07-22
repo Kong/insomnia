@@ -1,18 +1,20 @@
-import React, { Fragment, PureComponent } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
-import { showPrompt } from './modals';
-import type { BaseModel } from '../../models';
-import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
-import type { WrapperProps } from './wrapper';
-import { database as db } from '../../common/database';
-import OnboardingContainer from './onboarding-container';
-import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
-import Analytics from './analytics';
-import { bindActionCreators } from 'redux';
-import { importFile, importUri } from '../redux/modules/import';
+
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
+import { database as db } from '../../common/database';
+import type { BaseModel } from '../../models';
+import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { ForceToWorkspace } from '../redux/modules/helpers';
+import { importFile, importUri } from '../redux/modules/import';
+import Analytics from './analytics';
+import { showPrompt } from './modals';
+import OnboardingContainer from './onboarding-container';
+import type { WrapperProps } from './wrapper';
 
 type ReduxProps = ReturnType<typeof mapDispatchToProps>;
 

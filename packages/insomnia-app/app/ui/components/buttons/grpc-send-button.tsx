@@ -1,6 +1,7 @@
-import React, { FunctionComponent } from 'react';
-import type { GrpcMethodType } from '../../../network/grpc/method';
 import { Button, ButtonProps } from 'insomnia-components';
+import React, { FunctionComponent } from 'react';
+
+import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcMethodTypeEnum } from '../../../network/grpc/method';
 
 interface Props {

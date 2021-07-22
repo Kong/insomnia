@@ -1,5 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
+
 import type { RadioButtonGroupProps } from './radio-button-group';
 import { RadioButtonGroup } from './radio-button-group';
 

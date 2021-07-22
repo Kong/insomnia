@@ -1,8 +1,9 @@
-import React, { Fragment } from 'react';
 import { text, withKnobs } from '@storybook/addon-knobs';
-import { SvgIcon, IconEnum, IconId } from './svg-icon';
-import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
+import React, { Fragment } from 'react';
 import styled from 'styled-components';
+
+import { IconEnum, IconId, SvgIcon } from './svg-icon';
+import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 
 export default {
   title: 'Iconography | Core Icons',

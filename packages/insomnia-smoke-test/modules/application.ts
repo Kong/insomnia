@@ -1,10 +1,11 @@
-import { Application } from 'spectron';
-import path from 'path';
+import fs from 'fs';
+import mkdirp from 'mkdirp';
 import os from 'os';
+import path from 'path';
+import { Application } from 'spectron';
+
 // @ts-expect-error TSCONVERSION
 import electronPath from '../../insomnia-app/node_modules/electron';
-import mkdirp from 'mkdirp';
-import fs from 'fs';
 
 const getAppPlatform = () => process.platform;
 const isMac = () => getAppPlatform() === 'darwin';

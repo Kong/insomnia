@@ -1,52 +1,53 @@
 import electron from 'electron';
+import fs, { NoParamCallback } from 'fs';
+import moment from 'moment';
+import path from 'path';
 import React, { Fragment } from 'react';
 import { combineReducers, Dispatch } from 'redux';
-import fs, { NoParamCallback } from 'fs';
-import path from 'path';
-import AskModal from '../../../ui/components/modals/ask-modal';
-import moment from 'moment';
+import { unreachableCase } from 'ts-assert-unreachable';
+
+import { trackEvent } from '../../../common/analytics';
+import type { GlobalActivity } from '../../../common/constants';
+import {
+  ACTIVITY_ANALYTICS,
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+  DEPRECATED_ACTIVITY_INSOMNIA,
+  isValidActivity,
+} from '../../../common/constants';
+import { database } from '../../../common/database';
+import { getDesignerDataDir } from '../../../common/electron-helpers';
 import {
   exportRequestsData,
   exportRequestsHAR,
   exportWorkspacesData,
   exportWorkspacesHAR,
 } from '../../../common/export';
-import AlertModal from '../../components/modals/alert-modal';
-import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
-import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
+import { Environment, isEnvironment } from '../../../models/environment';
+import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import { SelectModal } from '../../components/modals/select-modal';
+import { Request } from '../../../models/request';
+import { Settings } from '../../../models/settings';
+import { BASE_SPACE_ID } from '../../../models/space';
+import { isWorkspace } from '../../../models/workspace';
+import { reloadPlugins } from '../../../plugins';
+import { createPlugin } from '../../../plugins/create';
+import install from '../../../plugins/install';
+import { setTheme } from '../../../plugins/misc';
+import AskModal from '../../../ui/components/modals/ask-modal';
+import AlertModal from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
-import { database } from '../../../common/database';
-import { trackEvent } from '../../../common/analytics';
+import LoginModal from '../../components/modals/login-modal';
+import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
+import { SelectModal } from '../../components/modals/select-modal';
 import SettingsModal, {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import install from '../../../plugins/install';
-import { createPlugin } from '../../../plugins/create';
-import { reloadPlugins } from '../../../plugins';
-import { setTheme } from '../../../plugins/misc';
-import type { GlobalActivity } from '../../../common/constants';
-import { isWorkspace } from '../../../models/workspace';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
-  ACTIVITY_ANALYTICS,
-  DEPRECATED_ACTIVITY_INSOMNIA,
-  isValidActivity,
-} from '../../../common/constants';
 import { selectActiveSpaceName, selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
-import { getDesignerDataDir } from '../../../common/electron-helpers';
-import { Settings } from '../../../models/settings';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { Environment, isEnvironment } from '../../../models/environment';
-import { BASE_SPACE_ID } from '../../../models/space';
-import { unreachableCase } from 'ts-assert-unreachable';
 import { importUri } from './import';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';

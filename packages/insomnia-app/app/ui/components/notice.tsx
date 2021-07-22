@@ -1,7 +1,8 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 const DISMISSED_VALUE = 'dismissed';
 
 interface Props {

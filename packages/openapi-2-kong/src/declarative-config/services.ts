@@ -3,20 +3,20 @@ import {
   generateSlug,
   getAllServers,
   getName,
-  pathVariablesToRegex,
   HttpMethod,
   parseUrl,
+  pathVariablesToRegex,
 } from '../common';
-import { generateSecurityPlugins } from './security-plugins';
-import {
-  generateOperationPlugins,
-  generateGlobalPlugins,
-  getRequestValidatorPluginDirective,
-  generatePlugins,
-} from './plugins';
-import { DCService, DCRoute } from '../types/declarative-config';
-import { OpenApi3Spec, OA3Server, OA3PathItem } from '../types/openapi3';
+import { DCRoute, DCService } from '../types/declarative-config';
 import { xKongName, xKongServiceDefaults } from '../types/kong';
+import { OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
+import {
+  generateGlobalPlugins,
+  generateOperationPlugins,
+  generatePlugins,
+  getRequestValidatorPluginDirective,
+} from './plugins';
+import { generateSecurityPlugins } from './security-plugins';
 
 export function generateServices(api: OpenApi3Spec, tags: string[]) {
   const servers = getAllServers(api);

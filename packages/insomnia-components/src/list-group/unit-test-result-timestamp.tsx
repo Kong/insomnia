@@ -1,5 +1,6 @@
 import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
+
 import { SvgIcon } from '../svg-icon';
 
 export interface UnitTestResultTimestampProps {

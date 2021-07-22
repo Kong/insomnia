@@ -1,10 +1,11 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { createRef, PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import ModalHeader from '../base/modal-header';
 import { showModal } from '.';
 
 export interface SelectModalShowOptions {

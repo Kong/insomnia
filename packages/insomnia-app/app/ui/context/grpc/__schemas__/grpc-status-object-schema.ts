@@ -1,5 +1,5 @@
 import type { Schema } from '@develohpanda/fluent-builder';
-import { StatusObject, status } from '@grpc/grpc-js';
+import { status, StatusObject } from '@grpc/grpc-js';
 
 export const grpcStatusObjectSchema: Schema<StatusObject> = {
   code: () => status.OK,

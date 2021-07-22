@@ -1,11 +1,11 @@
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
-import type { GrpcMethodType } from './method';
-import * as models from '../../models';
 import {
   getRenderedGrpcRequest,
   getRenderedGrpcRequestMessage,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
+import * as models from '../../models';
+import type { GrpcMethodType } from './method';
 import { canClientStream } from './method';
 
 export interface GrpcIpcRequestParams {

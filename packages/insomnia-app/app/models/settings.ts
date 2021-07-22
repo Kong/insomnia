@@ -1,14 +1,14 @@
-import type { BaseModel } from './index';
-import { database as db } from '../common/database';
+import type { HttpVersion } from '../common/constants';
 import {
-  getAppDefaultTheme,
-  getAppDefaultLightTheme,
   getAppDefaultDarkTheme,
+  getAppDefaultLightTheme,
+  getAppDefaultTheme,
   HttpVersions,
   UPDATE_CHANNEL_STABLE,
 } from '../common/constants';
+import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
-import type { HttpVersion } from '../common/constants';
+import type { BaseModel } from './index';
 
 export interface PluginConfig {
   disabled: boolean;

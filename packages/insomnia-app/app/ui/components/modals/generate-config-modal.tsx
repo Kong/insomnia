@@ -1,19 +1,20 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { ApiSpec } from '../../../models/api-spec';
+import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import CodeEditor from '../codemirror/code-editor';
+
+import { parseApiSpec } from '../../../common/api-specs';
+import { AUTOBIND_CFG } from '../../../common/constants';
+import type { ApiSpec } from '../../../models/api-spec';
 import type { Settings } from '../../../models/settings';
-import Notice from '../notice';
-import CopyButton from '../base/copy-button';
-import ModalFooter from '../base/modal-footer';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
-import { parseApiSpec } from '../../../common/api-specs';
+import CopyButton from '../base/copy-button';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import CodeEditor from '../codemirror/code-editor';
+import Notice from '../notice';
 import { showModal } from './index';
 
 interface Props {

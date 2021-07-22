@@ -1,5 +1,6 @@
-import React, { FunctionComponent } from 'react';
 import { MultiSwitch } from 'insomnia-components';
+import React, { FunctionComponent } from 'react';
+
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';

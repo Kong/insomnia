@@ -1,5 +1,5 @@
-import React, { PureComponent, ReactNode } from 'react';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
 
 interface Props {
   children?: ReactNode,

@@ -1,19 +1,18 @@
-import React, { PureComponent } from 'react';
-import * as mimes from 'mime-types';
-import clone from 'clone';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import RawEditor from './raw-editor';
-import UrlEncodedEditor from './url-encoded-editor';
-import FormEditor from './form-editor';
-import FileEditor from './file-editor';
+import clone from 'clone';
+import * as mimes from 'mime-types';
+import React, { PureComponent } from 'react';
+
 import {
+  AUTOBIND_CFG,
   CONTENT_TYPE_FILE,
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   CONTENT_TYPE_GRAPHQL,
-  AUTOBIND_CFG,
   getContentTypeFromHeaders,
 } from '../../../../common/constants';
+import { getContentTypeHeader } from '../../../../common/misc';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type {
   Request,
   RequestBody,
@@ -26,13 +25,15 @@ import {
   newBodyFormUrlEncoded,
   newBodyRaw,
 } from '../../../../models/request';
-import GraphQLEditor from './graph-ql-editor';
-import { getContentTypeHeader } from '../../../../common/misc';
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
-import { showModal } from '../../modals/index';
 import AskModal from '../../modals/ask-modal';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import { showModal } from '../../modals/index';
+import FileEditor from './file-editor';
+import FormEditor from './form-editor';
+import GraphQLEditor from './graph-ql-editor';
+import RawEditor from './raw-editor';
+import UrlEncodedEditor from './url-encoded-editor';
 
 interface Props {
   onChange: (r: Request, body: RequestBody) => Promise<Request>;

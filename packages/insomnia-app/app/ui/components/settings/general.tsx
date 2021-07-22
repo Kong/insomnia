@@ -1,6 +1,10 @@
-import React, { Fragment, PureComponent } from 'react';
-import * as fontScanner from 'font-scanner';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import * as fontScanner from 'font-scanner';
+import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import type { GlobalActivity, HttpVersion } from '../../../common/constants';
 import {
   ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
@@ -11,29 +15,26 @@ import {
   HttpVersions,
   isDevelopment,
   isMac,
-  updatesSupported,
-  UPDATE_CHANNEL_BETA,
-  UPDATE_CHANNEL_STABLE,
-  MIN_INTERFACE_FONT_SIZE,
+  MAX_EDITOR_FONT_SIZE,
   MAX_INTERFACE_FONT_SIZE,
   MIN_EDITOR_FONT_SIZE,
-  MAX_EDITOR_FONT_SIZE,
+  MIN_INTERFACE_FONT_SIZE,
+  UPDATE_CHANNEL_BETA,
+  UPDATE_CHANNEL_STABLE,
+  updatesSupported,
 } from '../../../common/constants';
-import HelpTooltip from '../help-tooltip';
-import type { GlobalActivity, HttpVersion } from '../../../common/constants';
-import type { Settings } from '../../../models/settings';
-import { setFont } from '../../../plugins/misc';
-import Tooltip from '../tooltip';
-import CheckForUpdatesButton from '../check-for-updates-button';
-import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
-import { bindActionCreators } from 'redux';
-import * as globalActions from '../../redux/modules/global';
-import { connect } from 'react-redux';
-import { strings } from '../../../common/strings';
-import { snapNumberToLimits } from '../../../common/misc';
-import { restartApp } from '../../../common/electron-helpers';
-import Link from '../base/link';
 import { docsKeyMaps } from '../../../common/documentation';
+import { restartApp } from '../../../common/electron-helpers';
+import { snapNumberToLimits } from '../../../common/misc';
+import { strings } from '../../../common/strings';
+import type { Settings } from '../../../models/settings';
+import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
+import { setFont } from '../../../plugins/misc';
+import * as globalActions from '../../redux/modules/global';
+import Link from '../base/link';
+import CheckForUpdatesButton from '../check-for-updates-button';
+import HelpTooltip from '../help-tooltip';
+import Tooltip from '../tooltip';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace

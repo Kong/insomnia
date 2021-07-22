@@ -1,21 +1,22 @@
-import fs from 'fs';
 import clone from 'clone';
-import { Cookie as toughCookie } from 'tough-cookie';
-import * as models from '../models';
-import type { RenderedRequest } from './render';
-import { getRenderedRequestAndContext } from './render';
+import fs from 'fs';
 import { jarFromCookies } from 'insomnia-cookies';
-import * as pluginContexts from '../plugins/context/index';
-import { getSetCookieHeaders, filterHeaders, hasAuthHeader } from './misc';
+import { smartEncodeUrl } from 'insomnia-url';
+import { Cookie as toughCookie } from 'tough-cookie';
+
+import * as models from '../models';
 import type { Cookie } from '../models/cookie-jar';
 import type { Request } from '../models/request';
 import { newBodyRaw } from '../models/request';
 import type { Response as ResponseModel } from '../models/response';
 import { getAuthHeader } from '../network/authentication';
-import { getAppVersion } from './constants';
-import { RenderError } from '../templating/index';
-import { smartEncodeUrl } from 'insomnia-url';
 import * as plugins from '../plugins';
+import * as pluginContexts from '../plugins/context/index';
+import { RenderError } from '../templating/index';
+import { getAppVersion } from './constants';
+import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
+import type { RenderedRequest } from './render';
+import { getRenderedRequestAndContext } from './render';
 
 export interface HarCookie {
   name: string;

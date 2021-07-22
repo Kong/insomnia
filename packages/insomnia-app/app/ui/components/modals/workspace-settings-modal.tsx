@@ -1,23 +1,24 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import type { ApiSpec } from '../../../models/api-spec';
+import type { ClientCertificate } from '../../../models/client-certificate';
+import getWorkspaceName from '../../../models/helpers/get-workspace-name';
+import * as workspaceOperations from '../../../models/helpers/workspace-operations';
+import * as models from '../../../models/index';
+import type { Workspace } from '../../../models/workspace';
 import DebouncedInput from '../base/debounced-input';
 import FileInputButton from '../base/file-input-button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import HelpTooltip from '../help-tooltip';
 import PromptButton from '../base/prompt-button';
-import * as models from '../../../models/index';
+import HelpTooltip from '../help-tooltip';
 import MarkdownEditor from '../markdown-editor';
-import type { Workspace } from '../../../models/workspace';
-import type { ClientCertificate } from '../../../models/client-certificate';
-import type { ApiSpec } from '../../../models/api-spec';
-import getWorkspaceName from '../../../models/helpers/get-workspace-name';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   clientCertificates: ClientCertificate[];

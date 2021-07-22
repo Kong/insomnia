@@ -1,17 +1,18 @@
-import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import * as React from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as models from '../../../models';
+import type { RequestGroup } from '../../../models/request-group';
+import type { Workspace } from '../../../models/workspace';
+import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
-import * as models from '../../../models';
-import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
-import { database as db } from '../../../common/database';
-import type { Workspace } from '../../../models/workspace';
-import type { RequestGroup } from '../../../models/request-group';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   editorFontSize: number;

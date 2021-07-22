@@ -1,3 +1,7 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import fuzzySort from 'fuzzysort';
+import { any, equals } from 'ramda';
 import React, {
   CSSProperties,
   Fragment,
@@ -8,13 +12,11 @@ import React, {
   ReactPortal,
 } from 'react';
 import ReactDOM from 'react-dom';
-import fuzzySort from 'fuzzysort';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import classnames from 'classnames';
-import { DropdownItem } from './dropdown-item';
-import { DropdownDivider } from './dropdown-divider';
 import styled, { css } from 'styled-components';
+
 import { SvgIcon } from '../svg-icon';
+import { DropdownDivider } from './dropdown-divider';
+import { DropdownItem } from './dropdown-item';
 
 export interface DropdownProps {
   children: ReactNode;
@@ -142,6 +144,16 @@ interface State {
   };
   uniquenessKey: number;
 }
+
+const isComponent = (match: string) => (child: ReactNode) => any(equals(match), [
+  // @ts-expect-error not sure
+  child.type.name,
+  // @ts-expect-error not sure
+  child.type.displayName,
+]);
+
+const isDropdownItem = isComponent(DropdownItem.name);
+const isDropdownDivider = isComponent(DropdownDivider.name);
 
 @autoBindMethodsForReact
 export class Dropdown extends PureComponent<DropdownProps, State> {
@@ -489,8 +501,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];
 
-      // @ts-expect-error -- TSCONVERSION
-      if (child.type.name === DropdownItem.name) {
+      if (isDropdownItem(child)) {
         const active = i === filterActiveIndex;
 
         if (visibleChildren.includes(child)) {
@@ -498,21 +509,18 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
             <li
               key={i}
               data-filter-index={i}
-              className={classnames({
-                active,
-              })}>
+              className={classnames({ active })}
+            >
               {child}
             </li>,
           );
         }
-        // @ts-expect-error -- TSCONVERSION
-      } else if (child.type.name === DropdownDivider.name) {
+      } else if (isDropdownDivider(child)) {
         const currentIndex = visibleChildren.indexOf(child);
         const nextChild = visibleChildren[currentIndex + 1];
 
-        // @ts-expect-error -- TSCONVERSION
         // Only show the divider if the next child is a DropdownItem
-        if (nextChild && nextChild.type.name === DropdownItem.name) {
+        if (isDropdownItem(nextChild)) {
           dropdownItems.push(<li key={i}>{child}</li>);
         }
       }

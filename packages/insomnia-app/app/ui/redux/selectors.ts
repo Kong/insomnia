@@ -1,14 +1,15 @@
 import { createSelector } from 'reselect';
+import { ValueOf } from 'type-fest';
+
+import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { BASE_SPACE_ID } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
-import { ValueOf } from 'type-fest';
-import { isWorkspaceActivity } from '../../common/constants';
-import { BASE_SPACE_ID } from '../../models/space';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
@@ -60,6 +61,7 @@ export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());
 
+/** WARNING: this does not include the base space */
 export const selectSpaces = createSelector(
   selectEntitiesLists,
   entities => entities.spaces,

@@ -1,7 +1,7 @@
 import { KeyAuthPlugin, xKongPluginKeyAuth } from '../types/kong';
+import { getSpec, tags } from './jest/test-helpers';
 import { generatePlugins } from './plugins';
 import { generateServices } from './services';
-import { tags, getSpec } from './jest/test-helpers';
 import { generateUpstreams } from './upstreams';
 
 describe('tags', () => {

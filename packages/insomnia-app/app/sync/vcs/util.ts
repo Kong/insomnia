@@ -1,6 +1,8 @@
 import clone from 'clone';
 import crypto from 'crypto';
+
 import { BaseModel } from '../../models';
+import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 import { deterministicStringify } from '../lib/deterministicStringify';
 import type {
   Branch,
@@ -14,7 +16,6 @@ import type {
   StatusCandidate,
   StatusCandidateMap,
 } from '../types';
-import { deleteKeys, resetKeys, shouldIgnoreKey } from '../ignore-keys';
 
 export function generateSnapshotStateMap(snapshot: Snapshot | null): SnapshotStateMap {
   if (!snapshot) {

@@ -1,6 +1,6 @@
 import HKDF from 'hkdf';
-import srp from 'srp-js';
 import forge from 'node-forge';
+import srp from 'srp-js';
 
 const DEFAULT_BYTE_LENGTH = 32;
 const DEFAULT_PBKDF2_ITERATIONS = 1e5; // 100,000

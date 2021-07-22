@@ -1,8 +1,9 @@
-import appConfig from '../config/config.json';
-import electronBuilderConfig from '../config/electronbuilder.json';
 import * as electronBuilder from 'electron-builder';
 import path from 'path';
 import rimraf from 'rimraf';
+
+import appConfig from '../config/config.json';
+import electronBuilderConfig from '../config/electronbuilder.json';
 import { start as build } from './build';
 
 const PLATFORM_MAP = {
