@@ -16,7 +16,7 @@ const isControlledInput = <T extends unknown>(dropdown: DropdownItemProps<T>): d
   Object.prototype.hasOwnProperty.call(dropdown, 'value')
 );
 
-const isUncontrolledInput = <T extends unknown>(dropdown: DropdownItemProps<T>): dropdown is ControlledDropdown<T> => (
+const isUncontrolledInput = <T extends unknown>(dropdown: DropdownItemProps<T>): dropdown is UncontrolledDropdown => (
   !isControlledInput(dropdown)
 );
 
