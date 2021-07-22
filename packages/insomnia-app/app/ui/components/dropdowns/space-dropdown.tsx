@@ -67,11 +67,10 @@ interface Props {
 
 const SpaceDropdownItem: FC<{
   space: SpaceSubset;
-  activeSpace: SpaceSubset;
+  isActive: boolean;
   setActive: (spaceId: string) => void;
-}> = ({ activeSpace, space, setActive }) => {
+}> = ({ isActive, space, setActive }) => {
   const { _id, name } = space;
-  const isActive = _id === activeSpace._id;
   const isBase = isBaseSpace(space);
   const isRemote = isRemoteSpace(space);
 
@@ -112,19 +111,19 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
       <SpaceDropdownItem
-        space={baseSpace}
-        activeSpace={activeSpace}
+        isActive={baseSpace._id === activeSpace._id}
         setActive={setActive}
+        space={baseSpace}
       />
 
       <DropdownDivider>All spaces{' '}{loading && spinner}</DropdownDivider>
 
       {spaces.map(space => (
         <SpaceDropdownItem
+          isActive={space._id === activeSpace._id}
           key={space._id}
-          space={space}
-          activeSpace={activeSpace}
           setActive={setActive}
+          space={space}
         />
       ))}
 
