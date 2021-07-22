@@ -21,7 +21,10 @@ const CONTEXT = {};
 const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndContext>[0]) => (await getRenderedRequestAndContext(args)).request;
 
 describe('actuallySend()', () => {
-  beforeEach(globalBeforeEach);
+  beforeEach(async () => {
+    await globalBeforeEach();
+    await models.space.all();
+  });
 
   it('sends a generic request', async () => {
     const workspace = await models.workspace.create();

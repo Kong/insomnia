@@ -5,7 +5,10 @@ import YAML from 'yaml';
 import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWorkspacesHAR } from '../export';
 
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
-  beforeEach(globalBeforeEach);
+  beforeEach(async () => {
+    await globalBeforeEach();
+    await models.space.all();
+  });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {
     const wrk1 = await models.workspace.create({
@@ -275,7 +278,7 @@ describe('export', () => {
           _id: w._id,
         }),
         expect.objectContaining({
-          _id: spec._id,
+          _id: spec?._id,
         }),
         expect.objectContaining({
           _id: eBase._id,

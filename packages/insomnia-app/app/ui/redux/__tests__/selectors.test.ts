@@ -1,4 +1,5 @@
 import * as models from '../../../models';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { selectActiveSpace } from '../selectors';
@@ -28,7 +29,7 @@ describe('selectors', () => {
       const state = await reduxStateForTest({ activeSpaceId: 'some-other-space' });
 
       const space = selectActiveSpace(state);
-      expect(space).toBeUndefined();
+      expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_SPACE_ID }));
     });
 
     it('should return undefined if no active space', async () => {
@@ -36,11 +37,11 @@ describe('selectors', () => {
       await models.space.create();
       await models.space.create();
 
-      // set first as selected
-      const state = await reduxStateForTest({ activeSpaceId: null });
+      // set base as selected
+      const state = await reduxStateForTest({ activeSpaceId: undefined });
 
       const space = selectActiveSpace(state);
-      expect(space).toBeUndefined();
+      expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_SPACE_ID }));
     });
   });
 });
