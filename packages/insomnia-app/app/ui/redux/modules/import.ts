@@ -49,6 +49,7 @@ const convertToRawConfig = ({
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
   const activeSpace = selectActiveSpace(state);
+  // WARNING: this selector does not include the base space
   const spaces = selectSpaces(state);
 
   return ({
