@@ -1,5 +1,4 @@
-import './css/index.less';
-
+// eslint-disable-next-line simple-import-sort/imports
 import { ipcRenderer } from 'electron';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -17,6 +16,8 @@ import { init as initPlugins } from '../plugins';
 import { applyColorScheme, setFont } from '../plugins/misc';
 import App from './containers/app';
 import { init as initStore } from './redux/modules';
+
+import './css/index.less'; // this import must come after `App`.  the reason is not yet known.
 
 initializeLogging();
 // Handy little helper
