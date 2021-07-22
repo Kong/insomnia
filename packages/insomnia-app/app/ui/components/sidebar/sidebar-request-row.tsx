@@ -20,8 +20,10 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { Request } from '../../../models/request';
 import { HotKeyRegistry } from '../../../common/hotkeys';
 import { HandleRender } from '../../../common/render';
+import { Space } from '../../../models/space';
 
 interface Props {
+  activeSpace: Space;
   activeEnvironment?: Environment | null;
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
@@ -211,6 +213,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
       isPinned,
       request,
       requestGroup,
+      activeSpace,
     } = this.props;
     const { dragDirection } = this.state;
     let node;
@@ -282,6 +285,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
                 requestGroup={requestGroup}
                 hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions to have network capabilities
                 activeEnvironment={activeEnvironment}
+                activeSpace={activeSpace}
               />
             </div>
             {isPinned && (

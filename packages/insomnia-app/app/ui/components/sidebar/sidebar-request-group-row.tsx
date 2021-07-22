@@ -15,6 +15,7 @@ import { Workspace } from '../../../models/workspace';
 import { Environment } from '../../../models/environment';
 import { HotKeyRegistry } from '../../../common/hotkeys';
 import { HandleRender } from '../../../common/render';
+import { Space } from '../../../models/space';
 
 interface Props {
   handleSetRequestGroupCollapsed: Function;
@@ -35,6 +36,7 @@ interface Props {
   connectDragSource?: Function;
   connectDropTarget?: Function;
   activeEnvironment?: Environment | null;
+  activeSpace: Space;
 }
 
 interface State {
@@ -106,6 +108,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       workspace,
       hotKeyRegistry,
       activeEnvironment,
+      activeSpace,
     } = this.props;
     const { dragDirection } = this.state;
     let folderIconClass = 'fa-folder';
@@ -191,6 +194,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               hotKeyRegistry={hotKeyRegistry}
               isPinned={false} // Necessary so that plugin actions work
               activeEnvironment={activeEnvironment}
+              activeSpace={activeSpace}
             />
           )}
         </ul>

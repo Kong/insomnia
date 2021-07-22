@@ -107,6 +107,7 @@ class WrapperDebug extends PureComponent<Props> {
       handleSidebarSort,
     } = this.props;
     const {
+      activeSpace,
       activeEnvironment,
       activeRequest,
       activeWorkspace,
@@ -184,6 +185,7 @@ class WrapperDebug extends PureComponent<Props> {
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
           activeEnvironment={activeEnvironment}
+          activeSpace={activeSpace}
         />
       </Fragment>
     );

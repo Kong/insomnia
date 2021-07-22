@@ -159,6 +159,7 @@ class WrapperHome extends PureComponent<Props, State> {
 
   renderCard(workspace: Workspace) {
     const {
+      activeSpace,
       apiSpecs,
       workspaceMetas,
     } = this.props.wrapperProps;
@@ -231,7 +232,7 @@ class WrapperHome extends PureComponent<Props, State> {
       );
     }
 
-    const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} />;
+    const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} space={activeSpace} />;
     const version = spec?.info?.version || '';
     let label: string = strings.collection.singular;
     let format = '';
