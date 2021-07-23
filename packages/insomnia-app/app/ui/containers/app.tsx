@@ -1260,10 +1260,6 @@ class App extends PureComponent<AppProps, State> {
   async _updateVCS() {
     const { activeWorkspace } = this.props;
 
-    if (!activeWorkspace) {
-      return;
-    }
-
     const lock = generateId();
     this._updateVCSLock = lock;
 
@@ -1289,7 +1285,11 @@ class App extends PureComponent<AppProps, State> {
       });
     }
 
-    await vcs.switchProject(activeWorkspace._id);
+    if (activeWorkspace) { 
+      await vcs.switchProject(activeWorkspace._id);
+    } else {
+      vcs.clearProject();
+    }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
     if (this._updateVCSLock === lock) {
