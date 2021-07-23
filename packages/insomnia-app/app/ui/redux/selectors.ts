@@ -61,7 +61,6 @@ export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());
 
-/** WARNING: this does not include the base space */
 export const selectSpaces = createSelector(
   selectEntitiesLists,
   entities => entities.spaces,
