@@ -22,6 +22,7 @@ export default async function(
   audience = '',
   resource = '',
   usePkce = false,
+  pkceMethod = c.PKCE_CHALLENGE_S256,
 ): Promise<Record<string, any>> {
   if (!authorizeUrl) {
     throw new Error('Invalid authorization URL');
@@ -37,8 +38,15 @@ export default async function(
   if (usePkce) {
     // @ts-expect-error -- TSCONVERSION
     codeVerifier = _base64UrlEncode(crypto.randomBytes(32));
-    // @ts-expect-error -- TSCONVERSION
-    codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
+
+    if (pkceMethod == c.PKCE_CHALLENGE_S256){
+      // @ts-expect-error -- TSCONVERSION
+      codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
+    }
+    else{
+      codeChallenge = codeVerifier;
+    }
+
   }
 
   const authorizeResults = await _authorize(
@@ -50,6 +58,7 @@ export default async function(
     audience,
     resource,
     codeChallenge,
+    pkceMethod
   );
 
   // Handle the error
@@ -84,6 +93,7 @@ async function _authorize(
   audience = '',
   resource = '',
   codeChallenge = '',
+  pkceMethod = '',
 ) {
   const params = [
     {
@@ -129,7 +139,7 @@ async function _authorize(
     });
     params.push({
       name: c.P_CODE_CHALLENGE_METHOD,
-      value: 'S256',
+      value: pkceMethod,
     });
   }
 

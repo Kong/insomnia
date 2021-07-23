@@ -19,6 +19,8 @@ import {
   RESPONSE_TYPE_ID_TOKEN,
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
   RESPONSE_TYPE_TOKEN,
+  PKCE_CHALLENGE_S256,
+  PKCE_CHALLENGE_PLAIN,
 } from '../../../../network/o-auth-2/constants';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
@@ -193,6 +195,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
 
   _handleChangePkce(value: boolean) {
     this._handleChangeProperty('usePkce', value);
+  }
+  
+  _handleChangePkceMethod(e: React.SyntheticEvent<HTMLInputElement>) {
+    this._handleChangeProperty('pkceMethod', e.currentTarget.value);
   }
 
   _handleChangeAuthorizationUrl(value: string) {
@@ -398,6 +404,21 @@ class OAuth2Auth extends PureComponent<Props, State> {
       this._handleChangeClientSecret,
     );
     const usePkce = this.renderUsePkceRow(this._handleChangePkce);
+    const pkceMethod = this.renderSelectRow(
+      'Code Challenge Method',
+      'pkceMethod',
+      [
+        {
+          name: 'SHA-256',
+          value: PKCE_CHALLENGE_S256,
+        },
+        {
+          name: 'Plain',
+          value: PKCE_CHALLENGE_PLAIN,
+        },
+      ],
+      this._handleChangePkceMethod,
+    );
     const authorizationUrl = this.renderInputRow(
       'Authorization URL',
       'authorizationUrl',
@@ -481,6 +502,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
     );
     const enabled = this.renderEnabledRow(this._handleChangeEnabled);
 
+    const { authentication } = this.props.request;
+
     if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
       basicFields = [
         authorizationUrl,
@@ -491,6 +514,11 @@ class OAuth2Auth extends PureComponent<Props, State> {
         redirectUri,
         enabled,
       ];
+
+      if (authentication.usePkce){
+          basicFields.splice(5, 0, pkceMethod);
+      }
+
       advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
