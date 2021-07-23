@@ -304,21 +304,15 @@ export async function getRenderContext(
   {
     request,
     environmentId,
-    ancestors,
+    ancestors: _ancestors,
     purpose,
     extraInfo,
   }: RenderContextOptions,
 ): Promise<Record<string, any>> {
-  if (!ancestors) {
-    ancestors = await getRenderContextAncestors(request);
-  }
-
+  const ancestors = _ancestors || await getRenderContextAncestors(request);
+  
   const space = ancestors.find(isSpace);
   const workspace = ancestors.find(isWorkspace);
-
-  if (!space) {
-    throw new Error('Failed to render. Could not find space');
-  }
 
   if (!workspace) {
     throw new Error('Failed to render. Could not find workspace');
@@ -399,7 +393,9 @@ export async function getRenderContext(
   };
 
   baseContext.getEnvironmentId = () => environmentId;
-  baseContext.getSpaceId = () => space._id;
+
+  // It is possible for a space to not exist because this 
+  baseContext.getSpaceId = () => space?._id;
 
   // Generate the context we need to render
   return buildRenderContext({ ancestors, rootEnvironment, subEnvironment: subEnvironment || undefined, baseContext });

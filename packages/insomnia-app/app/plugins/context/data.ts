@@ -25,9 +25,13 @@ const buildImportRawConfig = (options: PluginImportOptions): ImportRawConfig => 
 });
 
 // TODO: add metrics here to track how frequently this fallback is being used
-const getWorkspacesInActiveSpace = (activeSpaceId: string) => models.workspace.findByParentId(activeSpaceId);
+const getWorkspaces = (activeSpaceId?: string) => 
+  activeSpaceId 
+    ? models.workspace.findByParentId(activeSpaceId) 
+    : models.workspace.all();
 
-export const init = (activeSpaceId: string) => ({
+// Only in the case of running unit tests from Inso via send-request can activeSpaceId be undefined. This is because the concept of a space doesn't exist in git/insomnia sync or an export file
+export const init = (activeSpaceId?: string) => ({
   data: {
     import: {
       uri: async (uri: string, options: PluginImportOptions = {}) => {
@@ -43,7 +47,7 @@ export const init = (activeSpaceId: string) => ({
         includePrivate,
         format,
       }: InsomniaExport = {}) => exportWorkspacesData(
-        workspace ? [workspace] : await getWorkspacesInActiveSpace(activeSpaceId),
+        workspace ? [workspace] : await getWorkspaces(activeSpaceId),
         Boolean(includePrivate),
         format || 'json',
       ),
@@ -52,7 +56,7 @@ export const init = (activeSpaceId: string) => ({
         workspace,
         includePrivate,
       }: HarExport = {}) => exportWorkspacesHAR(
-        workspace ? [workspace] : await getWorkspacesInActiveSpace(activeSpaceId),
+        workspace ? [workspace] : await getWorkspaces(activeSpaceId),
         Boolean(includePrivate),
       ),
     },
