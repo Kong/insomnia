@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
-import { defaultSpace, SpaceSubset } from '../../../models/helpers/default-space';
+import { baseSpace, SpaceSubset } from '../../../models/helpers/base-space';
 import { isBaseSpace, isRemoteSpace, spaceHasSettings } from '../../../models/space';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteSpaces } from '../../hooks/space';
@@ -87,7 +87,7 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   // get list of spaces (which doesn't include the base space)
   const spaces = useSelector(selectSpaces);
 
-  const activeSpace = useSelector(selectActiveSpace) || defaultSpace;
+  const activeSpace = useSelector(selectActiveSpace) || baseSpace;
   const dispatch = useDispatch();
   const setActive = useCallback((spaceId: string) => dispatch(setActiveSpace(spaceId)), [dispatch]);
   const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
@@ -104,9 +104,9 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
       <SpaceDropdownItem
-        isActive={defaultSpace._id === activeSpace._id}
+        isActive={baseSpace._id === activeSpace._id}
         setActive={setActive}
-        space={defaultSpace}
+        space={baseSpace}
       />
 
       <DropdownDivider>All spaces{' '}{loading && spinner}</DropdownDivider>
