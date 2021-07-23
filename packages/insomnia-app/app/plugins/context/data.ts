@@ -2,6 +2,7 @@ import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
 import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
 import * as models from '../../models';
+import { BASE_SPACE_ID } from '../../models/space';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 
 interface PluginImportOptions {
@@ -17,11 +18,12 @@ interface InsomniaExport {
 
 type HarExport = Omit<InsomniaExport, 'format'>;
 
-const buildImportRawConfig = (options: PluginImportOptions): ImportRawConfig => ({
+const buildImportRawConfig = (options: PluginImportOptions, activeSpaceId: string): ImportRawConfig => ({
   getWorkspaceId: () => Promise.resolve(options.workspaceId || null),
   getWorkspaceScope: options.scope && (() => (
     Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
   ),
+  getSpaceId: () => Promise.resolve(activeSpaceId),
 });
 
 // TODO: add metrics here to track how frequently this fallback is being used
@@ -35,10 +37,10 @@ export const init = (activeSpaceId?: string) => ({
   data: {
     import: {
       uri: async (uri: string, options: PluginImportOptions = {}) => {
-        await importUri(uri, buildImportRawConfig(options));
+        await importUri(uri, buildImportRawConfig(options, activeSpaceId || BASE_SPACE_ID));
       },
       raw: async (text: string, options: PluginImportOptions = {}) => {
-        await importRaw(text, buildImportRawConfig(options));
+        await importRaw(text, buildImportRawConfig(options, activeSpaceId || BASE_SPACE_ID));
       },
     },
     export: {

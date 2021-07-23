@@ -20,7 +20,7 @@ describe('selectors', () => {
       expect(space).toStrictEqual(spaceA);
     });
 
-    it('should return undefined if active space not found', async () => {
+    it('should return base space if active space not found', async () => {
       // create two spaces
       await models.space.create();
       await models.space.create();
@@ -32,7 +32,7 @@ describe('selectors', () => {
       expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_SPACE_ID }));
     });
 
-    it('should return undefined if no active space', async () => {
+    it('should return base space if no active space', async () => {
       // create two spaces
       await models.space.create();
       await models.space.create();

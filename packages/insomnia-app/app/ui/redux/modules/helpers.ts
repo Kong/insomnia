@@ -82,7 +82,7 @@ export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[];
         value: defaultValue,
         noEscape: true,
         onDone: selectedSpaceId => {
-          // @ts-expect-error onDone can return null
+          // @ts-expect-error onDone can send null as an argument; why/how?
           resolve(selectedSpaceId);
         },
       });
