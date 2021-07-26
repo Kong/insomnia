@@ -127,7 +127,7 @@ class CookieList extends PureComponent<CookieListProps> {
           <div className="pad faint italic text-center">
             <p>I couldn't find any cookies for you.</p>
             <p>
-              <button className="btn btn--clicky" onClick={() => this._handleCookieAdd()}>
+              <button className="btn btn--clicky" onClick={this._handleCookieAdd}>
                 Add Cookie <i className="fa fa-plus-circle" />
               </button>
             </p>
