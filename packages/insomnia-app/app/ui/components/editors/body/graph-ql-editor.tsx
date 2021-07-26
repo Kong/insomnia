@@ -342,15 +342,15 @@ class GraphQLEditor extends PureComponent<Props, State> {
       ],
     };
 
-    const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
+    const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
 
     if (canceled) {
       return;
     }
 
     try {
-      const path = paths[0]; // showOpenDialog is single select
-      const file = readFileSync(path);
+      const filePath = filePaths[0]; // showOpenDialog is single select
+      const file = readFileSync(filePath);
 
       const content = JSON.parse(file.toString());
       if (!content.data) {
