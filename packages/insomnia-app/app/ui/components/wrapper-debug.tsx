@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { Button } from 'insomnia-components';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
@@ -10,7 +9,6 @@ import { isCollection, isDesign } from '../../models/workspace';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SyncDropdown from './dropdowns/sync-dropdown';
 import ErrorBoundary from './error-boundary';
-import { showSyncShareModal } from './modals/sync-share-modal';
 import PageLayout from './page-layout';
 import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
@@ -66,14 +64,9 @@ class WrapperDebug extends PureComponent<Props> {
     const collection = isCollection(activeWorkspace);
     const design = isDesign(activeWorkspace);
 
-    let share: ReactNode = null;
     let insomniaSync: ReactNode = null;
 
     if (isLoggedIn && collection && activeSpace?.remoteId && vcs) {
-      share = <Button variant="contained" onClick={showSyncShareModal}>
-        <i className="fa fa-globe pad-right-sm" /> Share
-      </Button>;
-
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}
@@ -89,12 +82,7 @@ class WrapperDebug extends PureComponent<Props> {
       <WorkspacePageHeader
         wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
-        gridRight={
-          <>
-            {share}
-            {sync && <span className="margin-left">{sync}</span>}
-          </>
-        }
+        gridRight={sync}
       />
     );
   }
