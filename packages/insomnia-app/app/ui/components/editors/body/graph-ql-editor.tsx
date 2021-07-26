@@ -430,9 +430,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   _handleSetLocalSchema() {
-    this.setState({ hideSchemaFetchErrors: false }, async () => {
-      await this._loadAndSetLocalSchema();
-    });
+    this.setState({ hideSchemaFetchErrors: false }, this._loadAndSetLocalSchema);
   }
 
   async _handleToggleAutomaticFetching() {
