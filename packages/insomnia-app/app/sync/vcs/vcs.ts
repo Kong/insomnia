@@ -90,6 +90,10 @@ export class VCS {
     this._project = null;
   }
 
+  clearProject() {
+    this._project = null;
+  }
+
   async switchProject(rootDocumentId: string) {
     const project = await this._getProjectByRootDocument(rootDocumentId);
 
