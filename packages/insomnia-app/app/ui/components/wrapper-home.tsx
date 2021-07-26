@@ -11,7 +11,7 @@ import {
   DropdownItem,
   Header,
 } from 'insomnia-components';
-import React, { Fragment, PureComponent, ReactNode } from 'react';
+import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
@@ -37,6 +37,7 @@ import { cloneGitRepository } from '../redux/modules/git';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { createWorkspace } from '../redux/modules/workspace';
+import { updateSpaceItemsOrder } from '../redux/modules/space';
 import Highlight from './base/highlight';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
@@ -48,14 +49,10 @@ import { showPrompt } from './modals';
 import Notice from './notice';
 import PageLayout from './page-layout';
 import TimeFromNow from './time-from-now';
-import type {
-  WrapperProps,
-} from './wrapper';
-
-interface RenderedCard {
-  card: ReactNode;
-  lastModifiedTimestamp?: number | null;
-}
+import type { WrapperProps } from './wrapper';
+import { Space, SpaceItemsSortOrder } from '../../models/space';
+import { ApiSpec } from '../../models/api-spec';
+import { WorkspaceMeta } from '../../models/workspace-meta';
 
 interface Props extends ReturnType<typeof mapDispatchToProps> {
   wrapperProps: WrapperProps;
@@ -63,6 +60,237 @@ interface Props extends ReturnType<typeof mapDispatchToProps> {
 
 interface State {
   filter: string;
+}
+
+function orderSpaceCards(orderBy: SpaceItemsSortOrder) {
+  return (cardA: WorkspaceCardProps, cardB: WorkspaceCardProps) => {
+    switch (orderBy) {
+      case 'DateModifiedDescending':
+        return cardB.lastModifiedTimestamp - cardA.lastModifiedTimestamp;
+      case 'NameAscending':
+        return cardA.workspace.name.localeCompare(cardB.workspace.name);
+      case 'NameDescending':
+        return cardB.workspace.name.localeCompare(cardA.workspace.name);
+      case 'DateCreatedAscending':
+        return cardA.workspace.created - cardB.workspace.created;
+      case 'DateCreatedDescending':
+        return cardB.workspace.created - cardA.workspace.created;
+    }
+  };
+}
+
+type OrderFilterDropdownProps = {
+  onSelect: (value: SpaceItemsSortOrder) => void;
+};
+
+function OrderFilterDropdown(props: OrderFilterDropdownProps) {
+  let { onSelect } = props;
+
+  return (
+    <Dropdown
+      className="margin-left"
+      renderButton={
+        <Button>
+          <i className="fa fa-sort" />
+        </Button>
+      }>
+      <DropdownItem value="DateModifiedDescending" onClick={onSelect}>
+        Last Modified
+      </DropdownItem>
+      <DropdownItem value="NameAscending" onClick={onSelect}>
+        Name Ascending
+      </DropdownItem>
+      <DropdownItem value="NameDescending" onClick={onSelect}>
+        Name Descending
+      </DropdownItem>
+      <DropdownItem value="DateCreatedAscending" onClick={onSelect}>
+        Oldest First
+      </DropdownItem>
+      <DropdownItem value="DateCreatedDescending" onClick={onSelect}>
+        Newest First
+      </DropdownItem>
+    </Dropdown>
+  );
+}
+
+type GetCardPropsInput = {
+  apiSpecs: ApiSpec[];
+  workspaceMetas: WorkspaceMeta[];
+  filter: string;
+  workspace: Workspace;
+};
+
+function getCardProps(input: GetCardPropsInput) {
+  const { apiSpecs, workspaceMetas, workspace } = input;
+  const apiSpec = apiSpecs.find((s) => s.parentId === workspace._id);
+
+  // an apiSpec model will always exist because a migration in the workspace forces it to
+  if (!apiSpec) {
+    return null;
+  }
+
+  let spec: ParsedApiSpec['contents'] = null;
+  let specFormat: ParsedApiSpec['format'] = null;
+  let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
+
+  try {
+    const result = parseApiSpec(apiSpec.contents);
+    spec = result.contents;
+    specFormat = result.format;
+    specFormatVersion = result.formatVersion;
+  } catch (err) {
+    // Assume there is no spec
+    // TODO: Check for parse errors if it's an invalid spec
+  }
+
+  // Get cached branch from WorkspaceMeta
+  const workspaceMeta = workspaceMetas?.find((wm) => wm.parentId === workspace._id);
+
+  const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
+
+  const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
+
+  const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
+
+  // WorkspaceMeta is a good proxy for last modified time
+  const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
+
+  const modifiedLocally = isDesign(workspace) ? apiSpec.modified : workspaceModified;
+
+  // Span spec, workspace and sync related timestamps for card last modified label and sort order
+  const lastModifiedFrom = [
+    workspace?.modified,
+    workspaceMeta?.modified,
+    apiSpec.modified,
+    workspaceMeta?.cachedGitLastCommitTime,
+  ];
+  const lastModifiedTimestamp = lastModifiedFrom
+    .filter(isNotNullOrUndefined)
+    .sort(descendingNumberSort)[0];
+
+  return {
+    lastModifiedTimestamp,
+    modifiedLocally,
+    lastCommitTime,
+    lastCommitAuthor,
+    lastActiveBranch,
+    spec,
+    specFormat,
+    apiSpec,
+    specFormatVersion,
+    workspace,
+  };
+}
+
+type WorkspaceCardProps = {
+  apiSpec: ApiSpec;
+  filter: string;
+  activeSpace: Space;
+  lastActiveBranch?: string;
+  lastModifiedTimestamp: number;
+  lastCommitTime?: number;
+  modifiedLocally: number;
+  workspace: Workspace;
+  lastCommitAuthor?: string;
+  spec: Record<string, any> | null;
+  specFormat: 'openapi' | 'swagger' | null;
+  specFormatVersion: string | null;
+  onSelect: (workspaceId: string, activity: GlobalActivity) => void;
+};
+
+function WorkspaceCard(props: WorkspaceCardProps) {
+  const {
+    apiSpec,
+    filter,
+    lastActiveBranch,
+    lastModifiedTimestamp,
+    workspace,
+    activeSpace,
+    lastCommitTime,
+    modifiedLocally,
+    lastCommitAuthor,
+    spec,
+    specFormat,
+    specFormatVersion,
+  } = props;
+
+  let branch = lastActiveBranch;
+
+  // @TODO Figure out how we should handle a missing timestamp
+  let log = <TimeFromNow timestamp={lastModifiedTimestamp || new Date()} />;
+
+  if (isDesign(workspace) && lastCommitTime && apiSpec.modified > lastCommitTime) {
+    // Show locally unsaved changes for spec
+    // NOTE: this doesn't work for non-spec workspaces
+    branch = lastActiveBranch + '*';
+    log = (
+      <Fragment>
+        <TimeFromNow className="text-danger" timestamp={modifiedLocally} /> (unsaved)
+      </Fragment>
+    );
+  } else if (lastCommitTime) {
+    // Show last commit time and author
+    branch = lastActiveBranch;
+    log = (
+      <Fragment>
+        <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
+      </Fragment>
+    );
+  }
+  const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} space={activeSpace} />;
+
+  const version = spec?.info?.version || '';
+  let label: string = strings.collection.singular;
+  let format = '';
+  let labelIcon = <i className="fa fa-bars" />;
+  let defaultActivity = ACTIVITY_DEBUG;
+  let title = workspace.name;
+
+  if (isDesign(workspace)) {
+    label = strings.document.singular;
+    labelIcon = <i className="fa fa-file-o" />;
+
+    if (specFormat === 'openapi') {
+      format = `OpenAPI ${specFormatVersion}`;
+    } else if (specFormat === 'swagger') {
+      // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
+      format = `OpenAPI ${specFormatVersion}`;
+    }
+
+    defaultActivity = ACTIVITY_SPEC;
+    title = apiSpec.fileName || title;
+  }
+
+  // Filter the card by multiple different properties
+  const matchResults = fuzzyMatchAll(filter, [title, label, branch, version], {
+    splitSpace: true,
+    loose: true,
+  });
+
+  // Return null if we don't match the filter
+  if (filter && !matchResults) {
+    return null;
+  }
+
+  return (
+    <Card
+      docBranch={branch ? <Highlight search={filter} text={branch} /> : undefined}
+      docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
+      docVersion={version ? <Highlight search={filter} text={`v${version}`} /> : undefined}
+      tagLabel={
+        label ? (
+          <>
+            <span className="margin-right-xs">{labelIcon}</span>
+            <Highlight search={filter} text={label} />
+          </>
+        ) : undefined
+      }
+      docLog={log}
+      docMenu={docMenu}
+      docFormat={format}
+      onClick={() => props.onSelect(workspace._id, defaultActivity)}
+    />
+  );
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -90,16 +318,22 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   _handleCollectionCreate() {
-    const { handleCreateWorkspace, wrapperProps: { activeSpace, vcs, isLoggedIn } } = this.props;
+    const {
+      handleCreateWorkspace,
+      wrapperProps: { activeSpace, vcs, isLoggedIn },
+    } = this.props;
 
     handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
-      onCreate: async workspace => {
+      onCreate: async (workspace) => {
         const spaceRemoteId = activeSpace?.remoteId;
 
         // Don't mark for sync if not logged in at the time of creation
         if (isLoggedIn && vcs && spaceRemoteId) {
-          await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+          await initializeLocalProjectAndMarkForSync({
+            vcs: vcs.newInstance(),
+            workspace,
+          });
         }
       },
     });
@@ -123,7 +357,7 @@ class WrapperHome extends PureComponent<Props, State> {
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: uri => {
+      onComplete: (uri) => {
         this.props.handleImportUri(uri, {
           forceToWorkspace: ForceToWorkspace.new,
         });
@@ -156,142 +390,6 @@ class WrapperHome extends PureComponent<Props, State> {
     }
 
     handleSetActiveWorkspace(id);
-  }
-
-  renderCard(workspace: Workspace) {
-    const {
-      activeSpace,
-      apiSpecs,
-      workspaceMetas,
-    } = this.props.wrapperProps;
-    const { filter } = this.state;
-    const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
-
-    // an apiSpec model will always exist because a migration in the workspace forces it to
-    if (!apiSpec) {
-      return null;
-    }
-
-    let spec: ParsedApiSpec['contents'] = null;
-    let specFormat: ParsedApiSpec['format'] = null;
-    let specFormatVersion: ParsedApiSpec['formatVersion'] = null;
-
-    try {
-      const result = parseApiSpec(apiSpec.contents);
-      spec = result.contents;
-      specFormat = result.format;
-      specFormatVersion = result.formatVersion;
-    } catch (err) {
-      // Assume there is no spec
-      // TODO: Check for parse errors if it's an invalid spec
-    }
-
-    // Get cached branch from WorkspaceMeta
-    const workspaceMeta = workspaceMetas?.find(wm => wm.parentId === workspace._id);
-    const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
-    const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
-    const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
-
-    // WorkspaceMeta is a good proxy for last modified time
-    const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
-    const modifiedLocally = isDesign(workspace) ? apiSpec.modified : workspaceModified;
-
-    // Span spec, workspace and sync related timestamps for card last modified label and sort order
-    const lastModifiedFrom = [
-      workspace?.modified,
-      workspaceMeta?.modified,
-      apiSpec.modified,
-      workspaceMeta?.cachedGitLastCommitTime,
-    ];
-    const lastModifiedTimestamp = lastModifiedFrom
-      .filter(isNotNullOrUndefined)
-      .sort(descendingNumberSort)[0];
-    // @ts-expect-error -- TSCONVERSION appears to be genuine
-    let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
-    let branch = lastActiveBranch;
-
-    if (
-      isDesign(workspace) &&
-      lastCommitTime &&
-      apiSpec.modified > lastCommitTime
-    ) {
-      // Show locally unsaved changes for spec
-      // NOTE: this doesn't work for non-spec workspaces
-      branch = lastActiveBranch + '*';
-      log = (
-        <Fragment>
-          <TimeFromNow className="text-danger" timestamp={modifiedLocally} /> (unsaved)
-        </Fragment>
-      );
-    } else if (lastCommitTime) {
-      // Show last commit time and author
-      branch = lastActiveBranch;
-      log = (
-        <Fragment>
-          <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
-        </Fragment>
-      );
-    }
-
-    const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} space={activeSpace} />;
-    const version = spec?.info?.version || '';
-    let label: string = strings.collection.singular;
-    let format = '';
-    let labelIcon = <i className="fa fa-bars" />;
-    let defaultActivity = ACTIVITY_DEBUG;
-    let title = workspace.name;
-
-    if (isDesign(workspace)) {
-      label = strings.document.singular;
-      labelIcon = <i className="fa fa-file-o" />;
-
-      if (specFormat === 'openapi') {
-        format = `OpenAPI ${specFormatVersion}`;
-      } else if (specFormat === 'swagger') {
-        // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
-        format = `OpenAPI ${specFormatVersion}`;
-      }
-
-      defaultActivity = ACTIVITY_SPEC;
-      title = apiSpec.fileName || title;
-    }
-
-    // Filter the card by multiple different properties
-    const matchResults = fuzzyMatchAll(filter, [title, label, branch, version], {
-      splitSpace: true,
-      loose: true,
-    });
-
-    // Return null if we don't match the filter
-    if (filter && !matchResults) {
-      return null;
-    }
-
-    const card = (
-      <Card
-        key={apiSpec._id}
-        docBranch={branch ? <Highlight search={filter} text={branch} /> : undefined}
-        docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
-        docVersion={version ? <Highlight search={filter} text={`v${version}`} /> : undefined}
-        tagLabel={
-          label ? (
-            <>
-              <span className="margin-right-xs">{labelIcon}</span>
-              <Highlight search={filter} text={label} />
-            </>
-          ) : undefined
-        }
-        docLog={log}
-        docMenu={docMenu}
-        docFormat={format}
-        onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
-      />
-    );
-    const renderedCard: RenderedCard = {
-      card,
-      lastModifiedTimestamp,
-    };
-    return renderedCard;
   }
 
   renderCreateMenu() {
@@ -349,6 +447,12 @@ class WrapperHome extends PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
+        <OrderFilterDropdown
+          onSelect={(value) =>
+            this.props.wrapperProps.activeSpace &&
+            updateSpaceItemsOrder(this.props.wrapperProps.activeSpace, value)
+          }
+        />
         <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
       </div>
@@ -356,15 +460,31 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces, isLoading, vcs } = this.props.wrapperProps;
+    const { workspaces, isLoading, vcs, activeSpace, workspaceMetas, apiSpecs } =
+      this.props.wrapperProps;
     const { filter } = this.state;
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces
-      .map(this.renderCard)
+      .map((workspace) =>
+        getCardProps({
+          workspace,
+          workspaceMetas,
+          apiSpecs,
+          filter,
+        }),
+      )
       .filter(isNotNullOrUndefined)
-      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-      .sort((a: RenderedCard, b: RenderedCard) => descendingNumberSort(a.lastModifiedTimestamp, b.lastModifiedTimestamp))
-      .map(c => c?.card);
+      .sort(orderSpaceCards(activeSpace?.order || 'DateModifiedDescending'))
+      .map((props) => (
+        <WorkspaceCard
+          activeSpace={activeSpace}
+          key={props?.apiSpec._id}
+          onSelect={this._handleClickCard}
+          {...props}
+          filter={filter}
+        />
+      ));
+
     const countLabel = cards.length === 1 ? strings.document.singular : strings.document.plural;
     return (
       <PageLayout
@@ -375,7 +495,14 @@ class WrapperHome extends PureComponent<Props, State> {
             gridLeft={
               <Fragment>
                 <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb crumbs={[{ id: 'space', node: <SpaceDropdown vcs={vcs || undefined} /> }]} />
+                <Breadcrumb
+                  crumbs={[
+                    {
+                      id: 'space',
+                      node: <SpaceDropdown vcs={vcs || undefined} />,
+                    },
+                  ]}
+                />
                 {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
               </Fragment>
             }
@@ -414,21 +541,24 @@ class WrapperHome extends PureComponent<Props, State> {
 }
 
 const mapDispatchToProps = (dispatch) => {
-  const bound = bindActionCreators({
-    createWorkspace,
-    cloneGitRepository,
-    importFile,
-    importClipBoard,
-    importUri,
-  }, dispatch);
+  const bound = bindActionCreators(
+    {
+      createWorkspace,
+      cloneGitRepository,
+      importFile,
+      importClipBoard,
+      importUri,
+    },
+    dispatch,
+  );
 
-  return ({
+  return {
     handleCreateWorkspace: bound.createWorkspace,
     handleGitCloneWorkspace: bound.cloneGitRepository,
     handleImportFile: bound.importFile,
     handleImportUri: bound.importUri,
     handleImportClipboard: bound.importClipBoard,
-  });
+  };
 };
 
 export default connect(null, mapDispatchToProps)(WrapperHome);

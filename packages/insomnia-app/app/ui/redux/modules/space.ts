@@ -2,7 +2,7 @@ import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { BASE_SPACE_ID, Space, SpaceItemsSortOrder } from '../../../models/space';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveSpace } from './global';
 
@@ -44,3 +44,11 @@ export const removeSpace = (space: Space) => dispatch => {
     },
   });
 };
+
+export const updateSpaceItemsOrder =
+  async (space: Space, order: SpaceItemsSortOrder) => {
+    models.space
+      .update(space, {
+        order,
+      })
+  };
