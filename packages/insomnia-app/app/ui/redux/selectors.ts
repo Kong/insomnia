@@ -7,6 +7,7 @@ import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { BASE_SPACE_ID } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 
@@ -60,7 +61,6 @@ export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());
 
-/** WARNING: this does not include the base space */
 export const selectSpaces = createSelector(
   selectEntitiesLists,
   entities => entities.spaces,
@@ -70,7 +70,7 @@ export const selectActiveSpace = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeSpaceId,
   (entities, activeSpaceId) => {
-    return activeSpaceId ? entities.spaces[activeSpaceId] : undefined;
+    return entities.spaces[activeSpaceId] || entities.spaces[BASE_SPACE_ID];
   },
 );
 
@@ -82,10 +82,7 @@ export const selectAllWorkspaces = createSelector(
 export const selectWorkspacesForActiveSpace = createSelector(
   selectAllWorkspaces,
   selectActiveSpace,
-  (workspaces, activeSpace) => {
-    const parentId = activeSpace?._id || null;
-    return workspaces.filter(w => w.parentId === parentId);
-  },
+  (workspaces, activeSpace) => workspaces.filter(w => w.parentId === activeSpace._id),
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -366,7 +363,7 @@ export const selectActiveUnitTests = createSelector(
 
 export const selectActiveSpaceName = createSelector(
   selectActiveSpace,
-  activeSpace => activeSpace?.name,
+  activeSpace => activeSpace.name,
 );
 
 export const selectActiveUnitTestSuites = createSelector(
