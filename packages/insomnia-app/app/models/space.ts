@@ -3,6 +3,13 @@ import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
 
+export type SpaceItemsSortOrder =
+  | "DateModifiedDescending"
+  | "NameAscending"
+  | "NameDescending"
+  | "DateCreatedAscending"
+  | "DateCreatedDescending";
+
 export const name = 'Space';
 export const type = 'Space';
 export const prefix = 'sp';
@@ -20,6 +27,7 @@ export const spaceHasSettings = (space: Space) => isLocalSpace(space) && !isBase
 interface BaseSpace {
   name: string;
   remoteId: string | null;
+  order: SpaceItemsSortOrder;
 }
 
 export type Space = BaseModel & BaseSpace;
@@ -36,6 +44,7 @@ export function init(): BaseSpace {
   return {
     name: 'My Space',
     remoteId: null, // `null` is necessary for the model init logic to work properly
+    order: "DateModifiedDescending"
   };
 }
 
