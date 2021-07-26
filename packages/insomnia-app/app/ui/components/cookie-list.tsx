@@ -2,7 +2,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';
 import React, { PureComponent } from 'react';
 import * as toughCookie from 'tough-cookie';
-import * as uuid from 'uuid';
 
 import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleRender } from '../../common/render';
@@ -12,7 +11,7 @@ import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
 
 export interface CookieListProps {
-  handleCookieAdd: Function;
+  handleCookieAdd: () => void;
   handleCookieDelete: Function;
   handleDeleteAll: Function;
   cookies: Cookie[];
@@ -21,32 +20,20 @@ export interface CookieListProps {
   handleRender: HandleRender;
 }
 
-// Use tough-cookie MAX_DATE value
-// https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
-const MAX_TIME = 2147483647000;
-
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class CookieList extends PureComponent<CookieListProps> {
-  _handleCookieAdd() {
-    const newCookie: Cookie = {
-      id: uuid.v4(),
-      key: 'foo',
-      value: 'bar',
-      domain: this.props.newCookieDomainName,
-      expires: MAX_TIME,
-      path: '/',
-      secure: false,
-      httpOnly: false,
-    };
-    this.props.handleCookieAdd(newCookie);
-  }
-
   _handleDeleteCookie(cookie: Cookie) {
     this.props.handleCookieDelete(cookie);
   }
 
   render() {
-    const { cookies, handleDeleteAll, handleShowModifyCookieModal, handleRender } = this.props;
+    const {
+      cookies,
+      handleCookieAdd,
+      handleDeleteAll,
+      handleRender,
+      handleShowModifyCookieModal,
+    } = this.props;
     return (
       <div>
         <table className="table--fancy cookie-table table--striped">
@@ -79,7 +66,7 @@ class CookieList extends PureComponent<CookieListProps> {
                   >
                     Actions <i className="fa fa-caret-down" />
                   </DropdownButton>
-                  <DropdownItem onClick={this._handleCookieAdd}>
+                  <DropdownItem onClick={handleCookieAdd}>
                     <i className="fa fa-plus-circle" /> Add Cookie
                   </DropdownItem>
                   <DropdownItem onClick={handleDeleteAll} buttonClass={PromptButton}>
@@ -127,7 +114,7 @@ class CookieList extends PureComponent<CookieListProps> {
           <div className="pad faint italic text-center">
             <p>I couldn't find any cookies for you.</p>
             <p>
-              <button className="btn btn--clicky" onClick={this._handleCookieAdd}>
+              <button className="btn btn--clicky" onClick={handleCookieAdd}>
                 Add Cookie <i className="fa fa-plus-circle" />
               </button>
             </p>

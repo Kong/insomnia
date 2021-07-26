@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import deepEqual from 'deep-equal';
 import React, { ChangeEvent, PureComponent } from 'react';
+import * as uuid from 'uuid';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { fuzzyMatch } from '../../../common/misc';
@@ -49,10 +50,23 @@ class CookiesModal extends PureComponent<Props, State> {
     await models.cookieJar.update(cookieJar);
   }
 
-  async _handleCookieAdd(cookie: Cookie) {
+  async _handleCookieAdd() {
+    const { filter } = this.state;
+
+    const newCookie: Cookie = {
+      id: uuid.v4(),
+      key: '',
+      value: '',
+      domain: filter || '',
+      expires: 0,
+      path: '',
+      secure: false,
+      httpOnly: false,
+    };
+    
     const { cookieJar } = this.props;
     const { cookies } = cookieJar;
-    cookieJar.cookies = [cookie, ...cookies];
+    cookieJar.cookies = [newCookie, ...cookies];
     await this._saveChanges();
   }
 
@@ -173,7 +187,7 @@ class CookiesModal extends PureComponent<Props, State> {
                       ref={this._setFilterInputRef}
                       onChange={this._handleFilterChange}
                       type="text"
-                      placeholder="twitter.com"
+                      placeholder="example.com"
                       defaultValue=""
                     />
                   </label>
@@ -187,7 +201,7 @@ class CookiesModal extends PureComponent<Props, State> {
                   handleDeleteAll={this._handleDeleteAllCookies}
                   handleCookieAdd={this._handleCookieAdd}
                   handleCookieDelete={this._handleCookieDelete} // Set the domain to the filter so that it shows up if we're filtering
-                  newCookieDomainName={filter || 'domain.com'}
+                  newCookieDomainName={filter}
                 />
               </div>
             </div>
