@@ -41,7 +41,6 @@ export const createWorkspace = ({ scope, onCreate }: {
 }) => {
   return (dispatch, getState) => {
     const activeSpace = selectActiveSpace(getState());
-    const parentId = activeSpace?._id || null;
 
     const design = isDesign({
       scope,
@@ -61,8 +60,7 @@ export const createWorkspace = ({ scope, onCreate }: {
             {
               name,
               scope,
-              // @ts-expect-error TSCONVERSION the common parentId isn't typed correctly
-              parentId,
+              parentId: activeSpace._id,
             },
             onCreate,
           ),

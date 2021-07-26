@@ -8,6 +8,7 @@ import * as models from '../../../models';
 import type { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
+import { Space } from '../../../models/space';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
@@ -22,11 +23,12 @@ import { showWorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal
 interface Props {
   workspace: Workspace;
   apiSpec: ApiSpec;
+  space: Space;
 }
 
 const spinner = <i className="fa fa-refresh fa-spin" />;
 
-const useWorkspaceHandlers = ({ workspace, apiSpec }: { workspace: Workspace; apiSpec: ApiSpec; }) => {
+const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
   const handleDuplicate = useCallback(() => {
     showWorkspaceDuplicateModal({ workspace, apiSpec });
   }, [apiSpec, workspace]);
@@ -65,7 +67,7 @@ const useWorkspaceHandlers = ({ workspace, apiSpec }: { workspace: Workspace; ap
   return { handleDelete, handleDuplicate, handleRename };
 };
 
-const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace; apiSpec: ApiSpec; }) => {
+const useDocumentActionPlugins = ({ workspace, apiSpec, space }: Props) => {
   const [actionPlugins, setActionPlugins] = useState<DocumentAction[]>([]);
   const { startLoading, stopLoading, isLoading } = useLoadingRecord();
 
@@ -82,7 +84,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
     try {
       const context = {
         ...pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(space._id),
         ...pluginContexts.store.init(p.plugin),
       };
       // @ts-expect-error -- TSCONVERSION
@@ -95,7 +97,7 @@ const useDocumentActionPlugins = ({ workspace, apiSpec }: { workspace: Workspace
     } finally {
       stopLoading(p.label);
     }
-  }, [apiSpec.contents, startLoading, stopLoading]);
+  }, [apiSpec.contents, space._id, startLoading, stopLoading]);
 
   const renderPluginDropdownItems = useCallback(() => actionPlugins.map(p => (
     <DropdownItem

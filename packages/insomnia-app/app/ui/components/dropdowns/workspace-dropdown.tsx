@@ -13,6 +13,7 @@ import { ApiSpec } from '../../../models/api-spec';
 import type { Environment } from '../../../models/environment';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
 import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
@@ -33,6 +34,7 @@ interface Props {
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
   activeApiSpec: ApiSpec;
+  activeSpace: Space;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
   className?: string;
@@ -57,13 +59,13 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: true },
     }));
-    const { activeEnvironment, activeWorkspace } = this.props;
+    const { activeEnvironment, activeWorkspace, activeSpace } = this.props;
 
     try {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(activeSpace._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };

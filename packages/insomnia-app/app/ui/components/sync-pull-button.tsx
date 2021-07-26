@@ -9,7 +9,7 @@ import { showError } from './modals';
 interface Props {
   vcs: VCS;
   branch: string;
-  space?: Space;
+  space: Space;
   onPull: (...args: any[]) => any;
   disabled?: boolean;
   className?: string;
@@ -40,7 +40,7 @@ class SyncPullButton extends PureComponent<Props, State> {
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
       await newVCS.checkout([], branch);
-      await newVCS.pull([], space?.remoteId);
+      await newVCS.pull([], space.remoteId);
     } catch (err) {
       showError({
         title: 'Pull Error',

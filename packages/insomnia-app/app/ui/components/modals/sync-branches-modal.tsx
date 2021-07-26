@@ -16,7 +16,7 @@ import SyncPullButton from '../sync-pull-button';
 
 interface Props {
   workspace: Workspace;
-  space?: Space;
+  space: Space;
   syncItems: StatusCandidate[];
   vcs: VCS;
 }

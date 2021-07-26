@@ -9,6 +9,7 @@ import type { Environment } from '../../../models/environment';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
 import type { Workspace } from '../../../models/workspace';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 import SidebarRequestGroupRow from './sidebar-request-group-row';
@@ -43,6 +44,7 @@ interface Props {
   hotKeyRegistry: HotKeyRegistry;
   activeEnvironment?: Environment | null;
   activeRequest?: Request | GrpcRequest | null;
+  activeSpace: Space;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -91,6 +93,7 @@ class SidebarChildren extends PureComponent<Props> {
       workspace,
       hotKeyRegistry,
       activeEnvironment,
+      activeSpace,
     } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     return children.map(child => {
@@ -117,6 +120,7 @@ class SidebarChildren extends PureComponent<Props> {
             request={child.doc}
             hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions on requests
             activeEnvironment={activeEnvironment}
+            activeSpace={activeSpace}
           />
         );
       }
@@ -158,6 +162,7 @@ class SidebarChildren extends PureComponent<Props> {
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}
           activeEnvironment={activeEnvironment}
+          activeSpace={activeSpace}
         >
           {children}
         </SidebarRequestGroupRow>

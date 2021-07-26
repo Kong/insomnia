@@ -4,7 +4,7 @@ import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { isSpaceId } from './space';
+import { BASE_SPACE_ID, isSpaceId } from './space';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -57,11 +57,16 @@ export async function migrate(doc: Workspace) {
     fileName: doc.name,
   });
   doc = _migrateScope(doc);
+  doc = _migrateIntoBaseSpace(doc);
   return doc;
 }
 
 export function getById(id?: string) {
   return db.get<Workspace>(type, id);
+}
+
+export function findByParentId(parentId: string) {
+  return db.find<Workspace>(type, { parentId });
 }
 
 export async function create(patch: Partial<Workspace> = {}) {
@@ -151,6 +156,14 @@ function _migrateScope(workspace: MigrationWorkspace) {
       break;
   }
   return workspace as Workspace;
+}
+
+function _migrateIntoBaseSpace(workspace: Workspace) {
+  if (!workspace.parentId) {
+    workspace.parentId = BASE_SPACE_ID;
+  }
+
+  return workspace;
 }
 
 export async function ensureChildren({ _id }: Workspace) {

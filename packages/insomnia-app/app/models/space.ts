@@ -1,3 +1,4 @@
+import { getAppName } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
@@ -8,15 +9,13 @@ export const prefix = 'sp';
 export const canDuplicate = false;
 export const canSync = false;
 
-// A base space represents "no" space, when viewing this base space fetch all workspaces with no parent.
-// Using this instead of null.
-export const BASE_SPACE_ID = 'base-space';
+export const BASE_SPACE_ID = `${prefix}_base-space`;
 
-export const isBaseSpace = ({ _id }: Pick<Space, '_id'>) => _id === BASE_SPACE_ID;
-export const isNotBaseSpace = (space: Pick<Space, '_id'>) => !isBaseSpace(space);
-export const isLocalSpace = ({ remoteId }: Pick<Space, 'remoteId'>) => remoteId === null;
-export const isRemoteSpace = (space: Pick<Space, 'remoteId'>) => !isLocalSpace(space);
-export const spaceHasSettings = (space: Pick<Space, 'remoteId' | '_id'>) => isLocalSpace(space) && !isBaseSpace(space);
+export const isBaseSpace = ({ _id }: Space) => _id === BASE_SPACE_ID;
+export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
+export const isLocalSpace = ({ remoteId }: Space) => remoteId === null;
+export const isRemoteSpace = (space: Space) => !isLocalSpace(space);
+export const spaceHasSettings = (space: Space) => isLocalSpace(space) && !isBaseSpace(space);
 
 interface BaseSpace {
   name: string;
@@ -64,6 +63,13 @@ export function update(space: Space, patch: Partial<Space>) {
   return db.docUpdate(space, patch);
 }
 
-export function all() {
-  return db.all<Space>(type);
+export async function all() {
+  const spaces = await db.all<Space>(type);
+
+  if (!spaces.find(c => c._id === BASE_SPACE_ID)) {
+    await create({ _id: BASE_SPACE_ID, name: getAppName(), remoteId: null });
+    return db.all<Space>(type);
+  }
+
+  return spaces;
 }

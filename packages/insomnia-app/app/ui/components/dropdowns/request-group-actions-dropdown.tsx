@@ -9,6 +9,7 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { RequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
 import type { Workspace } from '../../../models/workspace';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
@@ -25,6 +26,7 @@ import { showError, showModal } from '../modals';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 
 interface Props {
+  space: Space;
   workspace: Workspace;
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
@@ -91,11 +93,11 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
     }));
 
     try {
-      const { activeEnvironment, requestGroup } = this.props;
+      const { activeEnvironment, requestGroup, space } = this.props;
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(space._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
