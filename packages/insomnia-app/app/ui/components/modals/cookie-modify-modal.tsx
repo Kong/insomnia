@@ -5,7 +5,7 @@ import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import * as toughCookie from 'tough-cookie';
 
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS, KONG_INITIAL_COMMIT_TIMESTAMP, TOUGH_COOKIE_MAX_TIMESTAMP } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
@@ -40,6 +40,14 @@ class CookieModifyModal extends PureComponent<Props, State> {
     cookie: null,
     rawValue: '',
   }
+
+  placeholders = {
+    key: 'foo',
+    value: 'bar',
+    domain: 'example.com',
+    path: '/',
+    expires: `${KONG_INITIAL_COMMIT_TIMESTAMP} (Unix Timesamp in Milliseconds)`,
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -202,6 +210,7 @@ class CookieModifyModal extends PureComponent<Props, State> {
         <label>
           {CookieModifyModal._capitalize(field)} <span className="danger">{error}</span>
           <OneLineEditor
+            placeholder={this.placeholders[field]}
             render={handleRender}
             getRenderContext={handleGetRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}

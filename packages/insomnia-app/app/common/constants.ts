@@ -123,6 +123,13 @@ export const MAX_INTERFACE_FONT_SIZE = 24;
 export const MIN_EDITOR_FONT_SIZE = 8;
 export const MAX_EDITOR_FONT_SIZE = 24;
 
+/**
+ * easter-egg: the date of Kong's initial commit
+ * useful for placeholder text
+ * see: https://github.com/kong/kong/commit/ffd70b3101ba38d9acc776038d124f6e2fccac3c
+ */
+export const KONG_INITIAL_COMMIT_TIMESTAMP = 1416268568000;
+
 // Activities
 export type GlobalActivity =
   | 'spec'
