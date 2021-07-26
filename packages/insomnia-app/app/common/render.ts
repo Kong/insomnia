@@ -394,7 +394,7 @@ export async function getRenderContext(
 
   baseContext.getEnvironmentId = () => environmentId;
 
-  // It is possible for a space to not exist because this 
+  // It is possible for a space to not exist because this code path can be reached via Inso/insomnia-send-request which has no concept of a space.
   baseContext.getSpaceId = () => space?._id;
 
   // Generate the context we need to render
