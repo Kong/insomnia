@@ -25,7 +25,6 @@ import LoginModal from '../modals/login-modal';
 import SyncBranchesModal from '../modals/sync-branches-modal';
 import SyncDeleteModal from '../modals/sync-delete-modal';
 import SyncHistoryModal from '../modals/sync-history-modal';
-import SyncShareModal from '../modals/sync-share-modal';
 import SyncStagingModal from '../modals/sync-staging-modal';
 import Tooltip from '../tooltip';
 
@@ -194,10 +193,6 @@ class SyncDropdown extends PureComponent<Props, State> {
         await this._handlePushChanges();
       },
     });
-  }
-
-  static _handleShowSharingModal() {
-    showModal(SyncShareModal);
   }
 
   static _handleShowLoginModal() {
@@ -522,11 +517,6 @@ class SyncDropdown extends PureComponent<Props, State> {
               <i className="fa fa-sign-in" /> Log In
             </DropdownItem>
           )}
-
-          <DropdownItem onClick={SyncDropdown._handleShowSharingModal}>
-            <i className="fa fa-users" />
-            Share Settings
-          </DropdownItem>
 
           <DropdownItem onClick={this._handleShowBranchesModal}>
             <i className="fa fa-code-fork" />
