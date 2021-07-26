@@ -1,13 +1,26 @@
-import React, { PureComponent, RefObject } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
+import fs from 'fs';
+import HTTPSnippet from 'httpsnippet';
+import * as mime from 'mime-types';
+import * as path from 'path';
+import React, { PureComponent, RefObject } from 'react';
+import ReactDOM from 'react-dom';
+import { connect } from 'react-redux';
+import { Action, bindActionCreators, Dispatch } from 'redux';
+import { parse as urlParse } from 'url';
+
+import { trackSegmentEvent } from '../../common/analytics';
 import {
-  AUTOBIND_CFG,
   ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
   DEFAULT_PANE_HEIGHT,
   DEFAULT_PANE_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
   getAppName,
+  isDevelopment,
   MAX_PANE_HEIGHT,
   MAX_PANE_WIDTH,
   MAX_SIDEBAR_REMS,
@@ -15,37 +28,78 @@ import {
   MIN_PANE_WIDTH,
   MIN_SIDEBAR_REMS,
   PREVIEW_MODE_SOURCE,
-  ACTIVITY_MIGRATION,
   SortOrder,
 } from '../../common/constants';
-import fs from 'fs';
-import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
-import { parse as urlParse } from 'url';
-import HTTPSnippet from 'httpsnippet';
-import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import { Action, bindActionCreators, Dispatch } from 'redux';
-import Wrapper from '../components/wrapper';
-import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
-import Toast from '../components/toast';
-import CookiesModal from '../components/modals/cookies-modal';
-import RequestSwitcherModal from '../components/modals/request-switcher-modal';
-import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { database as db } from '../../common/database';
+import { getDataDirectory } from '../../common/electron-helpers';
+import { getWorkspaceLabel } from '../../common/get-workspace-label';
+import { exportHarRequest } from '../../common/har';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
 import {
-  importUri,
+  debounce,
+  generateId,
+  getContentDispositionHeader,
+} from '../../common/misc';
+import * as render from '../../common/render';
+import { RenderContextAndKeys } from '../../common/render';
+import { sortMethodMap } from '../../common/sorting';
+import * as models from '../../models';
+import { isEnvironment } from '../../models/environment';
+import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
+import { GrpcRequestMeta } from '../../models/grpc-request-meta';
+import getWorkspaceName from '../../models/helpers/get-workspace-name';
+import * as requestOperations from '../../models/helpers/request-operations';
+import * as workspaceOperations from '../../models/helpers/workspace-operations';
+import { Request, updateMimeType } from '../../models/request';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
+import { RequestMeta } from '../../models/request-meta';
+import { Response } from '../../models/response';
+import { isCollection, isWorkspace } from '../../models/workspace';
+import { WorkspaceMeta } from '../../models/workspace-meta';
+import * as network from '../../network/network';
+import * as plugins from '../../plugins';
+import * as themes from '../../plugins/misc';
+import { fsClient } from '../../sync/git/fs-client';
+import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR, GitVCS } from '../../sync/git/git-vcs';
+import { NeDBClient } from '../../sync/git/ne-db-client';
+import { routableFSClient } from '../../sync/git/routable-fs-client';
+import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
+import { VCS } from '../../sync/vcs/vcs';
+import * as templating from '../../templating/index';
+import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
+import { getKeys } from '../../templating/utils';
+import ErrorBoundary from '../components/error-boundary';
+import KeydownBinder from '../components/keydown-binder';
+import AskModal from '../components/modals/ask-modal';
+import CookiesModal from '../components/modals/cookies-modal';
+import GenerateCodeModal from '../components/modals/generate-code-modal';
+import { showAlert, showModal, showPrompt } from '../components/modals/index';
+import RequestCreateModal from '../components/modals/request-create-modal';
+import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
+import RequestSettingsModal from '../components/modals/request-settings-modal';
+import RequestSwitcherModal from '../components/modals/request-switcher-modal';
+import { showSelectModal } from '../components/modals/select-modal';
+import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import SyncMergeModal from '../components/modals/sync-merge-modal';
+import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
+import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
+import Toast from '../components/toast';
+import Wrapper from '../components/wrapper';
+import withDragDropContext from '../context/app/drag-drop-context';
+import { GrpcProvider } from '../context/grpc';
+import { RootState } from '../redux/modules';
+import { initialize } from '../redux/modules/entities';
+import {
+  exportRequestsToFile,
+  goToNextActivity,
   loadRequestStart,
   loadRequestStop,
   newCommand,
-  setActiveWorkspace,
   setActiveActivity,
-  goToNextActivity,
-  importFile,
-  importClipBoard,
-  exportRequestsToFile,
+  setActiveWorkspace,
 } from '../redux/modules/global';
-import { initialize } from '../redux/modules/entities';
-import { database as db } from '../../common/database';
-import * as models from '../../models';
+import { importUri } from '../redux/modules/import';
 import {
   selectActiveCookieJar,
   selectActiveEnvironment,
@@ -71,59 +125,6 @@ import {
   selectWorkspacesForActiveSpace,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
-import RequestCreateModal from '../components/modals/request-create-modal';
-import GenerateCodeModal from '../components/modals/generate-code-modal';
-import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
-import RequestSettingsModal from '../components/modals/request-settings-modal';
-import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
-import * as network from '../../network/network';
-import {
-  debounce,
-  generateId,
-  getContentDispositionHeader,
-} from '../../common/misc';
-import { getDataDirectory } from '../../common/electron-helpers';
-import * as mime from 'mime-types';
-import * as path from 'path';
-import * as render from '../../common/render';
-import { getKeys } from '../../templating/utils';
-import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import { exportHarRequest } from '../../common/har';
-import { hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
-import KeydownBinder from '../components/keydown-binder';
-import ErrorBoundary from '../components/error-boundary';
-import * as plugins from '../../plugins';
-import * as templating from '../../templating/index';
-import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
-import AskModal from '../components/modals/ask-modal';
-import { Request, updateMimeType } from '../../models/request';
-import * as themes from '../../plugins/misc';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { VCS } from '../../sync/vcs/vcs';
-import SyncMergeModal from '../components/modals/sync-merge-modal';
-import { GitVCS, GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INTERNAL_DIR } from '../../sync/git/git-vcs';
-import { NeDBClient } from '../../sync/git/ne-db-client';
-import { fsClient } from '../../sync/git/fs-client';
-import { routableFSClient } from '../../sync/git/routable-fs-client';
-import { getWorkspaceLabel } from '../../common/get-workspace-label';
-import * as requestOperations from '../../models/helpers/request-operations';
-import { GrpcProvider } from '../context/grpc';
-import { sortMethodMap } from '../../common/sorting';
-import withDragDropContext from '../context/app/drag-drop-context';
-import { trackSegmentEvent } from '../../common/analytics';
-import getWorkspaceName from '../../models/helpers/get-workspace-name';
-import * as workspaceOperations from '../../models/helpers/workspace-operations';
-import { isCollection, isWorkspace } from '../../models/workspace';
-import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
-import { isEnvironment } from '../../models/environment';
-import { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import { RequestMeta } from '../../models/request-meta';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { WorkspaceMeta } from '../../models/workspace-meta';
-import { Response } from '../../models/response';
-import { RenderContextAndKeys } from '../../common/render';
-import { RootState } from '../redux/modules';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -528,13 +529,12 @@ class App extends PureComponent<AppProps, State> {
 
   async _fetchRenderContext() {
     const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
-    const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    const ancestors = await db.withAncestors(activeRequest || activeWorkspace || null, [
-      models.request.type,
-      models.requestGroup.type,
-      models.workspace.type,
-    ]);
-    return render.getRenderContext(activeRequest, environmentId, ancestors);
+    const ancestors = await render.getRenderContextAncestors(activeRequest || activeWorkspace);
+    return render.getRenderContext({
+      request: activeRequest || undefined,
+      environmentId: activeEnvironment?._id,
+      ancestors,
+    });
   }
 
   async _handleGetRenderContext(): Promise<RenderContextAndKeys> {
@@ -1169,7 +1169,7 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Check on VCS things
-    const { activeWorkspace, activeGitRepository } = this.props;
+    const { activeWorkspace, activeSpace, activeGitRepository } = this.props;
     const changingWorkspace = prevProps.activeWorkspace?._id !== activeWorkspace?._id;
 
     // Update VCS if needed
@@ -1178,16 +1178,16 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Update Git VCS if needed
-    const nextGit = activeGitRepository;
-    const prevGit = prevProps.activeGitRepository;
+    const changingSpace = prevProps.activeSpace?._id !== activeSpace?._id;
+    const changingGit = prevProps.activeGitRepository?._id !== activeGitRepository?._id;
 
-    if (changingWorkspace || prevGit?._id !== nextGit?._id) {
+    if (changingWorkspace || changingSpace || changingGit) {
       this._updateGitVCS();
     }
   }
 
   async _updateGitVCS() {
-    const { activeGitRepository, activeWorkspace } = this.props;
+    const { activeGitRepository, activeWorkspace, activeSpace } = this.props;
 
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
@@ -1207,7 +1207,7 @@ class App extends PureComponent<AppProps, State> {
       );
 
       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-      const neDbClient = NeDBClient.createClient(activeWorkspace._id);
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeSpace._id);
 
       /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
       const gitDataClient = fsClient(baseDir);
@@ -1259,10 +1259,6 @@ class App extends PureComponent<AppProps, State> {
   async _updateVCS() {
     const { activeWorkspace } = this.props;
 
-    if (!activeWorkspace) {
-      return;
-    }
-
     const lock = generateId();
     this._updateVCSLock = lock;
 
@@ -1288,7 +1284,11 @@ class App extends PureComponent<AppProps, State> {
       });
     }
 
-    await vcs.switchProject(activeWorkspace._id);
+    if (activeWorkspace) { 
+      await vcs.switchProject(activeWorkspace._id);
+    } else {
+      vcs.clearProject();
+    }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
     if (this._updateVCSLock === lock) {
@@ -1349,6 +1349,56 @@ class App extends PureComponent<AppProps, State> {
     ipcRenderer.on('toggle-preferences', () => {
       App._handleShowSettingsModal();
     });
+
+    if (isDevelopment()) {
+      ipcRenderer.on('clear-model', () => {
+        const options = models
+          .types()
+          .filter(t => t !== models.settings.type) // don't clear settings
+          .map(t => ({ name: t, value: t }));
+
+        showSelectModal({
+          title: 'Clear a model',
+          message: 'Select a model to clear; this operation cannot be undone.',
+          value: options[0].value,
+          options,
+          onDone: async type => {
+            if (type) {
+              const bufferId = await db.bufferChanges();
+              console.log(`[developer] clearing all "${type}" entities`);
+              const allEntities = await db.all(type);
+              await db.batchModifyDocs({ remove: allEntities });
+              db.flushChanges(bufferId);
+            }
+          },
+        });
+      });
+
+      ipcRenderer.on('clear-all-models', () => {
+        showModal(AskModal, {
+          title: 'Clear all models',
+          message: 'Are you sure you want to clear all models? This operation cannot be undone.',
+          yesText: 'Yes',
+          noText: 'No',
+          onDone: async yes => {
+            if (yes) {
+              const bufferId = await db.bufferChanges();
+              const promises = models
+                .types()
+                .filter(t => t !== models.settings.type) // don't clear settings
+                .reverse().map(async type => {
+                  console.log(`[developer] clearing all "${type}" entities`);
+                  const allEntities = await db.all(type);
+                  await db.batchModifyDocs({ remove: allEntities });
+                });
+              await Promise.all(promises);
+              db.flushChanges(bufferId);
+            }
+          },
+        });
+      });
+    }
+
     ipcRenderer.on('reload-plugins', this._handleReloadPlugins);
     ipcRenderer.on('toggle-preferences-shortcuts', () => {
       App._handleShowSettingsModal(TAB_INDEX_SHORTCUTS);
@@ -1372,7 +1422,7 @@ class App extends PureComponent<AppProps, State> {
       'drop',
       async e => {
         e.preventDefault();
-        const { activeWorkspace, handleImportUriToWorkspace } = this.props;
+        const { activeWorkspace, handleImportUri } = this.props;
 
         if (!activeWorkspace) {
           return;
@@ -1397,7 +1447,7 @@ class App extends PureComponent<AppProps, State> {
           ),
           addCancel: true,
         });
-        handleImportUriToWorkspace(uri, { workspaceId: activeWorkspace?._id });
+        handleImportUri(uri, { workspaceId: activeWorkspace?._id });
       },
       false,
     );
@@ -1755,15 +1805,13 @@ function mapStateToProps(state: RootState) {
 
 const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   const {
-    importUri: handleImportUriToWorkspace,
+    importUri: handleImportUri,
     loadRequestStart: handleStartLoading,
     loadRequestStop: handleStopLoading,
     setActiveWorkspace: handleSetActiveWorkspace,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
     goToNextActivity: handleGoToNextActivity,
-    importFile: handleImportFileToWorkspace,
-    importClipBoard: handleImportClipBoardToWorkspace,
     exportRequestsToFile: handleExportRequestsToFile,
     initialize: handleInitializeEntities,
   } = bindActionCreators({
@@ -1774,21 +1822,17 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     setActiveWorkspace,
     setActiveActivity,
     goToNextActivity,
-    importFile,
-    importClipBoard,
     exportRequestsToFile,
     initialize,
   }, dispatch);
   return {
     handleCommand,
-    handleImportUriToWorkspace,
+    handleImportUri,
     handleSetActiveWorkspace,
     handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,
     handleGoToNextActivity,
-    handleImportFileToWorkspace,
-    handleImportClipBoardToWorkspace,
     handleExportRequestsToFile,
     handleInitializeEntities,
     handleMoveDoc: _moveDoc, // TODO this doesn't use dispatch.. it's unclear why it needs to be here.

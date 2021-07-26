@@ -1,25 +1,29 @@
-import configureMockStore from 'redux-mock-store';
-import thunk from 'redux-thunk';
-import { globalBeforeEach } from '../../../../__jest__/before-each';
-import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
-import * as models from '../../../../models';
-import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
-import { ACTIVITY_SPEC } from '../../../../common/constants';
-import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
-import { MemClient } from '../../../../sync/git/mem-client';
-import { generateId } from '../../../../common/misc';
-import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
+import { createBuilder } from '@develohpanda/fluent-builder';
+import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
 import React, { Fragment } from 'react';
-import { cloneGitRepository, setupGitRepository } from '../git';
+import configureMockStore from 'redux-mock-store';
+import thunk from 'redux-thunk';
+import { mocked } from 'ts-jest/utils';
+
+import { globalBeforeEach } from '../../../../__jest__/before-each';
+import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
+import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { ACTIVITY_SPEC } from '../../../../common/constants';
+import * as models from '../../../../models';
+import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
+import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
+import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
+import { MemClient } from '../../../../sync/git/mem-client';
+import { shallowClone as _shallowClone } from '../../../../sync/git/shallow-clone';
 import {
   getAndClearShowAlertMockArgs,
   getAndClearShowErrorMockArgs,
   getAndClearShowModalMockArgs,
   getAndClearShowPromptMockArgs,
 } from '../../../../test-utils';
-import { shallowClone } from '../../../../sync/git/shallow-clone';
-import reduxStateForTest from '../../../../__jest__/redux-state-for-test';
+import { cloneGitRepository, setupGitRepository } from '../git';
+import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');
@@ -28,12 +32,18 @@ jest.mock('../../../../common/analytics');
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
+const shallowClone = mocked(_shallowClone);
+
+const gitRepoBuilder = createBuilder(gitRepositorySchema);
+
 describe('git', () => {
   let store;
   beforeEach(async () => {
     await globalBeforeEach();
     store = mockStore(await reduxStateForTest());
+    gitRepoBuilder.reset();
   });
+
   // Check loading events
   afterEach(() => {
     const actions = store.getActions();
@@ -47,7 +57,7 @@ describe('git', () => {
   });
 
   describe('cloneGitRepository', () => {
-    const dispatchCloneAndSubmitSettings = async (memClient: Record<string, any>, uri?: string) => {
+    const dispatchCloneAndSubmitSettings = async (memClient: PromiseFsClient, uri?: string) => {
       const createFsClientMock = jest.fn().mockReturnValue(memClient);
       // dispatch clone action
       store.dispatch(
@@ -56,9 +66,9 @@ describe('git', () => {
         }),
       );
       const { onSubmitEdits } = getAndClearShowModalMockArgs();
+
       // Submit GitRepositorySettingsModal with repo settings
-      const repoSettings = models.gitRepository.init();
-      repoSettings._id = generateId(models.gitRepository.prefix);
+      const repoSettings = gitRepoBuilder.build();
 
       if (uri) {
         repoSettings.uri = uri;
@@ -71,7 +81,7 @@ describe('git', () => {
       };
     };
 
-    const shouldPromptToCreateWorkspace = async memClient => {
+    const shouldPromptToCreateWorkspace = async (memClient: PromiseFsClient) => {
       const { repoSettings } = await dispatchCloneAndSubmitSettings(memClient);
       expect(trackEvent).toHaveBeenCalledWith('Git', 'Clone');
       // show alert asking to create a document
@@ -88,7 +98,7 @@ describe('git', () => {
       const promptArgs = getAndClearShowPromptMockArgs();
       expect(promptArgs.title).toBe('Create New Design Document');
       // Submit new design doc name
-      await promptArgs.onComplete('name');
+      await promptArgs.onComplete?.('name');
       // Ensure workspace created
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
@@ -97,7 +107,7 @@ describe('git', () => {
       expect(workspace.scope).toBe(WorkspaceScopeKeys.design);
       // Ensure git repo is linked
       const meta = await models.workspaceMeta.getByParentId(workspace._id);
-      expect(meta.gitRepositoryId).toBe(repoSettings._id);
+      expect(meta?.gitRepositoryId).toBe(repoSettings._id);
       // Ensure tracking events
       expect(trackSegmentEvent).toHaveBeenCalledWith('Document Created');
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
@@ -194,7 +204,7 @@ describe('git', () => {
     it('should fail if exception during clone and not try again if uri ends with .git', async () => {
       const memClient = MemClient.createClient();
       const err = new Error('some error');
-      (shallowClone as jest.Mock).mockRejectedValue(err);
+      shallowClone.mockRejectedValue(err);
       await dispatchCloneAndSubmitSettings(memClient, 'https://git.com.git');
       const alertArgs = getAndClearShowAlertMockArgs();
       expect(alertArgs.title).toBe('Error Cloning Repository');
@@ -213,9 +223,9 @@ describe('git', () => {
     it('should show combined error if clone with and without .git suffix fails', async () => {
       const memClient = MemClient.createClient();
       const firstError = new Error('first error');
-      (shallowClone as jest.Mock).mockRejectedValueOnce(firstError);
+      shallowClone.mockRejectedValueOnce(firstError);
       const secondError = new Error('second error');
-      (shallowClone as jest.Mock).mockRejectedValueOnce(secondError);
+      shallowClone.mockRejectedValueOnce(secondError);
       const uri = 'https://git.com';
       const dotGitUri = `${uri}.git`;
       await dispatchCloneAndSubmitSettings(memClient, uri);
@@ -237,7 +247,7 @@ describe('git', () => {
       expect(shallowClone).toHaveBeenCalledTimes(2);
     });
 
-    const createValidRepoFiles = async memClient => {
+    const createValidRepoFiles = async (memClient: PromiseFsClient) => {
       // Create workspace and apiSpec dirs
       await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
       await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
@@ -282,8 +292,8 @@ describe('git', () => {
       const { workspace } = await createValidRepoFiles(memClient);
       // Mock clone
       const err = new Error('some error');
-      (shallowClone as jest.Mock).mockRejectedValueOnce(err);
-      (shallowClone as jest.Mock).mockResolvedValueOnce();
+      shallowClone.mockRejectedValueOnce(err);
+      shallowClone.mockResolvedValueOnce();
       // Dispatch
       const uri = 'https://git.com/abc/def';
       const { createFsClientMock, repoSettings } = await dispatchCloneAndSubmitSettings(
@@ -315,8 +325,8 @@ describe('git', () => {
       );
       // Because second clone succeeds, store the updated URL
       const createdRepo = await models.gitRepository.getById(repoSettings._id);
-      expect(createdRepo.needsFullClone).toBe(true);
-      expect(createdRepo.uri).toBe(`${uri}.git`);
+      expect(createdRepo?.needsFullClone).toBe(true);
+      expect(createdRepo?.uri).toBe(`${uri}.git`);
     });
 
     it('should import workspace and apiSpec', async () => {
@@ -338,17 +348,13 @@ describe('git', () => {
       expect(clonedApiSpec).toStrictEqual(apiSpec);
       // Ensure git repo is linked
       const meta = await models.workspaceMeta.getByParentId(workspace._id);
-      expect(meta.gitRepositoryId).toBe(repoSettings._id);
+      expect(meta?.gitRepositoryId).toBe(repoSettings._id);
       const createdRepo = await models.gitRepository.getById(repoSettings._id);
-      expect(createdRepo.needsFullClone).toBe(true);
+      expect(createdRepo?.needsFullClone).toBe(true);
       // Ensure workspace is enabled
       expect(store.getActions()).toEqual([
         {
           type: LOAD_START,
-        },
-        {
-          type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspace._id,
         },
         {
           type: LOAD_STOP,
@@ -359,7 +365,7 @@ describe('git', () => {
 
   describe('setupGitRepository', () => {
     const dispatchSetupAndSubmitSettings = async (
-      memClient: Record<string, any>,
+      memClient: PromiseFsClient,
       workspace: Workspace,
     ) => {
       // dispatch clone action
@@ -371,8 +377,7 @@ describe('git', () => {
       );
       const { onSubmitEdits } = getAndClearShowModalMockArgs();
       // Submit GitRepositorySettingsModal with repo settings
-      const repoSettings = models.gitRepository.init();
-      repoSettings._id = generateId(models.gitRepository.prefix);
+      const repoSettings = gitRepoBuilder.build();
       await onSubmitEdits(repoSettings);
       return repoSettings;
     };
@@ -383,7 +388,7 @@ describe('git', () => {
         scope: WorkspaceScopeKeys.design,
       });
       const err = new Error('some error');
-      (shallowClone as jest.Mock).mockRejectedValue(err);
+      shallowClone.mockRejectedValue(err);
       await dispatchSetupAndSubmitSettings(memClient, workspace);
       const errorArgs = getAndClearShowErrorMockArgs();
       expect(errorArgs.title).toBe('Error Cloning Repository');
@@ -435,9 +440,9 @@ describe('git', () => {
       });
       const repo = await dispatchSetupAndSubmitSettings(memClient, workspace);
       const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
-      expect(wMeta.gitRepositoryId).toBe(repo._id);
+      expect(wMeta?.gitRepositoryId).toBe(repo._id);
       const createdRepo = await models.gitRepository.getById(repo._id);
-      expect(createdRepo.needsFullClone).toBe(true);
+      expect(createdRepo?.needsFullClone).toBe(true);
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
         {
@@ -457,9 +462,9 @@ describe('git', () => {
       await memClient.promises.mkdir(GIT_INSOMNIA_DIR);
       const repo = await dispatchSetupAndSubmitSettings(memClient, workspace);
       const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
-      expect(wMeta.gitRepositoryId).toBe(repo._id);
+      expect(wMeta?.gitRepositoryId).toBe(repo._id);
       const createdRepo = await models.gitRepository.getById(repo._id);
-      expect(createdRepo.needsFullClone).toBe(true);
+      expect(createdRepo?.needsFullClone).toBe(true);
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
         {
@@ -480,9 +485,9 @@ describe('git', () => {
       await memClient.promises.mkdir(path.join(GIT_INSOMNIA_DIR, models.workspace.type));
       const repo = await dispatchSetupAndSubmitSettings(memClient, workspace);
       const wMeta = await models.workspaceMeta.getByParentId(workspace._id);
-      expect(wMeta.gitRepositoryId).toBe(repo._id);
+      expect(wMeta?.gitRepositoryId).toBe(repo._id);
       const createdRepo = await models.gitRepository.getById(repo._id);
-      expect(createdRepo.needsFullClone).toBe(true);
+      expect(createdRepo?.needsFullClone).toBe(true);
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
         {

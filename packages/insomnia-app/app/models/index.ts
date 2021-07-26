@@ -1,29 +1,3 @@
-import * as _apiSpec from './api-spec';
-import * as _clientCertificate from './client-certificate';
-import * as _cookieJar from './cookie-jar';
-import * as _environment from './environment';
-import * as _gitRepository from './git-repository';
-import * as _oAuth2Token from './o-auth-2-token';
-import * as _pluginData from './plugin-data';
-import * as _request from './request';
-import * as _requestGroup from './request-group';
-import * as _requestGroupMeta from './request-group-meta';
-import * as _requestMeta from './request-meta';
-import * as _requestVersion from './request-version';
-import * as _response from './response';
-import * as _settings from './settings';
-import * as _space from './space';
-import * as _stats from './stats';
-import * as _unitTest from './unit-test';
-import * as _unitTestResult from './unit-test-result';
-import * as _unitTestSuite from './unit-test-suite';
-import * as _protoFile from './proto-file';
-import * as _protoDirectory from './proto-directory';
-import * as _grpcRequest from './grpc-request';
-import * as _grpcRequestMeta from './grpc-request-meta';
-import * as _workspace from './workspace';
-import * as _workspaceMeta from './workspace-meta';
-import { generateId, pluralize } from '../common/misc';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -37,6 +11,32 @@ import {
   EXPORT_TYPE_UNIT_TEST_SUITE,
   EXPORT_TYPE_WORKSPACE,
 } from '../common/constants';
+import { generateId, pluralize } from '../common/misc';
+import * as _apiSpec from './api-spec';
+import * as _clientCertificate from './client-certificate';
+import * as _cookieJar from './cookie-jar';
+import * as _environment from './environment';
+import * as _gitRepository from './git-repository';
+import * as _grpcRequest from './grpc-request';
+import * as _grpcRequestMeta from './grpc-request-meta';
+import * as _oAuth2Token from './o-auth-2-token';
+import * as _pluginData from './plugin-data';
+import * as _protoDirectory from './proto-directory';
+import * as _protoFile from './proto-file';
+import * as _request from './request';
+import * as _requestGroup from './request-group';
+import * as _requestGroupMeta from './request-group-meta';
+import * as _requestMeta from './request-meta';
+import * as _requestVersion from './request-version';
+import * as _response from './response';
+import * as _settings from './settings';
+import * as _space from './space';
+import * as _stats from './stats';
+import * as _unitTest from './unit-test';
+import * as _unitTestResult from './unit-test-result';
+import * as _unitTestSuite from './unit-test-suite';
+import * as _workspace from './workspace';
+import * as _workspaceMeta from './workspace-meta';
 
 export interface BaseModel {
   _id: string;
@@ -44,7 +44,7 @@ export interface BaseModel {
   // TSCONVERSION -- parentId is always required for all models, except 4:
   //   - Stats, Settings, and Space, which never have a parentId
   //   - Workspace optionally has a parentId (which will be the id of a Space)
-  parentId: string;
+  parentId: string; // or null
   modified: number;
   created: number;
   isPrivate: boolean;

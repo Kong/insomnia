@@ -1,12 +1,13 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import GraphQLExplorerField from './graph-ql-explorer-field';
-import GraphQLExplorerType from './graph-ql-explorer-type';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
-import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import GraphQLExplorerEnum from './graph-ql-explorer-enum';
+import GraphQLExplorerField from './graph-ql-explorer-field';
+import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import GraphQLExplorerType from './graph-ql-explorer-type';
 
 interface Props {
   handleClose: () => void;

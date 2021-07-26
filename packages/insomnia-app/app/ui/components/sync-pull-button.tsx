@@ -1,14 +1,15 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../common/constants';
+import { Space } from '../../models/space';
 import { VCS } from '../../sync/vcs/vcs';
 import { showError } from './modals';
-import { Space } from '../../models/space';
 
 interface Props {
   vcs: VCS;
   branch: string;
-  space?: Space;
+  space: Space;
   onPull: (...args: any[]) => any;
   disabled?: boolean;
   className?: string;
@@ -39,7 +40,7 @@ class SyncPullButton extends PureComponent<Props, State> {
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
       await newVCS.checkout([], branch);
-      await newVCS.pull([], space?.remoteId);
+      await newVCS.pull([], space.remoteId);
     } catch (err) {
       showError({
         title: 'Pull Error',

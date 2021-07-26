@@ -1,20 +1,36 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
 import styled, { css } from 'styled-components';
 
-export interface DropdownItemProps {
+interface ControlledDropdown<T> {
+  value: T;
+  onClick?: (value: T, event: React.MouseEvent<HTMLButtonElement>) => void | Promise<void>;
+}
+
+interface UncontrolledDropdown {
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+}
+
+const isControlledInput = <T extends unknown>(dropdown: DropdownItemProps<T>): dropdown is ControlledDropdown<T> => (
+  Object.prototype.hasOwnProperty.call(dropdown, 'value')
+);
+
+const isUncontrolledInput = <T extends unknown>(dropdown: DropdownItemProps<T>): dropdown is UncontrolledDropdown => (
+  !isControlledInput(dropdown)
+);
+
+export type DropdownItemProps<T = string> = {
   buttonClass?: string,
   stayOpenAfterClick?: boolean,
-  value?: any,
   disabled?: boolean,
-  onClick?: Function,
   children?: ReactNode,
   icon?: ReactNode,
   right?: ReactNode,
   className?: string,
   color?: string,
   selected?: boolean,
-}
+} & (ControlledDropdown<T> | UncontrolledDropdown)
 
 const StyledButton = styled.button<{ selected?: boolean }>`
   display: flex;
@@ -86,7 +102,7 @@ const StyledIconContainer = styled.div`
 `;
 
 @autoBindMethodsForReact
-export class DropdownItem extends PureComponent<DropdownItemProps> {
+export class DropdownItem<T> extends PureComponent<DropdownItemProps<T>> {
   _handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
 
@@ -98,10 +114,10 @@ export class DropdownItem extends PureComponent<DropdownItemProps> {
       return;
     }
 
-    if (this.props.hasOwnProperty('value')) {
-      onClick(this.props.value, event);
-    } else {
-      onClick(event);
+    if (isControlledInput<T>(this.props)) {
+      this.props.onClick?.(this.props.value, event);
+    } else if (isUncontrolledInput(this.props)) {
+      this.props.onClick?.(event);
     }
   }
 
@@ -126,7 +142,7 @@ export class DropdownItem extends PureComponent<DropdownItemProps> {
     );
     return (
       <StyledButton
-        className={buttonClass}
+        className={classnames(className, buttonClass)}
         type="button"
         onClick={this._handleClick}
         disabled={disabled}

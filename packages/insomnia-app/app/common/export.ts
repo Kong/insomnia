@@ -1,9 +1,22 @@
-import { Insomnia4Data } from 'insomnia-importers';
 import clone from 'clone';
-import { database as db } from './database';
-import * as har from './har';
+import { Insomnia4Data } from 'insomnia-importers';
+import YAML from 'yaml';
+
+import { isApiSpec } from '../models/api-spec';
+import { isCookieJar } from '../models/cookie-jar';
+import { isEnvironment } from '../models/environment';
+import { isGrpcRequest } from '../models/grpc-request';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
+import { isProtoDirectory } from '../models/proto-directory';
+import { isProtoFile } from '../models/proto-file';
+import { isRequest } from '../models/request';
+import { isRequestGroup } from '../models/request-group';
+import { isUnitTest } from '../models/unit-test';
+import { isUnitTestSuite } from '../models/unit-test-suite';
+import { isWorkspace, Workspace } from '../models/workspace';
+import { resetKeys } from '../sync/ignore-keys';
+import { trackEvent } from './analytics';
 import {
   EXPORT_TYPE_API_SPEC,
   EXPORT_TYPE_COOKIE_JAR,
@@ -18,19 +31,8 @@ import {
   EXPORT_TYPE_WORKSPACE,
   getAppVersion,
 } from './constants';
-import YAML from 'yaml';
-import { trackEvent } from './analytics';
-import { isGrpcRequest } from '../models/grpc-request';
-import { isRequest } from '../models/request';
-import { isRequestGroup } from '../models/request-group';
-import { isProtoDirectory } from '../models/proto-directory';
-import { isProtoFile } from '../models/proto-file';
-import { isWorkspace, Workspace } from '../models/workspace';
-import { isApiSpec } from '../models/api-spec';
-import { isCookieJar } from '../models/cookie-jar';
-import { isEnvironment } from '../models/environment';
-import { isUnitTestSuite } from '../models/unit-test-suite';
-import { isUnitTest } from '../models/unit-test';
+import { database as db } from './database';
+import * as har from './har';
 
 const EXPORT_FORMAT = 4;
 
@@ -46,9 +48,7 @@ export async function exportWorkspacesHAR(
   workspaces: Workspace[],
   includePrivateDocs = false,
 ) {
-  // regarding `[null]`, see the comment here in `exportWorkspacesData`
-  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
-  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(isRequest);
   return exportRequestsHAR(requests, includePrivateDocs);
@@ -122,9 +122,7 @@ export async function exportWorkspacesData(
   includePrivateDocs: boolean,
   format: 'json' | 'yaml',
 ) {
-  // Semantically, if an empty array is passed, then nothing will be returned.  What an empty array really signifies is "no parent", which, at the database layer is the same as "parentId === null", hence we add null in ourselves.
-  const rootDocs = workspaces.length === 0 ? [null] : workspaces;
-  const promises = rootDocs.map(getDocWithDescendants(includePrivateDocs));
+  const promises = workspaces.map(getDocWithDescendants(includePrivateDocs));
   const docs = (await Promise.all(promises)).flat();
   const requests = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
   return exportRequestsData(requests, includePrivateDocs, format);
@@ -210,6 +208,8 @@ export async function exportRequestsData(
       if (isWorkspace(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_WORKSPACE;
+        // reset the parentId of a workspace
+        resetKeys(d);
       } else if (isCookieJar(d)) {
         // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
         d._type = EXPORT_TYPE_COOKIE_JAR;

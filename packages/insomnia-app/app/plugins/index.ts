@@ -1,18 +1,19 @@
-import mkdirp from 'mkdirp';
-import appConfig from '../../config/config.json';
-import * as models from '../models';
 import fs from 'fs';
+import mkdirp from 'mkdirp';
 import path from 'path';
+
+import appConfig from '../../config/config.json';
 import { PLUGIN_PATH } from '../common/constants';
 import { resolveHomePath } from '../common/misc';
-import { showError } from '../ui/components/modals/index';
-import type { PluginTemplateTag } from '../templating/extensions/index';
-import type { PluginTheme } from './misc';
-import type { RequestGroup } from '../models/request-group';
+import * as models from '../models';
+import { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
+import type { RequestGroup } from '../models/request-group';
 import type { PluginConfig, PluginConfigMap } from '../models/settings';
 import type { Workspace } from '../models/workspace';
-import { GrpcRequest } from '../models/grpc-request';
+import type { PluginTemplateTag } from '../templating/extensions/index';
+import { showError } from '../ui/components/modals/index';
+import type { PluginTheme } from './misc';
 
 export interface Module {
   templateTags?: PluginTemplateTag[],

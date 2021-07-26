@@ -1,27 +1,30 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import ReactDOM from 'react-dom';
-import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
-import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
+import React, { PureComponent } from 'react';
+import { DragSource, DropTarget } from 'react-dnd';
+import ReactDOM from 'react-dom';
+
+import { AUTOBIND_CFG, CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
+import { HotKeyRegistry } from '../../../common/hotkeys';
+import { getMethodOverrideHeader } from '../../../common/misc';
+import { HandleRender } from '../../../common/render';
+import { Environment } from '../../../models/environment';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import * as requestOperations from '../../../models/helpers/request-operations';
+import { Request } from '../../../models/request';
+import { RequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
 import Editable from '../base/editable';
 import Highlight from '../base/highlight';
-import MethodTag from '../tags/method-tag';
+import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
+import GrpcSpinner from '../grpc-spinner';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
-import { CONTENT_TYPE_GRAPHQL, AUTOBIND_CFG } from '../../../common/constants';
-import { getMethodOverrideHeader } from '../../../common/misc';
 import GrpcTag from '../tags/grpc-tag';
-import * as requestOperations from '../../../models/helpers/request-operations';
-import GrpcSpinner from '../grpc-spinner';
-import { Environment } from '../../../models/environment';
-import { RequestGroup } from '../../../models/request-group';
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { HotKeyRegistry } from '../../../common/hotkeys';
-import { HandleRender } from '../../../common/render';
+import MethodTag from '../tags/method-tag';
 
 interface Props {
+  activeSpace: Space;
   activeEnvironment?: Environment | null;
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
@@ -211,6 +214,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
       isPinned,
       request,
       requestGroup,
+      activeSpace,
     } = this.props;
     const { dragDirection } = this.state;
     let node;
@@ -282,6 +286,7 @@ class SidebarRequestRow extends PureComponent<Props, State> {
                 requestGroup={requestGroup}
                 hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions to have network capabilities
                 activeEnvironment={activeEnvironment}
+                activeSpace={activeSpace}
               />
             </div>
             {isPinned && (

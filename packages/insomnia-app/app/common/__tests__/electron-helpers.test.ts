@@ -2,6 +2,7 @@ import electron from 'electron';
 import { ESLint } from 'eslint';
 import { promises } from 'fs';
 import path from 'path';
+
 import { clickLink } from '../electron-helpers';
 const { readFile } = promises;
 

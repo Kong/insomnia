@@ -1,9 +1,10 @@
-import { generateId } from '../../../common/misc';
-import type { GrpcMethodDefinition } from '../../../network/grpc/method';
-import * as models from '../../../models';
-import * as protoLoader from '../../../network/grpc/proto-loader';
-import { ValueOf } from 'type-fest';
 import { ServiceError, StatusObject } from '@grpc/grpc-js';
+import { ValueOf } from 'type-fest';
+
+import { generateId } from '../../../common/misc';
+import * as models from '../../../models';
+import type { GrpcMethodDefinition } from '../../../network/grpc/method';
+import * as protoLoader from '../../../network/grpc/proto-loader';
 
 export interface GrpcMessage {
   id: string;

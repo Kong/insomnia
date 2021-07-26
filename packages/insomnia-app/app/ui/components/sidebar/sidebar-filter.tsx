@@ -1,10 +1,11 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
-import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import KeydownBinder from '../keydown-binder';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 import SidebarSortDropdown from './sidebar-sort-dropdown';
 

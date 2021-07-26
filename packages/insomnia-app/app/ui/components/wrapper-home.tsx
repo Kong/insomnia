@@ -1,15 +1,6 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import {
-  GlobalActivity,
-  ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
-  AUTOBIND_CFG,
-  isWorkspaceActivity,
-} from '../../common/constants';
-import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
-
 import 'swagger-ui-react/swagger-ui.css';
+
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   Breadcrumb,
   Button,
@@ -20,54 +11,54 @@ import {
   DropdownItem,
   Header,
 } from 'insomnia-components';
-import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
-import KeydownBinder from './keydown-binder';
-import { executeHotKey } from '../../common/hotkeys-listener';
-import { hotKeyRefs } from '../../common/hotkeys';
-import { showPrompt } from './modals';
-import * as models from '../../models';
-import TimeFromNow from './time-from-now';
-import Highlight from './base/highlight';
-import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import type {
-  HandleImportClipboardCallback,
-  HandleImportFileCallback,
-  HandleImportUriCallback,
-  WrapperProps,
-} from './wrapper';
-import Notice from './notice';
-import PageLayout from './page-layout';
-import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
-import coreLogo from '../images/insomnia-core-logo.png';
-import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
-import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import SettingsButton from './buttons/settings-button';
-import AccountDropdown from './dropdowns/account-dropdown';
-import { strings } from '../../common/strings';
-import { descendingNumberSort } from '../../common/sorting';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { createWorkspace } from '../redux/modules/workspace';
-import { cloneGitRepository } from '../redux/modules/git';
+
+import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
+import {
+  ACTIVITY_DEBUG,
+  ACTIVITY_SPEC,
+  AUTOBIND_CFG,
+  GlobalActivity,
+  isWorkspaceActivity,
+} from '../../common/constants';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
+import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
+import { descendingNumberSort } from '../../common/sorting';
+import { strings } from '../../common/strings';
+import * as models from '../../models';
+import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
-import { SpaceDropdown } from './dropdowns/space-dropdown';
 import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
+import coreLogo from '../images/insomnia-core-logo.png';
+import { cloneGitRepository } from '../redux/modules/git';
+import { ForceToWorkspace } from '../redux/modules/helpers';
+import { importClipBoard, importFile, importUri } from '../redux/modules/import';
+import { createWorkspace } from '../redux/modules/workspace';
+import Highlight from './base/highlight';
+import SettingsButton from './buttons/settings-button';
+import AccountDropdown from './dropdowns/account-dropdown';
+import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
+import { SpaceDropdown } from './dropdowns/space-dropdown';
+import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
+import KeydownBinder from './keydown-binder';
+import { showPrompt } from './modals';
+import Notice from './notice';
+import PageLayout from './page-layout';
+import TimeFromNow from './time-from-now';
+import type {
+  WrapperProps,
+} from './wrapper';
 
 interface RenderedCard {
   card: ReactNode;
   lastModifiedTimestamp?: number | null;
 }
 
-interface ReduxDispatchProps {
-  handleCreateWorkspace: typeof createWorkspace;
-  handleGitCloneWorkspace: typeof cloneGitRepository;
-}
-
-interface Props extends ReduxDispatchProps {
+interface Props extends ReturnType<typeof mapDispatchToProps> {
   wrapperProps: WrapperProps;
-  handleImportFile: HandleImportFileCallback;
-  handleImportUri: HandleImportUriCallback;
-  handleImportClipboard: HandleImportClipboardCallback;
 }
 
 interface State {
@@ -116,13 +107,13 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _handleImportFile() {
     this.props.handleImportFile({
-      forceToWorkspace: ForceToWorkspaceKeys.new,
+      forceToWorkspace: ForceToWorkspace.new,
     });
   }
 
   _handleImportClipBoard() {
     this.props.handleImportClipboard({
-      forceToWorkspace: ForceToWorkspaceKeys.new,
+      forceToWorkspace: ForceToWorkspace.new,
     });
   }
 
@@ -134,7 +125,7 @@ class WrapperHome extends PureComponent<Props, State> {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         this.props.handleImportUri(uri, {
-          forceToWorkspace: ForceToWorkspaceKeys.new,
+          forceToWorkspace: ForceToWorkspace.new,
         });
       },
     });
@@ -169,6 +160,7 @@ class WrapperHome extends PureComponent<Props, State> {
 
   renderCard(workspace: Workspace) {
     const {
+      activeSpace,
       apiSpecs,
       workspaceMetas,
     } = this.props.wrapperProps;
@@ -241,7 +233,7 @@ class WrapperHome extends PureComponent<Props, State> {
       );
     }
 
-    const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} />;
+    const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} space={activeSpace} />;
     const version = spec?.info?.version || '';
     let label: string = strings.collection.singular;
     let format = '';
@@ -421,9 +413,22 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 }
 
-const mapDispatchToProps = (dispatch): ReduxDispatchProps => ({
-  handleCreateWorkspace: bindActionCreators(createWorkspace, dispatch),
-  handleGitCloneWorkspace: bindActionCreators(cloneGitRepository, dispatch),
-});
+const mapDispatchToProps = (dispatch) => {
+  const bound = bindActionCreators({
+    createWorkspace,
+    cloneGitRepository,
+    importFile,
+    importClipBoard,
+    importUri,
+  }, dispatch);
+
+  return ({
+    handleCreateWorkspace: bound.createWorkspace,
+    handleGitCloneWorkspace: bound.cloneGitRepository,
+    handleImportFile: bound.importFile,
+    handleImportUri: bound.importUri,
+    handleImportClipboard: bound.importClipBoard,
+  });
+};
 
 export default connect(null, mapDispatchToProps)(WrapperHome);

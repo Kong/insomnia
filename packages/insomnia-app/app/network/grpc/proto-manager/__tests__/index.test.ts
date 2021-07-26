@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+
 import { globalBeforeEach } from '../../../../__jest__/before-each';
+import { database as db } from '../../../../common/database';
 import { selectFileOrFolder } from '../../../../common/select-file-or-folder';
-import * as protoManager from '../index';
-import { loadMethods as _loadMethods, loadMethodsFromPath as _loadMethodsFromPath } from '../../proto-loader';
 import * as models from '../../../../models';
 import * as modals from '../../../../ui/components/modals';
-import { database as db } from '../../../../common/database';
+import { loadMethods as _loadMethods, loadMethodsFromPath as _loadMethodsFromPath } from '../../proto-loader';
+import * as protoManager from '../index';
 
 const loadMethods = _loadMethods as jest.Mock;
 const loadMethodsFromPath = _loadMethodsFromPath as jest.Mock;

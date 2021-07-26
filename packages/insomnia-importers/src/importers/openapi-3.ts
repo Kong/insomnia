@@ -1,11 +1,12 @@
-import crypto from 'crypto';
-import { camelCase } from 'change-case';
 import SwaggerParser from '@apidevtools/swagger-parser';
+import { camelCase } from 'change-case';
+import crypto from 'crypto';
+import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 import { parse as urlParse } from 'url';
+import YAML from 'yaml';
+
 import { Authentication, Converter, ImportRequest } from '../entities';
 import { unthrowableParseJson } from '../utils';
-import YAML from 'yaml';
-import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
 
 export const id = 'openapi3';
 export const name = 'OpenAPI 3.0';

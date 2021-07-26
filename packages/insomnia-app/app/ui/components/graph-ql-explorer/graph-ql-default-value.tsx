@@ -1,6 +1,6 @@
-import React, { PureComponent } from 'react';
 import type { GraphQLField } from 'graphql';
 import { astFromValue, print } from 'graphql';
+import React, { PureComponent } from 'react';
 
 interface Props {
   field: GraphQLField<any, any>;

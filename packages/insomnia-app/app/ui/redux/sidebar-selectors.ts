@@ -1,9 +1,10 @@
-import type { BaseModel } from '../../models';
-import { isRequest, Request } from '../../models/request';
-import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
-import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { createSelector } from 'reselect';
+
 import { fuzzyMatchAll } from '../../common/misc';
+import type { BaseModel } from '../../models';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
+import { isRequest, Request } from '../../models/request';
+import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import {
   selectActiveWorkspace,
   selectActiveWorkspaceMeta,

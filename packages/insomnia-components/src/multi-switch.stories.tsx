@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import { MultiSwitch } from './multi-switch';
 
 export default {

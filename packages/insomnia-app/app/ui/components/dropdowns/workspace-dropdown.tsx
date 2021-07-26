@@ -1,37 +1,40 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import classnames from 'classnames';
-import Dropdown from '../base/dropdown/dropdown';
-import DropdownDivider from '../base/dropdown/dropdown-divider';
-import DropdownButton from '../base/dropdown/dropdown-button';
-import DropdownItem from '../base/dropdown/dropdown-item';
-import DropdownHint from '../base/dropdown/dropdown-hint';
-import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
-import { showError, showModal } from '../modals';
-import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
-import KeydownBinder from '../keydown-binder';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import { ApiSpec } from '../../../models/api-spec';
+import type { Environment } from '../../../models/environment';
+import { isRequest } from '../../../models/request';
+import { isRequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
 import { isDesign, Workspace } from '../../../models/workspace';
-import { database as db } from '../../../common/database';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import type { Environment } from '../../../models/environment';
+import Dropdown from '../base/dropdown/dropdown';
+import DropdownButton from '../base/dropdown/dropdown-button';
+import DropdownDivider from '../base/dropdown/dropdown-divider';
+import DropdownHint from '../base/dropdown/dropdown-hint';
+import DropdownItem from '../base/dropdown/dropdown-item';
+import KeydownBinder from '../keydown-binder';
+import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import { ApiSpec } from '../../../models/api-spec';
-import { isRequestGroup } from '../../../models/request-group';
-import { isRequest } from '../../../models/request';
+import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
+import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
 
 interface Props {
   displayName: string;
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
   activeApiSpec: ApiSpec;
+  activeSpace: Space;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
   className?: string;
@@ -56,13 +59,13 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: true },
     }));
-    const { activeEnvironment, activeWorkspace } = this.props;
+    const { activeEnvironment, activeWorkspace, activeSpace } = this.props;
 
     try {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(activeSpace._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };

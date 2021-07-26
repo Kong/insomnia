@@ -1,9 +1,10 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import * as models from '../../../models';
+
 import { globalBeforeEach } from '../../../__jest__/before-each';
+import * as models from '../../../models';
+import { snapshotStateEntrySchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { Snapshot } from '../../types';
-import { snapshotStateEntrySchema } from '../../__schemas__/type-schemas';
 import { initializeLocalProjectAndMarkForSync, pushSnapshotOnInitialize } from '../initialize-project';
 import { VCS } from '../vcs';
 

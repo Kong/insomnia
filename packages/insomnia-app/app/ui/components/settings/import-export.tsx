@@ -1,15 +1,17 @@
 import React, { FC, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { getAppName } from '../../../common/constants';
+import { docsImportExport } from '../../../common/documentation';
+import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { strings } from '../../../common/strings';
+import { exportAllToFile } from '../../redux/modules/global';
+import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
+import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
-import { showModal, showPrompt } from '../modals/index';
-import { docsImportExport } from '../../../common/documentation';
-import { strings } from '../../../common/strings';
-import { useDispatch, useSelector } from 'react-redux';
-import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
 import ExportRequestsModal from '../modals/export-requests-modal';
-import { exportAllToFile, importClipBoard, importFile, importUri } from '../../redux/modules/global';
-import { getAppName } from '../../../common/constants';
-import { getWorkspaceLabel } from '../../../common/get-workspace-label';
+import { showModal, showPrompt } from '../modals/index';
 
 interface Props {
   hideSettingsModal: () => void;

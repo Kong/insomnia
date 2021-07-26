@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Notice, NoticeTable } from './notice-table';
 
 export default {

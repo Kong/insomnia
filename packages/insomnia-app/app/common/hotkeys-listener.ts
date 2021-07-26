@@ -1,6 +1,6 @@
+import * as models from '../models';
 import type { HotKeyDefinition, KeyBindings, KeyCombination } from './hotkeys';
 import { areSameKeyCombinations, getPlatformKeyCombinations } from './hotkeys';
-import * as models from '../models';
 
 const _pressedHotKey = (event: KeyboardEvent, bindings: KeyBindings) => {
   const pressedKeyComb: KeyCombination = {

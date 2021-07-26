@@ -1,4 +1,5 @@
 import path from 'path';
+
 import neDbAdapter from './ne-db-adapter';
 
 describe('neDbAdapter()', () => {

@@ -1,10 +1,11 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
 import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import classnames from 'classnames';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import CodeEditor from './code-editor';
 import Input from '../base/debounced-input';
+import CodeEditor from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';

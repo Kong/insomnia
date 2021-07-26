@@ -1,9 +1,10 @@
-import crypto from 'crypto';
-import { unthrowableParseJson } from '../utils';
 import SwaggerParser from '@apidevtools/swagger-parser';
+import crypto from 'crypto';
 import { OpenAPIV2 } from 'openapi-types';
 import YAML from 'yaml';
+
 import { Converter, Header, ImportRequest } from '../entities';
+import { unthrowableParseJson } from '../utils';
 
 const SUPPORTED_SWAGGER_VERSION = '2.0';
 const MIMETYPE_JSON = 'application/json';

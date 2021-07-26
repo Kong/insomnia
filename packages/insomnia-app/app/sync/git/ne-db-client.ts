@@ -1,29 +1,35 @@
+import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
+import YAML from 'yaml';
+
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import YAML from 'yaml';
-import Stat from './stat';
+import { BaseModel } from '../../models';
+import { isWorkspace } from '../../models/workspace';
+import { resetKeys } from '../ignore-keys';
+import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
-import { BufferEncoding } from './utils';
+import Stat from './stat';
 import { SystemError } from './system-error';
-import { BaseModel } from '../../models';
-import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
+import { BufferEncoding } from './utils';
 
 export class NeDBClient {
   _workspaceId: string;
+  _spaceId: string;
 
-  constructor(workspaceId: string) {
+  constructor(workspaceId: string, spaceId: string) {
     if (!workspaceId) {
       throw new Error('Cannot use NeDBClient without workspace ID');
     }
 
     this._workspaceId = workspaceId;
+    this._spaceId = spaceId;
   }
 
-  static createClient(workspaceId: string) {
+  static createClient(workspaceId: string, spaceId: string): PromiseFsClient {
     return {
-      promises: new NeDBClient(workspaceId),
+      promises: new NeDBClient(workspaceId, spaceId),
     };
   }
 
@@ -51,6 +57,9 @@ export class NeDBClient {
     if (!doc || doc.isPrivate) {
       throw this._errMissing(filePath);
     }
+
+    // When git is reading from NeDb, reset keys we wish to ignore to their original values
+    resetKeys(doc);
 
     // It would be nice to be able to add this check here but we can't since
     // isomorphic-git may have just deleted the workspace from the FS. This
@@ -88,6 +97,14 @@ export class NeDBClient {
 
     if (type !== doc.type) {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
+    }
+
+    if (isWorkspace(doc)) {
+      console.log('[git] setting workspace parent to be that of the active space', { original: doc.parentId, new: this._spaceId });
+      // Whenever we write a workspace into nedb we should set the parentId to be that of the current space
+      // This is because the parentId (or a space) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the space on the client
+      // In order to reproduce this bug, comment out the following line, then clone a repository into a local space, then open the workspace, you'll notice it will have moved into the base space
+      doc.parentId = this._spaceId;
     }
 
     forceWorkspaceScopeToDesign(doc);

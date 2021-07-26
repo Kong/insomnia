@@ -1,7 +1,8 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { branchSchema, mergeConflictSchema, statusCandidateSchema } from '../../__schemas__/type-schemas';
 import { StageEntry } from '../../types';
-import { branchSchema, statusCandidateSchema, mergeConflictSchema } from '../../__schemas__/type-schemas';
 import {
   combinedMapKeys,
   compareBranches,
@@ -942,7 +943,7 @@ describe('util', () => {
 
     it('shouldnt change the hash of a workspace after a parent id is added and ignored', () => {
       // Arrange
-      // @ts-expect-error parent id should be nullable
+      // @ts-expect-error parentId is intentionally null, because that's what the data was originally
       const originalSyncedWorkspace = workspaceModelBuilder.parentId(null).build();
 
       // Existing synced workspaces do not have a modified field

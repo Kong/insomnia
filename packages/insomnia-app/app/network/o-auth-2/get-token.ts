@@ -1,26 +1,26 @@
-import getAccessTokenAuthorizationCode from './grant-authorization-code';
-import getAccessTokenClientCredentials from './grant-client-credentials';
-import getAccessTokenPassword from './grant-password';
-import getAccessTokenImplicit from './grant-implicit';
-import refreshAccessToken from './refresh-token';
+import * as models from '../../models';
+import type { OAuth2Token } from '../../models/o-auth-2-token';
+import type { RequestAuthentication } from '../../models/request';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
   P_ACCESS_TOKEN,
+  P_ERROR,
   P_ERROR_DESCRIPTION,
   P_ERROR_URI,
-  P_ERROR,
   P_EXPIRES_IN,
-  P_REFRESH_TOKEN,
   P_ID_TOKEN,
-  X_RESPONSE_ID,
+  P_REFRESH_TOKEN,
   X_ERROR,
+  X_RESPONSE_ID,
 } from './constants';
-import * as models from '../../models';
-import type { RequestAuthentication } from '../../models/request';
-import type { OAuth2Token } from '../../models/o-auth-2-token';
+import getAccessTokenAuthorizationCode from './grant-authorization-code';
+import getAccessTokenClientCredentials from './grant-client-credentials';
+import getAccessTokenImplicit from './grant-implicit';
+import getAccessTokenPassword from './grant-password';
+import refreshAccessToken from './refresh-token';
 /** Get an OAuth2Token object and also handle storing/saving/refreshing */
 
 export default async function(

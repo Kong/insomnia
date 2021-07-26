@@ -1,14 +1,15 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent, ReactElement } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
+import { AUTOBIND_CFG } from '../../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import Button from '../../base/button';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import CodePromptModal from '../../modals/code-prompt-modal';
-import Button from '../../base/button';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import { AUTOBIND_CFG } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----

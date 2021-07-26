@@ -1,7 +1,12 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import type { Environment } from '../../../models/environment';
+import type { Workspace } from '../../../models/workspace';
 import {
   DropdownButton,
   DropdownDivider,
@@ -9,14 +14,10 @@ import {
   DropdownItem,
 } from '../base/dropdown';
 import Dropdown from '../base/dropdown/dropdown';
-import { showModal } from '../modals/index';
-import Tooltip from '../tooltip';
 import KeydownBinder from '../keydown-binder';
-import type { Workspace } from '../../../models/workspace';
-import type { Environment } from '../../../models/environment';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
+import { showModal } from '../modals/index';
+import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
+import Tooltip from '../tooltip';
 
 interface Props {
   handleChangeEnvironment: Function;

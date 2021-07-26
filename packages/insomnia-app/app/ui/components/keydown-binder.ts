@@ -1,7 +1,8 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { isMac, AUTOBIND_CFG } from '../../common/constants';
+
+import { AUTOBIND_CFG, isMac } from '../../common/constants';
 
 interface Props {
   children: ReactNode;

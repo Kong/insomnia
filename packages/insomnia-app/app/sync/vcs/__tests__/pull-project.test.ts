@@ -1,12 +1,13 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { mocked } from 'ts-jest/utils';
+
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
 import { Workspace } from '../../../models/workspace';
-import { globalBeforeEach } from '../../../__jest__/before-each';
 import { projectSchema } from '../../__schemas__/type-schemas';
-import { pullProject } from '../pull-project';
-import { mocked } from 'ts-jest/utils';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import { pullProject } from '../pull-project';
 import { VCS } from '../vcs';
 
 jest.mock('../vcs');
@@ -36,25 +37,6 @@ describe('pullProject()', () => {
 
     afterEach(() => {
       expect(vcs.pull).not.toHaveBeenCalledWith([], expect.anything());
-    });
-
-    it('should insert a workspace with no parent', async () => {
-      // Arrange
-      const space = undefined;
-
-      // Act
-      await pullProject({ vcs, project, space });
-
-      // Assert
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
-        _id: project.rootDocumentId,
-        name: project.name,
-        // @ts-expect-error parent id is optional for workspaces
-        parentId: null,
-      }));
     });
 
     it('should insert a workspace with parent', async () => {
@@ -101,36 +83,6 @@ describe('pullProject()', () => {
     });
 
     afterEach(() => {
-    });
-
-    it('should overwrite the parentId only for a workspace with null', async () => {
-      // Arrange
-      const space = undefined;
-      const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
-      const existingReq = await models.request.create({ parentId: existingWrk._id });
-
-      vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
-
-      // Act
-      await pullProject({ vcs, project, space });
-
-      // Assert
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
-        _id: project.rootDocumentId,
-        name: project.name,
-        // @ts-expect-error parent id is optional for workspaces
-        parentId: null,
-      }));
-
-      const requests = await models.request.all();
-      expect(requests).toHaveLength(1);
-      const request = requests[0];
-      expect(request).toStrictEqual(existingReq);
-
-      expect(vcs.pull).toHaveBeenCalledWith([], undefined);
     });
 
     it('should overwrite the parentId only for a workspace with the space id', async () => {

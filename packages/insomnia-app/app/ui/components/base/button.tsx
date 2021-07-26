@@ -1,5 +1,6 @@
-import React, { ButtonHTMLAttributes, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { ButtonHTMLAttributes, CSSProperties, PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 export interface ButtonProps<T> {
@@ -14,6 +15,7 @@ export interface ButtonProps<T> {
   id?: string,
   // TODO(TSCONVERSION) figure out why so many components pass this yet it isn't used
   title?: string;
+  style?: CSSProperties;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -32,7 +34,7 @@ class Button<T> extends PureComponent<ButtonProps<T>> {
   }
 
   render() {
-    const { children, disabled, tabIndex, className, type, id } = this.props;
+    const { children, disabled, tabIndex, className, type, id, style } = this.props;
     return (
       <button
         disabled={disabled}
@@ -41,6 +43,7 @@ class Button<T> extends PureComponent<ButtonProps<T>> {
         tabIndex={tabIndex}
         className={className}
         onClick={this._handleClick}
+        style={style}
       >
         {children}
       </button>

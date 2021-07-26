@@ -1,60 +1,54 @@
-import electron, { OpenDialogOptions } from 'electron';
+import electron from 'electron';
+import fs, { NoParamCallback } from 'fs';
+import moment from 'moment';
+import path from 'path';
 import React, { Fragment } from 'react';
 import { combineReducers, Dispatch } from 'redux';
-import fs, { NoParamCallback } from 'fs';
-import path from 'path';
-import AskModal from '../../../ui/components/modals/ask-modal';
-import moment from 'moment';
+import { unreachableCase } from 'ts-assert-unreachable';
+
+import { trackEvent } from '../../../common/analytics';
+import type { GlobalActivity } from '../../../common/constants';
 import {
-  ImportRawConfig,
-  ImportResult,
-  importRaw,
-  importUri as _importUri,
-} from '../../../common/import';
+  ACTIVITY_ANALYTICS,
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+  DEPRECATED_ACTIVITY_INSOMNIA,
+  isValidActivity,
+} from '../../../common/constants';
+import { database } from '../../../common/database';
+import { getDesignerDataDir } from '../../../common/electron-helpers';
 import {
   exportRequestsData,
   exportRequestsHAR,
   exportWorkspacesData,
   exportWorkspacesHAR,
 } from '../../../common/export';
-import AlertModal from '../../components/modals/alert-modal';
-import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
-import LoginModal from '../../components/modals/login-modal';
 import * as models from '../../../models';
+import { Environment, isEnvironment } from '../../../models/environment';
+import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
+import { Request } from '../../../models/request';
+import { Settings } from '../../../models/settings';
+import { BASE_SPACE_ID } from '../../../models/space';
+import { isWorkspace } from '../../../models/workspace';
+import { reloadPlugins } from '../../../plugins';
+import { createPlugin } from '../../../plugins/create';
+import install from '../../../plugins/install';
+import { setTheme } from '../../../plugins/misc';
+import AskModal from '../../../ui/components/modals/ask-modal';
+import AlertModal from '../../components/modals/alert-modal';
+import { showAlert, showError, showModal } from '../../components/modals/index';
+import LoginModal from '../../components/modals/login-modal';
+import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import { SelectModal } from '../../components/modals/select-modal';
-import { showError, showModal } from '../../components/modals/index';
-import { database } from '../../../common/database';
-import { trackEvent } from '../../../common/analytics';
 import SettingsModal, {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import install from '../../../plugins/install';
-import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace, askToSetWorkspaceScope } from './helpers';
-import { createPlugin } from '../../../plugins/create';
-import { reloadPlugins } from '../../../plugins';
-import { setTheme } from '../../../plugins/misc';
-import type { GlobalActivity } from '../../../common/constants';
-import { isWorkspace, Workspace, WorkspaceScope } from '../../../models/workspace';
-import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
-  ACTIVITY_ANALYTICS,
-  DEPRECATED_ACTIVITY_INSOMNIA,
-  isValidActivity,
-} from '../../../common/constants';
-import { selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
-import { getDesignerDataDir } from '../../../common/electron-helpers';
-import { Settings } from '../../../models/settings';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { Environment, isEnvironment } from '../../../models/environment';
-import { BASE_SPACE_ID } from '../../../models/space';
-import { unreachableCase } from 'ts-assert-unreachable';
+import { selectActiveSpaceName, selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
+import { importUri } from './import';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -85,7 +79,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeSpaceReducer(state: string | null = BASE_SPACE_ID, action) {
+function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
       return action.spaceId;
@@ -147,7 +141,7 @@ function loginStateChangeReducer(state = false, action) {
 
 export interface GlobalState {
   isLoading: boolean;
-  activeSpaceId: string | null;
+  activeSpaceId: string;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
@@ -197,7 +191,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         ),
         addCancel: true,
       });
-      dispatch(importUri(args.uri, { workspaceId: args.workspaceId }));
+      dispatch(importUri(args.uri, { workspaceId: args.workspaceId, forceToSpace: 'prompt' }));
       break;
 
     case COMMAND_PLUGIN_INSTALL:
@@ -389,141 +383,6 @@ export const setActiveWorkspace = (workspaceId: string | null) => {
   };
 };
 
-export interface ImportOptions {
-  workspaceId?: string
-  forceToWorkspace?: ForceToWorkspace;
-  forceToScope?: WorkspaceScope;
-}
-
-export const importFile = (
-  { workspaceId, forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
-  dispatch(loadStart());
-  const options: OpenDialogOptions = {
-    title: 'Import Insomnia Data',
-    buttonLabel: 'Import',
-    properties: ['openFile'],
-    filters: [
-      // @ts-expect-error https://github.com/electron/electron/pull/29322
-      {
-        extensions: [
-          '',
-          'sh',
-          'txt',
-          'json',
-          'har',
-          'curl',
-          'bash',
-          'shell',
-          'yaml',
-          'yml',
-          'wsdl',
-        ],
-      },
-    ],
-  };
-  const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
-
-  if (canceled) {
-    // It was cancelled, so let's bail out
-    dispatch(loadStop());
-    return;
-  }
-
-  // Let's import all the files!
-  for (const filePath of filePaths) {
-    try {
-      const uri = `file://${filePath}`;
-      const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-      };
-      const result = await _importUri(uri, options);
-      handleImportResult(result, 'The file does not contain a valid specification.');
-    } catch (err) {
-      showModal(AlertModal, {
-        title: 'Import Failed',
-        message: err + '',
-      });
-    } finally {
-      dispatch(loadStop());
-    }
-  }
-};
-
-const handleImportResult = (result: ImportResult, errorMessage: string) => {
-  const { error, summary } = result;
-
-  if (error) {
-    showError({
-      title: 'Import Failed',
-      message: errorMessage,
-      error,
-    });
-    return [];
-  }
-
-  models.stats.incrementRequestStats({
-    createdRequests: summary[models.request.type].length + summary[models.grpcRequest.type].length,
-  });
-  return (summary[models.workspace.type] as Workspace[]) || [];
-};
-
-export const importClipBoard = (
-  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
-  dispatch(loadStart());
-  const schema = electron.clipboard.readText();
-
-  if (!schema) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: 'Your clipboard appears to be empty.',
-    });
-    return;
-  }
-
-  // Let's import all the paths!
-  try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    };
-    const result = await importRaw(schema, options);
-    handleImportResult(result, 'Your clipboard does not contain a valid specification.');
-  } catch (err) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: 'Your clipboard does not contain a valid specification.',
-    });
-  } finally {
-    dispatch(loadStop());
-  }
-};
-
-export const importUri = (
-  uri: string,
-  { forceToScope, forceToWorkspace, workspaceId }: ImportOptions = {},
-) => async (dispatch: Dispatch) => {
-  dispatch(loadStart());
-
-  try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    };
-    const result = await _importUri(uri, options);
-    handleImportResult(result, 'The URI does not contain a valid specification.');
-  } catch (err) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: err + '',
-    });
-  } finally {
-    dispatch(loadStop());
-  }
-};
-
 const VALUE_JSON = 'json';
 const VALUE_YAML = 'yaml';
 const VALUE_HAR = 'har';
@@ -602,10 +461,22 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
 
 export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
+  const state = getState();
+  const activeSpaceName = selectActiveSpaceName(state);
+  const workspaces = selectWorkspacesForActiveSpace(state);
+
+  if (!workspaces.length) {
+    dispatch(loadStop());
+    showAlert({
+      title: 'Cannot export',
+      message: <>There are no workspaces to export in the <strong>{activeSpaceName}</strong> space.</>,
+    });
+    return;
+  }
+
   showSelectExportTypeModal({
     onCancel: () => { dispatch(loadStop()); },
     onDone: async selectedFormat => {
-      const state = getState();
       // Check if we want to export private environments.
       const environments = await models.environment.all();
 
@@ -627,8 +498,6 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
         dispatch(loadStop());
         return;
       }
-
-      const workspaces = selectWorkspacesForActiveSpace(state);
 
       let stringifiedExport;
 

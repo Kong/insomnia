@@ -1,19 +1,20 @@
-import { checkIfRestartNeeded } from './main/squirrel-startup';
-import appConfig from '../config/config.json';
-import path from 'path';
 import * as electron from 'electron';
+import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import path from 'path';
+
+import appConfig from '../config/config.json';
+import { trackNonInteractiveEventQueueable } from './common/analytics';
+import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
+import { database } from './common/database';
+import log, { initializeLogging } from './common/log';
 import * as errorHandling from './main/error-handling';
-import * as updates from './main/updates';
 import * as grpcIpcMain from './main/grpc-ipc-main';
+import { checkIfRestartNeeded } from './main/squirrel-startup';
+import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
-import { database } from './common/database';
-import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
-import type { ToastNotification } from './ui/components/toast';
 import type { Stats } from './models/stats';
-import { trackNonInteractiveEventQueueable } from './common/analytics';
-import log, { initializeLogging } from './common/log';
-import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
 if (checkIfRestartNeeded()) {

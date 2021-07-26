@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import KeyValueEditor from '../key-value-editor/editor';
-import CodeEditor from '../codemirror/code-editor';
-import allHeaderNames from '../../../datasets/header-names';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import allCharsets from '../../../datasets/charsets';
 import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
+import allHeaderNames from '../../../datasets/header-names';
 import type { Request, RequestHeader } from '../../../models/request';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import CodeEditor from '../codemirror/code-editor';
+import KeyValueEditor from '../key-value-editor/editor';
 
 interface Props {
   onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;

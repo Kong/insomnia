@@ -1,17 +1,18 @@
 import { ACTIVITY_DEBUG } from '../common/constants';
+import { BASE_SPACE_ID } from '../models/space';
 import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
+import { GlobalState } from '../ui/redux/modules/global';
 
-const reduxStateForTest = async (activeWorkspaceId: string | null = null): Promise<RootState> => ({
+export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Promise<RootState> => ({
   entities: entities.reducer(entities.initialEntitiesState, entities.initializeWith(await entities.allDocs())),
   global: {
-    activeWorkspaceId,
+    activeWorkspaceId: null,
     activeActivity: ACTIVITY_DEBUG,
-    activeSpaceId: null,
+    activeSpaceId: BASE_SPACE_ID,
     isLoading: false,
     isLoggedIn: false,
     loadingRequestIds: {},
+    ...global,
   },
 });
-
-export default reduxStateForTest;

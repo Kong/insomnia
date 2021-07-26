@@ -1,6 +1,7 @@
-import React, { Component, Fragment } from 'react';
-import iconv from 'iconv-lite';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import iconv from 'iconv-lite';
+import React, { Component, Fragment } from 'react';
+
 import {
   AUTOBIND_CFG,
   HUGE_RESPONSE_MB,
@@ -8,17 +9,17 @@ import {
   PREVIEW_MODE_FRIENDLY,
   PREVIEW_MODE_RAW,
 } from '../../../common/constants';
-import PDFViewer from './response-pdf-viewer';
-import CSVViewer from './response-csv-viewer';
-import CodeEditor from '../codemirror/code-editor';
-import ResponseWebView from './response-web-view';
-import MultipartViewer from './response-multipart';
-import ResponseRaw from './response-raw';
-import ResponseError from './response-error';
-import KeydownBinder from '../keydown-binder';
-import { executeHotKey } from '../../../common/hotkeys-listener';
-import { hotKeyRefs } from '../../../common/hotkeys';
 import { clickLink } from '../../../common/electron-helpers';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import CodeEditor from '../codemirror/code-editor';
+import KeydownBinder from '../keydown-binder';
+import CSVViewer from './response-csv-viewer';
+import ResponseError from './response-error';
+import MultipartViewer from './response-multipart';
+import PDFViewer from './response-pdf-viewer';
+import ResponseRaw from './response-raw';
+import ResponseWebView from './response-web-view';
 
 let alwaysShowLargeResponses = false;
 

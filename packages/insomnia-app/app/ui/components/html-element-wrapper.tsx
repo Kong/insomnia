@@ -1,5 +1,6 @@
-import React, { Component } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Component } from 'react';
+
 import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {

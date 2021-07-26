@@ -1,11 +1,12 @@
 import React, { FunctionComponent } from 'react';
-import { Pane, PaneBody, PaneHeader } from './pane';
-import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages';
-import type { Settings } from '../../../models/settings';
+
 import type { GrpcRequest } from '../../../models/grpc-request';
-import GrpcStatusTag from '../tags/grpc-status-tag';
-import GrpcSpinner from '../grpc-spinner';
+import type { Settings } from '../../../models/settings';
 import { useGrpcRequestState } from '../../context/grpc';
+import GrpcSpinner from '../grpc-spinner';
+import GrpcStatusTag from '../tags/grpc-status-tag';
+import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages';
+import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {
   forceRefreshKey: number;

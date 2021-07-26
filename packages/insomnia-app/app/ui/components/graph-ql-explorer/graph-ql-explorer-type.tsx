@@ -1,14 +1,15 @@
-import React, { Fragment, PureComponent } from 'react';
-import { SvgIcon } from 'insomnia-components';
-import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import MarkdownPreview from '../markdown-preview';
-import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
 import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
-import GraphQLDefaultValue from './graph-ql-default-value';
+import { SvgIcon } from 'insomnia-components';
+import React, { Fragment, PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import Tooltip from '../../components/tooltip';
+import MarkdownPreview from '../markdown-preview';
+import GraphQLDefaultValue from './graph-ql-default-value';
+import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
+import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 
 interface Props {
   onNavigateType: (type: Record<string, any>) => void;

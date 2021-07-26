@@ -1,8 +1,9 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import CodeEditor, { CodeEditorOnChange } from '../../codemirror/code-editor';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import CodeEditor, { CodeEditorOnChange } from '../../codemirror/code-editor';
 
 interface Props {
   onChange: CodeEditorOnChange;

@@ -1,13 +1,14 @@
-import type { BaseModel } from './index';
-import * as models from './index';
-import { Readable } from 'stream';
-import fs from 'fs';
 import crypto from 'crypto';
-import path from 'path';
-import zlib from 'zlib';
+import fs from 'fs';
 import mkdirp from 'mkdirp';
+import path from 'path';
+import { Readable } from 'stream';
+import zlib from 'zlib';
+
 import { database as db, Query } from '../common/database';
 import { getDataDirectory } from '../common/electron-helpers';
+import type { BaseModel } from './index';
+import * as models from './index';
 
 export const name = 'Response';
 

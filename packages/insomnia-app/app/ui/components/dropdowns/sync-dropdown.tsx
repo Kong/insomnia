@@ -1,32 +1,32 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import classnames from 'classnames';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import type { Workspace } from '../../../models/workspace';
-import { showAlert, showModal } from '../modals';
-import SyncStagingModal from '../modals/sync-staging-modal';
-import HelpTooltip from '../help-tooltip';
-import Link from '../base/link';
-import SyncHistoryModal from '../modals/sync-history-modal';
-import SyncShareModal from '../modals/sync-share-modal';
-import SyncBranchesModal from '../modals/sync-branches-modal';
-import SyncDeleteModal from '../modals/sync-delete-modal';
-import { VCS } from '../../../sync/vcs/vcs';
-import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
-import ErrorModal from '../modals/error-modal';
-import Tooltip from '../tooltip';
-import LoginModal from '../modals/login-modal';
+import React, { Fragment, PureComponent } from 'react';
+
 import * as session from '../../../account/session';
-import PromptButton from '../base/prompt-button';
+import { AUTOBIND_CFG, DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import * as models from '../../../models';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
-import { pullProject } from '../../../sync/vcs/pull-project';
+import * as models from '../../../models';
 import { Space } from '../../../models/space';
+import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
+import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
+import { pullProject } from '../../../sync/vcs/pull-project';
+import { VCS } from '../../../sync/vcs/vcs';
+import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import Link from '../base/link';
+import PromptButton from '../base/prompt-button';
+import HelpTooltip from '../help-tooltip';
+import { showAlert, showModal } from '../modals';
+import ErrorModal from '../modals/error-modal';
+import LoginModal from '../modals/login-modal';
+import SyncBranchesModal from '../modals/sync-branches-modal';
+import SyncDeleteModal from '../modals/sync-delete-modal';
+import SyncHistoryModal from '../modals/sync-history-modal';
+import SyncStagingModal from '../modals/sync-staging-modal';
+import Tooltip from '../tooltip';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -193,10 +193,6 @@ class SyncDropdown extends PureComponent<Props, State> {
         await this._handlePushChanges();
       },
     });
-  }
-
-  static _handleShowSharingModal() {
-    showModal(SyncShareModal);
   }
 
   static _handleShowLoginModal() {
@@ -521,11 +517,6 @@ class SyncDropdown extends PureComponent<Props, State> {
               <i className="fa fa-sign-in" /> Log In
             </DropdownItem>
           )}
-
-          <DropdownItem onClick={SyncDropdown._handleShowSharingModal}>
-            <i className="fa fa-users" />
-            Share Settings
-          </DropdownItem>
 
           <DropdownItem onClick={this._handleShowBranchesModal}>
             <i className="fa fa-code-fork" />
