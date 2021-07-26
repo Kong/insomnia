@@ -1,18 +1,20 @@
 
 import { useCallback, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
-import { isLoggedIn } from '../../account/session';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { Space } from '../../models/space';
 import { VCS } from '../../sync/vcs/vcs';
+import { selectIsLoggedIn } from '../redux/selectors';
 import { useSafeState } from './use-safe-state';
 
 export const useRemoteSpaces = (vcs?: VCS) => {
   const [loading, setLoading] = useSafeState(false);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const refresh = useCallback(async () => {
-    if (vcs && isLoggedIn()) {
+    if (vcs && isLoggedIn) {
       setLoading(true);
 
       const teams = await vcs.teams();
@@ -28,7 +30,7 @@ export const useRemoteSpaces = (vcs?: VCS) => {
 
       setLoading(false);
     }
-  }, [vcs, setLoading]);
+  }, [vcs, setLoading, isLoggedIn]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {

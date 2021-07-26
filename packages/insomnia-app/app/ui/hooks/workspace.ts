@@ -1,12 +1,12 @@
 import { Reducer, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useSelector } from 'react-redux';
 
-import { isLoggedIn } from '../../account/session';
+import { isRemoteSpace } from '../../models/space';
 import { Project } from '../../sync/types';
 import { pullProject } from '../../sync/vcs/pull-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
-import { selectActiveSpace, selectAllWorkspaces } from '../redux/selectors';
+import { selectActiveSpace, selectAllWorkspaces, selectIsLoggedIn } from '../redux/selectors';
 import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';
 
 interface State {
@@ -48,7 +48,8 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
   const workspaces = useSelector(selectAllWorkspaces);
   const activeSpace = useSelector(selectActiveSpace);
-  const spaceRemoteId = activeSpace?.remoteId || undefined;
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+
 
   // Local state
   const [{ loading, localProjects, remoteProjects, pullingProjects }, _dispatch] = useReducer(reducer, initialState);
@@ -56,15 +57,15 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
 
   // Refresh remote spaces
   const refresh = useCallback(async () => {
-    if (!vcs || !isLoggedIn()) {
+    if (!vcs || !isLoggedIn || !isRemoteSpace(activeSpace)) {
       return;
     }
 
     dispatch({ type: 'loadProjects' });
-    const remote = await vcs.remoteProjects(spaceRemoteId);
+    const remote = await vcs.remoteProjects(activeSpace.remoteId);
     const local = await vcs.localProjects();
     dispatch({ type: 'saveProjects', local, remote });
-  }, [dispatch, spaceRemoteId, vcs]);
+  }, [vcs, isLoggedIn, activeSpace, dispatch]);
 
   // Find remote spaces that haven't been pulled
   const missingProjects = useMemo(() => remoteProjects.filter(({ id, rootDocumentId }) => {

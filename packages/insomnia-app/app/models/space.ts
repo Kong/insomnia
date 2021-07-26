@@ -11,18 +11,25 @@ export const canSync = false;
 
 export const BASE_SPACE_ID = `${prefix}_base-space`;
 
-export const isBaseSpace = ({ _id }: Space) => _id === BASE_SPACE_ID;
+export const isBaseSpace = (space: Space) => space._id === BASE_SPACE_ID;
 export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
-export const isLocalSpace = ({ remoteId }: Space) => remoteId === null;
-export const isRemoteSpace = (space: Space) => !isLocalSpace(space);
+export const isLocalSpace = (space: Space): space is LocalSpace => space.remoteId === null;
+export const isRemoteSpace = (space: Space): space is RemoteSpace => !isLocalSpace(space);
 export const spaceHasSettings = (space: Space) => isLocalSpace(space) && !isBaseSpace(space);
 
-interface BaseSpace {
+interface CommonSpace {
   name: string;
-  remoteId: string | null;
 }
 
-export type Space = BaseModel & BaseSpace;
+export interface RemoteSpace extends BaseModel, CommonSpace {
+  remoteId: string;
+}
+
+export interface LocalSpace extends BaseModel, CommonSpace {
+  remoteId: null;
+}
+
+export type Space = LocalSpace | RemoteSpace;
 
 export const isSpace = (model: Pick<BaseModel, 'type'>): model is Space => (
   model.type === type
@@ -32,7 +39,7 @@ export const isSpaceId = (id: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 
-export function init(): BaseSpace {
+export function init(): Partial<Space> {
   return {
     name: 'My Space',
     remoteId: null, // `null` is necessary for the model init logic to work properly
