@@ -223,6 +223,18 @@ class CookieModifyModal extends PureComponent<Props, State> {
     );
   }
 
+  validateExpires() {
+    const { cookie } = this.state;
+
+    if ((cookie?.expires || 0) > TOUGH_COOKIE_MAX_TIMESTAMP) {
+      return `expiration date ${cookie?.expires} is greater than the max allowable timestamp by our cookie implementation tough-cookie: ${TOUGH_COOKIE_MAX_TIMESTAMP}`;
+    }
+
+    const computedDate = new Date(cookie?.expires || 0).getTime();
+
+    return isNaN(computedDate) ? 'Invalid Date' : null;
+  }
+
   render() {
     const { cookieJar } = this.props;
     const { cookie } = this.state;
@@ -251,10 +263,7 @@ class CookieModifyModal extends PureComponent<Props, State> {
                     {this._renderInputField('domain')}
                     {this._renderInputField('path')}
                   </div>
-                  {this._renderInputField(
-                    'expires',
-                    isNaN(new Date(cookie.expires || 0).getTime()) ? 'Invalid Date' : null,
-                  )}
+                  {this._renderInputField('expires', this.validateExpires())}
                 </div>
                 <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
                   {checkFields.map((field, i) => {

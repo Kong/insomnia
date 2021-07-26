@@ -130,6 +130,12 @@ export const MAX_EDITOR_FONT_SIZE = 24;
  */
 export const KONG_INITIAL_COMMIT_TIMESTAMP = 1416268568000;
 
+/**
+ * Use tough-cookie MAX_DATE value
+ * see: https://github.com/salesforce/tough-cookie/blob/5ae97c6a28122f3fb309adcd8428274d9b2bd795/lib/cookie.js#L77
+ */
+export const TOUGH_COOKIE_MAX_TIMESTAMP = 2147483647000;
+
 // Activities
 export type GlobalActivity =
   | 'spec'
