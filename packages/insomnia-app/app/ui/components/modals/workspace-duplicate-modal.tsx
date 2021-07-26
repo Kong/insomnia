@@ -7,10 +7,9 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { ApiSpec } from '../../../models/api-spec';
-import { baseSpace, SpaceSubset } from '../../../models/helpers/base-space';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { isBaseSpace, isLocalSpace } from '../../../models/space';
+import { isBaseSpace, isLocalSpace, Space } from '../../../models/space';
 import { Workspace } from '../../../models/workspace';
 import { setActiveSpace, setActiveWorkspace } from '../../redux/modules/global';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
@@ -35,7 +34,7 @@ interface Props extends Options {
   hide: () => void,
 }
 
-const SpaceOption: FC<SpaceSubset> = space => (
+const SpaceOption: FC<Space> = space => (
   <option key={space._id} value={space._id}>
     {space.name} ({isBaseSpace(space) ? 'Base' : isLocalSpace(space) ? 'Local' : 'Remote'})
   </option>
@@ -45,7 +44,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, Pr
   const dispatch = useDispatch();
 
   const spaces = useSelector(selectSpaces);
-  const activeSpace = useSelector(selectActiveSpace) || baseSpace;
+  const activeSpace = useSelector(selectActiveSpace);
 
   const title = `Duplicate ${getWorkspaceLabel(workspace).singular}`;
   const defaultWorkspaceName = getWorkspaceName(workspace, apiSpec);
@@ -59,15 +58,12 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, Pr
     } } = useForm<FormFields>({
       defaultValues: {
         newName: defaultWorkspaceName,
-        spaceId: activeSpace?._id,
+        spaceId: activeSpace._id,
       },
     });
 
   const onSubmit = async ({ spaceId, newName }: FormFields) => {
-    // TODO: just use the default base space ID instead of using null (once we have a base space by default)
-    const parentId = spaceId === baseSpace._id ? null : spaceId;
-    // @ts-expect-error workspace parentId can be null
-    const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId });
+    const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: spaceId });
     dispatch(setActiveSpace(spaceId));
     dispatch(setActiveWorkspace(newWorkspace._id));
     hide();
@@ -89,7 +85,6 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, Pr
           <label>
             {strings.space.plural} to duplicate into
             <select {...register('spaceId')}>
-              {SpaceOption(baseSpace)}
               {spaces.map(SpaceOption)}
             </select>
           </label>
