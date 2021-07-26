@@ -34,7 +34,7 @@ import { RequestGroup } from '../../models/request-group';
 import type { Response } from '../../models/response';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
-import CookieModifyModal from '../components/modals/cookie-modify-modal';
+import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
 import { DropdownButton } from './base/dropdown';

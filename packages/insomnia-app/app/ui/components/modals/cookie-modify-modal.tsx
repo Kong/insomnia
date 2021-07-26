@@ -31,7 +31,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookieModifyModal extends PureComponent<Props, State> {
+export class CookieModifyModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _rawTimeout: NodeJS.Timeout | null = null;
   _cookieUpdateTimeout: NodeJS.Timeout | null = null;
@@ -117,7 +117,6 @@ class CookieModifyModal extends PureComponent<Props, State> {
     const cookie = clone(newCookie);
     // Sanitize expires field
     const expires = new Date(cookie.expires || '').getTime();
-
     if (isNaN(expires)) {
       cookie.expires = null;
     } else {
@@ -134,10 +133,12 @@ class CookieModifyModal extends PureComponent<Props, State> {
       return;
     }
 
-    cookieJar.cookies = [...cookies.slice(0, index), cookie, ...cookies.slice(index + 1)];
-    this.setState({
+    cookieJar.cookies = [
+      ...cookies.slice(0, index),
       cookie,
-    });
+      ...cookies.slice(index + 1),
+    ];
+    this.setState({ cookie });
     await CookieModifyModal._saveChanges(cookieJar);
     return cookie;
   }
@@ -158,17 +159,16 @@ class CookieModifyModal extends PureComponent<Props, State> {
       // Should never happen
     }
 
-    const newCookie = Object.assign({}, cookie, {
+    const newCookie = {
+      ...cookie,
       [field]: value,
-    });
+    };
     if (this._cookieUpdateTimeout !== null) {
       clearTimeout(this._cookieUpdateTimeout);
     }
     this._cookieUpdateTimeout = setTimeout(async () => {
       await this._handleCookieUpdate(newCookie);
-      this.setState({
-        cookie: newCookie,
-      });
+      this.setState({ cookie: newCookie });
     }, DEBOUNCE_MILLIS * 2);
   }
 
@@ -239,6 +239,7 @@ class CookieModifyModal extends PureComponent<Props, State> {
     const { cookieJar } = this.props;
     const { cookie } = this.state;
     const checkFields = ['secure', 'httpOnly'];
+
     return (
       <Modal ref={this._setModalRef} {...this.props}>
         <ModalHeader>Edit Cookie</ModalHeader>
@@ -306,6 +307,4 @@ class CookieModifyModal extends PureComponent<Props, State> {
       </Modal>
     );
   }
-} // export CookieModifyModal;
-
-export default CookieModifyModal;
+}
