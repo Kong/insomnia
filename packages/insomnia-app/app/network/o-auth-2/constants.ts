@@ -33,5 +33,5 @@ export const P_TOKEN_TYPE = 'token_type';
 export const P_USERNAME = 'username';
 export const X_RESPONSE_ID = 'xResponseId';
 export const X_ERROR = 'xError';
-export const PKCE_CHALLENGE_S256 = "S256";
-export const PKCE_CHALLENGE_PLAIN = "plain";
+export const PKCE_CHALLENGE_S256 = 'S256';
+export const PKCE_CHALLENGE_PLAIN = 'plain';

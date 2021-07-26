@@ -16,11 +16,11 @@ import {
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
+  PKCE_CHALLENGE_PLAIN,
+  PKCE_CHALLENGE_S256,
   RESPONSE_TYPE_ID_TOKEN,
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
   RESPONSE_TYPE_TOKEN,
-  PKCE_CHALLENGE_S256,
-  PKCE_CHALLENGE_PLAIN,
 } from '../../../../network/o-auth-2/constants';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
@@ -286,7 +286,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
           </label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--underlined no-margin">
+          <div
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled,
+            })}>
             <Button
               className="btn btn--super-duper-compact"
               id="use-pkce"
@@ -361,6 +364,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }[],
     onChange: (...args: any[]) => any,
     help: string | null = null,
+    disabled = false,
   ) {
     const { request } = this.props;
     const { authentication } = request;
@@ -379,7 +383,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--outlined no-margin', {
-              'form-control--inactive': authentication.disabled,
+              'form-control--inactive': authentication.disabled || disabled,
             })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
@@ -395,6 +399,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
   }
 
   renderGrantTypeFields(grantType: string) {
+    const { authentication } = this.props.request;
+
     let basicFields: JSX.Element[] = [];
     let advancedFields: JSX.Element[] = [];
     const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
@@ -418,6 +424,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
         },
       ],
       this._handleChangePkceMethod,
+      null,
+      !Boolean(authentication.usePkce)
     );
     const authorizationUrl = this.renderInputRow(
       'Authorization URL',
@@ -502,8 +510,6 @@ class OAuth2Auth extends PureComponent<Props, State> {
     );
     const enabled = this.renderEnabledRow(this._handleChangeEnabled);
 
-    const { authentication } = this.props.request;
-
     if (grantType === GRANT_TYPE_AUTHORIZATION_CODE) {
       basicFields = [
         authorizationUrl,
@@ -511,13 +517,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
         clientId,
         clientSecret,
         usePkce,
+        pkceMethod,
         redirectUri,
         enabled,
       ];
-
-      if (authentication.usePkce){
-          basicFields.splice(5, 0, pkceMethod);
-      }
 
       advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
