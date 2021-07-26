@@ -549,7 +549,7 @@ export const database = {
 
     let docsToReturn: T[] = doc ? [doc] : [];
 
-    async function next(docs: T[]) {
+    async function next(docs: T[]): Promise<T[]> {
       const foundDocs: T[] = [];
 
       for (const d of docs) {
