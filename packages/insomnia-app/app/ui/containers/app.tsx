@@ -529,13 +529,12 @@ class App extends PureComponent<AppProps, State> {
 
   async _fetchRenderContext() {
     const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
-    const environmentId = activeEnvironment ? activeEnvironment._id : null;
-    const ancestors = await db.withAncestors(activeRequest || activeWorkspace || null, [
-      models.request.type,
-      models.requestGroup.type,
-      models.workspace.type,
-    ]);
-    return render.getRenderContext(activeRequest, environmentId, ancestors);
+    const ancestors = await render.getRenderContextAncestors(activeRequest || activeWorkspace);
+    return render.getRenderContext({
+      request: activeRequest || undefined,
+      environmentId: activeEnvironment?._id,
+      ancestors,
+    });
   }
 
   async _handleGetRenderContext(): Promise<RenderContextAndKeys> {
@@ -1208,7 +1207,7 @@ class App extends PureComponent<AppProps, State> {
       );
 
       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeSpace?._id);
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeSpace._id);
 
       /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
       const gitDataClient = fsClient(baseDir);
@@ -1260,10 +1259,6 @@ class App extends PureComponent<AppProps, State> {
   async _updateVCS() {
     const { activeWorkspace } = this.props;
 
-    if (!activeWorkspace) {
-      return;
-    }
-
     const lock = generateId();
     this._updateVCSLock = lock;
 
@@ -1289,7 +1284,11 @@ class App extends PureComponent<AppProps, State> {
       });
     }
 
-    await vcs.switchProject(activeWorkspace._id);
+    if (activeWorkspace) { 
+      await vcs.switchProject(activeWorkspace._id);
+    } else {
+      vcs.clearProject();
+    }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
     if (this._updateVCSLock === lock) {

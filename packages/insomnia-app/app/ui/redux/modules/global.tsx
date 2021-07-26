@@ -39,7 +39,7 @@ import install from '../../../plugins/install';
 import { setTheme } from '../../../plugins/misc';
 import AskModal from '../../../ui/components/modals/ask-modal';
 import AlertModal from '../../components/modals/alert-modal';
-import { showError, showModal } from '../../components/modals/index';
+import { showAlert, showError, showModal } from '../../components/modals/index';
 import LoginModal from '../../components/modals/login-modal';
 import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
 import { SelectModal } from '../../components/modals/select-modal';
@@ -47,7 +47,7 @@ import SettingsModal, {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
+import { selectActiveSpaceName, selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
 import { importUri } from './import';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
@@ -79,7 +79,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeSpaceReducer(state: string | null = BASE_SPACE_ID, action) {
+function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
       return action.spaceId;
@@ -141,7 +141,7 @@ function loginStateChangeReducer(state = false, action) {
 
 export interface GlobalState {
   isLoading: boolean;
-  activeSpaceId: string | null;
+  activeSpaceId: string;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
@@ -461,10 +461,22 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
 
 export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
+  const state = getState();
+  const activeSpaceName = selectActiveSpaceName(state);
+  const workspaces = selectWorkspacesForActiveSpace(state);
+
+  if (!workspaces.length) {
+    dispatch(loadStop());
+    showAlert({
+      title: 'Cannot export',
+      message: <>There are no workspaces to export in the <strong>{activeSpaceName}</strong> space.</>,
+    });
+    return;
+  }
+
   showSelectExportTypeModal({
     onCancel: () => { dispatch(loadStop()); },
     onDone: async selectedFormat => {
-      const state = getState();
       // Check if we want to export private environments.
       const environments = await models.environment.all();
 
@@ -486,8 +498,6 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
         dispatch(loadStop());
         return;
       }
-
-      const workspaces = selectWorkspacesForActiveSpace(state);
 
       let stringifiedExport;
 

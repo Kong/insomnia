@@ -895,7 +895,7 @@ export async function sendWithSettings(
   };
 
   try {
-    renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
+    renderResult = await getRenderedRequestAndContext({ request: newRequest, environmentId });
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
@@ -946,10 +946,12 @@ export async function send(
 
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const renderResult = await getRenderedRequestAndContext(
-    request,
-    environmentId || null,
-    RENDER_PURPOSE_SEND,
-    extraInfo,
+    {
+      request,
+      environmentId,
+      purpose: RENDER_PURPOSE_SEND,
+      extraInfo,
+    },
   );
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
@@ -1004,7 +1006,7 @@ async function _applyRequestPluginHooks(
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
+      ...pluginContexts.data.init(renderedContext.getSpaceId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
       ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
@@ -1032,7 +1034,7 @@ async function _applyResponsePluginHooks(
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
+      ...pluginContexts.data.init(renderedContext.getSpaceId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.response.init(newResponse) as Record<string, any>),
       ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),

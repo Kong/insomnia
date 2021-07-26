@@ -74,7 +74,6 @@ import SyncBranchesModal from './modals/sync-branches-modal';
 import SyncDeleteModal from './modals/sync-delete-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
 import SyncMergeModal from './modals/sync-merge-modal';
-import SyncShareModal from './modals/sync-share-modal';
 import SyncStagingModal from './modals/sync-staging-modal';
 import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
 import WorkspaceSettingsModal from './modals/workspace-settings-modal';
@@ -708,7 +707,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 />
                 <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-                <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               </Fragment>
             ) : null}
 
