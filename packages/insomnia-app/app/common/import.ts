@@ -40,7 +40,7 @@ interface ConvertResult {
 
 export interface ImportRawConfig {
   getWorkspaceId: ImportToWorkspacePrompt;
-  getSpaceId?: () => Promise<string | null>;
+  getSpaceId?: () => Promise<string>;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
@@ -336,11 +336,10 @@ async function updateWorkspaceScope(
 
 async function createWorkspaceInSpace(
   resource: Workspace,
-  getSpaceId?: () => Promise<string | null>,
+  getSpaceId?: () => Promise<string>,
 ) {
   if (getSpaceId) {
     // Set the workspace parent if creating a new workspace during import
-    // @ts-expect-error workspace parent can be null or string
     resource.parentId = await getSpaceId();
   }
 }

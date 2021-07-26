@@ -3,9 +3,8 @@ import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { getAppName } from '../../../common/constants';
 import { strings } from '../../../common/strings';
-import { BASE_SPACE_ID, isBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/space';
+import { isBaseSpace, isNotBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/space';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteSpaces } from '../../hooks/space';
 import { setActiveSpace } from '../../redux/modules/global';
@@ -13,14 +12,6 @@ import { createSpace } from '../../redux/modules/space';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/space-settings-modal';
-
-type SpaceSubset = Pick<Space, '_id' | 'name' | 'remoteId'>;
-
-const baseSpace: SpaceSubset = {
-  _id: BASE_SPACE_ID,
-  name: getAppName(),
-  remoteId: null,
-};
 
 const svgPlacementHack = {
   // This is a bit of a hack/workaround to avoid some larger changes that we'd need to do with dropdown item icons and tooltips.
@@ -67,7 +58,7 @@ interface Props {
 }
 
 const SpaceDropdownItem: FC<{
-  space: SpaceSubset;
+  space: Space;
   isActive: boolean;
   setActive: (spaceId: string) => void;
 }> = ({ isActive, space, setActive }) => {
@@ -92,10 +83,9 @@ SpaceDropdownItem.displayName = DropdownItem.name; // This is required because t
 export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   const { loading, refresh } = useRemoteSpaces(vcs);
 
-  // get list of spaces (which doesn't include the base space)
   const spaces = useSelector(selectSpaces);
 
-  const activeSpace = useSelector(selectActiveSpace) || baseSpace;
+  const activeSpace = useSelector(selectActiveSpace);
   const dispatch = useDispatch();
   const setActive = useCallback((spaceId: string) => dispatch(setActiveSpace(spaceId)), [dispatch]);
   const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
@@ -109,25 +99,20 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
     </button>
   ), [activeSpace]);
 
+  const renderSpace = useCallback((space: Space) => (
+    <SpaceDropdownItem
+      key={space._id}
+      isActive={space._id === activeSpace._id}
+      setActive={setActive}
+      space={space}
+    />
+  ), [setActive, activeSpace._id]);
+
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      <SpaceDropdownItem
-        isActive={baseSpace._id === activeSpace._id}
-        setActive={setActive}
-        space={baseSpace}
-      />
-
+      {spaces.filter(isBaseSpace).map(renderSpace)}
       <DropdownDivider>All spaces{' '}{loading && spinner}</DropdownDivider>
-
-      {spaces.map(space => (
-        <SpaceDropdownItem
-          isActive={space._id === activeSpace._id}
-          key={space._id}
-          setActive={setActive}
-          space={space}
-        />
-      ))}
-
+      {spaces.filter(isNotBaseSpace).map(renderSpace)}
       {spaceHasSettings(activeSpace) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>
@@ -142,3 +127,4 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
     </Dropdown>
   );
 };
+

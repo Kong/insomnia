@@ -50,14 +50,13 @@ const convertToRawConfig = ({
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
   const activeSpace = selectActiveSpace(state);
-  // WARNING: this selector does not include the base space
   const spaces = selectSpaces(state);
 
   return ({
     getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
     getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
     // Currently, just return the active space instead of prompting for which space to import into
-    getSpaceId: forceToSpace === 'prompt' ? askToImportIntoSpace({ spaces, activeSpace }) : () => Promise.resolve(activeSpace?._id || null),
+    getSpaceId: forceToSpace === 'prompt' ? askToImportIntoSpace({ spaces, activeSpace }) : () => Promise.resolve(activeSpace._id),
   });
 };
 

@@ -1,7 +1,8 @@
 import { Schema } from '@develohpanda/fluent-builder';
 import clone from 'clone';
 
-import { BaseModel, gitRepository, grpcRequest, request, requestGroup, workspace } from '..';
+import { BaseModel, environment, gitRepository, grpcRequest, request, requestGroup, workspace } from '..';
+import { Environment } from '../environment';
 import { GitRepository } from '../git-repository';
 import { GrpcRequest } from '../grpc-request';
 import { Request } from '../request';
@@ -63,4 +64,10 @@ export const gitRepositorySchema: Schema<GitRepository> = {
   uri: () => '',
   needsFullClone: () => false,
   uriNeedsMigration: () => true,
+};
+
+export const environmentModelSchema: Schema<Environment> = {
+  ...baseModelSchema,
+  ...toSchema(environment.init()),
+  type: () => environment.type,
 };

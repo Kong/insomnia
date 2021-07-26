@@ -186,7 +186,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    const harRequest = await exportHarWithRequest(request, exportRequest.environmentId);
+    const harRequest = await exportHarWithRequest(request, exportRequest.environmentId || undefined);
 
     if (!harRequest) {
       continue;
@@ -283,11 +283,11 @@ export async function exportHarRequest(
 
 export async function exportHarWithRequest(
   request: Request,
-  environmentId: string | null,
+  environmentId?: string,
   addContentLength = false,
 ) {
   try {
-    const renderResult = await getRenderedRequestAndContext(request, environmentId);
+    const renderResult = await getRenderedRequestAndContext({ request, environmentId });
     const renderedRequest = await _applyRequestPluginHooks(
       renderResult.request,
       renderResult.context,
