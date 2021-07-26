@@ -325,11 +325,6 @@ class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   async _loadAndSetLocalSchema() {
-    const newState: Partial<State> = {
-      schemaFetchError: null,
-      schemaIsFetching: false,
-    };
-
     const options: OpenDialogOptions = {
       title: 'Import GraphQL introspection schema',
       buttonLabel: 'Import',
@@ -357,18 +352,27 @@ class GraphQLEditor extends PureComponent<Props, State> {
         throw new Error('JSON file should have a data field with the introspection results');
       }
 
-      newState.schema = buildClientSchema(content.data);
-      newState.schemaLastFetchTime = Date.now();
+      if (this._isMounted) {
+        return;
+      }
+      this.setState({
+        schema: buildClientSchema(content.data),
+        schemaLastFetchTime: Date.now(),
+        schemaFetchError: null,
+        schemaIsFetching: false,
+      });
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
-      newState.schemaFetchError = {
-        message: `Failed to fetch schema: ${err.message}`,
-        response: null,
-      };
-    }
-
-    if (this._isMounted) {
-      this.setState(existingState => ({ ...existingState, ...newState }));
+      if (!this._isMounted) {
+        return;
+      }
+      this.setState({
+        schemaFetchError: {
+          message: `Failed to fetch schema: ${err.message}`,
+          response: null,
+        },
+        schemaIsFetching: false,
+      });
     }
   }
 
