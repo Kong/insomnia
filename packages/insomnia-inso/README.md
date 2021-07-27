@@ -151,7 +151,7 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 | `--testNamePattern <regex>` | `-t` | run tests that match the regex|
 | `--bail` | `-b` | abort ("bail") after the first test failure|
 | `--keepFile` | | do not delete the generated test file (useful for debugging)|
-| `--disableSSL` | | disable SSL validation|
+| `--disableCertValidation` | | disable certificate validation|
 
 ### Examples
 

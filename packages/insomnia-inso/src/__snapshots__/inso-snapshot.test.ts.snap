@@ -168,6 +168,6 @@ Options:
                                  progress, spec] (default: spec)
   -b, --bail                     abort (\\"bail\\") after first test failure
   --keepFile                     do not delete the generated test file
-  --disableSSL                   disable SSL validation
+  --disableCertValidation        disable certificate validation
   -h, --help                     display help for command"
 `;
