@@ -52,6 +52,7 @@ import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
+import { isNotBaseSpace } from '../../models/space';
 import { isCollection, isWorkspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import * as network from '../../network/network';
@@ -1338,7 +1339,9 @@ class App extends PureComponent<AppProps, State> {
               const bufferId = await db.bufferChanges();
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await db.all(type);
-              await db.batchModifyDocs({ remove: allEntities });
+              const filteredEntites = allEntities
+                .filter(isNotBaseSpace); // don't clear the base space
+              await db.batchModifyDocs({ remove: filteredEntites });
               db.flushChanges(bufferId);
             }
           },
@@ -1360,7 +1363,9 @@ class App extends PureComponent<AppProps, State> {
                 .reverse().map(async type => {
                   console.log(`[developer] clearing all "${type}" entities`);
                   const allEntities = await db.all(type);
-                  await db.batchModifyDocs({ remove: allEntities });
+                  const filteredEntites = allEntities
+                    .filter(isNotBaseSpace); // don't clear the base space
+                  await db.batchModifyDocs({ remove: filteredEntites });
                 });
               await Promise.all(promises);
               db.flushChanges(bufferId);
