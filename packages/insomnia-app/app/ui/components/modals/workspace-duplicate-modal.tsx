@@ -15,7 +15,7 @@ import { isBaseSpace, isLocalSpace, isRemoteSpace, Space } from '../../../models
 import { Workspace } from '../../../models/workspace';
 import { initializeLocalProjectAndMarkForSync } from '../../../sync/vcs/initialize-project';
 import { VCS } from '../../../sync/vcs/vcs';
-import { setActiveSpace, setActiveWorkspace } from '../../redux/modules/global';
+import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveSpace, selectIsLoggedIn, selectSpaces } from '../../redux/selectors';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -81,8 +81,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
       await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }
 
-    dispatch(setActiveSpace(spaceId));
-    dispatch(setActiveWorkspace(newWorkspace._id));
+    dispatch(activateWorkspace(newWorkspace));
     hide();
     onDone?.();
   }, [dispatch, hide, isLoggedIn, onDone, spaces, vcs, workspace]);

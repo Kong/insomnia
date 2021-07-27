@@ -388,3 +388,8 @@ export const selectIsLoggedIn = createSelector(
   (state: RootState) => state.global,
   global => global.isLoggedIn,
 );
+
+export const selectActiveActivity = createSelector(
+  (state: RootState) => state.global,
+  global => global.activeActivity,
+);
