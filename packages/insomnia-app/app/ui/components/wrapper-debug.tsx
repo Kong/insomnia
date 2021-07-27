@@ -106,7 +106,6 @@ class WrapperDebug extends PureComponent<Props> {
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
       handleGenerateCode,
-      handleMoveDoc,
       handleRender,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
@@ -161,7 +160,6 @@ class WrapperDebug extends PureComponent<Props> {
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
           handleRender={handleRender}
-          moveDoc={handleMoveDoc}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
         />

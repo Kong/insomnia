@@ -88,7 +88,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
       connectDragSource,
       connectDropTarget,
       filter,
-      moveDoc,
       children,
       requestGroup,
       isCollapsed,
@@ -172,7 +171,6 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
               handleCopyAsCurl={misc.nullFn}
               handleSetRequestPinned={misc.nullFn}
               handleRender={handleRender}
-              moveDoc={moveDoc}
               isActive={false}
               requestGroup={requestGroup}
               requestCreate={handleCreateRequest}

@@ -45,7 +45,6 @@ interface Props extends ReduxProps {
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleRender: HandleRender;
-  moveDoc: Function;
   childObjects: SidebarChildObjects;
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
@@ -91,7 +90,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
       handleGenerateCode,
       handleCopyAsCurl,
       handleRender,
-      moveDoc,
       handleActivateRequest,
       activeRequest,
       hotKeyRegistry,
@@ -107,7 +105,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
           <SidebarRequestRow
             key={child.doc._id}
             filter={isInPinnedList ? '' : filter || ''}
-            moveDoc={moveDoc}
             handleActivateRequest={handleActivateRequest}
             handleSetRequestPinned={handleSetRequestPinned}
             handleDuplicateRequest={handleDuplicateRequest}
@@ -149,7 +146,6 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
           key={requestGroup._id}
           filter={filter || ''}
           isActive={isActive}
-          moveDoc={moveDoc}
           handleActivateRequest={handleActivateRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
