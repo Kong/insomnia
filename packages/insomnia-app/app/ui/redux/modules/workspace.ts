@@ -1,12 +1,12 @@
 import { Dispatch } from 'redux';
 
 import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, isCollectionActivity, isDesignActivity } from '../../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showPrompt } from '../../components/modals';
-import { selectActiveActivity, selectActiveSpace, selectActiveWorkspace } from '../selectors';
+import { selectActiveActivity, selectActiveSpace } from '../selectors';
 import { RootState } from '.';
 import { setActiveActivity, setActiveSpace, setActiveWorkspace } from './global';
 
@@ -76,20 +76,14 @@ export const activateWorkspace = (workspace: Workspace) => {
   return async (dispatch: Dispatch, getState: () => RootState) => {
     
     const activeActivity = selectActiveActivity(getState()) || undefined;
-    const activeSpace = selectActiveSpace(getState());
-    const activeWorkspace = selectActiveWorkspace(getState());
     
     // Activate the correct space
     const nextSpaceId = workspace.parentId;
-    if (activeSpace._id !== nextSpaceId){
-      dispatch(setActiveSpace(nextSpaceId));
-    }
+    dispatch(setActiveSpace(nextSpaceId));
 
     // Activate the correct workspace
     const nextWorkspaceId = workspace._id;
-    if (activeWorkspace?._id !== nextWorkspaceId) {
-      dispatch(setActiveWorkspace(nextWorkspaceId));
-    }
+    dispatch(setActiveWorkspace(nextWorkspaceId));
     
     // Activate the correct activity
     if (isCollection(workspace) && isCollectionActivity(activeActivity)) {
@@ -100,7 +94,7 @@ export const activateWorkspace = (workspace: Workspace) => {
       return;
     } else {
       const { activeActivity: cachedActivity } = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
-      const nextActivity = cachedActivity ||  isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG;
+      const nextActivity = cachedActivity as GlobalActivity ||  (isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG);
       dispatch(setActiveActivity(nextActivity));
     }
   };
