@@ -73,7 +73,8 @@ export const createWorkspace = ({ scope, onCreate }: {
 };
 
 export const activateWorkspace = (workspace: Workspace) => {
-  return (dispatch: Dispatch, getState: () => RootState) => {
+  return async (dispatch: Dispatch, getState: () => RootState) => {
+    
     const activeActivity = selectActiveActivity(getState()) || undefined;
     const activeSpace = selectActiveSpace(getState());
     const activeWorkspace = selectActiveWorkspace(getState());
@@ -98,7 +99,8 @@ export const activateWorkspace = (workspace: Workspace) => {
       // we are in a design document, and our active activity is a design activity
       return;
     } else {
-      const nextActivity = isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG;
+      const { activeActivity: cachedActivity } = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+      const nextActivity = cachedActivity ||  isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG;
       dispatch(setActiveActivity(nextActivity));
     }
   };
