@@ -113,14 +113,29 @@ function OrderFilterDropdown(props: OrderFilterDropdownProps) {
   );
 }
 
-type GetCardPropsInput = {
+type MapWorkspaceToWorkspaceCardInput = {
   apiSpecs: ApiSpec[];
   workspaceMetas: WorkspaceMeta[];
   filter: string;
   workspace: Workspace;
 };
 
-function getCardProps(input: GetCardPropsInput) {
+function mapWorkspaceToWorkspaceCard(
+  input: MapWorkspaceToWorkspaceCardInput,
+): Pick<
+  WorkspaceCardProps,
+  | 'hasUnsavedChanges'
+  | 'lastModifiedTimestamp'
+  | 'modifiedLocally'
+  | 'lastCommitTime'
+  | 'lastCommitAuthor'
+  | 'lastActiveBranch'
+  | 'spec'
+  | 'specFormat'
+  | 'apiSpec'
+  | 'specFormatVersion'
+  | 'workspace'
+> | null {
   const { apiSpecs, workspaceMetas, workspace } = input;
   const apiSpec = apiSpecs.find((s) => s.parentId === workspace._id);
 
@@ -146,14 +161,14 @@ function getCardProps(input: GetCardPropsInput) {
   // Get cached branch from WorkspaceMeta
   const workspaceMeta = workspaceMetas?.find((wm) => wm.parentId === workspace._id);
 
-  const lastActiveBranch = workspaceMeta ? workspaceMeta.cachedGitRepositoryBranch : null;
+  const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
 
-  const lastCommitAuthor = workspaceMeta ? workspaceMeta.cachedGitLastAuthor : null;
+  const lastCommitAuthor = workspaceMeta?.cachedGitLastAuthor;
 
-  const lastCommitTime = workspaceMeta ? workspaceMeta.cachedGitLastCommitTime : null;
+  const lastCommitTime = workspaceMeta?.cachedGitLastCommitTime;
 
   // WorkspaceMeta is a good proxy for last modified time
-  const workspaceModified = workspaceMeta ? workspaceMeta.modified : workspace.modified;
+  const workspaceModified = workspaceMeta?.modified;
 
   const modifiedLocally = isDesign(workspace) ? apiSpec.modified : workspaceModified;
 
@@ -164,11 +179,17 @@ function getCardProps(input: GetCardPropsInput) {
     apiSpec.modified,
     workspaceMeta?.cachedGitLastCommitTime,
   ];
+
   const lastModifiedTimestamp = lastModifiedFrom
     .filter(isNotNullOrUndefined)
     .sort(descendingNumberSort)[0];
 
+  let hasUnsavedChanges = Boolean(
+    isDesign(workspace) && lastCommitTime && apiSpec.modified > lastCommitTime,
+  );
+
   return {
+    hasUnsavedChanges,
     lastModifiedTimestamp,
     modifiedLocally,
     lastCommitTime,
@@ -184,17 +205,18 @@ function getCardProps(input: GetCardPropsInput) {
 
 type WorkspaceCardProps = {
   apiSpec: ApiSpec;
+  workspace: Workspace;
   filter: string;
   activeSpace: Space;
-  lastActiveBranch?: string;
+  lastActiveBranch?: string | null;
   lastModifiedTimestamp: number;
-  lastCommitTime?: number;
-  modifiedLocally: number;
-  workspace: Workspace;
-  lastCommitAuthor?: string;
+  lastCommitTime?: number | null;
+  lastCommitAuthor?: string | null;
+  modifiedLocally?: number;
   spec: Record<string, any> | null;
   specFormat: 'openapi' | 'swagger' | null;
   specFormatVersion: string | null;
+  hasUnsavedChanges: boolean;
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
 };
 
@@ -212,6 +234,7 @@ function WorkspaceCard(props: WorkspaceCardProps) {
     spec,
     specFormat,
     specFormatVersion,
+    hasUnsavedChanges,
   } = props;
 
   let branch = lastActiveBranch;
@@ -219,18 +242,17 @@ function WorkspaceCard(props: WorkspaceCardProps) {
   // @TODO Figure out how we should handle a missing timestamp
   let log = <TimeFromNow timestamp={lastModifiedTimestamp || new Date()} />;
 
-  if (isDesign(workspace) && lastCommitTime && apiSpec.modified > lastCommitTime) {
+  if (hasUnsavedChanges) {
     // Show locally unsaved changes for spec
     // NOTE: this doesn't work for non-spec workspaces
     branch = lastActiveBranch + '*';
     log = (
       <Fragment>
-        <TimeFromNow className="text-danger" timestamp={modifiedLocally} /> (unsaved)
+        <TimeFromNow className="text-danger" timestamp={modifiedLocally || new Date()} /> (unsaved)
       </Fragment>
     );
   } else if (lastCommitTime) {
     // Show last commit time and author
-    branch = lastActiveBranch;
     log = (
       <Fragment>
         <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
@@ -466,7 +488,7 @@ class WrapperHome extends PureComponent<Props, State> {
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces
       .map((workspace) =>
-        getCardProps({
+        mapWorkspaceToWorkspaceCard({
           workspace,
           workspaceMetas,
           apiSpecs,
@@ -477,10 +499,10 @@ class WrapperHome extends PureComponent<Props, State> {
       .sort(orderSpaceCards(activeSpace?.order || 'DateModifiedDescending'))
       .map((props) => (
         <WorkspaceCard
-          activeSpace={activeSpace}
-          key={props?.apiSpec._id}
-          onSelect={this._handleClickCard}
           {...props}
+          key={props.apiSpec._id}
+          activeSpace={activeSpace}
+          onSelect={this._handleClickCard}
           filter={filter}
         />
       ));
