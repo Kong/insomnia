@@ -86,7 +86,7 @@ export const activateWorkspace = (workspace: Workspace) => {
 
     // Activate the correct workspace
     const nextWorkspaceId = workspace._id;
-    if (activeWorkspace !== nextWorkspaceId) {
+    if (activeWorkspace?._id !== nextWorkspaceId) {
       dispatch(setActiveWorkspace(nextWorkspaceId));
     }
     
