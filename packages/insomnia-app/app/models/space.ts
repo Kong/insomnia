@@ -4,11 +4,11 @@ import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
 
 export type SpaceItemsSortOrder =
-  | "DateModifiedDescending"
-  | "NameAscending"
-  | "NameDescending"
-  | "DateCreatedAscending"
-  | "DateCreatedDescending";
+  | 'DateModifiedDescending'
+  | 'NameAscending'
+  | 'NameDescending'
+  | 'DateCreatedAscending'
+  | 'DateCreatedDescending';
 
 export const name = 'Space';
 export const type = 'Space';
@@ -44,7 +44,7 @@ export function init(): BaseSpace {
   return {
     name: 'My Space',
     remoteId: null, // `null` is necessary for the model init logic to work properly
-    order: "DateModifiedDescending"
+    order: 'DateModifiedDescending',
   };
 }
 

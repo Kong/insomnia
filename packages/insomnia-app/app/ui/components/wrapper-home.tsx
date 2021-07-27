@@ -29,15 +29,18 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import * as models from '../../models';
+import { ApiSpec } from '../../models/api-spec';
+import { Space, SpaceItemsSortOrder } from '../../models/space';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
+import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
-import { createWorkspace } from '../redux/modules/workspace';
 import { updateSpaceItemsOrder } from '../redux/modules/space';
+import { createWorkspace } from '../redux/modules/workspace';
 import Highlight from './base/highlight';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
@@ -50,9 +53,6 @@ import Notice from './notice';
 import PageLayout from './page-layout';
 import TimeFromNow from './time-from-now';
 import type { WrapperProps } from './wrapper';
-import { Space, SpaceItemsSortOrder } from '../../models/space';
-import { ApiSpec } from '../../models/api-spec';
-import { WorkspaceMeta } from '../../models/workspace-meta';
 
 interface Props extends ReturnType<typeof mapDispatchToProps> {
   wrapperProps: WrapperProps;
@@ -75,16 +75,18 @@ function orderSpaceCards(orderBy: SpaceItemsSortOrder) {
         return cardA.workspace.created - cardB.workspace.created;
       case 'DateCreatedDescending':
         return cardB.workspace.created - cardA.workspace.created;
+      default:
+        return cardB.lastModifiedTimestamp - cardA.lastModifiedTimestamp;
     }
   };
 }
 
-type OrderFilterDropdownProps = {
+interface OrderFilterDropdownProps {
   onSelect: (value: SpaceItemsSortOrder) => void;
-};
+}
 
 function OrderFilterDropdown(props: OrderFilterDropdownProps) {
-  let { onSelect } = props;
+  const { onSelect } = props;
 
   return (
     <Dropdown
@@ -113,12 +115,12 @@ function OrderFilterDropdown(props: OrderFilterDropdownProps) {
   );
 }
 
-type MapWorkspaceToWorkspaceCardInput = {
+interface MapWorkspaceToWorkspaceCardInput {
   apiSpecs: ApiSpec[];
   workspaceMetas: WorkspaceMeta[];
   filter: string;
   workspace: Workspace;
-};
+}
 
 function mapWorkspaceToWorkspaceCard(
   input: MapWorkspaceToWorkspaceCardInput,
@@ -184,7 +186,7 @@ function mapWorkspaceToWorkspaceCard(
     .filter(isNotNullOrUndefined)
     .sort(descendingNumberSort)[0];
 
-  let hasUnsavedChanges = Boolean(
+  const hasUnsavedChanges = Boolean(
     isDesign(workspace) && lastCommitTime && apiSpec.modified > lastCommitTime,
   );
 
@@ -203,7 +205,7 @@ function mapWorkspaceToWorkspaceCard(
   };
 }
 
-type WorkspaceCardProps = {
+interface WorkspaceCardProps {
   apiSpec: ApiSpec;
   workspace: Workspace;
   filter: string;
@@ -218,7 +220,7 @@ type WorkspaceCardProps = {
   specFormatVersion: string | null;
   hasUnsavedChanges: boolean;
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
-};
+}
 
 function WorkspaceCard(props: WorkspaceCardProps) {
   const {

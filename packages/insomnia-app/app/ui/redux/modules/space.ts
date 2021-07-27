@@ -50,5 +50,5 @@ export const updateSpaceItemsOrder =
     models.space
       .update(space, {
         order,
-      })
+      });
   };
