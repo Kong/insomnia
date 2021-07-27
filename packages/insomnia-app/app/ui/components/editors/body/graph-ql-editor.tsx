@@ -352,7 +352,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
         throw new Error('JSON file should have a data field with the introspection results');
       }
 
-      if (this._isMounted) {
+      if (!this._isMounted) {
         return;
       }
       this.setState({
