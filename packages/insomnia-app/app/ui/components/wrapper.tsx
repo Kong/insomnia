@@ -537,7 +537,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} settings={settings} />
             <SpaceSettingsModal ref={registerModal} />
-            <WorkspaceDuplicateModal ref={registerModal} />
+            <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
 
             <CodePromptModal
               ref={registerModal}

@@ -383,3 +383,8 @@ export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
   getStatusCandidates,
 );
+
+export const selectIsLoggedIn = createSelector(
+  (state: RootState) => state.global,
+  global => global.isLoggedIn,
+);

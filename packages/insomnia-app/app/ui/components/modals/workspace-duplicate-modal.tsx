@@ -1,18 +1,22 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { createRef, FC, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
+import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
+import * as models from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { isBaseSpace, isLocalSpace, Space } from '../../../models/space';
+import { isBaseSpace, isLocalSpace, isRemoteSpace, Space } from '../../../models/space';
 import { Workspace } from '../../../models/workspace';
+import { initializeLocalProjectAndMarkForSync } from '../../../sync/vcs/initialize-project';
+import { VCS } from '../../../sync/vcs/vcs';
 import { setActiveSpace, setActiveWorkspace } from '../../redux/modules/global';
-import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
+import { selectActiveSpace, selectIsLoggedIn, selectSpaces } from '../../redux/selectors';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
@@ -30,7 +34,7 @@ interface FormFields {
   spaceId: string;
 }
 
-interface Props extends Options {
+interface InnerProps extends Options, Props {
   hide: () => void,
 }
 
@@ -40,11 +44,12 @@ const SpaceOption: FC<Space> = space => (
   </option>
 );
 
-const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, Props> = ({ workspace, apiSpec, onDone, hide }, ref) => {
+const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, InnerProps> = ({ workspace, apiSpec, onDone, hide, vcs }, ref) => {
   const dispatch = useDispatch();
 
   const spaces = useSelector(selectSpaces);
   const activeSpace = useSelector(selectActiveSpace);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const title = `Duplicate ${getWorkspaceLabel(workspace).singular}`;
   const defaultWorkspaceName = getWorkspaceName(workspace, apiSpec);
@@ -62,13 +67,25 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, Pr
       },
     });
 
-  const onSubmit = async ({ spaceId, newName }: FormFields) => {
+  const onSubmit = useCallback(async ({ spaceId, newName }: FormFields) => {
+    const duplicateToSpace = spaces.find(s => s._id === spaceId);
+    if (!duplicateToSpace) {
+      throw new Error('Space could not be found');
+    }
+    
     const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: spaceId });
+    await models.workspace.ensureChildren(newWorkspace);
+    
+    // Mark for sync if logged in and in the expected space
+    if (isLoggedIn && vcs && isRemoteSpace(duplicateToSpace)) {
+      await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
+    }
+
     dispatch(setActiveSpace(spaceId));
     dispatch(setActiveWorkspace(newWorkspace._id));
     hide();
     onDone?.();
-  };
+  }, [dispatch, hide, isLoggedIn, onDone, spaces, vcs, workspace]);
 
   return <Modal ref={ref} onShow={reset}>
     <ModalHeader>{title}</ModalHeader>
@@ -101,12 +118,16 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, Pr
 
 const WorkspaceDuplicateModalInternal = forwardRef(WorkspaceDuplicateModalInternalWithRef);
 
+interface Props {
+  vcs?: VCS;
+}
+
 interface State {
   options?: Options;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class WorkspaceDuplicateModal extends PureComponent<{}, State> {
+export class WorkspaceDuplicateModal extends PureComponent<Props, State> {
   state: State = { };
   modal = createRef<Modal>();
 
@@ -125,6 +146,7 @@ export class WorkspaceDuplicateModal extends PureComponent<{}, State> {
       return <WorkspaceDuplicateModalInternal
         ref={this.modal}
         {...this.state.options}
+        {...this.props}
         hide={this.hide}
       />;
     } else {
