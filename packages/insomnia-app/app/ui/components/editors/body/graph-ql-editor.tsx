@@ -679,15 +679,10 @@ class GraphQLEditor extends PureComponent<Props, State> {
             <i className="fa fa-file-code-o" /> Show Documentation
           </DropdownItem>
           <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
-            <i className={'fa fa-refresh ' + (schemaIsFetching ? 'fa-spin' : '')} /> Refresh Schema
+            <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
           </DropdownItem>
           <DropdownItem onClick={this._handleToggleAutomaticFetching} stayOpenAfterClick>
-            <i
-              className={classnames('fa', {
-                'fa-toggle-on': automaticFetch,
-                'fa-toggle-off': !automaticFetch,
-              })}
-            />{' '}
+            <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
             Automatic Fetch
             <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
           </DropdownItem>
