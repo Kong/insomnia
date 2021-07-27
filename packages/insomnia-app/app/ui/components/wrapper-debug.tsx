@@ -14,7 +14,7 @@ import GrpcRequestPane from './panes/grpc-request-pane';
 import GrpcResponsePane from './panes/grpc-response-pane';
 import RequestPane from './panes/request-pane';
 import ResponsePane from './panes/response-pane';
-import SidebarChildren from './sidebar/sidebar-children';
+import { SidebarChildren } from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
 import WorkspacePageHeader from './workspace-page-header';
 import type { WrapperProps } from './wrapper';
@@ -96,9 +96,7 @@ class WrapperDebug extends PureComponent<Props> {
       handleSidebarSort,
     } = this.props;
     const {
-      activeSpace,
       activeEnvironment,
-      activeRequest,
       activeWorkspace,
       environments,
       handleActivateRequest,
@@ -116,8 +114,6 @@ class WrapperDebug extends PureComponent<Props> {
       settings,
       sidebarChildren,
       sidebarFilter,
-      sidebarHidden,
-      sidebarWidth,
     } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
@@ -166,15 +162,8 @@ class WrapperDebug extends PureComponent<Props> {
           handleCopyAsCurl={handleCopyAsCurl}
           handleRender={handleRender}
           moveDoc={handleMoveDoc}
-          // @ts-expect-error -- TSCONVERSION this prop isn't sent
-          hidden={sidebarHidden}
-          width={sidebarWidth}
-          workspace={activeWorkspace}
-          activeRequest={activeRequest}
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
-          activeEnvironment={activeEnvironment}
-          activeSpace={activeSpace}
         />
       </Fragment>
     );
