@@ -671,13 +671,17 @@ class GraphQLEditor extends PureComponent<Props, State> {
     return (
       <div className="graphql-editor">
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
+          
           <DropdownButton className="space-left btn btn--micro btn--outlined">
             schema <i className="fa fa-wrench" />
           </DropdownButton>
-          <DropdownDivider>GraphQL Schema</DropdownDivider>
+
           <DropdownItem onClick={this._handleShowDocumentation} disabled={!schema}>
             <i className="fa fa-file-code-o" /> Show Documentation
           </DropdownItem>
+
+          <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
+          
           <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
             <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
           </DropdownItem>
@@ -686,6 +690,9 @@ class GraphQLEditor extends PureComponent<Props, State> {
             Automatic Fetch
             <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
           </DropdownItem>
+
+          <DropdownDivider>Local GraphQL Schema</DropdownDivider>
+
           <DropdownItem onClick={this._handleSetLocalSchema}>
             <i className="fa fa-file-code-o" /> Load schema from JSON
             <HelpTooltip>
@@ -694,6 +701,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
             </HelpTooltip>
           </DropdownItem>
         </Dropdown>
+
         <div className="graphql-editor__query">
           <CodeEditor
             dynamicHeight
