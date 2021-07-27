@@ -214,8 +214,14 @@ function isOnExpandTag(monitor: DropTargetMonitor, component: UnconnectedSidebar
 
 const hoverHandle = hoverHandleCreator<Props>();
 
+const dropHandle = dropHandleCreator<Props>({
+  getMovingDoc: monitor => (monitor.getItem() as ReturnType<typeof dragSource['beginDrag']>).requestGroup,
+  getParentId: props => props.requestGroup.parentId,
+  getTargetId: props => props.requestGroup._id,
+});
+
 const dragTarget: DropTargetSpec<Props> = {
-  drop: dropHandleCreator<Props>(),
+  drop: dropHandle,
   hover: (props, monitor, component) => {
     if (props.isCollapsed && isOnExpandTag(monitor, component)) {
       component.props.handleSetRequestGroupCollapsed(props.requestGroup._id, false);

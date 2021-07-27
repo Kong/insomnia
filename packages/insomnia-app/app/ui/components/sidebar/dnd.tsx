@@ -4,9 +4,6 @@ import ReactDOM from 'react-dom';
 import { database } from '../../../common/database';
 import { BaseModel } from '../../../models';
 import * as models from '../../../models';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { Request } from '../../../models/request';
-import { RequestGroup } from '../../../models/request-group';
 
 export type DnDProps = ReturnType<typeof sourceCollect> & ReturnType<typeof targetCollect>;
 
@@ -28,36 +25,34 @@ export const isAbove = (monitor: DropTargetMonitor, component: any) => {
   return draggedTop && hoveredTop > draggedTop;
 };
 
-interface DropProps extends DnDProps {
-  requestGroup?: RequestGroup;
-  request?: Request | GrpcRequest;
-}
+export const dropHandleCreator = <Props extends Object>(
+  {
+    getParentId,
+    getTargetId,
+    getMovingDoc,
+  }: {
+    getParentId: (props: Props) => string | undefined;
+    getTargetId: (props: Props) => string | undefined;
+    getMovingDoc: (monitor: DropTargetMonitor) => BaseModel | undefined;
+  }
+): Required<DropTargetSpec<Props>>['drop'] =>
+    (props, monitor, component) => {
+      const movingDoc = getMovingDoc(monitor);
+      const parentId = getParentId(props);
+      const targetId = getTargetId(props);
+        
+      if (!movingDoc || !parentId || !targetId) {
+        return;
+      }
 
-interface DragSourceItem {
-  requestGroup?: RequestGroup;
-  request?: Request | GrpcRequest;
-}  
+      if (isAbove(monitor, component)) {
+        moveDoc(movingDoc, parentId, targetId, 1);
+      } else {
+        moveDoc(movingDoc, parentId, targetId, -1);
+      }
+    };
 
-export const dropHandleCreator = <T extends DropProps>(): Required<DropTargetSpec<T>>['drop'] =>
-  (props, monitor, component) => {
-    const item = monitor.getItem() as DragSourceItem;
-    const movingDoc = item.requestGroup || item.request;
-    
-    const parentId = props.requestGroup?._id || props.request?.parentId;
-    const targetId = props.request?._id;
-    
-    if (!movingDoc || !parentId || !targetId) {
-      return;
-    }
-
-    if (isAbove(monitor, component)) {
-      moveDoc(movingDoc, parentId, targetId, 1);
-    } else {
-      moveDoc(movingDoc, parentId, targetId, -1);
-    }
-  };
-
-export const hoverHandleCreator = <T extends DropProps>(): Required<DropTargetSpec<T>>['hover'] =>
+export const hoverHandleCreator = <Props extends Object>(): Required<DropTargetSpec<Props>>['hover'] =>
   (_, monitor, component) => {
     if (isAbove(monitor, component)) {
       component.setDragDirection(1);

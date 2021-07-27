@@ -313,9 +313,17 @@ const dragSource: DragSourceSpec<Props, Pick<Props, 'request'>> = {
   },
 };
 
+const dropHandle = dropHandleCreator<Props>({
+  getMovingDoc: monitor => (monitor.getItem() as ReturnType<typeof dragSource['beginDrag']>).request,
+  getParentId: props => props.requestGroup?._id || props.request?.parentId,
+  getTargetId: props => props.request?._id,
+});
+
+const hoverHandle = hoverHandleCreator<Props>();
+
 const dragTarget: DropTargetSpec<Props> = {
-  drop: dropHandleCreator<Props>(),
-  hover: hoverHandleCreator<Props>(),
+  drop: dropHandle,
+  hover: hoverHandle,
 };
 
 const mapStateToProps = (state: RootState) => ({
