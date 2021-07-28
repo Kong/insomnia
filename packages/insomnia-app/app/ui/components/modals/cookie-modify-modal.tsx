@@ -15,6 +15,7 @@ import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
 import ModalHeader from '../base/modal-header';
 import OneLineEditor from '../codemirror/one-line-editor';
+import { showModal } from '.';
 
 interface Props extends ModalProps {
   handleRender: HandleRender;
@@ -46,7 +47,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     value: 'bar',
     domain: 'example.com',
     path: '/',
-    expires: `${KONG_INITIAL_COMMIT_TIMESTAMP} (Unix Timesamp in Milliseconds)`,
+    expires: new Date(KONG_INITIAL_COMMIT_TIMESTAMP).toUTCString(),
   };
 
   _setModalRef(n: Modal) {
@@ -162,7 +163,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     const newCookie = {
       ...cookie,
       [field]: value,
-    };
+    } as Cookie;
     if (this._cookieUpdateTimeout !== null) {
       clearTimeout(this._cookieUpdateTimeout);
     }
@@ -226,13 +227,25 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   validateExpires() {
     const { cookie } = this.state;
 
-    if ((cookie?.expires || 0) > TOUGH_COOKIE_MAX_TIMESTAMP) {
-      return `expiration date ${cookie?.expires} is greater than the max allowable timestamp by our cookie implementation tough-cookie: ${TOUGH_COOKIE_MAX_TIMESTAMP}`;
+    if (!cookie) {
+      return null;
     }
 
-    const computedDate = new Date(cookie?.expires || 0).getTime();
+    if (cookie.expires === null) {
+      return null;
+    }
 
-    return isNaN(computedDate) ? 'Invalid Date' : null;
+    const utcDate = new Date(cookie.expires || '').getTime();
+
+    if (isNaN(utcDate)) {
+      return 'Invalid Date';
+    }
+
+    if (utcDate > TOUGH_COOKIE_MAX_TIMESTAMP) {
+      return `expiration date "${cookie.expires}" is greater than the max allowable timestamp by our cookie implementation (tough-cookie): ${TOUGH_COOKIE_MAX_TIMESTAMP}`;
+    }
+
+    return null;
   }
 
   render() {
@@ -308,3 +321,5 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     );
   }
 }
+
+export const showModifyCookieModal = (cookie: Cookie) => showModal(CookieModifyModal, cookie);

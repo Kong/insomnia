@@ -14,6 +14,7 @@ import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
 import ModalHeader from '../base/modal-header';
 import CookieList, { CookieListProps } from '../cookie-list';
+import { showModifyCookieModal } from './cookie-modify-modal';
 
 interface Props extends ModalProps {
   handleShowModifyCookieModal: CookieListProps['handleShowModifyCookieModal'];
@@ -58,7 +59,7 @@ class CookiesModal extends PureComponent<Props, State> {
       key: '',
       value: '',
       domain: filter || '',
-      expires: 0,
+      expires: null,
       path: '',
       secure: false,
       httpOnly: false,
@@ -68,6 +69,7 @@ class CookiesModal extends PureComponent<Props, State> {
     const { cookies } = cookieJar;
     cookieJar.cookies = [newCookie, ...cookies];
     await this._saveChanges();
+    showModifyCookieModal(newCookie);
   }
 
   async _handleDeleteAllCookies() {
