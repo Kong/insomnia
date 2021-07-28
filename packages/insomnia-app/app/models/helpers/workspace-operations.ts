@@ -15,9 +15,10 @@ export async function rename(w: Workspace, s: ApiSpec, name: string) {
   }
 }
 
-export async function duplicate(w: Workspace, name: string) {
+export async function duplicate(w: Workspace, { name, parentId }: Pick<Workspace, 'name' | 'parentId'>) {
   const newWorkspace = await db.duplicate(w, {
     name,
+    parentId,
   });
   await models.apiSpec.updateOrCreateForParentId(newWorkspace._id, {
     fileName: name,
