@@ -17,6 +17,7 @@ export interface ModalProps {
   noEscape?: boolean,
   dontFocus?: boolean,
   closeOnKeyCodes?: any[],
+  onShow?: Function,
   onHide?: Function,
   onCancel?: Function,
   onKeyDown?: Function,
@@ -106,6 +107,8 @@ class Modal extends PureComponent<ModalProps, State> {
       zIndex: globalZIndex++,
       forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
     });
+
+    this.props.onShow?.();
 
     if (this.props.dontFocus) {
       return;

@@ -29,6 +29,7 @@ import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import * as models from '../../models';
+import { isRemoteSpace } from '../../models/space';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
@@ -95,10 +96,8 @@ class WrapperHome extends PureComponent<Props, State> {
     handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
       onCreate: async workspace => {
-        const spaceRemoteId = activeSpace?.remoteId;
-
         // Don't mark for sync if not logged in at the time of creation
-        if (isLoggedIn && vcs && spaceRemoteId) {
+        if (isLoggedIn && vcs && isRemoteSpace(activeSpace)) {
           await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
