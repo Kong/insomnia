@@ -4,8 +4,17 @@ import ReactDOM from 'react-dom';
 import { database } from '../../../common/database';
 import { BaseModel } from '../../../models';
 import * as models from '../../../models';
+import { GrpcRequest } from '../../../models/grpc-request';
+import { Request } from '../../../models/request';
+import { RequestGroup } from '../../../models/request-group';
 
-export type DnDProps = ReturnType<typeof sourceCollect> & ReturnType<typeof targetCollect>;
+export type DnDDragProps = ReturnType<typeof sourceCollect>;
+export type DnDDropProps = ReturnType<typeof targetCollect>;
+export type DnDProps =  DnDDragProps & DnDDropProps;
+
+export interface DragObject {
+  item?: GrpcRequest | Request | RequestGroup;
+}
 
 export const sourceCollect = (connect: DragSourceConnector, monitor: DragSourceMonitor) => ({
   connectDragSource: connect.dragSource(),
@@ -29,15 +38,14 @@ export const dropHandleCreator = <Props extends Object>(
   {
     getParentId,
     getTargetId,
-    getMovingDoc,
   }: {
     getParentId: (props: Props) => string | undefined;
     getTargetId: (props: Props) => string | undefined;
-    getMovingDoc: (monitor: DropTargetMonitor) => BaseModel | undefined;
   }
 ): Required<DropTargetSpec<Props>>['drop'] =>
     (props, monitor, component) => {
-      const movingDoc = getMovingDoc(monitor);
+      // the item comes from the dragSource
+      const movingDoc = (monitor.getItem() as DragObject).item;
       const parentId = getParentId(props);
       const targetId = getTargetId(props);
         

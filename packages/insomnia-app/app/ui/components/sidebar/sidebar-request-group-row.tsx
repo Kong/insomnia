@@ -17,7 +17,7 @@ import Highlight from '../base/highlight';
 import { RequestGroupActionsDropdown, UnconnectedRequestGroupActionsDropdown } from '../dropdowns/request-group-actions-dropdown';
 import { showModal } from '../modals';
 import RequestGroupSettingsModal from '../modals/request-group-settings-modal';
-import { DnDProps, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
+import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 import { SidebarRequestRow } from './sidebar-request-row';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
@@ -188,10 +188,10 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
 /**
  * Implements the drag source contract.
  */
-const dragSource: DragSourceSpec<Props, Pick<Props, 'requestGroup'>> = {
+const dragSource: DragSourceSpec<Props, DragObject> = {
   beginDrag(props: Props) {
     return {
-      requestGroup: props.requestGroup,
+      item: props.requestGroup,
     };
   },
 };
@@ -215,7 +215,6 @@ function isOnExpandTag(monitor: DropTargetMonitor, component: UnconnectedSidebar
 const hoverHandle = hoverHandleCreator<Props>();
 
 const dropHandle = dropHandleCreator<Props>({
-  getMovingDoc: monitor => (monitor.getItem() as ReturnType<typeof dragSource['beginDrag']>).requestGroup,
   getParentId: props => props.requestGroup.parentId,
   getTargetId: props => props.requestGroup._id,
 });
@@ -232,8 +231,8 @@ const dragTarget: DropTargetSpec<Props> = {
   },
 };
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestGroupRow);
-const target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestGroupRow);
+const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 const connected = connect(mapStateToProps)(target);
 
 export const SidebarRequestGroupRow = connected;

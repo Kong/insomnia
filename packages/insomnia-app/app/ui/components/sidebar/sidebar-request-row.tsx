@@ -22,7 +22,7 @@ import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import GrpcTag from '../tags/grpc-tag';
 import MethodTag from '../tags/method-tag';
-import { DnDProps, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
+import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
@@ -305,16 +305,15 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
   }
 }
 
-const dragSource: DragSourceSpec<Props, Pick<Props, 'request'>> = {
+const dragSource: DragSourceSpec<Props, DragObject> = {
   beginDrag(props) {
     return {
-      request: props.request,
+      item: props.request,
     };
   },
 };
 
 const dropHandle = dropHandleCreator<Props>({
-  getMovingDoc: monitor => (monitor.getItem() as ReturnType<typeof dragSource['beginDrag']>).request,
   getParentId: props => props.requestGroup?._id || props.request?.parentId,
   getTargetId: props => props.request?._id,
 });
@@ -331,8 +330,8 @@ const mapStateToProps = (state: RootState) => ({
   activeEnvironment: selectActiveEnvironment(state),
 });
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
-const target = DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
+const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
 const connected = connect(mapStateToProps)(target);
 
 export const SidebarRequestRow = connected;
