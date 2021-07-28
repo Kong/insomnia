@@ -23,6 +23,11 @@ export const selectEntities = createSelector(
   entities => entities,
 );
 
+export const selectGlobal = createSelector(
+  (state: RootState) => state.global,
+  global => global,
+);
+
 export const selectEntitiesLists = createSelector(
   selectEntities,
   entities => {
@@ -385,11 +390,11 @@ export const selectSyncItems = createSelector(
 );
 
 export const selectIsLoggedIn = createSelector(
-  (state: RootState) => state.global,
+  selectGlobal,
   global => global.isLoggedIn,
 );
 
 export const selectActiveActivity = createSelector(
-  (state: RootState) => state.global,
+  selectGlobal,
   global => global.activeActivity,
 );
