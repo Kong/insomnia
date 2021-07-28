@@ -69,7 +69,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     });
 
   const onSubmit = useCallback(async ({ spaceId, newName }: FormFields) => {
-    const duplicateToSpace = spaces.find(s => s._id === spaceId);
+    const duplicateToSpace = spaces.find(space => space._id === spaceId);
     if (!duplicateToSpace) {
       throw new Error('Space could not be found');
     }
