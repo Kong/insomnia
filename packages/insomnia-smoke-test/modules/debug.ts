@@ -46,7 +46,7 @@ export const createNewRequest = async (app, name) => {
 };
 
 const waitUntilRequestIsActive = async (app, name) => {
-  const request = await app.client.react$('SidebarRequestRow', {
+  const request = await app.client.react$('UnconnectedSidebarRequestRow', {
     props: { isActive: true, request: { name } },
   });
 
@@ -54,7 +54,7 @@ const waitUntilRequestIsActive = async (app, name) => {
 };
 
 export const clickFolderByName = async (app, name) => {
-  const folder = await app.client.react$('SidebarRequestGroupRow', {
+  const folder = await app.client.react$('UnconnectedSidebarRequestGroupRow', {
     props: { requestGroup: { name } },
   });
 
