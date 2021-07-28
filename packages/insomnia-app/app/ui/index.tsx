@@ -68,11 +68,11 @@ window['styled-components'] = styledComponents;
 // Catch uncaught errors and report them
 if (window && !isDevelopment()) {
   window.addEventListener('error', e => {
-    console.error('Uncaught Error', e);
+    console.error('Uncaught Error', e.error || e);
     trackEvent('Error', 'Uncaught Error');
   });
   window.addEventListener('unhandledrejection', e => {
-    console.error('Unhandled Promise', e);
+    console.error('Unhandled Promise', e.reason);
     trackEvent('Error', 'Uncaught Promise');
   });
 }
