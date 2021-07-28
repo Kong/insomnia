@@ -99,7 +99,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
         </div>
         <div className="form-control form-control--outlined">
           <label>
-            {strings.space.plural} to duplicate into
+            {strings.space.singular} to duplicate into
             <select {...register('spaceId')}>
               {spaces.map(SpaceOption)}
             </select>
