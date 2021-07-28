@@ -1,4 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { string } from 'prop-types';
 import React, { createRef, FC, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
@@ -40,7 +41,7 @@ interface InnerProps extends Options, Props {
 
 const SpaceOption: FC<Space> = space => (
   <option key={space._id} value={space._id}>
-    {space.name} ({isBaseSpace(space) ? 'Base' : isLocalSpace(space) ? 'Local' : 'Remote'})
+    {space.name} ({isBaseSpace(space) ? strings.baseSpace.singular : isLocalSpace(space) ? strings.localSpace.singular : strings.remoteSpace.singular})
   </option>
 );
 
