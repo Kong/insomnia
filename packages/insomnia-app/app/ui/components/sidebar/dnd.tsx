@@ -49,14 +49,14 @@ export const dropHandleCreator = <Props extends Object>(
       const parentId = getParentId(props);
       const targetId = getTargetId(props);
         
-      if (!movingDoc || !parentId || !targetId) {
+      if (!movingDoc || !parentId) {
         return;
       }
 
       if (isAbove(monitor, component)) {
-        moveDoc(movingDoc, parentId, targetId, 1);
+        moveDoc({ docToMove: movingDoc, parentId, targetId, targetOffset: 1 });
       } else {
-        moveDoc(movingDoc, parentId, targetId, -1);
+        moveDoc({ docToMove: movingDoc, parentId, targetId, targetOffset: -1 });
       }
     };
 
@@ -69,7 +69,17 @@ export const hoverHandleCreator = <Props extends Object>(): Required<DropTargetS
     }
   };
 
-const moveDoc = async (docToMove: BaseModel, parentId: string, targetId: string, targetOffset: number) => {
+const moveDoc = async ({ 
+  docToMove,
+  parentId,
+  targetId,
+  targetOffset,
+}: {
+  docToMove: BaseModel;
+  parentId: string;
+  targetId?: string;
+  targetOffset: number;
+}) => {
   // Nothing to do. We are in the same spot as we started
   if (docToMove._id === targetId) {
     return;
@@ -90,11 +100,9 @@ const moveDoc = async (docToMove: BaseModel, parentId: string, targetId: string,
     return models.getModel(docToMove.type).update(doc, patch);
   }
   
-  if (targetId === null) {
+  if (!targetId) {
     // We are moving to an empty area. No sorting required
-    await __updateDoc(docToMove, {
-      parentId,
-    });
+    await __updateDoc(docToMove, { parentId });
     return;
   }
   

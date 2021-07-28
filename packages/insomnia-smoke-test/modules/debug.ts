@@ -1,6 +1,8 @@
 import faker from 'faker';
 import spectronKeys from 'spectron-keys';
 
+import { COMPONENT_NAMES } from './component-names';
+
 export const workspaceDropdownExists = async (app, workspaceName = 'Insomnia') => {
   await app.client.waitUntilTextExists('.workspace-dropdown', workspaceName);
 };
@@ -46,7 +48,7 @@ export const createNewRequest = async (app, name) => {
 };
 
 const waitUntilRequestIsActive = async (app, name) => {
-  const request = await app.client.react$('UnconnectedSidebarRequestRow', {
+  const request = await app.client.react$(COMPONENT_NAMES.sidebarRequestRow, {
     props: { isActive: true, request: { name } },
   });
 
@@ -54,7 +56,7 @@ const waitUntilRequestIsActive = async (app, name) => {
 };
 
 export const clickFolderByName = async (app, name) => {
-  const folder = await app.client.react$('UnconnectedSidebarRequestGroupRow', {
+  const folder = await app.client.react$(COMPONENT_NAMES.sidebarRequestGroupRow, {
     props: { requestGroup: { name } },
   });
 
@@ -63,7 +65,7 @@ export const clickFolderByName = async (app, name) => {
 };
 
 export const clickRequestByName = async (app, name) => {
-  const folder = await app.client.react$('SidebarRequestRow', {
+  const folder = await app.client.react$(COMPONENT_NAMES.sidebarRequestRow, {
     props: { request: { name } },
   });
 
@@ -72,7 +74,7 @@ export const clickRequestByName = async (app, name) => {
 };
 
 export const typeInUrlBar = async (app, url) => {
-  const urlEditor = await app.client.react$('RequestUrlBar');
+  const urlEditor = await app.client.react$(COMPONENT_NAMES.requestUrlBar);
   await urlEditor.waitForExist();
   await urlEditor.click();
   await urlEditor.keys(url);
