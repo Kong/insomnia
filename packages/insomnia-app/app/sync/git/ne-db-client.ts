@@ -1,27 +1,35 @@
+import { PromiseFsClient } from 'isomorphic-git';
 import path from 'path';
+import YAML from 'yaml';
+
 import { database as db } from '../../common/database';
 import * as models from '../../models';
-import YAML from 'yaml';
-import Stat from './stat';
+import { BaseModel } from '../../models';
+import { isWorkspace } from '../../models/workspace';
+import { resetKeys } from '../ignore-keys';
+import { forceWorkspaceScopeToDesign } from './force-workspace-scope-to-design';
 import { GIT_INSOMNIA_DIR_NAME } from './git-vcs';
 import parseGitPath from './parse-git-path';
-import { BufferEncoding } from './utils';
+import Stat from './stat';
 import { SystemError } from './system-error';
+import { BufferEncoding } from './utils';
 
 export class NeDBClient {
   _workspaceId: string;
+  _spaceId: string;
 
-  constructor(workspaceId: string) {
+  constructor(workspaceId: string, spaceId: string) {
     if (!workspaceId) {
       throw new Error('Cannot use NeDBClient without workspace ID');
     }
 
     this._workspaceId = workspaceId;
+    this._spaceId = spaceId;
   }
 
-  static createClient(workspaceId: string) {
+  static createClient(workspaceId: string, spaceId: string): PromiseFsClient {
     return {
-      promises: new NeDBClient(workspaceId),
+      promises: new NeDBClient(workspaceId, spaceId),
     };
   }
 
@@ -50,13 +58,16 @@ export class NeDBClient {
       throw this._errMissing(filePath);
     }
 
+    // When git is reading from NeDb, reset keys we wish to ignore to their original values
+    resetKeys(doc);
+
     // It would be nice to be able to add this check here but we can't since
     // isomorphic-git may have just deleted the workspace from the FS. This
     // happens frequently during branch checkouts and merges
     //
     // if (doc.type !== models.workspace.type) {
     //   const ancestors = await db.withAncestors(doc);
-    //   if (!ancestors.find(d => d.type === models.workspace.type)) {
+    //   if (!ancestors.find(isWorkspace)) {
     //     throw new Error(`Not found under workspace ${filePath}`);
     //   }
     // }
@@ -78,7 +89,7 @@ export class NeDBClient {
       return;
     }
 
-    const doc = YAML.parse(data.toString());
+    const doc: BaseModel = YAML.parse(data.toString());
 
     if (id !== doc._id) {
       throw new Error(`Doc _id does not match file path [${doc._id} != ${id || 'null'}]`);
@@ -87,6 +98,16 @@ export class NeDBClient {
     if (type !== doc.type) {
       throw new Error(`Doc type does not match file path [${doc.type} != ${type || 'null'}]`);
     }
+
+    if (isWorkspace(doc)) {
+      console.log('[git] setting workspace parent to be that of the active space', { original: doc.parentId, new: this._spaceId });
+      // Whenever we write a workspace into nedb we should set the parentId to be that of the current space
+      // This is because the parentId (or a space) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the space on the client
+      // In order to reproduce this bug, comment out the following line, then clone a repository into a local space, then open the workspace, you'll notice it will have moved into the base space
+      doc.parentId = this._spaceId;
+    }
+
+    forceWorkspaceScopeToDesign(doc);
 
     await db.upsert(doc, true);
   }
@@ -111,45 +132,32 @@ export class NeDBClient {
   async readdir(filePath: string) {
     filePath = path.normalize(filePath);
     const { root, type, id } = parseGitPath(filePath);
-    let docs = [];
-    let otherFolders = [];
+    let docs: BaseModel[] = [];
+    let otherFolders: string[] = [];
 
     if (root === null && id === null && type === null) {
-      // @ts-expect-error -- TSCONVERSION
       otherFolders = [GIT_INSOMNIA_DIR_NAME];
     } else if (id === null && type === null) {
       otherFolders = [
-        // @ts-expect-error -- TSCONVERSION
         models.workspace.type,
-        // @ts-expect-error -- TSCONVERSION
         models.environment.type,
-        // @ts-expect-error -- TSCONVERSION
         models.requestGroup.type,
-        // @ts-expect-error -- TSCONVERSION
         models.request.type,
-        // @ts-expect-error -- TSCONVERSION
         models.apiSpec.type,
-        // @ts-expect-error -- TSCONVERSION
         models.unitTestSuite.type,
-        // @ts-expect-error -- TSCONVERSION
         models.unitTest.type,
-        // @ts-expect-error -- TSCONVERSION
         models.grpcRequest.type,
-        // @ts-expect-error -- TSCONVERSION
         models.protoFile.type,
-        // @ts-expect-error -- TSCONVERSION
         models.protoDirectory.type,
       ];
     } else if (type !== null && id === null) {
       const workspace = await db.get(models.workspace.type, this._workspaceId);
       const children = await db.withDescendants(workspace);
-      // @ts-expect-error -- TSCONVERSION
       docs = children.filter(d => d.type === type && !d.isPrivate);
     } else {
       throw this._errMissing(filePath);
     }
 
-    // @ts-expect-error -- TSCONVERSION
     const ids = docs.map(d => `${d._id}.yml`);
     return [...ids, ...otherFolders].sort();
   }
@@ -182,13 +190,13 @@ export class NeDBClient {
     }
 
     if (fileBuff) {
-      const doc = YAML.parse(fileBuff.toString());
+      const doc: BaseModel = YAML.parse(fileBuff.toString());
       return new Stat({
         type: 'file',
         mode: 0o777,
         size: fileBuff.length,
+        // @ts-expect-error should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino
         ino: doc._id,
-        // should be number instead of string https://nodejs.org/api/fs.html#fs_stats_ino I think flow should have detected this
         mtimeMs: doc.modified,
       });
     } else {

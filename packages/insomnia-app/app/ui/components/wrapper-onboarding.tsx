@@ -1,21 +1,25 @@
-import React, { Fragment, PureComponent } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import 'swagger-ui-react/swagger-ui.css';
-import { showPrompt } from './modals';
-import type { BaseModel } from '../../models';
-import * as models from '../../models';
-import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
-import type { HandleImportFileCallback, HandleImportUriCallback, WrapperProps } from './wrapper';
-import { database as db } from '../../common/database';
-import { ForceToWorkspaceKeys } from '../redux/modules/helpers';
-import OnboardingContainer from './onboarding-container';
-import { WorkspaceScopeKeys } from '../../models/workspace';
-import Analytics from './analytics';
 
-interface Props {
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
+import { database as db } from '../../common/database';
+import type { BaseModel } from '../../models';
+import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
+import { ForceToWorkspace } from '../redux/modules/helpers';
+import { importFile, importUri } from '../redux/modules/import';
+import Analytics from './analytics';
+import { showPrompt } from './modals';
+import OnboardingContainer from './onboarding-container';
+import type { WrapperProps } from './wrapper';
+
+type ReduxProps = ReturnType<typeof mapDispatchToProps>;
+
+interface Props extends ReduxProps {
   wrapperProps: WrapperProps;
-  handleImportFile: HandleImportFileCallback;
-  handleImportUri: HandleImportUriCallback;
 }
 
 interface State {
@@ -39,7 +43,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
 
   _handleDbChange(changes: [string, BaseModel, boolean][]) {
     for (const change of changes) {
-      if (change[1].type === models.workspace.type) {
+      if (isWorkspace(change[1])) {
         setTimeout(() => {
           this._handleDone();
         }, 400);
@@ -65,9 +69,8 @@ class WrapperOnboarding extends PureComponent<Props, State> {
   }
 
   _handleImportFile() {
-    const { handleImportFile } = this.props;
-    handleImportFile({
-      forceToWorkspace: ForceToWorkspaceKeys.new,
+    this.props.handleImportFile({
+      forceToWorkspace: ForceToWorkspace.new,
       forceToScope: WorkspaceScopeKeys.design,
     });
   }
@@ -81,7 +84,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
       label: 'URI to Import',
       onComplete: value => {
         handleImportUri(value, {
-          forceToWorkspace: ForceToWorkspaceKeys.new,
+          forceToWorkspace: ForceToWorkspace.new,
           forceToScope: WorkspaceScopeKeys.design,
         });
       },
@@ -161,4 +164,16 @@ class WrapperOnboarding extends PureComponent<Props, State> {
   }
 }
 
-export default WrapperOnboarding;
+const mapDispatchToProps = (dispatch) => {
+  const bound = bindActionCreators({
+    importFile,
+    importUri,
+  }, dispatch);
+
+  return ({
+    handleImportFile: bound.importFile,
+    handleImportUri: bound.importUri,
+  });
+};
+
+export default connect(null, mapDispatchToProps)(WrapperOnboarding);

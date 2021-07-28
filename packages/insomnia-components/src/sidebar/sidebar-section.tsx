@@ -1,11 +1,11 @@
+import { motion } from 'framer-motion';
 import React, { ChangeEvent, FunctionComponent, ReactNode, useCallback, useLayoutEffect, useState } from 'react';
+import { useToggle } from 'react-use';
+import styled from 'styled-components';
 
+import { SidebarFilter } from './sidebar-filter';
 import { SidebarHeader } from './sidebar-header';
 import { SidebarPanel } from './sidebar-panel';
-import { SidebarFilter } from './sidebar-filter';
-import styled from 'styled-components';
-import { motion } from 'framer-motion';
-import { useToggle } from 'react-use';
 
 export interface SidebarSectionProps {
   title: string;

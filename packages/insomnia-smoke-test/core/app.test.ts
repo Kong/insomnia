@@ -1,14 +1,15 @@
-import * as debug from '../modules/debug';
-import * as client from '../modules/client';
-import { launchApp, stop } from '../modules/application';
-import * as dropdown from '../modules/dropdown';
-import * as settings from '../modules/settings';
 import fs from 'fs';
+import { Application } from 'spectron';
+
 import { basicAuthCreds } from '../fixtures/constants';
-import * as onboarding from '../modules/onboarding';
+import { launchApp, stop } from '../modules/application';
+import * as client from '../modules/client';
+import * as debug from '../modules/debug';
+import * as dropdown from '../modules/dropdown';
 import * as home from '../modules/home';
 import * as modal from '../modules/modal';
-import { Application } from 'spectron';
+import * as onboarding from '../modules/onboarding';
+import * as settings from '../modules/settings';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -58,8 +59,8 @@ describe('Application launch', function() {
 
       // Click dropdown and open import modal
       await home.documentListingShown(app);
-      await home.expectTotalDocuments(app, 1);
-      await home.openDocumentWithTitle(app, 'Insomnia');
+      await home.createNewCollection(app);
+      await debug.pageDisplayed(app);
       const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
       await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
 
@@ -134,7 +135,7 @@ describe('Application launch', function() {
 
     // Open card dropdown for the document
     const card = await home.findCardWithTitle(app, docName);
-    await home.openDocumentMenuDropdown(card);
+    await home.openWorkspaceCardDropdown(card);
 
     // Click the "Deploy to Portal" button, installed from that plugin
     await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Portal');
@@ -155,8 +156,12 @@ describe('Application launch', function() {
 
     // Expect one document at home
     await home.documentListingShown(app);
+    const collectionName = await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
+
+    await debug.goToDashboard(app);
     await home.expectTotalDocuments(app, 1);
-    await home.expectDocumentWithTitle(app, 'Insomnia');
+    await home.expectDocumentWithTitle(app, collectionName);
     const name = 'E2E testing specification - swagger 2 1.0.0';
 
     // Import from clipboard as collection
@@ -170,7 +175,7 @@ describe('Application launch', function() {
     await home.cardHasBadge(collCard, 'Collection');
 
     // Delete the collection
-    await home.openDocumentMenuDropdown(collCard);
+    await home.openWorkspaceCardDropdown(collCard);
     await dropdown.clickDropdownItemByText(collCard, 'Delete');
     await modal.waitUntilOpened(app, { title: 'Delete Collection' });
     await modal.clickModalFooterByText(app, 'Yes');

@@ -1,11 +1,11 @@
 import type { RenderedGrpcRequest, RenderedGrpcRequestBody } from '../../common/render';
-import type { GrpcMethodType } from './method';
-import * as models from '../../models';
 import {
   getRenderedGrpcRequest,
   getRenderedGrpcRequestMessage,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
+import * as models from '../../models';
+import type { GrpcMethodType } from './method';
 import { canClientStream } from './method';
 
 export interface GrpcIpcRequestParams {
@@ -23,15 +23,16 @@ export const prepareGrpcRequest = async (
   methodType: GrpcMethodType,
 ): Promise<GrpcIpcRequestParams> => {
   const req = await models.grpcRequest.getById(requestId);
-  const environment = await models.environment.getById(environmentId || 'n/a');
   const request = await getRenderedGrpcRequest(
-    // @ts-expect-error -- TSCONVERSION req can be null but should not try to render if it is null
-    req,
-    environment,
-    RENDER_PURPOSE_SEND,
-    {},
-    canClientStream(methodType),
+    {
+      // @ts-expect-error -- TSCONVERSION req can be null but should not try to render if it is null
+      request: req,
+      environmentId,
+      purpose: RENDER_PURPOSE_SEND,
+      skipBody: canClientStream(methodType),
+    },
   );
+
   return {
     request,
   };
@@ -42,13 +43,12 @@ export const prepareGrpcMessage = async (
   environmentId: string,
 ): Promise<GrpcIpcMessageParams> => {
   const req = await models.grpcRequest.getById(requestId);
-  const environment = await models.environment.getById(environmentId || 'n/a');
-  const requestBody = await getRenderedGrpcRequestMessage(
+  const requestBody = await getRenderedGrpcRequestMessage({
     // @ts-expect-error -- TSCONVERSION req can be null but should not try to render if it is null
-    req,
-    environment,
-    RENDER_PURPOSE_SEND,
-    {},
+    request: req,
+    environmentId,
+    purpose: RENDER_PURPOSE_SEND,
+  },
   );
   return {
     body: requestBody,

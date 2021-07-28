@@ -1,8 +1,5 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, ACTIVITY_HOME } from '../../common/constants';
 import classnames from 'classnames';
-import PageLayout from './page-layout';
 import {
   Button,
   Dropdown,
@@ -11,27 +8,33 @@ import {
   UnitTestItem,
   UnitTestResultItem,
 } from 'insomnia-components';
-import UnitTestEditable from './unit-test-editable';
-import ErrorBoundary from './error-boundary';
-import CodeEditor from './codemirror/code-editor';
-import type { WrapperProps } from './wrapper';
-import * as models from '../../models';
-import type { UnitTest } from '../../models/unit-test';
 import { generate, runTests, Test } from 'insomnia-testing';
-import { showAlert, showModal, showPrompt } from './modals';
-import Editable from './base/editable';
-import type { SidebarChildObjects } from './sidebar/sidebar-children';
-import SelectModal from './modals/select-modal';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
-import { getSendRequestCallback } from '../../common/send-request';
-import type { GlobalActivity } from '../../common/constants';
-import WorkspacePageHeader from './workspace-page-header';
+import React, { PureComponent, ReactNode } from 'react';
+
 import { trackSegmentEvent } from '../../common/analytics';
+import type { GlobalActivity } from '../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
+import { getSendRequestCallback } from '../../common/send-request';
+import * as models from '../../models';
+import { isRequest } from '../../models/request';
+import { isRequestGroup } from '../../models/request-group';
+import type { UnitTest } from '../../models/unit-test';
+import type { UnitTestSuite } from '../../models/unit-test-suite';
+import Editable from './base/editable';
+import CodeEditor from './codemirror/code-editor';
+import ErrorBoundary from './error-boundary';
+import { showAlert, showModal, showPrompt } from './modals';
+import { SelectModal } from './modals/select-modal';
+import PageLayout from './page-layout';
+import type { SidebarChildObjects } from './sidebar/sidebar-children';
+import UnitTestEditable from './unit-test-editable';
+import WorkspacePageHeader from './workspace-page-header';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   wrapperProps: WrapperProps;
 }
 
@@ -115,7 +118,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                   value: this.generateSendReqSnippet(unitTest.code, `'${request._id}'`),
                 })),
               ],
-              onDone: v => resolve(v),
+              onDone: value => resolve(value),
             });
           });
         },
@@ -125,6 +128,11 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   async _handleCreateTestSuite() {
     const { activeWorkspace } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     showPrompt({
       title: 'New Test Suite',
       defaultValue: 'New Suite',
@@ -165,14 +173,6 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     await models.unitTest.update(unitTest, {
       code: v,
     });
-  }
-
-  async _handleBreadcrumb() {
-    const {
-      handleActivityChange,
-      wrapperProps: { activeWorkspace },
-    } = this.props;
-    await handleActivityChange(activeWorkspace._id, ACTIVITY_HOME);
   }
 
   async _handleRunTests() {
@@ -230,6 +230,11 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   async _handleSetActiveUnitTestSuite(unitTestSuite: UnitTestSuite) {
     const { activeWorkspace } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     await models.workspaceMeta.updateByParentId(activeWorkspace._id, {
       activeUnitTestSuiteId: unitTestSuite._id,
     });
@@ -251,6 +256,11 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
   async _runTests(unitTests: UnitTest[]) {
     const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
     this.setState({
       testsRunning: unitTests,
       resultsError: null,
@@ -313,12 +323,12 @@ class WrapperUnitTest extends PureComponent<Props, State> {
 
     const next = (p, children) => {
       for (const c of children) {
-        if (c.doc.type === models.request.type) {
+        if (isRequest(c.doc)) {
           selectableRequests.push({
             name: `${p} [${c.doc.method}] ${c.doc.name}`,
             request: c.doc,
           });
-        } else if (c.doc.type === models.requestGroup.type) {
+        } else if (isRequestGroup(c.doc)) {
           next(c.doc.name + ' / ', c.children);
         }
       }

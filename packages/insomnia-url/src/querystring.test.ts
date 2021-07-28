@@ -1,9 +1,9 @@
 import {
-  getJoiner,
-  joinUrlAndQueryString,
   buildQueryParameter,
   buildQueryStringFromParams,
   deconstructQueryStringToParams,
+  getJoiner,
+  joinUrlAndQueryString,
   smartEncodeUrl,
 } from './querystring';
 
@@ -178,13 +178,13 @@ describe('querystring', () => {
     });
 
     it('leaves already encoded pathname', () => {
-      const url = smartEncodeUrl('https://google.com/foo%20bar%20baz/100%25/foo');
-      expect(url).toBe('https://google.com/foo%20bar%20baz/100%25/foo');
+      const url = smartEncodeUrl('https://google.com/foo%20bar%20baz/100%25/foo/%24');
+      expect(url).toBe('https://google.com/foo%20bar%20baz/100%25/foo/%24');
     });
 
     it('encodes querystring', () => {
-      const url = smartEncodeUrl('https://google.com?s=foo bar 100%&hi');
-      expect(url).toBe('https://google.com/?s=foo%20bar%20100%25&hi');
+      const url = smartEncodeUrl('https://google.com?s=foo bar 100%&hi$');
+      expect(url).toBe('https://google.com/?s=foo%20bar%20100%25&hi%24');
     });
 
     it('encodes querystring with mixed spaces', () => {
@@ -205,6 +205,14 @@ describe('querystring', () => {
       // Encoded should skip encoded versions of @ ; ,
       const url2 = smartEncodeUrl('https://google.com/%40%3B%2C%26%5E');
       expect(url2).toBe('https://google.com/%40%3B%2C%26%5E');
+
+      // Encoded should skip raw versions of $
+      const url3 = smartEncodeUrl('https://google.com/$myservice');
+      expect(url3).toBe('https://google.com/$myservice');
+
+      // Encoded should skip encoded versions of $
+      const url4 = smartEncodeUrl('https://google.com/%24myservice');
+      expect(url4).toBe('https://google.com/%24myservice');
     });
 
     it('leaves already encoded characters alone', () => {

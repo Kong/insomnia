@@ -1,49 +1,54 @@
-import electron, { OpenDialogOptions } from 'electron';
-import React, { Fragment } from 'react';
-import { combineReducers } from 'redux';
+import electron from 'electron';
 import fs, { NoParamCallback } from 'fs';
-import path from 'path';
-import AskModal from '../../../ui/components/modals/ask-modal';
 import moment from 'moment';
-import type { ImportRawConfig, ImportResult } from '../../../common/import';
-import * as importUtils from '../../../common/import';
-import AlertModal from '../../components/modals/alert-modal';
-import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
-import LoginModal from '../../components/modals/login-modal';
-import * as models from '../../../models';
-import * as requestOperations from '../../../models/helpers/request-operations';
-import SelectModal from '../../components/modals/select-modal';
-import { showError, showModal } from '../../components/modals/index';
-import { database } from '../../../common/database';
+import path from 'path';
+import React, { Fragment } from 'react';
+import { combineReducers, Dispatch } from 'redux';
+import { unreachableCase } from 'ts-assert-unreachable';
+
 import { trackEvent } from '../../../common/analytics';
-import SettingsModal, {
-  TAB_INDEX_PLUGINS,
-  TAB_INDEX_THEMES,
-} from '../../components/modals/settings-modal';
-import install from '../../../plugins/install';
-import type { ForceToWorkspace } from './helpers';
-import { askToImportIntoWorkspace, askToSetWorkspaceScope } from './helpers';
-import { createPlugin } from '../../../plugins/create';
-import { reloadPlugins } from '../../../plugins';
-import { setTheme } from '../../../plugins/misc';
 import type { GlobalActivity } from '../../../common/constants';
-import type { Workspace, WorkspaceScope } from '../../../models/workspace';
 import {
+  ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
   ACTIVITY_ONBOARDING,
-  ACTIVITY_ANALYTICS,
   DEPRECATED_ACTIVITY_INSOMNIA,
   isValidActivity,
 } from '../../../common/constants';
-import { selectSettings } from '../selectors';
+import { database } from '../../../common/database';
 import { getDesignerDataDir } from '../../../common/electron-helpers';
-import { Settings } from '../../../models/settings';
+import {
+  exportRequestsData,
+  exportRequestsHAR,
+  exportWorkspacesData,
+  exportWorkspacesHAR,
+} from '../../../common/export';
+import * as models from '../../../models';
+import { Environment, isEnvironment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
+import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
-import { Environment } from '../../../models/environment';
+import { Settings } from '../../../models/settings';
 import { BASE_SPACE_ID } from '../../../models/space';
+import { isWorkspace } from '../../../models/workspace';
+import { reloadPlugins } from '../../../plugins';
+import { createPlugin } from '../../../plugins/create';
+import install from '../../../plugins/install';
+import { setTheme } from '../../../plugins/misc';
+import AskModal from '../../../ui/components/modals/ask-modal';
+import AlertModal from '../../components/modals/alert-modal';
+import { showAlert, showError, showModal } from '../../components/modals/index';
+import LoginModal from '../../components/modals/login-modal';
+import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
+import { SelectModal } from '../../components/modals/select-modal';
+import SettingsModal, {
+  TAB_INDEX_PLUGINS,
+  TAB_INDEX_THEMES,
+} from '../../components/modals/settings-modal';
+import { selectActiveSpaceName, selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
+import { importUri } from './import';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
 const LOGIN_STATE_CHANGE = 'global/login-state-change';
@@ -61,15 +66,10 @@ const COMMAND_IMPORT_URI = 'app/import';
 const COMMAND_PLUGIN_INSTALL = 'plugins/install';
 const COMMAND_PLUGIN_THEME = 'plugins/theme';
 
-const VALUE_JSON = 'json';
-const VALUE_YAML = 'yaml';
-const VALUE_HAR = 'har';
-type SelectedFormat = typeof VALUE_HAR | typeof VALUE_JSON | typeof VALUE_YAML;
-
 // ~~~~~~~~ //
 // REDUCERS //
 // ~~~~~~~~ //
-function activeActivityReducer(state = null, action) {
+function activeActivityReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_ACTIVITY:
       return action.activity;
@@ -79,7 +79,7 @@ function activeActivityReducer(state = null, action) {
   }
 }
 
-function activeSpaceReducer(state = BASE_SPACE_ID, action) {
+function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
       return action.spaceId;
@@ -89,7 +89,7 @@ function activeSpaceReducer(state = BASE_SPACE_ID, action) {
   }
 }
 
-function activeWorkspaceReducer(state = null, action) {
+function activeWorkspaceReducer(state: string | null = null, action) {
   switch (action.type) {
     case SET_ACTIVE_WORKSPACE:
       return action.workspaceId;
@@ -112,7 +112,7 @@ function loadingReducer(state = false, action) {
   }
 }
 
-function loadingRequestsReducer(state = {}, action) {
+function loadingRequestsReducer(state: Record<string, number> = {}, action) {
   switch (action.type) {
     case LOAD_REQUEST_START:
       return Object.assign({}, state, {
@@ -139,7 +139,16 @@ function loginStateChangeReducer(state = false, action) {
   }
 }
 
-export const reducer = combineReducers({
+export interface GlobalState {
+  isLoading: boolean;
+  activeSpaceId: string;
+  activeWorkspaceId: string | null;
+  activeActivity: GlobalActivity | null,
+  isLoggedIn: boolean;
+  loadingRequestIds: Record<string, number>;
+}
+
+export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeSpaceId: activeSpaceReducer,
@@ -147,11 +156,12 @@ export const reducer = combineReducers({
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
 });
+
 // ~~~~~~~ //
 // ACTIONS //
 // ~~~~~~~ //
 
-export const newCommand = (command: string, args) => async dispatch => {
+export const newCommand = (command: string, args: any) => async (dispatch: Dispatch<any>) => {
   switch (command) {
     case COMMAND_ALERT:
       showModal(AlertModal, {
@@ -181,7 +191,7 @@ export const newCommand = (command: string, args) => async dispatch => {
         ),
         addCancel: true,
       });
-      dispatch(importUri(args.workspaceId, args.uri));
+      dispatch(importUri(args.uri, { workspaceId: args.workspaceId, forceToSpace: 'prompt' }));
       break;
 
     case COMMAND_PLUGIN_INSTALL:
@@ -373,177 +383,63 @@ export const setActiveWorkspace = (workspaceId: string | null) => {
   };
 };
 
-export interface ImportOptions {
-  forceToWorkspace?: ForceToWorkspace;
-  forceToScope?: WorkspaceScope;
-}
+const VALUE_JSON = 'json';
+const VALUE_YAML = 'yaml';
+const VALUE_HAR = 'har';
 
-export const importFile = (
-  workspaceId: string,
-  { forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async dispatch => {
-  dispatch(loadStart());
-  const options: OpenDialogOptions = {
-    title: 'Import Insomnia Data',
-    buttonLabel: 'Import',
-    properties: ['openFile'],
-    filters: [
-      // @ts-expect-error https://github.com/electron/electron/pull/29322
-      {
-        extensions: [
-          '',
-          'sh',
-          'txt',
-          'json',
-          'har',
-          'curl',
-          'bash',
-          'shell',
-          'yaml',
-          'yml',
-          'wsdl',
-        ],
-      },
-    ],
-  };
-  const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
+export type SelectedFormat =
+  | typeof VALUE_HAR
+  | typeof VALUE_JSON
+  | typeof VALUE_YAML
+  ;
 
-  if (canceled) {
-    // It was cancelled, so let's bail out
-    dispatch(loadStop());
-    return;
-  }
+const showSelectExportTypeModal = ({ onCancel, onDone }: {
+  onCancel: () => void;
+  onDone: (selectedFormat: SelectedFormat) => Promise<void>;
+}) => {
+  const options = [
+    {
+      name: 'Insomnia v4 (JSON)',
+      value: VALUE_JSON,
+    },
+    {
+      name: 'Insomnia v4 (YAML)',
+      value: VALUE_YAML,
+    },
+    {
+      name: 'HAR – HTTP Archive Format',
+      value: VALUE_HAR,
+    },
+  ];
 
-  // Let's import all the paths!
-  for (const p of paths) {
-    try {
-      const uri = `file://${p}`;
-      const options: ImportRawConfig = {
-        getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-        getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-      };
-      const result = await importUtils.importUri(uri, options);
-      handleImportResult(result, 'The file does not contain a valid specification.');
-    } catch (err) {
-      showModal(AlertModal, {
-        title: 'Import Failed',
-        message: err + '',
-      });
-    } finally {
-      dispatch(loadStop());
-    }
-  }
-};
-
-const handleImportResult = (result: ImportResult, errorMessage: string) => {
-  const { error, summary } = result;
-
-  if (error) {
-    showError({
-      title: 'Import Failed',
-      message: errorMessage,
-      error,
-    });
-    return [];
-  }
-
-  models.stats.incrementRequestStats({
-    createdRequests: summary[models.request.type].length + summary[models.grpcRequest.type].length,
-  });
-  return (summary[models.workspace.type] as Workspace[]) || [];
-};
-
-export const importClipBoard = (
-  workspaceId: string,
-  { forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async dispatch => {
-  dispatch(loadStart());
-  const schema = electron.clipboard.readText();
-
-  if (!schema) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: 'Your clipboard appears to be empty.',
-    });
-    return;
-  }
-
-  // Let's import all the paths!
-  try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-    };
-    const result = await importUtils.importRaw(schema, options);
-    handleImportResult(result, 'Your clipboard does not contain a valid specification.');
-  } catch (err) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: 'Your clipboard does not contain a valid specification.',
-    });
-  } finally {
-    dispatch(loadStop());
-  }
-};
-
-export const importUri = (
-  workspaceId: string,
-  uri: string,
-  { forceToScope, forceToWorkspace }: ImportOptions = {},
-) => async dispatch => {
-  dispatch(loadStart());
-
-  try {
-    const options: ImportRawConfig = {
-      getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
-      getWorkspaceId: askToImportIntoWorkspace(workspaceId, forceToWorkspace),
-    };
-    const result = await importUtils.importUri(uri, options);
-    handleImportResult(result, 'The URI does not contain a valid specification.');
-  } catch (err) {
-    showModal(AlertModal, {
-      title: 'Import Failed',
-      message: err + '',
-    });
-  } finally {
-    dispatch(loadStop());
-  }
-};
-
-function showSelectExportTypeModal(onCancel: () => void, onDone: (selectedFormat: SelectedFormat) => void) {
   const lastFormat = window.localStorage.getItem('insomnia.lastExportFormat');
+  const defaultValue = options.find(({ value }) => value === lastFormat) ? lastFormat : VALUE_JSON;
+
   showModal(SelectModal, {
     title: 'Select Export Type',
-    value: lastFormat,
-    options: [
-      {
-        name: 'Insomnia v4 (JSON)',
-        value: VALUE_JSON,
-      },
-      {
-        name: 'Insomnia v4 (YAML)',
-        value: VALUE_YAML,
-      },
-      {
-        name: 'HAR – HTTP Archive Format',
-        value: VALUE_HAR,
-      },
-    ],
+    value: defaultValue,
+    options,
     message: 'Which format would you like to export as?',
     onCancel,
-    onDone: (selectedFormat: SelectedFormat) => {
+    onDone: async (selectedFormat: SelectedFormat) => {
       window.localStorage.setItem('insomnia.lastExportFormat', selectedFormat);
-      onDone(selectedFormat);
+      await onDone(selectedFormat);
     },
   });
-}
+};
 
 const showExportPrivateEnvironmentsModal = (privateEnvNames: string) => showModal(AskModal, {
   title: 'Export Private Environments?',
   message: `Do you want to include private environments (${privateEnvNames}) in your export?`,
 });
 
-const showSaveExportedFileDialog = async (exportedFileNamePrefix: string, selectedFormat: SelectedFormat) => {
+const showSaveExportedFileDialog = async ({
+  exportedFileNamePrefix,
+  selectedFormat,
+}: {
+  exportedFileNamePrefix: string,
+  selectedFormat: SelectedFormat,
+}) => {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
@@ -563,32 +459,39 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
   fs.writeFile(filename, jsonData, {}, onDone);
 };
 
-export const exportWorkspacesToFile = (workspaceId: string | undefined = undefined) => async dispatch => {
+export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
-  showSelectExportTypeModal(
-    () => dispatch(loadStop()),
-    async (selectedFormat: SelectedFormat) => {
-      const workspace = await models.workspace.getById(workspaceId);
-      // Check if we want to export private environments.
-      let environments;
+  const state = getState();
+  const activeSpaceName = selectActiveSpaceName(state);
+  const workspaces = selectWorkspacesForActiveSpace(state);
 
-      if (workspace) {
-        const parentEnv = await models.environment.getOrCreateForWorkspace(workspace);
-        environments = [parentEnv, ...(await models.environment.findByParentId(parentEnv._id) || [])];
-      } else {
-        environments = await models.environment.all();
-      }
+  if (!workspaces.length) {
+    dispatch(loadStop());
+    showAlert({
+      title: 'Cannot export',
+      message: <>There are no workspaces to export in the <strong>{activeSpaceName}</strong> space.</>,
+    });
+    return;
+  }
+
+  showSelectExportTypeModal({
+    onCancel: () => { dispatch(loadStop()); },
+    onDone: async selectedFormat => {
+      // Check if we want to export private environments.
+      const environments = await models.environment.all();
 
       let exportPrivateEnvironments = false;
-      const privateEnvironments = environments.filter(e => e.isPrivate);
+      const privateEnvironments = environments.filter(environment => environment.isPrivate);
 
       if (privateEnvironments.length) {
-        const names = privateEnvironments.map(e => e.name).join(', ');
+        const names = privateEnvironments.map(environment => environment.name).join(', ');
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
-      const fileNamePrefix = (workspace ? workspace.name : 'Insomnia All').replace(/ /g, '-');
-      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: 'Insomnia-All',
+        selectedFormat,
+      });
 
       if (!fileName) {
         // Cancelled.
@@ -601,26 +504,19 @@ export const exportWorkspacesToFile = (workspaceId: string | undefined = undefin
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportWorkspacesHAR(
-              workspace,
-              exportPrivateEnvironments,
-            );
+            stringifiedExport = await exportWorkspacesHAR(workspaces, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'yaml',
-            );
+            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'yaml');
             break;
+
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportWorkspacesData(
-              workspace,
-              exportPrivateEnvironments,
-              'json',
-            );
+            stringifiedExport = await exportWorkspacesData(workspaces, exportPrivateEnvironments, 'json');
             break;
+
+          default:
+            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
@@ -640,14 +536,14 @@ export const exportWorkspacesToFile = (workspaceId: string | undefined = undefin
         dispatch(loadStop());
       });
     },
-  );
+  });
 };
 
-export const exportRequestsToFile = (requestIds: string[]) => async dispatch => {
+export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: Dispatch) => {
   dispatch(loadStart());
-  showSelectExportTypeModal(
-    () => dispatch(loadStop()),
-    async (selectedFormat: SelectedFormat) => {
+  showSelectExportTypeModal({
+    onCancel: () => { dispatch(loadStop()); },
+    onDone: async selectedFormat => {
       const requests: (GrpcRequest | Request)[] = [];
       const privateEnvironments: Environment[] = [];
       const workspaceLookup = {};
@@ -664,7 +560,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
           models.workspace.type,
           models.requestGroup.type,
         ]);
-        const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+        const workspace = ancestors.find(isWorkspace);
 
         if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
           continue;
@@ -672,8 +568,8 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
 
         workspaceLookup[workspace._id] = true;
         const descendants = await database.withDescendants(workspace);
-        const privateEnvs = descendants.filter(
-          descendant => descendant.type === models.environment.type && descendant.isPrivate,
+        const privateEnvs = descendants.filter(isEnvironment).filter(
+          descendant => descendant.isPrivate,
         );
         privateEnvironments.push(...privateEnvs);
       }
@@ -685,8 +581,10 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
         exportPrivateEnvironments = await showExportPrivateEnvironmentsModal(names);
       }
 
-      const fileNamePrefix = 'Insomnia';
-      const fileName = await showSaveExportedFileDialog(fileNamePrefix, selectedFormat);
+      const fileName = await showSaveExportedFileDialog({
+        exportedFileNamePrefix: 'Insomnia',
+        selectedFormat,
+      });
 
       if (!fileName) {
         // Cancelled.
@@ -699,27 +597,19 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
       try {
         switch (selectedFormat) {
           case VALUE_HAR:
-            stringifiedExport = await importUtils.exportRequestsHAR(
-              requests,
-              exportPrivateEnvironments,
-            );
+            stringifiedExport = await exportRequestsHAR(requests, exportPrivateEnvironments);
             break;
 
           case VALUE_YAML:
-            stringifiedExport = await importUtils.exportRequestsData(
-              requests,
-              exportPrivateEnvironments,
-              'yaml',
-            );
+            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'yaml');
             break;
 
           case VALUE_JSON:
-            stringifiedExport = await importUtils.exportRequestsData(
-              requests,
-              exportPrivateEnvironments,
-              'json',
-            );
+            stringifiedExport = await exportRequestsData(requests, exportPrivateEnvironments, 'json');
             break;
+
+          default:
+            unreachableCase(selectedFormat, `selected export format "${selectedFormat}" is invalid`);
         }
       } catch (err) {
         showError({
@@ -739,7 +629,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async dispatch => 
         dispatch(loadStop());
       });
     },
-  );
+  });
 };
 
 export function initActiveSpace() {

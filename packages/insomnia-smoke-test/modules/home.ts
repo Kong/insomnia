@@ -1,8 +1,9 @@
-import * as dropdown from './dropdown';
-import * as modal from './modal';
-import findAsync from './find-async';
-import * as debug from './debug';
 import faker from 'faker';
+
+import * as debug from './debug';
+import * as dropdown from './dropdown';
+import findAsync from './find-async';
+import * as modal from './modal';
 
 export const documentListingShown = async app => {
   const item = await app.client.$('.document-listing');
@@ -44,8 +45,8 @@ export const expectTotalDocuments = async (app, count) => {
   await app.client.waitUntilTextExists('.document-listing__footer', `${count} ${label}`);
 };
 
-export const openDocumentMenuDropdown = async card => {
-  const dropdown = await card.react$('DocumentCardDropdown');
+export const openWorkspaceCardDropdown = async card => {
+  const dropdown = await card.react$('WorkspaceCardDropdown');
   await dropdown.click();
 };
 

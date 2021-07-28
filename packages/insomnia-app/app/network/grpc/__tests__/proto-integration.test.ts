@@ -1,11 +1,12 @@
-import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import * as protoManager from '../proto-manager';
-import * as protoLoader from '../proto-loader';
-import * as models from '../../../models';
+import path from 'path';
+
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { selectFileOrFolder as _selectFileOrFolder } from '../../../common/select-file-or-folder';
+import * as models from '../../../models';
+import * as protoLoader from '../proto-loader';
+import * as protoManager from '../proto-manager';
 
 jest.mock('../../../common/select-file-or-folder', () => ({
   selectFileOrFolder: jest.fn(),

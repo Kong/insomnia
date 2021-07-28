@@ -1,10 +1,11 @@
-import * as client from '../modules/client';
-import { launchApp, stop } from '../modules/application';
-import * as onboarding from '../modules/onboarding';
-import * as migration from '../modules/migration';
-import * as home from '../modules/home';
 import path from 'path';
 import { Application } from 'spectron';
+
+import { launchApp, stop } from '../modules/application';
+import * as client from '../modules/client';
+import * as home from '../modules/home';
+import * as migration from '../modules/migration';
+import * as onboarding from '../modules/onboarding';
 
 describe('Migration', function() {
   jest.setTimeout(50000);
@@ -27,8 +28,7 @@ describe('Migration', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    await home.expectTotalDocuments(app, 1);
-    await home.expectDocumentWithTitle(app, 'Insomnia');
+    await home.expectTotalDocuments(app, 0);
 
     await app.restart();
     await client.focusAfterRestart(app);
@@ -55,8 +55,7 @@ describe('Migration', function() {
     await onboarding.skipOnboardingFlow(app);
 
     await home.documentListingShown(app);
-    await home.expectTotalDocuments(app, 2);
-    await home.expectDocumentWithTitle(app, 'Insomnia');
+    await home.expectTotalDocuments(app, 1);
     await home.expectDocumentWithTitle(app, 'BASIC-DESIGNER-FIXTURE'); // imported from fixture
 
     await app.restart();

@@ -1,20 +1,21 @@
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,
   SIGNATURE_METHOD_HMAC_SHA256,
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import CodePromptModal from '../../modals/code-prompt-modal';
-import { showModal } from '../../modals';
 import Button from '../../base/button';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import HelpTooltip from '../../help-tooltip';
+import { showModal } from '../../modals';
+import CodePromptModal from '../../modals/code-prompt-modal';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----

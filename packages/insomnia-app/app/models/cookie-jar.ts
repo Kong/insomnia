@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
@@ -35,6 +36,10 @@ interface BaseCookieJar {
 }
 
 export type CookieJar = BaseModel & BaseCookieJar;
+
+export const isCookieJar = (model: Pick<BaseModel, 'type'>): model is CookieJar => (
+  model.type === type
+);
 
 export function init() {
   return {

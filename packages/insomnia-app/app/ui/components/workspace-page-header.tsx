@@ -1,18 +1,19 @@
+import { Breadcrumb, Header } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'react';
+
 import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
-import coreLogo from '../images/insomnia-core-logo.png';
 import { strings } from '../../common/strings';
-import WorkspaceDropdown from './dropdowns/workspace-dropdown';
+import { isCollection, isDesign } from '../../models/workspace';
+import coreLogo from '../images/insomnia-core-logo.png';
 import ActivityToggle from './activity-toggle';
-import type { WrapperProps } from './wrapper';
-import { Header, Breadcrumb } from 'insomnia-components';
-import AccountDropdown from './dropdowns/account-dropdown';
 import SettingsButton from './buttons/settings-button';
-import { isCollection, isDesign } from '../../models/helpers/is-model';
+import AccountDropdown from './dropdowns/account-dropdown';
+import WorkspaceDropdown from './dropdowns/workspace-dropdown';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   wrapperProps: WrapperProps;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   gridRight: ReactNode;
 }
 
@@ -22,18 +23,24 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
   wrapperProps: {
     activeApiSpec,
     activeWorkspace,
+    activeSpace,
     activeEnvironment,
     settings,
     activity,
     isLoading,
   },
 }) => {
+  const homeCallback = useCallback(
+    () => handleActivityChange({ workspaceId: activeWorkspace?._id, nextActivity: ACTIVITY_HOME }),
+    [activeWorkspace, handleActivityChange],
+  );
+
+  if (!activeWorkspace || !activeApiSpec || !activity) {
+    return null;
+  }
+
   const collection = isCollection(activeWorkspace);
   const design = isDesign(activeWorkspace);
-  const homeCallback = useCallback(
-    () => handleActivityChange(activeWorkspace._id, ACTIVITY_HOME),
-    [activeWorkspace._id, handleActivityChange],
-  );
 
   const workspace = (
     <WorkspaceDropdown
@@ -41,6 +48,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
       activeApiSpec={activeApiSpec}
+      activeSpace={activeSpace}
       hotKeyRegistry={settings.hotKeyRegistry}
       isLoading={isLoading}
     />

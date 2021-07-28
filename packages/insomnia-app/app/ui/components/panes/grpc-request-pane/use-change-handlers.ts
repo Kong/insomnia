@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
+
+import * as models from '../../../../models';
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { GrpcDispatch } from '../../../context/grpc';
-import * as models from '../../../../models';
 import { grpcActions } from '../../../context/grpc';
 import { showModal } from '../../modals';
 import ProtoFilesModal from '../../modals/proto-files-modal';

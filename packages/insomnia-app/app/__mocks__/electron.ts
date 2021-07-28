@@ -1,5 +1,5 @@
-import mkdirp from 'mkdirp';
 import { EventEmitter } from 'events';
+import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 

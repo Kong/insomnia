@@ -1,6 +1,11 @@
-import * as models from '../index';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { database } from '../../common/database';
+import { ApiSpec } from '../api-spec';
+import { CookieJar } from '../cookie-jar';
+import { Environment } from '../environment';
+import * as models from '../index';
 import { WorkspaceScopeKeys } from '../workspace';
+import { WorkspaceMeta } from '../workspace-meta';
 
 describe('migrate()', () => {
   beforeEach(globalBeforeEach);
@@ -111,5 +116,26 @@ describe('migrate()', () => {
     expect(somethingElseW.scope).toBe(WorkspaceScopeKeys.collection);
     expect(designW.scope).toBe(WorkspaceScopeKeys.design);
     expect(collectionW.scope).toBe(WorkspaceScopeKeys.collection);
+  });
+});
+
+describe('ensureChildren()', () => {
+  beforeEach(globalBeforeEach);
+
+  it('creates children for workspace', async () => {
+    const workspace = await models.workspace.create();
+    await models.workspace.ensureChildren(workspace);
+
+    const descendents = await database.withDescendants(workspace);
+
+    expect(descendents).toHaveLength(5);
+    expect(descendents).toStrictEqual(expect.arrayContaining([
+      workspace,
+      // ApiSpec is created as part of migration
+      expect.objectContaining<Partial<ApiSpec>>({ parentId: workspace._id, type: models.apiSpec.type }),
+      expect.objectContaining<Partial<Environment>>({ parentId: workspace._id, type: models.environment.type }),
+      expect.objectContaining<Partial<CookieJar>>({ parentId: workspace._id, type: models.cookieJar.type }),
+      expect.objectContaining<Partial<WorkspaceMeta>>({ parentId: workspace._id, type: models.workspaceMeta.type }),
+    ]));
   });
 });

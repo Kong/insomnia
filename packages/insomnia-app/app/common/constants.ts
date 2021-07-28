@@ -1,6 +1,7 @@
-import appConfig from '../../config/config.json';
 import path from 'path';
 import { ValueOf } from 'type-fest';
+
+import appConfig from '../../config/config.json';
 import { getDataDirectory } from './electron-helpers';
 
 // App Stuff
@@ -82,6 +83,7 @@ export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
 export const EDITOR_KEY_MAP_VIM = 'vim';
 
 // Hotkey
+// For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
 export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
 export const ALT_SYM = isMac() ? '⌥' : 'Alt';
@@ -94,8 +96,11 @@ export const UPDATE_CHANNEL_BETA = 'beta';
 export const UPDATE_URL_MAC = 'https://updates.insomnia.rest/builds/check/mac';
 export const UPDATE_URL_WINDOWS = 'https://updates.insomnia.rest/updates/win';
 
-// AP
+// API
 export const API_BASE_URL = 'https://api.insomnia.rest';
+
+// SYNC
+export const DEFAULT_BRANCH_NAME = 'master';
 
 // PLUGIN
 export const PLUGIN_HUB_BASE = 'https://insomnia.rest/plugins';
@@ -202,6 +207,7 @@ export const PREVIEW_MODES = Object.keys(previewModeMap);
 
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
+export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'text/yaml';
 export const CONTENT_TYPE_EDN = 'application/edn';
@@ -218,6 +224,7 @@ const contentTypesMap = {
   [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
   [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
   [CONTENT_TYPE_OTHER]: ['Other', 'Other'],
+  [CONTENT_TYPE_PLAINTEXT]: ['Plain', 'Plain'],
   [CONTENT_TYPE_XML]: ['XML', 'XML'],
   [CONTENT_TYPE_YAML]: ['YAML', 'YAML'],
 };
@@ -478,3 +485,17 @@ export const RESPONSE_CODE_REASONS = {
   510: 'Not Extended',
   511: 'Network Authentication Required',
 };
+
+export const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
+export const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
+export const EXPORT_TYPE_REQUEST = 'request';
+export const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
+export const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
+export const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
+export const EXPORT_TYPE_UNIT_TEST = 'unit_test';
+export const EXPORT_TYPE_WORKSPACE = 'workspace';
+export const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
+export const EXPORT_TYPE_ENVIRONMENT = 'environment';
+export const EXPORT_TYPE_API_SPEC = 'api_spec';
+export const EXPORT_TYPE_PROTO_FILE = 'proto_file';
+export const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';

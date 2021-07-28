@@ -1,19 +1,23 @@
-import { renderHook, act } from '@testing-library/react-hooks';
-import { isLoggedIn as _isLoggedIn } from '../../../account/session';
-import MemoryDriver from '../../../sync/store/drivers/memory-driver';
-import VCS from '../../../sync/vcs';
+import { act, renderHook } from '@testing-library/react-hooks';
+import { mocked } from 'ts-jest/utils';
+
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { useRemoteSpaces } from '../space';
+import { isLoggedIn as _isLoggedIn } from '../../../account/session';
 import * as models from '../../../models';
-import { Space } from '../../../models/space';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
+import MemoryDriver from '../../../sync/store/drivers/memory-driver';
+import { VCS } from '../../../sync/vcs/vcs';
+import { useRemoteSpaces } from '../space';
 
 jest.mock('../../../account/session', () => ({
   isLoggedIn: jest.fn(),
 }));
 
-jest.mock('../../../sync/vcs');
+jest.mock('../../../sync/vcs/vcs');
 
-const isLoggedIn = _isLoggedIn as jest.MockedFunction<typeof _isLoggedIn>;
+const isLoggedIn = mocked(_isLoggedIn);
+
+const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
 describe('useRemoteSpaces', () => {
   beforeEach(globalBeforeEach);
@@ -24,7 +28,7 @@ describe('useRemoteSpaces', () => {
   });
 
   it('should not load teams if not signed in', async () => {
-    const vcs = new VCS(new MemoryDriver());
+    const vcs = newMockedVcs();
     isLoggedIn.mockReturnValue(false);
 
     const { result } = renderHook(() => useRemoteSpaces(vcs));
@@ -32,18 +36,18 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs.teams).not.toHaveBeenCalled();
     expect(result.current.loading).toBe(false);
-    await expect(models.space.all()).resolves.toHaveLength(0);
+    await expect(models.space.all()).resolves.toHaveLength(1);
   });
 
   it('should load teams each time VCS changes', async () => {
     isLoggedIn.mockReturnValue(true);
 
-    const vcs1 = new VCS(new MemoryDriver());
-    const vcs2 = new VCS(new MemoryDriver());
+    const vcs1 = newMockedVcs();
+    const vcs2 = newMockedVcs();
     const team1 = { id: 'id1', name: 'team1' };
     const team2 = { id: 'id2', name: 'team2' };
-    (vcs1.teams as jest.MockedFunction<typeof vcs1.teams>).mockResolvedValue([team1]);
-    (vcs2.teams as jest.MockedFunction<typeof vcs2.teams>).mockResolvedValue([team2]);
+    vcs1.teams.mockResolvedValue([team1]);
+    vcs2.teams.mockResolvedValue([team2]);
 
     const { result, rerender, waitFor } = renderHook(prop => useRemoteSpaces(prop), { initialProps: vcs1 });
 
@@ -62,8 +66,11 @@ describe('useRemoteSpaces', () => {
     expect(vcs2.teams).toHaveBeenCalledTimes(1);
 
     const allSpaces = await models.space.all();
-    expect(allSpaces).toHaveLength(2);
+    expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
+      expect.objectContaining<Partial<Space>>({
+        _id: BASE_SPACE_ID,
+      }),
       expect.objectContaining<Partial<Space>>({
         remoteId: team1.id,
         name: team1.name,
@@ -78,8 +85,8 @@ describe('useRemoteSpaces', () => {
   it('should load teams on refresh', async () => {
     isLoggedIn.mockReturnValue(true);
 
-    const vcs = new VCS(new MemoryDriver());
-    (vcs.teams as jest.MockedFunction<typeof vcs.teams>).mockResolvedValue([]);
+    const vcs = newMockedVcs();
+    vcs.teams.mockResolvedValue([]);
 
     const { result, waitFor } = renderHook(() => useRemoteSpaces(vcs));
 
@@ -88,11 +95,11 @@ describe('useRemoteSpaces', () => {
     await waitFor(() => result.current.loading === false);
 
     expect(vcs.teams).toHaveBeenCalledTimes(1);
-    await expect(models.space.all()).resolves.toHaveLength(0);
+    await expect(models.space.all()).resolves.toHaveLength(1);
 
     const team1 = { id: 'id1', name: 'team1' };
     const team2 = { id: 'id2', name: 'team2' };
-    (vcs.teams as jest.MockedFunction<typeof vcs.teams>).mockResolvedValue([team1, team2]);
+    vcs.teams.mockResolvedValue([team1, team2]);
 
     // Refresh multiple times
     await act(() => result.current.refresh());
@@ -101,8 +108,11 @@ describe('useRemoteSpaces', () => {
     expect(vcs.teams).toHaveBeenCalledTimes(3);
 
     const allSpaces = await models.space.all();
-    expect(allSpaces).toHaveLength(2);
+    expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
+      expect.objectContaining<Partial<Space>>({
+        _id: BASE_SPACE_ID,
+      }),
       expect.objectContaining<Partial<Space>>({
         remoteId: team1.id,
         name: team1.name,

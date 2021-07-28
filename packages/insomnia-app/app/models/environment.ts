@@ -1,16 +1,12 @@
 import * as crypto from 'crypto';
+
 import { database as db } from '../common/database';
 import type { BaseModel } from './index';
-import type { Workspace } from './workspace';
 
 export const name = 'Environment';
-
 export const type = 'Environment';
-
 export const prefix = 'env';
-
 export const canDuplicate = true;
-
 export const canSync = true;
 
 interface BaseEnvironment {
@@ -24,6 +20,10 @@ interface BaseEnvironment {
 }
 
 export type Environment = BaseModel & BaseEnvironment;
+
+export const isEnvironment = (model: Pick<BaseModel, 'type'>): model is Environment => (
+  model.type === type
+);
 
 export function init() {
   return {
@@ -64,30 +64,30 @@ export function findByParentId(parentId: string) {
   );
 }
 
-export async function getOrCreateForWorkspaceId(workspaceId: string) {
+export async function getOrCreateForParentId(parentId: string) {
   const environments = await db.find<Environment>(type, {
-    parentId: workspaceId,
+    parentId,
   });
 
   if (!environments.length) {
     return create({
-      parentId: workspaceId,
+      parentId,
       name: 'Base Environment',
       // Deterministic base env ID. It helps reduce sync complexity since we won't have to
       // de-duplicate environments.
-      _id: `${prefix}_${crypto.createHash('sha1').update(workspaceId).digest('hex')}`,
+      _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
     });
   }
 
   return environments[environments.length - 1];
 }
 
-export async function getOrCreateForWorkspace(workspace: Workspace) {
-  return getOrCreateForWorkspaceId(workspace._id);
-}
-
 export function getById(id: string): Promise<Environment | null> {
   return db.get(type, id);
+}
+
+export function getByParentId(parentId: string): Promise<Environment | null> {
+  return db.getWhere<Environment>(type, { parentId });
 }
 
 export async function duplicate(environment: Environment) {

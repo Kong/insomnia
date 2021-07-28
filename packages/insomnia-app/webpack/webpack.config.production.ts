@@ -1,4 +1,5 @@
 import { Configuration, DefinePlugin } from 'webpack';
+
 import baseConfig from './webpack.config.base';
 
 const configuration: Configuration = {

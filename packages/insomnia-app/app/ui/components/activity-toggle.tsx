@@ -1,12 +1,13 @@
-import React, { FunctionComponent } from 'react';
 import { MultiSwitch } from 'insomnia-components';
+import React, { FunctionComponent } from 'react';
+
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../common/constants';
 import type { Workspace } from '../../models/workspace';
 
 interface Props {
   activity: GlobalActivity;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   workspace: Workspace;
 }
 
@@ -25,11 +26,11 @@ const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChan
       value: ACTIVITY_UNIT_TEST,
     },
   ];
+
   return (
     <MultiSwitch
       name="activity-toggle"
-      // @ts-expect-error -- TSCONVERSION
-      onChange={a => handleActivityChange(workspace._id, a)}
+      onChange={(nextActivity: GlobalActivity) => handleActivityChange({ workspaceId: workspace._id, nextActivity })}
       choices={choices}
       selectedValue={activity}
     />

@@ -1,34 +1,36 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
-import type { Workspace } from '../../../models/workspace';
-import type { GitVCS, GitLogEntry } from '../../../sync/git/git-vcs';
-import { showAlert, showError, showModal } from '../modals';
-import GitStagingModal from '../modals/git-staging-modal';
-import { database as db } from '../../../common/database';
-import * as models from '../../../models';
-import type { GitRepository } from '../../../models/git-repository';
-import GitLogModal from '../modals/git-log-modal';
-import GitBranchesModal from '../modals/git-branches-modal';
-import HelpTooltip from '../help-tooltip';
-import Link from '../base/link';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
 import { trackEvent } from '../../../common/analytics';
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
 import { docsGitSync } from '../../../common/documentation';
 import { isNotNullOrUndefined } from '../../../common/misc';
+import * as models from '../../../models';
+import type { GitRepository } from '../../../models/git-repository';
+import type { Workspace } from '../../../models/workspace';
+import type { GitLogEntry, GitVCS } from '../../../sync/git/git-vcs';
 import { MemClient } from '../../../sync/git/mem-client';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import * as gitActions from '../../redux/modules/git';
+import { initialize as initializeEntities } from '../../redux/modules/entities';
 import type {
   SetupGitRepositoryCallback,
   UpdateGitRepositoryCallback,
 } from '../../redux/modules/git';
+import * as gitActions from '../../redux/modules/git';
+import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import Dropdown from '../base/dropdown/dropdown';
+import Link from '../base/link';
+import HelpTooltip from '../help-tooltip';
+import { showAlert, showError, showModal } from '../modals';
+import GitBranchesModal from '../modals/git-branches-modal';
+import GitLogModal from '../modals/git-log-modal';
+import GitStagingModal from '../modals/git-staging-modal';
 
 interface Props {
-  handleInitializeEntities: () => Promise<void>;
+  handleInitializeEntities: typeof initializeEntities;
   handleGitBranchChanged: (branch: string) => void;
   workspace: Workspace;
   vcs: GitVCS;

@@ -1,23 +1,26 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import ReactDOM from 'react-dom';
-import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+import { DragSource, DropTarget } from 'react-dnd';
+import ReactDOM from 'react-dom';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { HotKeyRegistry } from '../../../common/hotkeys';
+import * as misc from '../../../common/misc';
+import { HandleRender } from '../../../common/render';
+import { Environment } from '../../../models/environment';
+import { RequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
+import { Workspace } from '../../../models/workspace';
 import Highlight from '../base/highlight';
 import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
+import { showModal } from '../modals';
+import RequestGroupSettingsModal from '../modals/request-group-settings-modal';
 import SidebarRequestRow from './sidebar-request-row';
-import * as misc from '../../../common/misc';
-import { RequestGroup } from '../../../models/request-group';
-import { Workspace } from '../../../models/workspace';
-import { Environment } from '../../../models/environment';
-import { HotKeyRegistry } from '../../../common/hotkeys';
-import { HandleRender } from '../../../common/render';
 
 interface Props {
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
   moveDoc: Function;
   handleActivateRequest: Function;
   handleCreateRequest: (id: string) => any;
@@ -34,6 +37,7 @@ interface Props {
   connectDragSource?: Function;
   connectDropTarget?: Function;
   activeEnvironment?: Environment | null;
+  activeSpace: Space;
 }
 
 interface State {
@@ -80,6 +84,12 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
     }
   }
 
+  _handleShowRequestGroupSettings() {
+    showModal(RequestGroupSettingsModal, {
+      requestGroup: this.props.requestGroup,
+    });
+  }
+
   render() {
     const {
       connectDragSource,
@@ -93,13 +103,13 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       handleCreateRequest,
       handleCreateRequestGroup,
       handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
       handleRender,
       isDragging,
       isDraggingOver,
       workspace,
       hotKeyRegistry,
       activeEnvironment,
+      activeSpace,
     } = this.props;
     const { dragDirection } = this.state;
     let folderIconClass = 'fa-folder';
@@ -152,7 +162,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-              handleMoveRequestGroup={handleMoveRequestGroup}
+              handleShowSettings={this._handleShowRequestGroupSettings}
               workspace={workspace}
               requestGroup={requestGroup}
               hotKeyRegistry={hotKeyRegistry}
@@ -185,6 +195,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               hotKeyRegistry={hotKeyRegistry}
               isPinned={false} // Necessary so that plugin actions work
               activeEnvironment={activeEnvironment}
+              activeSpace={activeSpace}
             />
           )}
         </ul>

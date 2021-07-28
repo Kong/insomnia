@@ -1,10 +1,18 @@
+import { createBuilder } from '@develohpanda/fluent-builder';
+import { difference } from 'lodash';
+
 import * as models from '../../../models';
+import { baseModelSchema, grpcRequestModelSchema, requestGroupModelSchema, requestModelSchema } from '../../../models/__schemas__/model-schemas';
 import {
   shouldIgnoreChildrenOf,
   shouldShowInSidebar,
   sortByMetaKeyOrId,
 } from '../sidebar-selectors';
-import { difference } from 'lodash';
+
+const baseModelBuilder = createBuilder(baseModelSchema);
+const requestModelBuilder = createBuilder(requestModelSchema);
+const requestGroupModelBuilder = createBuilder(requestGroupModelSchema);
+const grpcRequestModelBuilder = createBuilder(grpcRequestModelSchema);
 
 describe('shouldShowInSidebar', () => {
   const allTypes = models.types();
@@ -12,61 +20,38 @@ describe('shouldShowInSidebar', () => {
   const unsupported = difference(allTypes, supported);
 
   it.each(supported)('should show %s in sidebar', type => {
-    expect(
-      shouldShowInSidebar({
-        type,
-      }),
-    ).toBe(true);
+    expect(shouldShowInSidebar(baseModelBuilder.type(type).build())).toBe(true);
   });
 
   it.each(unsupported)('should not show %s in sidebar', type => {
-    expect(
-      shouldShowInSidebar({
-        type,
-      }),
-    ).toBe(false);
+    expect(shouldShowInSidebar(baseModelBuilder.type(type).build())).toBe(false);
   });
 });
 
 describe('shouldIgnoreChildrenOf', () => {
-  it.each([models.request.type, models.grpcRequest.type])('should ignore children of %s', type => {
-    expect(
-      shouldIgnoreChildrenOf({
-        type,
-      }),
-    ).toBe(true);
+  it('should ignore children of', () => {
+    expect(shouldIgnoreChildrenOf(requestModelBuilder.build())).toBe(true);
+    expect(shouldIgnoreChildrenOf(grpcRequestModelBuilder.build())).toBe(true);
   });
 
-  it.each([models.requestGroup.type])('should not ignore children of', type => {
-    expect(
-      shouldIgnoreChildrenOf({
-        type,
-      }),
-    ).toBe(false);
+  it('should not ignore children of', () => {
+    expect(shouldIgnoreChildrenOf(requestGroupModelBuilder.build())).toBe(false);
   });
 });
 
 describe('sortByMetaKeyOrId', () => {
   it('sort by _id if meta keys are identical', () => {
-    const a = {
-      _id: 'a',
-      metaSortKey: '1',
-    };
-    const b = {
-      _id: 'b',
-      metaSortKey: '1',
-    };
+    const a = requestModelBuilder._id('a').metaSortKey(1).build();
+    const b = requestModelBuilder._id('b').metaSortKey(1).build();
+
     expect(sortByMetaKeyOrId(a, b)).toBe(1);
     expect(sortByMetaKeyOrId(b, a)).toBe(-1);
   });
 
   it('sort by meta keys', () => {
-    const a = {
-      metaSortKey: '1',
-    };
-    const b = {
-      metaSortKey: '2',
-    };
+    const a = requestModelBuilder.metaSortKey(1).build();
+    const b = requestModelBuilder.metaSortKey(2).build();
+
     expect(sortByMetaKeyOrId(a, b)).toBe(-1);
     expect(sortByMetaKeyOrId(b, a)).toBe(1);
   });

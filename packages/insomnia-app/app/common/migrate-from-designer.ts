@@ -1,16 +1,16 @@
-import NeDB from 'nedb';
-import type { BaseModel } from '../models';
-import fsPath from 'path';
 import fs from 'fs';
-import * as models from '../models';
-import { database as db } from './database';
-import { getModelName } from '../models';
-import { difference } from 'lodash';
-import type { Workspace } from '../models/workspace';
-import type { Settings } from '../models/settings';
 import fsx from 'fs-extra';
+import { difference } from 'lodash';
+import NeDB from 'nedb';
+import fsPath from 'path';
+
+import type { BaseModel } from '../models';
+import * as models from '../models';
+import { getModelName } from '../models';
+import type { Settings } from '../models/settings';
+import { forceWorkspaceScopeToDesign } from '../sync/git/force-workspace-scope-to-design';
 import { trackEvent } from './analytics';
-import { WorkspaceScopeKeys } from '../models/workspace';
+import { database as db } from './database';
 
 async function loadDesignerDb(
   types: string[],
@@ -201,9 +201,7 @@ export default async function migrateFromDesigner({
 
       // For each workspace coming from Designer, mark workspace.scope as 'design'
       if (modelType === models.workspace.type) {
-        for (const workspace of entries) {
-          (workspace as Workspace).scope = WorkspaceScopeKeys.design;
-        }
+        entries.forEach(forceWorkspaceScopeToDesign);
       }
 
       const entryCount = entries.length;

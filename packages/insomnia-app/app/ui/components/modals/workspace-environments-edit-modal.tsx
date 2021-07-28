@@ -1,26 +1,27 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
-import { SortableContainer, SortableElement, arrayMove, SortEndHandler } from 'react-sortable-hoc';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
-import PromptButton from '../base/prompt-button';
-import Button, { ButtonProps } from '../base/button';
-import Link from '../base/link';
-import EnvironmentEditor from '../editors/environment-editor';
-import Editable from '../base/editable';
-import Modal, { ModalProps } from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import * as models from '../../../models';
-import type { Workspace } from '../../../models/workspace';
-import type { Environment } from '../../../models/environment';
+import React, { Fragment, PureComponent } from 'react';
+import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
+
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import HelpTooltip from '../help-tooltip';
-import Tooltip from '../tooltip';
 import { docsTemplateTags } from '../../../common/documentation';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as models from '../../../models';
+import type { Environment } from '../../../models/environment';
+import type { Workspace } from '../../../models/workspace';
+import Button, { ButtonProps } from '../base/button';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import Editable from '../base/editable';
+import Link from '../base/link';
+import Modal, { ModalProps } from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import PromptButton from '../base/prompt-button';
+import EnvironmentEditor from '../editors/environment-editor';
+import HelpTooltip from '../help-tooltip';
+import Tooltip from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface Props extends ModalProps {
@@ -187,7 +188,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
       return;
     }
 
-    const rootEnvironment = await models.environment.getOrCreateForWorkspace(workspace);
+    const rootEnvironment = await models.environment.getOrCreateForParentId(workspace._id);
     const subEnvironments = await models.environment.findByParentId(rootEnvironment._id);
     let selectedEnvironmentId;
 

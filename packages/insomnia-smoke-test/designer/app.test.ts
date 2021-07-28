@@ -1,11 +1,11 @@
-import * as client from '../modules/client';
-import * as home from '../modules/home';
-import * as settings from '../modules/settings';
-import * as modal from '../modules/modal';
-import * as dropdown from '../modules/dropdown';
+import { Application } from 'spectron';
 
 import { isPackage, launchApp, stop } from '../modules/application';
-import { Application } from 'spectron';
+import * as client from '../modules/client';
+import * as dropdown from '../modules/dropdown';
+import * as home from '../modules/home';
+import * as modal from '../modules/modal';
+import * as settings from '../modules/settings';
 
 const itIf = condition => (condition ? it : it.skip);
 // @ts-expect-error TSCONVERSION
@@ -35,7 +35,7 @@ xdescribe('Application launch', function() {
     await settings.closeModal(app);
 
     // Open card dropdown for any card
-    const dd = await home.openDocumentMenuDropdown(app);
+    const dd = await home.openWorkspaceCardDropdown(app);
 
     // Click the "Deploy to Portal" button, installed from that plugin
     await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');

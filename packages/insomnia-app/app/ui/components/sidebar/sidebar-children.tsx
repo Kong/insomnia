@@ -1,18 +1,19 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import SidebarRequestRow from './sidebar-request-row';
-import SidebarRequestGroupRow from './sidebar-request-group-row';
-import type { RequestGroup } from '../../../models/request-group';
-import type { Workspace } from '../../../models/workspace';
-import type { Request } from '../../../models/request';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
-import type { Environment } from '../../../models/environment';
-import SidebarCreateDropdown from './sidebar-create-dropdown';
-import { GrpcRequest } from '../../../models/grpc-request';
-import { isGrpcRequest, isRequest } from '../../../models/helpers/is-model';
 import { HandleRender } from '../../../common/render';
+import type { Environment } from '../../../models/environment';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import { isRequest, Request } from '../../../models/request';
+import type { RequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
+import type { Workspace } from '../../../models/workspace';
+import SidebarCreateDropdown from './sidebar-create-dropdown';
+import SidebarRequestGroupRow from './sidebar-request-group-row';
+import SidebarRequestRow from './sidebar-request-row';
 
 export interface Child {
   doc: Request | GrpcRequest | RequestGroup;
@@ -33,7 +34,6 @@ interface Props {
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => Promise<void>;
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleRender: HandleRender;
@@ -43,7 +43,8 @@ interface Props {
   filter: string;
   hotKeyRegistry: HotKeyRegistry;
   activeEnvironment?: Environment | null;
-  activeRequest?: Request | null;
+  activeRequest?: Request | GrpcRequest | null;
+  activeSpace: Space;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -83,7 +84,6 @@ class SidebarChildren extends PureComponent<Props> {
       handleSetRequestGroupCollapsed,
       handleDuplicateRequest,
       handleDuplicateRequestGroup,
-      handleMoveRequestGroup,
       handleGenerateCode,
       handleCopyAsCurl,
       handleRender,
@@ -93,6 +93,7 @@ class SidebarChildren extends PureComponent<Props> {
       workspace,
       hotKeyRegistry,
       activeEnvironment,
+      activeSpace,
     } = this.props;
     const activeRequestId = activeRequest ? activeRequest._id : 'n/a';
     return children.map(child => {
@@ -119,6 +120,7 @@ class SidebarChildren extends PureComponent<Props> {
             request={child.doc}
             hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions on requests
             activeEnvironment={activeEnvironment}
+            activeSpace={activeSpace}
           />
         );
       }
@@ -152,7 +154,6 @@ class SidebarChildren extends PureComponent<Props> {
           handleActivateRequest={handleActivateRequest}
           handleSetRequestGroupCollapsed={handleSetRequestGroupCollapsed}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
           handleRender={handleRender}
           isCollapsed={child.collapsed}
           handleCreateRequest={handleCreateRequest}
@@ -161,6 +162,7 @@ class SidebarChildren extends PureComponent<Props> {
           requestGroup={requestGroup}
           hotKeyRegistry={hotKeyRegistry}
           activeEnvironment={activeEnvironment}
+          activeSpace={activeSpace}
         >
           {children}
         </SidebarRequestGroupRow>

@@ -1,6 +1,6 @@
-import type { BaseModel } from './index';
 import { database as db } from '../common/database';
 import type { GitCredentials } from '../sync/git/git-vcs';
+import type { BaseModel } from './index';
 
 export type GitRepository = BaseModel & BaseGitRepository;
 
@@ -37,6 +37,10 @@ interface BaseGitRepository {
   };
   uriNeedsMigration: boolean;
 }
+
+export const isGitRepository = (model: Pick<BaseModel, 'type'>): model is GitRepository => (
+  model.type === type
+);
 
 export function migrate(doc: GitRepository) {
   return doc;

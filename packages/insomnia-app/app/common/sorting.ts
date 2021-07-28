@@ -1,6 +1,8 @@
+import { GrpcRequest, isGrpcRequest } from '../models/grpc-request';
+import { isRequest, Request } from '../models/request';
+import { isRequestGroup, RequestGroup } from '../models/request-group';
 import {
   HTTP_METHODS,
-  SortOrder,
   SORT_CREATED_ASC,
   SORT_CREATED_DESC,
   SORT_HTTP_METHOD,
@@ -8,11 +10,8 @@ import {
   SORT_NAME_DESC,
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
+  SortOrder,
 } from './constants';
-import type { Request } from '../models/request';
-import type { GrpcRequest } from '../models/grpc-request';
-import type { RequestGroup } from '../models/request-group';
-import { isGrpcRequest, isRequest, isRequestGroup } from '../models/helpers/is-model';
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction = (a: SortableModel, b: SortableModel) => number;

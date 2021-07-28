@@ -1,9 +1,10 @@
-import { Readable, Writable } from 'stream';
 import fuzzysort from 'fuzzysort';
+import { join as pathJoin } from 'path';
+import { Readable, Writable } from 'stream';
 import * as uuid from 'uuid';
 import zlib from 'zlib';
-import { join as pathJoin } from 'path';
-import { METHOD_OPTIONS, METHOD_DELETE, DEBOUNCE_MILLIS } from './constants';
+
+import { DEBOUNCE_MILLIS, METHOD_DELETE, METHOD_OPTIONS } from './constants';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
 
@@ -444,6 +445,6 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
   return value;
 }
 
-export function isNotNullOrUndefined(obj: unknown) {
+export function isNotNullOrUndefined(obj: any | null | undefined) {
   return obj !== null && obj !== undefined;
 }

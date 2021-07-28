@@ -1,13 +1,21 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+
 import { globalBeforeEach } from '../../../../__jest__/before-each';
-import { createWorkspace } from '../workspace';
-import { WorkspaceScopeKeys } from '../../../../models/workspace';
-import * as models from '../../../../models';
+import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../../common/constants';
-import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
+import { database } from '../../../../common/database';
+import * as models from '../../../../models';
+import { ApiSpec } from '../../../../models/api-spec';
+import { CookieJar } from '../../../../models/cookie-jar';
+import { Environment } from '../../../../models/environment';
+import { BASE_SPACE_ID } from '../../../../models/space';
+import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../../models/workspace';
+import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
+import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
+import { createWorkspace } from '../workspace';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
@@ -22,6 +30,25 @@ const createStoreWithSpace = async () => {
   const global = { activeSpaceId: space._id };
   const store = mockStore({ entities, global });
   return { store, space };
+};
+
+const expectedModelsCreated = async (name: string, scope: WorkspaceScope, parentId: string) => {
+  const workspaces = await models.workspace.all();
+  expect(workspaces).toHaveLength(1);
+  const workspace = workspaces[0];
+
+  const descendents = await database.withDescendants(workspace);
+
+  expect(descendents).toHaveLength(5);
+  expect(descendents).toStrictEqual(expect.arrayContaining([
+    expect.objectContaining<Partial<Workspace>>({ name, scope, parentId, type: models.workspace.type }),
+    expect.objectContaining<Partial<ApiSpec>>({ parentId: workspace._id, type: models.apiSpec.type }),
+    expect.objectContaining<Partial<Environment>>({ parentId: workspace._id, type: models.environment.type }),
+    expect.objectContaining<Partial<CookieJar>>({ parentId: workspace._id, type: models.cookieJar.type }),
+    expect.objectContaining<Partial<WorkspaceMeta>>({ parentId: workspace._id, type: models.workspaceMeta.type }),
+  ]));
+
+  return workspace._id;
 };
 
 describe('workspace', () => {
@@ -39,18 +66,15 @@ describe('workspace', () => {
       expect(defaultValue).toBe('my-spec.yaml');
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace.name).toBe(workspaceName);
-      expect(workspace.scope).toBe(WorkspaceScopeKeys.design);
-      expect(workspace.parentId).toBe(space._id);
+
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, space._id);
+
       expect(trackSegmentEvent).toHaveBeenCalledWith('Document Created');
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspace._id,
+          workspaceId: workspaceId,
         },
         {
           type: SET_ACTIVE_ACTIVITY,
@@ -71,20 +95,15 @@ describe('workspace', () => {
       expect(defaultValue).toBe('My Collection');
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace).toMatchObject({
-        name: workspaceName,
-        scope: WorkspaceScopeKeys.collection,
-        parentId: space._id,
-      });
+
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, space._id);
+
       expect(trackSegmentEvent).toHaveBeenCalledWith('Collection Created');
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspace._id,
+          workspaceId: workspaceId,
         },
         {
           type: SET_ACTIVE_ACTIVITY,
@@ -94,9 +113,7 @@ describe('workspace', () => {
     });
 
     it('should create with no space', async () => {
-      const entities = { spaces: {} };
-      const global = { };
-      const store = mockStore({ entities, global });
+      const store = mockStore(await reduxStateForTest());
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
@@ -107,20 +124,15 @@ describe('workspace', () => {
       expect(defaultValue).toBe('My Collection');
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace).toMatchObject({
-        name: workspaceName,
-        scope: WorkspaceScopeKeys.collection,
-        parentId: null,
-      });
+
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, BASE_SPACE_ID);
+
       expect(trackSegmentEvent).toHaveBeenCalledWith('Collection Created');
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspace._id,
+          workspaceId: workspaceId,
         },
         {
           type: SET_ACTIVE_ACTIVITY,

@@ -1,6 +1,6 @@
 import { database as db } from '../common/database';
+import { isGrpcRequestId } from './grpc-request';
 import type { BaseModel } from './index';
-import { isGrpcRequestId } from './helpers/is-model';
 
 export const name = 'gRPC Request Meta';
 
@@ -18,6 +18,10 @@ interface BaseGrpcRequestMeta {
 }
 
 export type GrpcRequestMeta = BaseModel & BaseGrpcRequestMeta;
+
+export const isGrpcRequestMeta = (model: Pick<BaseModel, 'type'>): model is GrpcRequestMeta => (
+  model.type === type
+);
 
 export function init() {
   return {

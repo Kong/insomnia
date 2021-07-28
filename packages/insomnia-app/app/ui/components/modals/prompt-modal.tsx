@@ -1,12 +1,13 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import Button from '../base/button';
+import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 
 interface State {
@@ -22,10 +23,11 @@ interface State {
   placeholder?: string | null;
   inputType?: string | null;
   cancelable?: boolean | null;
-  onComplete?: ((arg0: string) => void) | null;
+  onComplete?: (arg0: string) => Promise<void> | void;
   onCancel?: (() => void) | null;
   onDeleteHint?: ((arg0: string) => void) | null;
   currentValue: string;
+  loading: boolean;
 }
 
 export interface PromptModalOptions {
@@ -41,7 +43,7 @@ export interface PromptModalOptions {
   validate?: (arg0: string) => string;
   label?: string;
   hints?: string[];
-  onComplete?: (arg0: string) => void;
+  onComplete?: (arg0: string) => Promise<void> | void;
   onDeleteHint?: (arg0: string) => void;
   onCancel?: () => void;
 }
@@ -68,13 +70,23 @@ class PromptModal extends PureComponent<{}, State> {
     onCancel: undefined,
     onDeleteHint: undefined,
     currentValue: '',
+    loading: false,
   }
 
-  _done(rawValue: string) {
+  async _done(rawValue: string) {
     const { onComplete, upperCase } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
-    onComplete && onComplete(value);
+    await onComplete?.(value);
     this.hide();
+  }
+
+  _handleCancel() {
+    const { onCancel, loading } = this.state;
+    if (loading) {
+      return;
+    }
+
+    onCancel?.();
   }
 
   _setInputRef(n: HTMLInputElement) {
@@ -98,15 +110,27 @@ class PromptModal extends PureComponent<{}, State> {
     });
   }
 
-  _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
+  async _handleSubmit(e: React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>) {
+    if (this.state.loading) {
+      return;
+    }
+
+    this.setState({
+      loading: true,
+    });
+
     e.preventDefault();
 
     if (this._input) {
       const result =
         this._input.type === 'checkbox' ? this._input.checked.toString() : this._input.value;
 
-      this._done(result);
+      await this._done(result);
     }
+
+    this.setState({
+      loading: false,
+    });
   }
 
   _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
@@ -156,8 +180,10 @@ class PromptModal extends PureComponent<{}, State> {
       label,
       validate,
       hints: hints || [],
+      loading: false,
     });
     this.modal && this.modal.show();
+
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
       if (!this._input) {
@@ -209,13 +235,14 @@ class PromptModal extends PureComponent<{}, State> {
       upperCase,
       hints,
       cancelable,
-      onCancel,
+      loading,
     } = this.state;
     const input = (
       <input
         ref={this._setInputRef}
         onChange={this._handleChange}
         id="prompt-input"
+        disabled={loading}
         type={inputType === 'decimal' ? 'number' : inputType || 'text'}
         step={inputType === 'decimal' ? '0.1' : undefined}
         min={inputType === 'decimal' ? '0.5' : undefined}
@@ -248,7 +275,7 @@ class PromptModal extends PureComponent<{}, State> {
       'form-control--outlined': inputType !== 'checkbox',
     });
     return (
-      <Modal ref={this._setModalRef} noEscape={!cancelable} onCancel={onCancel || undefined}>
+      <Modal ref={this._setModalRef} noEscape={!cancelable || loading} onCancel={this._handleCancel}>
         <ModalHeader>{title}</ModalHeader>
         <ModalBody className="wide">
           <form onSubmit={this._handleSubmit} className="wide pad">
@@ -258,8 +285,8 @@ class PromptModal extends PureComponent<{}, State> {
         </ModalBody>
         <ModalFooter>
           <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
-          <button className="btn" onClick={this._handleSubmit}>
-            {submitName || 'Submit'}
+          <button className="btn" onClick={this._handleSubmit} disabled={loading}>
+            {loading && <i className="fa fa-refresh fa-spin" />} {submitName || 'Submit'}
           </button>
         </ModalFooter>
       </Modal>

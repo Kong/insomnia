@@ -1,4 +1,5 @@
-import type { BaseModel } from './index';
+import { deconstructQueryStringToParams } from 'insomnia-url';
+
 import {
   AUTH_ASAP,
   AUTH_AWS_IAM,
@@ -23,9 +24,9 @@ import {
 } from '../common/constants';
 import { database as db } from '../common/database';
 import { getContentTypeHeader } from '../common/misc';
-import { deconstructQueryStringToParams } from 'insomnia-url';
-import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
 import { SIGNATURE_METHOD_HMAC_SHA1 } from '../network/o-auth-1/constants';
+import { GRANT_TYPE_AUTHORIZATION_CODE } from '../network/o-auth-2/constants';
+import type { BaseModel } from './index';
 
 export const name = 'Request';
 
@@ -93,6 +94,10 @@ interface BaseRequest {
 }
 
 export type Request = BaseModel & BaseRequest;
+
+export const isRequest = (model: Pick<BaseModel, 'type'>): model is Request => (
+  model.type === type
+);
 
 export function init(): BaseRequest {
   return {

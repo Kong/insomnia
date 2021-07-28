@@ -1,8 +1,13 @@
-import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
+import Analytics from 'analytics-node';
 import * as electron from 'electron';
-import * as models from '../models/index';
-import { database as db } from '../common/database';
+import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import * as uuid from 'uuid';
+
+import { getAccountId } from '../account/session';
+import { database as db } from '../common/database';
+import * as models from '../models/index';
+import type { RequestParameter } from '../models/request';
+import { isSettings } from '../models/settings';
 import {
   getAppId,
   getAppName,
@@ -13,10 +18,7 @@ import {
   getSegmentWriteKey,
   isDevelopment,
 } from './constants';
-import type { RequestParameter } from '../models/request';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './electron-helpers';
-import Analytics from 'analytics-node';
-import { getAccountId } from '../account/session';
 
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
@@ -316,7 +318,7 @@ db.onChange(async changes => {
   for (const change of changes) {
     const [event, doc] = change;
 
-    if (doc.type === models.settings.type && event === 'update') {
+    if (isSettings(doc) && event === 'update') {
       if (doc.enableAnalytics) {
         await _flushQueuedEvents();
       }

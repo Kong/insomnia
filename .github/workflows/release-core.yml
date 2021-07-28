@@ -9,7 +9,7 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_REF: ${{ github.ref }}
   GITHUB_SHA: ${{ github.sha }}
-  NPM_CONFIG_TARGET: 9.3.5
+  NPM_CONFIG_TARGET: 11.2.3
   NPM_CONFIG_DISTURL: https://electronjs.org/headers
   NPM_CONFIG_RUNTIME: electron
 
@@ -72,8 +72,8 @@ jobs:
       - name: Release app
         run: npm run app-release
         env:
-          CSC_LINK: ${{ secrets.CORE_WINDOWS_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CORE_WINDOWS_CSC_KEY_PASSWORD }}
+          CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
   Mac:
     needs: [ npm ]
     name: Mac

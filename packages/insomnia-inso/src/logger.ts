@@ -1,4 +1,5 @@
-import consola, { LogLevel, FancyReporter, BasicReporter, logType } from 'consola';
+import consola, { BasicReporter, FancyReporter, LogLevel, logType } from 'consola';
+
 import { noop } from './util';
 
 export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> => {

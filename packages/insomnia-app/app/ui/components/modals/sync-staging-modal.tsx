@@ -1,18 +1,20 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import * as models from '../../../models';
+import { BaseModel } from '../../../models';
+import type { Workspace } from '../../../models/workspace';
+import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
+import { describeChanges } from '../../../sync/vcs/util';
+import { VCS } from '../../../sync/vcs/vcs';
+import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import type { Workspace } from '../../../models/workspace';
-import VCS from '../../../sync/vcs';
-import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
-import * as models from '../../../models';
+import ModalHeader from '../base/modal-header';
 import Tooltip from '../tooltip';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
-import { describeChanges } from '../../../sync/vcs/util';
-import { strings } from '../../../common/strings';
 
 interface Props {
   workspace: Workspace;
@@ -155,7 +157,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
     for (const key of allKeys) {
       const item = syncItems.find(si => si.key === key);
-      const oldDoc: Record<string, any> | null = await vcs.blobFromLastSnapshot(key);
+      const oldDoc: BaseModel | null = await vcs.blobFromLastSnapshot(key);
       const doc = (item && item.document) || oldDoc;
       const entry = status.stage[key] || status.unstaged[key];
 

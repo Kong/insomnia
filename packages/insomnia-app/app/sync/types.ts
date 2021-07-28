@@ -1,3 +1,4 @@
+import { BaseModel } from '../models';
 
 export interface Team {
   id: string;
@@ -92,7 +93,7 @@ export type Stage = Record<DocumentKey, StageEntry>;
 export interface StatusCandidate {
   key: DocumentKey;
   name: string;
-  document: Record<string, any>;
+  document: BaseModel;
 }
 
 export type StatusCandidateMap = Record<DocumentKey, StatusCandidate>;

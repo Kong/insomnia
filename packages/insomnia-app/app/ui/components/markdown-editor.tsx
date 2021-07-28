@@ -1,12 +1,13 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+
+import { AUTOBIND_CFG } from '../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import Button from './base/button';
 import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
 
 interface Props {
   onChange: Function,

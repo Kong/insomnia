@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import PasswordEditor from '../password-editor';
-import Button from '../../base/button';
-import type { Settings } from '../../../../models/settings';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import HelpTooltip from '../../help-tooltip';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import type { Settings } from '../../../../models/settings';
+import Button from '../../base/button';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import HelpTooltip from '../../help-tooltip';
+import PasswordEditor from '../password-editor';
 
 interface Props {
   handleRender: HandleRender;

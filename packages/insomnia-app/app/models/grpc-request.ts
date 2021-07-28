@@ -2,13 +2,9 @@ import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'gRPC Request';
-
 export const type = 'GrpcRequest';
-
 export const prefix = 'greq';
-
 export const canDuplicate = true;
-
 export const canSync = true;
 
 export interface GrpcRequestBody {
@@ -27,6 +23,14 @@ interface BaseGrpcRequest {
 }
 
 export type GrpcRequest = BaseModel & BaseGrpcRequest;
+
+export const isGrpcRequest = (model: Pick<BaseModel, 'type'>): model is GrpcRequest => (
+  model.type === type
+);
+
+export const isGrpcRequestId = (id: string | null) => (
+  id?.startsWith(`${prefix}_`)
+);
 
 export function init(): BaseGrpcRequest {
   return {

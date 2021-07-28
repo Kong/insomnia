@@ -1,6 +1,7 @@
 import React, { ReactNode, useCallback, useState } from 'react';
-import { Button } from './button';
+
 import type { ButtonProps } from './button';
+import { Button } from './button';
 
 // Taken from https://github.com/then/is-promise
 function isPromise(obj: unknown) {

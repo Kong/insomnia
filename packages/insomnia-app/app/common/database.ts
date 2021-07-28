@@ -1,22 +1,24 @@
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
-import type { BaseModel } from '../models/index';
-import * as models from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import { DB_PERSIST_INTERVAL } from './constants';
 import * as uuid from 'uuid';
-import { generateId } from './misc';
-import { getDataDirectory } from './electron-helpers';
+
 import { mustGetModel } from '../models';
-import type { Workspace } from '../models/workspace';
-import { GitRepository } from '../models/git-repository';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
+import { GitRepository } from '../models/git-repository';
+import type { BaseModel } from '../models/index';
+import * as models from '../models/index';
+import type { Workspace } from '../models/workspace';
+import { DB_PERSIST_INTERVAL } from './constants';
+import { getDataDirectory } from './electron-helpers';
+import { generateId } from './misc';
 
 export interface Query {
   _id?: string | SpecificQuery;
   parentId?: string | null;
+  remoteId?: string | null;
   plugin?: string;
   key?: string;
   environmentId?: string | null;
@@ -547,7 +549,7 @@ export const database = {
 
     let docsToReturn: T[] = doc ? [doc] : [];
 
-    async function next(docs: T[]) {
+    async function next(docs: T[]): Promise<T[]> {
       const foundDocs: T[] = [];
 
       for (const d of docs) {
@@ -574,24 +576,24 @@ export const database = {
     return next([doc]);
   },
 
-  withDescendants: async function<T extends BaseModel>(doc: T | null, stopType: string | null = null) {
-    if (db._empty) return _send<T[]>('withDescendants', ...arguments);
-    let docsToReturn = doc ? [doc] : [];
+  withDescendants: async function<T extends BaseModel>(doc: T | null, stopType: string | null = null): Promise<BaseModel[]> {
+    if (db._empty) return _send<BaseModel[]>('withDescendants', ...arguments);
+    let docsToReturn: BaseModel[] = doc ? [doc] : [];
 
-    async function next(docs: (T | null)[]): Promise<T[]> {
-      let foundDocs: T[] = [];
+    async function next(docs: (BaseModel | null)[]): Promise<BaseModel[]> {
+      let foundDocs: BaseModel[] = [];
 
       for (const doc of docs) {
         if (stopType && doc && doc.type === stopType) {
           continue;
         }
 
-        const promises: Promise<T[]>[] = [];
+        const promises: Promise<BaseModel[]>[] = [];
 
         for (const type of allTypes()) {
           // If the doc is null, we want to search for parentId === null
           const parentId = doc ? doc._id : null;
-          const promise = database.find<T>(type, { parentId });
+          const promise = database.find(type, { parentId });
           promises.push(promise);
         }
 

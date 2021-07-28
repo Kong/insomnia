@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "2.3.0-beta.2",
+  "version": "2.3.1-alpha.0",
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx",
@@ -42,7 +42,7 @@
     "get-bin-path": "^5.1.0",
     "jest": "^26.6.3",
     "mkdirp": "^1.0.4",
-    "spectron": "^11.1.0",
+    "spectron": "^13.0.0",
     "spectron-keys": "0.0.1",
     "ts-node": "^9.1.1",
     "xvfb-maybe": "^0.2.1"

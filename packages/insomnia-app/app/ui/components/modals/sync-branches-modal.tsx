@@ -1,19 +1,22 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { Space } from '../../../models/space';
+import type { Workspace } from '../../../models/workspace';
+import type { StatusCandidate } from '../../../sync/types';
+import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import VCS from '../../../sync/vcs';
-import { database as db } from '../../../common/database';
-import type { StatusCandidate } from '../../../sync/types';
 import PromptButton from '../base/prompt-button';
 import SyncPullButton from '../sync-pull-button';
 
 interface Props {
   workspace: Workspace;
+  space: Space;
   syncItems: StatusCandidate[];
   vcs: VCS;
 }
@@ -173,7 +176,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { vcs } = this.props;
+    const { vcs, space } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -288,6 +291,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                         <SyncPullButton
                           className="btn btn--micro btn--outlined space-left"
                           branch={name}
+                          space={space}
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
                           vcs={vcs}>

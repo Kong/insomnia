@@ -1,8 +1,17 @@
-import { parse as urlParse, format as urlFormat } from 'url';
+import { format as urlFormat, parse as urlParse } from 'url';
+
 import { setDefaultProtocol } from './protocol';
 
 const ESCAPE_REGEX_MATCH = /[-[\]/{}()*+?.\\^$|]/g;
-const URL_PATH_CHARACTER_WHITELIST = '+,;@=:';
+
+/** see list of allowed characters https://datatracker.ietf.org/doc/html/rfc3986#section-2.2 */
+const RFC_3986_GENERAL_DELIMITERS = ':@'; // (unintentionally?) missing: /?#[]
+
+/** see list of allowed characters https://datatracker.ietf.org/doc/html/rfc3986#section-2.2 */
+const RFC_3986_SUB_DELIMITERS = '$+,;='; // (unintentionally?) missing: !&'()*
+
+/** see list of allowed characters https://datatracker.ietf.org/doc/html/rfc3986#section-2.2 */
+const URL_PATH_CHARACTER_WHITELIST = `${RFC_3986_GENERAL_DELIMITERS}${RFC_3986_SUB_DELIMITERS}`;
 
 export const getJoiner = (url: string) => {
   url = url || '';

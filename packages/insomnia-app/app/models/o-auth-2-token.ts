@@ -1,5 +1,5 @@
-import type { BaseModel } from './index';
 import { database as db } from '../common/database';
+import type { BaseModel } from './index';
 
 export type OAuth2Token = BaseModel & BaseOAuth2Token;
 
@@ -27,6 +27,10 @@ interface BaseOAuth2Token {
   errorDescription: string;
   errorUri: string;
 }
+
+export const isOAuth2Token = (model: Pick<BaseModel, 'type'>): model is OAuth2Token => (
+  model.type === type
+);
 
 export function init(): BaseOAuth2Token {
   return {

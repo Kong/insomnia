@@ -1,23 +1,25 @@
-import YAML from 'yaml';
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
+import classnames from 'classnames';
 import path from 'path';
+import React, { Fragment, PureComponent } from 'react';
+import YAML from 'yaml';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { strings } from '../../../common/strings';
 import * as models from '../../../models';
+import { isApiSpec } from '../../../models/api-spec';
+import type { Workspace } from '../../../models/workspace';
+import { gitRollback } from '../../../sync/git/git-rollback';
+import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/git/git-vcs';
+import parseGitPath from '../../../sync/git/parse-git-path';
+import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { GitVCS, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../../sync/git/git-vcs';
-import { database as db } from '../../../common/database';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import ModalFooter from '../base/modal-footer';
-import Tooltip from '../tooltip';
+import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
-import { gitRollback } from '../../../sync/git/git-rollback';
-import classnames from 'classnames';
-import parseGitPath from '../../../sync/git/parse-git-path';
-import { strings } from '../../../common/strings';
+import Tooltip from '../tooltip';
 
 interface Item {
   path: string;
@@ -188,8 +190,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     this.statusNames = {};
 
     for (const doc of docs) {
-      // @ts-expect-error -- TSCONVERSION
-      const name = (doc.type === models.apiSpec.type && doc.fileName) || doc.name || '';
+      const name = (isApiSpec(doc) && doc.fileName) || doc.name || '';
       this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.json`)] = name;
       this.statusNames[path.join(GIT_INSOMNIA_DIR_NAME, doc.type, `${doc._id}.yml`)] = name;
     }
@@ -231,12 +232,13 @@ class GitStagingModal extends PureComponent<Props, State> {
 
       const added = status.includes('added');
       let staged = !added;
-      // We want to enforce that the workspace is committed because otherwise
-      // others won't be able to clone from it. So here we're preventing
-      // people from un-staging the workspace if it's not added yet.
       let editable = true;
 
-      if (type === models.workspace.type && added) {
+      // We want to enforce that workspace changes are always committed because otherwise
+      // others won't be able to clone from it. We also make fundamental migrations to the
+      // scope property which need to be committed.
+      // So here we're preventing people from un-staging the workspace.
+      if (type === models.workspace.type) {
         editable = false;
         staged = true;
       }
@@ -294,10 +296,12 @@ class GitStagingModal extends PureComponent<Props, State> {
 
   async _handleRollback(items: Item[]) {
     const { vcs } = this.props;
-    const files = items.map(i => ({
-      filePath: i.path,
-      status: i.status,
-    }));
+    const files = items
+      .filter(i => i.editable) // only rollback if editable
+      .map(i => ({
+        filePath: i.path,
+        status: i.status,
+      }));
     await gitRollback(vcs, files);
     await this._refresh();
   }
@@ -321,13 +325,13 @@ class GitStagingModal extends PureComponent<Props, State> {
           </label>
         </td>
         <td className="text-right">
-          <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
+          {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
             <button
               className="btn btn--micro space-right"
               onClick={() => this._handleRollback([item])}>
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </button>
-          </Tooltip>
+          </Tooltip>}
           {this.renderOperation(item)}
         </td>
       </tr>

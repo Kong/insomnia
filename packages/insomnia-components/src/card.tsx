@@ -1,6 +1,7 @@
 import React, { PureComponent, ReactNode } from 'react';
 import styled from 'styled-components';
-import { SvgIcon, IconEnum } from './svg-icon';
+
+import { IconEnum, SvgIcon } from './svg-icon';
 
 export interface CardProps {
   docBranch?: ReactNode;

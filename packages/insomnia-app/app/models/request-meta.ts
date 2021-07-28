@@ -1,5 +1,5 @@
-import { database as db } from '../common/database';
 import { PREVIEW_MODE_FRIENDLY } from '../common/constants';
+import { database as db } from '../common/database';
 import type { BaseModel } from './index';
 
 export const name = 'Request Meta';
@@ -25,6 +25,10 @@ interface BaseRequestMeta {
 }
 
 export type RequestMeta = BaseModel & BaseRequestMeta;
+
+export const isRequestMeta = (model: Pick<BaseModel, 'type'>): model is RequestMeta => (
+  model.type === type
+);
 
 export function init() {
   return {

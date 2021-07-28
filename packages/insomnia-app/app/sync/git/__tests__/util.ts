@@ -21,7 +21,8 @@ export function setupDateMocks() {
 
   global.Date = fakeDate;
 }
-export async function assertAsyncError(promise, code) {
+
+export async function assertAsyncError(promise: Promise<any>, code?: string) {
   try {
     await promise;
   } catch (err) {

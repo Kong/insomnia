@@ -1,16 +1,17 @@
 import { bindActionCreators, combineReducers } from 'redux';
-import * as entities from './entities';
-import configureStore from '../create';
-import * as global from './global';
-import { database as db } from '../../../common/database';
-import { API_BASE_URL, getClientString } from '../../../common/constants';
-import { isLoggedIn, onLoginLogout } from '../../../account/session';
+
 import * as fetch from '../../../account/fetch';
+import { isLoggedIn, onLoginLogout } from '../../../account/session';
+import { API_BASE_URL, getClientString } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import configureStore from '../create';
+import * as entities from './entities';
+import * as global from './global';
 
 export async function init() {
   const store = configureStore();
   // Do things that must happen before initial render
-  const { addChanges, initializeWith: initEntities } = bindActionCreators(entities, store.dispatch);
+  const { addChanges, initializeWith: initEntities } = bindActionCreators({ addChanges: entities.addChanges, initializeWith: entities.initializeWith }, store.dispatch);
 
   // @ts-expect-error -- TSCONVERSION
   const { newCommand, loginStateChange } = bindActionCreators(global, store.dispatch);
@@ -34,7 +35,13 @@ export async function init() {
 
   return store;
 }
+
 export const reducer = combineReducers({
   entities: entities.reducer,
   global: global.reducer,
 });
+
+export interface RootState {
+  entities: entities.EntitiesState
+  global: global.GlobalState,
+}

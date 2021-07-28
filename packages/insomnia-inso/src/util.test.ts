@@ -1,8 +1,8 @@
-import { exit, logErrorExit1, getDefaultAppName, getVersion, isDevelopment, noop } from './util';
 import * as packageJson from '../package.json';
+import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { InsoError } from './errors';
+import { exit, getDefaultAppName, getVersion, isDevelopment, logErrorExit1, noop } from './util';
 
 describe('exit()', () => {
   beforeAll(() => {

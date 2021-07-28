@@ -1,8 +1,9 @@
 import { Entry } from 'type-fest';
+
 import { distinctByProperty, getPluginNameFromKey, isPluginKey } from '../common';
 import { DCPlugin } from '../types/declarative-config';
-import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, xKongPluginRequestValidator, XKongPluginRequestValidator } from '../types/kong';
-import { OA3Operation, OpenApi3Spec, OA3RequestBody, OA3Parameter } from '../types/openapi3';
+import { isBodySchema, isParameterSchema, ParameterSchema, RequestValidatorPlugin, XKongPluginRequestValidator, xKongPluginRequestValidator } from '../types/kong';
+import { OA3Operation, OA3Parameter, OA3RequestBody, OpenApi3Spec } from '../types/openapi3';
 
 export const isRequestValidatorPluginKey = (property: string): property is typeof xKongPluginRequestValidator => (
   property.match(/-request-validator$/) != null

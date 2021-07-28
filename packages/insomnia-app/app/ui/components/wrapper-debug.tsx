@@ -1,37 +1,34 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import PageLayout from './page-layout';
-import type { HandleImportFileCallback, WrapperProps } from './wrapper';
-import RequestPane from './panes/request-pane';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
+import { isGrpcRequest } from '../../models/grpc-request';
+import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import { Settings } from '../../models/settings';
+import { isCollection, isDesign } from '../../models/workspace';
+import EnvironmentsDropdown from './dropdowns/environments-dropdown';
+import SyncDropdown from './dropdowns/sync-dropdown';
 import ErrorBoundary from './error-boundary';
+import PageLayout from './page-layout';
+import GrpcRequestPane from './panes/grpc-request-pane';
+import GrpcResponsePane from './panes/grpc-response-pane';
+import RequestPane from './panes/request-pane';
 import ResponsePane from './panes/response-pane';
 import SidebarChildren from './sidebar/sidebar-children';
 import SidebarFilter from './sidebar/sidebar-filter';
-import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
-import { isCollection, isDesign, isGrpcRequest } from '../../models/helpers/is-model';
-import GrpcRequestPane from './panes/grpc-request-pane';
-import GrpcResponsePane from './panes/grpc-response-pane';
 import WorkspacePageHeader from './workspace-page-header';
-import { isLoggedIn } from '../../account/session';
-import SyncDropdown from './dropdowns/sync-dropdown';
-import { Button } from 'insomnia-components';
-import { showSyncShareModal } from './modals/sync-share-modal';
-import * as session from '../../account/session';
-import { Settings } from '../../models/settings';
-import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   handleChangeEnvironment: Function;
   handleDeleteResponse: Function;
   handleDeleteResponses: Function;
   handleForceUpdateRequest: (r: Request, patch: Partial<Request>) => Promise<Request>;
   handleForceUpdateRequestHeaders: (r: Request, headers: RequestHeader[]) => Promise<Request>;
   handleImport: Function;
-  handleImportFile: HandleImportFileCallback;
   handleRequestCreate: () => void;
   handleRequestGroupCreate: () => void;
   handleSendAndDownloadRequestWithActiveEnvironment: (filepath?: string) => Promise<void>;
@@ -58,29 +55,34 @@ interface Props {
 class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, syncItems } = this.props.wrapperProps;
+    const { vcs, activeWorkspace, activeWorkspaceMeta, activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return null;
+    }
+
     const collection = isCollection(activeWorkspace);
     const design = isDesign(activeWorkspace);
-    const share = session.isLoggedIn() && collection && (
-      <Button variant="contained" onClick={showSyncShareModal}>
-        <i className="fa fa-globe pad-right-sm" /> Share
-      </Button>
-    );
-    const betaSync = collection && vcs && isLoggedIn() && (
-      <SyncDropdown workspace={activeWorkspace} vcs={vcs} syncItems={syncItems} />
-    );
+
+    let insomniaSync: ReactNode = null;
+
+    if (isLoggedIn && collection && activeSpace?.remoteId && vcs) {
+      insomniaSync = <SyncDropdown
+        workspace={activeWorkspace}
+        workspaceMeta={activeWorkspaceMeta}
+        space={activeSpace}
+        vcs={vcs}
+        syncItems={syncItems} />;
+    }
+
     const gitSync = design && gitSyncDropdown;
-    const sync = betaSync || gitSync;
+    const sync = insomniaSync || gitSync;
+
     return (
       <WorkspacePageHeader
         wrapperProps={wrapperProps}
         handleActivityChange={handleActivityChange}
-        gridRight={
-          <>
-            {share}
-            {sync && <span className="margin-left">{sync}</span>}
-          </>
-        }
+        gridRight={sync}
       />
     );
   }
@@ -94,6 +96,7 @@ class WrapperDebug extends PureComponent<Props> {
       handleSidebarSort,
     } = this.props;
     const {
+      activeSpace,
       activeEnvironment,
       activeRequest,
       activeWorkspace,
@@ -106,7 +109,6 @@ class WrapperDebug extends PureComponent<Props> {
       handleDuplicateRequestGroup,
       handleGenerateCode,
       handleMoveDoc,
-      handleMoveRequestGroup,
       handleRender,
       handleSetRequestGroupCollapsed,
       handleSetRequestPinned,
@@ -117,6 +119,11 @@ class WrapperDebug extends PureComponent<Props> {
       sidebarHidden,
       sidebarWidth,
     } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return null;
+    }
+
     return (
       <Fragment>
         <div className="sidebar__menu">
@@ -155,7 +162,6 @@ class WrapperDebug extends PureComponent<Props> {
           handleSetRequestPinned={handleSetRequestPinned}
           handleDuplicateRequest={handleDuplicateRequest}
           handleDuplicateRequestGroup={handleDuplicateRequestGroup}
-          handleMoveRequestGroup={handleMoveRequestGroup}
           handleGenerateCode={handleGenerateCode}
           handleCopyAsCurl={handleCopyAsCurl}
           handleRender={handleRender}
@@ -168,6 +174,7 @@ class WrapperDebug extends PureComponent<Props> {
           filter={sidebarFilter || ''}
           hotKeyRegistry={settings.hotKeyRegistry}
           activeEnvironment={activeEnvironment}
+          activeSpace={activeSpace}
         />
       </Fragment>
     );
@@ -179,7 +186,6 @@ class WrapperDebug extends PureComponent<Props> {
       handleForceUpdateRequest,
       handleForceUpdateRequestHeaders,
       handleImport,
-      handleImportFile,
       handleSendAndDownloadRequestWithActiveEnvironment,
       handleSendRequestWithActiveEnvironment,
       handleUpdateRequestAuthentication,
@@ -208,6 +214,10 @@ class WrapperDebug extends PureComponent<Props> {
       responseDownloadPath,
       settings,
     } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return null;
+    }
 
     // activeRequest being truthy only needs to be checked for isGrpcRequest (for now)
     // The RequestPane and ResponsePane components already handle the case where activeRequest is null
@@ -240,7 +250,6 @@ class WrapperDebug extends PureComponent<Props> {
           handleGenerateCode={handleGenerateCodeForActiveRequest}
           handleGetRenderContext={handleGetRenderContext}
           handleImport={handleImport}
-          handleImportFile={handleImportFile}
           handleRender={handleRender}
           handleSend={handleSendRequestWithActiveEnvironment}
           handleSendAndDownload={handleSendAndDownloadRequestWithActiveEnvironment}

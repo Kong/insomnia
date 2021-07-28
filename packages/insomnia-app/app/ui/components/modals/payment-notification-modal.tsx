@@ -1,12 +1,13 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
+import { endTrial, getFirstName, logout } from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import PromptButton from '../base/prompt-button';
 import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import { getFirstName, endTrial, logout } from '../../../account/session';
+import PromptButton from '../base/prompt-button';
 let hidePaymentNotificationUntilNextLaunch = false;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

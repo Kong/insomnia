@@ -1,26 +1,27 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { WrapperProps } from './wrapper';
-import PageLayout from './page-layout';
 import { Button, NoticeTable } from 'insomnia-components';
-import ErrorBoundary from './error-boundary';
-import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
-import CodeEditor from './codemirror/code-editor';
-import { Spectral } from '@stoplight/spectral';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
 import SwaggerUI from 'swagger-ui-react';
-import type { ApiSpec } from '../../models/api-spec';
-import previewIcon from '../images/icn-eye.svg';
-import * as models from '../../models/index';
+
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import type { GlobalActivity } from '../../common/constants';
 import { ACTIVITY_HOME, AUTOBIND_CFG } from '../../common/constants';
+import { initializeSpectral, isLintError } from '../../common/spectral';
+import type { ApiSpec } from '../../models/api-spec';
+import * as models from '../../models/index';
+import previewIcon from '../images/icn-eye.svg';
+import CodeEditor from './codemirror/code-editor';
+import ErrorBoundary from './error-boundary';
+import PageLayout from './page-layout';
+import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
 import WorkspacePageHeader from './workspace-page-header';
+import type { WrapperProps } from './wrapper';
 
-const spectral = new Spectral();
+const spectral = initializeSpectral();
 
 interface Props {
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (workspaceId: string, activity: GlobalActivity) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
   handleUpdateApiSpec: (s: ApiSpec) => Promise<void>;
   wrapperProps: WrapperProps;
 }
@@ -56,7 +57,13 @@ class WrapperDesign extends PureComponent<Props, State> {
   }
 
   async _handleTogglePreview() {
-    const workspaceId = this.props.wrapperProps.activeWorkspace._id;
+    const { activeWorkspace } = this.props.wrapperProps;
+
+    if (!activeWorkspace) {
+      return;
+    }
+
+    const workspaceId = activeWorkspace._id;
     const previewHidden = Boolean(this.props.wrapperProps.activeWorkspaceMeta?.previewHidden);
     await models.workspaceMeta.updateByParentId(workspaceId, { previewHidden: !previewHidden });
   }
@@ -66,6 +73,12 @@ class WrapperDesign extends PureComponent<Props, State> {
       wrapperProps: { activeApiSpec },
       handleUpdateApiSpec,
     } = this.props;
+
+    if (!activeApiSpec) {
+      return;
+    }
+
+    // TODO: this seems strange, should the timeout be set and cleared on every change??
     // Debounce the update because these specs can get pretty large
     if (this.debounceTimeout !== null) {
       clearTimeout(this.debounceTimeout);
@@ -97,8 +110,8 @@ class WrapperDesign extends PureComponent<Props, State> {
     const { activeApiSpec } = this.props.wrapperProps;
 
     // Lint only if spec has content
-    if (activeApiSpec.contents.length !== 0) {
-      const results = await spectral.run(activeApiSpec.contents);
+    if (activeApiSpec && activeApiSpec.contents.length !== 0) {
+      const results = (await spectral.run(activeApiSpec.contents)).filter(isLintError);
       this.setState({
         lintMessages: results.map(r => ({
           type: r.severity === 0 ? 'error' : 'warning',
@@ -127,7 +140,7 @@ class WrapperDesign extends PureComponent<Props, State> {
     const { activeApiSpec } = this.props.wrapperProps;
 
     // Re-lint if content changed
-    if (activeApiSpec.contents !== prevProps.wrapperProps.activeApiSpec.contents) {
+    if (activeApiSpec?.contents !== prevProps.wrapperProps.activeApiSpec?.contents) {
       this._reLint();
     }
   }
@@ -135,6 +148,11 @@ class WrapperDesign extends PureComponent<Props, State> {
   _renderEditor() {
     const { activeApiSpec, settings } = this.props.wrapperProps;
     const { lintMessages } = this.state;
+
+    if (!activeApiSpec) {
+      return null;
+    }
+
     return (
       <div className="column tall theme--pane__body">
         <div className="tall">
@@ -162,7 +180,7 @@ class WrapperDesign extends PureComponent<Props, State> {
   _renderPreview() {
     const { activeApiSpec, activeWorkspaceMeta } = this.props.wrapperProps;
 
-    if (activeWorkspaceMeta?.previewHidden) {
+    if (!activeApiSpec || activeWorkspaceMeta?.previewHidden) {
       return null;
     }
 
@@ -229,6 +247,11 @@ class WrapperDesign extends PureComponent<Props, State> {
 
   _renderPageSidebar() {
     const { activeApiSpec } = this.props.wrapperProps;
+
+    if (!activeApiSpec) {
+      return null;
+    }
+
     return (
       <ErrorBoundary
         invalidationKey={activeApiSpec.contents}

@@ -1,15 +1,15 @@
-import type { ProtoFile } from '../../../models/proto-file';
-import { showAlert, showError } from '../../../ui/components/modals';
-import * as models from '../../../models';
-import React from 'react';
-import type { ProtoDirectory } from '../../../models/proto-directory';
-import { database as db } from '../../../common/database';
-import { selectFileOrFolder } from '../../../common/select-file-or-folder';
-import ingestProtoDirectory from './ingest-proto-directory';
 import fs from 'fs';
 import path from 'path';
+import React from 'react';
+
+import { database as db } from '../../../common/database';
+import { selectFileOrFolder } from '../../../common/select-file-or-folder';
+import * as models from '../../../models';
+import type { ProtoDirectory } from '../../../models/proto-directory';
+import { isProtoFile, ProtoFile } from '../../../models/proto-file';
+import { showAlert, showError } from '../../../ui/components/modals';
 import * as protoLoader from '../proto-loader';
-import { isProtoFile } from '../../../models/helpers/is-model';
+import ingestProtoDirectory from './ingest-proto-directory';
 
 export async function deleteFile(protoFile: ProtoFile, callback: (arg0: string) => void) {
   showAlert({

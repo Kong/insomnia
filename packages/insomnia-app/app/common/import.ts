@@ -1,57 +1,23 @@
-import { convert, Insomnia4Data } from 'insomnia-importers';
-import clone from 'clone';
-import { database as db } from './database';
-import * as har from './har';
+import fs from 'fs';
+import { convert } from 'insomnia-importers';
+
+import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
-import { CONTENT_TYPE_GRAPHQL, getAppVersion } from './constants';
-import { showError, showModal } from '../ui/components/modals/index';
+import { isRequest } from '../models/request';
+import { isWorkspace, Workspace } from '../models/workspace';
 import AlertModal from '../ui/components/modals/alert-modal';
-import fs from 'fs';
-import { fnOrString, generateId, diffPatchObj } from './misc';
-import YAML from 'yaml';
+import { showError, showModal } from '../ui/components/modals/index';
+import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
 import { trackEvent } from './analytics';
 import {
-  isGrpcRequest,
-  isProtoDirectory,
-  isProtoFile,
-  isRequest,
-  isRequestGroup,
-  isWorkspace,
-} from '../models/helpers/is-model';
-import type { Workspace } from '../models/workspace';
-import type { ApiSpec } from '../models/api-spec';
-import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
-
-const WORKSPACE_ID_KEY = '__WORKSPACE_ID__';
-const BASE_ENVIRONMENT_ID_KEY = '__BASE_ENVIRONMENT_ID__';
-const EXPORT_FORMAT = 4;
-const EXPORT_TYPE_REQUEST = 'request';
-const EXPORT_TYPE_GRPC_REQUEST = 'grpc_request';
-const EXPORT_TYPE_REQUEST_GROUP = 'request_group';
-const EXPORT_TYPE_UNIT_TEST_SUITE = 'unit_test_suite';
-const EXPORT_TYPE_UNIT_TEST = 'unit_test';
-const EXPORT_TYPE_WORKSPACE = 'workspace';
-const EXPORT_TYPE_COOKIE_JAR = 'cookie_jar';
-const EXPORT_TYPE_ENVIRONMENT = 'environment';
-const EXPORT_TYPE_API_SPEC = 'api_spec';
-const EXPORT_TYPE_PROTO_FILE = 'proto_file';
-const EXPORT_TYPE_PROTO_DIRECTORY = 'proto_directory';
-// If we come across an ID of this form, we will replace it with a new one
-const REPLACE_ID_REGEX = /__\w+_\d+__/g;
-const MODELS = {
-  [EXPORT_TYPE_REQUEST]: models.request,
-  [EXPORT_TYPE_GRPC_REQUEST]: models.grpcRequest,
-  [EXPORT_TYPE_REQUEST_GROUP]: models.requestGroup,
-  [EXPORT_TYPE_UNIT_TEST_SUITE]: models.unitTestSuite,
-  [EXPORT_TYPE_UNIT_TEST]: models.unitTest,
-  [EXPORT_TYPE_WORKSPACE]: models.workspace,
-  [EXPORT_TYPE_COOKIE_JAR]: models.cookieJar,
-  [EXPORT_TYPE_ENVIRONMENT]: models.environment,
-  [EXPORT_TYPE_API_SPEC]: models.apiSpec,
-  [EXPORT_TYPE_PROTO_FILE]: models.protoFile,
-  [EXPORT_TYPE_PROTO_DIRECTORY]: models.protoDirectory,
-};
+  BASE_ENVIRONMENT_ID_KEY,
+  CONTENT_TYPE_GRAPHQL,
+  EXPORT_TYPE_WORKSPACE,
+  WORKSPACE_ID_KEY,
+} from './constants';
+import { database as db } from './database';
+import { diffPatchObj, fnOrString, generateId } from './misc';
 
 export interface ImportResult {
   source: string;
@@ -74,6 +40,7 @@ interface ConvertResult {
 
 export interface ImportRawConfig {
   getWorkspaceId: ImportToWorkspacePrompt;
+  getSpaceId?: () => Promise<string>;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
@@ -139,11 +106,15 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   return result;
 }
 
+// If we come across an ID of this form, we will replace it with a new one
+const REPLACE_ID_REGEX = /__\w+_\d+__/g;
+
 export async function importRaw(
   rawContent: string,
   {
     getWorkspaceId,
     getWorkspaceScope,
+    getSpaceId,
     enableDiffBasedPatching,
     enableDiffDeep,
     bypassDiffProps,
@@ -168,7 +139,7 @@ export async function importRaw(
 
   for (const r of data.resources) {
     for (const key of r._id.match(REPLACE_ID_REGEX) || []) {
-      generatedIds[key] = generateId(MODELS[r._type].prefix);
+      generatedIds[key] = generateId(models.MODELS_BY_EXPORT_TYPE[r._type].prefix);
     }
   }
 
@@ -186,7 +157,7 @@ export async function importRaw(
   // Contains the ID of the base environment to be used with the import
   generatedIds[BASE_ENVIRONMENT_ID_KEY] = async () => {
     const parentId = await fnOrString(generatedIds[WORKSPACE_ID_KEY]);
-    const baseEnvironment = await models.environment.getOrCreateForWorkspaceId(parentId);
+    const baseEnvironment = await models.environment.getOrCreateForParentId(parentId);
     // Update this fn so it doesn't run again
     generatedIds[BASE_ENVIRONMENT_ID_KEY] = baseEnvironment._id;
     return baseEnvironment._id;
@@ -223,7 +194,7 @@ export async function importRaw(
       }
     }
 
-    const model = MODELS[resource._type];
+    const model = models.MODELS_BY_EXPORT_TYPE[resource._type];
 
     if (!model) {
       console.warn('Unknown doc type for import', resource._type);
@@ -278,15 +249,18 @@ export async function importRaw(
         updateDoc.url = resource.url;
       }
 
-      // If workspace, don't overwrite the existing scope
+      // If workspace preserve the scope and parentId of the existing workspace while importing
       if (isWorkspace(model)) {
         (updateDoc as Workspace).scope = (existingDoc as Workspace).scope;
+        (updateDoc as Workspace).parentId = (existingDoc as Workspace).parentId;
       }
 
       newDoc = await db.docUpdate(existingDoc, updateDoc);
     } else {
+      // If workspace, check and set the scope and parentId while importing a new workspace
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
+        await createWorkspaceInSpace(resource as Workspace, getSpaceId);
       }
 
       newDoc = await db.docCreate(model.type, resource);
@@ -338,7 +312,7 @@ async function updateWorkspaceScope(
   resultType: ConvertResultType,
   getWorkspaceScope?: SetWorkspaceScopePrompt,
 ) {
-  // Set the workspace scope if creating a new workspace
+  // Set the workspace scope if creating a new workspace during import
   //  IF is creating a new workspace
   //  AND imported resource has no preset scope property OR scope is null
   //  AND we have a function to get scope
@@ -356,239 +330,24 @@ async function updateWorkspaceScope(
     }
 
     const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
-    (resource as Workspace).scope = await getWorkspaceScope(nameToPrompt);
+    resource.scope = await getWorkspaceScope(nameToPrompt);
   }
 }
 
-export function isApiSpecImport({ id }: ConvertResultType) {
-  return id === 'openapi3' || id === 'swagger2';
-}
-
-export function isInsomniaV4Import({ id }: ConvertResultType) {
-  return id === 'insomnia-4';
-}
-
-export async function exportWorkspacesHAR(
-  parentDoc: BaseModel | null = null,
-  includePrivateDocs = false,
+async function createWorkspaceInSpace(
+  resource: Workspace,
+  getSpaceId?: () => Promise<string>,
 ) {
-  const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: BaseModel[] = docs.filter(isRequest);
-  return exportRequestsHAR(requests, includePrivateDocs);
-}
-
-export async function exportRequestsHAR(
-  requests: BaseModel[],
-  includePrivateDocs = false,
-) {
-  const workspaces: BaseModel[] = [];
-  const mapRequestIdToWorkspace: Record<string, any> = {};
-  const workspaceLookup: Record<string, any> = {};
-
-  for (const request of requests) {
-    const ancestors: BaseModel[] = await db.withAncestors(request, [
-      models.workspace.type,
-      models.requestGroup.type,
-    ]);
-    const workspace = ancestors.find(isWorkspace);
-    mapRequestIdToWorkspace[request._id] = workspace;
-
-    if (workspace == null || workspaceLookup.hasOwnProperty(workspace._id)) {
-      continue;
-    }
-
-    workspaceLookup[workspace._id] = true;
-    workspaces.push(workspace);
-  }
-
-  const mapWorkspaceIdToEnvironmentId: Record<string, any> = {};
-
-  for (const workspace of workspaces) {
-    const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
-    let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
-    const environment = await models.environment.getById(environmentId || 'n/a');
-
-    if (!environment || (environment.isPrivate && !includePrivateDocs)) {
-      environmentId = 'n/a';
-    }
-
-    mapWorkspaceIdToEnvironmentId[workspace._id] = environmentId;
-  }
-
-  requests = requests.sort((a: Record<string, any>, b: Record<string, any>) =>
-    a.metaSortKey < b.metaSortKey ? -1 : 1,
-  );
-  const harRequests: har.ExportRequest[] = [];
-
-  for (const request of requests) {
-    const workspace = mapRequestIdToWorkspace[request._id];
-
-    if (workspace == null) {
-      // Workspace not found for request, so don't export it.
-      continue;
-    }
-
-    const environmentId = mapWorkspaceIdToEnvironmentId[workspace._id];
-    harRequests.push({
-      requestId: request._id,
-      environmentId: environmentId,
-    });
-  }
-
-  const data = await har.exportHar(harRequests);
-  trackEvent('Data', 'Export', 'HAR');
-  return JSON.stringify(data, null, '\t');
-}
-
-export async function exportWorkspacesData(
-  parentDoc: BaseModel | null,
-  includePrivateDocs: boolean,
-  format: 'json' | 'yaml',
-) {
-  const docs: BaseModel[] = await getDocWithDescendants(parentDoc, includePrivateDocs);
-  const requests: BaseModel[] = docs.filter(doc => isRequest(doc) || isGrpcRequest(doc));
-  return exportRequestsData(requests, includePrivateDocs, format);
-}
-
-export async function exportRequestsData(
-  requests: BaseModel[],
-  includePrivateDocs: boolean,
-  format: 'json' | 'yaml',
-) {
-  const data: Insomnia4Data = {
-    // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-    _type: 'export',
-    __export_format: EXPORT_FORMAT,
-    __export_date: new Date(),
-    __export_source: `insomnia.desktop.app:v${getAppVersion()}`,
-    resources: [],
-  };
-  const docs: BaseModel[] = [];
-  const workspaces: BaseModel[] = [];
-  const mapTypeAndIdToDoc: Record<string, any> = {};
-
-  for (const req of requests) {
-    const ancestors: BaseModel[] = clone(await db.withAncestors(req));
-
-    for (const ancestor of ancestors) {
-      const key = ancestor.type + '___' + ancestor._id;
-
-      if (mapTypeAndIdToDoc.hasOwnProperty(key)) {
-        continue;
-      }
-
-      mapTypeAndIdToDoc[key] = ancestor;
-      docs.push(ancestor);
-
-      if (isWorkspace(ancestor)) {
-        workspaces.push(ancestor);
-      }
-    }
-  }
-
-  for (const workspace of workspaces) {
-    const descendants: BaseModel[] = (await db.withDescendants(workspace)).filter(d => {
-      // Only interested in these additional model types.
-      return (
-        d.type === models.cookieJar.type ||
-        d.type === models.environment.type ||
-        d.type === models.apiSpec.type ||
-        d.type === models.unitTestSuite.type ||
-        d.type === models.unitTest.type ||
-        isProtoFile(d) ||
-        isProtoDirectory(d)
-      );
-    });
-    docs.push(...descendants);
-  }
-
-  data.resources = docs
-    .filter(d => {
-      // Only export these model types.
-      if (
-        !(
-          d.type === models.unitTestSuite.type ||
-          d.type === models.unitTest.type ||
-          isRequest(d) ||
-          isGrpcRequest(d) ||
-          isRequestGroup(d) ||
-          isProtoFile(d) ||
-          isProtoDirectory(d) ||
-          isWorkspace(d) ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.cookieJar.type ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.environment.type ||
-          // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-          d.type === models.apiSpec.type
-        )
-      ) {
-        return false;
-      }
-
-      // BaseModel doesn't have isPrivate, so cast it first.
-      return !d.isPrivate || includePrivateDocs;
-    })
-    .map(d => {
-      if (isWorkspace(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_WORKSPACE;
-      } else if (d.type === models.cookieJar.type) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_COOKIE_JAR;
-      } else if (d.type === models.environment.type) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_ENVIRONMENT;
-      } else if (d.type === models.unitTestSuite.type) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_UNIT_TEST_SUITE;
-      } else if (d.type === models.unitTest.type) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_UNIT_TEST;
-      } else if (isRequestGroup(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_REQUEST_GROUP;
-      } else if (isRequest(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_REQUEST;
-      } else if (isGrpcRequest(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_GRPC_REQUEST;
-      } else if (isProtoFile(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_PROTO_FILE;
-      } else if (isProtoDirectory(d)) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_PROTO_DIRECTORY;
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-      } else if (d.type === models.apiSpec.type) {
-        // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-        d._type = EXPORT_TYPE_API_SPEC;
-      }
-
-      // @ts-expect-error -- TSCONVERSION maybe this needs to be added to the upstream type?
-      // Delete the things we don't want to export
-      delete d.type;
-      return d;
-    });
-  trackEvent('Data', 'Export', `Insomnia ${format}`);
-
-  if (format.toLowerCase() === 'yaml') {
-    return YAML.stringify(data);
-  } else if (format.toLowerCase() === 'json') {
-    return JSON.stringify(data);
-  } else {
-    throw new Error(`Invalid export format ${format}. Must be "json" or "yaml"`);
+  if (getSpaceId) {
+    // Set the workspace parent if creating a new workspace during import
+    resource.parentId = await getSpaceId();
   }
 }
 
-async function getDocWithDescendants(
-  parentDoc: BaseModel | null = null,
-  includePrivateDocs = false,
-): Promise<BaseModel[]> {
-  const docs = await db.withDescendants(parentDoc);
-  return docs.filter(
-    // Don't include if private, except if we want to
-    doc => !doc?.isPrivate || includePrivateDocs,
-  );
-}
+export const isApiSpecImport = ({ id }: Pick<ConvertResultType, 'id'>) => (
+  id === 'openapi3' || id === 'swagger2'
+);
+
+export const isInsomniaV4Import = ({ id }: Pick<ConvertResultType, 'id'>) => (
+  id === 'insomnia-4'
+);

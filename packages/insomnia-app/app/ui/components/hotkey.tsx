@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { isMac } from '../../common/constants';
 import type { KeyBindings, KeyCombination } from '../../common/hotkeys';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';

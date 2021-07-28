@@ -1,17 +1,29 @@
-import type { Workspace, WorkspaceScope } from '../../../models/workspace';
-import * as models from '../../../models';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
+import { Dispatch } from 'redux';
+
 import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
-import { isDesign } from '../../../models/helpers/is-model';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC } from '../../../common/constants';
+import { database } from '../../../common/database';
+import * as models from '../../../models';
+import { isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showPrompt } from '../../components/modals';
-import { setActiveActivity, setActiveWorkspace } from './global';
 import { selectActiveSpace } from '../selectors';
+import { setActiveActivity, setActiveWorkspace } from './global';
 
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
+const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
+  const flushId = await database.bufferChanges();
+
+  const workspace = await models.workspace.create(patch);
+  await models.workspace.ensureChildren(workspace);
+
+  await database.flushChanges(flushId);
+  return workspace;
+};
+
 const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
-  return async dispatch => {
-    const workspace = await models.workspace.create(patch);
+  return async (dispatch: Dispatch) => {
+    const workspace = await createWorkspaceAndChildren(patch);
 
     if (onCreate) {
       await onCreate(workspace);
@@ -29,7 +41,6 @@ export const createWorkspace = ({ scope, onCreate }: {
 }) => {
   return (dispatch, getState) => {
     const activeSpace = selectActiveSpace(getState());
-    const parentId = activeSpace?._id || null;
 
     const design = isDesign({
       scope,
@@ -49,8 +60,7 @@ export const createWorkspace = ({ scope, onCreate }: {
             {
               name,
               scope,
-              // @ts-expect-error TSCONVERSION the common parentId isn't typed correctly
-              parentId,
+              parentId: activeSpace._id,
             },
             onCreate,
           ),

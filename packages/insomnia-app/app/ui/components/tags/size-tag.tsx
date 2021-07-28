@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import * as misc from '../../../common/misc';
 import Tooltip from '../tooltip';
 

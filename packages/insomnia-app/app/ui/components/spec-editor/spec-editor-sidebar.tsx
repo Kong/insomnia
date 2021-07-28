@@ -1,12 +1,13 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { Sidebar } from 'insomnia-components';
 import React, { Component } from 'react';
 import styled from 'styled-components';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import YAML from 'yaml';
 import YAMLSourceMap from 'yaml-source-map';
-import { Sidebar } from 'insomnia-components';
-import type { ApiSpec } from '../../../models/api-spec';
+
 import { trackEvent } from '../../../common/analytics';
+import { AUTOBIND_CFG } from '../../../common/constants';
+import type { ApiSpec } from '../../../models/api-spec';
 
 interface Props {
   apiSpec: ApiSpec;

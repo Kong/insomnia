@@ -1,22 +1,23 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { Curl } from 'node-libcurl';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
+import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
-import Modal from '../base/modal';
+import * as models from '../../../models/index';
+import { Settings } from '../../../models/settings';
 import Button from '../base/button';
+import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import SettingsShortcuts from '../settings/shortcuts';
-import General from '../settings/general';
-import ImportExport from '../settings/import-export';
-import Plugins from '../settings/plugins';
-import Theme from '../settings/theme';
-import * as models from '../../../models/index';
-import { Curl } from 'node-libcurl';
-import Tooltip from '../tooltip';
-import { applyColorScheme } from '../../../plugins/misc';
-import * as session from '../../../account/session';
 import Account from '../settings/account';
+import General from '../settings/general';
+import { ImportExport } from '../settings/import-export';
+import Plugins from '../settings/plugins';
+import SettingsShortcuts from '../settings/shortcuts';
+import { ThemePanel } from '../settings/theme-panel';
+import Tooltip from '../tooltip';
 import { showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
@@ -25,13 +26,7 @@ export const TAB_INDEX_THEMES = 2;
 export const TAB_INDEX_PLUGINS = 5;
 
 interface Props {
-  handleShowExportRequestsModal: Function;
-  handleExportAllToFile: Function;
-  handleImportFile: Function;
-  handleImportUri: Function;
-  handleToggleMenuBar: Function;
-  handleImportClipBoard: Function;
-  settings: any;
+  settings: Settings;
 }
 
 interface State {
@@ -54,74 +49,6 @@ class SettingsModal extends PureComponent<Props, State> {
     return models.settings.update(this.props.settings, {
       [key]: value,
     });
-  }
-
-  _handleExportAllToFile() {
-    this.props.handleExportAllToFile();
-    this.modal?.hide();
-  }
-
-  _handleShowExportRequestsModal() {
-    this.props.handleShowExportRequestsModal();
-    this.modal?.hide();
-  }
-
-  _handleImportFile() {
-    this.props.handleImportFile();
-    this.modal?.hide();
-  }
-
-  _handleImportClipBoard() {
-    this.props.handleImportClipBoard();
-    this.modal?.hide();
-  }
-
-  _handleImportUri(uri) {
-    this.props.handleImportUri(uri);
-    this.modal?.hide();
-  }
-
-  async _handleChangeTheme(themeName, colorScheme, persist = true) {
-    const { settings } = this.props;
-    let patch;
-
-    switch (colorScheme) {
-      case 'light':
-        patch = {
-          lightTheme: themeName,
-        };
-        break;
-
-      case 'dark':
-        patch = {
-          darkTheme: themeName,
-        };
-        break;
-
-      case 'default':
-      default:
-        patch = {
-          theme: themeName,
-        };
-        break;
-    }
-
-    applyColorScheme({ ...settings, ...patch });
-
-    if (persist) {
-      await models.settings.update(settings, patch);
-    }
-  }
-
-  async _handleAutoDetectColorSchemeChange(autoDetectColorScheme, persist = true) {
-    const { settings } = this.props;
-    applyColorScheme({ ...settings, autoDetectColorScheme });
-
-    if (persist) {
-      models.settings.update(settings, {
-        autoDetectColorScheme,
-      });
-    }
   }
 
   async _handleUpdateKeyBindings(hotKeyRegistry) {
@@ -187,28 +114,16 @@ class SettingsModal extends PureComponent<Props, State> {
               <General
                 settings={settings}
                 hideModal={this.hide}
-                handleToggleMenuBar={this.props.handleToggleMenuBar}
                 updateSetting={this._handleUpdateSetting}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <ImportExport
-                handleExportAll={this._handleExportAllToFile}
-                handleShowExportRequestsModal={this._handleShowExportRequestsModal}
-                handleImportFile={this._handleImportFile}
-                handleImportClipBoard={this._handleImportClipBoard}
-                handleImportUri={this._handleImportUri}
+                hideSettingsModal={this.hide}
               />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <Theme
-                handleChangeTheme={this._handleChangeTheme}
-                activeTheme={settings.theme}
-                handleAutoDetectColorSchemeChange={this._handleAutoDetectColorSchemeChange}
-                autoDetectColorScheme={settings.autoDetectColorScheme}
-                activeLightTheme={settings.lightTheme}
-                activeDarkTheme={settings.darkTheme}
-              />
+              <ThemePanel />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
               <SettingsShortcuts

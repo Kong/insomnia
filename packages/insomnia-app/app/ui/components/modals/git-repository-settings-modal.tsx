@@ -1,15 +1,16 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { docsGitAccessToken, docsGitSync } from '../../../common/documentation';
+import type { GitRepository } from '../../../models/git-repository';
+import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
+import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { GitRepository } from '../../../models/git-repository';
 import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
-import { docsGitAccessToken, docsGitSync } from '../../../common/documentation';
-import Link from '../base/link';
-import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
 
 interface State {
   gitRepository: GitRepository | null;

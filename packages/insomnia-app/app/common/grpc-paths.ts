@@ -1,5 +1,6 @@
-import type { GrpcMethodDefinition, GrpcMethodType } from '../network/grpc/method';
 import { groupBy } from 'lodash';
+
+import type { GrpcMethodDefinition, GrpcMethodType } from '../network/grpc/method';
 import { getMethodType } from '../network/grpc/method';
 const PROTO_PATH_REGEX = /^\/(?:(?<package>[\w.]+)\.)?(?<service>\w+)\/(?<method>\w+)$/;
 

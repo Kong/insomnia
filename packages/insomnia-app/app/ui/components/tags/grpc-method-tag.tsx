@@ -1,8 +1,9 @@
-import React, { FunctionComponent } from 'react';
 import { Tooltip } from 'insomnia-components';
+import React, { FunctionComponent } from 'react';
+import styled from 'styled-components';
+
 import type { GrpcMethodType } from '../../../network/grpc/method';
 import { GrpcMethodTypeAcronym, GrpcMethodTypeName } from '../../../network/grpc/method';
-import styled from 'styled-components';
 
 interface Props {
   methodType: GrpcMethodType;

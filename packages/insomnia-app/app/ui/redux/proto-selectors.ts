@@ -1,7 +1,8 @@
 import { createSelector } from 'reselect';
-import { selectActiveWorkspace, selectEntitiesLists } from './selectors';
+
 import type { ProtoDirectory } from '../../models/proto-directory';
 import type { ProtoFile } from '../../models/proto-file';
+import { selectActiveWorkspace, selectEntitiesLists } from './selectors';
 
 export interface ExpandedProtoDirectory {
   files: ProtoFile[];
@@ -11,14 +12,12 @@ export interface ExpandedProtoDirectory {
 
 const selectAllProtoFiles = createSelector(
   selectEntitiesLists,
-  // @ts-expect-error -- TSCONVERSION
-  entities => entities.protoFiles || [],
+  entities => entities.protoFiles,
 );
 
 const selectAllProtoDirectories = createSelector(
   selectEntitiesLists,
-  // @ts-expect-error -- TSCONVERSION
-  entities => entities.protoDirectories || [],
+  entities => entities.protoDirectories,
 );
 
 export const selectExpandedActiveProtoDirectories = createSelector(
@@ -27,9 +26,9 @@ export const selectExpandedActiveProtoDirectories = createSelector(
   selectAllProtoDirectories,
   (workspace, allFiles, allDirs): ExpandedProtoDirectory[] => {
     // Get files where the parent is the workspace
-    const individualFiles = allFiles.filter(pf => pf.parentId === workspace._id);
+    const individualFiles = allFiles.filter(pf => pf.parentId === workspace?._id);
     // Get directories where the parent is the workspace
-    const rootDirs = allDirs.filter(pd => pd.parentId === workspace._id);
+    const rootDirs = allDirs.filter(pd => pd.parentId === workspace?._id);
     // Expand each directory
     const expandedDirs = rootDirs.map(dir => expandDir(dir, allFiles, allDirs));
 

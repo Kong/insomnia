@@ -1,8 +1,10 @@
 /// <reference types="webpack-env" />
-import { createStore, applyMiddleware, compose } from 'redux';
+import { applyMiddleware, compose, createStore } from 'redux';
 import thunkMiddleware from 'redux-thunk';
+
 import { reducer } from './modules';
 
+// TODO there's a circular dependency between this file and /redux/create
 export default function() {
   const composeEnhancers =
     typeof window === 'object' && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__

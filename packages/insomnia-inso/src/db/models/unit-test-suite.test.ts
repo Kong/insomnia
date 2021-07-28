@@ -1,9 +1,10 @@
+import enquirer from 'enquirer';
+
 import type { Database } from '../index';
 import { emptyDb } from '../index';
 import type { ApiSpec, UnitTestSuite, Workspace } from './types';
-import enquirer from 'enquirer';
-import { generateIdIsh } from './util';
 import { loadTestSuites, promptTestSuites } from './unit-test-suite';
+import { generateIdIsh } from './util';
 
 jest.mock('enquirer');
 

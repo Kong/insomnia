@@ -1,6 +1,6 @@
-import path from 'path';
 import { spawn } from 'child_process';
 import { app } from 'electron';
+import path from 'path';
 
 function run(args, done) {
   const updateExe = path.resolve(path.dirname(process.execPath), '..', 'Update.exe');
@@ -31,7 +31,8 @@ export function checkIfRestartNeeded() {
     case '--squirrel-obsolete':
       app.quit();
       return true;
-  }
 
-  return false;
+    default:
+      return false;
+  }
 }

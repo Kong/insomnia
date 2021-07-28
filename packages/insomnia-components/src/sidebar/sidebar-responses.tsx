@@ -1,9 +1,10 @@
 import React, { Component, ReactNode } from 'react';
-import { SvgIcon, IconEnum } from '../svg-icon';
-import { SidebarSection } from './sidebar-section';
+
+import { IconEnum, SvgIcon } from '../svg-icon';
+import { Tooltip } from '../tooltip';
 import { SidebarInvalidSection } from './sidebar-invalid-section';
 import { SidebarItem } from './sidebar-item';
-import { Tooltip } from '../tooltip';
+import { SidebarSection } from './sidebar-section';
 
 export interface SidebarResponsesProps {
   responses: Record<string, any>;
