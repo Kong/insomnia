@@ -325,11 +325,6 @@ class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   async _loadAndSetLocalSchema() {
-    const newState: Partial<State> = {
-      schemaFetchError: null,
-      schemaIsFetching: false,
-    };
-
     const options: OpenDialogOptions = {
       title: 'Import GraphQL introspection schema',
       buttonLabel: 'Import',
@@ -342,33 +337,42 @@ class GraphQLEditor extends PureComponent<Props, State> {
       ],
     };
 
-    const { canceled, filePaths: paths } = await electron.remote.dialog.showOpenDialog(options);
+    const { canceled, filePaths } = await electron.remote.dialog.showOpenDialog(options);
 
     if (canceled) {
       return;
     }
 
     try {
-      const path = paths[0]; // showOpenDialog is single select
-      const file = readFileSync(path);
+      const filePath = filePaths[0]; // showOpenDialog is single select
+      const file = readFileSync(filePath);
 
       const content = JSON.parse(file.toString());
       if (!content.data) {
         throw new Error('JSON file should have a data field with the introspection results');
       }
 
-      newState.schema = buildClientSchema(content.data);
-      newState.schemaLastFetchTime = Date.now();
+      if (!this._isMounted) {
+        return;
+      }
+      this.setState({
+        schema: buildClientSchema(content.data),
+        schemaLastFetchTime: Date.now(),
+        schemaFetchError: null,
+        schemaIsFetching: false,
+      });
     } catch (err) {
       console.log('[graphql] ERROR: Failed to fetch schema', err);
-      newState.schemaFetchError = {
-        message: `Failed to fetch schema: ${err.message}`,
-        response: null,
-      };
-    }
-
-    if (this._isMounted) {
-      this.setState(existingState => ({ ...existingState, ...newState }));
+      if (!this._isMounted) {
+        return;
+      }
+      this.setState({
+        schemaFetchError: {
+          message: `Failed to fetch schema: ${err.message}`,
+          response: null,
+        },
+        schemaIsFetching: false,
+      });
     }
   }
 
@@ -426,9 +430,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   _handleSetLocalSchema() {
-    this.setState({ hideSchemaFetchErrors: false }, async () => {
-      await this._loadAndSetLocalSchema();
-    });
+    this.setState({ hideSchemaFetchErrors: false }, this._loadAndSetLocalSchema);
   }
 
   async _handleToggleAutomaticFetching() {
@@ -669,26 +671,28 @@ class GraphQLEditor extends PureComponent<Props, State> {
     return (
       <div className="graphql-editor">
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
+          
           <DropdownButton className="space-left btn btn--micro btn--outlined">
             schema <i className="fa fa-wrench" />
           </DropdownButton>
-          <DropdownDivider>GraphQL Schema</DropdownDivider>
+
           <DropdownItem onClick={this._handleShowDocumentation} disabled={!schema}>
             <i className="fa fa-file-code-o" /> Show Documentation
           </DropdownItem>
+
+          <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
+          
           <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
-            <i className={'fa fa-refresh ' + (schemaIsFetching ? 'fa-spin' : '')} /> Refresh Schema
+            <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
           </DropdownItem>
           <DropdownItem onClick={this._handleToggleAutomaticFetching} stayOpenAfterClick>
-            <i
-              className={classnames('fa', {
-                'fa-toggle-on': automaticFetch,
-                'fa-toggle-off': !automaticFetch,
-              })}
-            />{' '}
+            <i className={`fa fa-toggle-${automaticFetch ? 'on' : 'off'}`} />{' '}
             Automatic Fetch
             <HelpTooltip>Automatically fetch schema when request URL is modified</HelpTooltip>
           </DropdownItem>
+
+          <DropdownDivider>Local GraphQL Schema</DropdownDivider>
+
           <DropdownItem onClick={this._handleSetLocalSchema}>
             <i className="fa fa-file-code-o" /> Load schema from JSON
             <HelpTooltip>
@@ -697,6 +701,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
             </HelpTooltip>
           </DropdownItem>
         </Dropdown>
+
         <div className="graphql-editor__query">
           <CodeEditor
             dynamicHeight
