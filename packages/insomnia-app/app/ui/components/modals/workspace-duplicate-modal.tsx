@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { string } from 'prop-types';
 import React, { createRef, FC, forwardRef, ForwardRefRenderFunction, PureComponent } from 'react';
 import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
