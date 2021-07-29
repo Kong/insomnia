@@ -9,7 +9,7 @@ import { mocked } from 'ts-jest/utils';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
-import { ACTIVITY_HOME, ACTIVITY_SPEC } from '../../../../common/constants';
+import { ACTIVITY_SPEC } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
 import { BASE_SPACE_ID } from '../../../../models/space';
