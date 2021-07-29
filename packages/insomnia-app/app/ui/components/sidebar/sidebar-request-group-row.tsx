@@ -1,27 +1,35 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent } from 'react';
-import { DragSource, DropTarget } from 'react-dnd';
-import ReactDOM from 'react-dom';
+import { PropsWithChildren } from 'react';
+import { createRef } from 'react';
+import { DragSource, DragSourceSpec, DropTarget, DropTargetMonitor, DropTargetSpec } from 'react-dnd';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HotKeyRegistry } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';
 import { HandleRender } from '../../../common/render';
-import { Environment } from '../../../models/environment';
 import { RequestGroup } from '../../../models/request-group';
-import { Space } from '../../../models/space';
-import { Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { selectActiveEnvironment, selectActiveRequest } from '../../redux/selectors';
 import Highlight from '../base/highlight';
-import RequestGroupActionsDropdown from '../dropdowns/request-group-actions-dropdown';
+import { RequestGroupActionsDropdown, UnconnectedRequestGroupActionsDropdown } from '../dropdowns/request-group-actions-dropdown';
 import { showModal } from '../modals';
 import RequestGroupSettingsModal from '../modals/request-group-settings-modal';
-import SidebarRequestRow from './sidebar-request-row';
+import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
+import { SidebarRequestRow } from './sidebar-request-row';
 
-interface Props {
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+const mapStateToProps = (state: RootState) => ({
+  activeSpace: selectActiveRequest(state),
+  activeEnvironment: selectActiveEnvironment(state),
+});
+
+interface Props extends DnDProps, ReduxProps, PropsWithChildren<{}> {
   handleSetRequestGroupCollapsed: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  moveDoc: Function;
   handleActivateRequest: Function;
   handleCreateRequest: (id: string) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
@@ -29,15 +37,8 @@ interface Props {
   filter: string;
   isActive: boolean;
   isCollapsed: boolean;
-  workspace: Workspace;
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  isDragging?: boolean;
-  isDraggingOver?: boolean;
-  connectDragSource?: Function;
-  connectDropTarget?: Function;
-  activeEnvironment?: Environment | null;
-  activeSpace: Space;
 }
 
 interface State {
@@ -45,24 +46,16 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarRequestGroupRow extends PureComponent<Props, State> {
+class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
   state: State = {
     dragDirection: 0,
   }
 
-  _requestGroupActionsDropdown: RequestGroupActionsDropdown | null = null;
-  _expandTag: HTMLDivElement | null = null;
-
-  _setRequestGroupActionsDropdownRef(n: RequestGroupActionsDropdown) {
-    this._requestGroupActionsDropdown = n;
-  }
-
-  _setExpandTagRef(n: HTMLDivElement) {
-    this._expandTag = n;
-  }
+  private dropdownRef = createRef<UnconnectedRequestGroupActionsDropdown>();
+  private expandTagRef = createRef<HTMLDivElement>();
 
   getExpandTag() {
-    return this._expandTag;
+    return this.expandTagRef.current;
   }
 
   _handleCollapse() {
@@ -73,7 +66,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
   _handleShowActions(e) {
     e.preventDefault();
 
-    this._requestGroupActionsDropdown?.show();
+    this.dropdownRef.current?.show();
   }
 
   setDragDirection(dragDirection) {
@@ -95,7 +88,6 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       connectDragSource,
       connectDropTarget,
       filter,
-      moveDoc,
       children,
       requestGroup,
       isCollapsed,
@@ -106,10 +98,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       handleRender,
       isDragging,
       isDraggingOver,
-      workspace,
       hotKeyRegistry,
-      activeEnvironment,
-      activeSpace,
     } = this.props;
     const { dragDirection } = this.state;
     let folderIconClass = 'fa-folder';
@@ -121,9 +110,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
       'sidebar__row--dragging-below': isDraggingOver && dragDirection < 0,
     });
     // NOTE: We only want the button draggable, not the whole container (ie. no children)
-    // @ts-expect-error -- TSCONVERSION
     const button = connectDragSource(
-      // @ts-expect-error -- TSCONVERSION
       connectDropTarget(
         <button onClick={this._handleCollapse} onContextMenu={this._handleShowActions}>
           <div className="sidebar__clickable">
@@ -137,7 +124,7 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
             />
             <Highlight search={filter} text={requestGroup.name} />
             <div
-              ref={this._setExpandTagRef}
+              ref={this.expandTagRef}
               className={classnames('sidebar__expand', {
                 'sidebar__expand-hint': isDraggingOver && isCollapsed,
               })}>
@@ -158,16 +145,13 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
           {button}
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
-              ref={this._setRequestGroupActionsDropdownRef}
+              ref={this.dropdownRef}
               handleCreateRequest={handleCreateRequest}
               handleCreateRequestGroup={handleCreateRequestGroup}
               handleDuplicateRequestGroup={handleDuplicateRequestGroup}
               handleShowSettings={this._handleShowRequestGroupSettings}
-              workspace={workspace}
               requestGroup={requestGroup}
               hotKeyRegistry={hotKeyRegistry}
-              activeEnvironment={activeEnvironment}
-              // @ts-expect-error -- TSCONVERSION
               right
             />
           </div>
@@ -187,15 +171,12 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
               handleCopyAsCurl={misc.nullFn}
               handleSetRequestPinned={misc.nullFn}
               handleRender={handleRender}
-              moveDoc={moveDoc}
               isActive={false}
               requestGroup={requestGroup}
               requestCreate={handleCreateRequest}
               filter={filter}
               hotKeyRegistry={hotKeyRegistry}
               isPinned={false} // Necessary so that plugin actions work
-              activeEnvironment={activeEnvironment}
-              activeSpace={activeSpace}
             />
           )}
         </ul>
@@ -207,25 +188,22 @@ class SidebarRequestGroupRow extends PureComponent<Props, State> {
 /**
  * Implements the drag source contract.
  */
-const dragSource = {
+const dragSource: DragSourceSpec<Props, DragObject> = {
   beginDrag(props: Props) {
     return {
-      requestGroup: props.requestGroup,
+      item: props.requestGroup,
     };
   },
 };
 
-function isAbove(monitor, component) {
-  const hoveredNode = ReactDOM.findDOMNode(component);
-  // @ts-expect-error -- TSCONVERSION
-  const hoveredTop = hoveredNode.getBoundingClientRect().top;
-  const draggedTop = monitor.getSourceClientOffset().y;
-  return hoveredTop > draggedTop;
-}
-
-function isOnExpandTag(monitor, component) {
-  const rect = component.getExpandTag().getBoundingClientRect();
+function isOnExpandTag(monitor: DropTargetMonitor, component: UnconnectedSidebarRequestGroupRow): boolean {
+  const rect = component.getExpandTag()?.getBoundingClientRect();
   const pointer = monitor.getClientOffset();
+  
+  if (!pointer || !rect) {
+    return false;
+  }
+
   return (
     rect.left <= pointer.x &&
     pointer.x <= rect.right &&
@@ -234,44 +212,27 @@ function isOnExpandTag(monitor, component) {
   );
 }
 
-const dragTarget = {
-  drop(props, monitor, component) {
-    const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
-    const parentId = props.requestGroup.parentId;
-    const targetId = props.requestGroup._id;
+const hoverHandle = hoverHandleCreator<Props>();
 
-    if (isAbove(monitor, component)) {
-      props.moveDoc(movingDoc, parentId, targetId, 1);
-    } else {
-      props.moveDoc(movingDoc, parentId, targetId, -1);
-    }
-  },
+const dropHandle = dropHandleCreator<Props>({
+  getParentId: props => props.requestGroup.parentId,
+  getTargetId: props => props.requestGroup._id,
+});
 
-  hover(props, monitor, component) {
+const dragTarget: DropTargetSpec<Props> = {
+  drop: dropHandle,
+  hover: (props, monitor, component) => {
     if (props.isCollapsed && isOnExpandTag(monitor, component)) {
       component.props.handleSetRequestGroupCollapsed(props.requestGroup._id, false);
       component.setDragDirection(0);
-    } else if (isAbove(monitor, component)) {
-      component.setDragDirection(1);
     } else {
-      component.setDragDirection(-1);
+      hoverHandle(props, monitor, component);
     }
   },
 };
 
-function sourceCollect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-  };
-}
+const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestGroupRow);
+const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+const connected = connect(mapStateToProps)(target);
 
-function targetCollect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver(),
-  };
-}
-
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestGroupRow);
-export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+export const SidebarRequestGroupRow = connected;

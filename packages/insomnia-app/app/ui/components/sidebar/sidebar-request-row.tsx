@@ -1,19 +1,19 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent } from 'react';
-import { DragSource, DropTarget } from 'react-dnd';
-import ReactDOM from 'react-dom';
+import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
 import { HotKeyRegistry } from '../../../common/hotkeys';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import { HandleRender } from '../../../common/render';
-import { Environment } from '../../../models/environment';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
-import { Space } from '../../../models/space';
+import { RootState } from '../../redux/modules';
+import { selectActiveEnvironment, selectActiveSpace } from '../../redux/selectors';
 import Editable from '../base/editable';
 import Highlight from '../base/highlight';
 import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
@@ -22,10 +22,11 @@ import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import GrpcTag from '../tags/grpc-tag';
 import MethodTag from '../tags/method-tag';
+import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
-interface Props {
-  activeSpace: Space;
-  activeEnvironment?: Environment | null;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends DnDProps, ReduxProps {
   handleActivateRequest: Function;
   handleSetRequestPinned: Function;
   handleDuplicateRequest: Function;
@@ -33,18 +34,13 @@ interface Props {
   handleCopyAsCurl: Function;
   handleRender: HandleRender;
   requestCreate: Function;
-  moveDoc: Function;
   filter: string;
   isActive: boolean;
   isPinned: boolean;
   hotKeyRegistry: HotKeyRegistry;
-  isDragging?: boolean;
-  isDraggingOver?: boolean;
-  connectDragSource?: Function;
-  connectDropTarget?: Function;
   requestGroup?: RequestGroup;
-  request?: Request | GrpcRequest;
   /** can be Request or GrpcRequest */
+  request?: Request | GrpcRequest;
   disableDragAndDrop?: boolean;
 }
 
@@ -55,7 +51,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarRequestRow extends PureComponent<Props, State> {
+class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
   state: State = {
     dragDirection: 0,
     isEditing: false,
@@ -302,66 +298,40 @@ class SidebarRequestRow extends PureComponent<Props, State> {
     if (disableDragAndDrop) {
       return node;
     } else if (!this.state.isEditing) {
-      // @ts-expect-error -- TSCONVERSION
       return connectDragSource(connectDropTarget(node));
     } else {
-      // @ts-expect-error -- TSCONVERSION
       return connectDropTarget(node);
     }
   }
 }
 
-const dragSource = {
-  beginDrag(props: Props) {
+const dragSource: DragSourceSpec<Props, DragObject> = {
+  beginDrag(props) {
     return {
-      request: props.request,
+      item: props.request,
     };
   },
 };
 
-function isAbove(monitor, component) {
-  const hoveredNode = ReactDOM.findDOMNode(component);
-  // @ts-expect-error -- TSCONVERSION
-  const hoveredTop = hoveredNode.getBoundingClientRect().top;
-  const draggedTop = monitor.getSourceClientOffset().y;
-  return hoveredTop > draggedTop;
-}
+const dropHandle = dropHandleCreator<Props>({
+  getParentId: props => props.requestGroup?._id || props.request?.parentId,
+  getTargetId: props => props.request?._id,
+});
 
-const dragTarget = {
-  drop(props, monitor, component) {
-    const movingDoc = monitor.getItem().requestGroup || monitor.getItem().request;
-    const parentId = props.requestGroup ? props.requestGroup._id : props.request.parentId;
-    const targetId = props.request ? props.request._id : null;
+const hoverHandle = hoverHandleCreator<Props>();
 
-    if (isAbove(monitor, component)) {
-      props.moveDoc(movingDoc, parentId, targetId, 1);
-    } else {
-      props.moveDoc(movingDoc, parentId, targetId, -1);
-    }
-  },
-
-  hover(_, monitor, component) {
-    if (isAbove(monitor, component)) {
-      component.setDragDirection(1);
-    } else {
-      component.setDragDirection(-1);
-    }
-  },
+const dragTarget: DropTargetSpec<Props> = {
+  drop: dropHandle,
+  hover: hoverHandle,
 };
 
-function sourceCollect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-  };
-}
+const mapStateToProps = (state: RootState) => ({
+  activeSpace: selectActiveSpace(state),
+  activeEnvironment: selectActiveEnvironment(state),
+});
 
-function targetCollect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isDraggingOver: monitor.isOver(),
-  };
-}
+const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
+const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+const connected = connect(mapStateToProps)(target);
 
-const source = DragSource('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(SidebarRequestRow);
-export default DropTarget('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
+export const SidebarRequestRow = connected;
