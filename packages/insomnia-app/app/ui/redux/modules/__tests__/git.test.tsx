@@ -41,7 +41,7 @@ describe('git', () => {
   let store;
   beforeEach(async () => {
     await globalBeforeEach();
-    store = mockStore(await reduxStateForTest({ activeActivity: ACTIVITY_HOME }));
+    store = mockStore(await reduxStateForTest());
     gitRepoBuilder.reset();
   });
 
