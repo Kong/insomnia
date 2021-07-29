@@ -17,18 +17,13 @@ import { bindActionCreators } from 'redux';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
   AUTOBIND_CFG,
-  GlobalActivity,
-  isWorkspaceActivity,
 } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort } from '../../common/sorting';
 import { strings } from '../../common/strings';
-import * as models from '../../models';
 import { isRemoteSpace } from '../../models/space';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { MemClient } from '../../sync/git/mem-client';
@@ -37,7 +32,7 @@ import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
-import { createWorkspace } from '../redux/modules/workspace';
+import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
 import Highlight from './base/highlight';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
@@ -144,19 +139,6 @@ class WrapperHome extends PureComponent<Props, State> {
     });
   }
 
-  async _handleClickCard(id: string, defaultActivity: GlobalActivity) {
-    const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
-    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
-
-    if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
-      handleSetActiveActivity(defaultActivity);
-    } else {
-      handleSetActiveActivity(activeActivity);
-    }
-
-    handleSetActiveWorkspace(id);
-  }
-
   renderCard(workspace: Workspace) {
     const {
       activeSpace,
@@ -237,7 +219,6 @@ class WrapperHome extends PureComponent<Props, State> {
     let label: string = strings.collection.singular;
     let format = '';
     let labelIcon = <i className="fa fa-bars" />;
-    let defaultActivity = ACTIVITY_DEBUG;
     let title = workspace.name;
 
     if (isDesign(workspace)) {
@@ -251,7 +232,6 @@ class WrapperHome extends PureComponent<Props, State> {
         format = `OpenAPI ${specFormatVersion}`;
       }
 
-      defaultActivity = ACTIVITY_SPEC;
       title = apiSpec.fileName || title;
     }
 
@@ -283,7 +263,7 @@ class WrapperHome extends PureComponent<Props, State> {
         docLog={log}
         docMenu={docMenu}
         docFormat={format}
-        onClick={() => this._handleClickCard(workspace._id, defaultActivity)}
+        onClick={() => this.props.handleActivateWorkspace(workspace)}
       />
     );
     const renderedCard: RenderedCard = {
@@ -419,6 +399,7 @@ const mapDispatchToProps = (dispatch) => {
     importFile,
     importClipBoard,
     importUri,
+    activateWorkspace,
   }, dispatch);
 
   return ({
@@ -427,6 +408,7 @@ const mapDispatchToProps = (dispatch) => {
     handleImportFile: bound.importFile,
     handleImportUri: bound.importUri,
     handleImportClipboard: bound.importClipBoard,
+    handleActivateWorkspace: bound.activateWorkspace,
   });
 };
 

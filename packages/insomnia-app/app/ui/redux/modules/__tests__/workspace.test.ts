@@ -4,7 +4,7 @@ import thunk from 'redux-thunk';
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
-import { ACTIVITY_DEBUG, ACTIVITY_HOME, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
 import { database } from '../../../../common/database';
 import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
@@ -65,6 +65,10 @@ describe('workspace', () => {
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
+          type: SET_ACTIVE_SPACE,
+          spaceId: BASE_SPACE_ID,
+        },
+        {
           type: SET_ACTIVE_WORKSPACE,
           workspaceId: workspaceId,
         },
@@ -95,34 +99,9 @@ describe('workspace', () => {
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspaceId,
+          type: SET_ACTIVE_SPACE,
+          spaceId: BASE_SPACE_ID,
         },
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_DEBUG,
-        },
-      ]);
-    });
-
-    it('should create with no space', async () => {
-      const store = mockStore(await reduxStateForTest());
-
-      // @ts-expect-error redux-thunk types
-      store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
-
-      const { title, submitName, defaultValue, onComplete } = getAndClearShowPromptMockArgs();
-      expect(title).toBe('Create New Request Collection');
-      expect(submitName).toBe('Create');
-      expect(defaultValue).toBe('My Collection');
-      const workspaceName = 'name';
-      await onComplete?.(workspaceName);
-
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, BASE_SPACE_ID);
-
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Collection Created');
-      expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
-      expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_WORKSPACE,
           workspaceId: workspaceId,
@@ -139,7 +118,7 @@ describe('workspace', () => {
     it('should activate space and workspace and activity from home', async () => {
       const space = await models.space.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def', activeActivity: ACTIVITY_HOME }));
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def' }));
 
       await store.dispatch(activateWorkspace(workspace));
 
@@ -162,7 +141,7 @@ describe('workspace', () => {
     it('should switch to the default design activity', async () => {
       const space = await models.space.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id, activeActivity: ACTIVITY_HOME }));
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
 
       await store.dispatch(activateWorkspace(workspace));
 
@@ -223,7 +202,7 @@ describe('workspace', () => {
     it('should switch to the default collection activity', async () => {
       const space = await models.space.create();
       const workspace = await models.workspace.create({ scope: 'collection', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id, activeActivity: ACTIVITY_HOME }));
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
 
       await store.dispatch(activateWorkspace(workspace));
 
@@ -248,7 +227,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       await models.workspace.ensureChildren(workspace);
       await models.workspaceMeta.updateByParentId(workspace._id, { activeActivity: ACTIVITY_UNIT_TEST });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id, activeActivity: ACTIVITY_HOME }));
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
 
       await store.dispatch(activateWorkspace(workspace));
 
