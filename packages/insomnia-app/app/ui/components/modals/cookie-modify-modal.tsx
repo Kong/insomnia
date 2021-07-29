@@ -277,7 +277,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
               <div className="pad">
                 <div className="form-control form-control--outlined">
                   <label>
-                  Raw Cookie String
+                    Raw Cookie String
                     <input
                       type="text"
                       onChange={this._handleChangeRawValue}
