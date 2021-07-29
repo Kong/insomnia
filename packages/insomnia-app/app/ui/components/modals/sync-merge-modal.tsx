@@ -56,7 +56,7 @@ class SyncMergeModal extends PureComponent<Props, State> {
     conflicts: MergeConflict[];
     handleDone: (arg0: MergeConflict[]) => void;
   }) {
-    this.modal && this.modal.show();
+    this.modal?.show();
     this._handleDone = options.handleDone;
     this.setState({
       conflicts: options.conflicts,
@@ -64,7 +64,7 @@ class SyncMergeModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {

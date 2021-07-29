@@ -176,7 +176,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   async _activateWorkspace(workspace: Workspace) {
     await this.props.handleActivateWorkspace(workspace);
 
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _activateRequest(request: Request) {
@@ -185,7 +185,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
 
     this.props.activateRequest(request._id);
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
@@ -312,7 +312,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     } = {},
   ) {
     // Don't show if we're already showing
-    if (this.modal && this.modal.isOpen()) {
+    if (this.modal?.isOpen()) {
       return;
     }
 
@@ -342,19 +342,19 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       // Change value after because it accesses state properties
       this._handleChangeValue('');
     });
-    this.modal && this.modal.show();
-    setTimeout(() => this._input && this._input.focus(), 100);
+    this.modal?.show();
+    setTimeout(() => this._input?.focus(), 100);
   }
 
   hide() {
     if (this._openTimeout !== null) {
       clearTimeout(this._openTimeout);
     }
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   toggle() {
-    if (this.modal && this.modal.isOpen()) {
+    if (this.modal?.isOpen()) {
       this.hide();
     } else {
       this.show();
@@ -387,7 +387,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     // the user unpresses the hotkey that triggered this modal but we currently do not
     // have the facilities to do that.
     const isMetaKeyDown = e.ctrlKey || e.shiftKey || e.metaKey || e.altKey;
-    const isActive = this.modal && this.modal.isOpen();
+    const isActive = this.modal?.isOpen();
 
     if (selectOnKeyup && isActive && !isMetaKeyDown) {
       await this._activateCurrentIndex();

@@ -345,7 +345,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     }
 
     // Also unset active response it's the one we're deleting
-    if (this.props.activeResponse && this.props.activeResponse._id === response._id) {
+    if (this.props.activeResponse?._id === response._id) {
       this._handleSetActiveResponse(null);
     }
   }

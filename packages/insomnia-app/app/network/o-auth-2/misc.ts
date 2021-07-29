@@ -43,7 +43,7 @@ export function responseToObject(body, keys, defaults = {}) {
   for (const key of keys) {
     if (data[key] !== undefined) {
       results[key] = data[key];
-    } else if (defaults && defaults.hasOwnProperty(key)) {
+    } else if (defaults?.hasOwnProperty(key)) {
       results[key] = defaults[key];
     } else {
       results[key] = null;

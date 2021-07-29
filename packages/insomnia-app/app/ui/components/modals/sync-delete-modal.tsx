@@ -72,12 +72,12 @@ class SyncDeleteModal extends PureComponent<Props, State> {
     this.setState(INITIAL_STATE);
     // Focus input when modal shows
     setTimeout(() => {
-      this.input && this.input.focus();
+      this.input?.focus();
     }, 100);
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {

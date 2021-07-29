@@ -38,7 +38,7 @@ export function showError(config: ErrorModalOptions) {
 export function hideAllModals() {
   for (const key of Object.keys(modals)) {
     const modal = modals[key];
-    modal.hide && modal.hide();
+    modal.hide?.();
   }
 }
 

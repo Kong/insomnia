@@ -63,7 +63,7 @@ class SyncPullButton extends PureComponent<Props, State> {
     }, 400);
 
     if (!failed) {
-      onPull && onPull();
+      onPull?.();
     }
   }
 

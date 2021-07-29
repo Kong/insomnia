@@ -96,7 +96,7 @@ class GitStagingModal extends PureComponent<Props, State> {
     }
 
     await vcs.commit(message);
-    this.modal && this.modal.hide();
+    this.modal?.hide();
 
     if (typeof this.onCommit === 'function') {
       this.onCommit();
@@ -104,7 +104,7 @@ class GitStagingModal extends PureComponent<Props, State> {
   }
 
   _hideModal() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async _toggleAll(items: Item[], forceAdd = false) {
@@ -166,11 +166,11 @@ class GitStagingModal extends PureComponent<Props, State> {
 
   async show(options: { onCommit?: () => void }) {
     this.onCommit = options.onCommit || null;
-    this.modal && this.modal.show();
+    this.modal?.show();
     // Reset state
     this.setState(INITIAL_STATE);
     await this._refresh(() => {
-      this.textarea && this.textarea.focus();
+      this.textarea?.focus();
     });
   }
 

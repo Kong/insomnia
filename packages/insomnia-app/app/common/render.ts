@@ -543,7 +543,7 @@ export async function getRenderedRequestAndContext(
  * @returns {number}
  */
 function _nunjucksSortValue(v) {
-  return v && v.match && v.match(/({{|{%)/) ? 2 : 1;
+  return v?.match?.(/({{|{%)/) ? 2 : 1;
 }
 
 function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): string[] {

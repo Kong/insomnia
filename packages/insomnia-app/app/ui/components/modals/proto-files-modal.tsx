@@ -60,7 +60,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     this.setState({
       selectedProtoFileId: options.preselectProtoFileId || '',
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   async _handleSave(e: React.SyntheticEvent<HTMLButtonElement>) {
@@ -73,7 +73,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleSelect(id: string) {

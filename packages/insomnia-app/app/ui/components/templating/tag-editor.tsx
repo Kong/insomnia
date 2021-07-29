@@ -261,7 +261,7 @@ class TagEditor extends PureComponent<Props, State> {
     let argIndex = -1;
 
     if (parent instanceof HTMLElement) {
-      const index = parent && parent.getAttribute('data-arg-index');
+      const index = parent?.getAttribute('data-arg-index');
       argIndex = typeof index === 'string' ? parseInt(index, 10) : -1;
     }
 

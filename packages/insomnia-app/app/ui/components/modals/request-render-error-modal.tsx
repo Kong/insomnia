@@ -50,7 +50,7 @@ class RequestRenderErrorModal extends PureComponent<{}, State> {
     const result = jq.query(request, `$.${error.path}`);
     const template = result && result.length ? result[0] : null;
     const locationLabel =
-      template && template.includes('\n') ? `line ${error.location.line} of` : null;
+      template?.includes('\n') ? `line ${error.location.line} of` : null;
     return (
       <div className="pad">
         <div className="notice warning">

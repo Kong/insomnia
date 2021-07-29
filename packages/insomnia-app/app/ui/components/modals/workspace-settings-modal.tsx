@@ -195,11 +195,11 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
       defaultPreviewMode: hasDescription,
       showAddCertificateForm: false,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   renderModalHeader() {

@@ -259,7 +259,7 @@ class Editor extends PureComponent<Props, State> {
 
     this._onChange(pairs);
 
-    this.props.onCreate && this.props.onCreate();
+    this.props.onCreate?.();
   }
 
   _deletePair(position, breakFocus = false) {
@@ -270,7 +270,7 @@ class Editor extends PureComponent<Props, State> {
     const focusedPosition = this._getFocusedPairIndex();
 
     const pair = this.state.pairs[position];
-    this.props.onDelete && this.props.onDelete(pair);
+    this.props.onDelete?.(pair);
     const pairs = [...this.state.pairs.slice(0, position), ...this.state.pairs.slice(position + 1)];
 
     if (focusedPosition >= position) {

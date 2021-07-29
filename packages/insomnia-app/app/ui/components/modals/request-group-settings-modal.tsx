@@ -182,11 +182,11 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
         defaultPreviewMode: hasDescription && !forceEditMode,
       },
       () => {
-        this.modal && this.modal.show();
+        this.modal?.show();
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor && this._editor.focus();
+            this._editor?.focus();
           }, 400);
         }
       },
@@ -194,7 +194,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _renderDescription() {

@@ -186,7 +186,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
       await vcs.push(gitRepository.credentials, force);
     } catch (err) {
       if (err.code === 'PushRejectedError') {
-        this._dropdown && this._dropdown.hide();
+        this._dropdown?.hide();
         showAlert({
           title: 'Push Rejected',
           message: 'Do you want to force push?',

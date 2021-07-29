@@ -58,7 +58,7 @@ class PageLayout extends PureComponent<Props> {
       workspaces,
     } = wrapperProps;
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
-    const paneTwo = renderPaneTwo && renderPaneTwo();
+    const paneTwo = renderPaneTwo?.();
     const gridRows = paneTwo
       ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
       : 'auto 1fr';

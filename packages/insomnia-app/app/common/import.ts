@@ -185,7 +185,7 @@ export async function importRaw(
     for (const key of Object.keys(generatedIds)) {
       const { parentId, _id } = resource;
 
-      if (parentId && parentId.includes(key)) {
+      if (parentId?.includes(key)) {
         resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
       }
 
