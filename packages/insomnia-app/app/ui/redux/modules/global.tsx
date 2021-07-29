@@ -7,7 +7,7 @@ import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { trackEvent } from '../../../common/analytics';
-import type { GlobalActivity } from '../../../common/constants';
+import { GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,

@@ -23,6 +23,11 @@ export const selectEntities = createSelector(
   entities => entities,
 );
 
+export const selectGlobal = createSelector(
+  (state: RootState) => state.global,
+  global => global,
+);
+
 export const selectEntitiesLists = createSelector(
   selectEntities,
   entities => {
@@ -77,6 +82,11 @@ export const selectActiveSpace = createSelector(
 export const selectAllWorkspaces = createSelector(
   selectEntitiesLists,
   entities => entities.workspaces,
+);
+
+export const selectAllApiSpecs = createSelector(
+  selectEntitiesLists,
+  entities => entities.apiSpecs,
 );
 
 export const selectWorkspacesForActiveSpace = createSelector(
@@ -377,4 +387,14 @@ export const selectActiveUnitTestSuites = createSelector(
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
   getStatusCandidates,
+);
+
+export const selectIsLoggedIn = createSelector(
+  selectGlobal,
+  global => global.isLoggedIn,
+);
+
+export const selectActiveActivity = createSelector(
+  selectGlobal,
+  global => global.activeActivity,
 );
