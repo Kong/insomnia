@@ -16,6 +16,8 @@ import {
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
+  PKCE_CHALLENGE_PLAIN,
+  PKCE_CHALLENGE_S256,
   RESPONSE_TYPE_ID_TOKEN,
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
   RESPONSE_TYPE_TOKEN,
@@ -194,6 +196,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
   _handleChangePkce(value: boolean) {
     this._handleChangeProperty('usePkce', value);
   }
+  
+  _handleChangePkceMethod(e: React.SyntheticEvent<HTMLInputElement>) {
+    this._handleChangeProperty('pkceMethod', e.currentTarget.value);
+  }
 
   _handleChangeAuthorizationUrl(value: string) {
     this._handleChangeProperty('authorizationUrl', value);
@@ -280,7 +286,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
           </label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--underlined no-margin">
+          <div
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled,
+            })}>
             <Button
               className="btn btn--super-duper-compact"
               id="use-pkce"
@@ -355,6 +364,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }[],
     onChange: (...args: any[]) => any,
     help: string | null = null,
+    disabled = false,
   ) {
     const { request } = this.props;
     const { authentication } = request;
@@ -373,7 +383,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--outlined no-margin', {
-              'form-control--inactive': authentication.disabled,
+              'form-control--inactive': authentication.disabled || disabled,
             })}>
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
@@ -389,6 +399,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
   }
 
   renderGrantTypeFields(grantType: string) {
+    const { authentication } = this.props.request;
+
     let basicFields: JSX.Element[] = [];
     let advancedFields: JSX.Element[] = [];
     const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
@@ -398,6 +410,23 @@ class OAuth2Auth extends PureComponent<Props, State> {
       this._handleChangeClientSecret,
     );
     const usePkce = this.renderUsePkceRow(this._handleChangePkce);
+    const pkceMethod = this.renderSelectRow(
+      'Code Challenge Method',
+      'pkceMethod',
+      [
+        {
+          name: 'SHA-256',
+          value: PKCE_CHALLENGE_S256,
+        },
+        {
+          name: 'Plain',
+          value: PKCE_CHALLENGE_PLAIN,
+        },
+      ],
+      this._handleChangePkceMethod,
+      null,
+      !Boolean(authentication.usePkce)
+    );
     const authorizationUrl = this.renderInputRow(
       'Authorization URL',
       'authorizationUrl',
@@ -488,9 +517,11 @@ class OAuth2Auth extends PureComponent<Props, State> {
         clientId,
         clientSecret,
         usePkce,
+        pkceMethod,
         redirectUri,
         enabled,
       ];
+
       advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
