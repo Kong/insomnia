@@ -49,9 +49,9 @@ const TooltipIcon = ({ message, icon }: { message: string, icon: SvgIconProps['i
 );
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
-const home = <TooltipIcon message={`Base ${strings.space.singular} (Always Local)`} icon="home" />;
-const remoteSpace = <TooltipIcon message={`Remote ${strings.space.singular}`} icon="globe" />;
-const localSpace = <TooltipIcon message={`Local ${strings.space.singular}`} icon="laptop" />;
+const home = <TooltipIcon message={`${strings.baseSpace.singular} ${strings.space.singular} (Always ${strings.localSpace.singular})`} icon="home" />;
+const remoteSpace = <TooltipIcon message={`${strings.remoteSpace.singular} ${strings.space.singular}`} icon="globe" />;
+const localSpace = <TooltipIcon message={`${strings.localSpace.singular} ${strings.space.singular}`} icon="laptop" />;
 
 interface Props {
   vcs?: VCS;
