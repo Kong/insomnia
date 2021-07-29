@@ -23,7 +23,7 @@ const createWorkspaceAndChildren = async (patch: Partial<Workspace>) => {
 };
 
 const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateCallback) => {
-  return async (dispatch: Dispatch) => {
+  return async (dispatch) => {
     const workspace = await createWorkspaceAndChildren(patch);
 
     if (onCreate) {
@@ -31,8 +31,7 @@ const actuallyCreate = (patch: Partial<Workspace>, onCreate?: OnWorkspaceCreateC
     }
 
     trackEvent('Workspace', 'Create');
-    dispatch(setActiveWorkspace(workspace._id));
-    dispatch(setActiveActivity(isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG));
+    await dispatch(activateWorkspace(workspace));
   };
 };
 

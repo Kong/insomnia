@@ -95,7 +95,6 @@ import {
   loadRequestStop,
   newCommand,
   setActiveActivity,
-  setActiveWorkspace,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
 import {
@@ -1701,7 +1700,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     importUri: handleImportUri,
     loadRequestStart: handleStartLoading,
     loadRequestStop: handleStopLoading,
-    setActiveWorkspace: handleSetActiveWorkspace,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
     goToNextActivity: handleGoToNextActivity,
@@ -1712,7 +1710,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStart,
     loadRequestStop,
     newCommand,
-    setActiveWorkspace,
     setActiveActivity,
     goToNextActivity,
     exportRequestsToFile,
@@ -1721,7 +1718,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   return {
     handleCommand,
     handleImportUri,
-    handleSetActiveWorkspace,
     handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,

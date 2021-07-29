@@ -41,7 +41,6 @@ class PageLayout extends PureComponent<Props> {
       handleInitializeEntities,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
-      handleSetActiveWorkspace,
       handleSetSidebarRef,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
@@ -114,7 +113,6 @@ class PageLayout extends PureComponent<Props> {
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
-              handleSetActiveWorkspace={handleSetActiveWorkspace}
               hidden={sidebarHidden || false}
               hotKeyRegistry={settings.hotKeyRegistry}
               isLoading={isLoading}
