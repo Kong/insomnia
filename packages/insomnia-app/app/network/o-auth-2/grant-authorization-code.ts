@@ -42,8 +42,7 @@ export default async function(
     if (pkceMethod == c.PKCE_CHALLENGE_S256){
       // @ts-expect-error -- TSCONVERSION
       codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
-    }
-    else{
+    } else {
       codeChallenge = codeVerifier;
     }
 
