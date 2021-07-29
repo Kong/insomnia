@@ -81,7 +81,7 @@ Sometimes selecting by a React component and props, directly from `app.client` i
 
 ```ts
 const waitUntilRequestIsActive = async (app: Application, name: string) => {
-  const request = await app.client.react$('SidebarRequestRow', {
+  const request = await app.client.react$('UnconnectedSidebarRequestRow', {
     props: { isActive: true, request: { name } },
   });
 
@@ -89,7 +89,7 @@ const waitUntilRequestIsActive = async (app: Application, name: string) => {
 };
 
 export const clickFolderByName = async (app, name) => {
-  const folder = await app.client.react$('SidebarRequestGroupRow', {
+  const folder = await app.client.react$('UnconnectedSidebarRequestGroupRow', {
     props: { requestGroup: { name } },
   });
 
@@ -97,6 +97,8 @@ export const clickFolderByName = async (app, name) => {
   await folder.click();
 };
 ```
+
+You can find a list of component names in `modules/component-names.ts`.
 
 #### Scoping
 It is important to scope an element to an appropriate ancestor. In a way the selector becomes self-documenting, but also ensures stability as the UI evolves.

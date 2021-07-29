@@ -471,7 +471,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
-      activeRequest,
       activeWorkspace,
       activeSpace,
       activeApiSpec,
@@ -483,16 +482,12 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       handleGetRenderContext,
       handleInitializeEntities,
       handleRender,
-      handleSetActiveWorkspace,
-      handleSetActiveActivity,
       handleSidebarSort,
       isVariableUncovered,
-      requestMetas,
       settings,
       sidebarChildren,
       syncItems,
       vcs,
-      workspaceChildren,
       workspaces,
     } = this.props;
 
@@ -641,15 +636,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <RequestSwitcherModal
               ref={registerModal}
-              workspace={activeWorkspace}
-              workspaces={workspaces}
-              workspaceChildren={workspaceChildren}
-              // the request switcher modal does not know about grpc requests yet
-              activeRequest={activeRequest && isRequest(activeRequest) ? activeRequest : undefined}
               activateRequest={handleActivateRequest}
-              requestMetas={requestMetas}
-              handleSetActiveWorkspace={handleSetActiveWorkspace}
-              handleSetActiveActivity={handleSetActiveActivity}
             />
 
             <EnvironmentEditModal
@@ -735,7 +722,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 <ProtoFilesModal
                   ref={registerModal}
                   grpcDispatch={dispatch}
-                  workspace={activeWorkspace}
                 />
               )}
             </GrpcDispatchModalWrapper>

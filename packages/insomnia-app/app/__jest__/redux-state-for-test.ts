@@ -1,4 +1,4 @@
-import { ACTIVITY_DEBUG } from '../common/constants';
+import { ACTIVITY_HOME } from '../common/constants';
 import { BASE_SPACE_ID } from '../models/space';
 import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
@@ -8,7 +8,7 @@ export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Prom
   entities: entities.reducer(entities.initialEntitiesState, entities.initializeWith(await entities.allDocs())),
   global: {
     activeWorkspaceId: null,
-    activeActivity: ACTIVITY_DEBUG,
+    activeActivity: ACTIVITY_HOME,
     activeSpaceId: BASE_SPACE_ID,
     isLoading: false,
     isLoggedIn: false,
