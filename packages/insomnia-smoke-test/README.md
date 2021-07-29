@@ -89,7 +89,7 @@ const waitUntilRequestIsActive = async (app: Application, name: string) => {
 };
 
 export const clickFolderByName = async (app, name) => {
-  const folder = await app.client.react$('UnconnectedRequestGroupRow', {
+  const folder = await app.client.react$('UnconnectedSidebarRequestGroupRow', {
     props: { requestGroup: { name } },
   });
 
