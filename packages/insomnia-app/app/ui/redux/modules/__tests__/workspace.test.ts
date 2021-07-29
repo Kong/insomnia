@@ -47,7 +47,7 @@ describe('workspace', () => {
   describe('createWorkspace', () => {
     it('should create document', async () => {
       const spaceId = BASE_SPACE_ID;
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: spaceId }));
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: spaceId, activeActivity: ACTIVITY_HOME }));
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.design }));
@@ -65,6 +65,10 @@ describe('workspace', () => {
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
+          type: SET_ACTIVE_SPACE,
+          spaceId: BASE_SPACE_ID,
+        },
+        {
           type: SET_ACTIVE_WORKSPACE,
           workspaceId: workspaceId,
         },
@@ -77,7 +81,7 @@ describe('workspace', () => {
 
     it('should create collection', async () => {
       const spaceId = BASE_SPACE_ID;
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: spaceId }));
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: spaceId, activeActivity: ACTIVITY_HOME }));
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
@@ -95,34 +99,9 @@ describe('workspace', () => {
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_WORKSPACE,
-          workspaceId: workspaceId,
+          type: SET_ACTIVE_SPACE,
+          spaceId: BASE_SPACE_ID,
         },
-        {
-          type: SET_ACTIVE_ACTIVITY,
-          activity: ACTIVITY_DEBUG,
-        },
-      ]);
-    });
-
-    it('should create with no space', async () => {
-      const store = mockStore(await reduxStateForTest());
-
-      // @ts-expect-error redux-thunk types
-      store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
-
-      const { title, submitName, defaultValue, onComplete } = getAndClearShowPromptMockArgs();
-      expect(title).toBe('Create New Request Collection');
-      expect(submitName).toBe('Create');
-      expect(defaultValue).toBe('My Collection');
-      const workspaceName = 'name';
-      await onComplete?.(workspaceName);
-
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, BASE_SPACE_ID);
-
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Collection Created');
-      expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
-      expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_WORKSPACE,
           workspaceId: workspaceId,
