@@ -8,7 +8,7 @@ import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { Space } from '../../../models/space';
+import { isRemoteSpace, Space } from '../../../models/space';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
@@ -85,10 +85,10 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 
   async refreshMainAttributes(extraState: Partial<State> = {}) {
-    const { vcs, syncItems, workspace } = this.props;
+    const { vcs, syncItems, workspace, space } = this.props;
 
-    if (!vcs.hasProject()) {
-      const remoteProjects = await vcs.remoteProjects();
+    if (!vcs.hasProject() && isRemoteSpace(space)) {
+      const remoteProjects = await vcs.remoteProjects(space._id);
       const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({
         remoteProjects: matchedProjects,

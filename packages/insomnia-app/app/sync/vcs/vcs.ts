@@ -121,7 +121,7 @@ export class VCS {
     return this._allProjects();
   }
 
-  async remoteProjects(teamId?: string) {
+  async remoteProjects(teamId: string) {
     return this._queryProjects(teamId);
   }
 
@@ -1114,7 +1114,7 @@ export class VCS {
   }
 
   async _queryProjects(
-    teamId?: string,
+    teamId: string,
   ): Promise<Project[]> {
     const { projects } = await this._runGraphQL(
       `
