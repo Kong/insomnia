@@ -70,13 +70,6 @@ interface State {
   filter: string;
 }
 
-interface MapWorkspaceToWorkspaceCardInput {
-  apiSpecs: ApiSpec[];
-  workspaceMetas: WorkspaceMeta[];
-  filter: string;
-  workspace: Workspace;
-}
-
 function orderSpaceCards(orderBy: SpaceSortOrder) {
   return (cardA: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>, cardB: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>) => {
     switch (orderBy) {
@@ -96,21 +89,13 @@ function orderSpaceCards(orderBy: SpaceSortOrder) {
   };
 }
 
-function mapWorkspaceToWorkspaceCard(input: MapWorkspaceToWorkspaceCardInput):Pick<
-WorkspaceCardProps,
-| 'hasUnsavedChanges'
-| 'lastModifiedTimestamp'
-| 'modifiedLocally'
-| 'lastCommitTime'
-| 'lastCommitAuthor'
-| 'lastActiveBranch'
-| 'spec'
-| 'specFormat'
-| 'apiSpec'
-| 'specFormatVersion'
-| 'workspace'
-> | null {
-  const { apiSpecs, workspaceMetas, workspace } = input;
+const mapWorkspaceToWorkspaceCard = ({
+  apiSpecs,
+  workspaceMetas,
+}: {
+  apiSpecs: ApiSpec[];
+  workspaceMetas: WorkspaceMeta[];
+}) => (workspace: Workspace) => {
   const apiSpec = apiSpecs.find((s) => s.parentId === workspace._id);
 
   // an apiSpec model will always exist because a migration in the workspace forces it to
@@ -141,8 +126,6 @@ WorkspaceCardProps,
 
   const lastCommitAuthor = workspaceMeta?.cachedGitLastAuthor;
 
-  const lastCommitTime = workspaceMeta?.cachedGitLastCommitTime;
-
   // WorkspaceMeta is a good proxy for last modified time
   const workspaceModified = workspaceMeta?.modified || workspace.modified;
 
@@ -163,14 +146,14 @@ WorkspaceCardProps,
     .sort(descendingNumberSort)[0];
 
   const hasUnsavedChanges = Boolean(
-    isDesign(workspace) && lastCommitTime && apiSpec.modified > lastCommitTime
+    isDesign(workspace) && workspaceMeta?.cachedGitLastCommitTime && apiSpec.modified > workspaceMeta?.cachedGitLastCommitTime
   );
 
   return {
     hasUnsavedChanges,
     lastModifiedTimestamp,
     modifiedLocally,
-    lastCommitTime,
+    lastCommitTime: workspaceMeta?.cachedGitLastCommitTime,
     lastCommitAuthor,
     lastActiveBranch,
     spec,
@@ -179,7 +162,7 @@ WorkspaceCardProps,
     specFormatVersion,
     workspace,
   };
-}
+};
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperHome extends PureComponent<Props, State> {
@@ -378,12 +361,10 @@ class WrapperHome extends PureComponent<Props, State> {
     const { filter } = this.state;
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces
-      .map((workspace) =>
+      .map(
         mapWorkspaceToWorkspaceCard({
-          workspace,
           workspaceMetas,
           apiSpecs,
-          filter,
         })
       )
       .filter(isNotNullOrUndefined)
