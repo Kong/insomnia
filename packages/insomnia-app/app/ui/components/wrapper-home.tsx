@@ -4,7 +4,6 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
   Breadcrumb,
   Button,
-  Card,
   CardContainer,
   Dropdown,
   DropdownDivider,
@@ -14,105 +13,61 @@ import {
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
+import { unreachableCase } from 'ts-assert-unreachable';
 
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
-  ACTIVITY_DEBUG,
-  ACTIVITY_SPEC,
   AUTOBIND_CFG,
   GlobalActivity,
   isWorkspaceActivity,
+  SpaceSortOrder,
 } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
-import { fuzzyMatchAll, isNotNullOrUndefined } from '../../common/misc';
-import { descendingNumberSort } from '../../common/sorting';
+import { isNotNullOrUndefined } from '../../common/misc';
+import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
-import { Space, SpaceItemsSortOrder } from '../../models/space';
-import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
+import {
+  isDesign,
+  Workspace,
+  WorkspaceScopeKeys,
+} from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
+import { setSpaceSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
-import { importClipBoard, importFile, importUri } from '../redux/modules/import';
-import { updateSpaceItemsOrder } from '../redux/modules/space';
+import {
+  importClipBoard,
+  importFile,
+  importUri,
+} from '../redux/modules/import';
 import { createWorkspace } from '../redux/modules/workspace';
-import Highlight from './base/highlight';
+import { selectSpaceSortOrder } from '../redux/selectors';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
 import { SpaceDropdown } from './dropdowns/space-dropdown';
-import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
+import OrderFilterDropdown from './dropdowns/space-sort-dropdown';
 import KeydownBinder from './keydown-binder';
 import { showPrompt } from './modals';
 import Notice from './notice';
 import PageLayout from './page-layout';
-import TimeFromNow from './time-from-now';
+import WorkspaceCard, { WorkspaceCardProps } from './workspace-card';
 import type { WrapperProps } from './wrapper';
 
-interface Props extends ReturnType<typeof mapDispatchToProps> {
+interface Props
+  extends ReturnType<typeof mapDispatchToProps>,
+    ReturnType<typeof mapStateToProps> {
   wrapperProps: WrapperProps;
 }
 
 interface State {
   filter: string;
-}
-
-function orderSpaceCards(orderBy: SpaceItemsSortOrder) {
-  return (cardA: WorkspaceCardProps, cardB: WorkspaceCardProps) => {
-    switch (orderBy) {
-      case 'DateModifiedDescending':
-        return cardB.lastModifiedTimestamp - cardA.lastModifiedTimestamp;
-      case 'NameAscending':
-        return cardA.workspace.name.localeCompare(cardB.workspace.name);
-      case 'NameDescending':
-        return cardB.workspace.name.localeCompare(cardA.workspace.name);
-      case 'DateCreatedAscending':
-        return cardA.workspace.created - cardB.workspace.created;
-      case 'DateCreatedDescending':
-        return cardB.workspace.created - cardA.workspace.created;
-      default:
-        return cardB.lastModifiedTimestamp - cardA.lastModifiedTimestamp;
-    }
-  };
-}
-
-interface OrderFilterDropdownProps {
-  onSelect: (value: SpaceItemsSortOrder) => void;
-}
-
-function OrderFilterDropdown(props: OrderFilterDropdownProps) {
-  const { onSelect } = props;
-
-  return (
-    <Dropdown
-      className="margin-left"
-      renderButton={
-        <Button>
-          <i className="fa fa-sort" />
-        </Button>
-      }>
-      <DropdownItem value="DateModifiedDescending" onClick={onSelect}>
-        Last Modified
-      </DropdownItem>
-      <DropdownItem value="NameAscending" onClick={onSelect}>
-        Name Ascending
-      </DropdownItem>
-      <DropdownItem value="NameDescending" onClick={onSelect}>
-        Name Descending
-      </DropdownItem>
-      <DropdownItem value="DateCreatedAscending" onClick={onSelect}>
-        Oldest First
-      </DropdownItem>
-      <DropdownItem value="DateCreatedDescending" onClick={onSelect}>
-        Newest First
-      </DropdownItem>
-    </Dropdown>
-  );
 }
 
 interface MapWorkspaceToWorkspaceCardInput {
@@ -122,21 +77,38 @@ interface MapWorkspaceToWorkspaceCardInput {
   workspace: Workspace;
 }
 
-function mapWorkspaceToWorkspaceCard(
-  input: MapWorkspaceToWorkspaceCardInput,
-): Pick<
-  WorkspaceCardProps,
-  | 'hasUnsavedChanges'
-  | 'lastModifiedTimestamp'
-  | 'modifiedLocally'
-  | 'lastCommitTime'
-  | 'lastCommitAuthor'
-  | 'lastActiveBranch'
-  | 'spec'
-  | 'specFormat'
-  | 'apiSpec'
-  | 'specFormatVersion'
-  | 'workspace'
+function orderSpaceCards(orderBy: SpaceSortOrder) {
+  return (cardA: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>, cardB: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>) => {
+    switch (orderBy) {
+      case 'modified-desc':
+        return sortMethodMap['modified-desc'](cardA, cardB);
+      case 'name-asc':
+        return sortMethodMap['name-asc'](cardA.workspace, cardB.workspace);
+      case 'name-desc':
+        return sortMethodMap['name-desc'](cardA.workspace, cardB.workspace);
+      case 'created-asc':
+        return sortMethodMap['created-asc'](cardA.workspace, cardB.workspace);
+      case 'created-desc':
+        return sortMethodMap['created-desc'](cardA.workspace, cardB.workspace);
+      default:
+        return unreachableCase(orderBy, `Space Ordering "${orderBy}" is invalid`);
+    }
+  };
+}
+
+function mapWorkspaceToWorkspaceCard(input: MapWorkspaceToWorkspaceCardInput):Pick<
+WorkspaceCardProps,
+| 'hasUnsavedChanges'
+| 'lastModifiedTimestamp'
+| 'modifiedLocally'
+| 'lastCommitTime'
+| 'lastCommitAuthor'
+| 'lastActiveBranch'
+| 'spec'
+| 'specFormat'
+| 'apiSpec'
+| 'specFormatVersion'
+| 'workspace'
 > | null {
   const { apiSpecs, workspaceMetas, workspace } = input;
   const apiSpec = apiSpecs.find((s) => s.parentId === workspace._id);
@@ -161,7 +133,9 @@ function mapWorkspaceToWorkspaceCard(
   }
 
   // Get cached branch from WorkspaceMeta
-  const workspaceMeta = workspaceMetas?.find((wm) => wm.parentId === workspace._id);
+  const workspaceMeta = workspaceMetas?.find(
+    (wm) => wm.parentId === workspace._id
+  );
 
   const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
 
@@ -170,9 +144,11 @@ function mapWorkspaceToWorkspaceCard(
   const lastCommitTime = workspaceMeta?.cachedGitLastCommitTime;
 
   // WorkspaceMeta is a good proxy for last modified time
-  const workspaceModified = workspaceMeta?.modified;
+  const workspaceModified = workspaceMeta?.modified || workspace.modified;
 
-  const modifiedLocally = isDesign(workspace) ? apiSpec.modified : workspaceModified;
+  const modifiedLocally = isDesign(workspace)
+    ? apiSpec.modified
+    : workspaceModified;
 
   // Span spec, workspace and sync related timestamps for card last modified label and sort order
   const lastModifiedFrom = [
@@ -187,7 +163,7 @@ function mapWorkspaceToWorkspaceCard(
     .sort(descendingNumberSort)[0];
 
   const hasUnsavedChanges = Boolean(
-    isDesign(workspace) && lastCommitTime && apiSpec.modified > lastCommitTime,
+    isDesign(workspace) && lastCommitTime && apiSpec.modified > lastCommitTime
   );
 
   return {
@@ -203,118 +179,6 @@ function mapWorkspaceToWorkspaceCard(
     specFormatVersion,
     workspace,
   };
-}
-
-interface WorkspaceCardProps {
-  apiSpec: ApiSpec;
-  workspace: Workspace;
-  filter: string;
-  activeSpace: Space;
-  lastActiveBranch?: string | null;
-  lastModifiedTimestamp: number;
-  lastCommitTime?: number | null;
-  lastCommitAuthor?: string | null;
-  modifiedLocally?: number;
-  spec: Record<string, any> | null;
-  specFormat: 'openapi' | 'swagger' | null;
-  specFormatVersion: string | null;
-  hasUnsavedChanges: boolean;
-  onSelect: (workspaceId: string, activity: GlobalActivity) => void;
-}
-
-function WorkspaceCard(props: WorkspaceCardProps) {
-  const {
-    apiSpec,
-    filter,
-    lastActiveBranch,
-    lastModifiedTimestamp,
-    workspace,
-    activeSpace,
-    lastCommitTime,
-    modifiedLocally,
-    lastCommitAuthor,
-    spec,
-    specFormat,
-    specFormatVersion,
-    hasUnsavedChanges,
-  } = props;
-
-  let branch = lastActiveBranch;
-
-  // @TODO Figure out how we should handle a missing timestamp
-  let log = <TimeFromNow timestamp={lastModifiedTimestamp || new Date()} />;
-
-  if (hasUnsavedChanges) {
-    // Show locally unsaved changes for spec
-    // NOTE: this doesn't work for non-spec workspaces
-    branch = lastActiveBranch + '*';
-    log = (
-      <Fragment>
-        <TimeFromNow className="text-danger" timestamp={modifiedLocally || new Date()} /> (unsaved)
-      </Fragment>
-    );
-  } else if (lastCommitTime) {
-    // Show last commit time and author
-    log = (
-      <Fragment>
-        <TimeFromNow timestamp={lastCommitTime} /> {lastCommitAuthor && `by ${lastCommitAuthor}`}
-      </Fragment>
-    );
-  }
-  const docMenu = <WorkspaceCardDropdown apiSpec={apiSpec} workspace={workspace} space={activeSpace} />;
-
-  const version = spec?.info?.version || '';
-  let label: string = strings.collection.singular;
-  let format = '';
-  let labelIcon = <i className="fa fa-bars" />;
-  let defaultActivity = ACTIVITY_DEBUG;
-  let title = workspace.name;
-
-  if (isDesign(workspace)) {
-    label = strings.document.singular;
-    labelIcon = <i className="fa fa-file-o" />;
-
-    if (specFormat === 'openapi') {
-      format = `OpenAPI ${specFormatVersion}`;
-    } else if (specFormat === 'swagger') {
-      // NOTE: This is not a typo, we're labeling Swagger as OpenAPI also
-      format = `OpenAPI ${specFormatVersion}`;
-    }
-
-    defaultActivity = ACTIVITY_SPEC;
-    title = apiSpec.fileName || title;
-  }
-
-  // Filter the card by multiple different properties
-  const matchResults = fuzzyMatchAll(filter, [title, label, branch, version], {
-    splitSpace: true,
-    loose: true,
-  });
-
-  // Return null if we don't match the filter
-  if (filter && !matchResults) {
-    return null;
-  }
-
-  return (
-    <Card
-      docBranch={branch ? <Highlight search={filter} text={branch} /> : undefined}
-      docTitle={title ? <Highlight search={filter} text={title} /> : undefined}
-      docVersion={version ? <Highlight search={filter} text={`v${version}`} /> : undefined}
-      tagLabel={
-        label ? (
-          <>
-            <span className="margin-right-xs">{labelIcon}</span>
-            <Highlight search={filter} text={label} />
-          </>
-        ) : undefined
-      }
-      docLog={log}
-      docMenu={docMenu}
-      docFormat={format}
-      onClick={() => props.onSelect(workspace._id, defaultActivity)}
-    />
-  );
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -404,8 +268,11 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   async _handleClickCard(id: string, defaultActivity: GlobalActivity) {
-    const { handleSetActiveWorkspace, handleSetActiveActivity } = this.props.wrapperProps;
-    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(id);
+    const { handleSetActiveWorkspace, handleSetActiveActivity } =
+      this.props.wrapperProps;
+    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(
+      id
+    );
 
     if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
       handleSetActiveActivity(defaultActivity);
@@ -426,25 +293,41 @@ class WrapperHome extends PureComponent<Props, State> {
     return (
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
+        <DropdownItem
+          icon={<i className="fa fa-file-o" />}
+          onClick={this._handleDocumentCreate}
+        >
           Design Document
         </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
+        <DropdownItem
+          icon={<i className="fa fa-bars" />}
+          onClick={this._handleCollectionCreate}
+        >
           Request Collection
         </DropdownItem>
         <DropdownDivider>Import From</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-plus" />} onClick={this._handleImportFile}>
+        <DropdownItem
+          icon={<i className="fa fa-plus" />}
+          onClick={this._handleImportFile}
+        >
           File
         </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-link" />} onClick={this._handleImportUri}>
+        <DropdownItem
+          icon={<i className="fa fa-link" />}
+          onClick={this._handleImportUri}
+        >
           URL
         </DropdownItem>
         <DropdownItem
           icon={<i className="fa fa-clipboard" />}
-          onClick={this._handleImportClipBoard}>
+          onClick={this._handleImportClipBoard}
+        >
           Clipboard
         </DropdownItem>
-        <DropdownItem icon={<i className="fa fa-code-fork" />} onClick={this._handleWorkspaceClone}>
+        <DropdownItem
+          icon={<i className="fa fa-code-fork" />}
+          onClick={this._handleWorkspaceClone}
+        >
           Git Clone
         </DropdownItem>
       </Dropdown>
@@ -452,14 +335,16 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { vcs } = this.props.wrapperProps;
+    const { wrapperProps, setSpaceSortOrder } = this.props;
+    const { vcs, activeSpace } = wrapperProps;
     return (
       <div className="row row--right pad-left wide">
         <div
           className="form-control form-control--outlined no-margin"
           style={{
             maxWidth: '400px',
-          }}>
+          }}
+        >
           <KeydownBinder onKeydown={this._handleKeyDown}>
             <input
               ref={this._setFilterInputRef}
@@ -472,10 +357,7 @@ class WrapperHome extends PureComponent<Props, State> {
           </KeydownBinder>
         </div>
         <OrderFilterDropdown
-          onSelect={(value) =>
-            this.props.wrapperProps.activeSpace &&
-            updateSpaceItemsOrder(this.props.wrapperProps.activeSpace, value)
-          }
+          onSelect={(value) => activeSpace && setSpaceSortOrder(value)}
         />
         <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
@@ -484,8 +366,15 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   render() {
-    const { workspaces, isLoading, vcs, activeSpace, workspaceMetas, apiSpecs } =
-      this.props.wrapperProps;
+    const { sortOrder, wrapperProps } = this.props;
+    const {
+      workspaces,
+      isLoading,
+      vcs,
+      activeSpace,
+      workspaceMetas,
+      apiSpecs,
+    } = wrapperProps;
     const { filter } = this.state;
     // Render each card, removing all the ones that don't match the filter
     const cards = workspaces
@@ -495,10 +384,10 @@ class WrapperHome extends PureComponent<Props, State> {
           workspaceMetas,
           apiSpecs,
           filter,
-        }),
+        })
       )
       .filter(isNotNullOrUndefined)
-      .sort(orderSpaceCards(activeSpace?.order || 'DateModifiedDescending'))
+      .sort(orderSpaceCards(sortOrder))
       .map((props) => (
         <WorkspaceCard
           {...props}
@@ -509,7 +398,8 @@ class WrapperHome extends PureComponent<Props, State> {
         />
       ));
 
-    const countLabel = cards.length === 1 ? strings.document.singular : strings.document.plural;
+    const countLabel =
+      cards.length === 1 ? strings.document.singular : strings.document.plural;
     return (
       <PageLayout
         wrapperProps={this.props.wrapperProps}
@@ -527,7 +417,9 @@ class WrapperHome extends PureComponent<Props, State> {
                     },
                   ]}
                 />
-                {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
+                {isLoading ? (
+                  <i className="fa fa-refresh fa-spin space-left" />
+                ) : null}
               </Fragment>
             }
             gridRight={
@@ -564,6 +456,10 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 }
 
+const mapStateToProps = (state) => ({
+  sortOrder: selectSpaceSortOrder(state),
+});
+
 const mapDispatchToProps = (dispatch) => {
   const bound = bindActionCreators(
     {
@@ -572,8 +468,9 @@ const mapDispatchToProps = (dispatch) => {
       importFile,
       importClipBoard,
       importUri,
+      setSpaceSortOrder,
     },
-    dispatch,
+    dispatch
   );
 
   return {
@@ -582,7 +479,8 @@ const mapDispatchToProps = (dispatch) => {
     handleImportFile: bound.importFile,
     handleImportUri: bound.importUri,
     handleImportClipboard: bound.importClipBoard,
+    setSpaceSortOrder: bound.setSpaceSortOrder,
   };
 };
 
-export default connect(null, mapDispatchToProps)(WrapperHome);
+export default connect(mapStateToProps, mapDispatchToProps)(WrapperHome);

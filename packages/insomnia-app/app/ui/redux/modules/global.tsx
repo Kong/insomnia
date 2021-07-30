@@ -7,7 +7,7 @@ import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { trackEvent } from '../../../common/analytics';
-import type { GlobalActivity } from '../../../common/constants';
+import type { GlobalActivity, SpaceSortOrder } from '../../../common/constants';
 import {
   ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
@@ -57,6 +57,7 @@ export const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 export const SET_ACTIVE_SPACE = 'global/activate-space';
+export const SET_SPACE_SORT_ORDER = 'global/space-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
@@ -83,6 +84,16 @@ function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
       return action.spaceId;
+
+    default:
+      return state;
+  }
+}
+
+function spaceSortOrderReducer(state: SpaceSortOrder = 'modified-desc', action) {
+  switch (action.type) {
+    case SET_SPACE_SORT_ORDER:
+      return action.payload.sortOrder;
 
     default:
       return state;
@@ -142,6 +153,7 @@ function loginStateChangeReducer(state = false, action) {
 export interface GlobalState {
   isLoading: boolean;
   activeSpaceId: string;
+  spaceSortOrder: SpaceSortOrder;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
@@ -150,6 +162,7 @@ export interface GlobalState {
 
 export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
+  spaceSortOrder: spaceSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeSpaceId: activeSpaceReducer,
   activeWorkspaceId: activeWorkspaceReducer,
@@ -371,6 +384,17 @@ export const setActiveSpace = (spaceId: string) => {
   return {
     type: SET_ACTIVE_SPACE,
     spaceId,
+  };
+};
+
+export const setSpaceSortOrder = (sortOrder: SpaceSortOrder) => {
+  const key = `${LOCALSTORAGE_PREFIX}::space-sort-order`;
+  window.localStorage.setItem(key, JSON.stringify(sortOrder));
+  return {
+    type: SET_SPACE_SORT_ORDER,
+    payload: {
+      sortOrder,
+    },
   };
 };
 
@@ -632,20 +656,40 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
   });
 };
 
-export function initActiveSpace() {
-  let spaceId: string | null = null;
+export const initActiveSpace = () => (dispatch) => {
+  let spaceId: string = BASE_SPACE_ID;
+  let spaceSortOrder: SpaceSortOrder = 'modified-desc';
 
   try {
-    const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
-    const item = window.localStorage.getItem(key);
-    // @ts-expect-error -- TSCONVERSION don't parse item if it's null
-    spaceId = JSON.parse(item);
+    const activeSpaceIdKey = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
+    const stringifiedActiveSpaceId = window.localStorage.getItem(activeSpaceIdKey);
+
+    if (stringifiedActiveSpaceId) {
+      spaceId = JSON.parse(stringifiedActiveSpaceId);
+    }
   } catch (e) {
     // Nothing here...
   }
 
-  return setActiveSpace(spaceId || BASE_SPACE_ID);
-}
+  try {
+    const spaceSortOrderKey = `${LOCALSTORAGE_PREFIX}::space-sort-order`;
+    const stringifiedSpaceSortOrder = window.localStorage.getItem(spaceSortOrderKey);
+
+    if (stringifiedSpaceSortOrder) {
+      spaceSortOrder = JSON.parse(stringifiedSpaceSortOrder);
+    }
+  } catch (e) {
+    // Nothing here...
+  }
+
+  dispatch(setActiveSpace(spaceId || BASE_SPACE_ID));
+  dispatch({
+    type: SET_SPACE_SORT_ORDER,
+    payload: {
+      sortOrder: spaceSortOrder,
+    },
+  });
+};
 
 export function initActiveWorkspace() {
   let workspaceId: string | null = null;
