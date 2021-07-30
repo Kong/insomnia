@@ -222,13 +222,12 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     }
 
     const utcDate = new Date(cookie.expires || '').getTime();
-
     if (isNaN(utcDate)) {
       return 'Invalid Date';
     }
-
     if (utcDate > TOUGH_COOKIE_MAX_TIMESTAMP) {
-      return `expiration date "${cookie.expires}" is greater than the max allowable timestamp by our cookie implementation (tough-cookie): ${TOUGH_COOKIE_MAX_TIMESTAMP}`;
+      const maxTimestamp = new Date(TOUGH_COOKIE_MAX_TIMESTAMP).toUTCString();
+      return `expiration date "${cookie.expires}" is greater than the max allowable timestamp by our cookie implementation (tough-cookie): ${maxTimestamp}`;
     }
 
     return null;
