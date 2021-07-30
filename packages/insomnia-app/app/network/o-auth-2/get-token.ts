@@ -70,6 +70,7 @@ async function _getOAuth2AuthorizationCodeHeader(
     authentication.audience,
     authentication.resource,
     authentication.usePkce,
+    authentication.pkceMethod,
   );
   return _updateOAuth2Token(requestId, results);
 }

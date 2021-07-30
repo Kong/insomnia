@@ -1,40 +1,43 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
-import type { Environment } from '../../../models/environment';
 import type { RequestGroup } from '../../../models/request-group';
-import { Space } from '../../../models/space';
-import type { Workspace } from '../../../models/workspace';
 import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
+import { RootState } from '../../redux/modules';
+import { selectActiveEnvironment, selectActiveSpace } from '../../redux/selectors';
 import {
   DropdownButton,
   DropdownDivider,
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
+import Dropdown, { DropdownProps } from '../base/dropdown/dropdown';
 import PromptButton from '../base/prompt-button';
 import { showError, showModal } from '../modals';
 import EnvironmentEditModal from '../modals/environment-edit-modal';
 
-interface Props {
-  space: Space;
-  workspace: Workspace;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+const mapStateToProps = (state: RootState) => ({
+  activeSpace: selectActiveSpace(state),
+  activeEnvironment: selectActiveEnvironment(state),
+});
+
+interface Props extends ReduxProps, Partial<DropdownProps> {
   requestGroup: RequestGroup;
   hotKeyRegistry: HotKeyRegistry;
-  activeEnvironment?: Environment | null;
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
   handleShowSettings: (requestGroup: RequestGroup) => any,
-  handleMoveRequestGroup: (requestGroup: RequestGroup) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
 }
 
@@ -44,7 +47,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestGroupActionsDropdown extends PureComponent<Props, State> {
+export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props, State> {
   _dropdown: Dropdown | null = null;
   state: State = {
     actionPlugins: [],
@@ -93,11 +96,11 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
     }));
 
     try {
-      const { activeEnvironment, requestGroup, space } = this.props;
+      const { activeEnvironment, requestGroup, activeSpace } = this.props;
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(space._id),
+        ...pluginContexts.data.init(activeSpace._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
@@ -122,7 +125,6 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
 
   render() {
     const {
-      workspace,
       // eslint-disable-line @typescript-eslint/no-unused-vars
       requestGroup,
       // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -131,7 +133,7 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
     } = this.props;
     const { actionPlugins, loadingActions } = this.state;
     return (
-      <Dropdown ref={this._setDropdownRef} onOpen={this.onOpen} {...(other as Record<string, any>)}>
+      <Dropdown ref={this._setDropdownRef} onOpen={this.onOpen} {...other}>
         <DropdownButton>
           <i className="fa fa-caret-down" />
         </DropdownButton>
@@ -173,4 +175,4 @@ class RequestGroupActionsDropdown extends PureComponent<Props, State> {
   }
 }
 
-export default RequestGroupActionsDropdown;
+export const RequestGroupActionsDropdown = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedRequestGroupActionsDropdown);

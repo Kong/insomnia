@@ -66,6 +66,11 @@ export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());
 
+export const selectRequestMetas = createSelector(
+  selectEntitiesLists,
+  entities => entities.requestMetas,
+);
+
 export const selectSpaces = createSelector(
   selectEntitiesLists,
   entities => entities.spaces,
