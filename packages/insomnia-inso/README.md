@@ -151,6 +151,7 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 | `--testNamePattern <regex>` | `-t` | run tests that match the regex|
 | `--bail` | `-b` | abort ("bail") after the first test failure|
 | `--keepFile` | | do not delete the generated test file (useful for debugging)|
+| `--disableCertValidation` | | disable certificate validation|
 
 ### Examples
 
@@ -167,6 +168,13 @@ Scope by the document name or id
 ``` sh
 inso run test "Sample Specification" --env "OpenAPI env"
 inso run test spc_46c5a4 --env env_env_ca046a
+```
+
+Don't validate SSL certificates
+
+``` sh
+inso run test "Sample Specification" --env "OpenAPI env" --disableSSL
+inso run test spc_46c5a4 --env env_env_ca046a --disableSSL
 ```
 
 Scope by the a test suite name or id
