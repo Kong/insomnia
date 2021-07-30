@@ -65,7 +65,7 @@ class EnvironmentsDropdown extends PureComponent<Props> {
 
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.ENVIRONMENT_SHOW_SWITCH_MENU, () => {
-      this._dropdown && this._dropdown.toggle(true);
+      this._dropdown?.toggle(true);
     });
   }
 

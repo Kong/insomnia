@@ -217,11 +217,11 @@ class RequestSettingsModal extends PureComponent<Props, State> {
         defaultPreviewMode: hasDescription && !forceEditMode,
       },
       () => {
-        this.modal && this.modal.show();
+        this.modal?.show();
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor && this._editor.focus();
+            this._editor?.focus();
           }, 400);
         }
       },
@@ -229,7 +229,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   renderCheckboxInput(setting: string) {
@@ -309,7 +309,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
             <select
               // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
-              defaultValue={this.state.request && this.state.request.settingFollowRedirects}
+              defaultValue={this.state.request?.settingFollowRedirects}
               name="settingFollowRedirects"
               onChange={this._updateRequestSettingString}>
               <option value={'global'}>Use global setting</option>

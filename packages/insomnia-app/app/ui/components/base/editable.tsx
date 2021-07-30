@@ -58,8 +58,8 @@ class Editable extends PureComponent<Props, State> {
       editing: true,
     });
     setTimeout(() => {
-      this._input && this._input.focus();
-      this._input && this._input.select();
+      this._input?.focus();
+      this._input?.select();
     });
 
     if (this.props.onEditStart) {

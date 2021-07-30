@@ -630,7 +630,7 @@ class App extends PureComponent<AppProps, State> {
     });
     // Give it time to update and re-render
     setTimeout(() => {
-      this._wrapper && this._wrapper._forceRequestPaneRefresh();
+      this._wrapper?._forceRequestPaneRefresh();
     }, 300);
   }
 

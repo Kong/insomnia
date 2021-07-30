@@ -164,7 +164,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { onHide: (...args: any[]) => any }) {

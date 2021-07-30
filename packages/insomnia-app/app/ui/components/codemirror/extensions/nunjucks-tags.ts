@@ -57,7 +57,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
-    const tokens = line.filter(({ type }) => type && type.indexOf('nunjucks') >= 0);
+    const tokens = line.filter(({ type }) => type?.indexOf('nunjucks') >= 0);
 
     // Aggregate same tokens
     const newTokens: Token[] = [];

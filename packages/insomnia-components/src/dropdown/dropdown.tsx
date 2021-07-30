@@ -432,13 +432,13 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     if (this._node) {
       const button = this._node.querySelector('button');
 
-      button && button.focus();
+      button?.focus();
     }
 
     this.setState({
       open: false,
     });
-    this.props.onHide && this.props.onHide();
+    this.props.onHide?.();
   }
 
   show(filterVisible = false, forcedPosition = null) {
@@ -457,7 +457,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       filterActiveIndex: -1,
       uniquenessKey: this.state.uniquenessKey + 1,
     });
-    this.props.onOpen && this.props.onOpen();
+    this.props.onOpen?.();
   }
 
   toggle(filterVisible = false) {

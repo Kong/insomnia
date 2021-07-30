@@ -85,7 +85,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
       configs,
       activeTab: foundIndex < 0 ? 0 : foundIndex,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   renderConfigTabPanel(config: Config) {

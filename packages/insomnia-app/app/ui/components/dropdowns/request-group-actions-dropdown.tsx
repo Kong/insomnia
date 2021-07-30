@@ -87,7 +87,7 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
   }
 
   async show() {
-    this._dropdown && this._dropdown.show();
+    this._dropdown?.show();
   }
 
   async _handlePluginClick(p: RequestGroupAction) {
@@ -120,7 +120,7 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: false },
     }));
-    this._dropdown && this._dropdown.hide();
+    this._dropdown?.hide();
   }
 
   render() {

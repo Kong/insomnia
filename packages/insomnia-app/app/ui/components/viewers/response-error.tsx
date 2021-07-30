@@ -14,13 +14,13 @@ class ResponseError extends PureComponent<Props> {
     const { error, fontSize } = this.props;
     let msg: React.ReactNode = null;
 
-    if (error && error.toLowerCase().indexOf('certificate') !== -1) {
+    if (error?.toLowerCase().indexOf('certificate') !== -1) {
       msg = (
         <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Disable SSL Validation
         </button>
       );
-    } else if (error && error.toLowerCase().indexOf('getaddrinfo') !== -1) {
+    } else if (error?.toLowerCase().indexOf('getaddrinfo') !== -1) {
       msg = (
         <button className="btn btn--clicky" onClick={() => showModal(SettingsModal)}>
           Setup Network Proxy

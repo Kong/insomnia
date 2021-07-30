@@ -83,7 +83,7 @@ class AskModal extends PureComponent<{}, State> {
     this.modal?.show();
 
     setTimeout(() => {
-      this.yesButton && this.yesButton.focus();
+      this.yesButton?.focus();
     }, 100);
 
     return new Promise<boolean>(resolve => {
