@@ -282,7 +282,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
         tests,
       },
     ]);
-    const sendRequest = getSendRequestCallback(activeEnvironment ? activeEnvironment._id : null);
+    const sendRequest = getSendRequestCallback(activeEnvironment?._id);
     let results;
 
     try {
