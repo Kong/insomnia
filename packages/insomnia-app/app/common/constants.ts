@@ -280,13 +280,15 @@ export type SortOrder =
   | 'http-method'
   | 'type-desc'
   | 'type-asc';
-export const SORT_NAME_ASC: SortOrder = 'name-asc';
-export const SORT_NAME_DESC: SortOrder = 'name-desc';
-export const SORT_CREATED_ASC: SortOrder = 'created-asc';
-export const SORT_CREATED_DESC: SortOrder = 'created-desc';
-export const SORT_HTTP_METHOD: SortOrder = 'http-method';
-export const SORT_TYPE_DESC: SortOrder = 'type-desc';
-export const SORT_TYPE_ASC: SortOrder = 'type-asc';
+export const SORT_NAME_ASC = 'name-asc';
+export const SORT_NAME_DESC = 'name-desc';
+export const SORT_CREATED_ASC = 'created-asc';
+export const SORT_CREATED_DESC = 'created-desc';
+export const SORT_MODIFIED_ASC = 'modified-asc';
+export const SORT_MODIFIED_DESC = 'modified-desc';
+export const SORT_HTTP_METHOD = 'http-method';
+export const SORT_TYPE_DESC = 'type-desc';
+export const SORT_TYPE_ASC = 'type-asc';
 export const SORT_ORDERS = [
   SORT_NAME_ASC,
   SORT_NAME_DESC,
@@ -304,6 +306,29 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_HTTP_METHOD]: 'HTTP Method',
   [SORT_TYPE_DESC]: 'Folders First',
   [SORT_TYPE_ASC]: 'Requests First',
+};
+
+export type SpaceSortOrder = 
+  | 'name-asc'
+  | 'name-desc'
+  | 'created-asc'
+  | 'created-desc'
+  | 'modified-desc'
+
+export const SPACE_SORT_ORDERS = [
+  SORT_MODIFIED_DESC,
+  SORT_NAME_ASC,
+  SORT_NAME_DESC,
+  SORT_CREATED_ASC,
+  SORT_CREATED_DESC,
+];
+
+export const spaceSortOrderName: Record<SpaceSortOrder, string> = {
+  [SORT_NAME_ASC]: 'Name Ascending',
+  [SORT_NAME_DESC]: 'Name Descending',
+  [SORT_CREATED_ASC]: 'Oldest First',
+  [SORT_CREATED_DESC]: 'Newest First',
+  [SORT_MODIFIED_DESC]: 'Last Modified',
 };
 
 export function getPreviewModeName(previewMode, useLong = false) {
