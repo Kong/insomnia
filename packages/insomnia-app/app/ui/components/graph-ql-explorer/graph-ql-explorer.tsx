@@ -1,15 +1,18 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import GraphQLExplorerField from './graph-ql-explorer-field';
-import GraphQLExplorerType, { GraphQLFieldWithParentName } from './graph-ql-explorer-type';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
-import GraphQLExplorerSchema from './graph-ql-explorer-schema';
-import GraphQLExplorerEnum from './graph-ql-explorer-enum';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import DebouncedInput from '../base/debounced-input';
 import KeydownBinder from '../keydown-binder';
+import GraphQLExplorerEnum from './graph-ql-explorer-enum';
+import GraphQLExplorerField from './graph-ql-explorer-field';
+import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import GraphQLExplorerSearchResults from './graph-ql-explorer-search-results';
+import GraphQLExplorerType from './graph-ql-explorer-type';
 
 interface Props {
   handleClose: () => void;
@@ -32,6 +35,12 @@ interface State extends HistoryItem {
   filter: string;
 }
 
+export interface GraphQLFieldWithParentName extends GraphQLField<any, any> {
+  parentName?: string;
+}
+
+const SEARCH_UPDATE_DELAY_IN_MS = 300;
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLExplorer extends PureComponent<Props, State> {
   state: State = {
@@ -41,7 +50,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     filter: '',
   };
 
-  _inputRef: React.RefObject<HTMLInputElement> = React.createRef();
+  _searchInput: HTMLInputElement | HTMLTextAreaElement | null;
 
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
@@ -51,9 +60,9 @@ class GraphQLExplorer extends PureComponent<Props, State> {
   }
 
   _focusAndSelectFilterInput() {
-    if (this._inputRef.current) {
-      this._inputRef.current.focus();
-      this._inputRef.current.select();
+    if (this._searchInput) {
+      this._searchInput.focus();
+      this._searchInput.select();
     }
   }
 
@@ -188,15 +197,22 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     return (
       <div className="graphql-explorer__search">
         <div className="form-control form-control--outlined form-control--btn-right">
-          <input
-            ref={this._inputRef}
-            type="text"
-            placeholder="Search the docs..."
-            value={this.state.filter}
-            onChange={ev => this.setState({ filter: ev.target.value })}
+          <DebouncedInput 
+            onChange={value => this.setState({ filter: value })} 
+            placeholder="Search the docs..." 
+            delay={SEARCH_UPDATE_DELAY_IN_MS}
+            initialValue={this.state.filter}
+            inputRef={(input) => this._searchInput = input}
           />
           {this.state.filter && (
-            <button className="form-control__right" onClick={() => this.setState({ filter: '' })}>
+            <button
+              className="form-control__right"
+              onClick={() => {
+                if (this._searchInput) {
+                  this._searchInput.value = '';
+                  this.setState({ filter: '' });
+                }
+              }}>
               <i className="fa fa-times-circle" />
             </button>
           )}
@@ -234,12 +250,19 @@ class GraphQLExplorer extends PureComponent<Props, State> {
       child = (
         <>
           {this.renderSearchInput()}
-          <GraphQLExplorerSchema
-            onNavigateType={this._handleNavigateType}
-            onNavigateField={this._handleNavigateField}
-            schema={schema}
-            filter={this.state.filter}
-          />
+          {this.state.filter ? (
+            <GraphQLExplorerSearchResults
+              schema={schema}
+              filter={this.state.filter}
+              onNavigateType={this._handleNavigateType}
+              onNavigateField={this._handleNavigateField}
+            />
+          ) : (
+            <GraphQLExplorerSchema
+              onNavigateType={this._handleNavigateType}
+              schema={schema}
+            />
+          )}
         </>
       );
     }

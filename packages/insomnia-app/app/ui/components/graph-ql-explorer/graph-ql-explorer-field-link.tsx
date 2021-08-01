@@ -1,7 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import { GraphQLFieldWithParentName } from './graph-ql-explorer-type';
+import { GraphQLFieldWithParentName } from './graph-ql-explorer';
 
 interface Props {
   onNavigate: (type: GraphQLFieldWithParentName) => void;
