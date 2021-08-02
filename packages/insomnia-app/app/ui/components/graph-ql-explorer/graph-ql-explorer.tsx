@@ -2,6 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
 import React, { PureComponent } from 'react';
+import { createRef } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
@@ -50,7 +51,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     filter: '',
   };
 
-  _searchInput: HTMLInputElement | HTMLTextAreaElement | null;
+  _searchInput = createRef<DebouncedInput>();
 
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
@@ -61,8 +62,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
 
   _focusAndSelectFilterInput() {
     if (this._searchInput) {
-      this._searchInput.focus();
-      this._searchInput.select();
+      this._searchInput.current?.focus();
+      this._searchInput.current?.select();
     }
   }
 
@@ -193,25 +194,27 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     );
   }
 
+  _handleFilterChange(filter: string) {
+    this.setState({ filter });
+  }
+
   renderSearchInput() {
     return (
       <div className="graphql-explorer__search">
         <div className="form-control form-control--outlined form-control--btn-right">
           <DebouncedInput 
-            onChange={value => this.setState({ filter: value })} 
+            ref={this._searchInput}
+            onChange={this._handleFilterChange} 
             placeholder="Search the docs..." 
             delay={SEARCH_UPDATE_DELAY_IN_MS}
             initialValue={this.state.filter}
-            inputRef={(input) => this._searchInput = input}
           />
           {this.state.filter && (
             <button
               className="form-control__right"
               onClick={() => {
-                if (this._searchInput) {
-                  this._searchInput.value = '';
-                  this.setState({ filter: '' });
-                }
+                this._searchInput.current?.setValue('');
+                this.setState({ filter: '' });
               }}>
               <i className="fa fa-times-circle" />
             </button>

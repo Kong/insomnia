@@ -12,7 +12,6 @@ interface Props {
   delay?: number;
   placeholder?: string;
   initialValue?: string;
-  inputRef?: (ref: HTMLTextAreaElement | HTMLInputElement | null) => void;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -122,6 +121,12 @@ class DebouncedInput extends PureComponent<Props> {
     }
   }
 
+  setValue(value: string) {
+    if (this._input) {
+      this._input.value = value;
+    }
+  }
+
   render() {
     const {
       onChange,
@@ -139,7 +144,7 @@ class DebouncedInput extends PureComponent<Props> {
     if (textarea) {
       return (
         <textarea
-          ref={ref => { this._input = ref; this.props.inputRef?.(ref); }}
+          ref={ref => { this._input = ref; }}
           {...props}
           onChange={this._handleChange}
           onFocus={this._handleFocus}
@@ -149,7 +154,7 @@ class DebouncedInput extends PureComponent<Props> {
     } else {
       return (
         <input
-          ref={ref => { this._input = ref; this.props.inputRef?.(ref); }}
+          ref={ref => { this._input = ref; }}
           {...props}
           onChange={this._handleChange}
           onFocus={this._handleFocus}
