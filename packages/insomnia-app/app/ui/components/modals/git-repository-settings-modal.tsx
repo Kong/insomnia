@@ -116,14 +116,14 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
       gitRepository,
       inputs,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
     setTimeout(() => {
-      this.input && this.input.focus();
+      this.input?.focus();
     }, 100);
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {

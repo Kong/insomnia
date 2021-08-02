@@ -94,6 +94,8 @@ module.exports = {
     'react/jsx-max-props-per-line': ['error', { maximum: 1, when: 'multiline' }],
     'react/jsx-uses-react': 'error',
     'react/jsx-uses-vars': 'error',
+    'react/jsx-indent': ['error', 2],
+    'react/jsx-indent-props': ['error', 2],
     'react/prop-types': 'off',
 
     'react-hooks/exhaustive-deps': 'error',

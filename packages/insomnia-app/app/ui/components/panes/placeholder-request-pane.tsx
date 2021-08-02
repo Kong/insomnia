@@ -63,10 +63,10 @@ const PlaceholderRequestPane: FC<Props> = ({
 
           <div className="text-center pane__body--placeholder__cta">
             <button className="btn inline-block btn--clicky" onClick={handleImportFile}>
-                Import from File
+              Import from File
             </button>
             <button className="btn inline-block btn--clicky" onClick={handleCreateRequest}>
-                New Request
+              New Request
             </button>
           </div>
         </div>

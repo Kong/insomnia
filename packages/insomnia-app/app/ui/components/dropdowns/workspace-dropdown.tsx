@@ -91,7 +91,7 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: false },
     }));
-    this._dropdown && this._dropdown.hide();
+    this._dropdown?.hide();
   }
 
   async _handleDropdownOpen() {
@@ -117,7 +117,7 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
 
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.TOGGLE_MAIN_MENU, () => {
-      this._dropdown && this._dropdown.toggle(true);
+      this._dropdown?.toggle(true);
     });
   }
 

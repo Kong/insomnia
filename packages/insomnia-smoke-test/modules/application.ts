@@ -93,7 +93,7 @@ const launch = async config => {
 export const stop = async app => {
   await takeScreenshotOnFailure(app);
 
-  if (app && app.isRunning()) {
+  if (app?.isRunning()) {
     await app.stop();
   }
 };

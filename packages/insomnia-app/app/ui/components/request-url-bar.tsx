@@ -74,7 +74,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
 
   _handleMetaClickSend(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
-    this._dropdown && this._dropdown.show();
+    this._dropdown?.show();
   }
 
   _handleFormSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -149,14 +149,14 @@ class RequestUrlBar extends PureComponent<Props, State> {
     }
 
     executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
-      this._input && this._input.focus();
-      this._input && this._input.selectAll();
+      this._input?.focus();
+      this._input?.selectAll();
     });
     executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
-      this._methodDropdown && this._methodDropdown.toggle();
+      this._methodDropdown?.toggle();
     });
     executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
-      this._dropdown && this._dropdown.toggle(true);
+      this._dropdown?.toggle(true);
     });
   }
 

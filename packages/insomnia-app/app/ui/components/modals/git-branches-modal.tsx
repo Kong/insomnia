@@ -59,10 +59,10 @@ class GitBranchesModal extends PureComponent<Props, State> {
       newBranchName: '',
     });
     this._onHide = options.onHide || null;
-    this.modal && this.modal.show();
+    this.modal?.show();
     // Focus input when modal shows
     setTimeout(() => {
-      this.input && this.input.focus();
+      this.input?.focus();
     }, 100);
     // Do a fetch of remotes and refresh again. NOTE: we're doing this
     // last because it's super slow
@@ -163,7 +163,7 @@ class GitBranchesModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {

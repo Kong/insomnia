@@ -109,7 +109,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _sendChange(patch) {
     const pair = Object.assign({}, this.props.pair, patch);
-    this.props.onChange && this.props.onChange(pair);
+    this.props.onChange?.(pair);
   }
 
   _handleNameChange(name) {
@@ -125,7 +125,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
     const value = e.clipboardData.getData('text/plain');
 
-    if (value && value.includes('\n')) {
+    if (value?.includes('\n')) {
       e.preventDefault();
 
       // Insert the pasted text into the current selection.

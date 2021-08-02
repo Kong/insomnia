@@ -59,11 +59,11 @@ class CookieModifyModal extends PureComponent<Props, State> {
     this.setState({
       cookie,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   static async _saveChanges(cookieJar: CookieJar) {

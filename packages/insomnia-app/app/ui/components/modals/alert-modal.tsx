@@ -66,10 +66,10 @@ class AlertModal extends PureComponent<{}, State> {
       addCancel,
       okLabel,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
-      this._cancel && this._cancel.focus();
+      this._cancel?.focus();
     }, 100);
     this._okCallback2 = onConfirm;
     return new Promise<void>(resolve => {

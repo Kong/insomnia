@@ -103,7 +103,7 @@ class PromptModal extends PureComponent<{}, State> {
 
   _handleDeleteHint(hint: string) {
     const { onDeleteHint } = this.state;
-    onDeleteHint && onDeleteHint(hint);
+    onDeleteHint?.(hint);
     const hints = this.state.hints.filter(h => h !== hint);
     this.setState({
       hints,
@@ -143,7 +143,7 @@ class PromptModal extends PureComponent<{}, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   show({
@@ -182,7 +182,7 @@ class PromptModal extends PureComponent<{}, State> {
       hints: hints || [],
       loading: false,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
@@ -198,7 +198,7 @@ class PromptModal extends PureComponent<{}, State> {
 
       this._input.focus();
 
-      selectText && this._input && this._input.select();
+      selectText && this._input?.select();
     }, 100);
   }
 

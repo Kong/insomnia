@@ -54,11 +54,11 @@ class MarkdownEditor extends PureComponent<Props, State> {
   }
 
   focusEnd() {
-    this._editor && this._editor.focusEnd();
+    this._editor?.focusEnd();
   }
 
   focus() {
-    this._editor && this._editor.focus();
+    this._editor?.focus();
   }
 
   render() {

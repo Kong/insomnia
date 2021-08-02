@@ -55,11 +55,11 @@ class SyncHistoryModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { handleRollback: (arg0: Snapshot) => Promise<void> }) {
-    this.modal && this.modal.show();
+    this.modal?.show();
     this.handleRollback = options.handleRollback;
     await this.refreshState();
   }

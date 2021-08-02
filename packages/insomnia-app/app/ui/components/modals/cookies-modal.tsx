@@ -142,15 +142,15 @@ class CookiesModal extends PureComponent<Props, State> {
 
   async show() {
     setTimeout(() => {
-      this.filterInput && this.filterInput.focus();
+      this.filterInput?.focus();
     }, 100);
     // make sure the filter is up to date
     await this._applyFilter(this.state.filter, this.props.cookieJar.cookies);
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
