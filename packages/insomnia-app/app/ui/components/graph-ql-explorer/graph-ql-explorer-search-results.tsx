@@ -38,7 +38,7 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     this.updateSearchResults();
   }
 
-  updateSearchResults = () => {
+  updateSearchResults() {
     if (this.ref.current) {
       this.setState({
         foundFields: this.searchForFields(),
