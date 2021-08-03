@@ -24,6 +24,7 @@ import type {
   StatusCandidate,
   Team,
 } from '../types';
+import { normalizeProjectTeam, ProjectWithTeams } from './normalize-project-team';
 import * as paths from './paths';
 import {
   compareBranches,
@@ -123,6 +124,10 @@ export class VCS {
 
   async remoteProjects(teamId: string) {
     return this._queryProjects(teamId);
+  }
+
+  async remoteProjectsInAnyTeam() {
+    return this._queryProjects();
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -1113,9 +1118,7 @@ export class VCS {
     return projectShareInstructions;
   }
 
-  async _queryProjects(
-    teamId: string,
-  ): Promise<Project[]> {
+  async _queryProjects(teamId?: string) {
     const { projects } = await this._runGraphQL(
       `
         query ($teamId: ID) {
@@ -1123,6 +1126,10 @@ export class VCS {
             id
             name
             rootDocumentId
+            teams {
+              id
+              name
+            }
           }
         }
       `,
@@ -1131,7 +1138,8 @@ export class VCS {
       },
       'projects',
     );
-    return projects;
+
+    return (projects as ProjectWithTeams[]).map(normalizeProjectTeam);
   }
 
   async _queryProject(): Promise<Project | null> {
