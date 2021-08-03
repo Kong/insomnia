@@ -95,6 +95,7 @@ export function createWindow() {
       enableRemoteModule: true,
       // TODO: enable context isolation
       contextIsolation: false,
+      disableBlinkFeatures: 'Auxclick',
     },
   });
 
