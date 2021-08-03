@@ -1,13 +1,14 @@
 import * as models from '../../models';
+import { Space } from '../../models/space';
 import { Workspace, WorkspaceScopeKeys } from '../../models/workspace';
-import { ProjectWithTeam } from './normalize-project-team';
+import { Project } from '../types';
 
-export const initializeWorkspaceFromProject = (project: ProjectWithTeam) => models.initModel<Workspace>(
+export const initializeWorkspaceFromProject = (project: Project, space: Space) => models.initModel<Workspace>(
   models.workspace.type,
   {
     _id: project.rootDocumentId,
     name: project.name,
-    parentId: project.team.id,
+    parentId: space._id,
     scope: WorkspaceScopeKeys.collection,
   }
 );

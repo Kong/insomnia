@@ -30,7 +30,7 @@ export const pullProject = async ({ vcs, project, remoteSpaces }: Options) => {
 
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
-    const workspace = await initializeWorkspaceFromProject(project);
+    const workspace = await initializeWorkspaceFromProject(project, space);
     await database.upsert(workspace);
   } else {
     await vcs.pull([], space.remoteId); // There won't be any existing docs since it's a new pull
