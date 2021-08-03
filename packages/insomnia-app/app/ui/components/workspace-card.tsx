@@ -51,22 +51,23 @@ const WorkspaceCard: FC<WorkspaceCardProps> = ({
 }) => {
   let branch = lastActiveBranch;
 
-  // @TODO Figure out how we should handle a missing timestamp
-  let log = <TimeFromNow timestamp={lastModifiedTimestamp || new Date()} />;
+  let log = <TimeFromNow timestamp={lastModifiedTimestamp} />;
 
   if (hasUnsavedChanges) {
     // Show locally unsaved changes for spec
     // NOTE: this doesn't work for non-spec workspaces
     branch = lastActiveBranch + '*';
-    log = (
-      <Fragment>
-        <TimeFromNow
-          className="text-danger"
-          timestamp={modifiedLocally || new Date()}
-        />{' '}
-        (unsaved)
-      </Fragment>
-    );
+    if (modifiedLocally) {
+      log = (
+        <Fragment>
+          <TimeFromNow
+            className="text-danger"
+            timestamp={modifiedLocally}
+          />{' '}
+          (unsaved)
+        </Fragment>
+      );
+    }
   } else if (lastCommitTime) {
     // Show last commit time and author
     log = (
