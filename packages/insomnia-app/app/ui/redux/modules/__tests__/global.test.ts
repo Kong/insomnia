@@ -14,6 +14,7 @@ import {
   ACTIVITY_UNIT_TEST,
   DEPRECATED_ACTIVITY_INSOMNIA,
   GlobalActivity,
+  SORT_MODIFIED_DESC,
 } from '../../../../common/constants';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
@@ -250,25 +251,58 @@ describe('global', () => {
   });
 
   describe('initActiveSpace', () => {
-    it('should initialize from local storage', () => {
+    it('should initialize from local storage', async () => {
       const spaceId = 'id';
+      const sortOrder = SORT_MODIFIED_DESC;
+
+      const store = mockStore({
+        global: {},
+      });
+
       global.localStorage.setItem(
         `${LOCALSTORAGE_PREFIX}::activeSpaceId`,
         JSON.stringify(spaceId),
       );
-      const expectedEvent = {
+
+      global.localStorage.setItem(
+        `${LOCALSTORAGE_PREFIX}::space-sort-order`,
+        JSON.stringify(sortOrder),
+      );
+
+      const expectedEvents = [{
         type: SET_ACTIVE_SPACE,
         spaceId,
-      };
-      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+      },
+      {
+        'payload': {
+          sortOrder,
+        },
+        'type': 'global/space-sort-order',
+      }];
+
+      await store.dispatch(initActiveSpace());
+
+      expect(store.getActions()).toEqual(expectedEvents)
     });
 
-    it('should default to base space if not exist', () => {
-      const expectedEvent = {
+    it('should default to base space if not exist', async () => {
+      const store = mockStore({
+        global: {},
+      });
+
+      const expectedEvents = [{
         type: SET_ACTIVE_SPACE,
         spaceId: BASE_SPACE_ID,
-      };
-      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+      },
+      {
+        'payload': {
+          'sortOrder': 'modified-desc',
+        },
+        'type': 'global/space-sort-order',
+      }];
+
+      await store.dispatch(initActiveSpace());
+      expect(store.getActions()).toEqual(expectedEvents);
     });
   });
 
