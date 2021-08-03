@@ -282,7 +282,7 @@ describe('global', () => {
 
       await store.dispatch(initActiveSpace());
 
-      expect(store.getActions()).toEqual(expectedEvents)
+      expect(store.getActions()).toEqual(expectedEvents);
     });
 
     it('should default to base space if not exist', async () => {
