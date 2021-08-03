@@ -2,7 +2,6 @@ import { Breadcrumb, Header } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'react';
 
 import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
-import { strings } from '../../common/strings';
 import { isCollection, isDesign } from '../../models/workspace';
 import coreLogo from '../images/insomnia-core-logo.png';
 import ActivityToggle from './activity-toggle';
@@ -54,15 +53,18 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
     />
   );
 
+  const crumbs = [
+    { id: 'home', node: activeSpace.name, onClick: homeCallback },
+    { id: 'workspace', node: <Fragment key="workspace-dd">{workspace}</Fragment> },
+  ];
+
   return (
     <Header
       className="app-header theme--app-header"
       gridLeft={
         <Fragment>
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-          <Breadcrumb
-            crumbs={[{ id: 'home', node: strings.home.singular, onClick: homeCallback },
-              { id: 'workspace', node: <Fragment key="workspace-dd">{workspace}</Fragment> }]}/>
+          <Breadcrumb crumbs={crumbs}/>
         </Fragment>
       }
       gridCenter={
