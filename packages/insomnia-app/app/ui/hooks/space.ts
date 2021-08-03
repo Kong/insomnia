@@ -3,8 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import { database } from '../../common/database';
-import * as models from '../../models';
-import { Space } from '../../models/space';
+import { initializeSpaceFromTeam } from '../../sync/vcs/initialize-space-from-team';
 import { VCS } from '../../sync/vcs/vcs';
 import { selectIsLoggedIn } from '../redux/selectors';
 import { useSafeState } from './use-safe-state';
@@ -18,14 +17,7 @@ export const useRemoteSpaces = (vcs?: VCS) => {
       setLoading(true);
 
       const teams = await vcs.teams();
-      const spaces = await Promise.all(teams.map(team => models.initModel<Space>(
-        models.space.type,
-        {
-          _id: `${models.space.prefix}_${team.id}`,
-          remoteId: team.id,
-          name: team.name,
-        },
-      )));
+      const spaces = await Promise.all(teams.map(initializeSpaceFromTeam));
       await database.batchModifyDocs({ upsert: spaces });
 
       setLoading(false);
