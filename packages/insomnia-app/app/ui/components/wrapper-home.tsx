@@ -263,7 +263,7 @@ class WrapperHome extends PureComponent<Props, State> {
         docLog={log}
         docMenu={docMenu}
         docFormat={format}
-        onClick={() => this.props.handleActivateWorkspace(workspace)}
+        onClick={() => this.props.handleActivateWorkspace({ workspace })}
       />
     );
     const renderedCard: RenderedCard = {

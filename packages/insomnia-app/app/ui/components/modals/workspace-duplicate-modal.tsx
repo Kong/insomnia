@@ -81,7 +81,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
       await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }
 
-    dispatch(activateWorkspace(newWorkspace));
+    dispatch(activateWorkspace({ workspace: newWorkspace }));
     hide();
     onDone?.();
   }, [dispatch, hide, isLoggedIn, onDone, spaces, vcs, workspace]);
