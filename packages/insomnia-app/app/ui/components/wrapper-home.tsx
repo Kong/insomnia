@@ -18,8 +18,6 @@ import { unreachableCase } from 'ts-assert-unreachable';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   AUTOBIND_CFG,
-  GlobalActivity,
-  isWorkspaceActivity,
   SpaceSortOrder,
 } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
@@ -27,13 +25,9 @@ import { executeHotKey } from '../../common/hotkeys-listener';
 import { isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
-import * as models from '../../models';
 import { ApiSpec } from '../../models/api-spec';
-import {
-  isDesign,
-  Workspace,
-  WorkspaceScopeKeys,
-} from '../../models/workspace';
+import { isRemoteSpace } from '../../models/space';
+import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
@@ -41,12 +35,8 @@ import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
 import { setSpaceSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
-import {
-  importClipBoard,
-  importFile,
-  importUri,
-} from '../redux/modules/import';
-import { createWorkspace } from '../redux/modules/workspace';
+import { importClipBoard, importFile, importUri } from '../redux/modules/import';
+import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
 import { selectSpaceSortOrder } from '../redux/selectors';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
@@ -196,15 +186,10 @@ class WrapperHome extends PureComponent<Props, State> {
 
     handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
-      onCreate: async (workspace) => {
-        const spaceRemoteId = activeSpace?.remoteId;
-
+      onCreate: async workspace => {
         // Don't mark for sync if not logged in at the time of creation
-        if (isLoggedIn && vcs && spaceRemoteId) {
-          await initializeLocalProjectAndMarkForSync({
-            vcs: vcs.newInstance(),
-            workspace,
-          });
+        if (isLoggedIn && vcs && isRemoteSpace(activeSpace)) {
+          await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
     });
@@ -248,22 +233,6 @@ class WrapperHome extends PureComponent<Props, State> {
         this._filterInput.focus();
       }
     });
-  }
-
-  async _handleClickCard(id: string, defaultActivity: GlobalActivity) {
-    const { handleSetActiveWorkspace, handleSetActiveActivity } =
-      this.props.wrapperProps;
-    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(
-      id
-    );
-
-    if (!activeActivity || !isWorkspaceActivity(activeActivity)) {
-      handleSetActiveActivity(defaultActivity);
-    } else {
-      handleSetActiveActivity(activeActivity);
-    }
-
-    handleSetActiveWorkspace(id);
   }
 
   renderCreateMenu() {
@@ -349,7 +318,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   render() {
-    const { sortOrder, wrapperProps } = this.props;
+    const { sortOrder, wrapperProps, handleActivateWorkspace } = this.props;
     const {
       workspaces,
       isLoading,
@@ -374,7 +343,7 @@ class WrapperHome extends PureComponent<Props, State> {
           {...props}
           key={props.apiSpec._id}
           activeSpace={activeSpace}
-          onSelect={this._handleClickCard}
+          onSelect={() => handleActivateWorkspace(props.workspace)}
           filter={filter}
         />
       ));
@@ -450,18 +419,20 @@ const mapDispatchToProps = (dispatch) => {
       importClipBoard,
       importUri,
       setSpaceSortOrder,
+      activateWorkspace,
     },
     dispatch
   );
 
-  return {
+  return ({
     handleCreateWorkspace: bound.createWorkspace,
     handleGitCloneWorkspace: bound.cloneGitRepository,
     handleImportFile: bound.importFile,
     handleImportUri: bound.importUri,
     handleImportClipboard: bound.importClipBoard,
     setSpaceSortOrder: bound.setSpaceSortOrder,
-  };
+    handleActivateWorkspace: bound.activateWorkspace,
+  });
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(WrapperHome);

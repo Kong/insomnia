@@ -101,11 +101,11 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
       onAddKeyCombination: onAddKeyCombination,
       pressedKeyCombination: null,
     });
-    this._modal && this._modal.show();
+    this._modal?.show();
   }
 
   hide() {
-    this._modal && this._modal.hide();
+    this._modal?.hide();
   }
 
   render() {

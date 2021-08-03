@@ -41,7 +41,6 @@ class PageLayout extends PureComponent<Props> {
       handleInitializeEntities,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
-      handleSetActiveWorkspace,
       handleSetSidebarRef,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
@@ -59,7 +58,7 @@ class PageLayout extends PureComponent<Props> {
       workspaces,
     } = wrapperProps;
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
-    const paneTwo = renderPaneTwo && renderPaneTwo();
+    const paneTwo = renderPaneTwo?.();
     const gridRows = paneTwo
       ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
       : 'auto 1fr';
@@ -114,7 +113,6 @@ class PageLayout extends PureComponent<Props> {
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
-              handleSetActiveWorkspace={handleSetActiveWorkspace}
               hidden={sidebarHidden || false}
               hotKeyRegistry={settings.hotKeyRegistry}
               isLoading={isLoading}

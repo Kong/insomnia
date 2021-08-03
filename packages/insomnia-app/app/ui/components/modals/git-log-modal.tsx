@@ -40,11 +40,11 @@ class GitLogModal extends PureComponent<Props, State> {
       logs,
       branch,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   renderLogEntryRow(entry: GitLogEntry) {

@@ -1,6 +1,5 @@
 import { SvgIcon } from 'insomnia-components';
 import React, { FC, useCallback, useState } from 'react';
-import { useDispatch } from 'react-redux';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -16,10 +15,10 @@ import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { setActiveWorkspace } from '../../redux/modules/global';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import { showError, showModal, showPrompt } from '../modals';
 import AskModal from '../modals/ask-modal';
+import { showWorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal';
 
 interface Props {
   workspace: Workspace;
@@ -30,21 +29,9 @@ interface Props {
 const spinner = <i className="fa fa-refresh fa-spin" />;
 
 const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
-  const dispatch = useDispatch();
-
   const handleDuplicate = useCallback(() => {
-    showPrompt({
-      title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
-      defaultValue: getWorkspaceName(workspace, apiSpec),
-      submitName: 'Create',
-      selectText: true,
-      label: 'New Name',
-      onComplete: async newName => {
-        const newWorkspace = await workspaceOperations.duplicate(workspace, newName);
-        dispatch(setActiveWorkspace(newWorkspace._id));
-      },
-    });
-  }, [apiSpec, workspace, dispatch]);
+    showWorkspaceDuplicateModal({ workspace, apiSpec });
+  }, [apiSpec, workspace]);
 
   const handleRename = useCallback(() => {
     showPrompt({

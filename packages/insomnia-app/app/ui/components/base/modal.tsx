@@ -17,6 +17,7 @@ export interface ModalProps {
   noEscape?: boolean,
   dontFocus?: boolean,
   closeOnKeyCodes?: any[],
+  onShow?: Function,
   onHide?: Function,
   onCancel?: Function,
   onKeyDown?: Function,
@@ -47,7 +48,7 @@ class Modal extends PureComponent<ModalProps, State> {
       return;
     }
 
-    this.props.onKeyDown && this.props.onKeyDown(e);
+    this.props.onKeyDown?.(e);
 
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
@@ -62,7 +63,7 @@ class Modal extends PureComponent<ModalProps, State> {
     if (pressedEscape || pressedCloseButton) {
       e.preventDefault();
       this.hide();
-      this.props.onCancel && this.props.onCancel();
+      this.props.onCancel?.();
     }
   }
 
@@ -89,7 +90,7 @@ class Modal extends PureComponent<ModalProps, State> {
 
     if (shouldHide) {
       this.hide();
-      this.props.onCancel && this.props.onCancel();
+      this.props.onCancel?.();
     }
   }
 
@@ -107,13 +108,15 @@ class Modal extends PureComponent<ModalProps, State> {
       forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
     });
 
+    this.props.onShow?.();
+
     if (this.props.dontFocus) {
       return;
     }
 
     // Allow instance-based onHide method
     this.onHide = options?.onHide ?? null;
-    setTimeout(() => this._node && this._node.focus());
+    setTimeout(() => this._node?.focus());
   }
 
   toggle() {
@@ -132,8 +135,8 @@ class Modal extends PureComponent<ModalProps, State> {
     this.setState({
       open: false,
     });
-    this.props.onHide && this.props.onHide();
-    this.onHide && this.onHide();
+    this.props.onHide?.();
+    this.onHide?.();
   }
 
   render() {

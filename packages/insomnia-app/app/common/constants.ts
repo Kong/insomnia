@@ -141,13 +141,32 @@ export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
-export const isWorkspaceActivity = (activity: string): activity is GlobalActivity => {
+export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity => 
+  isDesignActivity(activity) || isCollectionActivity(activity);
+
+export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
     case ACTIVITY_SPEC:
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
       return true;
 
+    case ACTIVITY_HOME:
+    case ACTIVITY_ONBOARDING:
+    case ACTIVITY_MIGRATION:
+    case ACTIVITY_ANALYTICS:
+    default:
+      return false;
+  }
+};
+
+export const isCollectionActivity = (activity?: string): activity is GlobalActivity => {
+  switch (activity) {
+    case ACTIVITY_DEBUG:
+      return true;
+      
+    case ACTIVITY_SPEC:
+    case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
     case ACTIVITY_ONBOARDING:
     case ACTIVITY_MIGRATION:

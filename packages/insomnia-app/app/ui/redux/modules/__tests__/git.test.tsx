@@ -12,6 +12,7 @@ import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_SPEC } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
+import { BASE_SPACE_ID } from '../../../../models/space';
 import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
 import { MemClient } from '../../../../sync/git/mem-client';
@@ -23,7 +24,7 @@ import {
   getAndClearShowPromptMockArgs,
 } from '../../../../test-utils';
 import { cloneGitRepository, setupGitRepository } from '../git';
-import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_WORKSPACE } from '../global';
+import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE, SET_ACTIVE_WORKSPACE } from '../global';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');
@@ -118,6 +119,10 @@ describe('git', () => {
         },
         {
           type: LOAD_STOP,
+        },
+        {
+          type: SET_ACTIVE_SPACE,
+          spaceId: BASE_SPACE_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,

@@ -51,7 +51,7 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
 
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HISTORY, () => {
-      this._dropdown && this._dropdown.toggle(true);
+      this._dropdown?.toggle(true);
     });
   }
 

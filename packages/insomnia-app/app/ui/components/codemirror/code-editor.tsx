@@ -928,7 +928,7 @@ class CodeEditor extends Component<Props, State> {
 
   _codemirrorEndCompletion() {
     if (this._autocompleteDebounce !== null) {
-      clearInterval(this._autocompleteDebounce);
+      clearTimeout(this._autocompleteDebounce);
     }
   }
 
@@ -944,6 +944,13 @@ class CodeEditor extends Component<Props, State> {
       if (this._autocompleteDebounce !== null) {
         clearTimeout(this._autocompleteDebounce);
       }
+
+      // You don't want to re-trigger the hint dropdown if it's already open
+      // for other reasons, like forcing its display with Ctrl+Space
+      if (this.codeMirror?.isHintDropdownActive()) {
+        return;
+      }
+
       this._autocompleteDebounce = setTimeout(() => {
         doc.execCommand('autocomplete');
       }, 700);

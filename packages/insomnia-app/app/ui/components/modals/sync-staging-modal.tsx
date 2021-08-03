@@ -119,7 +119,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     const success = await this._handleTakeSnapshot();
 
     if (success) {
-      this._handlePush && this._handlePush();
+      this._handlePush?.();
     }
   }
 
@@ -139,7 +139,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
       return false;
     }
 
-    this._onSnapshot && this._onSnapshot();
+    this._onSnapshot?.();
     await this.refreshMainAttributes({
       message: '',
       error: '',
@@ -190,12 +190,12 @@ class SyncStagingModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { onSnapshot?: () => any; handlePush: () => Promise<void> }) {
     const { vcs, syncItems } = this.props;
-    this.modal && this.modal.show();
+    this.modal?.show();
     // @ts-expect-error -- TSCONVERSION
     this._onSnapshot = options.onSnapshot;
     this._handlePush = options.handlePush;
@@ -217,7 +217,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
     const stage = await vcs.stage(status.stage, toStage);
     await this.refreshMainAttributes({}, stage);
-    this.textarea && this.textarea.focus();
+    this.textarea?.focus();
   }
 
   static renderOperation(entry: StageEntry, type: string, changes: string[]) {

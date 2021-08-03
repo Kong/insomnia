@@ -16,7 +16,6 @@ interface Props {
   children: ReactNode;
   environmentHighlightColorStyle: string;
   handleSetActiveEnvironment: (...args: any[]) => any;
-  handleSetActiveWorkspace: (...args: any[]) => any;
   hidden: boolean;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;

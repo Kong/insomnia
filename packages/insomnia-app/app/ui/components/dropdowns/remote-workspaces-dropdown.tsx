@@ -17,7 +17,7 @@ interface Props {
 
 const PullButton: FC<{disabled?: boolean, className?: string}> = ({ disabled, className }) => (
   <Button className={className} disabled={disabled}>
-      Pull
+    Pull
     <i className="fa fa-caret-down pad-left-sm" />
   </Button>
 );

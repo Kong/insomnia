@@ -23,6 +23,7 @@ describe('client_credentials', () => {
       bodyPath,
       JSON.stringify({
         access_token: 'token_123',
+        refresh_token: 'token_456',
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
@@ -100,6 +101,7 @@ describe('client_credentials', () => {
     expect(result).toEqual({
       access_token: 'token_123',
       id_token: null,
+      refresh_token: 'token_456',
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,
@@ -118,6 +120,7 @@ describe('client_credentials', () => {
       bodyPath,
       JSON.stringify({
         access_token: 'token_123',
+        refresh_token: 'token_456',
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
@@ -199,6 +202,7 @@ describe('client_credentials', () => {
     expect(result).toEqual({
       access_token: 'token_123',
       id_token: null,
+      refresh_token: 'token_456',
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,

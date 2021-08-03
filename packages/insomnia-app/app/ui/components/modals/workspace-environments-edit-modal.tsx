@@ -179,7 +179,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     }
 
     await this._load(workspace);
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   async _load(workspace: Workspace | null, environmentToSelect: Environment | null = null) {

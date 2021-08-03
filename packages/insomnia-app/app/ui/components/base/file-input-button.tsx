@@ -20,11 +20,11 @@ class FileInputButton extends PureComponent<Props> {
   _button: HTMLButtonElement | null = null;
 
   focus() {
-    this._button && this._button.focus();
+    this._button?.focus();
   }
 
   focusEnd() {
-    this._button && this._button.focus();
+    this._button?.focus();
   }
 
   _setRef(n: HTMLButtonElement) {

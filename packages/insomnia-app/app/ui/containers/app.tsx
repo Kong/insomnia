@@ -32,7 +32,6 @@ import {
 } from '../../common/constants';
 import { database as db } from '../../common/database';
 import { getDataDirectory } from '../../common/electron-helpers';
-import { getWorkspaceLabel } from '../../common/get-workspace-label';
 import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
@@ -48,13 +47,12 @@ import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
-import getWorkspaceName from '../../models/helpers/get-workspace-name';
 import * as requestOperations from '../../models/helpers/request-operations';
-import * as workspaceOperations from '../../models/helpers/workspace-operations';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
+import { isNotBaseSpace } from '../../models/space';
 import { isCollection, isWorkspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import * as network from '../../network/network';
@@ -97,7 +95,6 @@ import {
   loadRequestStop,
   newCommand,
   setActiveActivity,
-  setActiveWorkspace,
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
 import {
@@ -501,32 +498,6 @@ class App extends PureComponent<AppProps, State> {
     });
   }
 
-  _workspaceDuplicateById(callback: () => void, workspaceId: string) {
-    const workspace = this.props.workspaces.find(w => w._id === workspaceId);
-    const apiSpec = this.props.apiSpecs.find(s => s.parentId === workspaceId);
-    showPrompt({
-      // @ts-expect-error -- TSCONVERSION workspace can be null
-      title: `Duplicate ${getWorkspaceLabel(workspace).singular}`,
-      // @ts-expect-error -- TSCONVERSION workspace can be null
-      defaultValue: getWorkspaceName(workspace, apiSpec),
-      submitName: 'Create',
-      selectText: true,
-      label: 'New Name',
-      onComplete: async name => {
-        // @ts-expect-error -- TSCONVERSION workspace can be null
-        const newWorkspace = await workspaceOperations.duplicate(workspace, name);
-        await this.props.handleSetActiveWorkspace(newWorkspace._id);
-        callback();
-      },
-    });
-  }
-
-  _workspaceDuplicate(callback: () => void) {
-    if (this.props.activeWorkspace) {
-      this._workspaceDuplicateById(callback, this.props.activeWorkspace._id);
-    }
-  }
-
   async _fetchRenderContext() {
     const { activeEnvironment, activeRequest, activeWorkspace } = this.props;
     const ancestors = await render.getRenderContextAncestors(activeRequest || activeWorkspace);
@@ -659,7 +630,7 @@ class App extends PureComponent<AppProps, State> {
     });
     // Give it time to update and re-render
     setTimeout(() => {
-      this._wrapper && this._wrapper._forceRequestPaneRefresh();
+      this._wrapper?._forceRequestPaneRefresh();
     }, 300);
   }
 
@@ -1367,7 +1338,9 @@ class App extends PureComponent<AppProps, State> {
               const bufferId = await db.bufferChanges();
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await db.all(type);
-              await db.batchModifyDocs({ remove: allEntities });
+              const filteredEntites = allEntities
+                .filter(isNotBaseSpace); // don't clear the base space
+              await db.batchModifyDocs({ remove: filteredEntites });
               db.flushChanges(bufferId);
             }
           },
@@ -1389,7 +1362,9 @@ class App extends PureComponent<AppProps, State> {
                 .reverse().map(async type => {
                   console.log(`[developer] clearing all "${type}" entities`);
                   const allEntities = await db.all(type);
-                  await db.batchModifyDocs({ remove: allEntities });
+                  const filteredEntites = allEntities
+                    .filter(isNotBaseSpace); // don't clear the base space
+                  await db.batchModifyDocs({ remove: filteredEntites });
                 });
               await Promise.all(promises);
               db.flushChanges(bufferId);
@@ -1565,7 +1540,6 @@ class App extends PureComponent<AppProps, State> {
                 handleGetRenderContext={this._handleGetRenderContext}
                 handleDuplicateRequest={this._requestDuplicate}
                 handleDuplicateRequestGroup={App._requestGroupDuplicate}
-                handleDuplicateWorkspace={this._workspaceDuplicate}
                 handleCreateRequestGroup={this._requestGroupCreate}
                 handleGenerateCode={App._handleGenerateCode}
                 handleGenerateCodeForActiveRequest={this._handleGenerateCodeForActiveRequest}
@@ -1600,88 +1574,6 @@ class App extends PureComponent<AppProps, State> {
         </GrpcProvider>
       </KeydownBinder>
     );
-  }
-}
-
-async function _moveDoc(docToMove, parentId, targetId, targetOffset) {
-  // Nothing to do. We are in the same spot as we started
-  if (docToMove._id === targetId) {
-    return;
-  }
-
-  // Don't allow dragging things into itself or children. This will disconnect
-  // the node from the tree and cause the item to no longer show in the UI.
-  const descendents = await db.withDescendants(docToMove);
-
-  for (const doc of descendents) {
-    if (doc._id === parentId) {
-      return;
-    }
-  }
-
-  function __updateDoc(doc, patch) {
-    // @ts-expect-error -- TSCONVERSION
-    return models.getModel(docToMove.type).update(doc, patch);
-  }
-
-  if (targetId === null) {
-    // We are moving to an empty area. No sorting required
-    await __updateDoc(docToMove, {
-      parentId,
-    });
-    return;
-  }
-
-  // NOTE: using requestToTarget's parentId so we can switch parents!
-  const docs = [
-    ...(await models.request.findByParentId(parentId)),
-    ...(await models.grpcRequest.findByParentId(parentId)),
-    ...(await models.requestGroup.findByParentId(parentId)),
-  ].sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));
-
-  // Find the index of doc B so we can re-order and save everything
-  for (let i = 0; i < docs.length; i++) {
-    const doc = docs[i];
-
-    if (doc._id === targetId) {
-      let before, after;
-
-      if (targetOffset < 0) {
-        // We're moving to below
-        before = docs[i];
-        after = docs[i + 1];
-      } else {
-        // We're moving to above
-        before = docs[i - 1];
-        after = docs[i];
-      }
-
-      const beforeKey = before ? before.metaSortKey : docs[0].metaSortKey - 100;
-      const afterKey = after ? after.metaSortKey : docs[docs.length - 1].metaSortKey + 100;
-
-      if (Math.abs(afterKey - beforeKey) < 0.000001) {
-        // If sort keys get too close together, we need to redistribute the list. This is
-        // not performant at all (need to update all siblings in DB), but it is extremely rare
-        // anyway
-        console.log(`[app] Recreating Sort Keys ${beforeKey} ${afterKey}`);
-        await db.bufferChanges(300);
-        docs.map((r, i) =>
-          __updateDoc(r, {
-            metaSortKey: i * 100,
-            parentId,
-          }),
-        );
-      } else {
-        const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-
-        __updateDoc(docToMove, {
-          metaSortKey,
-          parentId,
-        });
-      }
-
-      break;
-    }
   }
 }
 
@@ -1808,7 +1700,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     importUri: handleImportUri,
     loadRequestStart: handleStartLoading,
     loadRequestStop: handleStopLoading,
-    setActiveWorkspace: handleSetActiveWorkspace,
     newCommand: handleCommand,
     setActiveActivity: handleSetActiveActivity,
     goToNextActivity: handleGoToNextActivity,
@@ -1819,7 +1710,6 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
     loadRequestStart,
     loadRequestStop,
     newCommand,
-    setActiveWorkspace,
     setActiveActivity,
     goToNextActivity,
     exportRequestsToFile,
@@ -1828,14 +1718,12 @@ const mapDispatchToProps = (dispatch: Dispatch<Action<any>>) => {
   return {
     handleCommand,
     handleImportUri,
-    handleSetActiveWorkspace,
     handleSetActiveActivity,
     handleStartLoading,
     handleStopLoading,
     handleGoToNextActivity,
     handleExportRequestsToFile,
     handleInitializeEntities,
-    handleMoveDoc: _moveDoc, // TODO this doesn't use dispatch.. it's unclear why it needs to be here.
   };
 };
 

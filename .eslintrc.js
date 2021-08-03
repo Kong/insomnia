@@ -56,6 +56,7 @@ module.exports = {
   ],
   rules: {
     'array-bracket-spacing': 'error',
+    'brace-style': 'off', // successor('@typescript-eslint/brace-style')
     'camelcase': ['error', { allow: ['__export_format', '__export_date', '__export_source'] }],
     'comma-dangle': ['error', 'always-multiline'],
     'comma-spacing': 'error',
@@ -63,6 +64,7 @@ module.exports = {
     'default-case-last': 'error',
     'filenames/match-exported': ['error', 'kebab'],
     'indent': ['error', 2, { SwitchCase: 1 }],
+    'keyword-spacing': 'off', // successor('@typescript-eslint/keyword-spacing')
     'no-async-promise-executor': 'off',
     'no-case-declarations': 'off',
     'no-duplicate-imports': 'off',
@@ -92,6 +94,8 @@ module.exports = {
     'react/jsx-max-props-per-line': ['error', { maximum: 1, when: 'multiline' }],
     'react/jsx-uses-react': 'error',
     'react/jsx-uses-vars': 'error',
+    'react/jsx-indent': ['error', 2],
+    'react/jsx-indent-props': ['error', 2],
     'react/prop-types': 'off',
 
     'react-hooks/exhaustive-deps': 'error',
@@ -99,8 +103,10 @@ module.exports = {
 
     '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
     '@typescript-eslint/ban-types': 'off',
+    '@typescript-eslint/brace-style': ['error', '1tbs', { 'allowSingleLine': true }],
     '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
     '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/keyword-spacing': 'error',
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
     '@typescript-eslint/no-redeclare': 'error',

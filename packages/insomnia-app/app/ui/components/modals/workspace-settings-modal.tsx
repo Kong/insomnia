@@ -19,6 +19,7 @@ import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import HelpTooltip from '../help-tooltip';
 import MarkdownEditor from '../markdown-editor';
+import { showWorkspaceDuplicateModal } from './workspace-duplicate-modal';
 
 interface Props {
   clientCertificates: ClientCertificate[];
@@ -33,7 +34,6 @@ interface Props {
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleRemoveWorkspace: Function;
-  handleDuplicateWorkspace: Function;
   handleClearAllResponses: Function;
 }
 
@@ -90,9 +90,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
   }
 
   _handleDuplicateWorkspace() {
-    this.props.handleDuplicateWorkspace(() => {
-      this.hide();
-    });
+    const { workspace, apiSpec } = this.props;
+    showWorkspaceDuplicateModal({ workspace, apiSpec, onDone: this.hide });
   }
 
   _handleToggleCertificateForm() {
@@ -196,11 +195,11 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
       defaultPreviewMode: hasDescription,
       showAddCertificateForm: false,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   renderModalHeader() {

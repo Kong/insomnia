@@ -42,7 +42,7 @@ class WrapperModal extends PureComponent<{}, State> {
       skinny: !!skinny,
       wide: !!wide,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   render() {
