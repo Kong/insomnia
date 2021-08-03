@@ -7,7 +7,7 @@ import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { BASE_SPACE_ID } from '../../models/space';
+import { BASE_SPACE_ID, isRemoteSpace } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 
@@ -74,6 +74,11 @@ export const selectRequestMetas = createSelector(
 export const selectSpaces = createSelector(
   selectEntitiesLists,
   entities => entities.spaces,
+);
+
+export const selectRemoteSpaces = createSelector(
+  selectSpaces,
+  spaces => spaces.filter(isRemoteSpace),
 );
 
 export const selectActiveSpace = createSelector(

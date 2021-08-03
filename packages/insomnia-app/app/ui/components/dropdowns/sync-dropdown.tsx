@@ -1,6 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG, DEFAULT_BRANCH_NAME } from '../../../common/constants';
@@ -11,10 +13,14 @@ import * as models from '../../../models';
 import { isRemoteSpace, Space } from '../../../models/space';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
-import type { Project, Snapshot, Status, StatusCandidate } from '../../../sync/types';
+import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
+import { ProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../../sync/vcs/pull-project';
 import { VCS } from '../../../sync/vcs/vcs';
+import { RootState } from '../../redux/modules';
+import { activateWorkspace } from '../../redux/modules/workspace';
+import { selectRemoteSpaces } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import PromptButton from '../base/prompt-button';
@@ -33,7 +39,20 @@ const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
 // Refresh dropdown periodically
 const REFRESH_PERIOD = 1000 * 60 * 1;
 
-interface Props {
+type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+
+const mapStateToProps = (state: RootState) => ({
+  remoteSpaces: selectRemoteSpaces(state),
+});
+
+const mapDispatchToProps = dispatch => {
+  const bound = bindActionCreators({ activateWorkspace }, dispatch);
+  return {
+    handleActivateWorkspace: bound.activateWorkspace,
+  };
+};
+
+interface Props extends ReduxProps {
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
   space: Space;
@@ -55,11 +74,11 @@ interface State {
   loadingPull: boolean;
   loadingProjectPull: boolean;
   loadingPush: boolean;
-  remoteProjects: Project[];
+  remoteProjects: ProjectWithTeam[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncDropdown extends PureComponent<Props, State> {
+class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   checkInterval: NodeJS.Timeout | null = null;
   refreshOnNextSyncItems = false;
   lastUserActivity = Date.now();
@@ -88,7 +107,7 @@ class SyncDropdown extends PureComponent<Props, State> {
     const { vcs, syncItems, workspace, space } = this.props;
 
     if (!vcs.hasProject() && isRemoteSpace(space)) {
-      const remoteProjects = await vcs.remoteProjects(space._id);
+      const remoteProjects = await vcs.remoteProjectsInAnyTeam();
       const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({
         remoteProjects: matchedProjects,
@@ -292,13 +311,22 @@ class SyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSetProject(p: Project) {
-    const { vcs, space } = this.props;
+  async _handleSetProject(p: ProjectWithTeam) {
+    const { vcs, remoteSpaces, space, workspace, handleActivateWorkspace } = this.props;
     this.setState({
       loadingProjectPull: true,
     });
 
-    await pullProject({ vcs, project: p, space });
+    const pulledIntoSpace = await pullProject({ vcs, project: p, remoteSpaces });
+    if (pulledIntoSpace._id !== space._id) {
+      // If pulled into a different space, reactivate the workspace
+      await handleActivateWorkspace({ workspaceId: workspace._id });
+      // TODO: do we need to show an alert to the user? It's pretty seamless
+      console.log('[sync] collection has been moved to the remote space to which it belongs', {
+        id: pulledIntoSpace._id,
+        name: pulledIntoSpace.name,
+      });
+    }
 
     await this.refreshMainAttributes({
       loadingProjectPull: false,
@@ -583,4 +611,5 @@ class SyncDropdown extends PureComponent<Props, State> {
   }
 }
 
+const SyncDropdown = connect(mapStateToProps, mapDispatchToProps)(UnconnectedSyncDropdown);
 export default SyncDropdown;

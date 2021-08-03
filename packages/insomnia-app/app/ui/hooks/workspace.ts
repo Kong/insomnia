@@ -3,16 +3,17 @@ import { useSelector } from 'react-redux';
 
 import { isRemoteSpace } from '../../models/space';
 import { Project } from '../../sync/types';
+import { ProjectWithTeam } from '../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../sync/vcs/pull-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
-import { selectActiveSpace, selectAllWorkspaces, selectIsLoggedIn } from '../redux/selectors';
+import { selectActiveSpace, selectAllWorkspaces, selectIsLoggedIn, selectRemoteSpaces } from '../redux/selectors';
 import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';
 
 interface State {
   loading: boolean;
   localProjects: Project[];
-  remoteProjects: Project[];
+  remoteProjects: ProjectWithTeam[];
   pullingProjects: Record<string, boolean>;
 }
 
@@ -48,6 +49,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
   const workspaces = useSelector(selectAllWorkspaces);
   const activeSpace = useSelector(selectActiveSpace);
+  const remoteSpaces = useSelector(selectRemoteSpaces);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
 
@@ -78,7 +80,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   }), [localProjects, remoteProjects, workspaces]);
 
   // Pull a remote space
-  const pull = useCallback(async (project: Project) => {
+  const pull = useCallback(async (project: ProjectWithTeam) => {
     if (!vcs) {
       throw new Error('VCS is not defined');
     }
@@ -91,7 +93,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
       // Remove all projects for workspace first
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
 
-      await pullProject({ vcs: newVCS, project, space: activeSpace });
+      await pullProject({ vcs: newVCS, project, remoteSpaces });
 
       await refresh();
     } catch (err) {
@@ -102,7 +104,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     } finally {
       dispatch({ type: 'stopPullingProject', projectId: project.id });
     }
-  }, [vcs, refresh, activeSpace, dispatch]);
+  }, [vcs, refresh, remoteSpaces, dispatch]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {
