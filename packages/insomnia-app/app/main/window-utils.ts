@@ -121,6 +121,11 @@ export function createWindow() {
     e.preventDefault();
     clickLink(url);
   });
+
+  mainWindow?.webContents.on('new-window', (e) => {
+    e.preventDefault();
+  });
+
   // Load the html of the app.
   const url = process.env.APP_RENDER_URL;
   const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
