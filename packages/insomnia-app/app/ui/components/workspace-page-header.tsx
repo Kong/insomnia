@@ -2,6 +2,7 @@ import { Breadcrumb, Header } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'react';
 
 import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
+import { strings } from '../../common/strings';
 import { isCollection, isDesign } from '../../models/workspace';
 import coreLogo from '../images/insomnia-core-logo.png';
 import ActivityToggle from './activity-toggle';
@@ -54,7 +55,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
   );
 
   const crumbs = [
-    { id: 'home', node: activeSpace.name, onClick: homeCallback },
+    { id: 'home', node: strings.home.singular, onClick: homeCallback },
     { id: 'workspace', node: <Fragment key="workspace-dd">{workspace}</Fragment> },
   ];
 
