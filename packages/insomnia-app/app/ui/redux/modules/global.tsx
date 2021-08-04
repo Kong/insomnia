@@ -656,20 +656,23 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
   });
 };
 
-export const initActiveSpace = () => (dispatch) => {
-  let spaceId: string = BASE_SPACE_ID;
-  let spaceSortOrder: SpaceSortOrder = 'modified-desc';
+export function initActiveSpace() {
+  let spaceId: string | null = null;
 
   try {
-    const activeSpaceIdKey = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
-    const stringifiedActiveSpaceId = window.localStorage.getItem(activeSpaceIdKey);
-
-    if (stringifiedActiveSpaceId) {
-      spaceId = JSON.parse(stringifiedActiveSpaceId);
-    }
+    const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
+    const item = window.localStorage.getItem(key);
+    // @ts-expect-error -- TSCONVERSION don't parse item if it's null
+    spaceId = JSON.parse(item);
   } catch (e) {
     // Nothing here...
   }
+
+  return setActiveSpace(spaceId || BASE_SPACE_ID);
+}
+
+export function initSpaceSortOrder() {
+  let spaceSortOrder: SpaceSortOrder = 'modified-desc';
 
   try {
     const spaceSortOrderKey = `${LOCALSTORAGE_PREFIX}::space-sort-order`;
@@ -682,14 +685,8 @@ export const initActiveSpace = () => (dispatch) => {
     // Nothing here...
   }
 
-  dispatch(setActiveSpace(spaceId || BASE_SPACE_ID));
-  dispatch({
-    type: SET_SPACE_SORT_ORDER,
-    payload: {
-      sortOrder: spaceSortOrder,
-    },
-  });
-};
+  return setSpaceSortOrder(spaceSortOrder);
+}
 
 export function initActiveWorkspace() {
   let workspaceId: string | null = null;
@@ -772,6 +769,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
 
 export const init = () => [
   initActiveSpace(),
+  initSpaceSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
 ];

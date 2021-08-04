@@ -24,10 +24,12 @@ import {
   initActiveActivity,
   initActiveSpace,
   initActiveWorkspace,
+  initSpaceSortOrder,
   LOCALSTORAGE_PREFIX,
   SET_ACTIVE_ACTIVITY,
   SET_ACTIVE_SPACE,
   SET_ACTIVE_WORKSPACE,
+  SET_SPACE_SORT_ORDER,
   setActiveActivity,
   setActiveSpace,
   setActiveWorkspace,
@@ -251,58 +253,56 @@ describe('global', () => {
   });
 
   describe('initActiveSpace', () => {
-    it('should initialize from local storage', async () => {
+    it('should initialize from local storage', () => {
       const spaceId = 'id';
-      const sortOrder = SORT_MODIFIED_DESC;
-
-      const store = mockStore({
-        global: {},
-      });
-
       global.localStorage.setItem(
         `${LOCALSTORAGE_PREFIX}::activeSpaceId`,
         JSON.stringify(spaceId),
       );
+      const expectedEvent = {
+        type: SET_ACTIVE_SPACE,
+        spaceId,
+      };
+      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+    });
+
+    it('should default to base space if not exist', () => {
+      const expectedEvent = {
+        type: SET_ACTIVE_SPACE,
+        spaceId: BASE_SPACE_ID,
+      };
+      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+    });
+  });
+
+  describe('initSpaceSortOrder', () => {
+    it('should initialize from local storage', () => {
+      const sortOrder = SORT_MODIFIED_DESC;
 
       global.localStorage.setItem(
         `${LOCALSTORAGE_PREFIX}::space-sort-order`,
         JSON.stringify(sortOrder),
       );
 
-      const expectedEvents = [{
-        type: SET_ACTIVE_SPACE,
-        spaceId,
-      },
-      {
+      const expectedEvent = {
         'payload': {
           sortOrder,
         },
-        'type': 'global/space-sort-order',
-      }];
+        'type': SET_SPACE_SORT_ORDER,
+      };
 
-      await store.dispatch(initActiveSpace());
-
-      expect(store.getActions()).toEqual(expectedEvents);
+      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
     });
 
-    it('should default to base space if not exist', async () => {
-      const store = mockStore({
-        global: {},
-      });
-
-      const expectedEvents = [{
-        type: SET_ACTIVE_SPACE,
-        spaceId: BASE_SPACE_ID,
-      },
-      {
+    it('should default to modified-desc if not exist', async () => {
+      const expectedEvent = {
         'payload': {
-          'sortOrder': 'modified-desc',
+          sortOrder: SORT_MODIFIED_DESC,
         },
-        'type': 'global/space-sort-order',
-      }];
+        'type': SET_SPACE_SORT_ORDER,
+      };
 
-      await store.dispatch(initActiveSpace());
-      expect(store.getActions()).toEqual(expectedEvents);
+      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
     });
   });
 
