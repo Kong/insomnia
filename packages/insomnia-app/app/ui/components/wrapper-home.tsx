@@ -42,7 +42,7 @@ import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
 import { SpaceDropdown } from './dropdowns/space-dropdown';
-import OrderFilterDropdown from './dropdowns/space-sort-dropdown';
+import { SpaceSortDropdown } from './dropdowns/space-sort-dropdown';
 import KeydownBinder from './keydown-binder';
 import { showPrompt } from './modals';
 import Notice from './notice';
@@ -287,8 +287,8 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { wrapperProps, setSpaceSortOrder } = this.props;
-    const { vcs, activeSpace } = wrapperProps;
+    const { wrapperProps, handleSetSpaceSortOrder } = this.props;
+    const { vcs } = wrapperProps;
     return (
       <div className="row row--right pad-left wide">
         <div
@@ -308,9 +308,7 @@ class WrapperHome extends PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        <OrderFilterDropdown
-          onSelect={(value) => activeSpace && setSpaceSortOrder(value)}
-        />
+        <SpaceSortDropdown onSelect={handleSetSpaceSortOrder} />
         <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
       </div>
@@ -430,7 +428,7 @@ const mapDispatchToProps = (dispatch) => {
     handleImportFile: bound.importFile,
     handleImportUri: bound.importUri,
     handleImportClipboard: bound.importClipBoard,
-    setSpaceSortOrder: bound.setSpaceSortOrder,
+    handleSetSpaceSortOrder: bound.setSpaceSortOrder,
     handleActivateWorkspace: bound.activateWorkspace,
   });
 };

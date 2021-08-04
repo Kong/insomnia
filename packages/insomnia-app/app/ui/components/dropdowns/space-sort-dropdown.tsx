@@ -3,11 +3,11 @@ import React, { FC } from 'react';
 
 import { SPACE_SORT_ORDERS, SpaceSortOrder, spaceSortOrderName } from '../../../common/constants';
 
-interface OrderFilterDropdownProps {
+interface SpaceSortDropdownProps {
   onSelect: (value: SpaceSortOrder) => void;
 }
 
-const OrderFilterDropdown: FC<OrderFilterDropdownProps> = ({ onSelect }) => {
+export const SpaceSortDropdown: FC<SpaceSortDropdownProps> = ({ onSelect }) => {
   return (
     <Dropdown
       className="margin-left"
@@ -25,5 +25,3 @@ const OrderFilterDropdown: FC<OrderFilterDropdownProps> = ({ onSelect }) => {
     </Dropdown>
   );
 };
-
-export default OrderFilterDropdown;
