@@ -85,8 +85,8 @@ export const selectActiveSpace = createSelector(
 );
 
 export const selectSpaceSortOrder = createSelector(
-  (state: RootState) => state.global.spaceSortOrder,
-  sortOrder => sortOrder
+  selectGlobal,
+  global => global.spaceSortOrder
 );
 
 export const selectAllWorkspaces = createSelector(
