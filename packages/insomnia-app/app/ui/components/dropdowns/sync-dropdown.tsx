@@ -321,7 +321,6 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     if (pulledIntoSpace._id !== space._id) {
       // If pulled into a different space, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
-      // TODO: do we need to show an alert to the user? It's pretty seamless
       console.log('[sync] collection has been moved to the remote space to which it belongs', {
         id: pulledIntoSpace._id,
         name: pulledIntoSpace.name,
