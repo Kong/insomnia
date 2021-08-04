@@ -15,6 +15,7 @@ import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
+import { logCollectionMovedToSpace } from '../../../sync/vcs/migrate-collections';
 import { ProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../../sync/vcs/pull-project';
 import { VCS } from '../../../sync/vcs/vcs';
@@ -321,10 +322,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     if (pulledIntoSpace._id !== space._id) {
       // If pulled into a different space, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
-      console.log('[sync] collection has been moved to the remote space to which it belongs', {
-        id: pulledIntoSpace._id,
-        name: pulledIntoSpace.name,
-      });
+      logCollectionMovedToSpace(pulledIntoSpace);
     }
 
     await this.refreshMainAttributes({

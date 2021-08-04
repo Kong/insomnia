@@ -74,6 +74,10 @@ export class VCS {
     return this._project !== null;
   }
 
+  hasLocalProjectForId(id: string) {
+    return Boolean(this._store.hasItem(paths.project(id)));
+  }
+
   async removeProjectsForRoot(rootDocumentId: string) {
     const all = await this._allProjects();
     const toRemove = all.filter(p => p.rootDocumentId === rootDocumentId);
