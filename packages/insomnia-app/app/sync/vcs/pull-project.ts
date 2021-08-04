@@ -3,8 +3,7 @@ import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
 import { RemoteSpace } from '../../models/space';
 import { isWorkspace } from '../../models/workspace';
-import { initializeSpaceFromTeam } from './initialize-space-from-team';
-import { initializeWorkspaceFromProject } from './initialize-workspace-from-project';
+import { initializeSpaceFromTeam, initializeWorkspaceFromProject } from './initialize-model-from';
 import { ProjectWithTeam } from './normalize-project-team';
 import { VCS } from './vcs';
 

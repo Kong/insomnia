@@ -3,7 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import { database } from '../../common/database';
-import { initializeSpaceFromTeam } from '../../sync/vcs/initialize-space-from-team';
+import { initializeSpaceFromTeam } from '../../sync/vcs/initialize-model-from';
 import { VCS } from '../../sync/vcs/vcs';
 import { selectIsLoggedIn } from '../redux/selectors';
 import { useSafeState } from './use-safe-state';
