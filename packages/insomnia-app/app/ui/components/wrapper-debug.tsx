@@ -5,6 +5,7 @@ import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants'
 import { isGrpcRequest } from '../../models/grpc-request';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
+import { isRemoteSpace } from '../../models/space';
 import { isCollection, isDesign } from '../../models/workspace';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SyncDropdown from './dropdowns/sync-dropdown';
@@ -66,7 +67,7 @@ class WrapperDebug extends PureComponent<Props> {
 
     let insomniaSync: ReactNode = null;
 
-    if (isLoggedIn && collection && activeSpace?.remoteId && vcs) {
+    if (isLoggedIn && collection && isRemoteSpace(activeSpace) && vcs) {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}

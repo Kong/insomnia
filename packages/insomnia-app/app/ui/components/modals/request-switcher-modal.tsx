@@ -174,7 +174,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   async _activateWorkspace(workspace: Workspace) {
-    await this.props.handleActivateWorkspace(workspace);
+    await this.props.handleActivateWorkspace({ workspace });
 
     this.modal?.hide();
   }

@@ -1097,12 +1097,13 @@ class App extends PureComponent<AppProps, State> {
   }
 
   /**
-   * Update document.title to be "Workspace (Environment) – Request" when not home
+   * Update document.title to be "Space - Workspace (Environment) – Request" when not home
    * @private
    */
   _updateDocumentTitle() {
     const {
       activeWorkspace,
+      activeSpace,
       activeApiSpec,
       activeEnvironment,
       activeRequest,
@@ -1113,7 +1114,8 @@ class App extends PureComponent<AppProps, State> {
     if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else if (activeWorkspace && activeApiSpec) {
-      title = isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
+      title = activeSpace.name;
+      title += ` - ${isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName}`;
 
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;

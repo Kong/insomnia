@@ -341,7 +341,7 @@ class WrapperHome extends PureComponent<Props, State> {
           {...props}
           key={props.apiSpec._id}
           activeSpace={activeSpace}
-          onSelect={() => handleActivateWorkspace(props.workspace)}
+          onSelect={() => handleActivateWorkspace({ workspace: props.workspace })}
           filter={filter}
         />
       ));
