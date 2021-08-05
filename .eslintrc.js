@@ -97,6 +97,10 @@ module.exports = {
     'react/jsx-indent': ['error', 2],
     'react/jsx-indent-props': ['error', 2],
     'react/prop-types': 'off',
+    'react/function-component-definition': ['error', {
+      'namedComponents':  'arrow-function',
+      'unnamedComponents': 'arrow-function',
+    }],
 
     'react-hooks/exhaustive-deps': 'error',
     'react-hooks/rules-of-hooks': 'error',
