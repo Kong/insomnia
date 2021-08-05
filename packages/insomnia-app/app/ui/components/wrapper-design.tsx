@@ -206,7 +206,8 @@ class WrapperDesign extends PureComponent<Props, State> {
                 can be previewed.
               </p>
             </div>
-          )}>
+          )}
+        >
           <SwaggerUI
             spec={swaggerUiSpec}
             supportedSubmitMethods={[
@@ -263,7 +264,8 @@ class WrapperDesign extends PureComponent<Props, State> {
               can be rendered.
             </p>
           </div>
-        )}>
+        )}
+      >
         <SpecEditorSidebar apiSpec={activeApiSpec} handleSetSelection={this._handleSetSelection} />
       </ErrorBoundary>
     );

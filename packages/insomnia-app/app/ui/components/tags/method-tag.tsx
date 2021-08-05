@@ -23,14 +23,16 @@ class MethodTag extends PureComponent<Props> {
       <div
         style={{
           position: 'relative',
-        }}>
+        }}
+      >
         {overrideName && (
           <div className={'tag tag--no-bg tag--superscript http-method-' + method}>
             <span>{methodName}</span>
           </div>
         )}
         <div
-          className={'tag tag--no-bg tag--small http-method-' + (overrideName ? override : method)}>
+          className={'tag tag--no-bg tag--small http-method-' + (overrideName ? override : method)}
+        >
           <span className="tag__inner">{overrideName || methodName}</span>
         </div>
       </div>

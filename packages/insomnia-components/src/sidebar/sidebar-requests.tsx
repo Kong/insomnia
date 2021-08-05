@@ -43,7 +43,8 @@ export class SidebarRequests extends Component<SidebarRequestsProps> {
             <Fragment key={requestName}>
               <SidebarItem
                 gridLayout
-                onClick={() => onClick('components', 'requestBodies', requestName)}>
+                onClick={() => onClick('components', 'requestBodies', requestName)}
+              >
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
@@ -67,7 +68,8 @@ export class SidebarRequests extends Component<SidebarRequestsProps> {
                             'content',
                             requestFormat,
                           )
-                        }>
+                        }
+                      >
                         {requestFormat}
                       </span>
                     </StyledRequestFormat>

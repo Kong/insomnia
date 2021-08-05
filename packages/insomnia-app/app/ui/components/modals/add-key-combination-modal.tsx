@@ -125,7 +125,8 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
       <Modal
         ref={this._setModalRef}
         onKeyDown={this._handleKeyDown}
-        className="shortcuts add-key-comb-modal">
+        className="shortcuts add-key-comb-modal"
+      >
         <ModalHeader>Add Keyboard Shortcut</ModalHeader>
         <ModalBody noScroll>
           <div className="pad-left pad-right pad-top pad-bottom-sm">

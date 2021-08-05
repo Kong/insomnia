@@ -166,7 +166,8 @@ class UnconnectedSidebarChildren extends PureComponent<Props> {
     return (
       <ul
         className="sidebar__list sidebar__list-root theme--sidebar__list"
-        onContextMenu={this._handleContextMenu}>
+        onContextMenu={this._handleContextMenu}
+      >
         {this._renderChildren(children, pinnedList)}
       </ul>
     );

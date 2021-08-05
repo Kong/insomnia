@@ -217,7 +217,8 @@ class Toast extends PureComponent<{}, State> {
       <div
         className={classnames('toast theme--dialog', {
           'toast--show': visible,
-        })}>
+        })}
+      >
         <StyledLogo>
           <img src={imgSrcCore} alt={appName} />
         </StyledLogo>
@@ -226,7 +227,8 @@ class Toast extends PureComponent<{}, State> {
           <StyledFooter>
             <button
               className="btn btn--super-duper-compact btn--outlined"
-              onClick={this._handleCancelClick}>
+              onClick={this._handleCancelClick}
+            >
               Dismiss
             </button>
             &nbsp;&nbsp;
@@ -234,7 +236,8 @@ class Toast extends PureComponent<{}, State> {
               button
               className="btn btn--super-duper-compact btn--outlined no-wrap"
               onClick={this._handlePostCTACleanup}
-              href={notification.url}>
+              href={notification.url}
+            >
               {notification.cta}
             </Link>
           </StyledFooter>

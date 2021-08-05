@@ -102,6 +102,7 @@ module.exports = {
       'unnamedComponents': 'arrow-function',
     }],
     'react/jsx-max-props-per-line': ['error', { 'maximum': 1, 'when': 'multiline' }],
+    'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
 
     'react-hooks/exhaustive-deps': 'error',
     'react-hooks/rules-of-hooks': 'error',

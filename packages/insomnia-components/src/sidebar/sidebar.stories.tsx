@@ -3135,12 +3135,14 @@ export const _default = () => {
     <div
       style={{
         width: '350px',
-      }}>
+      }}
+    >
       <div
         style={{
           display: 'block',
           margin: '0px 0px 20px 0px',
-        }}>
+        }}
+      >
         Target: {targetPath}
       </div>
       <Sidebar jsonData={apiSpec} onClick={_handleItemClick} />
@@ -3159,12 +3161,14 @@ export const SimpleAPI = () => {
     <div
       style={{
         width: '350px',
-      }}>
+      }}
+    >
       <div
         style={{
           display: 'block',
           margin: '0px 0px 20px 0px',
-        }}>
+        }}
+      >
         Target: {targetPath}
       </div>
       {/* @ts-expect-error -- TSCONVERSION */}
@@ -3184,12 +3188,14 @@ export const Badges = () => {
     <div
       style={{
         width: '600px',
-      }}>
+      }}
+    >
       <div
         style={{
           display: 'block',
           margin: '0px 0px 20px 0px',
-        }}>
+        }}
+      >
         {clickedBadge}
       </div>
       <h3>Method Badges</h3>

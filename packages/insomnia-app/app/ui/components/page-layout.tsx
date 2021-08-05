@@ -100,7 +100,8 @@ class PageLayout extends PureComponent<Props> {
             settings.environmentHighlightColorStyle === 'window-right'
               ? '5px solid ' + activeEnvironment.color
               : undefined,
-        }}>
+        }}
+      >
         {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader()}</ErrorBoundary>}
 
         {renderPageSidebar && (
@@ -121,7 +122,8 @@ class PageLayout extends PureComponent<Props> {
               unseenWorkspaces={unseenWorkspaces}
               gitVCS={gitVCS}
               width={sidebarWidth}
-              workspaces={workspaces}>
+              workspaces={workspaces}
+            >
               {renderPageSidebar()}
             </Sidebar>
 

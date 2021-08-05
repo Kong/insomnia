@@ -163,7 +163,8 @@ class RequestCreateModal extends PureComponent<{}, State> {
                 className="form-control form-control--no-label"
                 style={{
                   width: 'auto',
-                }}>
+                }}
+              >
                 <MethodDropdown
                   right
                   showGrpc
@@ -177,12 +178,14 @@ class RequestCreateModal extends PureComponent<{}, State> {
                   className="form-control form-control--no-label"
                   style={{
                     width: 'auto',
-                  }}>
+                  }}
+                >
                   <ContentTypeDropdown
                     className="btn btn--clicky no-wrap"
                     right
                     contentType={selectedContentType}
-                    onChange={this._handleChangeSelectedContentType}>
+                    onChange={this._handleChangeSelectedContentType}
+                  >
                     {getContentTypeName(selectedContentType) || 'No Body'}{' '}
                     <i className="fa fa-caret-down" />
                   </ContentTypeDropdown>

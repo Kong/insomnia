@@ -39,7 +39,8 @@ const AccountDropdown: FunctionComponent<Props> = ({ className }) => (
           key="login"
           stayOpenAfterClick
           buttonClass={PromptButton}
-          onClick={session.logout}>
+          onClick={session.logout}
+        >
           <StyledIconContainer>
             <i className="fa fa-sign-out" />
           </StyledIconContainer>

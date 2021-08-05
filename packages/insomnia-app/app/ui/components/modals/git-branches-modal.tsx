@@ -218,7 +218,8 @@ class GitBranchesModal extends PureComponent<Props, State> {
                       <span
                         className={classnames({
                           bold: name === currentBranch,
-                        })}>
+                        })}
+                      >
                         {name}
                       </span>
                       {name === currentBranch ? (
@@ -231,18 +232,21 @@ class GitBranchesModal extends PureComponent<Props, State> {
                           <PromptButton
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Merged"
-                            onClick={() => this._handleMerge(name)}>
+                            onClick={() => this._handleMerge(name)}
+                          >
                             Merge
                           </PromptButton>
                           <PromptButton
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Deleted"
-                            onClick={() => this._handleDelete(name)}>
+                            onClick={() => this._handleDelete(name)}
+                          >
                             Delete
                           </PromptButton>
                           <button
                             className="btn btn--micro btn--outlined space-left"
-                            onClick={() => this._handleCheckout(name)}>
+                            onClick={() => this._handleCheckout(name)}
+                          >
                             Checkout
                           </button>
                         </Fragment>
@@ -269,7 +273,8 @@ class GitBranchesModal extends PureComponent<Props, State> {
                       <td className="text-right">
                         <button
                           className="btn btn--micro btn--outlined space-left"
-                          onClick={() => this._handleRemoteCheckout(name)}>
+                          onClick={() => this._handleRemoteCheckout(name)}
+                        >
                           Checkout
                         </button>
                       </td>

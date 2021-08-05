@@ -150,7 +150,8 @@ class GenerateCodeModal extends PureComponent<Props, State> {
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1fr)',
             gridTemplateRows: 'auto minmax(0, 1fr)',
-          }}>
+          }}
+        >
           <div className="pad">
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">

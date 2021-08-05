@@ -77,7 +77,8 @@ class SpaceSettingsModal extends PureComponent<Props> {
             <PromptButton
               onClick={this._handleRemoveSpace}
               addIcon
-              className="width-auto btn btn--clicky inline-block">
+              className="width-auto btn btn--clicky inline-block"
+            >
               <i className="fa fa-trash-o" /> Delete
             </PromptButton>
           </div>

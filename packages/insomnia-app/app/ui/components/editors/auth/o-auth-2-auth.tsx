@@ -262,7 +262,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
               id="enabled"
               onClick={onChange}
               value={!authentication.disabled}
-              title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+              title={authentication.disabled ? 'Enable item' : 'Disable item'}
+            >
               {authentication.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -289,13 +290,15 @@ class OAuth2Auth extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <Button
               className="btn btn--super-duper-compact"
               id="use-pkce"
               onClick={onChange}
               value={!authentication.usePkce}
-              title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}>
+              title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}
+            >
               {authentication.usePkce ? (
                 <i className="fa fa-check-square-o" />
               ) : (
@@ -337,7 +340,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               type={type}
@@ -384,7 +388,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--outlined no-margin', {
               'form-control--inactive': authentication.disabled || disabled,
-            })}>
+            })}
+          >
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
@@ -593,7 +598,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
         <button
           onClick={this._handleDebugResponseClick}
           className="icon icon--success space-left"
-          title="View response timeline">
+          title="View response timeline"
+        >
           <i className="fa fa-bug" />
         </button>
       ) : null;
@@ -724,7 +730,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
             <button
               className="btn btn--clicky"
               onClick={this._handleRefreshToken}
-              disabled={loading}>
+              disabled={loading}
+            >
               {loading
                 ? tok
                   ? 'Refreshing...'

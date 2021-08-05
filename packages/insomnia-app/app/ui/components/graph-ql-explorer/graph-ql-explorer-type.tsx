@@ -126,7 +126,8 @@ class GraphQLExplorerType extends PureComponent<Props> {
                   <Tooltip
                     message={`The field "${field.name}" is deprecated. ${field.deprecationReason}`}
                     position="bottom"
-                    delay={1000}>
+                    delay={1000}
+                  >
                     <SvgIcon icon="warning" />
                   </Tooltip>
                 )}

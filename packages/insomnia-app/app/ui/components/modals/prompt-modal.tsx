@@ -217,7 +217,8 @@ class PromptModal extends PureComponent<{}, State> {
           confirmMessage=""
           className="tall space-left icon"
           onClick={this._handleDeleteHint}
-          value={hint}>
+          value={hint}
+        >
           <i className="fa fa-close faint" />
         </PromptButton>
       </div>

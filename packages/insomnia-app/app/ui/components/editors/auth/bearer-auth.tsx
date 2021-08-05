@@ -58,7 +58,8 @@ class BearerAuth extends PureComponent<Props> {
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
                     'form-control--inactive': authentication.disabled,
-                  })}>
+                  })}
+                >
                   <OneLineEditor
                     type="text"
                     id="token"
@@ -86,7 +87,8 @@ class BearerAuth extends PureComponent<Props> {
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
                     'form-control--inactive': authentication.disabled,
-                  })}>
+                  })}
+                >
                   <OneLineEditor
                     type="text"
                     id="prefix"
@@ -114,7 +116,8 @@ class BearerAuth extends PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

@@ -285,7 +285,8 @@ class WrapperHome extends PureComponent<Props, State> {
         <DropdownDivider>New</DropdownDivider>
         <DropdownItem 
           icon={<i className="fa fa-file-o" />}
-          onClick={this._handleDocumentCreate}>
+          onClick={this._handleDocumentCreate}
+        >
           Design Document
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
@@ -300,7 +301,8 @@ class WrapperHome extends PureComponent<Props, State> {
         </DropdownItem>
         <DropdownItem
           icon={<i className="fa fa-clipboard" />}
-          onClick={this._handleImportClipBoard}>
+          onClick={this._handleImportClipBoard}
+        >
           Clipboard
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-code-fork" />} onClick={this._handleWorkspaceClone}>
@@ -318,7 +320,8 @@ class WrapperHome extends PureComponent<Props, State> {
           className="form-control form-control--outlined no-margin"
           style={{
             maxWidth: '400px',
-          }}>
+          }}
+        >
           <KeydownBinder onKeydown={this._handleKeyDown}>
             <input
               ref={this._setFilterInputRef}

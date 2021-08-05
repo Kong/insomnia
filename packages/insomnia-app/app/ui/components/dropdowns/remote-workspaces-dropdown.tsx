@@ -77,7 +77,8 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
             ) : (
               <i className="fa fa-cloud-download" />
             )
-          }>
+          }
+        >
           <span>
             Pull <strong>{p.name}</strong>
           </span>

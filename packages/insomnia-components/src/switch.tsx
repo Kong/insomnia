@@ -81,7 +81,8 @@ export const Switch: FunctionComponent<SwitchProps> = ({ className, onClick, opt
             />
             <label
               htmlFor={item.label}
-              className={`switch-label ${i === 0 ? 'switch-label-off' : 'switch-label-on'}`}>
+              className={`switch-label ${i === 0 ? 'switch-label-off' : 'switch-label-on'}`}
+            >
               {item.label}
             </label>
           </Fragment>

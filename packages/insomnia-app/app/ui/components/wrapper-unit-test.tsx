@@ -431,7 +431,8 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             onSubmit={this._handleChangeTestName.bind(this, unitTest)}
             value={unitTest.name}
           />
-        }>
+        }
+      >
         <CodeEditor
           dynamicHeight
           manualPrettify
@@ -510,7 +511,8 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                 key={s._id}
                 className={classnames({
                   active: s._id === activeId,
-                })}>
+                })}
+              >
                 <button key={s._id} onClick={this._handleSetActiveUnitTestSuite.bind(this, s)}>
                   {s.name}
                 </button>
@@ -520,12 +522,14 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                     <button className="unit-tests__sidebar__action">
                       <i className="fa fa-caret-down" />
                     </button>
-                  )}>
+                  )}
+                >
                   <DropdownItem
                     stayOpenAfterClick
                     onClick={this._handleRunTests}
                     // @ts-expect-error -- TSCONVERSION
-                    disabled={testsRunning}>
+                    disabled={testsRunning}
+                  >
                     {testsRunning ? 'Running... ' : 'Run Tests'}
                   </DropdownItem>
                   <DropdownItem onClick={this._handleDeleteUnitTestSuite.bind(this, s)}>

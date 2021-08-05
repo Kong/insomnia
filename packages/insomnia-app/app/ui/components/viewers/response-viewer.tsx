@@ -252,14 +252,16 @@ class ResponseViewer extends Component<Props, State> {
                 <button
                   onClick={this._handleDismissBlocker}
                   disabled={wayTooLarge}
-                  className=" inline-block btn btn--clicky margin-xs">
+                  className=" inline-block btn btn--clicky margin-xs"
+                >
                   Show Anyway
                 </button>
               </div>
               <div className="pad-top-sm">
                 <button
                   className="faint inline-block btn btn--super-compact"
-                  onClick={this._handleDisableBlocker}>
+                  onClick={this._handleDisableBlocker}
+                >
                   Always Show
                 </button>
               </div>

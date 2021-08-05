@@ -236,7 +236,8 @@ class ResponseMultipart extends PureComponent<Props, State> {
           className="pad monospace"
           style={{
             fontSize: editorFontSize,
-          }}>
+          }}
+        >
           Failed to parse multipart response: {error}
         </div>
       );
@@ -249,13 +250,15 @@ class ResponseMultipart extends PureComponent<Props, State> {
         style={{
           display: 'grid',
           gridTemplateRows: 'auto minmax(0, 1fr)',
-        }}>
+        }}
+      >
         <div
           className="pad-bottom-sm"
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1fr) auto',
-          }}>
+          }}
+        >
           <div>
             <Dropdown wide>
               <DropdownButton className="btn btn--clicky">
@@ -263,7 +266,8 @@ class ResponseMultipart extends PureComponent<Props, State> {
                   style={{
                     minWidth: '200px',
                     display: 'inline-block',
-                  }}>
+                  }}
+                >
                   {selectedPart ? this._describePart(selectedPart) : 'Unknown'}
                 </div>
                 <i className="fa fa-caret-down fa--skinny space-left" />
