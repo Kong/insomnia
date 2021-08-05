@@ -104,6 +104,7 @@ module.exports = {
     'react/jsx-max-props-per-line': ['error', { 'maximum': 1, 'when': 'multiline' }],
     'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
     'react/prefer-stateless-function': 'warn',
+    'react/jsx-key': ['error', { 'checkFragmentShorthand': true }],
 
     'react-hooks/exhaustive-deps': 'error',
     'react-hooks/rules-of-hooks': 'error',
