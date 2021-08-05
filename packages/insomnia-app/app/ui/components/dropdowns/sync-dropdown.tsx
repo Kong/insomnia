@@ -322,7 +322,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     if (pulledIntoSpace._id !== space._id) {
       // If pulled into a different space, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
-      logCollectionMovedToSpace(pulledIntoSpace);
+      logCollectionMovedToSpace(workspace, pulledIntoSpace);
     }
 
     await this.refreshMainAttributes({

@@ -7,14 +7,25 @@ import { Team } from '../types';
 import { initializeSpaceFromTeam } from './initialize-model-from';
 import { VCS } from './vcs';
 
-export const logCollectionMovedToSpace = (remoteSpace: RemoteSpace) => {
+export const logCollectionMovedToSpace = (collection: Workspace, remoteSpace: RemoteSpace) => {
   console.log('[sync] collection has been moved to the remote space to which it belongs', {
-    id: remoteSpace._id,
-    name: remoteSpace.name,
+    collection: {
+      id : collection._id,
+      name: collection.name,
+    },
+    space: {
+      id: remoteSpace._id,
+      name: remoteSpace.name,
+    },
   });
 };
 
 export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
+  // If not logged in, exit
+  if (!isLoggedIn()) {
+    return;
+  }
+    
   const collections = (await models.workspace.all()).filter(isCollection);
   const remoteSpaces = (await models.space.all()).filter(isRemoteSpace);
     
@@ -26,11 +37,6 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
 
   // If nothing to migrate, exit
   if (!needsMigration.length) {
-    return;
-  }
-
-  // If not logged in, exit
-  if (!isLoggedIn()) {
     return;
   }
 
@@ -55,7 +61,7 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
 
     collection.parentId = remoteSpace._id;
     upsert.push(collection);
-    logCollectionMovedToSpace(remoteSpace);
+    logCollectionMovedToSpace(collection, remoteSpace);
   });
 
   await database.batchModifyDocs({ upsert });
