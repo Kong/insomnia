@@ -3,7 +3,6 @@ import { database } from '../../common/database';
 import * as models from '../../models';
 import { isRemoteSpace, RemoteSpace } from '../../models/space';
 import {  isCollection, Workspace } from '../../models/workspace';
-import FileSystemDriver from '../store/drivers/file-system-driver';
 import { Team } from '../types';
 import { initializeSpaceFromTeam } from './initialize-model-from';
 import { VCS } from './vcs';
@@ -15,10 +14,7 @@ export const logCollectionMovedToSpace = (remoteSpace: RemoteSpace) => {
   });
 };
 
-export const migrateCollectionsIntoRemoteSpace = async (vcsDirectory: string) => {
-  const driver = new FileSystemDriver({ directory: vcsDirectory });
-  const vcs = new VCS(driver);
-  
+export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
   const collections = (await models.workspace.all()).filter(isCollection);
   const remoteSpaces = (await models.space.all()).filter(isRemoteSpace);
     
