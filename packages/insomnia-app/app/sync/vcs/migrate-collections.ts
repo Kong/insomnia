@@ -45,7 +45,8 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
   const findRemoteSpaceByTeam = (team: Team) => remoteSpaces.find(space => space.remoteId === team.id);
   
   const upsert: (Workspace | RemoteSpace)[] = [];
-  needsMigration.forEach(async collection => {
+
+  for (const collection of needsMigration) {
     const remoteProject = findRemoteProject(collection);
 
     if (!remoteProject) {
@@ -62,7 +63,9 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
     collection.parentId = remoteSpace._id;
     upsert.push(collection);
     logCollectionMovedToSpace(collection, remoteSpace);
-  });
+  }
 
-  await database.batchModifyDocs({ upsert });
+  if (upsert.length) {
+    await database.batchModifyDocs({ upsert });
+  }
 };
