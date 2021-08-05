@@ -64,7 +64,7 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
-    .option('--disableCertValidation', 'disable certificate validation')
+    .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
     .action((identifier, cmd) => {
       let options = getOptions<RunTestsOptions>(cmd, {
         reporter: defaultReporter,
