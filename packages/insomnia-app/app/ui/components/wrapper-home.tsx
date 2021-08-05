@@ -283,7 +283,9 @@ class WrapperHome extends PureComponent<Props, State> {
     return (
       <Dropdown renderButton={button}>
         <DropdownDivider>New</DropdownDivider>
-        <DropdownItem icon={<i className="fa fa-file-o" />} onClick={this._handleDocumentCreate}>
+        <DropdownItem 
+          icon={<i className="fa fa-file-o" />}
+          onClick={this._handleDocumentCreate}>
           Design Document
         </DropdownItem>
         <DropdownItem icon={<i className="fa fa-bars" />} onClick={this._handleCollectionCreate}>
