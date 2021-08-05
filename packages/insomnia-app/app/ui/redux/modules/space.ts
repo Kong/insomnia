@@ -2,7 +2,7 @@ import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { BASE_SPACE_ID, isRemoteSpace, Space } from '../../../models/space';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveSpace } from './global';
 
@@ -27,9 +27,13 @@ export const createSpace = () => dispatch => {
 };
 
 export const removeSpace = (space: Space) => dispatch => {
+  const message = isRemoteSpace(space)
+    ? `Deleting a remote space will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. This cannot be undone. Are you sure you want to delete ${space.name}?`
+    : `Deleting a space will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${space.name}?`;
+
   showAlert({
     title: `Delete ${strings.space.singular}`,
-    message: `Deleting a space will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${space.name}?`,
+    message,
     addCancel: true,
     okLabel: 'Delete',
     onConfirm: async () => {

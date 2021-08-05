@@ -15,6 +15,7 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
+import HelpTooltip from '../help-tooltip';
 
 export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -48,9 +49,11 @@ class SpaceSettingsModal extends PureComponent<Props> {
 
   render() {
     const { space } = this.props;
-    if (isBaseSpace(space) || isRemoteSpace(space)) {
+    if (isBaseSpace(space)) {
       return null;
     }
+
+    const isRemote = isRemoteSpace(space);
 
     return (
       <Modal ref={this._handleSetModalRef} freshState>
@@ -62,14 +65,24 @@ class SpaceSettingsModal extends PureComponent<Props> {
           <div className="form-control form-control--outlined">
             <label>
               Name
-              <DebouncedInput
-              // @ts-expect-error -- TSCONVERSION props are spread into an input element
-                type="text"
-                delay={500}
-                placeholder="My Space"
-                defaultValue={space.name}
-                onChange={this._handleRename}
-              />
+              {isRemote && (
+                <>
+                  <HelpTooltip className="space-left">
+                    To rename a remote space please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
+                  </HelpTooltip>
+                  <input disabled readOnly defaultValue={space.name} />
+                </>
+              )}
+              {!isRemote && (
+                <DebouncedInput
+                // @ts-expect-error -- TSCONVERSION props are spread into an input element
+                  type="text"
+                  delay={500}
+                  placeholder="My Space"
+                  defaultValue={space.name}
+                  onChange={this._handleRename}
+                />
+              )}
             </label>
           </div>
           <h2>Actions</h2>

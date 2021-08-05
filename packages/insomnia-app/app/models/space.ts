@@ -15,7 +15,7 @@ export const isBaseSpace = ({ _id }: Space) => _id === BASE_SPACE_ID;
 export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
 export const isLocalSpace = ({ remoteId }: Space) => remoteId === null;
 export const isRemoteSpace = (space: Space) => !isLocalSpace(space);
-export const spaceHasSettings = (space: Space) => isLocalSpace(space) && !isBaseSpace(space);
+export const spaceHasSettings = (space: Space) => !isBaseSpace(space);
 
 interface BaseSpace {
   name: string;
