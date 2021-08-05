@@ -88,7 +88,7 @@ export const Switch: FunctionComponent<SwitchProps> = ({ className, onClick, opt
           </Fragment>
         );
       })}
-      <span className="switch-selection"></span>
+      <span className="switch-selection" />
     </div>
   </StyledSwitch>
 );

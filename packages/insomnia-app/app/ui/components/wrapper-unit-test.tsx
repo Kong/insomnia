@@ -485,7 +485,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             disabled={testsRunning}
           >
             {testsRunning ? 'Running... ' : 'Run Tests'}
-            <i className="fa fa-play space-left"></i>
+            <i className="fa fa-play space-left" />
           </Button>
         </div>
         <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
