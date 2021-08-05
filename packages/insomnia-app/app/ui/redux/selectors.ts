@@ -84,6 +84,11 @@ export const selectActiveSpace = createSelector(
   },
 );
 
+export const selectSpaceSortOrder = createSelector(
+  selectGlobal,
+  global => global.spaceSortOrder
+);
+
 export const selectAllWorkspaces = createSelector(
   selectEntitiesLists,
   entities => entities.workspaces,

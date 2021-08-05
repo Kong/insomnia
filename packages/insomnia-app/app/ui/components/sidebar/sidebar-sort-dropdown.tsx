@@ -13,7 +13,7 @@ const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) => (
       <i className="fa fa-sort" />
     </DropdownButton>
     {SORT_ORDERS.map(order => (
-      <DropdownItem onClick={() => handleSort(order)} key={order}>
+      <DropdownItem value={order} onClick={handleSort} key={order}>
         {sortOrderName[order]}
       </DropdownItem>
     ))}
