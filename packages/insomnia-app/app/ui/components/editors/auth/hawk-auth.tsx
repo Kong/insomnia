@@ -109,7 +109,8 @@ class HawkAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--outlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
@@ -148,7 +149,8 @@ class HawkAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               type="text"
@@ -180,7 +182,8 @@ class HawkAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <Button
               className="btn btn--super-duper-compact"
               id={id}
@@ -190,7 +193,8 @@ class HawkAuth extends PureComponent<Props> {
                 authentication.validatePayload
                   ? 'Enable payload validation'
                   : 'Disable payload validation'
-              }>
+              }
+            >
               {authentication.validatePayload ? (
                 <i className="fa fa-check-square-o" />
               ) : (
@@ -224,7 +228,8 @@ class HawkAuth extends PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

@@ -83,7 +83,8 @@ export const SidebarHeader: FunctionComponent<SidebarHeaderProps> = ({
             }}
             animate={{
               opacity: sectionVisible ? 0.6 : 0,
-            }}>
+            }}
+          >
             <SvgIcon icon={IconEnum.search} />
           </motion.span>
         )}

@@ -242,7 +242,8 @@ class Plugins extends PureComponent<Props, State> {
                     <td
                       style={{
                         width: '4rem',
-                      }}>
+                      }}
+                    >
                       {this.renderToggleSwitch(plugin)}
                     </td>
                     <td>
@@ -261,18 +262,21 @@ class Plugins extends PureComponent<Props, State> {
                       className="no-wrap"
                       style={{
                         width: '10rem',
-                      }}>
+                      }}
+                    >
                       <CopyButton
                         size="small"
                         variant="contained"
                         title={plugin.directory}
-                        content={plugin.directory}>
+                        content={plugin.directory}
+                      >
                         Copy Path
                       </CopyButton>{' '}
                       <Button
                         size="small"
                         variant="contained"
-                        onClick={Plugins._handleOpenDirectory.bind(this, plugin.directory)}>
+                        onClick={Plugins._handleOpenDirectory.bind(this, plugin.directory)}
+                      >
                         Reveal Folder
                       </Button>
                     </td>
@@ -332,7 +336,8 @@ class Plugins extends PureComponent<Props, State> {
           <Button
             disabled={isRefreshingPlugins}
             className="space-left"
-            onClick={this._handleClickRefreshPlugins}>
+            onClick={this._handleClickRefreshPlugins}
+          >
             Reload Plugins
             {isRefreshingPlugins && <i className="fa fa-refresh fa-spin space-left" />}
           </Button>

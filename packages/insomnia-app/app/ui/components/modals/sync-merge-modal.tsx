@@ -81,7 +81,8 @@ class SyncMergeModal extends PureComponent<Props, State> {
                 <th
                   style={{
                     width: '10rem',
-                  }}>
+                  }}
+                >
                   Choose
                 </th>
               </tr>

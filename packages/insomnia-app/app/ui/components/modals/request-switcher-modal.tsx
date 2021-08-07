@@ -412,7 +412,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
         <Modal
           ref={this._setModalRef}
           dontFocus={!disableInput}
-          className={isModalVisible ? '' : 'hide'}>
+          className={isModalVisible ? '' : 'hide'}
+        >
           <ModalHeader hideCloseButton>
             {title || (
               <Fragment>
@@ -505,7 +506,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 {workspace ? <button
                   className="btn btn--outlined btn--compact"
                   disabled={!searchString}
-                  onClick={this._activateCurrentIndex}>
+                  onClick={this._activateCurrentIndex}
+                >
                   Create a request named {searchString}
                 </button> : null}
               </div>

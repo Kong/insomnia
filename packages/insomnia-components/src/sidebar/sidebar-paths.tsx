@@ -57,7 +57,8 @@ export class SidebarPaths extends Component<SidebarPathsProps> {
                     <SidebarBadge
                       key={method}
                       method={method}
-                      onClick={() => onClick('paths', route, method)}></SidebarBadge>
+                      onClick={() => onClick('paths', route, method)}
+                    />
                   ))}
               </SidebarItem>
             </Fragment>

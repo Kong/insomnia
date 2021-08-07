@@ -20,7 +20,8 @@ class GrpcStatusTag extends PureComponent<Props> {
       <div
         className={classnames('tag', colorClass, {
           'tag--small': small,
-        })}>
+        })}
+      >
         <Tooltip message={message} position="bottom" delay={tooltipDelay}>
           <strong>{statusCode} </strong>
           {message}

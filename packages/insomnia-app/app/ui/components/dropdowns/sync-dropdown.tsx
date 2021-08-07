@@ -380,7 +380,8 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
         className={classnames({
           bold: isCurrentBranch,
         })}
-        title={isCurrentBranch ? null : `Switch to "${branch}"`}>
+        title={isCurrentBranch ? null : `Switch to "${branch}"`}
+      >
         {icon}
         {branch}
       </DropdownItem>
@@ -569,7 +570,8 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
             onClick={this._handleRevert}
             buttonClass={PromptButton}
             stayOpenAfterClick
-            disabled={!canCreateSnapshot || historyCount === 0}>
+            disabled={!canCreateSnapshot || historyCount === 0}
+          >
             <i className="fa fa-undo" />
             Revert Changes
           </DropdownItem>

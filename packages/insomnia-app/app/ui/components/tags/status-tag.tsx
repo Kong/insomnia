@@ -55,7 +55,8 @@ class StatusTag extends PureComponent<Props> {
       <div
         className={classnames('tag', colorClass, {
           'tag--small': small,
-        })}>
+        })}
+      >
         <Tooltip message={description} position="bottom" delay={tooltipDelay}>
           <strong>{statusCodeToDisplay}</strong>{' '}
           {statusMessage || RESPONSE_CODE_REASONS[statusCode]}

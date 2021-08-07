@@ -311,7 +311,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
               // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
               defaultValue={this.state.request?.settingFollowRedirects}
               name="settingFollowRedirects"
-              onChange={this._updateRequestSettingString}>
+              onChange={this._updateRequestSettingString}
+            >
               <option value={'global'}>Use global setting</option>
               <option value={'off'}>Don't follow redirects</option>
               <option value={'on'}>Follow redirects</option>
@@ -360,7 +361,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
     ) : (
       <button
         onClick={this._handleAddDescription}
-        className="btn btn--outlined btn--super-duper-compact">
+        className="btn btn--outlined btn--super-duper-compact"
+      >
         Add Description
       </button>
     );
@@ -402,7 +404,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             </HelpTooltip>
             <select
               value={activeWorkspaceIdToCopyTo || '__NULL__'}
-              onChange={this._handleUpdateMoveCopyWorkspace}>
+              onChange={this._handleUpdateMoveCopyWorkspace}
+            >
               <option value="__NULL__">-- Select Workspace --</option>
               {workspaces.map(w => {
                 if (workspace && workspace._id === w._id) {
@@ -422,7 +425,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
           <button
             disabled={justCopied || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleCopyToWorkspace}>
+            onClick={this._handleCopyToWorkspace}
+          >
             {justCopied ? 'Copied!' : 'Copy'}
           </button>
         </div>
@@ -430,7 +434,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
           <button
             disabled={justMoved || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleMoveToWorkspace}>
+            onClick={this._handleMoveToWorkspace}
+          >
             {justMoved ? 'Moved!' : 'Move'}
           </button>
         </div>

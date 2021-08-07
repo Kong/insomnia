@@ -174,7 +174,8 @@ const Options = ({ start, cancel }: OptionsProps) => {
           size="medium"
           variant="contained"
           onClick={() => start(options)}
-          disabled={!canStart}>
+          disabled={!canStart}
+        >
           Start Migration
         </Button>
         <button key="cancel" className="btn btn--super-compact" onClick={cancel}>
@@ -298,7 +299,8 @@ const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => (
   <OnboardingContainer
     wrapperProps={wrapperProps}
     header="Migrate from Insomnia Designer"
-    subHeader="Insomnia Designer and Core are now Insomnia!">
+    subHeader="Insomnia Designer and Core are now Insomnia!"
+  >
     <MigrationBody />
   </OnboardingContainer>
 );

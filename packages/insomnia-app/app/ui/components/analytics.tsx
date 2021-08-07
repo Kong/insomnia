@@ -48,13 +48,15 @@ class Analytics extends PureComponent<Props> {
           radius="3px"
           size="medium"
           variant="contained"
-          onClick={this._handleClickEnableAnalytics}>
+          onClick={this._handleClickEnableAnalytics}
+        >
           Share Usage Analytics
         </Button>
         <button
           key="disable"
           className="btn btn--super-compact"
-          onClick={this._handleClickDisableAnalytics}>
+          onClick={this._handleClickDisableAnalytics}
+        >
           Don't share usage analytics
         </button>
       </Fragment>

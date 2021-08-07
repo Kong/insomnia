@@ -69,7 +69,8 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
         key={response._id}
         disabled={active}
         value={i === 0 ? null : response}
-        onClick={this._handleSetActiveResponse}>
+        onClick={this._handleSetActiveResponse}
+      >
         {active ? <i className="fa fa-thumb-tack" /> : <i className="fa fa-empty" />}{' '}
         <StatusTag
           small

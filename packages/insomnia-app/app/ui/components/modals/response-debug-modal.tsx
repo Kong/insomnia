@@ -58,7 +58,8 @@ class ResponseDebugModal extends PureComponent<Props, State> {
             style={{
               display: 'grid',
             }}
-            className="tall">
+            className="tall"
+          >
             {response ? (
               <ResponseTimelineViewer
                 editorFontSize={settings.editorFontSize}

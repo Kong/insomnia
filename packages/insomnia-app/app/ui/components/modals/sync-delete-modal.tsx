@@ -87,7 +87,8 @@ class SyncDeleteModal extends PureComponent<Props, State> {
       <strong
         style={{
           whiteSpace: 'pre-wrap',
-        }}>
+        }}
+      >
         {workspace.name}
       </strong>
     );

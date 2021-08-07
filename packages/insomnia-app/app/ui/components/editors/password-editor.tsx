@@ -51,7 +51,8 @@ class PasswordEditor extends PureComponent<Props, State> {
         <div
           className={classnames('form-control form-control--underlined no-margin', {
             'form-control--inactive': disabled,
-          })}>
+          })}
+        >
           <OneLineEditor
             type={showAllPasswords || showPassword ? 'text' : 'password'}
             id="password"
@@ -67,7 +68,8 @@ class PasswordEditor extends PureComponent<Props, State> {
           <Button
             className="btn btn--super-duper-compact pointer"
             onClick={this._handleShowPassword}
-            value={showPassword}>
+            value={showPassword}
+          >
             {showPassword ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
           </Button>
         )}

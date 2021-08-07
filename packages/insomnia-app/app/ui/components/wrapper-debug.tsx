@@ -73,7 +73,8 @@ class WrapperDebug extends PureComponent<Props> {
         workspaceMeta={activeWorkspaceMeta}
         space={activeSpace}
         vcs={vcs}
-        syncItems={syncItems} />;
+        syncItems={syncItems}
+      />;
     }
 
     const gitSync = design && gitSyncDropdown;

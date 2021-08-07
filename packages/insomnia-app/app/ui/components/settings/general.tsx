@@ -239,7 +239,8 @@ class General extends PureComponent<Props, State> {
                 defaultValue={settings.environmentHighlightColorStyle}
                 name="environmentHighlightColorStyle"
                 // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}>
+                onChange={this._handleUpdateSetting}
+              >
                 <option value="sidebar-indicator">Sidebar indicator</option>
                 <option value="sidebar-edge">Sidebar edge</option>
                 <option value="window-top">Window top</option>
@@ -280,7 +281,8 @@ class General extends PureComponent<Props, State> {
                   name="fontInterface"
                   value={settings.fontInterface || '__NULL__'}
                   // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}>
+                  onChange={this._handleFontChange}
+                >
                   <option value="__NULL__">-- System Default --</option>
                   {fonts.map((item, index) => (
                     <option key={index} value={item.family}>
@@ -311,7 +313,8 @@ class General extends PureComponent<Props, State> {
                   name="fontMonospace"
                   value={settings.fontMonospace || '__NULL__'}
                   // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}>
+                  onChange={this._handleFontChange}
+                >
                   <option value="__NULL__">-- System Default --</option>
                   {fontsMono.map((item, index) => (
                     <option key={index} value={item.family}>
@@ -351,7 +354,8 @@ class General extends PureComponent<Props, State> {
                 defaultValue={settings.editorKeyMap}
                 name="editorKeyMap"
                 // @ts-expect-error -- TSCONVERSION
-                onChange={this._handleUpdateSetting}>
+                onChange={this._handleUpdateSetting}
+              >
                 <option value={EDITOR_KEY_MAP_DEFAULT}>Default</option>
                 <option value={EDITOR_KEY_MAP_VIM}>Vim</option>
                 <option value={EDITOR_KEY_MAP_EMACS}>Emacs</option>
@@ -460,7 +464,8 @@ class General extends PureComponent<Props, State> {
             style={{
               padding: 0,
             }}
-            onClick={initNewOAuthSession}>
+            onClick={initNewOAuthSession}
+          >
             Clear OAuth 2 session
           </button>
         </div>
@@ -475,7 +480,8 @@ class General extends PureComponent<Props, State> {
               maxWidth: '20rem',
               // @ts-expect-error -- TSCONVERSION
               lineWrap: 'word',
-            }}>
+            }}
+          >
             Enable global network proxy. Supports authentication via Basic Auth, digest, or NTLM
           </HelpTooltip>
         </h2>
@@ -525,7 +531,8 @@ class General extends PureComponent<Props, State> {
                   value={settings.updateChannel}
                   name="updateChannel"
                   // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleUpdateSetting}>
+                  onChange={this._handleUpdateSetting}
+                >
                   <option value={UPDATE_CHANNEL_STABLE}>Release (Recommended)</option>
                   <option value={UPDATE_CHANNEL_BETA}>Early Access (Beta)</option>
                 </select>

@@ -381,7 +381,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
             className={classnames({
               active,
               hide,
-            })}>
+            })}
+          >
             {child}
           </li>,
         );
@@ -412,7 +413,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
           <div
             key="item"
             className={menuClasses}
-            aria-hidden={!open}>
+            aria-hidden={!open}
+          >
             <div className="dropdown__backdrop theme--transparent-overlay" />
             <div
               key={uniquenessKey}
@@ -420,7 +422,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
               tabIndex={-1}
               className={classnames('dropdown__list', {
                 'dropdown__list--filtering': filterVisible,
-              })}>
+              })}
+            >
               <div className="form-control dropdown__filter">
                 <i className="fa fa-search" />
                 <input
@@ -434,7 +437,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
               <ul
                 className={classnames({
                   hide: noResults,
-                })}>
+                })}
+              >
                 {dropdownItems}
               </ul>
             </div>
@@ -453,7 +457,8 @@ class Dropdown extends PureComponent<DropdownProps, State> {
           ref={this._setRef}
           onClick={this._handleClick}
           tabIndex={-1}
-          onMouseDown={Dropdown._handleMouseDown}>
+          onMouseDown={Dropdown._handleMouseDown}
+        >
           {finalChildren}
         </div>
       </KeydownBinder>

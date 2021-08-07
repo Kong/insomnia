@@ -461,7 +461,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
             <li
               className={classnames('env-modal__sidebar-root-item', {
                 'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
-              })}>
+              })}
+            >
               <Button onClick={this._handleShowEnvironment} value={rootEnvironment}>
                 {ROOT_ENVIRONMENT_NAME}
                 <HelpTooltip className="space-left">
@@ -483,7 +484,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                 <DropdownItem
                   onClick={this._handleAddEnvironment}
                   value={true}
-                  title="Environment will not be exported or synced">
+                  title="Environment will not be exported or synced"
+                >
                   <i className="fa fa-eye-slash" /> Private Environment
                 </DropdownItem>
               </Dropdown>
@@ -556,7 +558,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                     <DropdownItem
                       value={selectedEnvironment}
                       onClick={this.unsetColor}
-                      disabled={!selectedEnvironment.color}>
+                      disabled={!selectedEnvironment.color}
+                    >
                       <i className="fa fa-minus-circle" />
                       Unset Color
                     </DropdownItem>
@@ -565,14 +568,16 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                   <Button
                     value={selectedEnvironment}
                     onClick={this._handleDuplicateEnvironment}
-                    className="btn btn--clicky space-right">
+                    className="btn btn--clicky space-right"
+                  >
                     <i className="fa fa-copy" /> Duplicate
                   </Button>
 
                   <PromptButton
                     value={selectedEnvironment}
                     onClick={this._handleDeleteEnvironment}
-                    className="btn btn--clicky">
+                    className="btn btn--clicky"
+                  >
                     <i className="fa fa-trash-o" />
                   </PromptButton>
                 </Fragment>

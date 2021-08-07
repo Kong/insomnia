@@ -548,7 +548,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
           <div
             key="item"
             className={menuClasses}
-            aria-hidden={!open}>
+            aria-hidden={!open}
+          >
             {open && <StyledBackdrop className="theme--transparent-overlay" />}
             {open && (
               <StyledMenu
@@ -576,7 +577,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
                 <ul
                   className={classnames({
                     hide: noResults,
-                  })}>
+                  })}
+                >
                   {dropdownItems}
                 </ul>
               </StyledMenu>

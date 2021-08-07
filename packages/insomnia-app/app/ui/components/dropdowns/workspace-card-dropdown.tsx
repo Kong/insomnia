@@ -104,7 +104,8 @@ const useDocumentActionPlugins = ({ workspace, apiSpec, space }: Props) => {
       key={`${p.plugin.name}:${p.label}`}
       value={p}
       onClick={handleClick}
-      stayOpenAfterClick={!p.hideAfterClick}>
+      stayOpenAfterClick={!p.hideAfterClick}
+    >
       {isLoading(p.label) && spinner}
       {p.label}
     </DropdownItem>

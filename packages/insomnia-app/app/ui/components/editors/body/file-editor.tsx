@@ -56,7 +56,8 @@ class FileEditor extends PureComponent<Props> {
           <PromptButton
             className="btn btn--super-compact"
             disabled={!path}
-            onClick={this._handleResetFile}>
+            onClick={this._handleResetFile}
+          >
             Reset File
           </PromptButton>
           &nbsp;&nbsp;

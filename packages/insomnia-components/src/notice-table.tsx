@@ -163,14 +163,16 @@ export class NoticeTable extends PureComponent<NoticeTableProps, State> {
                     style={{
                       minWidth: '3em',
                     }}
-                    align="center">
+                    align="center"
+                  >
                     Line
                   </TableHeader>
                   <TableHeader
                     style={{
                       width: '100%',
                     }}
-                    align="left">
+                    align="left"
+                  >
                     Message
                   </TableHeader>
                 </TableRow>

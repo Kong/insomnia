@@ -51,7 +51,8 @@ class RenderedText extends PureComponent<Props, State> {
           style={{
             fontSize: '0.9em',
             fontStyle: 'italic',
-          }}>
+          }}
+        >
           {this.state.error || 'Unknown Error'}
         </span>
       );

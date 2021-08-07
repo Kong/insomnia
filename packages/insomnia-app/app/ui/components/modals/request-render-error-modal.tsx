@@ -61,7 +61,8 @@ class RequestRenderErrorModal extends PureComponent<{}, State> {
             {error.path.match(/^body/) && (
               <button
                 className="btn btn--clicky margin-right-sm"
-                onClick={this._handleShowRequestSettings}>
+                onClick={this._handleShowRequestSettings}
+              >
                 Adjust Render Settings
               </button>
             )}

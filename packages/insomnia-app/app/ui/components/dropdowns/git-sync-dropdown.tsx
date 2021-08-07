@@ -306,7 +306,8 @@ class GitSyncDropdown extends PureComponent<Props, State> {
         className={classnames({
           bold: isCurrentBranch,
         })}
-        title={isCurrentBranch ? null : `Switch to "${branch}"`}>
+        title={isCurrentBranch ? null : `Switch to "${branch}"`}
+      >
         {icon}
         {branch}
       </DropdownItem>

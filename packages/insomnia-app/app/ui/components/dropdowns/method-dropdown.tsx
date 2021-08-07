@@ -101,7 +101,8 @@ class MethodDropdown extends PureComponent<Props> {
             key={method}
             className={`http-method-${method}`}
             onClick={this._handleChange}
-            value={method}>
+            value={method}
+          >
             {method}
           </DropdownItem>
         ))}
@@ -117,7 +118,8 @@ class MethodDropdown extends PureComponent<Props> {
         <DropdownItem
           className="http-method-custom"
           onClick={this._handleSetCustomMethod}
-          value={method}>
+          value={method}
+        >
           Custom Method
         </DropdownItem>
       </Dropdown>
