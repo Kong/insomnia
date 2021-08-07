@@ -105,7 +105,7 @@ module.exports = {
     'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
     'react/prefer-stateless-function': 'warn', // TODO: fix this and change to error
     'react/jsx-key': ['error', { 'checkFragmentShorthand': true }],
-    'react/no-array-index-key': 'warn', // TODO: fix this and change to error
+    'react/no-array-index-key': 'warn',
     'react/self-closing-comp': 'error',
 
     'react-hooks/exhaustive-deps': 'error',
