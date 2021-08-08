@@ -121,7 +121,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   const headers = [
     ...((pairsByName.header as string[] | undefined) || []),
     ...((pairsByName.H as string[] | undefined) || []),
-  ].map((header) => {
+  ].map(header => {
     const [name, value] = header.split(/:(.*)$/);
     return {
       name: name.trim(),
@@ -134,7 +134,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     ...((pairsByName.cookie as string[] | undefined) || []),
     ...((pairsByName.b as string[] | undefined) || []),
   ]
-    .map((str) => {
+    .map(str => {
       const name = str.split('=', 1)[0];
       const value = str.replace(`${name}=`, '');
       return `${name}=${value}`;
@@ -143,7 +143,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
 
   // Convert cookie value to header
   const existingCookieHeader = headers.find(
-    (header) => header.name.toLowerCase() === 'cookie',
+    header => header.name.toLowerCase() === 'cookie',
   );
 
   if (cookieHeaderValue && existingCookieHeader) {
@@ -179,7 +179,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   // join params to make body
   const textBody = textBodyParams.join('&');
   const contentTypeHeader = headers.find(
-    (header) => header.name.toLowerCase() === 'content-type',
+    header => header.name.toLowerCase() === 'content-type',
   );
   const mimeType = contentTypeHeader
     ? contentTypeHeader.value.split(';')[0]
@@ -189,7 +189,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   const formDataParams = [
     ...((pairsByName.form as string[] | undefined) || []),
     ...((pairsByName.F as string[] | undefined) || []),
-  ].map((str) => {
+  ].map(str => {
     const [name, value] = str.split('=');
     const item: Parameter = {
       name,
@@ -211,7 +211,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
   const bodyAsGET = getPairValue(pairsByName, false, ['G', 'get']);
 
   if (textBody && bodyAsGET) {
-    const bodyParams = textBody.split('&').map((v) => {
+    const bodyParams = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
       return {
         name: name || '',
@@ -220,7 +220,7 @@ const importCommand = (parseEntries: ParseEntry[]): ImportRequest => {
     });
     parameters.push(...bodyParams);
   } else if (textBody && mimeType === 'application/x-www-form-urlencoded') {
-    body.params = textBody.split('&').map((v) => {
+    body.params = textBody.split('&').map(v => {
       const [name, value] = v.split('=');
       return {
         name: name || '',
@@ -274,7 +274,7 @@ const getPairValue = <T extends string | boolean>(
   return defaultValue;
 };
 
-export const convert: Converter = (rawData) => {
+export const convert: Converter = rawData => {
   requestCount = 1;
 
   if (!rawData.match(/^\s*curl /)) {
@@ -338,7 +338,7 @@ export const convert: Converter = (rawData) => {
   commands.push(currentCommand);
 
   const requests: ImportRequest[] = commands
-    .filter((command) => command[0] === 'curl')
+    .filter(command => command[0] === 'curl')
     .map(importCommand);
 
   return requests;

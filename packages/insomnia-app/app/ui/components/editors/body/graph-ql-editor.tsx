@@ -671,7 +671,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     return (
       <div className="graphql-editor">
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
-          
+
           <DropdownButton className="space-left btn btn--micro btn--outlined">
             schema <i className="fa fa-wrench" />
           </DropdownButton>
@@ -681,7 +681,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
           </DropdownItem>
 
           <DropdownDivider>Remote GraphQL Schema</DropdownDivider>
-          
+
           <DropdownItem onClick={this._handleRefreshSchema} stayOpenAfterClick>
             <i className={classnames('fa', 'fa-refresh', { 'fa-spin': schemaIsFetching })} /> Refresh Schema
           </DropdownItem>

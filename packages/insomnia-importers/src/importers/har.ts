@@ -74,7 +74,7 @@ const importRequest = (request: ImportRequest): ImportRequest => {
 
   // Convert cookie value to header
   const existingCookieHeader = headers.find(
-    (header) => header.name.toLowerCase() === 'cookie',
+    header => header.name.toLowerCase() === 'cookie',
   );
 
   if (cookieHeaderValue && existingCookieHeader) {
@@ -106,7 +106,7 @@ const importRequest = (request: ImportRequest): ImportRequest => {
   };
 };
 
-export const convert: Converter = (rawData) => {
+export const convert: Converter = rawData => {
   requestCount = 1;
 
   try {

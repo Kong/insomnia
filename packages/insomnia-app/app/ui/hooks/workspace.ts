@@ -52,7 +52,6 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   const remoteSpaces = useSelector(selectRemoteSpaces);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
-
   // Local state
   const [{ loading, localProjects, remoteProjects, pullingProjects }, _dispatch] = useReducer(reducer, initialState);
   const dispatch = useSafeReducerDispatch(_dispatch);

@@ -345,7 +345,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleSortEnd: SortEndHandler = (results) => {
+  _handleSortEnd: SortEndHandler = results => {
     const { oldIndex, newIndex } = results;
 
     if (newIndex === oldIndex) {

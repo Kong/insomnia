@@ -86,7 +86,7 @@ const mapWorkspaceToWorkspaceCard = ({
   apiSpecs: ApiSpec[];
   workspaceMetas: WorkspaceMeta[];
 }) => (workspace: Workspace) => {
-  const apiSpec = apiSpecs.find((s) => s.parentId === workspace._id);
+  const apiSpec = apiSpecs.find(s => s.parentId === workspace._id);
 
   // an apiSpec model will always exist because a migration in the workspace forces it to
   if (!apiSpec) {
@@ -109,7 +109,7 @@ const mapWorkspaceToWorkspaceCard = ({
 
   // Get cached branch from WorkspaceMeta
   const workspaceMeta = workspaceMetas?.find(
-    (wm) => wm.parentId === workspace._id
+    wm => wm.parentId === workspace._id
   );
 
   const lastActiveBranch = workspaceMeta?.cachedGitRepositoryBranch;
@@ -213,7 +213,7 @@ class WrapperHome extends PureComponent<Props, State> {
       submitName: 'Fetch and Import',
       label: 'URL',
       placeholder: 'https://website.com/insomnia-import.json',
-      onComplete: (uri) => {
+      onComplete: uri => {
         this.props.handleImportUri(uri, {
           forceToWorkspace: ForceToWorkspace.new,
         });
@@ -336,7 +336,7 @@ class WrapperHome extends PureComponent<Props, State> {
       )
       .filter(isNotNullOrUndefined)
       .sort(orderSpaceCards(sortOrder))
-      .map((props) => (
+      .map(props => (
         <WorkspaceCard
           {...props}
           key={props.apiSpec._id}
@@ -404,11 +404,11 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 }
 
-const mapStateToProps = (state) => ({
+const mapStateToProps = state => ({
   sortOrder: selectSpaceSortOrder(state),
 });
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   const bound = bindActionCreators(
     {
       createWorkspace,

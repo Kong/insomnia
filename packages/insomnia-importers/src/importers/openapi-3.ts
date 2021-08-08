@@ -127,7 +127,7 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
     method: string,
     tags?: string[],
   } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths)
-    .map((path) => {
+    .map(path => {
       const schemasPerMethod = document.paths[path];
 
       if (!schemasPerMethod) {
@@ -276,7 +276,7 @@ const parseSecurity = (
   }
 
   const supportedSchemes = security
-    .map((securityPolicy) => {
+    .map(securityPolicy => {
       const securityName = Object.keys(securityPolicy)[0];
       // @ts-expect-error the base types do not include an index but from what I can tell, they should
       return securitySchemes[securityName];
@@ -288,8 +288,8 @@ const parseSecurity = (
     scheme.type === SECURITY_TYPE.API_KEY
   ));
   const apiKeyHeaders = apiKeySchemes
-    .filter((scheme) => scheme.in === 'header')
-    .map((scheme) => {
+    .filter(scheme => scheme.in === 'header')
+    .map(scheme => {
       const variableName = camelCase(scheme.name);
       return {
         name: scheme.name,
@@ -298,8 +298,8 @@ const parseSecurity = (
       };
     });
   const apiKeyCookies = apiKeySchemes
-    .filter((scheme) => scheme.in === 'cookie')
-    .map((scheme) => {
+    .filter(scheme => scheme.in === 'cookie')
+    .map(scheme => {
       const variableName = camelCase(scheme.name);
       return `${scheme.name}={{ ${variableName} }}`;
     });
@@ -309,8 +309,8 @@ const parseSecurity = (
     value: apiKeyCookies.join('; '),
   };
   const apiKeyParams = apiKeySchemes
-    .filter((scheme) => scheme.in === 'query')
-    .map((scheme) => {
+    .filter(scheme => scheme.in === 'query')
+    .map(scheme => {
       const variableName = camelCase(scheme.name);
       return {
         name: scheme.name,
@@ -325,7 +325,7 @@ const parseSecurity = (
 
   const authentication = (() => {
     const authScheme = supportedSchemes.find(
-      (scheme) =>
+      scheme =>
         [SECURITY_TYPE.HTTP, SECURITY_TYPE.OAUTH].includes(scheme.type) &&
         SUPPORTED_HTTP_AUTH_SCHEMES.includes(scheme.scheme),
     );
@@ -368,8 +368,8 @@ const getSecurityEnvVariables = (securitySchemeObject?: OpenAPIV3.SecurityScheme
   const securitySchemes = Object.values(securitySchemeObject);
 
   const apiKeyVariableNames = securitySchemes
-    .filter((scheme) => scheme.type === SECURITY_TYPE.API_KEY)
-    .map((scheme) => camelCase(scheme.name));
+    .filter(scheme => scheme.type === SECURITY_TYPE.API_KEY)
+    .map(scheme => camelCase(scheme.name));
   const variables: Record<string, string> = {};
   Array.from(new Set(apiKeyVariableNames)).forEach(name => {
     variables[name] = name;
@@ -464,7 +464,7 @@ const prepareBody = (endpointSchema: OpenAPIV3.OperationObject): ImportRequest['
  * Converts openapi schema of parameters into insomnia one.
  */
 const convertParameters = (parameters: OpenAPIV3.ParameterObject[] = []) => {
-  return parameters.map((parameter) => {
+  return parameters.map(parameter => {
     const { required, name, schema } = parameter;
     return {
       name,

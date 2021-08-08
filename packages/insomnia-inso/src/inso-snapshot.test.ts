@@ -18,7 +18,7 @@ describe('Snapshot for', () => {
     'export spec -h',
   ])(
     '"inso %s"',
-    async (args) => {
+    async args => {
       const binPath = getBinPathSync();
       if (binPath === undefined) {
         throw new Error('unable to get binary path');

@@ -202,7 +202,7 @@ const dragSource: DragSourceSpec<Props, DragObject> = {
 function isOnExpandTag(monitor: DropTargetMonitor, component: UnconnectedSidebarRequestGroupRow): boolean {
   const rect = component.getExpandTag()?.getBoundingClientRect();
   const pointer = monitor.getClientOffset();
-  
+
   if (!pointer || !rect) {
     return false;
   }

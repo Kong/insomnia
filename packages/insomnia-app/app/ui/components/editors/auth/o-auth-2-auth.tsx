@@ -196,7 +196,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
   _handleChangePkce(value: boolean) {
     this._handleChangeProperty('usePkce', value);
   }
-  
+
   _handleChangePkceMethod(e: React.SyntheticEvent<HTMLInputElement>) {
     this._handleChangeProperty('pkceMethod', e.currentTarget.value);
   }
