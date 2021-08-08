@@ -74,8 +74,8 @@ export class VCS {
     return this._project !== null;
   }
 
-  hasLocalProjectForId(id: string) {
-    return Boolean(this._store.hasItem(paths.project(id)));
+  async hasLocalProjectForRootDocument(rootDocumentId: string) {
+    return Boolean(await this._getProjectByRootDocument(rootDocumentId));
   }
 
   async removeProjectsForRoot(rootDocumentId: string) {

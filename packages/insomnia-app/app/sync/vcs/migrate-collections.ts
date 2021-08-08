@@ -1,4 +1,5 @@
 import { isLoggedIn } from '../../account/session';
+import { asyncFilter } from '../../common/async-array-helpers';
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { isRemoteSpace, RemoteSpace } from '../../models/space';
@@ -31,9 +32,9 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
     
   // Are there any collections that have sync setup but are not in a remote space?
   const isNotInRemoteSpace = (collection: Workspace) => !Boolean(remoteSpaces.find(space => space._id === collection.parentId));
-  const hasLocalProject = (collection: Workspace) => vcs.hasLocalProjectForId(collection._id);
+  const hasLocalProject = (collection: Workspace) => vcs.hasLocalProjectForRootDocument(collection._id);
     
-  const needsMigration = collections.filter(coll => hasLocalProject(coll) && isNotInRemoteSpace(coll));
+  const needsMigration = await asyncFilter(collections, async coll => await hasLocalProject(coll) && isNotInRemoteSpace(coll));
 
   // If nothing to migrate, exit
   if (!needsMigration.length) {
