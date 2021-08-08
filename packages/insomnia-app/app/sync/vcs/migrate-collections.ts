@@ -22,6 +22,8 @@ export const logCollectionMovedToSpace = (collection: Workspace, remoteSpace: Re
 };
 
 export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
+  console.log('[sync] checking for collections which need to be migrated');
+
   // If not logged in, exit
   if (!isLoggedIn()) {
     return;

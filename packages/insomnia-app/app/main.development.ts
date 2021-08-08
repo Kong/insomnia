@@ -10,6 +10,7 @@ import log, { initializeLogging } from './common/log';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
+import * as syncMigration from './main/sync-migration';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
@@ -55,10 +56,17 @@ app.on('ready', async () => {
   await _createModelInstances();
   await errorHandling.init();
   await windowUtils.init();
+
   // Init the app
   const updatedStats = await _trackStats();
   await _updateFlags(updatedStats);
+
+  // Check for collections that need to be moved into a remote space just before launching the app
+  await syncMigration.init();
+
+  // Launch app
   await _launchApp();
+
   // Init the rest
   await updates.init();
   grpcIpcMain.init();
