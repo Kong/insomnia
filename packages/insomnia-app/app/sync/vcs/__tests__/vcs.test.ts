@@ -2,12 +2,15 @@ import { createBuilder } from '@develohpanda/fluent-builder';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import * as paths from '../paths';
 import { describeChanges } from '../util';
 import { VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
+const projectBuilder = createBuilder(projectSchema);
 
 function newDoc(id) {
   return baseModelBuilder.reset()._id(id).build();
@@ -932,6 +935,32 @@ describe('VCS', () => {
       expect(await v.getHistory(2)).toStrictEqual([s1, s2]);
       // Get the last 3 items (only 2 exist)
       expect(await v.getHistory(3)).toStrictEqual([s1, s2]);
+    });
+  });
+
+  describe('hasProjectForRootDocument', () => {
+    let vcs: VCS;
+    const project = projectBuilder.build();
+
+    beforeEach(async () => {
+      const driver = new MemoryDriver();
+      vcs = new VCS(driver);
+
+      driver.setItem(paths.projects(), Buffer.from(JSON.stringify([project])));
+      driver.setItem(paths.projectBase(project.id), Buffer.from(''));
+      driver.setItem(paths.project(project.id), Buffer.from(JSON.stringify(project)));
+    });
+
+    it('should return true if has project', async () => {
+      const hasProject = await vcs.hasProjectForRootDocument(project.rootDocumentId);
+
+      expect(hasProject).toBe(true);
+    });
+
+    it('should return false if has no project', async () => {
+      const hasProject = await vcs.hasProjectForRootDocument('some other id');
+
+      expect(hasProject).toBe(false);
     });
   });
 });

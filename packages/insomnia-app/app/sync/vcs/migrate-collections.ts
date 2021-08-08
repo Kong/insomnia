@@ -32,7 +32,7 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
 
   // Are there any collections that have sync setup but are not in a remote space?
   const isNotInRemoteSpace = (collection: Workspace) => !Boolean(remoteSpaces.find(space => space._id === collection.parentId));
-  const hasLocalProject = (collection: Workspace) => vcs.hasLocalProjectForRootDocument(collection._id);
+  const hasLocalProject = (collection: Workspace) => vcs.hasProjectForRootDocument(collection._id);
 
   const needsMigration = await asyncFilter(collections, async coll => await hasLocalProject(coll) && isNotInRemoteSpace(coll));
 

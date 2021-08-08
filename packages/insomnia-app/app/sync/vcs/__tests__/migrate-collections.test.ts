@@ -41,7 +41,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     await migrateCollectionsIntoRemoteSpace(vcs);
 
     // Assert
-    expect(vcs.hasLocalProjectForRootDocument).not.toHaveBeenCalled();
+    expect(vcs.hasProjectForRootDocument).not.toHaveBeenCalled();
     expect(vcs.remoteProjectsInAnyTeam).not.toHaveBeenCalled();
   });
 
@@ -55,7 +55,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     const localSpace = await models.space.create();
     const workspaceInLocal = await models.workspace.create({ parentId: localSpace._id });
 
-    vcs.hasLocalProjectForRootDocument.mockResolvedValue(false); // no local project
+    vcs.hasProjectForRootDocument.mockResolvedValue(false); // no local project
 
     // Act
     await migrateCollectionsIntoRemoteSpace(vcs);
@@ -73,7 +73,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     const remoteSpace = await models.space.create({ remoteId: 'str' });
     const workspaceInRemote = await models.workspace.create({ parentId: remoteSpace._id });
 
-    vcs.hasLocalProjectForRootDocument.mockResolvedValue(true); // has local project
+    vcs.hasProjectForRootDocument.mockResolvedValue(true); // has local project
 
     // Act
     await migrateCollectionsIntoRemoteSpace(vcs);
@@ -90,7 +90,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     const localSpace = await models.space.create();
     const workspaceInLocal = await models.workspace.create({ scope: 'design', parentId: localSpace._id });
 
-    vcs.hasLocalProjectForRootDocument.mockResolvedValue(true); // has local project
+    vcs.hasProjectForRootDocument.mockResolvedValue(true); // has local project
 
     // Act
     await migrateCollectionsIntoRemoteSpace(vcs);
@@ -112,7 +112,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
       .team(team)
       .build();
 
-    vcs.hasLocalProjectForRootDocument.mockResolvedValue(true); // has local project
+    vcs.hasProjectForRootDocument.mockResolvedValue(true); // has local project
     vcs.remoteProjectsInAnyTeam.mockResolvedValue([remoteProjectWithTeam]); // has local project
 
     // Act
@@ -142,7 +142,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
       .team(team)
       .build();
 
-    vcs.hasLocalProjectForRootDocument.mockResolvedValue(true); // has local project
+    vcs.hasProjectForRootDocument.mockResolvedValue(true); // has local project
     vcs.remoteProjectsInAnyTeam.mockResolvedValue([remoteProjectWithTeam]); // has local project
 
     // Act

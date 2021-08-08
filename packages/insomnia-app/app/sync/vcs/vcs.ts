@@ -74,7 +74,7 @@ export class VCS {
     return this._project !== null;
   }
 
-  async hasLocalProjectForRootDocument(rootDocumentId: string) {
+  async hasProjectForRootDocument(rootDocumentId: string) {
     return Boolean(await this._getProjectByRootDocument(rootDocumentId));
   }
 
