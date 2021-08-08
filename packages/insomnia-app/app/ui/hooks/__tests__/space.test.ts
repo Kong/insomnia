@@ -33,7 +33,7 @@ describe('useRemoteSpaces', () => {
 
   it('should not load teams if not signed in', async () => {
     const store = mockStore(await reduxStateForTest({ isLoggedIn: false }));
-    
+
     const vcs = newMockedVcs();
 
     const { result } = renderHook(() => useRemoteSpaces(vcs), { wrapper: withReduxStore(store) });

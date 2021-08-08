@@ -14,7 +14,7 @@ describe('extractCommandOptions()', () => {
     command
       .command('subCommand')
       .option('-s, --subCmd')
-      .action((cmd) => {
+      .action(cmd => {
         expect(extractCommandOptions(cmd)).toEqual({
           global: true,
           subCmd: true,

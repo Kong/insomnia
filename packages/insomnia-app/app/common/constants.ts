@@ -141,7 +141,7 @@ export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
-export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity => 
+export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
   isDesignActivity(activity) || isCollectionActivity(activity);
 
 export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
@@ -164,7 +164,7 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
   switch (activity) {
     case ACTIVITY_DEBUG:
       return true;
-      
+
     case ACTIVITY_SPEC:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
@@ -327,7 +327,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_ASC]: 'Requests First',
 };
 
-export type SpaceSortOrder = 
+export type SpaceSortOrder =
   | 'name-asc'
   | 'name-desc'
   | 'created-asc'

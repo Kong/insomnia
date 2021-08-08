@@ -32,7 +32,7 @@ const mapStateToProps = (state: RootState) => {
   const activeRequest = selectActiveRequest(state);
   // the request switcher modal does not know about grpc requests yet
   const normalizedRequest = activeRequest && isRequest(activeRequest) ? activeRequest : undefined;
-  
+
   return {
     activeRequest: normalizedRequest,
     workspace: selectActiveWorkspace(state),
@@ -42,7 +42,7 @@ const mapStateToProps = (state: RootState) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   const bound = bindActionCreators({ activateWorkspace }, dispatch);
   return {
     handleActivateWorkspace: bound.activateWorkspace,
@@ -525,5 +525,3 @@ export default connect(
   null,
   { forwardRef: true }
 )(RequestSwitcherModal);
-
-

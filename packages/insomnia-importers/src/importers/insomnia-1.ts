@@ -105,7 +105,7 @@ const importRequestItem = (parentId?: string) => ({
     const mimeType = contentTypeHeader ? contentTypeHeader.value.split(';')[0] : '';
     const params = (typeof itemBody === 'string' ? itemBody : '')
       .split('&')
-      .map((param) => {
+      .map(param => {
         const [name, value] = param.split('=');
         return {
           name: decodeURIComponent(name),
@@ -142,7 +142,7 @@ const importRequestItem = (parentId?: string) => ({
   };
 };
 
-export const convert: Converter = (rawData) => {
+export const convert: Converter = rawData => {
   requestCount = 1;
   requestGroupCount = 1;
   let data;
@@ -159,7 +159,7 @@ export const convert: Converter = (rawData) => {
   }
 
   return data.items
-    .map((item) => {
+    .map(item => {
       const requestGroup = importRequestGroupItem(item);
       return [
         requestGroup,

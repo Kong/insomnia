@@ -130,12 +130,12 @@ const addScriptCommand = (originalCommand: commander.Command) => {
 
       if (!scriptTask) {
         logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
-        return exit(new Promise((resolve) => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       if (!scriptTask.startsWith('inso')) {
         logger.fatal('Tasks in a script should start with `inso`.');
-        return exit(new Promise((resolve) => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       // Collect args

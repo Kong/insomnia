@@ -133,7 +133,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     if (!workspace) {
       return;
     }
-    
+
     return protoManager.addDirectory(workspace._id);
   }
 

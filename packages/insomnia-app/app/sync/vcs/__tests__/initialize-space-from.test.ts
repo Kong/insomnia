@@ -19,7 +19,7 @@ describe('initializeSpaceFromTeam', () => {
 
     // Act
     const space = await initializeSpaceFromTeam(team);
-    
+
     // Assert
     expect(isRemoteSpace(space)).toBe(true);
     expect(space).toMatchObject<Partial<Space>>({
@@ -32,15 +32,15 @@ describe('initializeSpaceFromTeam', () => {
 
 describe('initializeWorkspaceFromProject', () => {
   beforeEach(globalBeforeEach);
-  
+
   it('should initialize workspac with properties from the project and space', async () => {
     // Arrange
     const space = await models.space.create();
     const project = projectBuilder.build();
-  
+
     // Act
     const workspace = await initializeWorkspaceFromProject(project, space);
-      
+
     // Assert
     expect(isCollection(workspace)).toBe(true);
     expect(workspace).toMatchObject<Partial<Workspace>>({

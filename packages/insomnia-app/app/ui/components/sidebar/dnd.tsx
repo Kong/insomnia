@@ -20,7 +20,7 @@ export const sourceCollect = (connect: DragSourceConnector, monitor: DragSourceM
   connectDragSource: connect.dragSource(),
   isDragging: monitor.isDragging(),
 });
-  
+
 export const targetCollect = (connect: DropTargetConnector, monitor: DropTargetMonitor) => ({
   connectDropTarget: connect.dropTarget(),
   isDraggingOver: monitor.isOver(),
@@ -48,7 +48,7 @@ export const dropHandleCreator = <Props extends Object>(
       const movingDoc = (monitor.getItem() as DragObject).item;
       const parentId = getParentId(props);
       const targetId = getTargetId(props);
-        
+
       if (!movingDoc || !parentId) {
         return;
       }
@@ -69,7 +69,7 @@ export const hoverHandleCreator = <Props extends Object>(): Required<DropTargetS
     }
   };
 
-const moveDoc = async ({ 
+const moveDoc = async ({
   docToMove,
   parentId,
   targetId,
@@ -84,42 +84,42 @@ const moveDoc = async ({
   if (docToMove._id === targetId) {
     return;
   }
-  
+
   // Don't allow dragging things into itself or children. This will disconnect
   // the node from the tree and cause the item to no longer show in the UI.
   const descendents = await database.withDescendants(docToMove);
-  
+
   for (const doc of descendents) {
     if (doc._id === parentId) {
       return;
     }
   }
-  
+
   function __updateDoc(doc, patch) {
     // @ts-expect-error -- TSCONVERSION
     return models.getModel(docToMove.type).update(doc, patch);
   }
-  
+
   if (!targetId) {
     // We are moving to an empty area. No sorting required
     await __updateDoc(docToMove, { parentId });
     return;
   }
-  
+
   // NOTE: using requestToTarget's parentId so we can switch parents!
   const docs = [
     ...(await models.request.findByParentId(parentId)),
     ...(await models.grpcRequest.findByParentId(parentId)),
     ...(await models.requestGroup.findByParentId(parentId)),
   ].sort((a, b) => (a.metaSortKey < b.metaSortKey ? -1 : 1));
-  
+
   // Find the index of doc B so we can re-order and save everything
   for (let i = 0; i < docs.length; i++) {
     const doc = docs[i];
-  
+
     if (doc._id === targetId) {
       let before, after;
-  
+
       if (targetOffset < 0) {
         // We're moving to below
         before = docs[i];
@@ -129,10 +129,10 @@ const moveDoc = async ({
         before = docs[i - 1];
         after = docs[i];
       }
-  
+
       const beforeKey = before ? before.metaSortKey : docs[0].metaSortKey - 100;
       const afterKey = after ? after.metaSortKey : docs[docs.length - 1].metaSortKey + 100;
-  
+
       if (Math.abs(afterKey - beforeKey) < 0.000001) {
         // If sort keys get too close together, we need to redistribute the list. This is
         // not performant at all (need to update all siblings in DB), but it is extremely rare
@@ -147,13 +147,13 @@ const moveDoc = async ({
         );
       } else {
         const metaSortKey = afterKey - (afterKey - beforeKey) / 2;
-  
+
         __updateDoc(docToMove, {
           metaSortKey,
           parentId,
         });
       }
-  
+
       break;
     }
   }

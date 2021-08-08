@@ -1257,7 +1257,7 @@ class App extends PureComponent<AppProps, State> {
       });
     }
 
-    if (activeWorkspace) { 
+    if (activeWorkspace) {
       await vcs.switchProject(activeWorkspace._id);
     } else {
       vcs.clearProject();

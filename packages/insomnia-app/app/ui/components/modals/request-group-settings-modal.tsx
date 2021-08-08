@@ -169,9 +169,9 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
 
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(requestGroup);
-    const doc = ancestors.find((doc) => doc.type === models.workspace.type);
+    const doc = ancestors.find(doc => doc.type === models.workspace.type);
     const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspaces.find((w) => w._id === workspaceId);
+    const workspace = workspaces.find(w => w._id === workspaceId);
 
     this.setState(
       {
@@ -271,7 +271,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
               onChange={this._handleUpdateMoveCopyWorkspace}
             >
               <option value="__NULL__">-- Select Workspace --</option>
-              {workspaces.map((w) => {
+              {workspaces.map(w => {
                 if (workspace && workspace._id === w._id) {
                   return null;
                 }
