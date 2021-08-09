@@ -1,5 +1,6 @@
-import { Reducer, useCallback, useEffect, useMemo, useReducer } from 'react';
+import { Reducer, useCallback, useMemo, useReducer } from 'react';
 import { useSelector } from 'react-redux';
+import { useAsync } from 'react-use';
 
 import { isRemoteSpace } from '../../models/space';
 import { Project } from '../../sync/types';
@@ -106,9 +107,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   }, [vcs, refresh, remoteSpaces, dispatch]);
 
   // If the refresh callback changes, refresh
-  useEffect(() => {
-    (async () => { await refresh(); })();
-  }, [refresh]);
+  useAsync(refresh, []);
 
   return {
     loading,
