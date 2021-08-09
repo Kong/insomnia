@@ -71,6 +71,7 @@ async function _getOAuth2AuthorizationCodeHeader(
     authentication.resource,
     authentication.usePkce,
     authentication.pkceMethod,
+    authentication.origin,
   );
   return _updateOAuth2Token(requestId, results);
 }
@@ -190,6 +191,7 @@ async function _getAccessToken(
     authentication.clientSecret,
     token.refreshToken,
     authentication.scope,
+    authentication.origin,
   );
 
   // If we didn't receive an access token it means the refresh token didn't succeed,

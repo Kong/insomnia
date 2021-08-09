@@ -14,6 +14,7 @@ export default async function(
   clientSecret: string,
   refreshToken: string,
   scope: string,
+  origin: string,
 ): Promise<Record<string, any>> {
   const params = [
     {
@@ -53,6 +54,10 @@ export default async function(
     });
   } else {
     headers.push(getBasicAuthHeader(clientId, clientSecret));
+  }
+
+  if (origin) {
+    headers.push({ name: 'Origin', value: origin });
   }
 
   const url = setDefaultProtocol(accessTokenUrl);
