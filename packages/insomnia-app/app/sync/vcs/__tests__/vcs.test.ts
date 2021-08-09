@@ -4,6 +4,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import { Project } from '../../types';
 import * as paths from '../paths';
 import { describeChanges } from '../util';
 import { VCS } from '../vcs';
@@ -940,9 +941,11 @@ describe('VCS', () => {
 
   describe('hasProjectForRootDocument', () => {
     let vcs: VCS;
-    const project = projectBuilder.build();
+    let project: Project;
 
     beforeEach(async () => {
+      project = projectBuilder.reset().build();
+
       const driver = new MemoryDriver();
       vcs = new VCS(driver);
 
