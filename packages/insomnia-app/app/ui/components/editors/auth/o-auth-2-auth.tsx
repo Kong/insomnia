@@ -241,6 +241,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
     this._handleChangeProperty('resource', value);
   }
 
+  _handleChangeOrigin(value: string) {
+    this._handleChangeProperty('origin', value);
+  }
+
   _handleChangeGrantType(e: React.SyntheticEvent<HTMLInputElement>) {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
@@ -497,6 +501,12 @@ class OAuth2Auth extends PureComponent<Props, State> {
       this._handleChangeResource,
       'Indicate what resource to access',
     );
+    const origin = this.renderInputRow(
+      'Origin',
+      'origin',
+      this._handleChangeOrigin,
+      'Specify Origin header when CORS is required for oauth endpoints',
+    );
     const credentialsInBody = this.renderSelectRow(
       'Credentials',
       'credentialsInBody',
@@ -527,7 +537,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
         enabled,
       ];
 
-      advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource];
+      advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource, origin];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
       advancedFields = [scope, credentialsInBody, tokenPrefix, audience, resource];
