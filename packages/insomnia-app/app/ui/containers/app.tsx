@@ -122,6 +122,7 @@ import {
   selectWorkspacesForActiveSpace,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
+import { AppHooks } from './app-hooks';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -1516,6 +1517,8 @@ class App extends PureComponent<AppProps, State> {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
+          <AppHooks />
+
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
               <Wrapper
