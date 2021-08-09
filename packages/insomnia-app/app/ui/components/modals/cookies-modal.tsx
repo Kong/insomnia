@@ -64,7 +64,7 @@ class CookiesModal extends PureComponent<Props, State> {
       secure: false,
       httpOnly: false,
     };
-    
+
     const { cookieJar } = this.props;
     const { cookies } = cookieJar;
     cookieJar.cookies = [newCookie, ...cookies];

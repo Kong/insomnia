@@ -79,11 +79,11 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   _handleChangeRawValue(e: React.SyntheticEvent<HTMLInputElement>) {
     const { cookie: oldCookie } = this.state;
     const { value } = e.currentTarget;
-    
+
     if (!oldCookie) {
       return;
     }
-    
+
     try {
       // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
       // @ts-expect-error -- TSCONVERSION
@@ -272,7 +272,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
                   );
                 })}
               </div>
-            
+
               <div className="pad">
                 <div className="form-control form-control--outlined">
                   <label>
