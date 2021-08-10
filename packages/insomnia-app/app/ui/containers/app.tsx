@@ -1243,10 +1243,7 @@ class App extends PureComponent<AppProps, State> {
     });
 
     if (!vcs) {
-      const directory = path.join(getDataDirectory(), 'version-control');
-      const driver = new FileSystemDriver({
-        directory,
-      });
+      const driver = FileSystemDriver.create(getDataDirectory());
 
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {

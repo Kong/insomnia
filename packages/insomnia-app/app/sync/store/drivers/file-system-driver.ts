@@ -7,9 +7,14 @@ import type { BaseDriver } from './base';
 export default class FileSystemDriver implements BaseDriver {
   _directory: string;
 
-  constructor(config: { directory: string }) {
+  private constructor(config: { directory: string }) {
     this._directory = config.directory;
     console.log(`[FileSystemDriver] Initialized in "${this._directory}"`);
+  }
+
+  static create(dataDirectory: string) {
+    const directory = path.join(dataDirectory, 'version-control');
+    return new FileSystemDriver({ directory });
   }
 
   async hasItem(key: string) {

@@ -1,4 +1,3 @@
-import path from 'path';
 import { useEffect } from 'react';
 import { useInterval } from 'react-use';
 
@@ -9,8 +8,7 @@ import { VCS } from '../../sync/vcs/vcs';
 import { invokeAsyncSynchronously } from './effect-helpers';
 
 const check = async () => {
-  const directory = path.join(getDataDirectory(), 'version-control');
-  const driver = new FileSystemDriver({ directory });
+  const driver = FileSystemDriver.create(getDataDirectory());
   await migrateCollectionsIntoRemoteSpace(new VCS(driver));
 };
 
