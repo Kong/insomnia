@@ -7,7 +7,7 @@ import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { BASE_SPACE_ID } from '../../models/space';
+import { BASE_SPACE_ID, isRemoteSpace } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 
@@ -76,12 +76,22 @@ export const selectSpaces = createSelector(
   entities => entities.spaces,
 );
 
+export const selectRemoteSpaces = createSelector(
+  selectSpaces,
+  spaces => spaces.filter(isRemoteSpace),
+);
+
 export const selectActiveSpace = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeSpaceId,
   (entities, activeSpaceId) => {
     return entities.spaces[activeSpaceId] || entities.spaces[BASE_SPACE_ID];
   },
+);
+
+export const selectSpaceSortOrder = createSelector(
+  selectGlobal,
+  global => global.spaceSortOrder
 );
 
 export const selectAllWorkspaces = createSelector(

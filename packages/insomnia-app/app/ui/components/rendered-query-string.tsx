@@ -91,7 +91,8 @@ class RenderedQueryString extends PureComponent<Props, State> {
           content={this.state.string}
           className="pull-right"
           title="Copy URL"
-          confirmMessage="">
+          confirmMessage=""
+        >
           <i className="fa fa-copy" />
         </CopyButton>
         {inner}

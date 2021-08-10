@@ -6,25 +6,26 @@ import {
   SORT_CREATED_ASC,
   SORT_CREATED_DESC,
   SORT_HTTP_METHOD,
+  SORT_MODIFIED_ASC,
+  SORT_MODIFIED_DESC,
   SORT_NAME_ASC,
   SORT_NAME_DESC,
   SORT_TYPE_ASC,
   SORT_TYPE_DESC,
-  SortOrder,
 } from './constants';
 
 type SortableModel = Request | RequestGroup | GrpcRequest;
-type SortFunction = (a: SortableModel, b: SortableModel) => number;
+type SortFunction<SortableType> = (a: SortableType, b: SortableType) => number;
 
-const ascendingNameSort: SortFunction = (a, b) => {
+const ascendingNameSort: SortFunction<{name: string}> = (a, b) => {
   return a.name.localeCompare(b.name);
 };
 
-const descendingNameSort: SortFunction = (a, b) => {
+const descendingNameSort: SortFunction<{name: string}> = (a, b) => {
   return b.name.localeCompare(a.name);
 };
 
-const createdFirstSort: SortFunction = (a, b) => {
+const createdFirstSort: SortFunction<{created: number}> = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
@@ -32,7 +33,7 @@ const createdFirstSort: SortFunction = (a, b) => {
   return a.created < b.created ? -1 : 1;
 };
 
-const createdLastSort: SortFunction = (a, b) => {
+const createdLastSort: SortFunction<{created: number}> = (a, b) => {
   if (a.created === b.created) {
     return 0;
   }
@@ -40,7 +41,23 @@ const createdLastSort: SortFunction = (a, b) => {
   return a.created > b.created ? -1 : 1;
 };
 
-const httpMethodSort: SortFunction = (a, b) => {
+const ascendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
+  if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
+    return 0;
+  }
+
+  return a.lastModifiedTimestamp < b.lastModifiedTimestamp ? -1 : 1;
+};
+
+const descendingModifiedSort: SortFunction<{lastModifiedTimestamp: number}> = (a, b) => {
+  if (a.lastModifiedTimestamp === b.lastModifiedTimestamp) {
+    return 0;
+  }
+
+  return a.lastModifiedTimestamp > b.lastModifiedTimestamp ? -1 : 1;
+};
+
+const httpMethodSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
   // Sort Requests and GrpcRequests to top, in that order
   if (a.type !== b.type) {
     if (isRequest(a) || isRequest(b)) {
@@ -75,7 +92,7 @@ const httpMethodSort: SortFunction = (a, b) => {
   return metaSortKeySort(a, b);
 };
 
-const ascendingTypeSort: SortFunction = (a, b) => {
+const ascendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
   if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
     return isRequestGroup(b) ? -1 : 1;
   }
@@ -83,7 +100,7 @@ const ascendingTypeSort: SortFunction = (a, b) => {
   return metaSortKeySort(a, b);
 };
 
-const descendingTypeSort: SortFunction = (a, b) => {
+const descendingTypeSort: SortFunction<Pick<SortableModel, 'type' | 'metaSortKey' | '_id'>> = (a, b) => {
   if (a.type !== b.type && (isRequestGroup(a) || isRequestGroup(b))) {
     return isRequestGroup(a) ? -1 : 1;
   }
@@ -91,7 +108,7 @@ const descendingTypeSort: SortFunction = (a, b) => {
   return metaSortKeySort(a, b);
 };
 
-export const metaSortKeySort: SortFunction = (a, b) => {
+export const metaSortKeySort: SortFunction<Pick<SortableModel, '_id' | 'metaSortKey'>> = (a, b) => {
   if (a.metaSortKey === b.metaSortKey) {
     return a._id > b._id ? -1 : 1;
   }
@@ -99,20 +116,21 @@ export const metaSortKeySort: SortFunction = (a, b) => {
   return a.metaSortKey < b.metaSortKey ? -1 : 1;
 };
 
-export const ascendingNumberSort = (a: number, b: number): number => {
+export const ascendingNumberSort: SortFunction<number> = (a, b) => {
   return a < b ? -1 : 1;
 };
 
-export const descendingNumberSort = (a: number, b: number): number => {
+export const descendingNumberSort: SortFunction<number> = (a, b) => {
   return ascendingNumberSort(b, a);
 };
 
-// @ts-expect-error -- TSCONVERSION appears to be a genuine error
-export const sortMethodMap: Record<SortOrder, SortFunction> = {
+export const sortMethodMap = {
   [SORT_NAME_ASC]: ascendingNameSort,
   [SORT_NAME_DESC]: descendingNameSort,
   [SORT_CREATED_ASC]: createdFirstSort,
   [SORT_CREATED_DESC]: createdLastSort,
+  [SORT_MODIFIED_ASC]: ascendingModifiedSort,
+  [SORT_MODIFIED_DESC]: descendingModifiedSort,
   [SORT_HTTP_METHOD]: httpMethodSort,
   [SORT_TYPE_DESC]: descendingTypeSort,
   [SORT_TYPE_ASC]: ascendingTypeSort,

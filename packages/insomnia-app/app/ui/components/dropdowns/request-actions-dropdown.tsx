@@ -181,7 +181,8 @@ class RequestActionsDropdown extends PureComponent<Props, State> {
             key={`${plugin.plugin.name}::${plugin.label}`}
             value={plugin}
             onClick={this._handlePluginClick}
-            stayOpenAfterClick>
+            stayOpenAfterClick
+          >
             {loadingActions[plugin.label] ? (
               <i className="fa fa-refresh fa-spin" />
             ) : (

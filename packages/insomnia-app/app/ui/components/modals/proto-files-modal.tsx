@@ -133,7 +133,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     if (!workspace) {
       return;
     }
-    
+
     return protoManager.addDirectory(workspace._id);
   }
 
@@ -154,7 +154,8 @@ class ProtoFilesModal extends PureComponent<Props, State> {
               <AsyncButton
                 className="margin-right-sm"
                 onClick={this._handleAddDirectory}
-                loadingNode={spinner}>
+                loadingNode={spinner}
+              >
                 Add Directory
               </AsyncButton>
               <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>

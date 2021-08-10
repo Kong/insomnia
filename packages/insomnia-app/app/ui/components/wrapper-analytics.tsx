@@ -20,7 +20,8 @@ const WrapperAnalytics: FunctionComponent<Props> = ({ wrapperProps }) => {
     <OnboardingContainer
       wrapperProps={wrapperProps}
       header={'Welcome to ' + getAppLongName()}
-      subHeader={getAppSynopsis()}>
+      subHeader={getAppSynopsis()}
+    >
       <Analytics wrapperProps={wrapperProps} handleDone={navigateHome} />
     </OnboardingContainer>
   );

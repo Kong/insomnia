@@ -1205,7 +1205,8 @@ class CodeEditor extends Component<Props, State> {
           key="prettify"
           className="btn btn--compact"
           title="Auto-format request body whitespace"
-          onClick={this._handleBeautify}>
+          onClick={this._handleBeautify}
+        >
           Beautify {contentTypeName}
         </button>,
       );
@@ -1233,7 +1234,8 @@ class CodeEditor extends Component<Props, State> {
           className={classnames('editor__container', 'input', className)}
           style={styles}
           onClick={onClick}
-          onMouseLeave={onMouseLeave}>
+          onMouseLeave={onMouseLeave}
+        >
           <textarea
             key={isVariableUncovered ? 'foo' : 'bar'}
             id={id}

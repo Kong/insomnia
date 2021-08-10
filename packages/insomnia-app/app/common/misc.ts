@@ -445,6 +445,10 @@ export function snapNumberToLimits(value: number, min?: number, max?: number) {
   return value;
 }
 
-export function isNotNullOrUndefined(obj: any | null | undefined) {
-  return obj !== null && obj !== undefined;
+export function isNotNullOrUndefined<ValueType>(
+  value: ValueType | null | undefined
+): value is ValueType {
+  if (value === null || value === undefined) return false;
+
+  return true;
 }

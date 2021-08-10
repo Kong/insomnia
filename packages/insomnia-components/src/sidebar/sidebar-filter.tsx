@@ -52,7 +52,8 @@ export const SidebarFilter: FunctionComponent<SidebarFilterProps> = ({ filter, o
       }}
       animate={{
         height: filter ? '100%' : '0px',
-      }}>
+      }}
+    >
       <input type="text" placeholder="Filter..." onChange={onChange} ref={filterField} />
     </StyledFilter>
   );

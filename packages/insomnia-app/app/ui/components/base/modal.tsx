@@ -178,7 +178,8 @@ class Modal extends PureComponent<ModalProps, State> {
           className={classes}
           style={styles}
           aria-hidden={!open}
-          onClick={this._handleClick}>
+          onClick={this._handleClick}
+        >
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
           <div className="modal__content__wrapper">
             <div className="modal__content" key={forceRefreshCounter}>

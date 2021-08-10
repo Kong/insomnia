@@ -143,7 +143,8 @@ class OAuth1Auth extends PureComponent<Props> {
               className="btn btn--super-duper-compact"
               id={label}
               onClick={onChange}
-              value={!authentication[property]}>
+              value={!authentication[property]}
+            >
               {authentication[property] ? (
                 <i className="fa fa-check-square-o" />
               ) : (
@@ -173,7 +174,8 @@ class OAuth1Auth extends PureComponent<Props> {
               id="enabled"
               onClick={onChange}
               value={!authentication.disabled}
-              title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+              title={authentication.disabled ? 'Enable item' : 'Disable item'}
+            >
               {authentication.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -215,7 +217,8 @@ class OAuth1Auth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               type={type}
@@ -261,7 +264,8 @@ class OAuth1Auth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--outlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>

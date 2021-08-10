@@ -64,7 +64,7 @@ const makeTestCommand = (commandCreator: CreateCommand) => {
     )
     .option('-b, --bail', 'abort ("bail") after first test failure')
     .option('--keepFile', 'do not delete the generated test file')
-    .option('--disableCertValidation', 'disable certificate validation')
+    .option('--disableCertValidation', 'disable certificate validation for requests with SSL')
     .action((identifier, cmd) => {
       let options = getOptions<RunTestsOptions>(cmd, {
         reporter: defaultReporter,
@@ -130,12 +130,12 @@ const addScriptCommand = (originalCommand: commander.Command) => {
 
       if (!scriptTask) {
         logger.fatal(`Could not find inso script "${scriptName}" in the config file.`);
-        return exit(new Promise((resolve) => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       if (!scriptTask.startsWith('inso')) {
         logger.fatal('Tasks in a script should start with `inso`.');
-        return exit(new Promise((resolve) => resolve(false)));
+        return exit(new Promise(resolve => resolve(false)));
       }
 
       // Collect args

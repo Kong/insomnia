@@ -141,7 +141,8 @@ class Shortcuts extends PureComponent<Props> {
                       keyComb: keyComb,
                     }}
                     buttonClass={PromptButton}
-                    onClick={this.handleRemoveKeyCombination}>
+                    onClick={this.handleRemoveKeyCombination}
+                  >
                     <i className="fa fa-trash-o" /> {display}
                   </DropdownItem>
                 );
@@ -153,7 +154,8 @@ class Shortcuts extends PureComponent<Props> {
               <DropdownItem
                 value={def.id}
                 buttonClass={PromptButton}
-                onClick={this.handleResetKeyBindings}>
+                onClick={this.handleResetKeyBindings}
+              >
                 <i className="fa fa-empty" /> Reset keyboard shortcuts
               </DropdownItem>
             )}

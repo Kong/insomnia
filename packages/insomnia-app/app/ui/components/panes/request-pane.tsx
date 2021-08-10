@@ -205,7 +205,8 @@ class RequestPane extends PureComponent<Props> {
                 onChange={updateRequestMimeType}
                 contentType={request.body.mimeType}
                 request={request}
-                className="tall">
+                className="tall"
+              >
                 {typeof request.body.mimeType === 'string'
                   ? getContentTypeName(request.body.mimeType)
                   : 'Body'}
@@ -217,7 +218,8 @@ class RequestPane extends PureComponent<Props> {
               <AuthDropdown
                 onChange={updateRequestAuthentication}
                 request={request}
-                className="tall">
+                className="tall"
+              >
                 {getAuthTypeName(request.authentication.type) || 'Auth'}
                 <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
@@ -283,7 +285,8 @@ class RequestPane extends PureComponent<Props> {
               <code className="txt-sm block faint">
                 <ErrorBoundary
                   key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
+                  errorClassName="tall wide vertically-align font-error pad text-center"
+                >
                   <RenderedQueryString handleRender={handleRender} request={request} />
                 </ErrorBoundary>
               </code>
@@ -291,7 +294,8 @@ class RequestPane extends PureComponent<Props> {
             <div className="query-editor__editor">
               <ErrorBoundary
                 key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center">
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
                 <RequestParametersEditor
                   key={headerEditorKey}
                   handleRender={handleRender}
@@ -311,12 +315,14 @@ class RequestPane extends PureComponent<Props> {
               <button
                 className="margin-top-sm btn btn--clicky"
                 title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
-                onClick={this._handleImportQueryFromUrl}>
+                onClick={this._handleImportQueryFromUrl}
+              >
                 Import from URL
               </button>
               <button
                 className="margin-top-sm btn btn--clicky space-left"
-                onClick={this._handleUpdateSettingsUseBulkParametersEditor}>
+                onClick={this._handleUpdateSettingsUseBulkParametersEditor}
+              >
                 {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
@@ -341,7 +347,8 @@ class RequestPane extends PureComponent<Props> {
             <div className="pad-right text-right">
               <button
                 className="margin-top-sm btn btn--clicky"
-                onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
+                onClick={this._handleUpdateSettingsUseBulkHeaderEditor}
+              >
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
@@ -382,7 +389,8 @@ class RequestPane extends PureComponent<Props> {
                   <br />
                   <button
                     className="btn btn--clicky faint"
-                    onClick={this._handleEditDescriptionAdd}>
+                    onClick={this._handleEditDescriptionAdd}
+                  >
                     Add Description
                   </button>
                 </p>

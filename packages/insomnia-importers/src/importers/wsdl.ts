@@ -15,7 +15,7 @@ export const name = 'WSDL';
 export const description = 'Importer for WSDL files';
 
 const convertToPostman = (items: Swagger[]) => {
-  const item = items.map((swagger) => {
+  const item = items.map(swagger => {
     const item = [];
     const url = get(
       swagger,
@@ -89,7 +89,7 @@ const convertWsdlToPostman = async (input: string) => {
   return convertToPostman(items);
 };
 
-export const convert: Converter = async (rawData) => {
+export const convert: Converter = async rawData => {
   try {
     if (rawData.indexOf('wsdl:definition') !== -1) {
       const postmanData = await convertWsdlToPostman(

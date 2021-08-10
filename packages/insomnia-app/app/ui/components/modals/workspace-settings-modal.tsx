@@ -246,7 +246,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
             <button
               className="btn btn--super-compact width-auto"
               title="Enable or disable certificate"
-              onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}>
+              onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}
+            >
               {certificate.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -257,7 +258,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
               className="btn btn--super-compact width-auto"
               confirmMessage=""
               addIcon
-              onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}>
+              onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}
+            >
               <i className="fa fa-trash-o" />
             </PromptButton>
           </div>
@@ -336,7 +338,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
               ) : (
                 <button
                   onClick={this._handleAddDescription}
-                  className="btn btn--outlined btn--super-duper-compact">
+                  className="btn btn--outlined btn--super-duper-compact"
+                >
                   Add Description
                 </button>
               )}
@@ -346,18 +349,21 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
               <PromptButton
                 onClick={this._handleRemoveWorkspace}
                 addIcon
-                className="width-auto btn btn--clicky inline-block">
+                className="width-auto btn btn--clicky inline-block"
+              >
                 <i className="fa fa-trash-o" /> Delete
               </PromptButton>
               <button
                 onClick={this._handleDuplicateWorkspace}
-                className="width-auto btn btn--clicky inline-block space-left">
+                className="width-auto btn btn--clicky inline-block space-left"
+              >
                 <i className="fa fa-copy" /> Duplicate
               </button>
               <PromptButton
                 onClick={this._handleClearAllResponses}
                 addIcon
-                className="width-auto btn btn--clicky inline-block space-left">
+                className="width-auto btn btn--clicky inline-block space-left"
+              >
                 <i className="fa fa-trash-o" /> Clear All Responses
               </PromptButton>
             </div>
@@ -390,7 +396,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                 <div className="text-center">
                   <button
                     className="btn btn--clicky auto"
-                    onClick={this._handleToggleCertificateForm}>
+                    onClick={this._handleToggleCertificateForm}
+                  >
                     New Certificate
                   </button>
                 </div>
@@ -486,7 +493,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                   <button
                     type="button"
                     className="btn btn--super-compact space-right"
-                    onClick={this._handleToggleCertificateForm}>
+                    onClick={this._handleToggleCertificateForm}
+                  >
                     Cancel
                   </button>
                   <button className="btn btn--clicky space-right" type="submit">

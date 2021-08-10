@@ -242,11 +242,13 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
           <div
             className={classnames('sidebar__item', 'sidebar__item--request', {
               'sidebar__item--active': isActive,
-            })}>
+            })}
+          >
             <button
               className="wide"
               onClick={this._handleRequestActivate}
-              onContextMenu={this._handleShowRequestActions}>
+              onContextMenu={this._handleShowRequestActions}
+            >
               <div className="sidebar__clickable">
                 {methodTag}
                 <Editable

@@ -114,7 +114,7 @@ class ImportCollection {
       description: (request.description as string) || '',
       url: this.importUrl(request.url),
       method: request.method || 'GET',
-      headers: ((request.header || []) as Header[])?.map((header) => ({
+      headers: ((request.header || []) as Header[])?.map(header => ({
         name: header.key,
         value: header.value,
       })),
@@ -482,7 +482,7 @@ class ImportCollection {
       return '';
     }
 
-    const obj = array.find((o) => o.key === key);
+    const obj = array.find(o => o.key === key);
 
     if (obj && typeof obj.value === 'string') {
       return obj.value || '';
@@ -492,7 +492,7 @@ class ImportCollection {
   };
 }
 
-export const convert: Converter = (rawData) => {
+export const convert: Converter = rawData => {
   requestCount = 1;
   requestGroupCount = 1;
 

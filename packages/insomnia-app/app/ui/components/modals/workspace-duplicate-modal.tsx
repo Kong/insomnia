@@ -72,16 +72,16 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     if (!duplicateToSpace) {
       throw new Error('Space could not be found');
     }
-    
+
     const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: spaceId });
     await models.workspace.ensureChildren(newWorkspace);
-    
+
     // Mark for sync if logged in and in the expected space
     if (isLoggedIn && vcs && isRemoteSpace(duplicateToSpace)) {
       await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }
 
-    dispatch(activateWorkspace(newWorkspace));
+    dispatch(activateWorkspace({ workspace: newWorkspace }));
     hide();
     onDone?.();
   }, [dispatch, hide, isLoggedIn, onDone, spaces, vcs, workspace]);

@@ -64,6 +64,8 @@ module.exports = {
     'default-case-last': 'error',
     'filenames/match-exported': ['error', 'kebab'],
     'indent': ['error', 2, { SwitchCase: 1 }],
+    'eol-last': ['error', 'always'],
+    'arrow-parens': ['error', 'as-needed'],
     'keyword-spacing': 'off', // successor('@typescript-eslint/keyword-spacing')
     'no-async-promise-executor': 'off',
     'no-case-declarations': 'off',
@@ -73,6 +75,8 @@ module.exports = {
     'no-unused-vars': 'off',
     'no-use-before-define': 'off',
     'no-var': 'error',
+    'no-trailing-spaces': 'error',
+    'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
     'object-curly-spacing': ['error', 'always'],
     'quotes': 'off',
     'semi': ['error', 'always'],
@@ -97,6 +101,16 @@ module.exports = {
     'react/jsx-indent': ['error', 2],
     'react/jsx-indent-props': ['error', 2],
     'react/prop-types': 'off',
+    'react/function-component-definition': ['error', {
+      'namedComponents':  'arrow-function',
+      'unnamedComponents': 'arrow-function',
+    }],
+    'react/jsx-max-props-per-line': ['error', { 'maximum': 1, 'when': 'multiline' }],
+    'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
+    'react/prefer-stateless-function': 'warn', // TODO: fix this and change to error
+    'react/jsx-key': ['error', { 'checkFragmentShorthand': true }],
+    'react/no-array-index-key': 'warn',
+    'react/self-closing-comp': 'error',
 
     'react-hooks/exhaustive-deps': 'error',
     'react-hooks/rules-of-hooks': 'error',

@@ -127,7 +127,8 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
               ref={this.expandTagRef}
               className={classnames('sidebar__expand', {
                 'sidebar__expand-hint': isDraggingOver && isCollapsed,
-              })}>
+              })}
+            >
               <div className="tag tag--no-bg tag--small">
                 <span className="tag__inner">OPEN</span>
               </div>
@@ -141,7 +142,8 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
         <div
           className={classnames('sidebar__item sidebar__item--big', {
             'sidebar__item--active': isActive,
-          })}>
+          })}
+        >
           {button}
           <div className="sidebar__actions">
             <RequestGroupActionsDropdown
@@ -160,7 +162,8 @@ class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
         <ul
           className={classnames('sidebar__list', {
             'sidebar__list--collapsed': isCollapsed,
-          })}>
+          })}
+        >
           {!isCollapsed && React.Children.count(children) > 0 ? (
             children
           ) : (
@@ -199,7 +202,7 @@ const dragSource: DragSourceSpec<Props, DragObject> = {
 function isOnExpandTag(monitor: DropTargetMonitor, component: UnconnectedSidebarRequestGroupRow): boolean {
   const rect = component.getExpandTag()?.getBoundingClientRect();
   const pointer = monitor.getClientOffset();
-  
+
   if (!pointer || !rect) {
     return false;
   }

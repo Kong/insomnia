@@ -64,7 +64,8 @@ export const manyItems = () => {
         <Button>
           {numItems} Items <SvgIcon icon="chevron-down" />
         </Button>
-      )}>
+      )}
+    >
       {items}
     </Dropdown>
   );

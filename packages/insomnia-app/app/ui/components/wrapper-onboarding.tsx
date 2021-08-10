@@ -157,14 +157,15 @@ class WrapperOnboarding extends PureComponent<Props, State> {
       <OnboardingContainer
         wrapperProps={this.props.wrapperProps}
         header={'Welcome to ' + getAppLongName()}
-        subHeader={getAppSynopsis()}>
+        subHeader={getAppSynopsis()}
+      >
         {stepBody}
       </OnboardingContainer>
     );
   }
 }
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   const bound = bindActionCreators({
     importFile,
     importUri,

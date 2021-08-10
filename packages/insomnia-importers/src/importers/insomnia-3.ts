@@ -9,7 +9,7 @@ export interface Insomnia3Data extends Omit<Insomnia2Data, '__export_format'> {
   __export_format: 3;
 }
 
-export const convert: Converter = (rawData) => {
+export const convert: Converter = rawData => {
   let data: Insomnia3Data | null = null;
 
   try {

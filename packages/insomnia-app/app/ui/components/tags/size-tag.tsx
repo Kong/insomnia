@@ -42,7 +42,8 @@ class SizeTag extends PureComponent<Props> {
             'tag--small': small,
           },
           className,
-        )}>
+        )}
+      >
         <Tooltip message={message} position="bottom" delay={tooltipDelay}>
           {responseSizeReadStringShort}
         </Tooltip>

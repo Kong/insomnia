@@ -68,14 +68,16 @@ const GrpcTabbedMessages: FunctionComponent<Props> = ({
             {handleStream && (
               <Button
                 className="btn btn--compact btn--clicky margin-sm bg-default"
-                onClick={handleStream}>
+                onClick={handleStream}
+              >
                 Stream <i className="fa fa-plus" />
               </Button>
             )}
             {handleCommit && (
               <Button
                 className="btn btn--compact btn--clicky margin-sm bg-surprise"
-                onClick={handleCommit}>
+                onClick={handleCommit}
+              >
                 Commit <i className="fa fa-arrow-right" />
               </Button>
             )}

@@ -22,7 +22,8 @@ const SettingsButton: FunctionComponent<Props> = ({ className, settings }) => (
         Preferences (
         <Hotkey keyBindings={settings.hotKeyRegistry[hotKeyRefs.PREFERENCES_SHOW_GENERAL.id]} />)
       </>
-    }>
+    }
+  >
     <CircleButton className={className} onClick={showSettingsModal}>
       <SvgIcon icon="gear" />
     </CircleButton>

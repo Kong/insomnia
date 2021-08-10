@@ -67,7 +67,8 @@ class RequestGroupRow extends PureComponent<Props> {
         <ul
           className={classnames('tree__list', {
             'tree__list--collapsed': isCollapsed,
-          })}>
+          })}
+        >
           {!isCollapsed ? children : null}
         </ul>
       </li>

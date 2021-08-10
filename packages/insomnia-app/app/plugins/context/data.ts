@@ -27,9 +27,9 @@ const buildImportRawConfig = (options: PluginImportOptions, activeSpaceId: strin
 });
 
 // TODO: add metrics here to track how frequently this fallback is being used
-const getWorkspaces = (activeSpaceId?: string) => 
-  activeSpaceId 
-    ? models.workspace.findByParentId(activeSpaceId) 
+const getWorkspaces = (activeSpaceId?: string) =>
+  activeSpaceId
+    ? models.workspace.findByParentId(activeSpaceId)
     : models.workspace.all();
 
 // Only in the case of running unit tests from Inso via send-request can activeSpaceId be undefined. This is because the concept of a space doesn't exist in git/insomnia sync or an export file
