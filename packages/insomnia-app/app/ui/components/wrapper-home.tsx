@@ -287,7 +287,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { wrapperProps, handleSetSpaceSortOrder } = this.props;
+    const { wrapperProps, handleSetSpaceSortOrder, sortOrder } = this.props;
     const { vcs } = wrapperProps;
     return (
       <div className="row row--right pad-left wide">
@@ -308,7 +308,7 @@ class WrapperHome extends PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        <SpaceSortDropdown onSelect={handleSetSpaceSortOrder} />
+        <SpaceSortDropdown value={sortOrder} onSelect={handleSetSpaceSortOrder} />
         <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
       </div>
