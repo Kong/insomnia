@@ -40,7 +40,7 @@ export default async function(
     // @ts-expect-error -- TSCONVERSION
     codeVerifier = _base64UrlEncode(crypto.randomBytes(32));
 
-    if (pkceMethod == c.PKCE_CHALLENGE_S256) {
+    if (pkceMethod === c.PKCE_CHALLENGE_S256) {
       // @ts-expect-error -- TSCONVERSION
       codeChallenge = _base64UrlEncode(crypto.createHash('sha256').update(codeVerifier).digest());
     } else {
