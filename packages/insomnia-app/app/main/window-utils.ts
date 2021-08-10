@@ -122,7 +122,7 @@ export function createWindow() {
     clickLink(url);
   });
 
-  mainWindow?.webContents.on('new-window', (e) => {
+  mainWindow?.webContents.on('new-window', e => {
     e.preventDefault();
   });
 
