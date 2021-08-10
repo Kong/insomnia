@@ -14,8 +14,6 @@ import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/space-settings-modal';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 
-
-
 const Checkmark = styled(SvgIcon)({
   ...svgPlacementHack,
   '& svg': {
