@@ -12,7 +12,7 @@ module.exports = function(context) {
       continue;
     }
 
-    if (value==="") {
+    if (value==="null") {
       context.request.setHeader(name, null);
       console.log(`[header] Remove default header ${name}`)
     } else {
