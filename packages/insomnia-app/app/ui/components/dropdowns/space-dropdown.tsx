@@ -12,17 +12,9 @@ import { createSpace } from '../../redux/modules/space';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/space-settings-modal';
+import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 
-const svgPlacementHack = {
-  // This is a bit of a hack/workaround to avoid some larger changes that we'd need to do with dropdown item icons and tooltips.
-  // Without this, the icon is too high with respect to the text because of Tooltip introducing some changes to the placement of the icon.
-  marginTop: 1,
-};
 
-const tooltipIconPlacementHack = {
-  // see above comment for `svgPlacementHack`.
-  marginTop: 3,
-};
 
 const Checkmark = styled(SvgIcon)({
   ...svgPlacementHack,

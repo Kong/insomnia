@@ -3,6 +3,7 @@ import React, { FC } from 'react';
 import styled from 'styled-components';
 
 import { SPACE_SORT_ORDERS, SpaceSortOrder, spaceSortOrderName } from '../../../common/constants';
+import { svgPlacementHack } from './dropdown-placement-hacks';
 
 interface SpaceSortDropdownProps {
   value: SpaceSortOrder;
@@ -10,8 +11,7 @@ interface SpaceSortDropdownProps {
 }
 
 const Checkmark = styled(SvgIcon)({
-  // @TODO Update this once we improve the way we show icons in the DropdownItem
-  marginTop: 1,
+  ...svgPlacementHack,
   '& svg': {
     fill: 'var(--color-surprise)',
   },
