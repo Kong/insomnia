@@ -7,6 +7,7 @@ import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from '
 import { parse, print, typeFromAST } from 'graphql';
 import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
 import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
+import { HelpTooltip } from 'insomnia-components';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
@@ -26,7 +27,6 @@ import * as network from '../../../../network/network';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
 import CodeEditor from '../../codemirror/code-editor';
 import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
-import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import TimeFromNow from '../../time-from-now';

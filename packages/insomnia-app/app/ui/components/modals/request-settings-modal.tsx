@@ -1,4 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HelpTooltip } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -13,7 +14,6 @@ import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import HelpTooltip from '../help-tooltip';
 import MarkdownEditor from '../markdown-editor';
 
 interface Props {

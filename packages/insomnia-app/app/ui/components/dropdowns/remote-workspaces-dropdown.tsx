@@ -1,4 +1,5 @@
 import { Button, Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
+import { HelpTooltip } from 'insomnia-components';
 import React, { FC } from 'react';
 import { useSelector } from 'react-redux';
 
@@ -8,7 +9,6 @@ import { isRemoteSpace } from '../../../models/space';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { selectActiveSpace } from '../../redux/selectors';
-import HelpTooltip from '../help-tooltip';
 
 interface Props {
   className?: string;

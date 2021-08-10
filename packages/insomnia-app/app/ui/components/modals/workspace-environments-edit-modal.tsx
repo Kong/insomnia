@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HelpTooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
 
@@ -20,7 +21,6 @@ import ModalFooter from '../base/modal-footer';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import EnvironmentEditor from '../editors/environment-editor';
-import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 

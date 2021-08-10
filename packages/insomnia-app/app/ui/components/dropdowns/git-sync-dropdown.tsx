@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HelpTooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -23,7 +24,6 @@ import * as gitActions from '../../redux/modules/git';
 import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Dropdown from '../base/dropdown/dropdown';
 import Link from '../base/link';
-import HelpTooltip from '../help-tooltip';
 import { showAlert, showError, showModal } from '../modals';
 import GitBranchesModal from '../modals/git-branches-modal';
 import GitLogModal from '../modals/git-log-modal';

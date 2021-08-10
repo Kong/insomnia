@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HelpTooltip } from 'insomnia-components';
 import React, { PureComponent, ReactElement } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -7,7 +8,6 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import Button from '../../base/button';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import CodePromptModal from '../../modals/code-prompt-modal';
 

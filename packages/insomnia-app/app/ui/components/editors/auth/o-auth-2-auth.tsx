@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HelpTooltip } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -28,7 +29,6 @@ import Button from '../../base/button';
 import Link from '../../base/link';
 import PromptButton from '../../base/prompt-button';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
 import TimeFromNow from '../../time-from-now';

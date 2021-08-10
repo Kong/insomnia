@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
 import { Button, ToggleSwitch } from 'insomnia-components';
+import { HelpTooltip } from 'insomnia-components';
 import * as path from 'path';
 import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
 
@@ -20,7 +21,6 @@ import installPlugin from '../../../plugins/install';
 import { reload } from '../../../templating/index';
 import CopyButton from '../base/copy-button';
 import Link from '../base/link';
-import HelpTooltip from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
 
 interface Props {

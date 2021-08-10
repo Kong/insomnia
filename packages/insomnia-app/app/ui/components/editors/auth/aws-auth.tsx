@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HelpTooltip } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -8,7 +9,6 @@ import type { Request, RequestAuthentication } from '../../../../models/request'
 import type { Settings } from '../../../../models/settings';
 import Button from '../../base/button';
 import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
 
 interface Props {
   request: Request;

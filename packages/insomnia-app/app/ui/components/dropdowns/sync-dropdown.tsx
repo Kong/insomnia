@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HelpTooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -25,7 +26,6 @@ import { selectRemoteSpaces } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
 import { showAlert, showModal } from '../modals';
 import ErrorModal from '../modals/error-modal';
 import LoginModal from '../modals/login-modal';

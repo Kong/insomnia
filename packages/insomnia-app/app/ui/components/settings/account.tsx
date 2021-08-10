@@ -1,11 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HelpTooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Link from '../base/link';
 import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
 import { hideAllModals, showModal } from '../modals/index';
 import LoginModal from '../modals/login-modal';
 

@@ -1,4 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HelpTooltip } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
@@ -17,7 +18,6 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
 import MarkdownEditor from '../markdown-editor';
 import { showWorkspaceDuplicateModal } from './workspace-duplicate-modal';
 

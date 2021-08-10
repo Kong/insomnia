@@ -1,4 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HelpTooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 
 import * as session from '../../../account/session';
@@ -10,7 +11,6 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
 import TimeFromNow from '../time-from-now';
 import Tooltip from '../tooltip';
 
@@ -82,11 +82,7 @@ class SyncHistoryModal extends PureComponent<Props, State> {
       return (
         <Fragment>
           {name}{' '}
-          <HelpTooltip
-            info
-            // @ts-expect-error -- TSCONVERSION
-            delay={500}
-          >
+          <HelpTooltip info delay={500}>
             {email}
           </HelpTooltip>
         </Fragment>

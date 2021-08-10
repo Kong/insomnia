@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as fontScanner from 'font-scanner';
+import { HelpTooltip } from 'insomnia-components';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -33,7 +34,6 @@ import { setFont } from '../../../plugins/misc';
 import * as globalActions from '../../redux/modules/global';
 import Link from '../base/link';
 import CheckForUpdatesButton from '../check-for-updates-button';
-import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
 
 // Font family regex to match certain monospace fonts that don't get

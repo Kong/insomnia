@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
+import { HelpTooltip } from 'insomnia-components';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -25,7 +26,6 @@ import type {
 import * as templateUtils from '../../../templating/utils';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
 import FileInputButton from '../base/file-input-button';
-import HelpTooltip from '../help-tooltip';
 
 interface Props {
   handleRender: HandleRender;
