@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import Tooltip from '../tooltip';
 
 interface Props {
@@ -29,7 +30,8 @@ class URLTag extends PureComponent<Props> {
             'tag--small': small,
           },
           className,
-        )}>
+        )}
+      >
         <Tooltip wide message={url} position="bottom" delay={tooltipDelay}>
           <strong>{method || 'URL'}</strong> {shortUrl}
         </Tooltip>

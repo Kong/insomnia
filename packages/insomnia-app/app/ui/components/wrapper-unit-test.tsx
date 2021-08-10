@@ -1,8 +1,5 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
-import PageLayout from './page-layout';
 import {
   Button,
   Dropdown,
@@ -11,24 +8,28 @@ import {
   UnitTestItem,
   UnitTestResultItem,
 } from 'insomnia-components';
-import UnitTestEditable from './unit-test-editable';
-import ErrorBoundary from './error-boundary';
-import CodeEditor from './codemirror/code-editor';
-import type { WrapperProps } from './wrapper';
-import * as models from '../../models';
-import type { UnitTest } from '../../models/unit-test';
 import { generate, runTests, Test } from 'insomnia-testing';
-import { showAlert, showModal, showPrompt } from './modals';
-import Editable from './base/editable';
-import type { SidebarChildObjects } from './sidebar/sidebar-children';
-import { SelectModal } from './modals/select-modal';
-import type { UnitTestSuite } from '../../models/unit-test-suite';
-import { getSendRequestCallback } from '../../common/send-request';
-import type { GlobalActivity } from '../../common/constants';
-import WorkspacePageHeader from './workspace-page-header';
+import React, { PureComponent, ReactNode } from 'react';
+
 import { trackSegmentEvent } from '../../common/analytics';
-import { isRequestGroup } from '../../models/request-group';
+import type { GlobalActivity } from '../../common/constants';
+import { AUTOBIND_CFG } from '../../common/constants';
+import { getSendRequestCallback } from '../../common/send-request';
+import * as models from '../../models';
 import { isRequest } from '../../models/request';
+import { isRequestGroup } from '../../models/request-group';
+import type { UnitTest } from '../../models/unit-test';
+import type { UnitTestSuite } from '../../models/unit-test-suite';
+import Editable from './base/editable';
+import CodeEditor from './codemirror/code-editor';
+import ErrorBoundary from './error-boundary';
+import { showAlert, showModal, showPrompt } from './modals';
+import { SelectModal } from './modals/select-modal';
+import PageLayout from './page-layout';
+import type { SidebarChildObjects } from './sidebar/sidebar-children';
+import UnitTestEditable from './unit-test-editable';
+import WorkspacePageHeader from './workspace-page-header';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   children: SidebarChildObjects;
@@ -281,7 +282,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
         tests,
       },
     ]);
-    const sendRequest = getSendRequestCallback(activeEnvironment ? activeEnvironment._id : null);
+    const sendRequest = getSendRequestCallback(activeEnvironment?._id);
     let results;
 
     try {
@@ -430,7 +431,8 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             onSubmit={this._handleChangeTestName.bind(this, unitTest)}
             value={unitTest.name}
           />
-        }>
+        }
+      >
         <CodeEditor
           dynamicHeight
           manualPrettify
@@ -483,7 +485,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             disabled={testsRunning}
           >
             {testsRunning ? 'Running... ' : 'Run Tests'}
-            <i className="fa fa-play space-left"></i>
+            <i className="fa fa-play space-left" />
           </Button>
         </div>
         <ListGroup>{activeUnitTests.map(this.renderUnitTest)}</ListGroup>
@@ -509,7 +511,8 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                 key={s._id}
                 className={classnames({
                   active: s._id === activeId,
-                })}>
+                })}
+              >
                 <button key={s._id} onClick={this._handleSetActiveUnitTestSuite.bind(this, s)}>
                   {s.name}
                 </button>
@@ -519,12 +522,14 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                     <button className="unit-tests__sidebar__action">
                       <i className="fa fa-caret-down" />
                     </button>
-                  )}>
+                  )}
+                >
                   <DropdownItem
                     stayOpenAfterClick
                     onClick={this._handleRunTests}
                     // @ts-expect-error -- TSCONVERSION
-                    disabled={testsRunning}>
+                    disabled={testsRunning}
+                  >
                     {testsRunning ? 'Running... ' : 'Run Tests'}
                   </DropdownItem>
                   <DropdownItem onClick={this._handleDeleteUnitTestSuite.bind(this, s)}>

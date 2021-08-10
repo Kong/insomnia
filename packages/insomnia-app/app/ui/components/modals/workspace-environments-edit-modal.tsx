@@ -1,26 +1,27 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
-import { SortableContainer, SortableElement, arrayMove, SortEndHandler } from 'react-sortable-hoc';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
-import PromptButton from '../base/prompt-button';
-import Button, { ButtonProps } from '../base/button';
-import Link from '../base/link';
-import EnvironmentEditor from '../editors/environment-editor';
-import Editable from '../base/editable';
-import Modal, { ModalProps } from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import * as models from '../../../models';
-import type { Workspace } from '../../../models/workspace';
-import type { Environment } from '../../../models/environment';
+import React, { Fragment, PureComponent } from 'react';
+import { arrayMove, SortableContainer, SortableElement, SortEndHandler } from 'react-sortable-hoc';
+
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import HelpTooltip from '../help-tooltip';
-import Tooltip from '../tooltip';
 import { docsTemplateTags } from '../../../common/documentation';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as models from '../../../models';
+import type { Environment } from '../../../models/environment';
+import type { Workspace } from '../../../models/workspace';
+import Button, { ButtonProps } from '../base/button';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import Editable from '../base/editable';
+import Link from '../base/link';
+import Modal, { ModalProps } from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import PromptButton from '../base/prompt-button';
+import EnvironmentEditor from '../editors/environment-editor';
+import HelpTooltip from '../help-tooltip';
+import Tooltip from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface Props extends ModalProps {
@@ -178,7 +179,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     }
 
     await this._load(workspace);
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   async _load(workspace: Workspace | null, environmentToSelect: Environment | null = null) {
@@ -344,7 +345,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     });
   }
 
-  _handleSortEnd: SortEndHandler = (results) => {
+  _handleSortEnd: SortEndHandler = results => {
     const { oldIndex, newIndex } = results;
 
     if (newIndex === oldIndex) {
@@ -460,7 +461,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
             <li
               className={classnames('env-modal__sidebar-root-item', {
                 'env-modal__sidebar-item--active': selectedEnvironment === rootEnvironment,
-              })}>
+              })}
+            >
               <Button onClick={this._handleShowEnvironment} value={rootEnvironment}>
                 {ROOT_ENVIRONMENT_NAME}
                 <HelpTooltip className="space-left">
@@ -482,7 +484,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                 <DropdownItem
                   onClick={this._handleAddEnvironment}
                   value={true}
-                  title="Environment will not be exported or synced">
+                  title="Environment will not be exported or synced"
+                >
                   <i className="fa fa-eye-slash" /> Private Environment
                 </DropdownItem>
               </Dropdown>
@@ -555,7 +558,8 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                     <DropdownItem
                       value={selectedEnvironment}
                       onClick={this.unsetColor}
-                      disabled={!selectedEnvironment.color}>
+                      disabled={!selectedEnvironment.color}
+                    >
                       <i className="fa fa-minus-circle" />
                       Unset Color
                     </DropdownItem>
@@ -564,14 +568,16 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
                   <Button
                     value={selectedEnvironment}
                     onClick={this._handleDuplicateEnvironment}
-                    className="btn btn--clicky space-right">
+                    className="btn btn--clicky space-right"
+                  >
                     <i className="fa fa-copy" /> Duplicate
                   </Button>
 
                   <PromptButton
                     value={selectedEnvironment}
                     onClick={this._handleDeleteEnvironment}
-                    className="btn btn--clicky">
+                    className="btn btn--clicky"
+                  >
                     <i className="fa fa-trash-o" />
                   </PromptButton>
                 </Fragment>

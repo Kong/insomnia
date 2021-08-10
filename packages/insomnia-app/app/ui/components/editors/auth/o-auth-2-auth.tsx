@@ -1,34 +1,37 @@
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import type { OAuth2Token } from '../../../../models/o-auth-2-token';
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import OneLineEditor from '../../codemirror/one-line-editor';
+import { convertEpochToMilliseconds } from '../../../../common/misc';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import accessTokenUrls from '../../../../datasets/access-token-urls';
+import authorizationUrls from '../../../../datasets/authorization-urls';
+import * as models from '../../../../models';
+import type { OAuth2Token } from '../../../../models/o-auth-2-token';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import type { Settings } from '../../../../models/settings';
 import {
   GRANT_TYPE_AUTHORIZATION_CODE,
   GRANT_TYPE_CLIENT_CREDENTIALS,
   GRANT_TYPE_IMPLICIT,
   GRANT_TYPE_PASSWORD,
+  PKCE_CHALLENGE_PLAIN,
+  PKCE_CHALLENGE_S256,
   RESPONSE_TYPE_ID_TOKEN,
   RESPONSE_TYPE_ID_TOKEN_TOKEN,
   RESPONSE_TYPE_TOKEN,
 } from '../../../../network/o-auth-2/constants';
-import authorizationUrls from '../../../../datasets/authorization-urls';
-import accessTokenUrls from '../../../../datasets/access-token-urls';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
-import * as models from '../../../../models';
-import Link from '../../base/link';
-import HelpTooltip from '../../help-tooltip';
-import PromptButton from '../../base/prompt-button';
-import TimeFromNow from '../../time-from-now';
+import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
 import Button from '../../base/button';
+import Link from '../../base/link';
+import PromptButton from '../../base/prompt-button';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
-import type { Settings } from '../../../../models/settings';
-import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
-import { convertEpochToMilliseconds } from '../../../../common/misc';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import TimeFromNow from '../../time-from-now';
 
 interface Props {
   handleRender: HandleRender;
@@ -194,6 +197,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
     this._handleChangeProperty('usePkce', value);
   }
 
+  _handleChangePkceMethod(e: React.SyntheticEvent<HTMLInputElement>) {
+    this._handleChangeProperty('pkceMethod', e.currentTarget.value);
+  }
+
   _handleChangeAuthorizationUrl(value: string) {
     this._handleChangeProperty('authorizationUrl', value);
   }
@@ -234,6 +241,10 @@ class OAuth2Auth extends PureComponent<Props, State> {
     this._handleChangeProperty('resource', value);
   }
 
+  _handleChangeOrigin(value: string) {
+    this._handleChangeProperty('origin', value);
+  }
+
   _handleChangeGrantType(e: React.SyntheticEvent<HTMLInputElement>) {
     this._handleChangeProperty('grantType', e.currentTarget.value);
   }
@@ -255,7 +266,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
               id="enabled"
               onClick={onChange}
               value={!authentication.disabled}
-              title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+              title={authentication.disabled ? 'Enable item' : 'Disable item'}
+            >
               {authentication.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -279,13 +291,18 @@ class OAuth2Auth extends PureComponent<Props, State> {
           </label>
         </td>
         <td className="wide">
-          <div className="form-control form-control--underlined no-margin">
+          <div
+            className={classnames('form-control form-control--underlined no-margin', {
+              'form-control--inactive': authentication.disabled,
+            })}
+          >
             <Button
               className="btn btn--super-duper-compact"
               id="use-pkce"
               onClick={onChange}
               value={!authentication.usePkce}
-              title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}>
+              title={authentication.usePkce ? 'Disable PKCE' : 'Enable PKCE'}
+            >
               {authentication.usePkce ? (
                 <i className="fa fa-check-square-o" />
               ) : (
@@ -327,7 +344,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               type={type}
@@ -354,6 +372,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     }[],
     onChange: (...args: any[]) => any,
     help: string | null = null,
+    disabled = false,
   ) {
     const { request } = this.props;
     const { authentication } = request;
@@ -372,8 +391,9 @@ class OAuth2Auth extends PureComponent<Props, State> {
         <td className="wide">
           <div
             className={classnames('form-control form-control--outlined no-margin', {
-              'form-control--inactive': authentication.disabled,
-            })}>
+              'form-control--inactive': authentication.disabled || disabled,
+            })}
+          >
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
@@ -388,6 +408,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
   }
 
   renderGrantTypeFields(grantType: string) {
+    const { authentication } = this.props.request;
+
     let basicFields: JSX.Element[] = [];
     let advancedFields: JSX.Element[] = [];
     const clientId = this.renderInputRow('Client ID', 'clientId', this._handleChangeClientId);
@@ -397,6 +419,23 @@ class OAuth2Auth extends PureComponent<Props, State> {
       this._handleChangeClientSecret,
     );
     const usePkce = this.renderUsePkceRow(this._handleChangePkce);
+    const pkceMethod = this.renderSelectRow(
+      'Code Challenge Method',
+      'pkceMethod',
+      [
+        {
+          name: 'SHA-256',
+          value: PKCE_CHALLENGE_S256,
+        },
+        {
+          name: 'Plain',
+          value: PKCE_CHALLENGE_PLAIN,
+        },
+      ],
+      this._handleChangePkceMethod,
+      null,
+      !Boolean(authentication.usePkce)
+    );
     const authorizationUrl = this.renderInputRow(
       'Authorization URL',
       'authorizationUrl',
@@ -462,6 +501,12 @@ class OAuth2Auth extends PureComponent<Props, State> {
       this._handleChangeResource,
       'Indicate what resource to access',
     );
+    const origin = this.renderInputRow(
+      'Origin',
+      'origin',
+      this._handleChangeOrigin,
+      'Specify Origin header when CORS is required for oauth endpoints',
+    );
     const credentialsInBody = this.renderSelectRow(
       'Credentials',
       'credentialsInBody',
@@ -487,10 +532,12 @@ class OAuth2Auth extends PureComponent<Props, State> {
         clientId,
         clientSecret,
         usePkce,
+        pkceMethod,
         redirectUri,
         enabled,
       ];
-      advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource];
+
+      advancedFields = [scope, state, credentialsInBody, tokenPrefix, audience, resource, origin];
     } else if (grantType === GRANT_TYPE_CLIENT_CREDENTIALS) {
       basicFields = [accessTokenUrl, clientId, clientSecret, enabled];
       advancedFields = [scope, credentialsInBody, tokenPrefix, audience, resource];
@@ -561,7 +608,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
         <button
           onClick={this._handleDebugResponseClick}
           className="icon icon--success space-left"
-          title="View response timeline">
+          title="View response timeline"
+        >
           <i className="fa fa-bug" />
         </button>
       ) : null;
@@ -692,7 +740,8 @@ class OAuth2Auth extends PureComponent<Props, State> {
             <button
               className="btn btn--clicky"
               onClick={this._handleRefreshToken}
-              disabled={loading}>
+              disabled={loading}
+            >
               {loading
                 ? tok
                   ? 'Refreshing...'

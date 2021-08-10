@@ -1,10 +1,11 @@
+import classnames from 'classnames';
 import React, { FunctionComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import classnames from 'classnames';
-import GRPCEditor from '../editors/grpc-editor';
-import Button from '../base/button';
+
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Settings } from '../../../models/settings';
+import Button from '../base/button';
+import GRPCEditor from '../editors/grpc-editor';
 
 interface Message {
   id: string;
@@ -67,14 +68,16 @@ const GrpcTabbedMessages: FunctionComponent<Props> = ({
             {handleStream && (
               <Button
                 className="btn btn--compact btn--clicky margin-sm bg-default"
-                onClick={handleStream}>
+                onClick={handleStream}
+              >
                 Stream <i className="fa fa-plus" />
               </Button>
             )}
             {handleCommit && (
               <Button
                 className="btn btn--compact btn--clicky margin-sm bg-surprise"
-                onClick={handleCommit}>
+                onClick={handleCommit}
+              >
                 Commit <i className="fa fa-arrow-right" />
               </Button>
             )}

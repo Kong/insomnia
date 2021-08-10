@@ -1,19 +1,20 @@
-import React, { Fragment, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import * as models from '../../../models';
+import { BaseModel } from '../../../models';
+import type { Workspace } from '../../../models/workspace';
+import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
+import { describeChanges } from '../../../sync/vcs/util';
+import { VCS } from '../../../sync/vcs/vcs';
+import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
-import * as models from '../../../models';
+import ModalHeader from '../base/modal-header';
 import Tooltip from '../tooltip';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
-import { describeChanges } from '../../../sync/vcs/util';
-import { strings } from '../../../common/strings';
-import { BaseModel } from '../../../models';
 
 interface Props {
   workspace: Workspace;
@@ -118,7 +119,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
     const success = await this._handleTakeSnapshot();
 
     if (success) {
-      this._handlePush && this._handlePush();
+      this._handlePush?.();
     }
   }
 
@@ -138,7 +139,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
       return false;
     }
 
-    this._onSnapshot && this._onSnapshot();
+    this._onSnapshot?.();
     await this.refreshMainAttributes({
       message: '',
       error: '',
@@ -189,12 +190,12 @@ class SyncStagingModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { onSnapshot?: () => any; handlePush: () => Promise<void> }) {
     const { vcs, syncItems } = this.props;
-    this.modal && this.modal.show();
+    this.modal?.show();
     // @ts-expect-error -- TSCONVERSION
     this._onSnapshot = options.onSnapshot;
     this._handlePush = options.handlePush;
@@ -216,7 +217,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
 
     const stage = await vcs.stage(status.stage, toStage);
     await this.refreshMainAttributes({}, stage);
-    this.textarea && this.textarea.focus();
+    this.textarea?.focus();
   }
 
   static renderOperation(entry: StageEntry, type: string, changes: string[]) {

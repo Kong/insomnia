@@ -1,8 +1,9 @@
 import electron, { BrowserWindow } from 'electron';
-import path from 'path';
-import { Curl } from 'node-libcurl';
 import fs from 'fs';
-import LocalStorage from './local-storage';
+import { Curl } from 'node-libcurl';
+import * as os from 'os';
+import path from 'path';
+
 import {
   changelogUrl,
   getAppLongName,
@@ -14,10 +15,10 @@ import {
   isMac,
   MNEMONIC_SYM,
 } from '../common/constants';
+import { docsBase } from '../common/documentation';
 import { clickLink, getDataDirectory, restartApp } from '../common/electron-helpers';
 import * as log from '../common/log';
-import * as os from 'os';
-import { docsBase } from '../common/documentation';
+import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard } = electron;
 // So we can use native modules in renderer
@@ -92,6 +93,9 @@ export function createWindow() {
       nodeIntegration: true,
       webviewTag: true,
       enableRemoteModule: true,
+      // TODO: enable context isolation
+      contextIsolation: false,
+      disableBlinkFeatures: 'Auxclick',
     },
   });
 
@@ -117,6 +121,11 @@ export function createWindow() {
     e.preventDefault();
     clickLink(url);
   });
+
+  mainWindow?.webContents.on('new-window', e => {
+    e.preventDefault();
+  });
+
   // Load the html of the app.
   const url = process.env.APP_RENDER_URL;
   const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
@@ -272,6 +281,9 @@ export function createWindow() {
         },
       },
       {
+        type: 'separator',
+      },
+      {
         label: 'Toggle Sidebar',
         click: () => {
           const w = BrowserWindow.getFocusedWindow();
@@ -336,6 +348,9 @@ export function createWindow() {
         },
       },
       {
+        type: 'separator',
+      },
+      {
         label: `Show App ${MNEMONIC_SYM}Data Folder`,
         click: () => {
           const directory = getDataDirectory();
@@ -348,6 +363,9 @@ export function createWindow() {
           const directory = log.getLogDirectory();
           shell.showItemInFolder(directory);
         },
+      },
+      {
+        type: 'separator',
       },
       {
         label: 'Show Open Source Licenses',
@@ -410,6 +428,9 @@ export function createWindow() {
   } else {
     // @ts-expect-error -- TSCONVERSION type splitting
     helpMenu.submenu?.push({
+      type: 'separator',
+    },
+    {
       label: `${MNEMONIC_SYM}About`,
       click: aboutMenuClickHandler,
     });
@@ -447,7 +468,19 @@ export function createWindow() {
         },
       },
       {
-        label: `${MNEMONIC_SYM}Restart`,
+        label: `${MNEMONIC_SYM}Clear a model`,
+        click: function(_menuItem, window) {
+          window?.webContents?.send('clear-model');
+        },
+      },
+      {
+        label: `Clear ${MNEMONIC_SYM}all models`,
+        click: function(_menuItem, window) {
+          window?.webContents?.send('clear-all-models');
+        },
+      },
+      {
+        label: `R${MNEMONIC_SYM}estart`,
         click: restartApp,
       },
     ],

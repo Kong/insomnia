@@ -1,16 +1,17 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import { GitVCS } from '../../../sync/git/git-vcs';
 import classnames from 'classnames';
-import PromptButton from '../base/prompt-button';
+import React, { Fragment, PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import type { GitRepository } from '../../../models/git-repository';
-import ModalFooter from '../base/modal-footer';
+import { GitVCS } from '../../../sync/git/git-vcs';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import PromptButton from '../base/prompt-button';
 
 interface Props {
   vcs: GitVCS;
@@ -58,10 +59,10 @@ class GitBranchesModal extends PureComponent<Props, State> {
       newBranchName: '',
     });
     this._onHide = options.onHide || null;
-    this.modal && this.modal.show();
+    this.modal?.show();
     // Focus input when modal shows
     setTimeout(() => {
-      this.input && this.input.focus();
+      this.input?.focus();
     }, 100);
     // Do a fetch of remotes and refresh again. NOTE: we're doing this
     // last because it's super slow
@@ -162,7 +163,7 @@ class GitBranchesModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -217,7 +218,8 @@ class GitBranchesModal extends PureComponent<Props, State> {
                       <span
                         className={classnames({
                           bold: name === currentBranch,
-                        })}>
+                        })}
+                      >
                         {name}
                       </span>
                       {name === currentBranch ? (
@@ -230,18 +232,21 @@ class GitBranchesModal extends PureComponent<Props, State> {
                           <PromptButton
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Merged"
-                            onClick={() => this._handleMerge(name)}>
+                            onClick={() => this._handleMerge(name)}
+                          >
                             Merge
                           </PromptButton>
                           <PromptButton
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Deleted"
-                            onClick={() => this._handleDelete(name)}>
+                            onClick={() => this._handleDelete(name)}
+                          >
                             Delete
                           </PromptButton>
                           <button
                             className="btn btn--micro btn--outlined space-left"
-                            onClick={() => this._handleCheckout(name)}>
+                            onClick={() => this._handleCheckout(name)}
+                          >
                             Checkout
                           </button>
                         </Fragment>
@@ -268,7 +273,8 @@ class GitBranchesModal extends PureComponent<Props, State> {
                       <td className="text-right">
                         <button
                           className="btn btn--micro btn--outlined space-left"
-                          onClick={() => this._handleRemoteCheckout(name)}>
+                          onClick={() => this._handleRemoteCheckout(name)}
+                        >
                           Checkout
                         </button>
                       </td>

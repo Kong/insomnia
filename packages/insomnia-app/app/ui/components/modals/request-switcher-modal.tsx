@@ -1,36 +1,56 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { ACTIVITY_DEBUG, ACTIVITY_SPEC, AUTOBIND_CFG, GlobalActivity, isWorkspaceActivity } from '../../../common/constants';
 import classnames from 'classnames';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
-import Button from '../base/button';
-import Highlight from '../base/highlight';
-import Modal from '../base/modal';
-import ModalHeader from '../base/modal-header';
-import ModalBody from '../base/modal-body';
-import MethodTag from '../tags/method-tag';
+import React, { Fragment, PureComponent } from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import { keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
-import { isRequestGroup, RequestGroup } from '../../../models/request-group';
 import { isRequest, Request } from '../../../models/request';
-import { isDesign, Workspace } from '../../../models/workspace';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import { executeHotKey } from '../../../common/hotkeys-listener';
+import { isRequestGroup } from '../../../models/request-group';
+import { Workspace } from '../../../models/workspace';
+import { RootState } from '../../redux/modules';
+import { activateWorkspace } from '../../redux/modules/workspace';
+import { selectActiveRequest, selectActiveWorkspace, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveSpace } from '../../redux/selectors';
+import Button from '../base/button';
+import Highlight from '../base/highlight';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
 import KeydownBinder from '../keydown-binder';
-import type { RequestMeta } from '../../../models/request-meta';
-import { keyboardKeys } from '../../../common/keyboard-keys';
-import { setActiveActivity, setActiveWorkspace } from '../../redux/modules/global';
+import MethodTag from '../tags/method-tag';
 
-interface Props {
-  handleSetActiveWorkspace: typeof setActiveWorkspace;
-  handleSetActiveActivity: typeof setActiveActivity;
+type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
+
+const mapStateToProps = (state: RootState) => {
+  const activeRequest = selectActiveRequest(state);
+  // the request switcher modal does not know about grpc requests yet
+  const normalizedRequest = activeRequest && isRequest(activeRequest) ? activeRequest : undefined;
+
+  return {
+    activeRequest: normalizedRequest,
+    workspace: selectActiveWorkspace(state),
+    workspaces: selectWorkspacesForActiveSpace(state),
+    requestMetas: selectRequestMetas(state),
+    workspaceChildren: selectWorkspaceRequestsAndRequestGroups(state),
+  };
+};
+
+const mapDispatchToProps = dispatch => {
+  const bound = bindActionCreators({ activateWorkspace }, dispatch);
+  return {
+    handleActivateWorkspace: bound.activateWorkspace,
+  };
+};
+
+interface Props extends ReduxProps {
   activateRequest: (id: string) => void;
-  activeRequest?: Request;
-  workspaceChildren: (Request | RequestGroup)[];
-  workspace?: Workspace;
-  workspaces: Workspace[];
-  requestMetas: RequestMeta[];
 }
 
 interface State {
@@ -154,20 +174,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   async _activateWorkspace(workspace: Workspace) {
-    const { activeActivity } = await models.workspaceMeta.getOrCreateByParentId(workspace._id);
+    await this.props.handleActivateWorkspace({ workspace });
 
-    let goToActivity: GlobalActivity;
-
-    if (activeActivity && isWorkspaceActivity(activeActivity)) {
-      goToActivity = activeActivity;
-    } else {
-      goToActivity = isDesign(workspace) ? ACTIVITY_SPEC : ACTIVITY_DEBUG;
-    }
-
-    this.props.handleSetActiveActivity(goToActivity);
-    this.props.handleSetActiveWorkspace(workspace._id);
-
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _activateRequest(request: Request) {
@@ -176,7 +185,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     }
 
     this.props.activateRequest(request._id);
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleChange(e: React.SyntheticEvent<HTMLInputElement>) {
@@ -303,7 +312,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     } = {},
   ) {
     // Don't show if we're already showing
-    if (this.modal && this.modal.isOpen()) {
+    if (this.modal?.isOpen()) {
       return;
     }
 
@@ -333,19 +342,19 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
       // Change value after because it accesses state properties
       this._handleChangeValue('');
     });
-    this.modal && this.modal.show();
-    setTimeout(() => this._input && this._input.focus(), 100);
+    this.modal?.show();
+    setTimeout(() => this._input?.focus(), 100);
   }
 
   hide() {
     if (this._openTimeout !== null) {
       clearTimeout(this._openTimeout);
     }
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   toggle() {
-    if (this.modal && this.modal.isOpen()) {
+    if (this.modal?.isOpen()) {
       this.hide();
     } else {
       this.show();
@@ -378,7 +387,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     // the user unpresses the hotkey that triggered this modal but we currently do not
     // have the facilities to do that.
     const isMetaKeyDown = e.ctrlKey || e.shiftKey || e.metaKey || e.altKey;
-    const isActive = this.modal && this.modal.isOpen();
+    const isActive = this.modal?.isOpen();
 
     if (selectOnKeyup && isActive && !isMetaKeyDown) {
       await this._activateCurrentIndex();
@@ -403,7 +412,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
         <Modal
           ref={this._setModalRef}
           dontFocus={!disableInput}
-          className={isModalVisible ? '' : 'hide'}>
+          className={isModalVisible ? '' : 'hide'}
+        >
           <ModalHeader hideCloseButton>
             {title || (
               <Fragment>
@@ -496,7 +506,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 {workspace ? <button
                   className="btn btn--outlined btn--compact"
                   disabled={!searchString}
-                  onClick={this._activateCurrentIndex}>
+                  onClick={this._activateCurrentIndex}
+                >
                   Create a request named {searchString}
                 </button> : null}
               </div>
@@ -508,4 +519,9 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 }
 
-export default RequestSwitcherModal;
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+  null,
+  { forwardRef: true }
+)(RequestSwitcherModal);

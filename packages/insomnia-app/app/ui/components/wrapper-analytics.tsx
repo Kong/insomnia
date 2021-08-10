@@ -1,10 +1,11 @@
 import React, { FunctionComponent, useCallback } from 'react';
-import type { WrapperProps } from './wrapper';
-import OnboardingContainer from './onboarding-container';
-import Analytics from './analytics';
 import { useDispatch } from 'react-redux';
+
+import { ACTIVITY_HOME, getAppLongName, getAppSynopsis } from '../../common/constants';
 import { setActiveActivity } from '../redux/modules/global';
-import { getAppLongName, getAppSynopsis, ACTIVITY_HOME } from '../../common/constants';
+import Analytics from './analytics';
+import OnboardingContainer from './onboarding-container';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   wrapperProps: WrapperProps;
@@ -19,7 +20,8 @@ const WrapperAnalytics: FunctionComponent<Props> = ({ wrapperProps }) => {
     <OnboardingContainer
       wrapperProps={wrapperProps}
       header={'Welcome to ' + getAppLongName()}
-      subHeader={getAppSynopsis()}>
+      subHeader={getAppSynopsis()}
+    >
       <Analytics wrapperProps={wrapperProps} handleDone={navigateHome} />
     </OnboardingContainer>
   );

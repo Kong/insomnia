@@ -1,9 +1,10 @@
+import enquirer from 'enquirer';
+
 import type { Database } from '../index';
 import { emptyDb } from '../index';
+import { loadApiSpec, promptApiSpec } from './api-spec';
 import type { ApiSpec } from './types';
 import { generateIdIsh } from './util';
-import enquirer from 'enquirer';
-import { loadApiSpec, promptApiSpec } from './api-spec';
 
 jest.mock('enquirer');
 
@@ -62,7 +63,7 @@ describe('apiSpec', () => {
 
     it.each([generateIdIsh(spec), spec._id, spec.fileName])(
       'should return spec with identifier: %o',
-      (identifier) => {
+      identifier => {
         expect(loadApiSpec(db, identifier)).toBe(spec);
       },
     );

@@ -1,22 +1,23 @@
+import fs from 'fs';
 import { convert } from 'insomnia-importers';
-import { database as db } from './database';
+
+import type { ApiSpec } from '../models/api-spec';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
-import { showError, showModal } from '../ui/components/modals/index';
-import AlertModal from '../ui/components/modals/alert-modal';
-import fs from 'fs';
-import { fnOrString, generateId, diffPatchObj } from './misc';
-import { trackEvent } from './analytics';
+import { isRequest } from '../models/request';
 import { isWorkspace, Workspace } from '../models/workspace';
-import type { ApiSpec } from '../models/api-spec';
+import AlertModal from '../ui/components/modals/alert-modal';
+import { showError, showModal } from '../ui/components/modals/index';
 import { ImportToWorkspacePrompt, SetWorkspaceScopePrompt } from '../ui/redux/modules/helpers';
+import { trackEvent } from './analytics';
 import {
   BASE_ENVIRONMENT_ID_KEY,
   CONTENT_TYPE_GRAPHQL,
   EXPORT_TYPE_WORKSPACE,
   WORKSPACE_ID_KEY,
 } from './constants';
-import { isRequest } from '../models/request';
+import { database as db } from './database';
+import { diffPatchObj, fnOrString, generateId } from './misc';
 
 export interface ImportResult {
   source: string;
@@ -39,6 +40,7 @@ interface ConvertResult {
 
 export interface ImportRawConfig {
   getWorkspaceId: ImportToWorkspacePrompt;
+  getSpaceId?: () => Promise<string>;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
@@ -112,6 +114,7 @@ export async function importRaw(
   {
     getWorkspaceId,
     getWorkspaceScope,
+    getSpaceId,
     enableDiffBasedPatching,
     enableDiffDeep,
     bypassDiffProps,
@@ -182,7 +185,7 @@ export async function importRaw(
     for (const key of Object.keys(generatedIds)) {
       const { parentId, _id } = resource;
 
-      if (parentId && parentId.includes(key)) {
+      if (parentId?.includes(key)) {
         resource.parentId = parentId.replace(key, await fnOrString(generatedIds[key]));
       }
 
@@ -246,15 +249,18 @@ export async function importRaw(
         updateDoc.url = resource.url;
       }
 
-      // If workspace, don't overwrite the existing scope
+      // If workspace preserve the scope and parentId of the existing workspace while importing
       if (isWorkspace(model)) {
         (updateDoc as Workspace).scope = (existingDoc as Workspace).scope;
+        (updateDoc as Workspace).parentId = (existingDoc as Workspace).parentId;
       }
 
       newDoc = await db.docUpdate(existingDoc, updateDoc);
     } else {
+      // If workspace, check and set the scope and parentId while importing a new workspace
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
+        await createWorkspaceInSpace(resource as Workspace, getSpaceId);
       }
 
       newDoc = await db.docCreate(model.type, resource);
@@ -306,7 +312,7 @@ async function updateWorkspaceScope(
   resultType: ConvertResultType,
   getWorkspaceScope?: SetWorkspaceScopePrompt,
 ) {
-  // Set the workspace scope if creating a new workspace
+  // Set the workspace scope if creating a new workspace during import
   //  IF is creating a new workspace
   //  AND imported resource has no preset scope property OR scope is null
   //  AND we have a function to get scope
@@ -325,6 +331,16 @@ async function updateWorkspaceScope(
 
     const nameToPrompt = specName ? `${specName} / ${workspaceName}` : workspaceName;
     resource.scope = await getWorkspaceScope(nameToPrompt);
+  }
+}
+
+async function createWorkspaceInSpace(
+  resource: Workspace,
+  getSpaceId?: () => Promise<string>,
+) {
+  if (getSpaceId) {
+    // Set the workspace parent if creating a new workspace during import
+    resource.parentId = await getSpaceId();
   }
 }
 

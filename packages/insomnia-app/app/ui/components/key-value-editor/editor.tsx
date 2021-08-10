@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import classnames from 'classnames';
-import Lazy from '../base/lazy';
-import KeyValueEditorRow from './row';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import { generateId, nullFn } from '../../../common/misc';
-import { Dropdown, DropdownItem, DropdownButton } from '../base/dropdown';
-import PromptButton from '../base/prompt-button';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import Lazy from '../base/lazy';
+import PromptButton from '../base/prompt-button';
+import KeyValueEditorRow from './row';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -258,7 +259,7 @@ class Editor extends PureComponent<Props, State> {
 
     this._onChange(pairs);
 
-    this.props.onCreate && this.props.onCreate();
+    this.props.onCreate?.();
   }
 
   _deletePair(position, breakFocus = false) {
@@ -269,7 +270,7 @@ class Editor extends PureComponent<Props, State> {
     const focusedPosition = this._getFocusedPairIndex();
 
     const pair = this.state.pairs[position];
-    this.props.onDelete && this.props.onDelete(pair);
+    this.props.onDelete?.(pair);
     const pairs = [...this.state.pairs.slice(0, position), ...this.state.pairs.slice(position + 1)];
 
     if (focusedPosition >= position) {

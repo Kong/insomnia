@@ -1,4 +1,4 @@
-import { UNKNOWN, ImportRequest, PostData, Body, Converter } from '../entities';
+import { Body, Converter, ImportRequest, PostData, UNKNOWN } from '../entities';
 
 export const id = 'har';
 export const name = 'HAR 1.2';
@@ -74,7 +74,7 @@ const importRequest = (request: ImportRequest): ImportRequest => {
 
   // Convert cookie value to header
   const existingCookieHeader = headers.find(
-    (header) => header.name.toLowerCase() === 'cookie',
+    header => header.name.toLowerCase() === 'cookie',
   );
 
   if (cookieHeaderValue && existingCookieHeader) {
@@ -106,7 +106,7 @@ const importRequest = (request: ImportRequest): ImportRequest => {
   };
 };
 
-export const convert: Converter = (rawData) => {
+export const convert: Converter = rawData => {
   requestCount = 1;
 
   try {

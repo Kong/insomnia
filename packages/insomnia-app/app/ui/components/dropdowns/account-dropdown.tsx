@@ -1,13 +1,14 @@
-import React, { FunctionComponent } from 'react';
 import { CircleButton, SvgIcon, Tooltip } from 'insomnia-components';
+import React, { FunctionComponent } from 'react';
+import styled from 'styled-components';
+
 import * as session from '../../../account/session';
-import { showLoginModal } from '../modals/login-modal';
+import Dropdown from '../base/dropdown/dropdown';
+import DropdownButton from '../base/dropdown/dropdown-button';
+import DropdownItem from '../base/dropdown/dropdown-item';
 import Link from '../base/link';
 import PromptButton from '../base/prompt-button';
-import Dropdown from '../base/dropdown/dropdown';
-import DropdownItem from '../base/dropdown/dropdown-item';
-import DropdownButton from '../base/dropdown/dropdown-button';
-import styled from 'styled-components';
+import { showLoginModal } from '../modals/login-modal';
 
 interface Props {
   className?: string;
@@ -38,7 +39,8 @@ const AccountDropdown: FunctionComponent<Props> = ({ className }) => (
           key="login"
           stayOpenAfterClick
           buttonClass={PromptButton}
-          onClick={session.logout}>
+          onClick={session.logout}
+        >
           <StyledIconContainer>
             <i className="fa fa-sign-out" />
           </StyledIconContainer>

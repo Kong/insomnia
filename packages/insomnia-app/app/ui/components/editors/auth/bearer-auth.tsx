@@ -1,12 +1,13 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import Button from '../../base/button';
-import HelpTooltip from '../../help-tooltip';
-import type { Request, RequestAuthentication } from '../../../../models/request';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import Button from '../../base/button';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import HelpTooltip from '../../help-tooltip';
 
 interface Props {
   handleRender: HandleRender;
@@ -57,7 +58,8 @@ class BearerAuth extends PureComponent<Props> {
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
                     'form-control--inactive': authentication.disabled,
-                  })}>
+                  })}
+                >
                   <OneLineEditor
                     type="text"
                     id="token"
@@ -85,7 +87,8 @@ class BearerAuth extends PureComponent<Props> {
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
                     'form-control--inactive': authentication.disabled,
-                  })}>
+                  })}
+                >
                   <OneLineEditor
                     type="text"
                     id="prefix"
@@ -113,7 +116,8 @@ class BearerAuth extends PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

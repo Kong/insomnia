@@ -1,10 +1,11 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { WrapperProps } from './wrapper';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
-import { AUTOBIND_CFG } from '../../common/constants';
+import type { WrapperProps } from './wrapper';
 
 interface Props {
   wrapperProps: WrapperProps;
@@ -40,7 +41,6 @@ class PageLayout extends PureComponent<Props> {
       handleInitializeEntities,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
-      handleSetActiveWorkspace,
       handleSetSidebarRef,
       handleSetRequestPaneRef,
       handleSetResponsePaneRef,
@@ -58,7 +58,7 @@ class PageLayout extends PureComponent<Props> {
       workspaces,
     } = wrapperProps;
     const realSidebarWidth = sidebarHidden ? 0 : sidebarWidth;
-    const paneTwo = renderPaneTwo && renderPaneTwo();
+    const paneTwo = renderPaneTwo?.();
     const gridRows = paneTwo
       ? `auto minmax(0, ${paneHeight}fr) 0 minmax(0, ${1 - paneHeight}fr)`
       : 'auto 1fr';
@@ -100,7 +100,8 @@ class PageLayout extends PureComponent<Props> {
             settings.environmentHighlightColorStyle === 'window-right'
               ? '5px solid ' + activeEnvironment.color
               : undefined,
-        }}>
+        }}
+      >
         {renderPageHeader && <ErrorBoundary showAlert>{renderPageHeader()}</ErrorBoundary>}
 
         {renderPageSidebar && (
@@ -113,7 +114,6 @@ class PageLayout extends PureComponent<Props> {
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
               handleSetActiveEnvironment={handleSetActiveEnvironment}
-              handleSetActiveWorkspace={handleSetActiveWorkspace}
               hidden={sidebarHidden || false}
               hotKeyRegistry={settings.hotKeyRegistry}
               isLoading={isLoading}
@@ -122,7 +122,8 @@ class PageLayout extends PureComponent<Props> {
               unseenWorkspaces={unseenWorkspaces}
               gitVCS={gitVCS}
               width={sidebarWidth}
-              workspaces={workspaces}>
+              workspaces={workspaces}
+            >
               {renderPageSidebar()}
             </Sidebar>
 

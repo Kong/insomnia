@@ -1,8 +1,9 @@
-import * as dropdown from './dropdown';
-import * as modal from './modal';
-import findAsync from './find-async';
-import * as debug from './debug';
 import faker from 'faker';
+
+import * as debug from './debug';
+import * as dropdown from './dropdown';
+import findAsync from './find-async';
+import * as modal from './modal';
 
 export const documentListingShown = async app => {
   const item = await app.client.$('.document-listing');

@@ -1,19 +1,20 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as models from '../../../models';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
+import * as requestOperations from '../../../models/helpers/request-operations';
+import type { Request } from '../../../models/request';
+import { isWorkspace, Workspace } from '../../../models/workspace';
+import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
-import * as models from '../../../models';
-import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
-import { database as db } from '../../../common/database';
-import { isWorkspace, Workspace } from '../../../models/workspace';
-import type { Request } from '../../../models/request';
-import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
-import * as requestOperations from '../../../models/helpers/request-operations';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   editorFontSize: number;
@@ -216,11 +217,11 @@ class RequestSettingsModal extends PureComponent<Props, State> {
         defaultPreviewMode: hasDescription && !forceEditMode,
       },
       () => {
-        this.modal && this.modal.show();
+        this.modal?.show();
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor && this._editor.focus();
+            this._editor?.focus();
           }, 400);
         }
       },
@@ -228,7 +229,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   renderCheckboxInput(setting: string) {
@@ -308,9 +309,10 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             Follow redirects <span className="txt-sm faint italic">(overrides global setting)</span>
             <select
               // @ts-expect-error -- TSCONVERSION this setting only exists for a Request not GrpcRequest
-              defaultValue={this.state.request && this.state.request.settingFollowRedirects}
+              defaultValue={this.state.request?.settingFollowRedirects}
               name="settingFollowRedirects"
-              onChange={this._updateRequestSettingString}>
+              onChange={this._updateRequestSettingString}
+            >
               <option value={'global'}>Use global setting</option>
               <option value={'off'}>Don't follow redirects</option>
               <option value={'on'}>Follow redirects</option>
@@ -359,7 +361,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
     ) : (
       <button
         onClick={this._handleAddDescription}
-        className="btn btn--outlined btn--super-duper-compact">
+        className="btn btn--outlined btn--super-duper-compact"
+      >
         Add Description
       </button>
     );
@@ -401,7 +404,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
             </HelpTooltip>
             <select
               value={activeWorkspaceIdToCopyTo || '__NULL__'}
-              onChange={this._handleUpdateMoveCopyWorkspace}>
+              onChange={this._handleUpdateMoveCopyWorkspace}
+            >
               <option value="__NULL__">-- Select Workspace --</option>
               {workspaces.map(w => {
                 if (workspace && workspace._id === w._id) {
@@ -421,7 +425,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
           <button
             disabled={justCopied || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleCopyToWorkspace}>
+            onClick={this._handleCopyToWorkspace}
+          >
             {justCopied ? 'Copied!' : 'Copy'}
           </button>
         </div>
@@ -429,7 +434,8 @@ class RequestSettingsModal extends PureComponent<Props, State> {
           <button
             disabled={justMoved || !activeWorkspaceIdToCopyTo}
             className="btn btn--clicky"
-            onClick={this._handleMoveToWorkspace}>
+            onClick={this._handleMoveToWorkspace}
+          >
             {justMoved ? 'Moved!' : 'Move'}
           </button>
         </div>

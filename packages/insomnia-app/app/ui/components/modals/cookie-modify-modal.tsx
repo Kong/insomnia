@@ -1,19 +1,20 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import clone from 'clone';
+import { cookieToString } from 'insomnia-cookies';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
 import * as toughCookie from 'tough-cookie';
+
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS } from '../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
-import clone from 'clone';
-import Modal, { ModalProps } from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import ModalFooter from '../base/modal-footer';
-import OneLineEditor from '../codemirror/one-line-editor';
-import { cookieToString } from 'insomnia-cookies';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import Modal, { ModalProps } from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import OneLineEditor from '../codemirror/one-line-editor';
 
 interface Props extends ModalProps {
   handleRender: HandleRender;
@@ -58,11 +59,11 @@ class CookieModifyModal extends PureComponent<Props, State> {
     this.setState({
       cookie,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   static async _saveChanges(cookieJar: CookieJar) {

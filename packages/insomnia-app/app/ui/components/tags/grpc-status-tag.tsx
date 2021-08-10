@@ -1,7 +1,8 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
-import Tooltip from '../tooltip';
 import { status } from '@grpc/grpc-js';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
+import Tooltip from '../tooltip';
 
 interface Props {
   statusCode?: number;
@@ -19,7 +20,8 @@ class GrpcStatusTag extends PureComponent<Props> {
       <div
         className={classnames('tag', colorClass, {
           'tag--small': small,
-        })}>
+        })}
+      >
         <Tooltip message={message} position="bottom" delay={tooltipDelay}>
           <strong>{statusCode} </strong>
           {message}

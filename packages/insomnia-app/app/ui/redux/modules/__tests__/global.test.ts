@@ -1,9 +1,11 @@
+import fs from 'fs';
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+
 import { globalBeforeEach } from '../../../../__jest__/before-each';
+import { trackEvent } from '../../../../common/analytics';
 import {
   ACTIVITY_ANALYTICS,
-  GlobalActivity,
   ACTIVITY_DEBUG,
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
@@ -11,25 +13,27 @@ import {
   ACTIVITY_SPEC,
   ACTIVITY_UNIT_TEST,
   DEPRECATED_ACTIVITY_INSOMNIA,
+  GlobalActivity,
+  SORT_MODIFIED_DESC,
 } from '../../../../common/constants';
-import { trackEvent } from '../../../../common/analytics';
+import { getDesignerDataDir } from '../../../../common/electron-helpers';
+import * as models from '../../../../models';
+import { BASE_SPACE_ID } from '../../../../models/space';
 import {
   goToNextActivity,
   initActiveActivity,
+  initActiveSpace,
   initActiveWorkspace,
+  initSpaceSortOrder,
   LOCALSTORAGE_PREFIX,
   SET_ACTIVE_ACTIVITY,
-  SET_ACTIVE_WORKSPACE,
-  setActiveActivity,
-  setActiveWorkspace,
   SET_ACTIVE_SPACE,
+  SET_ACTIVE_WORKSPACE,
+  SET_SPACE_SORT_ORDER,
+  setActiveActivity,
   setActiveSpace,
-  initActiveSpace,
+  setActiveWorkspace,
 } from '../global';
-import * as models from '../../../../models';
-import fs from 'fs';
-import { getDesignerDataDir } from '../../../../common/electron-helpers';
-import { BASE_SPACE_ID } from '../../../../models/space';
 
 jest.mock('../../../../common/analytics');
 
@@ -268,6 +272,37 @@ describe('global', () => {
         spaceId: BASE_SPACE_ID,
       };
       expect(initActiveSpace()).toStrictEqual(expectedEvent);
+    });
+  });
+
+  describe('initSpaceSortOrder', () => {
+    it('should initialize from local storage', () => {
+      const sortOrder = SORT_MODIFIED_DESC;
+
+      global.localStorage.setItem(
+        `${LOCALSTORAGE_PREFIX}::space-sort-order`,
+        JSON.stringify(sortOrder),
+      );
+
+      const expectedEvent = {
+        'payload': {
+          sortOrder,
+        },
+        'type': SET_SPACE_SORT_ORDER,
+      };
+
+      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
+    });
+
+    it('should default to modified-desc if not exist', async () => {
+      const expectedEvent = {
+        'payload': {
+          sortOrder: SORT_MODIFIED_DESC,
+        },
+        'type': SET_SPACE_SORT_ORDER,
+      };
+
+      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
     });
   });
 

@@ -1,14 +1,13 @@
+import { Space } from '../../../models/space';
+import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
-import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
-import { ValueOf } from 'type-fest';
+import { showSelectModal } from '../../components/modals/select-modal';
 
-export const ForceToWorkspaceKeys = {
-  new: 'new',
-  current: 'current',
-} as const;
-
-export type ForceToWorkspace = ValueOf<typeof ForceToWorkspaceKeys>;
+export enum ForceToWorkspace {
+  new = 'new',
+  current = 'current'
+}
 
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
 export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; }): ImportToWorkspacePrompt {
@@ -18,10 +17,10 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { wo
     }
 
     switch (forceToWorkspace) {
-      case ForceToWorkspaceKeys.new:
+      case ForceToWorkspace.new:
         return null;
 
-      case ForceToWorkspaceKeys.current:
+      case ForceToWorkspace.current:
         return workspaceId;
 
       default:
@@ -61,5 +60,32 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
           });
         });
     }
+  };
+}
+
+export type SetSpaceIdPrompt = () => Promise<string>;
+export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[]; activeSpace: Space; }): SetSpaceIdPrompt {
+  return function() {
+    return new Promise(resolve => {
+      // If only one space exists, return that
+      if (spaces.length === 1) {
+        return resolve(spaces[0]._id);
+      }
+
+      const options = spaces.map(space => ({ name: space.name, value: space._id }));
+      const defaultValue = activeSpace._id;
+
+      showSelectModal({
+        title: 'Import',
+        message: 'Select a space to import into',
+        options,
+        value: defaultValue,
+        noEscape: true,
+        onDone: selectedSpaceId => {
+          // @ts-expect-error onDone can send null as an argument; why/how?
+          resolve(selectedSpaceId);
+        },
+      });
+    });
   };
 }

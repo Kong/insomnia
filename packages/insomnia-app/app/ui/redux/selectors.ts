@@ -1,13 +1,15 @@
 import { createSelector } from 'reselect';
+import { ValueOf } from 'type-fest';
+
+import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { BASE_SPACE_ID, isRemoteSpace } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
-import { ValueOf } from 'type-fest';
-import { isWorkspaceActivity } from '../../common/constants';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
@@ -19,6 +21,11 @@ type EntitiesLists = {
 export const selectEntities = createSelector(
   (state: RootState) => state.entities,
   entities => entities,
+);
+
+export const selectGlobal = createSelector(
+  (state: RootState) => state.global,
+  global => global,
 );
 
 export const selectEntitiesLists = createSelector(
@@ -59,17 +66,32 @@ export const selectSettings = createSelector(
   selectEntitiesLists,
   entities => entities.settings[0] || models.settings.init());
 
+export const selectRequestMetas = createSelector(
+  selectEntitiesLists,
+  entities => entities.requestMetas,
+);
+
 export const selectSpaces = createSelector(
   selectEntitiesLists,
   entities => entities.spaces,
+);
+
+export const selectRemoteSpaces = createSelector(
+  selectSpaces,
+  spaces => spaces.filter(isRemoteSpace),
 );
 
 export const selectActiveSpace = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeSpaceId,
   (entities, activeSpaceId) => {
-    return entities.spaces[activeSpaceId || 'n/a'];
+    return entities.spaces[activeSpaceId] || entities.spaces[BASE_SPACE_ID];
   },
+);
+
+export const selectSpaceSortOrder = createSelector(
+  selectGlobal,
+  global => global.spaceSortOrder
 );
 
 export const selectAllWorkspaces = createSelector(
@@ -77,13 +99,15 @@ export const selectAllWorkspaces = createSelector(
   entities => entities.workspaces,
 );
 
+export const selectAllApiSpecs = createSelector(
+  selectEntitiesLists,
+  entities => entities.apiSpecs,
+);
+
 export const selectWorkspacesForActiveSpace = createSelector(
   selectAllWorkspaces,
   selectActiveSpace,
-  (workspaces, activeSpace) => {
-    const parentId = activeSpace?._id || null;
-    return workspaces.filter(w => w.parentId === parentId);
-  },
+  (workspaces, activeSpace) => workspaces.filter(w => w.parentId === activeSpace._id),
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -364,7 +388,7 @@ export const selectActiveUnitTests = createSelector(
 
 export const selectActiveSpaceName = createSelector(
   selectActiveSpace,
-  activeSpace => activeSpace?.name,
+  activeSpace => activeSpace.name,
 );
 
 export const selectActiveUnitTestSuites = createSelector(
@@ -378,4 +402,14 @@ export const selectActiveUnitTestSuites = createSelector(
 export const selectSyncItems = createSelector(
   selectActiveWorkspaceEntities,
   getStatusCandidates,
+);
+
+export const selectIsLoggedIn = createSelector(
+  selectGlobal,
+  global => global.isLoggedIn,
+);
+
+export const selectActiveActivity = createSelector(
+  selectGlobal,
+  global => global.activeActivity,
 );

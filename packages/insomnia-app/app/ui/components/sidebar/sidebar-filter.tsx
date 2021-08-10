@@ -1,10 +1,11 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, SortOrder } from '../../../common/constants';
-import KeydownBinder from '../keydown-binder';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import KeydownBinder from '../keydown-binder';
 import SidebarCreateDropdown from './sidebar-create-dropdown';
 import SidebarSortDropdown from './sidebar-sort-dropdown';
 
@@ -56,7 +57,7 @@ class SidebarFilter extends PureComponent<Props> {
 
   _handleKeydown(e: KeyboardEvent) {
     executeHotKey(e, hotKeyRefs.SIDEBAR_FOCUS_FILTER, () => {
-      this._input && this._input.focus();
+      this._input?.focus();
     });
   }
 

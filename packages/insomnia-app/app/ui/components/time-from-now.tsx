@@ -1,7 +1,8 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import moment from 'moment';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
   timestamp: number | Date | string;

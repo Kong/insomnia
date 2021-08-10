@@ -1,20 +1,23 @@
-import { hot } from 'react-hot-loader';
+// eslint-disable-next-line simple-import-sort/imports
+import { ipcRenderer } from 'electron';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { hot } from 'react-hot-loader';
 import { Provider } from 'react-redux';
-import App from './containers/app';
-import * as models from '../models';
-import { database as db } from '../common/database';
-import { init as initStore } from './redux/modules';
-import { init as initPlugins } from '../plugins';
-import './css/index.less';
-import { getAppLongName, isDevelopment } from '../common/constants';
-import { setFont, applyColorScheme } from '../plugins/misc';
-import { trackEvent } from '../common/analytics';
 import * as styledComponents from 'styled-components';
-import { initNewOAuthSession } from '../network/o-auth-2/misc';
+
+import { trackEvent } from '../common/analytics';
+import { getAppLongName, isDevelopment } from '../common/constants';
+import { database as db } from '../common/database';
 import { initializeLogging } from '../common/log';
-import { ipcRenderer } from 'electron';
+import * as models from '../models';
+import { initNewOAuthSession } from '../network/o-auth-2/misc';
+import { init as initPlugins } from '../plugins';
+import { applyColorScheme, setFont } from '../plugins/misc';
+import App from './containers/app';
+import { init as initStore } from './redux/modules';
+
+import './css/index.less'; // this import must come after `App`.  the reason is not yet known.
 
 initializeLogging();
 // Handy little helper
@@ -65,11 +68,11 @@ window['styled-components'] = styledComponents;
 // Catch uncaught errors and report them
 if (window && !isDevelopment()) {
   window.addEventListener('error', e => {
-    console.error('Uncaught Error', e);
+    console.error('Uncaught Error', e.error || e);
     trackEvent('Error', 'Uncaught Error');
   });
   window.addEventListener('unhandledrejection', e => {
-    console.error('Unhandled Promise', e);
+    console.error('Unhandled Promise', e.reason);
     trackEvent('Error', 'Uncaught Promise');
   });
 }

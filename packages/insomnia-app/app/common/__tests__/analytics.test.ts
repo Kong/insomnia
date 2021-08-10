@@ -1,14 +1,15 @@
 import * as electron from 'electron';
 import { EventEmitter } from 'events';
+
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models/index';
 import { _trackEvent, _trackPageView } from '../analytics';
 import {
+  getAppId,
+  getAppName,
   getAppPlatform,
   getAppVersion,
   getBrowserUserAgent,
-  getAppId,
-  getAppName,
   getGoogleAnalyticsId,
   getGoogleAnalyticsLocation,
 } from '../constants';

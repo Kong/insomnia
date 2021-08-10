@@ -1,20 +1,21 @@
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
 import {
   SIGNATURE_METHOD_HMAC_SHA1,
   SIGNATURE_METHOD_HMAC_SHA256,
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import CodePromptModal from '../../modals/code-prompt-modal';
-import { showModal } from '../../modals';
 import Button from '../../base/button';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import HelpTooltip from '../../help-tooltip';
+import { showModal } from '../../modals';
+import CodePromptModal from '../../modals/code-prompt-modal';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -142,7 +143,8 @@ class OAuth1Auth extends PureComponent<Props> {
               className="btn btn--super-duper-compact"
               id={label}
               onClick={onChange}
-              value={!authentication[property]}>
+              value={!authentication[property]}
+            >
               {authentication[property] ? (
                 <i className="fa fa-check-square-o" />
               ) : (
@@ -172,7 +174,8 @@ class OAuth1Auth extends PureComponent<Props> {
               id="enabled"
               onClick={onChange}
               value={!authentication.disabled}
-              title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+              title={authentication.disabled ? 'Enable item' : 'Disable item'}
+            >
               {authentication.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -214,7 +217,8 @@ class OAuth1Auth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               type={type}
@@ -260,7 +264,8 @@ class OAuth1Auth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--outlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>

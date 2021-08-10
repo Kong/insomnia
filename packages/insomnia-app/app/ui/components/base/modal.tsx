@@ -1,10 +1,11 @@
-import React, { CSSProperties, PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import KeydownBinder from '../keydown-binder';
+import React, { CSSProperties, PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { pressedHotKey } from '../../../common/hotkeys-listener';
+import KeydownBinder from '../keydown-binder';
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;
@@ -16,6 +17,7 @@ export interface ModalProps {
   noEscape?: boolean,
   dontFocus?: boolean,
   closeOnKeyCodes?: any[],
+  onShow?: Function,
   onHide?: Function,
   onCancel?: Function,
   onKeyDown?: Function,
@@ -46,7 +48,7 @@ class Modal extends PureComponent<ModalProps, State> {
       return;
     }
 
-    this.props.onKeyDown && this.props.onKeyDown(e);
+    this.props.onKeyDown?.(e);
 
     // Don't check for close keys if we don't want them
     if (this.props.noEscape) {
@@ -61,7 +63,7 @@ class Modal extends PureComponent<ModalProps, State> {
     if (pressedEscape || pressedCloseButton) {
       e.preventDefault();
       this.hide();
-      this.props.onCancel && this.props.onCancel();
+      this.props.onCancel?.();
     }
   }
 
@@ -88,7 +90,7 @@ class Modal extends PureComponent<ModalProps, State> {
 
     if (shouldHide) {
       this.hide();
-      this.props.onCancel && this.props.onCancel();
+      this.props.onCancel?.();
     }
   }
 
@@ -106,13 +108,15 @@ class Modal extends PureComponent<ModalProps, State> {
       forceRefreshCounter: forceRefreshCounter + (freshState ? 1 : 0),
     });
 
+    this.props.onShow?.();
+
     if (this.props.dontFocus) {
       return;
     }
 
     // Allow instance-based onHide method
     this.onHide = options?.onHide ?? null;
-    setTimeout(() => this._node && this._node.focus());
+    setTimeout(() => this._node?.focus());
   }
 
   toggle() {
@@ -131,8 +135,8 @@ class Modal extends PureComponent<ModalProps, State> {
     this.setState({
       open: false,
     });
-    this.props.onHide && this.props.onHide();
-    this.onHide && this.onHide();
+    this.props.onHide?.();
+    this.onHide?.();
   }
 
   render() {
@@ -174,7 +178,8 @@ class Modal extends PureComponent<ModalProps, State> {
           className={classes}
           style={styles}
           aria-hidden={!open}
-          onClick={this._handleClick}>
+          onClick={this._handleClick}
+        >
           <div className="modal__backdrop overlay theme--transparent-overlay" data-close-modal />
           <div className="modal__content__wrapper">
             <div className="modal__content" key={forceRefreshCounter}>

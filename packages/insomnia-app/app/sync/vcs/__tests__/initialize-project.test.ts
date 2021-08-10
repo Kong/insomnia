@@ -1,9 +1,10 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
-import * as models from '../../../models';
+
 import { globalBeforeEach } from '../../../__jest__/before-each';
+import * as models from '../../../models';
+import { snapshotStateEntrySchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { Snapshot } from '../../types';
-import { snapshotStateEntrySchema } from '../../__schemas__/type-schemas';
 import { initializeLocalProjectAndMarkForSync, pushSnapshotOnInitialize } from '../initialize-project';
 import { VCS } from '../vcs';
 
@@ -13,6 +14,22 @@ describe('initialize-project', () => {
   beforeEach(globalBeforeEach);
 
   describe('initializeLocalProjectAndMarkForSync()', () => {
+    it('should do nothing if not request collection', async () => {
+      // Arrange
+      const workspace = await models.workspace.create({ scope: 'design' });
+      await models.workspace.ensureChildren(workspace);
+      const vcs = new VCS(new MemoryDriver());
+      const switchAndCreateProjectIfNotExistSpy = jest.spyOn(vcs, 'switchAndCreateProjectIfNotExist');
+
+      // Act
+      await initializeLocalProjectAndMarkForSync({ workspace, vcs });
+
+      // Assert
+      expect(switchAndCreateProjectIfNotExistSpy).not.toHaveBeenCalled();
+      const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+      expect(workspaceMeta?.pushSnapshotOnInitialize).toBe(false);
+      switchAndCreateProjectIfNotExistSpy.mockClear();
+    });
     it('should create a local project and commit', async () => {
       const workspace = await models.workspace.create();
       await models.workspace.ensureChildren(workspace);
@@ -62,10 +79,23 @@ describe('initialize-project', () => {
       pushSpy.mockClear();
     });
 
+    it('should not push if no active project', async () => {
+      const space = await models.space.create({ remoteId: null });
+      const workspace = await models.workspace.create({ parentId: space._id });
+      const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
+      vcs.clearProject();
+
+      await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
+
+      expect(pushSpy).not.toHaveBeenCalled();
+      await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
+    });
+
     it('should not push snapshot if not remote space', async () => {
       const space = await models.space.create({ remoteId: null });
       const workspace = await models.workspace.create({ parentId: space._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
+      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
 
@@ -78,6 +108,7 @@ describe('initialize-project', () => {
       const anotherSpace = await models.space.create({ remoteId: 'def' });
       const workspace = await models.workspace.create({ parentId: anotherSpace._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
+      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
 
@@ -89,6 +120,7 @@ describe('initialize-project', () => {
       const space = await models.space.create({ remoteId: 'abc' });
       const workspace = await models.workspace.create({ parentId: space._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: false });
+      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
 
@@ -100,6 +132,7 @@ describe('initialize-project', () => {
       const space = await models.space.create({ remoteId: 'abc' });
       const workspace = await models.workspace.create({ parentId: space._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
+      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
 
       await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
 

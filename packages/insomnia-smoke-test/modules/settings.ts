@@ -1,7 +1,8 @@
-import { clickTabByText } from './tabs';
 import { mapAccelerator } from 'spectron-keys';
-import * as modal from './modal';
+
 import * as dropdown from './dropdown';
+import * as modal from './modal';
+import { clickTabByText } from './tabs';
 
 export const openWithKeyboardShortcut = async app => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));

@@ -1,12 +1,13 @@
-import React, { Fragment, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { Fragment, PureComponent } from 'react';
+
+import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Link from '../base/link';
-import LoginModal from '../modals/login-modal';
-import { hideAllModals, showModal } from '../modals/index';
 import PromptButton from '../base/prompt-button';
-import * as session from '../../../account/session';
 import HelpTooltip from '../help-tooltip';
+import { hideAllModals, showModal } from '../modals/index';
+import LoginModal from '../modals/login-modal';
 
 interface State {
   code: string;
@@ -144,7 +145,8 @@ class Account extends PureComponent<{}, State> {
             <Link
               button
               className="margin-left-sm btn btn--clicky"
-              href="https://insomnia.rest/pricing">
+              href="https://insomnia.rest/pricing"
+            >
               Plus for Teams <i className="fa fa-external-link" />
             </Link>
           </div>
@@ -186,7 +188,8 @@ class Account extends PureComponent<{}, State> {
           </PromptButton>
           <button
             className="space-left btn btn--clicky"
-            onClick={this._handleShowChangePasswordForm}>
+            onClick={this._handleShowChangePasswordForm}
+          >
             Change Password
           </button>
         </div>
@@ -242,7 +245,8 @@ class Account extends PureComponent<{}, State> {
                 <button
                   type="submit"
                   className="btn btn--clicky"
-                  disabled={!code || !password || password !== password2}>
+                  disabled={!code || !password || password !== password2}
+                >
                   Submit Change
                 </button>
               </div>

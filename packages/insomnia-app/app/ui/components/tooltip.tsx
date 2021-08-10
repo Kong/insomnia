@@ -1,8 +1,9 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 
 interface Props {
   children: ReactNode;
@@ -189,14 +190,16 @@ class Tooltip extends PureComponent<Props, State> {
         ref={this._setTooltipRef}
         id={this._id}
         onMouseEnter={this._handleMouseEnter}
-        onMouseLeave={this._handleMouseLeave}>
+        onMouseLeave={this._handleMouseLeave}
+      >
         <div
           className={bubbleClasses}
           onClick={this._handleStopClick}
           role="tooltip"
           aria-hidden={!visible}
           aria-describedby={this._id}
-          ref={this._setBubbleRef}>
+          ref={this._setBubbleRef}
+        >
           {message}
         </div>
         {children}

@@ -1,10 +1,11 @@
+import { parseArgsStringToArgv } from 'string-argv';
+
+import * as packageJson from '../package.json';
 import * as cli from './cli';
+import { exportSpecification as _exportSpecification } from './commands/export-specification';
 import { generateConfig as _generateConfig } from './commands/generate-config';
 import { lintSpecification as _lintSpecification } from './commands/lint-specification';
 import { runInsomniaTests as _runInsomniaTests } from './commands/run-tests';
-import { exportSpecification as _exportSpecification } from './commands/export-specification';
-import { parseArgsStringToArgv } from 'string-argv';
-import * as packageJson from '../package.json';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
 import { exit as _exit } from './util';

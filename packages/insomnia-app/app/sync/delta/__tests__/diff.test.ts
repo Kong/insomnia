@@ -1,4 +1,4 @@
-import { diff, __internal } from '../diff';
+import { __internal, diff } from '../diff';
 
 describe('diff()', () => {
   it('creates block map', () => {

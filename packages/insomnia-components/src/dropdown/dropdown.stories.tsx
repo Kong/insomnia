@@ -1,10 +1,11 @@
-import React from 'react';
 import { number, withKnobs } from '@storybook/addon-knobs';
-import { Dropdown } from './dropdown';
-import { DropdownItem } from './dropdown-item';
-import { DropdownDivider } from './dropdown-divider';
-import { SvgIcon } from '../svg-icon';
+import React from 'react';
+
 import { Button } from '../button';
+import { SvgIcon } from '../svg-icon';
+import { Dropdown } from './dropdown';
+import { DropdownDivider } from './dropdown-divider';
+import { DropdownItem } from './dropdown-item';
 
 export default {
   title: 'Navigation | Dropdown',
@@ -63,7 +64,8 @@ export const manyItems = () => {
         <Button>
           {numItems} Items <SvgIcon icon="chevron-down" />
         </Button>
-      )}>
+      )}
+    >
       {items}
     </Dropdown>
   );

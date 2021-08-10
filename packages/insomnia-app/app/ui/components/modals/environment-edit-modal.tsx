@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import EnvironmentEditor from '../editors/environment-editor';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import { RequestGroup } from '../../../models/request-group';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import { RequestGroup } from '../../../models/request-group';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import ModalHeader from '../base/modal-header';
+import EnvironmentEditor from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;

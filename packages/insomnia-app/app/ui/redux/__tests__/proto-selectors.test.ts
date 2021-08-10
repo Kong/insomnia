@@ -1,7 +1,8 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { selectExpandedActiveProtoDirectories } from '../proto-selectors';
+import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
+import { ACTIVITY_DEBUG } from '../../../common/constants';
 import * as models from '../../../models';
-import reduxStateForTest from '../../../__jest__/redux-state-for-test';
+import { selectExpandedActiveProtoDirectories } from '../proto-selectors';
 
 describe('selectExpandedActiveProtoDirectories', () => {
   beforeEach(globalBeforeEach);
@@ -10,7 +11,7 @@ describe('selectExpandedActiveProtoDirectories', () => {
     // Arrange
     const w = await models.workspace.create();
     // Act
-    const state = await reduxStateForTest(w._id);
+    const state = await reduxStateForTest({ activeWorkspaceId: w._id, activeActivity: ACTIVITY_DEBUG });
     const expandedDirs = selectExpandedActiveProtoDirectories(state);
     // Assert
     expect(expandedDirs).toHaveLength(0);
@@ -36,7 +37,7 @@ describe('selectExpandedActiveProtoDirectories', () => {
     });
     const w2 = await models.workspace.create();
     // Act
-    const state = await reduxStateForTest(w2._id);
+    const state = await reduxStateForTest({ activeWorkspaceId: w2._id, activeActivity: ACTIVITY_DEBUG });
     const expandedDirs = selectExpandedActiveProtoDirectories(state);
     // Assert
     expect(expandedDirs).toHaveLength(0);
@@ -52,7 +53,7 @@ describe('selectExpandedActiveProtoDirectories', () => {
       parentId: pd1._id,
     });
     // Act
-    const state = await reduxStateForTest(w._id);
+    const state = await reduxStateForTest({ activeWorkspaceId: w._id, activeActivity: ACTIVITY_DEBUG });
     const expandedDirs = selectExpandedActiveProtoDirectories(state);
     // Assert
     expect(expandedDirs).toHaveLength(1);
@@ -81,7 +82,7 @@ describe('selectExpandedActiveProtoDirectories', () => {
       parentId: w._id,
     });
     // Act
-    const state = await reduxStateForTest(w._id);
+    const state = await reduxStateForTest({ activeWorkspaceId: w._id, activeActivity: ACTIVITY_DEBUG });
     const expandedDirs = selectExpandedActiveProtoDirectories(state);
     // Assert
     expect(expandedDirs).toHaveLength(1);
@@ -110,7 +111,7 @@ describe('selectExpandedActiveProtoDirectories', () => {
       parentId: pd2._id,
     });
     // Act
-    const state = await reduxStateForTest(w._id);
+    const state = await reduxStateForTest({ activeWorkspaceId: w._id, activeActivity: ACTIVITY_DEBUG });
     const expandedDirs = selectExpandedActiveProtoDirectories(state);
     // Assert
     expect(expandedDirs).toHaveLength(2);
@@ -146,7 +147,7 @@ describe('selectExpandedActiveProtoDirectories', () => {
       parentId: pd2._id,
     });
     // Act
-    const state = await reduxStateForTest(w._id);
+    const state = await reduxStateForTest({ activeWorkspaceId: w._id, activeActivity: ACTIVITY_DEBUG });
     const expandedDirs = selectExpandedActiveProtoDirectories(state);
     // Assert
     expect(expandedDirs).toHaveLength(1);
@@ -184,7 +185,7 @@ describe('selectExpandedActiveProtoDirectories', () => {
       parentId: w._id,
     });
     // Act
-    const state = await reduxStateForTest(w._id);
+    const state = await reduxStateForTest({ activeWorkspaceId: w._id, activeActivity: ACTIVITY_DEBUG });
     const expandedDirs = selectExpandedActiveProtoDirectories(state);
     // Assert
     expect(expandedDirs).toHaveLength(2);

@@ -1,11 +1,12 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../../common/constants';
-import fs from 'fs';
 import electron from 'electron';
+import fs from 'fs';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../../common/constants';
+import * as misc from '../../../../common/misc';
 import FileInputButton from '../../base/file-input-button';
 import PromptButton from '../../base/prompt-button';
-import * as misc from '../../../../common/misc';
 
 interface Props {
   onChange: (path: string) => void;
@@ -55,7 +56,8 @@ class FileEditor extends PureComponent<Props> {
           <PromptButton
             className="btn btn--super-compact"
             disabled={!path}
-            onClick={this._handleResetFile}>
+            onClick={this._handleResetFile}
+          >
             Reset File
           </PromptButton>
           &nbsp;&nbsp;

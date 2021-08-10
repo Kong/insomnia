@@ -1,6 +1,6 @@
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import getToken from '../grant-implicit';
 import { createBWRedirectMock } from './helpers';
-import { globalBeforeEach } from '../../../__jest__/before-each';
 // Mock some test things
 const AUTHORIZE_URL = 'https://foo.com/authorizeAuthCode';
 const CLIENT_ID = 'client_123';

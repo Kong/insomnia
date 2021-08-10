@@ -1,11 +1,12 @@
 import React, { Component, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
-import { SvgIcon, IconEnum } from '../svg-icon';
+
+import { IconEnum, SvgIcon } from '../svg-icon';
+import { Tooltip } from '../tooltip';
 import { SidebarBadge } from './sidebar-badge';
+import { SidebarInvalidSection } from './sidebar-invalid-section';
 import { SidebarItem } from './sidebar-item';
 import { SidebarSection } from './sidebar-section';
-import { SidebarInvalidSection } from './sidebar-invalid-section';
-import { Tooltip } from '../tooltip';
 
 export interface SidebarRequestsProps {
   requests: Record<string, any>;
@@ -42,7 +43,8 @@ export class SidebarRequests extends Component<SidebarRequestsProps> {
             <Fragment key={requestName}>
               <SidebarItem
                 gridLayout
-                onClick={() => onClick('components', 'requestBodies', requestName)}>
+                onClick={() => onClick('components', 'requestBodies', requestName)}
+              >
                 <div>
                   <SvgIcon icon={IconEnum.folderOpen} />
                 </div>
@@ -66,7 +68,8 @@ export class SidebarRequests extends Component<SidebarRequestsProps> {
                             'content',
                             requestFormat,
                           )
-                        }>
+                        }
+                      >
                         {requestFormat}
                       </span>
                     </StyledRequestFormat>

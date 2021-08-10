@@ -1,13 +1,15 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
+
 import { globalBeforeEach } from '../../../../__jest__/before-each';
-import { createSpace, removeSpace } from '../space';
-import * as models from '../../../../models';
+import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../../common/constants';
-import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE } from '../global';
-import { getAndClearShowAlertMockArgs, getAndClearShowPromptMockArgs } from '../../../../test-utils';
+import * as models from '../../../../models';
 import { BASE_SPACE_ID } from '../../../../models/space';
+import { getAndClearShowAlertMockArgs, getAndClearShowPromptMockArgs } from '../../../../test-utils';
+import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE } from '../global';
+import { createSpace, removeSpace } from '../space';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
@@ -19,7 +21,7 @@ describe('space', () => {
   beforeEach(globalBeforeEach);
   describe('createSpace', () => {
     it('should create space', async () => {
-      const store = mockStore();
+      const store = mockStore(await reduxStateForTest());
       store.dispatch(createSpace());
 
       const {
@@ -63,7 +65,7 @@ describe('space', () => {
 
   describe('removeSpace', () => {
     it('should remove space', async () => {
-      const store = mockStore();
+      const store = mockStore(await reduxStateForTest());
       const spaceOne = await models.space.create({ name: 'My Space' });
       const spaceTwo = await models.space.create();
 

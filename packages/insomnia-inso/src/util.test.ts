@@ -1,8 +1,8 @@
-import { exit, logErrorExit1, getDefaultAppName, getVersion, isDevelopment, noop } from './util';
 import * as packageJson from '../package.json';
+import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { InsoError } from './errors';
+import { exit, getDefaultAppName, getVersion, isDevelopment, logErrorExit1, noop } from './util';
 
 describe('exit()', () => {
   beforeAll(() => {
@@ -15,13 +15,13 @@ describe('exit()', () => {
 
   it('should exit 0 if successful result', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    await exit(new Promise((resolve) => resolve(true)));
+    await exit(new Promise(resolve => resolve(true)));
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
   it('should exit 1 if unsuccessful result', async () => {
     const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-    await exit(new Promise((resolve) => resolve(false)));
+    await exit(new Promise(resolve => resolve(false)));
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 

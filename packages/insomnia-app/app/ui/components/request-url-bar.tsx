@@ -1,7 +1,13 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { OpenDialogOptions, remote } from 'electron';
-import { DEBOUNCE_MILLIS, AUTOBIND_CFG, isMac } from '../../common/constants';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
+import type { HotKeyRegistry } from '../../common/hotkeys';
+import { hotKeyRefs } from '../../common/hotkeys';
+import { executeHotKey } from '../../common/hotkeys-listener';
+import { HandleGetRenderContext, HandleRender } from '../../common/render';
+import type { Request } from '../../models/request';
 import {
   DropdownButton,
   DropdownDivider,
@@ -9,16 +15,11 @@ import {
   DropdownItem,
 } from './base/dropdown';
 import Dropdown from './base/dropdown/dropdown';
-import { showPrompt } from './modals/index';
-import MethodDropdown from './dropdowns/method-dropdown';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
+import MethodDropdown from './dropdowns/method-dropdown';
 import KeydownBinder from './keydown-binder';
-import type { Request } from '../../models/request';
-import type { HotKeyRegistry } from '../../common/hotkeys';
-import { hotKeyRefs } from '../../common/hotkeys';
-import { executeHotKey } from '../../common/hotkeys-listener';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
+import { showPrompt } from './modals/index';
 
 interface Props {
   handleAutocompleteUrls: Function;
@@ -73,7 +74,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
 
   _handleMetaClickSend(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
-    this._dropdown && this._dropdown.show();
+    this._dropdown?.show();
   }
 
   _handleFormSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -148,14 +149,14 @@ class RequestUrlBar extends PureComponent<Props, State> {
     }
 
     executeHotKey(e, hotKeyRefs.REQUEST_FOCUS_URL, () => {
-      this._input && this._input.focus();
-      this._input && this._input.selectAll();
+      this._input?.focus();
+      this._input?.selectAll();
     });
     executeHotKey(e, hotKeyRefs.REQUEST_TOGGLE_HTTP_METHOD_MENU, () => {
-      this._methodDropdown && this._methodDropdown.toggle();
+      this._methodDropdown?.toggle();
     });
     executeHotKey(e, hotKeyRefs.REQUEST_SHOW_OPTIONS, () => {
-      this._dropdown && this._dropdown.toggle(true);
+      this._dropdown?.toggle(true);
     });
   }
 
@@ -281,7 +282,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           type="button"
           key="cancel-interval"
           className="urlbar__send-btn danger"
-          onClick={this._handleStopInterval}>
+          onClick={this._handleStopInterval}
+        >
           Stop
         </button>
       );
@@ -291,7 +293,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           type="button"
           key="cancel-timeout"
           className="urlbar__send-btn danger"
-          onClick={this._handleStopTimeout}>
+          onClick={this._handleStopTimeout}
+        >
           Cancel
         </button>
       );
@@ -305,7 +308,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           <DropdownButton
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
-            onClick={this._handleClickSend}>
+            onClick={this._handleClickSend}
+          >
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
@@ -328,7 +332,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
               stayOpenAfterClick
               addIcon
               buttonClass={PromptButton}
-              onClick={this._handleClearDownloadLocation}>
+              onClick={this._handleClearDownloadLocation}
+            >
               <i className="fa fa-stop-circle" /> Stop Auto-Download
             </DropdownItem>
           ) : (
@@ -363,7 +368,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           <MethodDropdown
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
-            method={method}>
+            method={method}
+          >
             {method} <i className="fa fa-caret-down" />
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>

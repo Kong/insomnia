@@ -1,12 +1,13 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
+import { endTrial, getFirstName, logout } from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import PromptButton from '../base/prompt-button';
 import Link from '../base/link';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import { getFirstName, endTrial, logout } from '../../../account/session';
+import PromptButton from '../base/prompt-button';
 let hidePaymentNotificationUntilNextLaunch = false;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -53,7 +54,8 @@ class PaymentNotificationModal extends PureComponent {
               style={{
                 maxWidth: '30rem',
                 margin: 'auto',
-              }}>
+              }}
+            >
               Your Insomnia Plus trial has come to an end. Please enter your billing info to
               continue using Plus features like encrypted data synchronization and backup.
             </p>
@@ -66,7 +68,8 @@ class PaymentNotificationModal extends PureComponent {
               <Link
                 button
                 href="https://app.insomnia.rest/app/subscribe/"
-                className="btn btn--compact btn--outlined">
+                className="btn btn--compact btn--outlined"
+              >
                 Update Billing
               </Link>
             </p>

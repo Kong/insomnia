@@ -1,5 +1,6 @@
-import React, { PureComponent } from 'react';
 import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import * as misc from '../../../common/misc';
 import Tooltip from '../tooltip';
 
@@ -41,7 +42,8 @@ class SizeTag extends PureComponent<Props> {
             'tag--small': small,
           },
           className,
-        )}>
+        )}
+      >
         <Tooltip message={message} position="bottom" delay={tooltipDelay}>
           {responseSizeReadStringShort}
         </Tooltip>

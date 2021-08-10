@@ -1,8 +1,9 @@
 import React, { Fragment, PureComponent } from 'react';
-import CopyButton from '../base/copy-button';
-import type { ResponseHeader } from '../../../models/response';
-import Link from '../base/link';
 import { URL } from 'url';
+
+import type { ResponseHeader } from '../../../models/response';
+import CopyButton from '../base/copy-button';
+import Link from '../base/link';
 
 interface Props {
   headers: ResponseHeader[];
@@ -38,14 +39,16 @@ class ResponseHeadersViewer extends PureComponent<Props> {
                   style={{
                     width: '50%',
                   }}
-                  className="force-wrap">
+                  className="force-wrap"
+                >
                   {h.name}
                 </td>
                 <td
                   style={{
                     width: '50%',
                   }}
-                  className="force-wrap">
+                  className="force-wrap"
+                >
                   {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
                 </td>
               </tr>

@@ -1,21 +1,22 @@
-import React, { PureComponent } from 'react';
-import * as electron from 'electron';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import styled from 'styled-components';
 import classnames from 'classnames';
-import Link from './base/link';
-import * as models from '../../models/index';
+import * as electron from 'electron';
+import React, { PureComponent } from 'react';
+import styled from 'styled-components';
+
+import * as fetch from '../../account/fetch';
+import * as session from '../../account/session';
 import {
   AUTOBIND_CFG,
+  getAppId,
   getAppName,
   getAppPlatform,
-  getAppId,
   getAppVersion,
   updatesSupported,
 } from '../../common/constants';
-import * as session from '../../account/session';
-import * as fetch from '../../account/fetch';
+import * as models from '../../models/index';
 import imgSrcCore from '../images/insomnia-core-logo.png';
+import Link from './base/link';
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
 export interface ToastNotification {
@@ -216,7 +217,8 @@ class Toast extends PureComponent<{}, State> {
       <div
         className={classnames('toast theme--dialog', {
           'toast--show': visible,
-        })}>
+        })}
+      >
         <StyledLogo>
           <img src={imgSrcCore} alt={appName} />
         </StyledLogo>
@@ -225,7 +227,8 @@ class Toast extends PureComponent<{}, State> {
           <StyledFooter>
             <button
               className="btn btn--super-duper-compact btn--outlined"
-              onClick={this._handleCancelClick}>
+              onClick={this._handleCancelClick}
+            >
               Dismiss
             </button>
             &nbsp;&nbsp;
@@ -233,7 +236,8 @@ class Toast extends PureComponent<{}, State> {
               button
               className="btn btn--super-duper-compact btn--outlined no-wrap"
               onClick={this._handlePostCTACleanup}
-              href={notification.url}>
+              href={notification.url}
+            >
               {notification.cta}
             </Link>
           </StyledFooter>

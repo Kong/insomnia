@@ -1,5 +1,5 @@
-import { urlMatchesCertHost } from '../url-matches-cert-host';
 import { globalBeforeEach } from '../../__jest__/before-each';
+import { urlMatchesCertHost } from '../url-matches-cert-host';
 
 describe('urlMatchesCertHost', () => {
   beforeEach(globalBeforeEach);

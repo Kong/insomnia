@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
-import Modal from '../base/modal';
-import ModalHeader from '../base/modal-header';
-import ModalBody from '../base/modal-body';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import type { KeyCombination } from '../../../common/hotkeys';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalHeader from '../base/modal-header';
 
 interface State {
   hotKeyRefId: string | null;
@@ -100,11 +101,11 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
       onAddKeyCombination: onAddKeyCombination,
       pressedKeyCombination: null,
     });
-    this._modal && this._modal.show();
+    this._modal?.show();
   }
 
   hide() {
-    this._modal && this._modal.hide();
+    this._modal?.hide();
   }
 
   render() {
@@ -124,7 +125,8 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
       <Modal
         ref={this._setModalRef}
         onKeyDown={this._handleKeyDown}
-        className="shortcuts add-key-comb-modal">
+        className="shortcuts add-key-comb-modal"
+      >
         <ModalHeader>Add Keyboard Shortcut</ModalHeader>
         <ModalBody noScroll>
           <div className="pad-left pad-right pad-top pad-bottom-sm">

@@ -1,37 +1,38 @@
-import type { Request } from '../../../models/request';
-import type { Response } from '../../../models/response';
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
-import fs from 'fs';
-import mime from 'mime-types';
+import classnames from 'classnames';
 import { remote } from 'electron';
+import fs from 'fs';
+import { json as jsonPrettify } from 'insomnia-prettify';
+import mime from 'mime-types';
+import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+
+import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import { getSetCookieHeaders } from '../../../common/misc';
+import * as models from '../../../models';
+import type { Environment } from '../../../models/environment';
+import type { Request } from '../../../models/request';
+import type { RequestVersion } from '../../../models/request-version';
+import type { Response } from '../../../models/response';
+import type { UnitTestResult } from '../../../models/unit-test-result';
+import { cancelRequestById } from '../../../network/network';
+import Button from '../base/button';
+import PreviewModeDropdown from '../dropdowns/preview-mode-dropdown';
+import ResponseHistoryDropdown from '../dropdowns/response-history-dropdown';
+import ErrorBoundary from '../error-boundary';
+import { showError } from '../modals';
+import { ResponseTimer } from '../response-timer';
 import SizeTag from '../tags/size-tag';
 import StatusTag from '../tags/status-tag';
 import TimeTag from '../tags/time-tag';
-import Button from '../base/button';
-import PreviewModeDropdown from '../dropdowns/preview-mode-dropdown';
-import ResponseViewer from '../viewers/response-viewer';
-import ResponseHistoryDropdown from '../dropdowns/response-history-dropdown';
-import { ResponseTimer } from '../response-timer';
-import ResponseTimelineViewer from '../viewers/response-timeline-viewer';
-import ResponseHeadersViewer from '../viewers/response-headers-viewer';
 import ResponseCookiesViewer from '../viewers/response-cookies-viewer';
-import * as models from '../../../models';
-import { getSetCookieHeaders } from '../../../common/misc';
-import { cancelRequestById } from '../../../network/network';
-import ErrorBoundary from '../error-boundary';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
-import type { RequestVersion } from '../../../models/request-version';
-import { showError } from '../modals';
-import { json as jsonPrettify } from 'insomnia-prettify';
-import type { Environment } from '../../../models/environment';
-import type { UnitTestResult } from '../../../models/unit-test-result';
+import ResponseHeadersViewer from '../viewers/response-headers-viewer';
+import ResponseTimelineViewer from '../viewers/response-timeline-viewer';
+import ResponseViewer from '../viewers/response-viewer';
 import BlankPane from './blank-pane';
-import PlaceholderResponsePane from './placeholder-response-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
-import classnames from 'classnames';
+import PlaceholderResponsePane from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
@@ -246,7 +247,8 @@ class ResponsePane extends PureComponent<Props> {
         <Tabs
           className={classnames(paneBodyClasses, 'react-tabs')}
           onSelect={this._handleTabSelect}
-          forceRenderTabPanel>
+          forceRenderTabPanel
+        >
           <TabList>
             <Tab tabIndex="-1">
               <PreviewModeDropdown

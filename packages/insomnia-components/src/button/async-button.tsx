@@ -1,6 +1,7 @@
 import React, { ReactNode, useCallback, useState } from 'react';
-import { Button } from './button';
+
 import type { ButtonProps } from './button';
+import { Button } from './button';
 
 // Taken from https://github.com/then/is-promise
 function isPromise(obj: unknown) {
@@ -13,7 +14,7 @@ function isPromise(obj: unknown) {
 }
 
 export interface AsyncButtonProps<T> extends ButtonProps {
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => Promise<T>;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => Promise<T> | undefined;
   loadingNode?: ReactNode;
 }
 

@@ -1,8 +1,9 @@
-import React from 'react';
 import { number, select, withKnobs } from '@storybook/addon-knobs';
-import { SvgIcon, IconEnum } from '../svg-icon';
-import { CircleButton } from './circle-button';
+import React from 'react';
+
+import { IconEnum, SvgIcon } from '../svg-icon';
 import { ButtonThemeEnum, ButtonVariantEnum } from './button';
+import { CircleButton } from './circle-button';
 
 export default {
   title: 'Buttons | Circle Button',
@@ -34,7 +35,8 @@ export const dimensions = () => {
       width={selectWidth()}
       height={selectHeight()}
       variant={select('Variant', ButtonVariantEnum, 'outlined')}
-      bg={select('Background', ButtonThemeEnum, 'default')}>
+      bg={select('Background', ButtonThemeEnum, 'default')}
+    >
       <SvgIcon icon={select('Icon', IconEnum, IconEnum.gear)} />
     </CircleButton>
   );

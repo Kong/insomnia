@@ -1,9 +1,10 @@
-import getToken from '../grant-client-credentials';
-import { globalBeforeEach } from '../../../__jest__/before-each';
-import path from 'path';
 import fs from 'fs';
-import * as network from '../../network';
+import path from 'path';
+
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getTempDir } from '../../../common/electron-helpers';
+import * as network from '../../network';
+import getToken from '../grant-client-credentials';
 
 // Mock some test things
 const ACCESS_TOKEN_URL = 'https://foo.com/access_token';
@@ -22,6 +23,7 @@ describe('client_credentials', () => {
       bodyPath,
       JSON.stringify({
         access_token: 'token_123',
+        refresh_token: 'token_456',
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
@@ -99,6 +101,7 @@ describe('client_credentials', () => {
     expect(result).toEqual({
       access_token: 'token_123',
       id_token: null,
+      refresh_token: 'token_456',
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,
@@ -117,6 +120,7 @@ describe('client_credentials', () => {
       bodyPath,
       JSON.stringify({
         access_token: 'token_123',
+        refresh_token: 'token_456',
         token_type: 'token_type',
         scope: SCOPE,
         audience: AUDIENCE,
@@ -198,6 +202,7 @@ describe('client_credentials', () => {
     expect(result).toEqual({
       access_token: 'token_123',
       id_token: null,
+      refresh_token: 'token_456',
       expires_in: null,
       token_type: 'token_type',
       scope: SCOPE,

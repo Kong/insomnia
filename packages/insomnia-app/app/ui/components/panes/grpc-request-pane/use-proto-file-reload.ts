@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { grpcActions } from '../../../context/grpc';
-import type { GrpcRequestState, GrpcDispatch } from '../../../context/grpc';
+
 import type { GrpcRequest } from '../../../../models/grpc-request';
+import type { GrpcDispatch, GrpcRequestState } from '../../../context/grpc';
+import { grpcActions } from '../../../context/grpc';
 
 // Refresh methods as necessary
 const useProtoFileReload = (

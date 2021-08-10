@@ -1,9 +1,10 @@
-import { VCS } from '../vcs';
+import { createBuilder } from '@develohpanda/fluent-builder';
+
+import { globalBeforeEach } from '../../../__jest__/before-each';
+import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { describeChanges } from '../util';
-import { globalBeforeEach } from '../../../__jest__/before-each';
-import { createBuilder } from '@develohpanda/fluent-builder';
-import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);

@@ -1,17 +1,19 @@
 import { createBuilder } from '@develohpanda/fluent-builder';
+import { mocked } from 'ts-jest/utils';
+
+import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
+import { isRemoteSpace } from '../../../models/space';
 import { Workspace } from '../../../models/workspace';
-import { globalBeforeEach } from '../../../__jest__/before-each';
-import { projectSchema } from '../../__schemas__/type-schemas';
-import { pullProject } from '../pull-project';
-import { mocked } from 'ts-jest/utils';
+import { projectWithTeamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import { pullProject } from '../pull-project';
 import { VCS } from '../vcs';
 
 jest.mock('../vcs');
 
-const project = createBuilder(projectSchema).build();
+const project = createBuilder(projectWithTeamSchema).build();
 
 const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
@@ -38,33 +40,19 @@ describe('pullProject()', () => {
       expect(vcs.pull).not.toHaveBeenCalledWith([], expect.anything());
     });
 
-    it('should insert a workspace with no parent', async () => {
+    it('should use existing space', async () => {
       // Arrange
-      const space = undefined;
+      const space = await models.space.create({
+        name: `${project.team.name} unique`,
+        remoteId: project.team.id,
+      });
 
       // Act
-      await pullProject({ vcs, project, space });
+      await pullProject({ vcs, project, remoteSpaces: [space].filter(isRemoteSpace) });
 
       // Assert
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
-        _id: project.rootDocumentId,
-        name: project.name,
-        // @ts-expect-error parent id is optional for workspaces
-        parentId: null,
-      }));
-    });
+      expect(space?.name).not.toBe(project.team.name); // should not rename if the space already exists
 
-    it('should insert a workspace with parent', async () => {
-      // Arrange
-      const space = await models.space.create();
-
-      // Act
-      await pullProject({ vcs, project, space });
-
-      // Assert
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
@@ -72,25 +60,46 @@ describe('pullProject()', () => {
         _id: project.rootDocumentId,
         name: project.name,
         parentId: space._id,
+        scope: 'collection',
+      }));
+    });
+
+    it('should insert a space and workspace with parent', async () => {
+      // Act
+      await pullProject({ vcs, project, remoteSpaces: [] });
+
+      // Assert
+      const space = await models.space.getByRemoteId(project.team.id);
+      expect(space?.name).toBe(project.team.name);
+
+      const workspaces = await models.workspace.all();
+      expect(workspaces).toHaveLength(1);
+      const workspace = workspaces[0];
+      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
+        _id: project.rootDocumentId,
+        name: project.name,
+        parentId: space?._id,
+        scope: 'collection',
       }));
     });
 
     it('should update a workspace if the name or parentId is different', async () => {
       // Arrange
       await models.workspace.create({ _id: project.rootDocumentId, name: 'someName' });
-      const space = await models.space.create();
 
       // Act
-      await pullProject({ vcs, project, space });
+      await pullProject({ vcs, project, remoteSpaces: [] });
 
       // Assert
+      const space = await models.space.getByRemoteId(project.team.id);
+
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
       expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
         _id: project.rootDocumentId,
         name: project.name,
-        parentId: space._id,
+        parentId: space?._id,
       }));
     });
   });
@@ -103,55 +112,26 @@ describe('pullProject()', () => {
     afterEach(() => {
     });
 
-    it('should overwrite the parentId only for a workspace with null', async () => {
-      // Arrange
-      const space = undefined;
-      const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
-      const existingReq = await models.request.create({ parentId: existingWrk._id });
-
-      vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
-
-      // Act
-      await pullProject({ vcs, project, space });
-
-      // Assert
-      const workspaces = await models.workspace.all();
-      expect(workspaces).toHaveLength(1);
-      const workspace = workspaces[0];
-      expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
-        _id: project.rootDocumentId,
-        name: project.name,
-        // @ts-expect-error parent id is optional for workspaces
-        parentId: null,
-      }));
-
-      const requests = await models.request.all();
-      expect(requests).toHaveLength(1);
-      const request = requests[0];
-      expect(request).toStrictEqual(existingReq);
-
-      expect(vcs.pull).toHaveBeenCalledWith([], undefined);
-    });
-
     it('should overwrite the parentId only for a workspace with the space id', async () => {
       // Arrange
-      const space = await models.space.create({ remoteId: 'abc' });
       const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
-      await pullProject({ vcs, project, space });
+      await pullProject({ vcs, project, remoteSpaces: [] });
 
       // Assert
+      const space = await models.space.getByRemoteId(project.team.id);
+
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
       const workspace = workspaces[0];
       expect(workspace).toStrictEqual(expect.objectContaining<Partial<Workspace>>({
         _id: project.rootDocumentId,
         name: project.name,
-        parentId: space._id,
+        parentId: space?._id,
       }));
 
       const requests = await models.request.all();
@@ -159,7 +139,7 @@ describe('pullProject()', () => {
       const request = requests[0];
       expect(request).toStrictEqual(existingReq);
 
-      expect(vcs.pull).toHaveBeenCalledWith([], space.remoteId);
+      expect(vcs.pull).toHaveBeenCalledWith([], space?.remoteId);
     });
   });
 });

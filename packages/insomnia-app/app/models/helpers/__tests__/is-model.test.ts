@@ -1,12 +1,13 @@
-import * as models from '../../index';
 import { difference } from 'lodash';
+
 import { generateId } from '../../../common/misc';
-import { isDesign, isWorkspace, WorkspaceScopeKeys } from '../../workspace';
 import { isGrpcRequest, isGrpcRequestId } from '../../grpc-request';
-import { isRequest } from '../../request';
+import * as models from '../../index';
 import { isProtoDirectory } from '../../proto-directory';
 import { isProtoFile } from '../../proto-file';
+import { isRequest } from '../../request';
 import { isRequestGroup } from '../../request-group';
+import { isDesign, isWorkspace, WorkspaceScopeKeys } from '../../workspace';
 
 const allTypes = models.types();
 const allPrefixes = models.all().map(model => model.prefix);

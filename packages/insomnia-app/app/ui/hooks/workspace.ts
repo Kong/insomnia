@@ -1,17 +1,19 @@
-import { useCallback, useMemo, useEffect, useReducer, Reducer } from 'react';
+import { Reducer, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useSelector } from 'react-redux';
-import { isLoggedIn } from '../../account/session';
+
+import { isRemoteSpace } from '../../models/space';
 import { Project } from '../../sync/types';
-import { VCS } from '../../sync/vcs/vcs';
+import { ProjectWithTeam } from '../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../sync/vcs/pull-project';
+import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
-import { selectActiveSpace, selectAllWorkspaces } from '../redux/selectors';
+import { selectActiveSpace, selectAllWorkspaces, selectIsLoggedIn, selectRemoteSpaces } from '../redux/selectors';
 import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';
 
 interface State {
   loading: boolean;
   localProjects: Project[];
-  remoteProjects: Project[];
+  remoteProjects: ProjectWithTeam[];
   pullingProjects: Record<string, boolean>;
 }
 
@@ -47,7 +49,8 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
   const workspaces = useSelector(selectAllWorkspaces);
   const activeSpace = useSelector(selectActiveSpace);
-  const spaceRemoteId = activeSpace?.remoteId || undefined;
+  const remoteSpaces = useSelector(selectRemoteSpaces);
+  const isLoggedIn = useSelector(selectIsLoggedIn);
 
   // Local state
   const [{ loading, localProjects, remoteProjects, pullingProjects }, _dispatch] = useReducer(reducer, initialState);
@@ -55,15 +58,15 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
 
   // Refresh remote spaces
   const refresh = useCallback(async () => {
-    if (!vcs || !isLoggedIn()) {
+    if (!vcs || !isLoggedIn || !isRemoteSpace(activeSpace)) {
       return;
     }
 
     dispatch({ type: 'loadProjects' });
-    const remote = await vcs.remoteProjects(spaceRemoteId);
+    const remote = await vcs.remoteProjects(activeSpace.remoteId);
     const local = await vcs.localProjects();
     dispatch({ type: 'saveProjects', local, remote });
-  }, [dispatch, spaceRemoteId, vcs]);
+  }, [vcs, isLoggedIn, activeSpace, dispatch]);
 
   // Find remote spaces that haven't been pulled
   const missingProjects = useMemo(() => remoteProjects.filter(({ id, rootDocumentId }) => {
@@ -76,7 +79,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   }), [localProjects, remoteProjects, workspaces]);
 
   // Pull a remote space
-  const pull = useCallback(async (project: Project) => {
+  const pull = useCallback(async (project: ProjectWithTeam) => {
     if (!vcs) {
       throw new Error('VCS is not defined');
     }
@@ -89,7 +92,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
       // Remove all projects for workspace first
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
 
-      await pullProject({ vcs: newVCS, project, space: activeSpace });
+      await pullProject({ vcs: newVCS, project, remoteSpaces });
 
       await refresh();
     } catch (err) {
@@ -100,7 +103,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     } finally {
       dispatch({ type: 'stopPullingProject', projectId: project.id });
     }
-  }, [vcs, refresh, activeSpace, dispatch]);
+  }, [vcs, refresh, remoteSpaces, dispatch]);
 
   // If the refresh callback changes, refresh
   useEffect(() => {

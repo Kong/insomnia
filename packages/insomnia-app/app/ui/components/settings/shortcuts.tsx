@@ -1,7 +1,7 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Hotkey from '../hotkey';
 import type { HotKeyDefinition, HotKeyRegistry, KeyCombination } from '../../../common/hotkeys';
 import {
   areKeyBindingsSameAsDefault,
@@ -13,9 +13,10 @@ import {
   newDefaultRegistry,
 } from '../../../common/hotkeys';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import PromptButton from '../base/prompt-button';
+import Hotkey from '../hotkey';
 import { showModal } from '../modals';
 import AddKeyCombinationModal from '../modals/add-key-combination-modal';
-import PromptButton from '../base/prompt-button';
 
 interface Props {
   hotKeyRegistry: HotKeyRegistry;
@@ -140,7 +141,8 @@ class Shortcuts extends PureComponent<Props> {
                       keyComb: keyComb,
                     }}
                     buttonClass={PromptButton}
-                    onClick={this.handleRemoveKeyCombination}>
+                    onClick={this.handleRemoveKeyCombination}
+                  >
                     <i className="fa fa-trash-o" /> {display}
                   </DropdownItem>
                 );
@@ -152,7 +154,8 @@ class Shortcuts extends PureComponent<Props> {
               <DropdownItem
                 value={def.id}
                 buttonClass={PromptButton}
-                onClick={this.handleResetKeyBindings}>
+                onClick={this.handleResetKeyBindings}
+              >
                 <i className="fa fa-empty" /> Reset keyboard shortcuts
               </DropdownItem>
             )}

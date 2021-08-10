@@ -1,4 +1,5 @@
 import { cosmiconfigSync } from 'cosmiconfig';
+
 import { GenerateConfigOptions } from './commands/generate-config';
 import { UNKNOWN_OBJ } from './types';
 

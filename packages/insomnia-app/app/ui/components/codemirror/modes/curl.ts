@@ -1,5 +1,6 @@
-import CodeMirror from 'codemirror';
 import 'codemirror/addon/mode/simple';
+
+import CodeMirror from 'codemirror';
 CodeMirror.defineSimpleMode('curl', {
   start: [
     // Regular key-value header tokens

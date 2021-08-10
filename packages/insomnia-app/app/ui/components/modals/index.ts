@@ -1,8 +1,7 @@
-import PromptModal, { PromptModalOptions } from './prompt-modal';
-import AlertModal from './alert-modal';
-import ErrorModal from './error-modal';
 import { trackEvent } from '../../../common/analytics';
-import type { ErrorModalOptions } from './error-modal';
+import AlertModal, { AlertModalOptions } from './alert-modal';
+import ErrorModal, { ErrorModalOptions } from './error-modal';
+import PromptModal, { PromptModalOptions } from './prompt-modal';
 
 const modals = {};
 
@@ -24,7 +23,7 @@ export function showPrompt(config: PromptModalOptions) {
   return showModal(PromptModal, config);
 }
 
-export function showAlert(config) {
+export function showAlert(config: AlertModalOptions) {
   return showModal(AlertModal, config);
 }
 
@@ -39,7 +38,7 @@ export function showError(config: ErrorModalOptions) {
 export function hideAllModals() {
   for (const key of Object.keys(modals)) {
     const modal = modals[key];
-    modal.hide && modal.hide();
+    modal.hide?.();
   }
 }
 

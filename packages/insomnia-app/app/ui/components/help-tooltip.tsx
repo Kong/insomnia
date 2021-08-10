@@ -1,8 +1,9 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import Tooltip from './tooltip';
-import { AUTOBIND_CFG } from '../../common/constants';
+import React, { PureComponent, ReactNode } from 'react';
 import { CSSProperties } from 'styled-components';
+
+import { AUTOBIND_CFG } from '../../common/constants';
+import Tooltip from './tooltip';
 
 interface Props {
   children: ReactNode;

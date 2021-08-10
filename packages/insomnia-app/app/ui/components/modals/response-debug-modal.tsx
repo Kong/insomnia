@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import * as models from '../../../models/index';
+import type { Response } from '../../../models/response';
+import type { Settings } from '../../../models/settings';
 import ResponseTimelineViewer from '../../components/viewers/response-timeline-viewer';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import * as models from '../../../models/index';
-import type { Response } from '../../../models/response';
-import type { Settings } from '../../../models/settings';
 
 interface Props {
   settings: Settings;
@@ -43,7 +44,7 @@ class ResponseDebugModal extends PureComponent<Props, State> {
       response,
       title: options.title || null,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   render() {
@@ -57,7 +58,8 @@ class ResponseDebugModal extends PureComponent<Props, State> {
             style={{
               display: 'grid',
             }}
-            className="tall">
+            className="tall"
+          >
             {response ? (
               <ResponseTimelineViewer
                 editorFontSize={settings.editorFontSize}

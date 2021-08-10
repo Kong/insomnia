@@ -1,30 +1,32 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
-import PromptButton from '../base/prompt-button';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import * as misc from '../../../common/misc';
+import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
+import type { Environment } from '../../../models/environment';
+import { GrpcRequest } from '../../../models/grpc-request';
+import * as requestOperations from '../../../models/helpers/request-operations';
+import { isRequest, Request } from '../../../models/request';
+import type { RequestGroup } from '../../../models/request-group';
+import { Space } from '../../../models/space';
+import { incrementDeletedRequests } from '../../../models/stats';
+// Plugin action related imports
+import type { RequestAction } from '../../../plugins';
+import { getRequestActions } from '../../../plugins';
+import * as pluginContexts from '../../../plugins/context/index';
+import Dropdown, { DropdownProps } from '../base/dropdown/dropdown';
 import {
   DropdownButton,
   DropdownDivider,
   DropdownHint,
   DropdownItem,
 } from '../base/dropdown/index';
-import Dropdown, { DropdownProps } from '../base/dropdown/dropdown';
-import { hotKeyRefs } from '../../../common/hotkeys';
-import * as misc from '../../../common/misc';
-import * as requestOperations from '../../../models/helpers/request-operations';
-import { incrementDeletedRequests } from '../../../models/stats';
-// Plugin action related imports
-import type { RequestAction } from '../../../plugins';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
-import { isRequest, Request } from '../../../models/request';
-import type { RequestGroup } from '../../../models/request-group';
-import type { Environment } from '../../../models/environment';
-import { getRequestActions } from '../../../plugins';
-import * as pluginContexts from '../../../plugins/context/index';
+import PromptButton from '../base/prompt-button';
 import { showError } from '../modals';
-import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
-import classnames from 'classnames';
-import { GrpcRequest } from '../../../models/grpc-request';
 
 interface Props extends Partial<DropdownProps> {
   handleDuplicateRequest: Function;
@@ -37,6 +39,7 @@ interface Props extends Partial<DropdownProps> {
   hotKeyRegistry: HotKeyRegistry;
   handleSetRequestPinned: Function;
   activeEnvironment?: Environment | null;
+  activeSpace: Space;
 }
 
 // Setup state for plugin actions
@@ -100,11 +103,11 @@ class RequestActionsDropdown extends PureComponent<Props, State> {
     }));
 
     try {
-      const { activeEnvironment, request, requestGroup } = this.props;
+      const { activeEnvironment, activeSpace, request, requestGroup } = this.props;
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(),
+        ...pluginContexts.data.init(activeSpace._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
@@ -178,7 +181,8 @@ class RequestActionsDropdown extends PureComponent<Props, State> {
             key={`${plugin.plugin.name}::${plugin.label}`}
             value={plugin}
             onClick={this._handlePluginClick}
-            stayOpenAfterClick>
+            stayOpenAfterClick
+          >
             {loadingActions[plugin.label] ? (
               <i className="fa fa-refresh fa-spin" />
             ) : (

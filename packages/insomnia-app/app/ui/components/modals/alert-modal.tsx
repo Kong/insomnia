@@ -1,17 +1,21 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent, ReactNode } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
 
-interface State {
-  title: string;
-  message: string;
-  addCancel: boolean;
-  okLabel: string;
+export interface AlertModalOptions {
+  title?: string;
+  message?: ReactNode;
+  addCancel?: boolean;
+  okLabel?: string;
+  onConfirm?: () => void | Promise<void>;
 }
+
+type State = Omit<AlertModalOptions, 'onConfirm'>;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class AlertModal extends PureComponent<{}, State> {
@@ -25,8 +29,9 @@ class AlertModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   _cancel: HTMLButtonElement | null = null;
   _ok: HTMLButtonElement | null = null;
-  _okCallback: Function | null = null;
-  _okCallback2: Function | null = null;
+
+  _okCallback: (value: void | PromiseLike<void>) => void;
+  _okCallback2: AlertModalOptions['onConfirm'];
 
   _setModalRef(m: Modal) {
     this.modal = m;
@@ -35,7 +40,7 @@ class AlertModal extends PureComponent<{}, State> {
   _handleOk() {
     this.hide();
 
-    this._okCallback?.();
+    this._okCallback();
 
     if (typeof this._okCallback2 === 'function') {
       this._okCallback2();
@@ -54,22 +59,20 @@ class AlertModal extends PureComponent<{}, State> {
     this._ok = n;
   }
 
-  show(options = {}) {
-    // @ts-expect-error -- TSCONVERSION
-    const { title, message, addCancel, onConfirm, okLabel } = options;
+  show({ title, message, addCancel, onConfirm, okLabel }: AlertModalOptions) {
     this.setState({
       title,
       message,
       addCancel,
       okLabel,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
-      this._cancel && this._cancel.focus();
+      this._cancel?.focus();
     }, 100);
     this._okCallback2 = onConfirm;
-    return new Promise(resolve => {
+    return new Promise<void>(resolve => {
       this._okCallback = resolve;
     });
   }

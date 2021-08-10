@@ -1,6 +1,7 @@
-import appConfig from '../../config/config.json';
 import path from 'path';
 import { ValueOf } from 'type-fest';
+
+import appConfig from '../../config/config.json';
 import { getDataDirectory } from './electron-helpers';
 
 // App Stuff
@@ -82,6 +83,7 @@ export const EDITOR_KEY_MAP_SUBLIME = 'sublime';
 export const EDITOR_KEY_MAP_VIM = 'vim';
 
 // Hotkey
+// For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
 export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
 export const ALT_SYM = isMac() ? '⌥' : 'Alt';
@@ -139,13 +141,32 @@ export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
-export const isWorkspaceActivity = (activity: string): activity is GlobalActivity => {
+export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
+  isDesignActivity(activity) || isCollectionActivity(activity);
+
+export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
   switch (activity) {
     case ACTIVITY_SPEC:
     case ACTIVITY_DEBUG:
     case ACTIVITY_UNIT_TEST:
       return true;
 
+    case ACTIVITY_HOME:
+    case ACTIVITY_ONBOARDING:
+    case ACTIVITY_MIGRATION:
+    case ACTIVITY_ANALYTICS:
+    default:
+      return false;
+  }
+};
+
+export const isCollectionActivity = (activity?: string): activity is GlobalActivity => {
+  switch (activity) {
+    case ACTIVITY_DEBUG:
+      return true;
+
+    case ACTIVITY_SPEC:
+    case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
     case ACTIVITY_ONBOARDING:
     case ACTIVITY_MIGRATION:
@@ -205,6 +226,7 @@ export const PREVIEW_MODES = Object.keys(previewModeMap);
 
 // Content Types
 export const CONTENT_TYPE_JSON = 'application/json';
+export const CONTENT_TYPE_PLAINTEXT = 'text/plain';
 export const CONTENT_TYPE_XML = 'application/xml';
 export const CONTENT_TYPE_YAML = 'text/yaml';
 export const CONTENT_TYPE_EDN = 'application/edn';
@@ -221,6 +243,7 @@ const contentTypesMap = {
   [CONTENT_TYPE_GRAPHQL]: ['GraphQL', 'GraphQL Query'],
   [CONTENT_TYPE_JSON]: ['JSON', 'JSON'],
   [CONTENT_TYPE_OTHER]: ['Other', 'Other'],
+  [CONTENT_TYPE_PLAINTEXT]: ['Plain', 'Plain'],
   [CONTENT_TYPE_XML]: ['XML', 'XML'],
   [CONTENT_TYPE_YAML]: ['YAML', 'YAML'],
 };
@@ -276,13 +299,15 @@ export type SortOrder =
   | 'http-method'
   | 'type-desc'
   | 'type-asc';
-export const SORT_NAME_ASC: SortOrder = 'name-asc';
-export const SORT_NAME_DESC: SortOrder = 'name-desc';
-export const SORT_CREATED_ASC: SortOrder = 'created-asc';
-export const SORT_CREATED_DESC: SortOrder = 'created-desc';
-export const SORT_HTTP_METHOD: SortOrder = 'http-method';
-export const SORT_TYPE_DESC: SortOrder = 'type-desc';
-export const SORT_TYPE_ASC: SortOrder = 'type-asc';
+export const SORT_NAME_ASC = 'name-asc';
+export const SORT_NAME_DESC = 'name-desc';
+export const SORT_CREATED_ASC = 'created-asc';
+export const SORT_CREATED_DESC = 'created-desc';
+export const SORT_MODIFIED_ASC = 'modified-asc';
+export const SORT_MODIFIED_DESC = 'modified-desc';
+export const SORT_HTTP_METHOD = 'http-method';
+export const SORT_TYPE_DESC = 'type-desc';
+export const SORT_TYPE_ASC = 'type-asc';
 export const SORT_ORDERS = [
   SORT_NAME_ASC,
   SORT_NAME_DESC,
@@ -293,13 +318,36 @@ export const SORT_ORDERS = [
   SORT_TYPE_ASC,
 ];
 export const sortOrderName: Record<SortOrder, string> = {
-  [SORT_NAME_ASC]: 'Name Ascending',
-  [SORT_NAME_DESC]: 'Name Descending',
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
   [SORT_CREATED_ASC]: 'Oldest First',
   [SORT_CREATED_DESC]: 'Newest First',
   [SORT_HTTP_METHOD]: 'HTTP Method',
   [SORT_TYPE_DESC]: 'Folders First',
   [SORT_TYPE_ASC]: 'Requests First',
+};
+
+export type SpaceSortOrder =
+  | 'name-asc'
+  | 'name-desc'
+  | 'created-asc'
+  | 'created-desc'
+  | 'modified-desc'
+
+export const SPACE_SORT_ORDERS = [
+  SORT_MODIFIED_DESC,
+  SORT_NAME_ASC,
+  SORT_NAME_DESC,
+  SORT_CREATED_ASC,
+  SORT_CREATED_DESC,
+];
+
+export const spaceSortOrderName: Record<SpaceSortOrder, string> = {
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
+  [SORT_CREATED_ASC]: 'Oldest First',
+  [SORT_CREATED_DESC]: 'Newest First',
+  [SORT_MODIFIED_DESC]: 'Last Modified',
 };
 
 export function getPreviewModeName(previewMode, useLong = false) {

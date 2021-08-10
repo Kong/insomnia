@@ -1,6 +1,7 @@
 import commander from 'commander';
-import { getOptions, extractCommandOptions, loadCosmiConfig } from './get-options';
 import path from 'path';
+
+import { extractCommandOptions, getOptions, loadCosmiConfig } from './get-options';
 import { noop } from './util';
 
 jest.unmock('cosmiconfig');
@@ -13,7 +14,7 @@ describe('extractCommandOptions()', () => {
     command
       .command('subCommand')
       .option('-s, --subCmd')
-      .action((cmd) => {
+      .action(cmd => {
         expect(extractCommandOptions(cmd)).toEqual({
           global: true,
           subCmd: true,

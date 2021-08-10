@@ -1,3 +1,14 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
+import React, { PureComponent } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+
+import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as models from '../../../models';
+import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
+import type { OAuth2Token } from '../../../models/o-auth-2-token';
 import type {
   Request,
   RequestAuthentication,
@@ -5,33 +16,22 @@ import type {
   RequestHeader,
   RequestParameter,
 } from '../../../models/request';
+import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
-import type { OAuth2Token } from '../../../models/o-auth-2-token';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG, getAuthTypeName, getContentTypeName } from '../../../common/constants';
-import { deconstructQueryStringToParams, extractQueryStringFromUrl } from 'insomnia-url';
-import React, { PureComponent } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
-import * as models from '../../../models';
 import AuthDropdown from '../dropdowns/auth-dropdown';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import AuthWrapper from '../editors/auth/auth-wrapper';
 import BodyEditor from '../editors/body/body-editor';
 import RequestHeadersEditor from '../editors/request-headers-editor';
+import RequestParametersEditor from '../editors/request-parameters-editor';
 import ErrorBoundary from '../error-boundary';
 import MarkdownPreview from '../markdown-preview';
 import { showModal } from '../modals';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import RenderedQueryString from '../rendered-query-string';
 import RequestUrlBar from '../request-url-bar';
-import type { Settings } from '../../../models/settings';
-import RequestParametersEditor from '../editors/request-parameters-editor';
-import PlaceholderRequestPane from './placeholder-request-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
-import classnames from 'classnames';
-import { queryAllWorkspaceUrls } from '../../../models/helpers/query-all-workspace-urls';
-import type { HandleImportFileCallback } from '../wrapper';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import PlaceholderRequestPane from './placeholder-request-pane';
 
 interface Props {
   // Functions
@@ -55,7 +55,6 @@ interface Props {
   updateSettingsUseBulkHeaderEditor: Function;
   updateSettingsUseBulkParametersEditor: (useBulkParametersEditor: boolean) => Promise<Settings>;
   handleImport: Function;
-  handleImportFile: HandleImportFileCallback;
   workspace: Workspace;
   settings: Settings;
   isVariableUncovered: boolean;
@@ -132,7 +131,6 @@ class RequestPane extends PureComponent<Props> {
       handleGenerateCode,
       handleGetRenderContext,
       handleImport,
-      handleImportFile,
       handleCreateRequest,
       handleRender,
       handleSend,
@@ -161,7 +159,6 @@ class RequestPane extends PureComponent<Props> {
       return (
         <PlaceholderRequestPane
           hotKeyRegistry={hotKeyRegistry}
-          handleImportFile={handleImportFile}
           handleCreateRequest={handleCreateRequest}
         />
       );
@@ -208,7 +205,8 @@ class RequestPane extends PureComponent<Props> {
                 onChange={updateRequestMimeType}
                 contentType={request.body.mimeType}
                 request={request}
-                className="tall">
+                className="tall"
+              >
                 {typeof request.body.mimeType === 'string'
                   ? getContentTypeName(request.body.mimeType)
                   : 'Body'}
@@ -220,7 +218,8 @@ class RequestPane extends PureComponent<Props> {
               <AuthDropdown
                 onChange={updateRequestAuthentication}
                 request={request}
-                className="tall">
+                className="tall"
+              >
                 {getAuthTypeName(request.authentication.type) || 'Auth'}
                 <i className="fa fa-caret-down space-left" />
               </AuthDropdown>
@@ -286,7 +285,8 @@ class RequestPane extends PureComponent<Props> {
               <code className="txt-sm block faint">
                 <ErrorBoundary
                   key={uniqueKey}
-                  errorClassName="tall wide vertically-align font-error pad text-center">
+                  errorClassName="tall wide vertically-align font-error pad text-center"
+                >
                   <RenderedQueryString handleRender={handleRender} request={request} />
                 </ErrorBoundary>
               </code>
@@ -294,7 +294,8 @@ class RequestPane extends PureComponent<Props> {
             <div className="query-editor__editor">
               <ErrorBoundary
                 key={uniqueKey}
-                errorClassName="tall wide vertically-align font-error pad text-center">
+                errorClassName="tall wide vertically-align font-error pad text-center"
+              >
                 <RequestParametersEditor
                   key={headerEditorKey}
                   handleRender={handleRender}
@@ -314,12 +315,14 @@ class RequestPane extends PureComponent<Props> {
               <button
                 className="margin-top-sm btn btn--clicky"
                 title={urlHasQueryParameters ? 'Import querystring' : 'No query params to import'}
-                onClick={this._handleImportQueryFromUrl}>
+                onClick={this._handleImportQueryFromUrl}
+              >
                 Import from URL
               </button>
               <button
                 className="margin-top-sm btn btn--clicky space-left"
-                onClick={this._handleUpdateSettingsUseBulkParametersEditor}>
+                onClick={this._handleUpdateSettingsUseBulkParametersEditor}
+              >
                 {settings.useBulkParametersEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
@@ -344,7 +347,8 @@ class RequestPane extends PureComponent<Props> {
             <div className="pad-right text-right">
               <button
                 className="margin-top-sm btn btn--clicky"
-                onClick={this._handleUpdateSettingsUseBulkHeaderEditor}>
+                onClick={this._handleUpdateSettingsUseBulkHeaderEditor}
+              >
                 {settings.useBulkHeaderEditor ? 'Regular Edit' : 'Bulk Edit'}
               </button>
             </div>
@@ -385,7 +389,8 @@ class RequestPane extends PureComponent<Props> {
                   <br />
                   <button
                     className="btn btn--clicky faint"
-                    onClick={this._handleEditDescriptionAdd}>
+                    onClick={this._handleEditDescriptionAdd}
+                  >
                     Add Description
                   </button>
                 </p>

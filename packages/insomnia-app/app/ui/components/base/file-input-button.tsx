@@ -1,7 +1,8 @@
-import React, { HTMLAttributes, PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import { basename as pathBasename } from 'path';
+import React, { HTMLAttributes, PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { selectFileOrFolder } from '../../../common/select-file-or-folder';
 
 interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
@@ -19,11 +20,11 @@ class FileInputButton extends PureComponent<Props> {
   _button: HTMLButtonElement | null = null;
 
   focus() {
-    this._button && this._button.focus();
+    this._button?.focus();
   }
 
   focusEnd() {
-    this._button && this._button.focus();
+    this._button?.focus();
   }
 
   _setRef(n: HTMLButtonElement) {

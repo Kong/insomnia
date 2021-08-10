@@ -1,12 +1,13 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import Button from '../base/button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
 import ModalFooter from '../base/modal-footer';
-import Button from '../base/button';
+import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 
 interface State {
@@ -102,7 +103,7 @@ class PromptModal extends PureComponent<{}, State> {
 
   _handleDeleteHint(hint: string) {
     const { onDeleteHint } = this.state;
-    onDeleteHint && onDeleteHint(hint);
+    onDeleteHint?.(hint);
     const hints = this.state.hints.filter(h => h !== hint);
     this.setState({
       hints,
@@ -142,7 +143,7 @@ class PromptModal extends PureComponent<{}, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   show({
@@ -181,7 +182,7 @@ class PromptModal extends PureComponent<{}, State> {
       hints: hints || [],
       loading: false,
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
 
     // Need to do this after render because modal focuses itself too
     setTimeout(() => {
@@ -197,7 +198,7 @@ class PromptModal extends PureComponent<{}, State> {
 
       this._input.focus();
 
-      selectText && this._input && this._input.select();
+      selectText && this._input?.select();
     }, 100);
   }
 
@@ -216,7 +217,8 @@ class PromptModal extends PureComponent<{}, State> {
           confirmMessage=""
           className="tall space-left icon"
           onClick={this._handleDeleteHint}
-          value={hint}>
+          value={hint}
+        >
           <i className="fa fa-close faint" />
         </PromptButton>
       </div>

@@ -1,10 +1,10 @@
-import { ACTIVITY_HOME } from '../../../common/constants';
 import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
+import { ACTIVITY_HOME } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import * as models from '../../../models';
+import { BASE_SPACE_ID, Space } from '../../../models/space';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveSpace } from './global';
-import * as models from '../../../models';
-import { strings } from '../../../common/strings';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
 
 export const createSpace = () => dispatch => {
   const defaultValue = 'My Space';
@@ -16,7 +16,7 @@ export const createSpace = () => dispatch => {
     placeholder: defaultValue,
     defaultValue,
     selectText: true,
-    onComplete: async (name) => {
+    onComplete: async name => {
       const space = await models.space.create({ name });
       trackEvent('Space', 'Create');
       dispatch(setActiveSpace(space._id));

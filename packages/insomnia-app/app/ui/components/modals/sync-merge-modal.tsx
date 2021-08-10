@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import type { Workspace } from '../../../models/workspace';
+import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
+import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
 import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
 
 interface Props {
   workspace: Workspace;
@@ -55,7 +56,7 @@ class SyncMergeModal extends PureComponent<Props, State> {
     conflicts: MergeConflict[];
     handleDone: (arg0: MergeConflict[]) => void;
   }) {
-    this.modal && this.modal.show();
+    this.modal?.show();
     this._handleDone = options.handleDone;
     this.setState({
       conflicts: options.conflicts,
@@ -63,7 +64,7 @@ class SyncMergeModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -80,7 +81,8 @@ class SyncMergeModal extends PureComponent<Props, State> {
                 <th
                   style={{
                     width: '10rem',
-                  }}>
+                  }}
+                >
                   Choose
                 </th>
               </tr>

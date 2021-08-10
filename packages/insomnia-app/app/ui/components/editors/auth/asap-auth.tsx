@@ -1,14 +1,15 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent, ReactElement } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
+import { AUTOBIND_CFG } from '../../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import Button from '../../base/button';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import CodePromptModal from '../../modals/code-prompt-modal';
-import Button from '../../base/button';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import { AUTOBIND_CFG } from '../../../../common/constants';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -98,7 +99,8 @@ class AsapAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               mode={mode}
@@ -151,7 +153,8 @@ class AsapAuth extends PureComponent<Props> {
               {
                 'form-control--inactive': authentication.disabled,
               },
-            )}>
+            )}
+          >
             <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
               <i className="fa fa-edit space-right" />
               {authentication.privateKey ? 'Click to Edit' : 'Click to Add'}
@@ -183,7 +186,8 @@ class AsapAuth extends PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

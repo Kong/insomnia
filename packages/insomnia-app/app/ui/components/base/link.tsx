@@ -1,6 +1,7 @@
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent, ReactNode } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { clickLink } from '../../../common/electron-helpers';
 
@@ -18,10 +19,10 @@ interface Props {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class Link extends PureComponent<Props> {
   _handleClick(e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) {
-    e && e.preventDefault();
+    e?.preventDefault();
     const { href, onClick } = this.props;
     // Also call onClick that was passed to us if there was one
-    onClick && onClick(e);
+    onClick?.(e);
     clickLink(href);
   }
 

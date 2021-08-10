@@ -1,17 +1,18 @@
-import * as React from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import * as React from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import * as models from '../../../models';
+import type { RequestGroup } from '../../../models/request-group';
+import type { Workspace } from '../../../models/workspace';
+import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
-import * as models from '../../../models';
-import DebouncedInput from '../base/debounced-input';
 import MarkdownEditor from '../markdown-editor';
-import { database as db } from '../../../common/database';
-import type { Workspace } from '../../../models/workspace';
-import type { RequestGroup } from '../../../models/request-group';
-import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 
 interface Props {
   editorFontSize: number;
@@ -168,9 +169,9 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
 
     // Find workspaces for use with moving workspace
     const ancestors = await db.withAncestors(requestGroup);
-    const doc = ancestors.find((doc) => doc.type === models.workspace.type);
+    const doc = ancestors.find(doc => doc.type === models.workspace.type);
     const workspaceId = doc ? doc._id : 'should-never-happen';
-    const workspace = workspaces.find((w) => w._id === workspaceId);
+    const workspace = workspaces.find(w => w._id === workspaceId);
 
     this.setState(
       {
@@ -181,11 +182,11 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
         defaultPreviewMode: hasDescription && !forceEditMode,
       },
       () => {
-        this.modal && this.modal.show();
+        this.modal?.show();
 
         if (forceEditMode) {
           setTimeout(() => {
-            this._editor && this._editor.focus();
+            this._editor?.focus();
           }, 400);
         }
       },
@@ -193,7 +194,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _renderDescription() {
@@ -270,7 +271,7 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
               onChange={this._handleUpdateMoveCopyWorkspace}
             >
               <option value="__NULL__">-- Select Workspace --</option>
-              {workspaces.map((w) => {
+              {workspaces.map(w => {
                 if (workspace && workspace._id === w._id) {
                   return null;
                 }

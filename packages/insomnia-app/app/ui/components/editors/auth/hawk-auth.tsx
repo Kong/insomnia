@@ -1,16 +1,17 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import {
   AUTOBIND_CFG,
   HAWK_ALGORITHM_SHA1,
   HAWK_ALGORITHM_SHA256,
 } from '../../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import Button from '../../base/button';
 import OneLineEditor from '../../codemirror/one-line-editor';
 import HelpTooltip from '../../help-tooltip';
-import Button from '../../base/button';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 
 interface Props {
   request: Request;
@@ -108,7 +109,8 @@ class HawkAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--outlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <select id={id} onChange={onChange} value={value}>
               {options.map(({ name, value }) => (
                 <option key={value} value={value}>
@@ -147,7 +149,8 @@ class HawkAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               type="text"
@@ -179,7 +182,8 @@ class HawkAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <Button
               className="btn btn--super-duper-compact"
               id={id}
@@ -189,7 +193,8 @@ class HawkAuth extends PureComponent<Props> {
                 authentication.validatePayload
                   ? 'Enable payload validation'
                   : 'Disable payload validation'
-              }>
+              }
+            >
               {authentication.validatePayload ? (
                 <i className="fa fa-check-square-o" />
               ) : (
@@ -223,7 +228,8 @@ class HawkAuth extends PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

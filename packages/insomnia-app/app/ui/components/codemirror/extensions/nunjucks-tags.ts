@@ -1,10 +1,11 @@
 import CodeMirror, { Token } from 'codemirror';
+
 import * as misc from '../../../../common/misc';
-import NunjucksVariableModal from '../../modals/nunjucks-modal';
-import { showModal } from '../../modals/index';
-import { tokenizeTag } from '../../../../templating/utils';
-import { getTagDefinitions } from '../../../../templating/index';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import { getTagDefinitions } from '../../../../templating/index';
+import { tokenizeTag } from '../../../../templating/utils';
+import { showModal } from '../../modals/index';
+import NunjucksVariableModal from '../../modals/nunjucks-modal';
 
 CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender: HandleRender,
@@ -56,7 +57,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
 
   for (let lineNo = vp.from; lineNo < vp.to; lineNo++) {
     const line = this.getLineTokens(lineNo);
-    const tokens = line.filter(({ type }) => type && type.indexOf('nunjucks') >= 0);
+    const tokens = line.filter(({ type }) => type?.indexOf('nunjucks') >= 0);
 
     // Aggregate same tokens
     const newTokens: Token[] = [];

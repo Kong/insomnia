@@ -1,21 +1,21 @@
-import React, { PureComponent, ReactNode } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
-import type { Workspace } from '../../../models/workspace';
-import type { Environment } from '../../../models/environment';
 import classnames from 'classnames';
+import React, { PureComponent, ReactNode } from 'react';
+
 import {
+  AUTOBIND_CFG,
   COLLAPSE_SIDEBAR_REMS,
   SIDEBAR_SKINNY_REMS,
-  AUTOBIND_CFG,
 } from '../../../common/constants';
+import type { HotKeyRegistry } from '../../../common/hotkeys';
+import type { Environment } from '../../../models/environment';
+import type { Workspace } from '../../../models/workspace';
 
 interface Props {
   activeEnvironment: Environment | null;
   children: ReactNode;
   environmentHighlightColorStyle: string;
   handleSetActiveEnvironment: (...args: any[]) => any;
-  handleSetActiveWorkspace: (...args: any[]) => any;
   hidden: boolean;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
@@ -49,7 +49,8 @@ class Sidebar extends PureComponent<Props> {
             environmentHighlightColorStyle === 'sidebar-edge'
               ? '5px solid ' + activeEnvironment.color
               : undefined,
-        }}>
+        }}
+      >
         {children}
       </aside>
     );

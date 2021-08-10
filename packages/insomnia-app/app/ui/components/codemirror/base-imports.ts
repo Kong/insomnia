@@ -61,10 +61,11 @@ import './extensions/nunjucks-tags';
 // CSS
 import 'codemirror/lib/codemirror.css';
 import '../../css/editor/index.less';
-// Make jsonlint available to the json-lint addon
-import { parser as jsonlint } from 'jsonlint';
+
 // Make js-yaml available to the yaml-lint addon
 import * as jsYaml from 'js-yaml';
+// Make jsonlint available to the json-lint addon
+import { parser as jsonlint } from 'jsonlint';
 
 // @ts-expect-error -- TSCONVERSION needs global augmentation
 global.jsonlint = jsonlint;

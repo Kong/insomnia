@@ -1,12 +1,13 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import GraphQLExplorerField from './graph-ql-explorer-field';
-import GraphQLExplorerType from './graph-ql-explorer-type';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
-import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import GraphQLExplorerEnum from './graph-ql-explorer-enum';
+import GraphQLExplorerField from './graph-ql-explorer-field';
+import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import GraphQLExplorerType from './graph-ql-explorer-type';
 
 interface Props {
   handleClose: () => void;
@@ -121,7 +122,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
             e.preventDefault();
 
             this._handlePopHistory();
-          }}>
+          }}
+        >
           <i className="fa--skinny fa fa-angle-left" /> Schema
         </a>
       );
@@ -149,7 +151,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
           e.preventDefault();
 
           this._handlePopHistory();
-        }}>
+        }}
+      >
         <i className="fa--skinny fa fa-angle-left" /> {name}
       </a>
     );
@@ -199,7 +202,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
           <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
           <button
             className="btn btn--compact graphql-explorer__header__close-btn"
-            onClick={handleClose}>
+            onClick={handleClose}
+          >
             <i className="fa fa-close" />
           </button>
         </div>

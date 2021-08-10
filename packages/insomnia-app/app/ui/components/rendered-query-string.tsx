@@ -1,9 +1,10 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../common/constants';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
-import CopyButton from './base/copy-button';
+import React, { PureComponent } from 'react';
+
+import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleRender } from '../../common/render';
+import CopyButton from './base/copy-button';
 
 interface Props {
   request: any,
@@ -90,7 +91,8 @@ class RenderedQueryString extends PureComponent<Props, State> {
           content={this.state.string}
           className="pull-right"
           title="Copy URL"
-          confirmMessage="">
+          confirmMessage=""
+        >
           <i className="fa fa-copy" />
         </CopyButton>
         {inner}

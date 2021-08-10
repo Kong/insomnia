@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
-import * as uuid from 'uuid';
-import * as toughCookie from 'tough-cookie';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { cookieToString } from 'insomnia-cookies';
-import PromptButton from './base/prompt-button';
-import RenderedText from './rendered-text';
-import type { Cookie } from '../../models/cookie-jar';
-import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
+import React, { PureComponent } from 'react';
+import * as toughCookie from 'tough-cookie';
+import * as uuid from 'uuid';
+
 import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleRender } from '../../common/render';
+import type { Cookie } from '../../models/cookie-jar';
+import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
+import PromptButton from './base/prompt-button';
+import RenderedText from './rendered-text';
 
 export interface CookieListProps {
   handleCookieAdd: Function;
@@ -54,24 +55,28 @@ class CookieList extends PureComponent<CookieListProps> {
               <th
                 style={{
                   minWidth: '10rem',
-                }}>
+                }}
+              >
                 Domain
               </th>
               <th
                 style={{
                   width: '90%',
-                }}>
+                }}
+              >
                 Cookie
               </th>
               <th
                 style={{
                   width: '2rem',
                 }}
-                className="text-right">
+                className="text-right"
+              >
                 <Dropdown right>
                   <DropdownButton
                     title="Add cookie"
-                    className="btn btn--super-duper-compact btn--outlined txt-md">
+                    className="btn btn--super-duper-compact btn--outlined txt-md"
+                  >
                     Actions <i className="fa fa-caret-down" />
                   </DropdownButton>
                   <DropdownItem onClick={this._handleCookieAdd}>
@@ -99,7 +104,8 @@ class CookieList extends PureComponent<CookieListProps> {
                     <button
                       className="btn btn--super-compact btn--outlined"
                       onClick={() => { handleShowModifyCookieModal(cookie); }}
-                      title="Edit cookie properties">
+                      title="Edit cookie properties"
+                    >
                       Edit
                     </button>{' '}
                     <PromptButton
@@ -107,7 +113,8 @@ class CookieList extends PureComponent<CookieListProps> {
                       addIcon
                       confirmMessage=""
                       onClick={() => this._handleDeleteCookie(cookie)}
-                      title="Delete cookie">
+                      title="Delete cookie"
+                    >
                       <i className="fa fa-trash-o" />
                     </PromptButton>
                   </td>

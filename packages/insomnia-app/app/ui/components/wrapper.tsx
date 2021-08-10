@@ -1,4 +1,27 @@
-import type { Response } from '../../models/response';
+import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import * as importers from 'insomnia-importers';
+import React, { Fragment, PureComponent } from 'react';
+
+import { trackPageView } from '../../common/analytics';
+import type { GlobalActivity } from '../../common/constants';
+import {
+  ACTIVITY_ANALYTICS,
+  ACTIVITY_DEBUG,
+  ACTIVITY_HOME,
+  ACTIVITY_MIGRATION,
+  ACTIVITY_ONBOARDING,
+  ACTIVITY_SPEC,
+  ACTIVITY_UNIT_TEST,
+  AUTOBIND_CFG,
+  SortOrder,
+} from '../../common/constants';
+import { database as db } from '../../common/database';
+import { importRaw } from '../../common/import';
+import { HandleGetRenderContext, HandleRender } from '../../common/render';
+import { initializeSpectral, isLintError } from '../../common/spectral';
+import type { ApiSpec } from '../../models/api-spec';
+import type { Cookie } from '../../models/cookie-jar';
+import * as models from '../../models/index';
 import {
   isRequest,
   Request,
@@ -7,85 +30,62 @@ import {
   RequestHeader,
   RequestParameter,
 } from '../../models/request';
-import React, { Fragment, PureComponent } from 'react';
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import {
-  AUTOBIND_CFG,
-  ACTIVITY_DEBUG,
-  ACTIVITY_HOME,
-  ACTIVITY_SPEC,
-  ACTIVITY_UNIT_TEST,
-  SortOrder,
-  ACTIVITY_MIGRATION,
-  ACTIVITY_ONBOARDING,
-  ACTIVITY_ANALYTICS,
-} from '../../common/constants';
-import { registerModal, showModal } from './modals/index';
-import AlertModal from './modals/alert-modal';
-import WrapperModal from './modals/wrapper-modal';
-import ErrorModal from './modals/error-modal';
-import CookiesModal from './modals/cookies-modal';
+import { RequestGroup } from '../../models/request-group';
+import type { Response } from '../../models/response';
+import { GitVCS } from '../../sync/git/git-vcs';
+import { VCS } from '../../sync/vcs/vcs';
 import CookieModifyModal from '../components/modals/cookie-modify-modal';
-import EnvironmentEditModal from './modals/environment-edit-modal';
-import GenerateCodeModal from './modals/generate-code-modal';
-import LoginModal from './modals/login-modal';
-import ResponseDebugModal from './modals/response-debug-modal';
-import PaymentNotificationModal from './modals/payment-notification-modal';
-import NunjucksModal from './modals/nunjucks-modal';
-import PromptModal from './modals/prompt-modal';
-import AskModal from './modals/ask-modal';
-import GenerateConfigModal from './modals/generate-config-modal';
-import { SelectModal } from './modals/select-modal';
-import RequestCreateModal from './modals/request-create-modal';
-import RequestSwitcherModal from './modals/request-switcher-modal';
-import SettingsModal from './modals/settings-modal';
-import FilterHelpModal from './modals/filter-help-modal';
-import RequestSettingsModal from './modals/request-settings-modal';
-import RequestGroupSettingsModal from './modals/request-group-settings-modal';
-import SyncStagingModal from './modals/sync-staging-modal';
-import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
-import GitStagingModal from './modals/git-staging-modal';
-import GitBranchesModal from './modals/git-branches-modal';
-import GitLogModal from './modals/git-log-modal';
-import SyncMergeModal from './modals/sync-merge-modal';
-import SyncHistoryModal from './modals/sync-history-modal';
-import SyncShareModal from './modals/sync-share-modal';
-import SyncBranchesModal from './modals/sync-branches-modal';
-import SyncDeleteModal from './modals/sync-delete-modal';
-import RequestRenderErrorModal from './modals/request-render-error-modal';
-import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
-import WorkspaceSettingsModal from './modals/workspace-settings-modal';
-import CodePromptModal from './modals/code-prompt-modal';
-import { database as db } from '../../common/database';
-import * as models from '../../models/index';
-import * as importers from 'insomnia-importers';
-import type { Cookie } from '../../models/cookie-jar';
+import { AppProps } from '../containers/app';
+import { GrpcDispatchModalWrapper } from '../context/grpc';
+import { DropdownButton } from './base/dropdown';
+import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import ErrorBoundary from './error-boundary';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';
+import AlertModal from './modals/alert-modal';
+import AskModal from './modals/ask-modal';
+import CodePromptModal from './modals/code-prompt-modal';
+import CookiesModal from './modals/cookies-modal';
+import EnvironmentEditModal from './modals/environment-edit-modal';
+import ErrorModal from './modals/error-modal';
 import ExportRequestsModal from './modals/export-requests-modal';
-import { VCS } from '../../sync/vcs/vcs';
-import type { ApiSpec } from '../../models/api-spec';
-import { GitVCS } from '../../sync/git/git-vcs';
-import { trackPageView } from '../../common/analytics';
-import WrapperHome from './wrapper-home';
-import WrapperDesign from './wrapper-design';
-import WrapperUnitTest from './wrapper-unit-test';
-import WrapperOnboarding from './wrapper-onboarding';
-import WrapperDebug from './wrapper-debug';
-import { importRaw } from '../../common/import';
-import GitSyncDropdown from './dropdowns/git-sync-dropdown';
-import { DropdownButton } from './base/dropdown';
-import type { GlobalActivity } from '../../common/constants';
+import FilterHelpModal from './modals/filter-help-modal';
+import GenerateCodeModal from './modals/generate-code-modal';
+import GenerateConfigModal from './modals/generate-config-modal';
+import GitBranchesModal from './modals/git-branches-modal';
+import GitLogModal from './modals/git-log-modal';
+import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
+import GitStagingModal from './modals/git-staging-modal';
+import { registerModal, showModal } from './modals/index';
+import LoginModal from './modals/login-modal';
+import NunjucksModal from './modals/nunjucks-modal';
+import PaymentNotificationModal from './modals/payment-notification-modal';
+import PromptModal from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
-import { GrpcDispatchModalWrapper } from '../context/grpc';
-import WrapperMigration from './wrapper-migration';
-import type { ImportOptions } from '../redux/modules/global';
-import WrapperAnalytics from './wrapper-analytics';
-import { HandleGetRenderContext, HandleRender } from '../../common/render';
-import { RequestGroup } from '../../models/request-group';
+import RequestCreateModal from './modals/request-create-modal';
+import RequestGroupSettingsModal from './modals/request-group-settings-modal';
+import RequestRenderErrorModal from './modals/request-render-error-modal';
+import RequestSettingsModal from './modals/request-settings-modal';
+import RequestSwitcherModal from './modals/request-switcher-modal';
+import ResponseDebugModal from './modals/response-debug-modal';
+import { SelectModal } from './modals/select-modal';
+import SettingsModal from './modals/settings-modal';
 import SpaceSettingsModal from './modals/space-settings-modal';
-import { AppProps } from '../containers/app';
-import { initializeSpectral, isLintError } from '../../common/spectral';
+import SyncBranchesModal from './modals/sync-branches-modal';
+import SyncDeleteModal from './modals/sync-delete-modal';
+import SyncHistoryModal from './modals/sync-history-modal';
+import SyncMergeModal from './modals/sync-merge-modal';
+import SyncStagingModal from './modals/sync-staging-modal';
+import { WorkspaceDuplicateModal } from './modals/workspace-duplicate-modal';
+import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
+import WorkspaceSettingsModal from './modals/workspace-settings-modal';
+import WrapperModal from './modals/wrapper-modal';
+import WrapperAnalytics from './wrapper-analytics';
+import WrapperDebug from './wrapper-debug';
+import WrapperDesign from './wrapper-design';
+import WrapperHome from './wrapper-home';
+import WrapperMigration from './wrapper-migration';
+import WrapperOnboarding from './wrapper-onboarding';
+import WrapperUnitTest from './wrapper-unit-test';
 
 const spectral = initializeSpectral();
 
@@ -97,7 +97,6 @@ export type WrapperProps = AppProps & {
   handleCreateRequest: (id: string) => void;
   handleDuplicateRequest: Function;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => void;
-  handleDuplicateWorkspace: Function;
   handleCreateRequestGroup: (parentId: string) => void;
   handleGenerateCodeForActiveRequest: Function;
   handleGenerateCode: Function;
@@ -133,10 +132,6 @@ export type WrapperProps = AppProps & {
   vcs: VCS | null;
   gitVCS: GitVCS | null;
 }
-
-export type HandleImportFileCallback = (options?: ImportOptions) => void;
-export type HandleImportClipboardCallback = (options?: ImportOptions) => void;
-export type HandleImportUriCallback = (uri: string, options?: ImportOptions) => void;
 
 interface State {
   forceRefreshKey: number;
@@ -245,14 +240,22 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       });
     }
 
-    const notEditingASpec = activity !== ACTIVITY_SPEC;
+    const editingASpec = activity === ACTIVITY_SPEC;
 
-    if (notEditingASpec) {
+    if (!editingASpec) {
       handleSetActiveActivity(nextActivity);
       return;
     }
 
     if (!activeApiSpec || !workspaceId) {
+      return;
+    }
+
+    const goingToDebugOrTest = nextActivity === ACTIVITY_DEBUG || nextActivity === ACTIVITY_UNIT_TEST;
+
+    // If editing a spec and not going to debug or test, don't regenerate anything
+    if (editingASpec && !goingToDebugOrTest) {
+      handleSetActiveActivity(nextActivity);
       return;
     }
 
@@ -302,18 +305,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     return models.settings.update(this.props.settings, { useBulkParametersEditor });
   }
 
-  _handleImportFile(options?: ImportOptions) {
-    this.props.handleImportFileToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
-  }
-
-  _handleImportUri(uri: string, options?: ImportOptions) {
-    this.props.handleImportUriToWorkspace(uri, { workspaceId: this.props.activeWorkspace?._id, ...options });
-  }
-
-  _handleImportClipBoard(options?: ImportOptions) {
-    this.props.handleImportClipBoardToWorkspace({ workspaceId: this.props.activeWorkspace?._id, ...options });
-  }
-
   _handleSetActiveResponse(responseId: string | null) {
     if (!this.props.activeRequest) {
       console.warn('Tried to set active response when request not active');
@@ -354,7 +345,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     }
 
     // Also unset active response it's the one we're deleting
-    if (this.props.activeResponse && this.props.activeResponse._id === response._id) {
+    if (this.props.activeResponse?._id === response._id) {
       this._handleSetActiveResponse(null);
     }
   }
@@ -480,7 +471,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activeCookieJar,
       activeEnvironment,
       activeGitRepository,
-      activeRequest,
       activeWorkspace,
       activeSpace,
       activeApiSpec,
@@ -488,21 +478,16 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activity,
       gitVCS,
       handleActivateRequest,
-      handleDuplicateWorkspace,
       handleExportRequestsToFile,
       handleGetRenderContext,
       handleInitializeEntities,
       handleRender,
-      handleSetActiveWorkspace,
-      handleSetActiveActivity,
       handleSidebarSort,
       isVariableUncovered,
-      requestMetas,
       settings,
       sidebarChildren,
       syncItems,
       vcs,
-      workspaceChildren,
       workspaces,
     } = this.props;
 
@@ -547,6 +532,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} settings={settings} />
             <SpaceSettingsModal ref={registerModal} />
+            <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
 
             <CodePromptModal
               ref={registerModal}
@@ -628,7 +614,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 handleGetRenderContext={handleGetRenderContext}
                 nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                 handleRemoveWorkspace={this._handleRemoveActiveWorkspace}
-                handleDuplicateWorkspace={handleDuplicateWorkspace}
                 handleClearAllResponses={this._handleActiveWorkspaceClearAllResponses}
                 isVariableUncovered={isVariableUncovered}
               /> : null}
@@ -651,15 +636,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <RequestSwitcherModal
               ref={registerModal}
-              workspace={activeWorkspace}
-              workspaces={workspaces}
-              workspaceChildren={workspaceChildren}
-              // the request switcher modal does not know about grpc requests yet
-              activeRequest={activeRequest && isRequest(activeRequest) ? activeRequest : undefined}
               activateRequest={handleActivateRequest}
-              requestMetas={requestMetas}
-              handleSetActiveWorkspace={handleSetActiveWorkspace}
-              handleSetActiveActivity={handleSetActiveActivity}
             />
 
             <EnvironmentEditModal
@@ -716,7 +693,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 />
                 <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
                 <SyncHistoryModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
-                <SyncShareModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />
               </Fragment>
             ) : null}
 
@@ -746,7 +722,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                 <ProtoFilesModal
                   ref={registerModal}
                   grpcDispatch={dispatch}
-                  workspace={activeWorkspace}
                 />
               )}
             </GrpcDispatchModalWrapper>
@@ -756,9 +731,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           {(activity === ACTIVITY_HOME || !activeWorkspace) && (
             <WrapperHome
               wrapperProps={this.props}
-              handleImportFile={this._handleImportFile}
-              handleImportUri={this._handleImportUri}
-              handleImportClipboard={this._handleImportClipBoard}
             />
           )}
 
@@ -792,7 +764,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               handleForceUpdateRequest={this._handleForceUpdateRequest}
               handleForceUpdateRequestHeaders={this._handleForceUpdateRequestHeaders}
               handleImport={this._handleImport}
-              handleImportFile={this._handleImportFile}
               handleRequestCreate={this._handleCreateRequestInWorkspace}
               handleRequestGroupCreate={this._handleCreateRequestGroupInWorkspace}
               handleSendAndDownloadRequestWithActiveEnvironment={
@@ -827,11 +798,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
           {activity === ACTIVITY_ANALYTICS && <WrapperAnalytics wrapperProps={this.props} />}
 
           {(activity === ACTIVITY_ONBOARDING || activity === null) && (
-            <WrapperOnboarding
-              wrapperProps={this.props}
-              handleImportFile={this._handleImportFile}
-              handleImportUri={this._handleImportUri}
-            />
+            <WrapperOnboarding wrapperProps={this.props} />
           )}
         </Fragment>
       </Fragment>

@@ -1,11 +1,15 @@
+import YAML from 'yaml';
+
+import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
 import { getAppVersion } from '../constants';
-import { globalBeforeEach } from '../../__jest__/before-each';
-import YAML from 'yaml';
 import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWorkspacesHAR } from '../export';
 
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
-  beforeEach(globalBeforeEach);
+  beforeEach(async () => {
+    await globalBeforeEach();
+    await models.space.all();
+  });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {
     const wrk1 = await models.workspace.create({
@@ -171,7 +175,7 @@ describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
       activeEnvironmentId: env2Private._id,
     });
     const includePrivateDocs = false;
-    const json = await exportWorkspacesHAR([], includePrivateDocs);
+    const json = await exportWorkspacesHAR([wrk1, wrk2], includePrivateDocs);
     const data = JSON.parse(json);
     expect(data).toMatchObject({
       log: {
@@ -259,8 +263,8 @@ describe('export', () => {
       parentId: eBase._id,
     });
     // Test export whole workspace.
-    const exportedWorkspacesJson = await exportWorkspacesData([], false, 'json');
-    const exportedWorkspacesYaml = await exportWorkspacesData([], false, 'yaml');
+    const exportedWorkspacesJson = await exportWorkspacesData([w], false, 'json');
+    const exportedWorkspacesYaml = await exportWorkspacesData([w], false, 'yaml');
     const exportWorkspacesDataJson = JSON.parse(exportedWorkspacesJson);
     const exportWorkspacesDataYaml = YAML.parse(exportedWorkspacesYaml);
     // Ensure JSON is the same as YAML
@@ -275,7 +279,7 @@ describe('export', () => {
           _id: w._id,
         }),
         expect.objectContaining({
-          _id: spec._id,
+          _id: spec?._id,
         }),
         expect.objectContaining({
           _id: eBase._id,

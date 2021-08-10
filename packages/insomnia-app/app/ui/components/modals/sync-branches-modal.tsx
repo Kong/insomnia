@@ -1,21 +1,22 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { database as db } from '../../../common/database';
+import { Space } from '../../../models/space';
+import type { Workspace } from '../../../models/workspace';
+import type { StatusCandidate } from '../../../sync/types';
+import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import { database as db } from '../../../common/database';
-import type { StatusCandidate } from '../../../sync/types';
 import PromptButton from '../base/prompt-button';
 import SyncPullButton from '../sync-pull-button';
-import { Space } from '../../../models/space';
 
 interface Props {
   workspace: Workspace;
-  space?: Space;
+  space: Space;
   syncItems: StatusCandidate[];
   vcs: VCS;
 }
@@ -163,7 +164,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   async show(options: { onHide: (...args: any[]) => any }) {
@@ -225,7 +226,8 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                       <span
                         className={classnames({
                           bold: name === currentBranch,
-                        })}>
+                        })}
+                      >
                         {name}
                       </span>
                       {name === currentBranch ? (
@@ -238,20 +240,23 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                         className="btn btn--micro btn--outlined space-left"
                         doneMessage="Merged"
                         disabled={name === currentBranch}
-                        onClick={() => this._handleMerge(name)}>
+                        onClick={() => this._handleMerge(name)}
+                      >
                         Merge
                       </PromptButton>
                       <PromptButton
                         className="btn btn--micro btn--outlined space-left"
                         doneMessage="Deleted"
                         disabled={name === currentBranch || name === 'master'}
-                        onClick={() => this._handleDelete(name)}>
+                        onClick={() => this._handleDelete(name)}
+                      >
                         Delete
                       </PromptButton>
                       <button
                         className="btn btn--micro btn--outlined space-left"
                         disabled={name === currentBranch}
-                        onClick={() => this._handleCheckout(name)}>
+                        onClick={() => this._handleCheckout(name)}
+                      >
                         Checkout
                       </button>
                     </td>
@@ -283,7 +288,8 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                             className="btn btn--micro btn--outlined space-left"
                             doneMessage="Deleted"
                             disabled={name === currentBranch}
-                            onClick={() => this._handleRemoteDelete(name)}>
+                            onClick={() => this._handleRemoteDelete(name)}
+                          >
                             Delete
                           </PromptButton>
                         )}
@@ -293,7 +299,8 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                           space={space}
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
-                          vcs={vcs}>
+                          vcs={vcs}
+                        >
                           Fetch
                         </SyncPullButton>
                       </td>

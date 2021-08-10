@@ -1,29 +1,28 @@
-import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
-import type { Request, RequestHeader } from '../models/request';
-import { isWorkspace, Workspace } from '../models/workspace';
-import type { Settings } from '../models/settings';
-import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
-import {
-  getRenderedRequestAndContext,
-  RENDER_PURPOSE_NO_RENDER,
-  RENDER_PURPOSE_SEND,
-} from '../common/render';
-import mkdirp from 'mkdirp';
-import crypto from 'crypto';
+import aws4 from 'aws4';
 import clone from 'clone';
-import { parse as urlParse, resolve as urlResolve } from 'url';
+import crypto from 'crypto';
+import fs from 'fs';
+import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
+import {
+  buildQueryStringFromParams,
+  joinUrlAndQueryString,
+  setDefaultProtocol,
+  smartEncodeUrl,
+} from 'insomnia-url';
+import mkdirp from 'mkdirp';
 import {
   Curl,
   CurlAuth,
   CurlCode,
-  CurlInfoDebug,
   CurlFeature,
-  CurlNetrc,
   CurlHttpVersion,
+  CurlInfoDebug,
+  CurlNetrc,
 } from 'node-libcurl';
 import { join as pathJoin } from 'path';
+import { parse as urlParse, resolve as urlResolve } from 'url';
 import * as uuid from 'uuid';
-import * as models from '../models';
+
 import {
   AUTH_AWS_IAM,
   AUTH_DIGEST,
@@ -35,6 +34,8 @@ import {
   HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
+import { database as db } from '../common/database';
+import { getDataDirectory, getTempDir } from '../common/electron-helpers';
 import {
   delay,
   describeByteSize,
@@ -49,24 +50,24 @@ import {
   hasUserAgentHeader,
   waitForStreamToFinish,
 } from '../common/misc';
-import { getDataDirectory, getTempDir } from '../common/electron-helpers';
+import type { ExtraRenderInfo, RenderedRequest } from '../common/render';
 import {
-  buildQueryStringFromParams,
-  joinUrlAndQueryString,
-  setDefaultProtocol,
-  smartEncodeUrl,
-} from 'insomnia-url';
-import fs from 'fs';
-import { database as db } from '../common/database';
-import caCerts from './ca-certs';
-import * as plugins from '../plugins/index';
-import * as pluginContexts from '../plugins/context/index';
-import { getAuthHeader } from './authentication';
-import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
-import { urlMatchesCertHost } from './url-matches-cert-host';
-import aws4 from 'aws4';
-import { buildMultipart } from './multipart';
+  getRenderedRequestAndContext,
+  RENDER_PURPOSE_NO_RENDER,
+  RENDER_PURPOSE_SEND,
+} from '../common/render';
+import * as models from '../models';
 import type { Environment } from '../models/environment';
+import type { Request, RequestHeader } from '../models/request';
+import type { ResponseHeader, ResponseTimelineEntry } from '../models/response';
+import type { Settings } from '../models/settings';
+import { isWorkspace, Workspace } from '../models/workspace';
+import * as pluginContexts from '../plugins/context/index';
+import * as plugins from '../plugins/index';
+import { getAuthHeader } from './authentication';
+import caCerts from './ca-certs';
+import { buildMultipart } from './multipart';
+import { urlMatchesCertHost } from './url-matches-cert-host';
 
 export interface ResponsePatch {
   bodyCompression?: 'zip' | null;
@@ -435,8 +436,9 @@ export async function _actuallySend(
       } catch (err) {
         // Doesn't exist yet, so write it
         mkdirp.sync(baseCAPath);
-        // @ts-expect-error -- TSCONVERSION
-        fs.writeFileSync(fullCAPath, caCerts);
+        // TODO: Should mock cacerts module for testing. This is literally
+        // coercing a function to string in tests due to lack of val-loader.
+        fs.writeFileSync(fullCAPath, String(caCerts));
         console.log('[net] Set CA to', fullCAPath);
       }
 
@@ -893,7 +895,7 @@ export async function sendWithSettings(
   };
 
   try {
-    renderResult = await getRenderedRequestAndContext(newRequest, environmentId);
+    renderResult = await getRenderedRequestAndContext({ request: newRequest, environmentId });
   } catch (err) {
     throw new Error(`Failed to render request: ${requestId}`);
   }
@@ -944,10 +946,12 @@ export async function send(
 
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
   const renderResult = await getRenderedRequestAndContext(
-    request,
-    environmentId || null,
-    RENDER_PURPOSE_SEND,
-    extraInfo,
+    {
+      request,
+      environmentId,
+      purpose: RENDER_PURPOSE_SEND,
+      extraInfo,
+    },
   );
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
@@ -1002,7 +1006,7 @@ async function _applyRequestPluginHooks(
   for (const { plugin, hook } of await plugins.getRequestHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
+      ...pluginContexts.data.init(renderedContext.getSpaceId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.request.init(newRenderedRequest, renderedContext) as Record<string, any>),
       ...(pluginContexts.network.init(renderedContext.getEnvironmentId()) as Record<string, any>),
@@ -1030,7 +1034,7 @@ async function _applyResponsePluginHooks(
   for (const { plugin, hook } of await plugins.getResponseHooks()) {
     const context = {
       ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-      ...pluginContexts.data.init(),
+      ...pluginContexts.data.init(renderedContext.getSpaceId()),
       ...(pluginContexts.store.init(plugin) as Record<string, any>),
       ...(pluginContexts.response.init(newResponse) as Record<string, any>),
       ...(pluginContexts.request.init(newRequest, renderedContext, true) as Record<string, any>),

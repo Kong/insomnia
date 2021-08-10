@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
-import classnames from 'classnames';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import classnames from 'classnames';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../../common/constants';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import PasswordEditor from '../password-editor';
-import Button from '../../base/button';
-import type { Settings } from '../../../../models/settings';
-import type { Request, RequestAuthentication } from '../../../../models/request';
-import HelpTooltip from '../../help-tooltip';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
+import type { Request, RequestAuthentication } from '../../../../models/request';
+import type { Settings } from '../../../../models/settings';
+import Button from '../../base/button';
+import OneLineEditor from '../../codemirror/one-line-editor';
+import HelpTooltip from '../../help-tooltip';
+import PasswordEditor from '../password-editor';
 
 interface Props {
   handleRender: HandleRender;
@@ -70,7 +71,8 @@ class BasicAuth extends PureComponent<Props> {
                 <div
                   className={classnames('form-control form-control--underlined no-margin', {
                     'form-control--inactive': authentication.disabled,
-                  })}>
+                  })}
+                >
                   <OneLineEditor
                     type="text"
                     id="username"
@@ -117,7 +119,8 @@ class BasicAuth extends PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (
@@ -143,7 +146,8 @@ class BasicAuth extends PureComponent<Props> {
                     id="use-iso-8859-1"
                     onClick={this._handleUseISO88591}
                     value={authentication.useISO88591}
-                    title={authentication.useISO88591 ? 'Enable item' : 'Disable item'}>
+                    title={authentication.useISO88591 ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.useISO88591 ? (
                       <i className="fa fa-check-square-o" />
                     ) : (

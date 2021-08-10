@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ListGroupItem } from './list-group-item';
+
 import { ListGroup } from './list-group';
+import { ListGroupItem } from './list-group-item';
 import { UnitTestItem } from './unit-test-item';
 import { UnitTestResultItem } from './unit-test-result-item';
 
@@ -12,7 +13,8 @@ export const _default = () => (
   <div
     style={{
       width: '350px',
-    }}>
+    }}
+  >
     <ListGroup>
       <ListGroupItem>List</ListGroupItem>
       <ListGroupItem>of</ListGroupItem>
@@ -25,7 +27,8 @@ export const _bordered = () => (
   <div
     style={{
       width: '350px',
-    }}>
+    }}
+  >
     <ListGroup bordered>
       <ListGroupItem>Bordered</ListGroupItem>
       <ListGroupItem>list</ListGroupItem>
@@ -39,7 +42,8 @@ export const _indented = () => (
   <div
     style={{
       width: '350px',
-    }}>
+    }}
+  >
     <ListGroup bordered>
       <ListGroupItem indentLevel={0}>Indent 0</ListGroupItem>
       <ListGroupItem indentLevel={1}>Indent 1</ListGroupItem>
@@ -60,7 +64,8 @@ export const _selectable = () => {
     <div
       style={{
         width: '350px',
-      }}>
+      }}
+    >
       <ListGroup>
         <ListGroupItem selectable isSelected={selected === 0} onClick={() => setSelected(0)}>
           Selectable
@@ -243,7 +248,8 @@ export const _unitTests = () => (
   <div
     style={{
       width: '100%',
-    }}>
+    }}
+  >
     <ListGroup>
       {unitTests.map(test => (
         <UnitTestItem
@@ -252,13 +258,15 @@ export const _unitTests = () => (
           key={test._id}
           onSetActiveRequest={_handleRequestSelected}
           // @ts-expect-error -- TSCONVERSION
-          selectableRequests={unitTestRequests}>
+          selectableRequests={unitTestRequests}
+        >
           <div
             style={{
               padding: '10px 15px',
               border: '1px solid #eee',
               margin: '10px',
-            }}>
+            }}
+          >
             CodeMirror instance.
           </div>
         </UnitTestItem>
@@ -270,7 +278,8 @@ export const _unitTestResults = () => (
   <div
     style={{
       width: '350px',
-    }}>
+    }}
+  >
     <ListGroup>
       {unitTestResults.map(test => (
         <UnitTestResultItem item={test} key={test._id} />

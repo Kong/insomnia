@@ -1,10 +1,16 @@
-import type { BaseDriver } from '../store/drivers/base';
-import path from 'path';
 import clone from 'clone';
-import Store from '../store';
 import crypto from 'crypto';
+import path from 'path';
+
+import * as crypt from '../../account/crypt';
+import * as fetch from '../../account/fetch';
+import * as session from '../../account/session';
+import { chunkArray, generateId } from '../../common/misc';
+import { strings } from '../../common/strings';
+import { BaseModel } from '../../models';
+import Store from '../store';
+import type { BaseDriver } from '../store/drivers/base';
 import compress from '../store/hooks/compress';
-import * as paths from './paths';
 import type {
   Branch,
   DocumentKey,
@@ -18,6 +24,8 @@ import type {
   StatusCandidate,
   Team,
 } from '../types';
+import { normalizeProjectTeam, ProjectWithTeams } from './normalize-project-team';
+import * as paths from './paths';
 import {
   compareBranches,
   generateCandidateMap,
@@ -30,12 +38,6 @@ import {
   threeWayMerge,
   updateStateWithConflictResolutions,
 } from './util';
-import { chunkArray, generateId } from '../../common/misc';
-import * as crypt from '../../account/crypt';
-import * as session from '../../account/session';
-import * as fetch from '../../account/fetch';
-import { strings } from '../../common/strings';
-import { BaseModel } from '../../models';
 
 const EMPTY_HASH = crypto.createHash('sha1').digest('hex').replace(/./g, '0');
 
@@ -89,6 +91,10 @@ export class VCS {
     this._project = null;
   }
 
+  clearProject() {
+    this._project = null;
+  }
+
   async switchProject(rootDocumentId: string) {
     const project = await this._getProjectByRootDocument(rootDocumentId);
 
@@ -116,8 +122,12 @@ export class VCS {
     return this._allProjects();
   }
 
-  async remoteProjects(teamId?: string) {
+  async remoteProjects(teamId: string) {
     return this._queryProjects(teamId);
+  }
+
+  async remoteProjectsInAnyTeam() {
+    return this._queryProjects();
   }
 
   async blobFromLastSnapshot(key: string) {
@@ -1108,9 +1118,7 @@ export class VCS {
     return projectShareInstructions;
   }
 
-  async _queryProjects(
-    teamId?: string,
-  ): Promise<Project[]> {
+  async _queryProjects(teamId?: string) {
     const { projects } = await this._runGraphQL(
       `
         query ($teamId: ID) {
@@ -1118,6 +1126,10 @@ export class VCS {
             id
             name
             rootDocumentId
+            teams {
+              id
+              name
+            }
           }
         }
       `,
@@ -1126,7 +1138,8 @@ export class VCS {
       },
       'projects',
     );
-    return projects;
+
+    return (projects as ProjectWithTeams[]).map(normalizeProjectTeam);
   }
 
   async _queryProject(): Promise<Project | null> {

@@ -1,10 +1,11 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import React, { PureComponent } from 'react';
+
+import * as constants from '../../../common/constants';
+import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
 import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Dropdown from '../base/dropdown/dropdown';
-import * as constants from '../../../common/constants';
 import { showPrompt } from '../modals/index';
-import { METHOD_GRPC, AUTOBIND_CFG } from '../../../common/constants';
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
@@ -100,7 +101,8 @@ class MethodDropdown extends PureComponent<Props> {
             key={method}
             className={`http-method-${method}`}
             onClick={this._handleChange}
-            value={method}>
+            value={method}
+          >
             {method}
           </DropdownItem>
         ))}
@@ -116,7 +118,8 @@ class MethodDropdown extends PureComponent<Props> {
         <DropdownItem
           className="http-method-custom"
           onClick={this._handleSetCustomMethod}
-          value={method}>
+          value={method}
+        >
           Custom Method
         </DropdownItem>
       </Dropdown>

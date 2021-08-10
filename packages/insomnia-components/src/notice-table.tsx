@@ -1,8 +1,9 @@
 import React, { PureComponent } from 'react';
-import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
-import { Button } from './button';
 import styled from 'styled-components';
-import { SvgIcon, IconEnum } from './svg-icon';
+
+import { Button } from './button';
+import { IconEnum, SvgIcon } from './svg-icon';
+import { Table, TableBody, TableData, TableHead, TableHeader, TableRow } from './table';
 
 export interface Notice {
   type: 'warning' | 'error';
@@ -162,14 +163,16 @@ export class NoticeTable extends PureComponent<NoticeTableProps, State> {
                     style={{
                       minWidth: '3em',
                     }}
-                    align="center">
+                    align="center"
+                  >
                     Line
                   </TableHeader>
                   <TableHeader
                     style={{
                       width: '100%',
                     }}
-                    align="left">
+                    align="left"
+                  >
                     Message
                   </TableHeader>
                 </TableRow>

@@ -1,19 +1,20 @@
 // eslint-disable-next-line filenames/match-exported
-import React, { PureComponent } from 'react';
-import ReactDOM from 'react-dom';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
-import FileInputButton from '../base/file-input-button';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
-import PromptButton from '../base/prompt-button';
-import CodePromptModal from '../modals/code-prompt-modal';
-import Button from '../base/button';
-import OneLineEditor from '../codemirror/one-line-editor';
-import { showModal } from '../modals/index';
+import React, { PureComponent } from 'react';
+import { ConnectDragPreview, ConnectDragSource, ConnectDropTarget, DragSource, DropTarget } from 'react-dnd';
+import ReactDOM from 'react-dom';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
 import { describeByteSize } from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
+import Button from '../base/button';
+import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
+import FileInputButton from '../base/file-input-button';
+import PromptButton from '../base/prompt-button';
+import OneLineEditor from '../codemirror/one-line-editor';
+import CodePromptModal from '../modals/code-prompt-modal';
+import { showModal } from '../modals/index';
 
 interface Props {
   onChange: Function,
@@ -108,7 +109,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _sendChange(patch) {
     const pair = Object.assign({}, this.props.pair, patch);
-    this.props.onChange && this.props.onChange(pair);
+    this.props.onChange?.(pair);
   }
 
   _handleNameChange(name) {
@@ -124,7 +125,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
     const value = e.clipboardData.getData('text/plain');
 
-    if (value && value.includes('\n')) {
+    if (value?.includes('\n')) {
       e.preventDefault();
 
       // Insert the pasted text into the current selection.
@@ -284,7 +285,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           {
             'form-control--inactive': pair.disabled,
           },
-        )}>
+        )}
+      >
         <OneLineEditor
           ref={this._setDescriptionInputRef}
           // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
@@ -335,7 +337,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       return (
         <button
           className="btn btn--outlined btn--super-duper-compact wide ellipsis"
-          onClick={this._handleEditMultiline}>
+          onClick={this._handleEditMultiline}
+        >
           <i className="fa fa-pencil-square-o space-right" />
           {bytes > 0 ? describeByteSize(bytes, true) : 'Click to Edit'}
         </button>
@@ -393,7 +396,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
             value={{
               type: 'text',
               multiline: false,
-            }}>
+            }}
+          >
             Text
           </DropdownItem>
           {allowMultiline && (
@@ -402,7 +406,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               value={{
                 type: 'text',
                 multiline: true,
-              }}>
+              }}
+            >
               Text (Multi-line)
             </DropdownItem>
           )}
@@ -411,7 +416,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               onClick={this._handleTypeChange}
               value={{
                 type: 'file',
-              }}>
+              }}
+            >
               File
             </DropdownItem>
           )}
@@ -474,7 +480,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--underlined form-control--wide', {
               'form-control--inactive': pair.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               ref={ref => { this._nameInput = ref; }}
               placeholder={namePlaceholder || 'Name'}
@@ -496,7 +503,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--underlined form-control--wide', {
               'form-control--inactive': pair.disabled,
-            })}>
+            })}
+          >
             {this.renderPairValue()}
           </div>
           {this.renderPairDescription()}
@@ -507,7 +515,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
             <Button
               onClick={this._handleDisableChange}
               value={!pair.disabled}
-              title={pair.disabled ? 'Enable item' : 'Disable item'}>
+              title={pair.disabled ? 'Enable item' : 'Disable item'}
+            >
               {pair.disabled ? (
                 <i className="fa fa-square-o" />
               ) : (
@@ -528,7 +537,8 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
                 confirmMessage=""
                 addIcon
                 onClick={this._handleDelete}
-                title="Delete item">
+                title="Delete item"
+              >
                 <i className="fa fa-trash-o" />
               </PromptButton>
             ) : (

@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import React, { FunctionComponent, ReactNode } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
 
 export interface SidebarPanelProps {
   children: ReactNode;
@@ -23,7 +23,8 @@ export const SidebarPanel: FunctionComponent<SidebarPanelProps> = ({ childrenVis
       duration: 0.2,
       ease: 'easeInOut',
       delay: 0,
-    }}>
+    }}
+  >
     {children}
   </StyledPanel>
 );

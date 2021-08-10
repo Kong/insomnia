@@ -1,13 +1,14 @@
-import React, { PureComponent } from 'react';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { Button } from 'insomnia-components';
+import React, { PureComponent } from 'react';
+
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { strings } from '../../../common/strings';
+import type { Workspace } from '../../../models/workspace';
+import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
-import type { Workspace } from '../../../models/workspace';
-import { VCS } from '../../../sync/vcs/vcs';
-import { Button } from 'insomnia-components';
-import { strings } from '../../../common/strings';
 
 interface Props {
   workspace: Workspace;
@@ -71,12 +72,12 @@ class SyncDeleteModal extends PureComponent<Props, State> {
     this.setState(INITIAL_STATE);
     // Focus input when modal shows
     setTimeout(() => {
-      this.input && this.input.focus();
+      this.input?.focus();
     }, 100);
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   render() {
@@ -86,7 +87,8 @@ class SyncDeleteModal extends PureComponent<Props, State> {
       <strong
         style={{
           whiteSpace: 'pre-wrap',
-        }}>
+        }}
+      >
         {workspace.name}
       </strong>
     );

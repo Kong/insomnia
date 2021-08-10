@@ -1,14 +1,15 @@
+import { Dropdown, DropdownDivider, DropdownItem, Tooltip } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, useMemo } from 'react';
-import { Dropdown, DropdownItem, DropdownDivider, Tooltip } from 'insomnia-components';
-import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
 import styled from 'styled-components';
-import GrpcMethodTag from '../../tags/grpc-method-tag';
+
+import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
 import {
   getShortGrpcPath,
   groupGrpcMethodsByPackage,
   NO_PACKAGE_KEY,
 } from '../../../../common/grpc-paths';
-import type { GrpcMethodInfo } from '../../../../common/grpc-paths';
+import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
+import GrpcMethodTag from '../../tags/grpc-method-tag';
 import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
 
 interface Props {
@@ -31,13 +32,14 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
   handleChangeProtoFile,
 }) => {
   const dropdownButton = useMemo(
-    () => () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
+    () => <GrpcMethodDropdownButton fullPath={selectedMethod?.path} />,
     // eslint-disable-next-line react-hooks/exhaustive-deps -- TSCONVERSION this error appears to be correct, actually
     [selectedMethod?.path],
   );
   const groupedByPkg = useMemo(() => groupGrpcMethodsByPackage(methods), [methods]);
   return (
     <Dropdown className="tall wide" renderButton={dropdownButton}>
+      {/* @ts-expect-error this appears to be a genuine error since value is not defined the argument passed will not be a string (as these types specify), but rather an event */}
       <DropdownItem onClick={handleChangeProtoFile}>
         <em>Click to change proto file</em>
       </DropdownItem>
@@ -59,7 +61,8 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
               value={fullPath}
               disabled={disabled}
               selected={fullPath === selectedMethod?.path}
-              icon={<GrpcMethodTag methodType={type} />}>
+              icon={<GrpcMethodTag methodType={type} />}
+            >
               <Tooltip message={fullPath} position="right" delay={500}>
                 {getShortGrpcPath(segments, fullPath)}
               </Tooltip>

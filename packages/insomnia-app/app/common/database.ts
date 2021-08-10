@@ -1,18 +1,19 @@
 /* eslint-disable prefer-rest-params -- don't want to change ...arguments usage for these sensitive functions without more testing */
-import type { BaseModel } from '../models/index';
-import * as models from '../models/index';
 import electron from 'electron';
 import NeDB from 'nedb';
 import fsPath from 'path';
-import { DB_PERSIST_INTERVAL } from './constants';
 import * as uuid from 'uuid';
-import { generateId } from './misc';
-import { getDataDirectory } from './electron-helpers';
+
 import { mustGetModel } from '../models';
-import type { Workspace } from '../models/workspace';
-import { GitRepository } from '../models/git-repository';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
+import { GitRepository } from '../models/git-repository';
+import type { BaseModel } from '../models/index';
+import * as models from '../models/index';
+import type { Workspace } from '../models/workspace';
+import { DB_PERSIST_INTERVAL } from './constants';
+import { getDataDirectory } from './electron-helpers';
+import { generateId } from './misc';
 
 export interface Query {
   _id?: string | SpecificQuery;
@@ -548,7 +549,7 @@ export const database = {
 
     let docsToReturn: T[] = doc ? [doc] : [];
 
-    async function next(docs: T[]) {
+    async function next(docs: T[]): Promise<T[]> {
       const foundDocs: T[] = [];
 
       for (const d of docs) {

@@ -1,23 +1,24 @@
-import React, { PureComponent } from 'react';
-import electron, { SaveDialogOptions } from 'electron';
-import mimes from 'mime-types';
-import fs from 'fs';
-import moment from 'moment';
-import path from 'path';
-import { PassThrough } from 'stream';
-import multiparty from 'multiparty';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import ResponseViewer from './response-viewer';
+import electron, { SaveDialogOptions } from 'electron';
+import fs from 'fs';
+import mimes from 'mime-types';
+import moment from 'moment';
+import multiparty from 'multiparty';
+import path from 'path';
+import React, { PureComponent } from 'react';
+import { PassThrough } from 'stream';
+
 import {
+  AUTOBIND_CFG,
   getContentTypeFromHeaders,
   PREVIEW_MODE_FRIENDLY,
-  AUTOBIND_CFG,
 } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
-import WrapperModal from '../modals/wrapper-modal';
 import { showModal } from '../modals/index';
+import WrapperModal from '../modals/wrapper-modal';
 import ResponseHeadersViewer from './response-headers-viewer';
+import ResponseViewer from './response-viewer';
 
 interface Part {
   name: string;
@@ -235,7 +236,8 @@ class ResponseMultipart extends PureComponent<Props, State> {
           className="pad monospace"
           style={{
             fontSize: editorFontSize,
-          }}>
+          }}
+        >
           Failed to parse multipart response: {error}
         </div>
       );
@@ -248,13 +250,15 @@ class ResponseMultipart extends PureComponent<Props, State> {
         style={{
           display: 'grid',
           gridTemplateRows: 'auto minmax(0, 1fr)',
-        }}>
+        }}
+      >
         <div
           className="pad-bottom-sm"
           style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1fr) auto',
-          }}>
+          }}
+        >
           <div>
             <Dropdown wide>
               <DropdownButton className="btn btn--clicky">
@@ -262,7 +266,8 @@ class ResponseMultipart extends PureComponent<Props, State> {
                   style={{
                     minWidth: '200px',
                     display: 'inline-block',
-                  }}>
+                  }}
+                >
                   {selectedPart ? this._describePart(selectedPart) : 'Unknown'}
                 </div>
                 <i className="fa fa-caret-down fa--skinny space-left" />

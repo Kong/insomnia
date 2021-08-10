@@ -1,8 +1,9 @@
-import React, { FunctionComponent, useCallback } from 'react';
 import { Button } from 'insomnia-components';
-import ProtoListItem from './proto-list-item';
+import React, { FunctionComponent, useCallback } from 'react';
+
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import type { DeleteProtoDirectoryHandler } from './proto-file-list';
+import ProtoListItem from './proto-list-item';
 
 interface Props {
   dir: ProtoDirectory;
@@ -30,7 +31,8 @@ const ProtoDirectoryListItem: FunctionComponent<Props> = ({ dir, indentLevel, ha
             variant="text"
             title="Delete Directory"
             onClick={handleDeleteCallback}
-            bg="danger">
+            bg="danger"
+          >
             <i className="fa fa-trash-o" />
           </Button>
         </div>

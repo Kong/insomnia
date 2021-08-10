@@ -1,27 +1,28 @@
-import React, { PureComponent } from 'react';
-import type { ProtoFile } from '../../../models/proto-file';
-import ModalHeader from '../base/modal-header';
-import ModalBody from '../base/modal-body';
-import ModalFooter from '../base/modal-footer';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { AUTOBIND_CFG } from '../../../common/constants';
-import type { Workspace } from '../../../models/workspace';
-import Modal from '../base/modal';
-import ProtoFileList from '../proto-file/proto-file-list';
 import { AsyncButton } from 'insomnia-components';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+
+import { AUTOBIND_CFG } from '../../../common/constants';
+import { GrpcRequestEventEnum } from '../../../common/grpc-events';
+import type { ProtoDirectory } from '../../../models/proto-directory';
+import type { ProtoFile } from '../../../models/proto-file';
+import * as protoManager from '../../../network/grpc/proto-manager';
 import type { GrpcDispatch } from '../../context/grpc';
 import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
-import { GrpcRequestEventEnum } from '../../../common/grpc-events';
-import { connect } from 'react-redux';
-import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
+import { RootState } from '../../redux/modules';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
-import type { ProtoDirectory } from '../../../models/proto-directory';
-import * as protoManager from '../../../network/grpc/proto-manager';
+import { selectActiveWorkspace } from '../../redux/selectors';
+import Modal from '../base/modal';
+import ModalBody from '../base/modal-body';
+import ModalFooter from '../base/modal-footer';
+import ModalHeader from '../base/modal-header';
+import ProtoFileList from '../proto-file/proto-file-list';
 
-interface Props {
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   grpcDispatch: GrpcDispatch;
-  workspace: Workspace;
-  protoDirectories: ExpandedProtoDirectory[];
 }
 
 interface State {
@@ -59,7 +60,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
     this.setState({
       selectedProtoFileId: options.preselectProtoFileId || '',
     });
-    this.modal && this.modal.show();
+    this.modal?.show();
   }
 
   async _handleSave(e: React.SyntheticEvent<HTMLButtonElement>) {
@@ -72,7 +73,7 @@ class ProtoFilesModal extends PureComponent<Props, State> {
   }
 
   hide() {
-    this.modal && this.modal.hide();
+    this.modal?.hide();
   }
 
   _handleSelect(id: string) {
@@ -104,7 +105,13 @@ class ProtoFilesModal extends PureComponent<Props, State> {
   }
 
   _handleAdd() {
-    return protoManager.addFile(this.props.workspace._id, createdId => {
+    const { workspace } = this.props;
+
+    if (!workspace) {
+      return;
+    }
+
+    return protoManager.addFile(workspace._id, createdId => {
       this.setState({
         selectedProtoFileId: createdId,
       });
@@ -121,7 +128,13 @@ class ProtoFilesModal extends PureComponent<Props, State> {
   }
 
   _handleAddDirectory() {
-    return protoManager.addDirectory(this.props.workspace._id);
+    const { workspace } = this.props;
+
+    if (!workspace) {
+      return;
+    }
+
+    return protoManager.addDirectory(workspace._id);
   }
 
   _handleRename(protoFile: ProtoFile, name: string) {
@@ -141,7 +154,8 @@ class ProtoFilesModal extends PureComponent<Props, State> {
               <AsyncButton
                 className="margin-right-sm"
                 onClick={this._handleAddDirectory}
-                loadingNode={spinner}>
+                loadingNode={spinner}
+              >
                 Add Directory
               </AsyncButton>
               <AsyncButton onClick={this._handleAdd} loadingNode={spinner}>
@@ -171,13 +185,10 @@ class ProtoFilesModal extends PureComponent<Props, State> {
   }
 }
 
-const mapStateToProps = (state, props) => {
-  // @ts-expect-error -- TSCONVERSION
-  const protoDirectories = selectExpandedActiveProtoDirectories(state, props);
-  return {
-    protoDirectories,
-  };
-};
+const mapStateToProps = (state: RootState) => ({
+  protoDirectories: selectExpandedActiveProtoDirectories(state),
+  workspace: selectActiveWorkspace(state),
+});
 
 export default connect(mapStateToProps, null, null, {
   forwardRef: true,
