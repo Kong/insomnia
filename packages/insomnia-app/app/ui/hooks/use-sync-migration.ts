@@ -1,11 +1,10 @@
-import { useEffect } from 'react';
+import { useAsync } from 'react-use';
 
 import { onLoginLogout } from '../../account/session';
 import { getDataDirectory } from '../../common/electron-helpers';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { migrateCollectionsIntoRemoteSpace } from '../../sync/vcs/migrate-collections';
 import { VCS } from '../../sync/vcs/vcs';
-import { invokeAsyncSynchronously } from './effect-helpers';
 
 const check = async () => {
   const driver = FileSystemDriver.create(getDataDirectory());
@@ -21,5 +20,5 @@ onLoginLogout(isLoggedIn => {
 
 export const useSyncMigration = () => {
   // Check once on mount
-  useEffect(() =>  invokeAsyncSynchronously(check), []);
+  useAsync(check, []);
 };
