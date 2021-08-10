@@ -1,6 +1,7 @@
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import { useAsync } from 'react-use';
 
 import { database } from '../../common/database';
 import { initializeSpaceFromTeam } from '../../sync/vcs/initialize-model-from';
@@ -25,9 +26,7 @@ export const useRemoteSpaces = (vcs?: VCS) => {
   }, [vcs, setLoading, isLoggedIn]);
 
   // If the refresh callback changes, refresh
-  useEffect(() => {
-    (async () => { await refresh(); })();
-  }, [refresh]);
+  useAsync(refresh, [refresh]);
 
   return { loading, refresh };
 };
