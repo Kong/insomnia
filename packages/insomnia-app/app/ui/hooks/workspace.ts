@@ -107,7 +107,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   }, [vcs, refresh, remoteSpaces, dispatch]);
 
   // If the refresh callback changes, refresh
-  useAsync(refresh, []);
+  useAsync(refresh, [refresh]);
 
   return {
     loading,
