@@ -122,6 +122,7 @@ import {
   selectWorkspacesForActiveSpace,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
+import { AppHooks } from './app-hooks';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -1242,10 +1243,7 @@ class App extends PureComponent<AppProps, State> {
     });
 
     if (!vcs) {
-      const directory = path.join(getDataDirectory(), 'version-control');
-      const driver = new FileSystemDriver({
-        directory,
-      });
+      const driver = FileSystemDriver.create(getDataDirectory());
 
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
@@ -1516,6 +1514,8 @@ class App extends PureComponent<AppProps, State> {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
+          <AppHooks />
+
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
               <Wrapper
