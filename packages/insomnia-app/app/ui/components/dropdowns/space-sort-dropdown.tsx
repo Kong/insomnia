@@ -32,7 +32,7 @@ export const SpaceSortDropdown: FC<SpaceSortDropdownProps> = ({ onSelect, value 
           value={order}
           onClick={onSelect}
           key={order}
-          right={value == order && <Checkmark icon="checkmark" />}
+          right={value === order && <Checkmark icon="checkmark" />}
         >
           {spaceSortOrderName[order]}
         </DropdownItem>
