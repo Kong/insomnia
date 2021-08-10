@@ -23,8 +23,7 @@ export const useThemes = () => {
   useAsync(async () => {
     const pluginThemes = await getThemes();
     setThemes(pluginThemes.map(({ theme }) => theme));
-  // Reload themes if pluginConfig changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Reload themes if pluginConfig changes
   }, [pluginConfig]);
 
   // Check if the theme is active
