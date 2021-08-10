@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { useInterval } from 'react-use';
 
+import { onLoginLogout } from '../../account/session';
 import { getDataDirectory } from '../../common/electron-helpers';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { migrateCollectionsIntoRemoteSpace } from '../../sync/vcs/migrate-collections';
@@ -12,12 +12,14 @@ const check = async () => {
   await migrateCollectionsIntoRemoteSpace(new VCS(driver));
 };
 
-const INTERVAL = 1000 * 60 * 30; // 30 minutes
+// Check on login / logout
+onLoginLogout(isLoggedIn => {
+  if (isLoggedIn) {
+    check();
+  }
+});
 
 export const useSyncMigration = () => {
   // Check once on mount
-  useEffect(() => invokeAsyncSynchronously(check), []);
-
-  // Setup check on interval
-  useInterval(check, INTERVAL);
+  useEffect(() =>  invokeAsyncSynchronously(check), []);
 };
