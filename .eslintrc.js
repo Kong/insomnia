@@ -112,7 +112,10 @@ module.exports = {
     'react/no-array-index-key': 'warn',
     'react/self-closing-comp': 'error',
 
-    'react-hooks/exhaustive-deps': 'error',
+    'react-hooks/exhaustive-deps': ['error', {
+      // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+      'additionalHooks': '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+    }],
     'react-hooks/rules-of-hooks': 'error',
 
     '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],

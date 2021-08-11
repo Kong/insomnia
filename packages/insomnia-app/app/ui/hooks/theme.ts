@@ -1,5 +1,6 @@
-import { ChangeEvent, useCallback, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useAsync } from 'react-use';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import * as models from '../../models';
@@ -19,13 +20,10 @@ export const useThemes = () => {
 
   const [themes, setThemes] = useState<PluginTheme[]>([]);
 
-  // Reload themes if pluginConfig changes
-  useEffect(() => {
-    const func = async () => {
-      const pluginThemes = await getThemes();
-      setThemes(pluginThemes.map(({ theme }) => theme));
-    };
-    func();
+  useAsync(async () => {
+    const pluginThemes = await getThemes();
+    setThemes(pluginThemes.map(({ theme }) => theme));
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Reload themes if pluginConfig changes
   }, [pluginConfig]);
 
   // Check if the theme is active
