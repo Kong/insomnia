@@ -119,14 +119,14 @@ export enum SegmentEvent {
   documentCreate = 'Document Created',
   requestCreate = 'Request Created',
   requestExecute = 'Request Executed',
+  spaceLocalCreate = 'Local Space Created',
+  spaceLocalDelete = 'Local Space Deleted',
   testSuiteCreate = 'Test Suite Created',
   testSuiteDelete = 'Test Suite Deleted',
   unitTestCreate = 'Unit Test Created',
-  unitTestRunAll = 'Ran All Unit Tests',
-  unitTestRun = 'Ran Individual Unit Test',
   unitTestDelete = 'Unit Test Deleted',
-  spaceLocalCreate = 'Local Space Created',
-  spaceLocalDelete = 'Local Space Deleted',
+  unitTestRun = 'Ran Individual Unit Test',
+  unitTestRunAll = 'Ran All Unit Tests',
 }
 
 export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
