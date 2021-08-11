@@ -419,13 +419,13 @@ export async function _actuallySend(
       }
 
       // SSL Validation
-      if (settings.validateSSL) {
-        addTimelineText('Enable SSL validation');
-      } else {
-        setOpt(Curl.option.SSL_VERIFYHOST, 0);
-        setOpt(Curl.option.SSL_VERIFYPEER, 0);
-        addTimelineText('Disable SSL validation');
-      }
+      // if (settings.validateSSL) {
+      //   addTimelineText('Enable SSL validation');
+      // } else {
+      setOpt(Curl.option.SSL_VERIFYHOST, 0);
+      setOpt(Curl.option.SSL_VERIFYPEER, 0);
+      addTimelineText('Disable SSL validation');
+      // }
 
       // Setup CA Root Certificates
       const baseCAPath = getTempDir();
@@ -904,7 +904,10 @@ export async function sendWithSettings(
     renderResult.request,
     renderResult.context,
     workspace,
-    settings,
+    {
+      ...settings,
+      validateSSL: settings.validateAuthSSL,
+    },
     environment,
   );
 }

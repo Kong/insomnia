@@ -2,6 +2,8 @@ import electron from 'electron';
 import querystring from 'querystring';
 import * as uuid from 'uuid';
 
+import * as models from '../../models/index';
+
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 let authWindowSessionId;
 
@@ -58,8 +60,22 @@ export function authorizeUserInWindow(
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/,
 ) {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>(async (resolve, reject) => {
     let finalUrl: string | null = null;
+
+    // Fetch user setting to determine whether to validate SSL certificates during auth
+    const {
+      validateAuthSSL,
+    } = await models.settings.getOrCreate();
+
+    // Create a child window
+    const child = new electron.remote.BrowserWindow({
+      webPreferences: {
+        nodeIntegration: false,
+        partition: authWindowSessionId,
+      },
+      show: false,
+    });
 
     function _parseUrl(currentUrl: string, source: string) {
       if (currentUrl.match(urlSuccessRegex)) {
@@ -84,14 +100,6 @@ export function authorizeUserInWindow(
       }
     }
 
-    // Create a child window
-    const child = new electron.remote.BrowserWindow({
-      webPreferences: {
-        nodeIntegration: false,
-        partition: authWindowSessionId,
-      },
-      show: false,
-    });
     // Finish on close
     child.on('close', () => {
       if (finalUrl) {
@@ -118,8 +126,35 @@ export function authorizeUserInWindow(
       // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
       _parseUrl(url, 'did-fail-load');
     });
+    child.webContents.on('certificate-error', (event, _url, err, _certificate, callback) => {
+      // Listen for certificate-error to be able to respect user settings to determine whether to
+      // validate SSL certificates during authentication.
+      if (validateAuthSSL) {
+        // Log error to console if certificate failed validation and user is not ignoring validation
+        // errors.
+        console.error(`[oauth2] unable to validate certificate during authorization: ${err}`);
+        // Close child window
+        child.close();
+        // Reject promise
+        reject(new Error(err));
+      } else {
+        // Allow auth page to load
+        event.preventDefault();
+      }
+
+      callback(!validateAuthSSL);
+    });
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
-    child.loadURL(url);
+
+    try {
+      await child.loadURL(url);
+    } catch (e) {
+      // Reject with error to show result in OAuth2 tab
+      reject(e);
+      // Need to close child window here since an exception in loadURL precludes normal call in
+      // _parseUrl
+      child.close();
+    }
   });
 }
