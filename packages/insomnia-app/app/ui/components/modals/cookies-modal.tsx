@@ -13,11 +13,10 @@ import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
 import ModalHeader from '../base/modal-header';
-import CookieList, { CookieListProps } from '../cookie-list';
-import { showModifyCookieModal } from './cookie-modify-modal';
+import CookieList from '../cookie-list';
+import { showCookieModifyModal } from './cookie-modify-modal';
 
 interface Props extends ModalProps {
-  handleShowModifyCookieModal: CookieListProps['handleShowModifyCookieModal'];
   handleRender: HandleRender;
   cookieJar: CookieJar;
   workspace: Workspace;
@@ -59,7 +58,7 @@ class CookiesModal extends PureComponent<Props, State> {
       key: '',
       value: '',
       domain: filter || '',
-      expires: null,
+      expires: '',
       path: '',
       secure: false,
       httpOnly: false,
@@ -69,7 +68,7 @@ class CookiesModal extends PureComponent<Props, State> {
     const { cookies } = cookieJar;
     cookieJar.cookies = [newCookie, ...cookies];
     await this._saveChanges();
-    showModifyCookieModal(newCookie);
+    showCookieModifyModal(newCookie);
   }
 
   async _handleDeleteAllCookies() {
@@ -170,7 +169,7 @@ class CookiesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { handleShowModifyCookieModal, handleRender, cookieJar } = this.props;
+    const { handleRender, cookieJar } = this.props;
     const { filter } = this.state;
 
     const cookies = this._getVisibleCookies();
@@ -198,7 +197,6 @@ class CookiesModal extends PureComponent<Props, State> {
               <div className="cookie-list__list border-tops pad">
                 <CookieList
                   cookies={cookies}
-                  handleShowModifyCookieModal={handleShowModifyCookieModal}
                   handleRender={handleRender}
                   handleDeleteAll={this._handleDeleteAllCookies}
                   handleCookieAdd={this._handleCookieAdd}

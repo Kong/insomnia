@@ -29,7 +29,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "tough-cookie": "^2.3.3"
+    "tough-cookie": "^4.0.0"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }

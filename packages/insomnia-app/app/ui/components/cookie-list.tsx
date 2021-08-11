@@ -8,6 +8,7 @@ import { HandleRender } from '../../common/render';
 import type { Cookie } from '../../models/cookie-jar';
 import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
 import PromptButton from './base/prompt-button';
+import { showCookieModifyModal } from './modals/cookie-modify-modal';
 import RenderedText from './rendered-text';
 
 export interface CookieListProps {
@@ -16,7 +17,6 @@ export interface CookieListProps {
   handleDeleteAll: Function;
   cookies: Cookie[];
   newCookieDomainName: string;
-  handleShowModifyCookieModal: (cookie: Cookie) => void;
   handleRender: HandleRender;
 }
 
@@ -32,7 +32,6 @@ class CookieList extends PureComponent<CookieListProps> {
       handleCookieAdd,
       handleDeleteAll,
       handleRender,
-      handleShowModifyCookieModal,
     } = this.props;
     return (
       <div>
@@ -90,7 +89,7 @@ class CookieList extends PureComponent<CookieListProps> {
                   <td onClick={() => {}} className="text-right no-wrap">
                     <button
                       className="btn btn--super-compact btn--outlined"
-                      onClick={() => { handleShowModifyCookieModal(cookie); }}
+                      onClick={() => { showCookieModifyModal(cookie); }}
                       title="Edit cookie properties"
                     >
                       Edit

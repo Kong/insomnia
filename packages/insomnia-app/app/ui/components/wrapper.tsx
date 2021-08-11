@@ -20,7 +20,6 @@ import { importRaw } from '../../common/import';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import { initializeSpectral, isLintError } from '../../common/spectral';
 import type { ApiSpec } from '../../models/api-spec';
-import type { Cookie } from '../../models/cookie-jar';
 import * as models from '../../models/index';
 import {
   isRequest,
@@ -322,10 +321,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     showModal(CookiesModal, this.props.activeWorkspace);
   }
 
-  static _handleShowModifyCookieModal(cookie: Cookie) {
-    showModal(CookieModifyModal, cookie);
-  }
-
   _handleShowRequestSettingsModal() {
     showModal(RequestSettingsModal, { request: this.props.activeRequest });
   }
@@ -576,7 +571,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
               {/* TODO: Figure out why cookieJar is sometimes null */}
               {activeCookieJar ? <>
                 <CookiesModal
-                  handleShowModifyCookieModal={Wrapper._handleShowModifyCookieModal}
                   handleRender={handleRender}
                   ref={registerModal}
                   workspace={activeWorkspace}
@@ -588,7 +582,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                   nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
                   ref={registerModal}
                   cookieJar={activeCookieJar}
-                  workspace={activeWorkspace}
                   isVariableUncovered={isVariableUncovered}
                 />
               </> : null}

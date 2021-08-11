@@ -1,14 +1,15 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import clone from 'clone';
 import { cookieToString } from 'insomnia-cookies';
-import React, { Fragment, PureComponent } from 'react';
+import { update } from 'ramda';
+import React, { createRef, Fragment, FunctionComponent, PureComponent, useCallback, useState } from 'react';
 import * as toughCookie from 'tough-cookie';
+import { unreachable } from 'ts-assert-unreachable';
 
 import { AUTOBIND_CFG, KONG_INITIAL_COMMIT_TIMESTAMP, TOUGH_COOKIE_MAX_TIMESTAMP } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
-import type { Workspace } from '../../../models/workspace';
 import Modal, { ModalProps } from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
@@ -21,123 +22,50 @@ interface Props extends ModalProps {
   handleGetRenderContext: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
-  workspace: Workspace;
   cookieJar: CookieJar;
 }
 
-interface State {
-  cookie: Cookie | null;
-  rawValue: string;
+const capitalize = (input: string) => `${input.charAt(0).toUpperCase()}${input.slice(1)}`;
+
+const placeholders = {
+  key: 'foo',
+  value: 'bar',
+  domain: 'example.com',
+  path: '/',
+  expires: new Date(KONG_INITIAL_COMMIT_TIMESTAMP).toUTCString(),
+};
+
+const getCookieString = (cookie: Cookie) => {
+  try {
+    return cookieToString(cookie);
+  } catch (err) {
+    console.warn('Failed to parse cookie string', err);
+    return null;
+  }
+};
+
+interface CookieModifyModalInternalProps {
+  updateCookie: (cookie: Cookie) => void;
+  cookie: Cookie;
+
+  handleRender: HandleRender;
+  handleGetRenderContext: HandleGetRenderContext;
+  nunjucksPowerUserMode: boolean;
+  isVariableUncovered: boolean;
 }
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-export class CookieModifyModal extends PureComponent<Props, State> {
-  modal: Modal | null = null;
+export const CookieModifyModalInternal: FunctionComponent<CookieModifyModalInternalProps> = ({
+  cookie,
+  handleGetRenderContext,
+  handleRender,
+  isVariableUncovered,
+  nunjucksPowerUserMode,
+  updateCookie,
+}) => {
+  const [stateRawString, setStateRawString] = useState('');
 
-  state: State = {
-    cookie: null,
-    rawValue: '',
-  }
-
-  placeholders = {
-    key: 'foo',
-    value: 'bar',
-    domain: 'example.com',
-    path: '/',
-    expires: new Date(KONG_INITIAL_COMMIT_TIMESTAMP).toUTCString(),
-  };
-
-  _setModalRef(n: Modal) {
-    this.modal = n;
-  }
-
-  async show(cookie: Cookie) {
-    // Dunno why this is sent as an array
-    cookie = cookie[0] || cookie;
-    const { cookieJar } = this.props;
-    const oldCookie = cookieJar.cookies.find(c => c.id === cookie.id);
-
-    if (!oldCookie) {
-      // Cookie not found in jar
-      return;
-    }
-
-    this.setState({
-      cookie,
-    });
-    this.modal?.show();
-  }
-
-  hide() {
-    this.modal?.hide();
-  }
-
-  static async _saveChanges(cookieJar: CookieJar) {
-    await models.cookieJar.update(cookieJar);
-  }
-
-  _handleChangeRawValue(e: React.SyntheticEvent<HTMLInputElement>) {
-    const { cookie: oldCookie } = this.state;
-    const { value } = e.currentTarget;
-
-    if (!oldCookie) {
-      return;
-    }
-
-    try {
-      // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
-      // @ts-expect-error -- TSCONVERSION
-      const cookie: Cookie = toughCookie.Cookie.parse(value)?.toJSON();
-
-      // Make sure cookie has an id
-      cookie.id = oldCookie.id;
-      this._handleCookieUpdate(cookie);
-    } catch (err) {
-      console.warn(`Failed to parse cookie string "${value}"`, err);
-      return;
-    }
-  }
-
-  async _handleCookieUpdate(newCookie: Cookie) {
-    const oldCookie = this.state.cookie;
-
-    if (!oldCookie) {
-      // We don't have a cookie to edit
-      return;
-    }
-
-    const cookie = clone(newCookie);
-    // Sanitize expires field
-    const expires = new Date(cookie.expires || '').getTime();
-    if (isNaN(expires)) {
-      cookie.expires = null;
-    } else {
-      cookie.expires = expires;
-    }
-
-    // Clone so we don't modify the original
-    const cookieJar = clone(this.props.cookieJar);
-    const { cookies } = cookieJar;
-    const index = cookies.findIndex(c => c.id === cookie.id);
-
-    if (index < 0) {
-      console.warn(`Could not find cookie with id=${cookie.id} to edit`);
-      return;
-    }
-
-    cookieJar.cookies = [
-      ...cookies.slice(0, index),
-      cookie,
-      ...cookies.slice(index + 1),
-    ];
-    this.setState({ cookie });
-    await CookieModifyModal._saveChanges(cookieJar);
-    return cookie;
-  }
-
-  _handleChange(field: string, eventOrValue: string | React.ChangeEvent<HTMLInputElement>) {
-    const { cookie } = this.state;
-    let value;
+  const handleChange = useCallback((field: string) => (eventOrValue: string | React.ChangeEvent<HTMLInputElement>) => {
+    let value: string | boolean = '';
 
     if (typeof eventOrValue === 'string') {
       value = eventOrValue.trim();
@@ -148,7 +76,7 @@ export class CookieModifyModal extends PureComponent<Props, State> {
         value = eventOrValue.target.value.trim();
       }
     } else {
-      // Should never happen
+      unreachable(`change for field "${field}" has an unexpected value ${eventOrValue}`);
     }
 
     const newCookie = {
@@ -156,67 +84,32 @@ export class CookieModifyModal extends PureComponent<Props, State> {
       [field]: value,
     } as Cookie;
 
-    this._handleCookieUpdate(newCookie);
-  }
+    updateCookie(newCookie);
 
-  static _capitalize(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
-  _getRawCookieString() {
-    const { cookie } = this.state;
-
-    if (!cookie) {
-      return '';
+    const cookieString = getCookieString(newCookie);
+    if (cookieString !== null) {
+      setStateRawString(cookieString);
     }
+  }, [cookie, updateCookie]);
 
-    try {
-      return cookieToString(toughCookie.Cookie.fromJSON(JSON.stringify(cookie)));
-    } catch (err) {
-      console.warn('Failed to parse cookie string', err);
-      return '';
-    }
-  }
+  const renderField = useCallback((field: string, error: string | null = null) => (
+    <div className="form-control form-control--outlined">
+      <label>
+        {capitalize(field)} <span className="danger">{error}</span>
+        <OneLineEditor
+          placeholder={placeholders[field]}
+          render={handleRender}
+          getRenderContext={handleGetRenderContext}
+          nunjucksPowerUserMode={nunjucksPowerUserMode}
+          isVariableUncovered={isVariableUncovered}
+          defaultValue={cookie[field] ?? ''}
+          onChange={handleChange(field)}
+        />
+      </label>
+    </div>
+  ), [cookie, handleChange, handleGetRenderContext, handleRender, isVariableUncovered, nunjucksPowerUserMode]);
 
-  _renderInputField(field: string, error: string | null = null) {
-    const { cookie } = this.state;
-    const {
-      handleRender,
-      handleGetRenderContext,
-      nunjucksPowerUserMode,
-      isVariableUncovered,
-    } = this.props;
-
-    if (!cookie) {
-      return null;
-    }
-
-    const val = (cookie[field] || '').toString();
-    return (
-      <div className="form-control form-control--outlined">
-        <label>
-          {CookieModifyModal._capitalize(field)} <span className="danger">{error}</span>
-          <OneLineEditor
-            placeholder={this.placeholders[field]}
-            render={handleRender}
-            getRenderContext={handleGetRenderContext}
-            nunjucksPowerUserMode={nunjucksPowerUserMode}
-            isVariableUncovered={isVariableUncovered}
-            defaultValue={val || ''}
-            onChange={value => this._handleChange(field, value)}
-          />
-        </label>
-      </div>
-    );
-  }
-
-  validateExpires() {
-    const { cookie } = this.state;
-
-    if (!cookie) {
-      return null;
-    }
-
+  const validateExpires = useCallback(() => {
     if (cookie.expires === null) {
       return null;
     }
@@ -231,62 +124,174 @@ export class CookieModifyModal extends PureComponent<Props, State> {
     }
 
     return null;
+  }, [cookie]);
+
+  const updateRawValue = useCallback((event: React.SyntheticEvent<HTMLInputElement>) => {
+    const { value } = event.currentTarget;
+    setStateRawString(value);
+
+    // handle case where the user is intentionally clearing the input
+    if (value === '') {
+      console.log('clearing');
+      updateCookie({
+        domain: '',
+        expires: '',
+        httpOnly: false,
+        id: cookie.id,
+        key: '',
+        path: '',
+        secure: false,
+        value: '',
+      });
+      return;
+    }
+
+    try {
+      // NOTE: Perform toJSON so we have a plain JS object instead of Cookie instance
+      // @ts-expect-error -- TSCONVERSION need to update toughCookie to get Cookie type
+      const newCookie: Cookie | undefined = toughCookie.Cookie.parse(value)?.toJSON();
+      if (!newCookie) {
+        throw new Error();
+      }
+
+      updateCookie({
+        ...newCookie,
+        id: cookie.id, // make the new cookie has the same id as the current
+      });
+    } catch (err) {
+      console.warn(`Failed to parse cookie string "${value}"`, err);
+    }
+  }, [cookie, updateCookie, setStateRawString]);
+
+  console.log({
+    getRawCookieString: getCookieString(cookie),
+    stateRawString,
+    cookie,
+  });
+
+  return (
+    <Fragment>
+      <div className="pad">
+        <div className="form-row">
+          {renderField('key')}
+          {renderField('value')}
+        </div>
+        <div className="form-row">
+          {renderField('domain')}
+          {renderField('path')}
+        </div>
+        {renderField('expires', validateExpires())}
+      </div>
+
+      <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
+        {['secure', 'httpOnly'].map(field => (
+          <label key={field}>
+            {capitalize(field)}
+            <input
+              className="space-left"
+              type="checkbox"
+              checked={Boolean(cookie[field])}
+              onChange={handleChange(field)}
+            />
+          </label>
+        ))}
+      </div>
+
+      <div className="pad">
+        <div className="form-control form-control--outlined">
+          <label>
+            Raw Cookie String
+            <input
+              type="text"
+              onChange={updateRawValue}
+              value={stateRawString}
+            />
+          </label>
+        </div>
+      </div>
+    </Fragment>
+  );
+};
+
+interface CookieModifyModalState {
+  cookie: Cookie | null;
+}
+
+@autoBindMethodsForReact(AUTOBIND_CFG)
+export class CookieModifyModal extends PureComponent<Props, CookieModifyModalState> {
+  modal = createRef<Modal>();
+
+  state: CookieModifyModalState = {
+    cookie: null,
+  }
+
+  async show(cookie: Cookie) {
+    const { cookieJar } = this.props;
+    const oldCookie = cookieJar.cookies.find(({ id }) => id === cookie.id);
+
+    if (!oldCookie) {
+      // Cookie not found in jar
+      console.error(`cookie with the id "${cookie.id}" not found`);
+      return;
+    }
+
+    this.setState({ cookie });
+    this.modal.current?.show();
+  }
+
+  hide() {
+    this.setState({ cookie: null });
+    this.modal.current?.hide();
+  }
+
+  async updateCookie(cookie: Cookie) {
+    console.log('updateCookie', cookie);
+
+    // Sanitize expires field
+    const expires = new Date(cookie.expires || '').getTime();
+    if (isNaN(expires)) {
+      cookie.expires = null;
+    } else {
+      cookie.expires = expires;
+    }
+
+    // deep clone so we don't modify the original
+    const cookieJar = clone(this.props.cookieJar);
+    const index = cookieJar.cookies.findIndex(c => c.id === cookie.id);
+
+    if (index < 0) {
+      console.warn(`Could not find cookie with id=${cookie.id} to edit`);
+      return;
+    }
+
+    cookieJar.cookies = update(index, cookie, cookieJar.cookies);
+    this.setState({ cookie });
+    await models.cookieJar.update(cookieJar);
   }
 
   render() {
-    const { cookieJar } = this.props;
     const { cookie } = this.state;
-    const checkFields = ['secure', 'httpOnly'];
-
+    const {
+      handleGetRenderContext,
+      handleRender,
+      isVariableUncovered,
+      nunjucksPowerUserMode,
+    } = this.props;
     return (
-      <Modal ref={this._setModalRef} {...this.props}>
+      <Modal ref={this.modal} {...this.props}>
         <ModalHeader>Edit Cookie</ModalHeader>
-        <ModalBody className="cookie-modify">
-          {cookieJar && cookie && (
-            <Fragment>
-              <div className="pad">
-                <div className="form-row">
-                  {this._renderInputField('key')}
-                  {this._renderInputField('value')}
-                </div>
-                <div className="form-row">
-                  {this._renderInputField('domain')}
-                  {this._renderInputField('path')}
-                </div>
-                {this._renderInputField('expires', this.validateExpires())}
-              </div>
-              <div className="pad no-pad-top cookie-modify__checkboxes row-around txt-lg">
-                {checkFields.map(field => {
-                  const checked = !!cookie[field];
-                  return (
-                    <label key={field}>
-                      {CookieModifyModal._capitalize(field)}
-                      <input
-                        className="space-left"
-                        type="checkbox"
-                        name={field}
-                        defaultChecked={checked || false}
-                        onChange={e => this._handleChange(field, e)}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
 
-              <div className="pad">
-                <div className="form-control form-control--outlined">
-                  <label>
-                    Raw Cookie String
-                    <input
-                      type="text"
-                      onChange={this._handleChangeRawValue}
-                      value={this._getRawCookieString()}
-                    />
-                  </label>
-                </div>
-              </div>
-            </Fragment>
-          )}
+        <ModalBody className="cookie-modify">
+          {cookie ? (
+            <CookieModifyModalInternal
+              cookie={cookie}
+              handleGetRenderContext={handleGetRenderContext}
+              handleRender={handleRender}
+              isVariableUncovered={isVariableUncovered}
+              nunjucksPowerUserMode={nunjucksPowerUserMode}
+              updateCookie={this.updateCookie}
+            />
+          ) : null}
         </ModalBody>
         <ModalFooter>
           <button className="btn" onClick={this.hide}>
@@ -298,4 +303,4 @@ export class CookieModifyModal extends PureComponent<Props, State> {
   }
 }
 
-export const showModifyCookieModal = (cookie: Cookie) => showModal(CookieModifyModal, cookie);
+export const showCookieModifyModal = (cookie: Cookie) => showModal(CookieModifyModal, cookie);
