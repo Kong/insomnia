@@ -114,7 +114,22 @@ export async function getDeviceId() {
 
 let segmentClient: Analytics | null = null;
 
-export async function trackSegmentEvent(event: string, properties?: Record<string, any>) {
+export enum SegmentEvent {
+  collectionCreate = 'Collection Created',
+  documentCreate = 'Document Created',
+  requestCreate = 'Request Created',
+  requestExecute = 'Request Executed',
+  testSuiteCreate = 'Test Suite Created',
+  testSuiteDelete = 'Test Suite Deleted',
+  unitTestCreate = 'Unit Test Created',
+  unitTestRunAll = 'Ran All Unit Tests',
+  unitTestRun = 'Ran Individual Unit Test',
+  unitTestDelete = 'Unit Test Deleted',
+  spaceLocalCreate = 'Local Space Created',
+  spaceLocalDelete = 'Local Space Deleted',
+}
+
+export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {

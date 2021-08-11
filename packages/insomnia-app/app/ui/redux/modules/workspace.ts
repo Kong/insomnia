@@ -1,7 +1,7 @@
 import { Dispatch } from 'redux';
 import { RequireExactlyOne } from 'type-fest';
 
-import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
+import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
@@ -48,7 +48,7 @@ export const createWorkspace = ({ scope, onCreate }: {
     });
     const title = design ? 'Design Document' : 'Request Collection';
     const defaultValue = design ? 'my-spec.yaml' : 'My Collection';
-    const segmentEvent = design ? 'Document Created' : 'Collection Created';
+    const segmentEvent = design ? SegmentEvent.documentCreate: SegmentEvent.collectionCreate;
     showPrompt({
       title: `Create New ${title}`,
       submitName: 'Create',

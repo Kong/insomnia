@@ -11,7 +11,7 @@ import {
 import { generate, runTests, Test } from 'insomnia-testing';
 import React, { PureComponent, ReactNode } from 'react';
 
-import { trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { getSendRequestCallback } from '../../common/send-request';
@@ -145,7 +145,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
           name,
         });
         await this._handleSetActiveUnitTestSuite(unitTestSuite);
-        trackSegmentEvent('Test Suite Created');
+        trackSegmentEvent(SegmentEvent.testSuiteCreate);
       },
     });
   }
@@ -164,7 +164,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
           code: this.generateSendReqSnippet('', ''),
           name,
         });
-        trackSegmentEvent('Unit Test Created');
+        trackSegmentEvent(SegmentEvent.unitTestCreate);
       },
     });
   }
@@ -178,12 +178,12 @@ class WrapperUnitTest extends PureComponent<Props, State> {
   async _handleRunTests() {
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
-    trackSegmentEvent('Ran All Unit Tests');
+    trackSegmentEvent(SegmentEvent.unitTestRunAll);
   }
 
   async _handleRunTest(unitTest: UnitTest) {
     await this._runTests([unitTest]);
-    trackSegmentEvent('Ran Individual Unit Test');
+    trackSegmentEvent(SegmentEvent.unitTestRun);
   }
 
   async _handleDeleteTest(unitTest: UnitTest) {
@@ -197,7 +197,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTest.remove(unitTest);
-        trackSegmentEvent('Unit Test Deleted');
+        trackSegmentEvent(SegmentEvent.unitTestDelete);
       },
     });
   }
@@ -223,7 +223,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTestSuite.remove(unitTestSuite);
-        trackSegmentEvent('Test Suite Deleted');
+        trackSegmentEvent(SegmentEvent.testSuiteDelete);
       },
     });
   }

@@ -3,7 +3,7 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { BASE_SPACE_ID } from '../../../../models/space';
@@ -48,7 +48,7 @@ describe('space', () => {
       expect(spaces).toHaveLength(1);
       const space = spaces[0];
       expect(space.name).toBe(spaceName);
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Local Space Created');
+      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.spaceLocalCreate);
       expect(trackEvent).toHaveBeenCalledWith('Space', 'Create');
       expect(store.getActions()).toEqual([
         {
@@ -92,7 +92,7 @@ describe('space', () => {
       expect(spaces).toHaveLength(1);
       const space = spaces[0];
       expect(space).toBe(spaceTwo);
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Local Space Deleted');
+      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.spaceLocalDelete);
       expect(trackEvent).toHaveBeenCalledWith('Space', 'Delete');
       expect(store.getActions()).toEqual([
         {

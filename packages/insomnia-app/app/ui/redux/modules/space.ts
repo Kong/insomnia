@@ -1,4 +1,4 @@
-import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
+import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
@@ -21,7 +21,7 @@ export const createSpace = () => dispatch => {
       trackEvent('Space', 'Create');
       dispatch(setActiveSpace(space._id));
       dispatch(setActiveActivity(ACTIVITY_HOME));
-      trackSegmentEvent('Local Space Created');
+      trackSegmentEvent(SegmentEvent.spaceLocalCreate);
     },
   });
 };
@@ -40,7 +40,7 @@ export const removeSpace = (space: Space) => dispatch => {
       dispatch(setActiveSpace(BASE_SPACE_ID));
       // Show home in case not already on home
       dispatch(setActiveActivity(ACTIVITY_HOME));
-      trackSegmentEvent('Local Space Deleted');
+      trackSegmentEvent(SegmentEvent.spaceLocalDelete);
     },
   });
 };

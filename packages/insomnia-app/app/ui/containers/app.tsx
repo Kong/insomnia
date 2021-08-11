@@ -10,7 +10,7 @@ import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
 
-import { trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
@@ -277,7 +277,7 @@ class App extends PureComponent<AppProps, State> {
           });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
-          trackSegmentEvent('Request Created');
+          trackSegmentEvent(SegmentEvent.requestCreate);
         },
       ],
       [
@@ -419,7 +419,7 @@ class App extends PureComponent<AppProps, State> {
         this._handleSetActiveRequest(requestId);
 
         models.stats.incrementCreatedRequests();
-        trackSegmentEvent('Request Created');
+        trackSegmentEvent(SegmentEvent.requestCreate);
       },
     });
   }
@@ -767,7 +767,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent('Request Executed');
+    trackSegmentEvent(SegmentEvent.requestExecute);
     // Start loading
     handleStartLoading(requestId);
 
@@ -854,7 +854,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent('Request Executed');
+    trackSegmentEvent(SegmentEvent.requestExecute);
     handleStartLoading(requestId);
 
     try {
