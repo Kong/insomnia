@@ -196,7 +196,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
         </ModalBody>
         <ModalFooter>
           {!this._isGrpcSelected() && (
-            <div className="margin-left italic txt-sm tall">
+            <div className="margin-left italic txt-sm">
               * Tip: paste Curl command into URL afterwards to import it
             </div>
           )}

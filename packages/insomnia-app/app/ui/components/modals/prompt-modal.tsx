@@ -285,7 +285,7 @@ class PromptModal extends PureComponent<{}, State> {
           </form>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
+          <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this._handleSubmit} disabled={loading}>
             {loading && <i className="fa fa-refresh fa-spin" />} {submitName || 'Submit'}
           </button>
