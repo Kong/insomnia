@@ -60,12 +60,15 @@ module.exports = {
     'camelcase': ['error', { allow: ['__export_format', '__export_date', '__export_source'] }],
     'comma-dangle': ['error', 'always-multiline'],
     'comma-spacing': 'error',
+    'consistent-return': 'warn',
     'default-case': 'error',
     'default-case-last': 'error',
     'filenames/match-exported': ['error', 'kebab'],
     'indent': ['error', 2, { SwitchCase: 1 }],
     'eol-last': ['error', 'always'],
+    'eqeqeq': ['error', 'smart'],
     'arrow-parens': ['error', 'as-needed'],
+    'arrow-spacing': 'error',
     'keyword-spacing': 'off', // successor('@typescript-eslint/keyword-spacing')
     'no-async-promise-executor': 'off',
     'no-case-declarations': 'off',
@@ -81,6 +84,8 @@ module.exports = {
     'quotes': 'off',
     'semi': ['error', 'always'],
     'space-before-function-paren': ['error', { anonymous: 'never', named: 'never', asyncArrow: 'always' }],
+    'space-infix-ops': 'off', // successor('@typescript-eslint/space-infix-ops')
+    'space-unary-ops': 'error',
     'space-in-parens': 'error',
     'spaced-comment': ['error', 'always', {
       exceptions: ['/', '*', '-', '* '], // for ASCII art :)
@@ -129,6 +134,7 @@ module.exports = {
     '@typescript-eslint/no-redeclare': 'error',
     '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
     '@typescript-eslint/no-use-before-define': 'error',
+    '@typescript-eslint/space-infix-ops': 'error',
     '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
 
     'simple-import-sort/imports': 'error',
