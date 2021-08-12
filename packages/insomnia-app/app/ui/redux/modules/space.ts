@@ -1,6 +1,5 @@
-import {  trackEvent, trackSegmentEvent } from '../../../common/analytics';
+import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../common/constants';
-import { SegmentEvent } from '../../../common/segment-event';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { BASE_SPACE_ID, isRemoteSpace, Space } from '../../../models/space';

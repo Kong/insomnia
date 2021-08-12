@@ -3,10 +3,9 @@ import thunk from 'redux-thunk';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
+import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
 import { database } from '../../../../common/database';
-import { SegmentEvent } from '../../../../common/segment-event';
 import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
 import { CookieJar } from '../../../../models/cookie-jar';

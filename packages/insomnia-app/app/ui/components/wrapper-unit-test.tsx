@@ -11,10 +11,9 @@ import {
 import { generate, runTests, Test } from 'insomnia-testing';
 import React, { PureComponent, ReactNode } from 'react';
 
-import {  trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import { AUTOBIND_CFG } from '../../common/constants';
-import { SegmentEvent } from '../../common/segment-event';
 import { getSendRequestCallback } from '../../common/send-request';
 import * as models from '../../models';
 import { isRequest } from '../../models/request';

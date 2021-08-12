@@ -1,8 +1,7 @@
-import { trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
 import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
-import { SegmentEvent } from '../../common/segment-event';
 import * as models from '../../models';
 import { BASE_SPACE_ID } from '../../models/space';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
