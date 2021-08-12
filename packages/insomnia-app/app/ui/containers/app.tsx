@@ -10,7 +10,7 @@ import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
 
-import {  trackSegmentEvent } from '../../common/analytics';
+import {  SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
@@ -42,7 +42,6 @@ import {
 } from '../../common/misc';
 import * as render from '../../common/render';
 import { RenderContextAndKeys } from '../../common/render';
-import { SegmentEvent } from '../../common/segment-event';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
