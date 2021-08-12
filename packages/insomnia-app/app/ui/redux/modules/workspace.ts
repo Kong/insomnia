@@ -48,7 +48,7 @@ export const createWorkspace = ({ scope, onCreate }: {
     });
     const title = design ? 'Design Document' : 'Request Collection';
     const defaultValue = design ? 'my-spec.yaml' : 'My Collection';
-    const segmentEvent = design ? SegmentEvent.documentCreate: SegmentEvent.collectionCreate;
+    const segmentEvent = design ? SegmentEvent.documentCreate : SegmentEvent.collectionCreate;
     showPrompt({
       title: `Create New ${title}`,
       submitName: 'Create',
