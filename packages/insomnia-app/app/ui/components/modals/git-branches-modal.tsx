@@ -286,7 +286,7 @@ class GitBranchesModal extends PureComponent<Props, State> {
           )}
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             <i className="fa fa-code-fork" /> {currentBranch}
           </div>
           <div>
