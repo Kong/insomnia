@@ -19,6 +19,7 @@ import {
   isDevelopment,
 } from './constants';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './electron-helpers';
+import { SegmentEvent } from './segment-event';
 
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
@@ -114,7 +115,7 @@ export async function getDeviceId() {
 
 let segmentClient: Analytics | null = null;
 
-export async function trackSegmentEvent(event: string, properties?: Record<string, any>) {
+export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();
 
   if (!settings.enableAnalytics) {

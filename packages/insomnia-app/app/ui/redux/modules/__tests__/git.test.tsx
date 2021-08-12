@@ -8,8 +8,9 @@ import { mocked } from 'ts-jest/utils';
 
 import { globalBeforeEach } from '../../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
-import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
+import {  trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_SPEC } from '../../../../common/constants';
+import { SegmentEvent } from '../../../../common/segment-event';
 import * as models from '../../../../models';
 import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
 import { BASE_SPACE_ID } from '../../../../models/space';
@@ -110,7 +111,7 @@ describe('git', () => {
       const meta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(meta?.gitRepositoryId).toBe(repoSettings._id);
       // Ensure tracking events
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Document Created');
+      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.documentCreate);
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       // Ensure activity is activated
       expect(store.getActions()).toEqual([
