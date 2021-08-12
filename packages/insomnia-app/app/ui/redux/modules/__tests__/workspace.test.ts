@@ -6,6 +6,7 @@ import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, ACTIVITY_UNIT_TEST } from '../../../../common/constants';
 import { database } from '../../../../common/database';
+import { SegmentEvent } from '../../../../common/segment-event';
 import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
 import { CookieJar } from '../../../../models/cookie-jar';
@@ -61,7 +62,7 @@ describe('workspace', () => {
 
       const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, spaceId);
 
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Document Created');
+      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.documentCreate);
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
@@ -95,7 +96,7 @@ describe('workspace', () => {
 
       const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, spaceId);
 
-      expect(trackSegmentEvent).toHaveBeenCalledWith('Collection Created');
+      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.collectionCreate);
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {

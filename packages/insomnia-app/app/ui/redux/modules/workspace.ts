@@ -4,6 +4,7 @@ import { RequireExactlyOne } from 'type-fest';
 import { trackEvent, trackSegmentEvent } from '../../../common/analytics';
 import { ACTIVITY_DEBUG, ACTIVITY_SPEC, GlobalActivity, isCollectionActivity, isDesignActivity } from '../../../common/constants';
 import { database } from '../../../common/database';
+import { SegmentEvent } from '../../../common/segment-event';
 import * as models from '../../../models';
 import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showPrompt } from '../../components/modals';
@@ -48,7 +49,7 @@ export const createWorkspace = ({ scope, onCreate }: {
     });
     const title = design ? 'Design Document' : 'Request Collection';
     const defaultValue = design ? 'my-spec.yaml' : 'My Collection';
-    const segmentEvent = design ? 'Document Created' : 'Collection Created';
+    const segmentEvent = design ? SegmentEvent.documentCreate : SegmentEvent.collectionCreate;
     showPrompt({
       title: `Create New ${title}`,
       submitName: 'Create',

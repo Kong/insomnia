@@ -10,7 +10,7 @@ import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
 
-import { trackSegmentEvent } from '../../common/analytics';
+import {  trackSegmentEvent } from '../../common/analytics';
 import {
   ACTIVITY_HOME,
   ACTIVITY_MIGRATION,
@@ -42,6 +42,7 @@ import {
 } from '../../common/misc';
 import * as render from '../../common/render';
 import { RenderContextAndKeys } from '../../common/render';
+import { SegmentEvent } from '../../common/segment-event';
 import { sortMethodMap } from '../../common/sorting';
 import * as models from '../../models';
 import { isEnvironment } from '../../models/environment';
@@ -277,7 +278,7 @@ class App extends PureComponent<AppProps, State> {
           });
           await this._handleSetActiveRequest(request._id);
           models.stats.incrementCreatedRequests();
-          trackSegmentEvent('Request Created');
+          trackSegmentEvent(SegmentEvent.requestCreate);
         },
       ],
       [
@@ -419,7 +420,7 @@ class App extends PureComponent<AppProps, State> {
         this._handleSetActiveRequest(requestId);
 
         models.stats.incrementCreatedRequests();
-        trackSegmentEvent('Request Created');
+        trackSegmentEvent(SegmentEvent.requestCreate);
       },
     });
   }
@@ -767,7 +768,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent('Request Executed');
+    trackSegmentEvent(SegmentEvent.requestExecute);
     // Start loading
     handleStartLoading(requestId);
 
@@ -854,7 +855,7 @@ class App extends PureComponent<AppProps, State> {
 
     // Update request stats
     models.stats.incrementExecutedRequests();
-    trackSegmentEvent('Request Executed');
+    trackSegmentEvent(SegmentEvent.requestExecute);
     handleStartLoading(requestId);
 
     try {
