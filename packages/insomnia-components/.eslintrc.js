@@ -1,3 +1,5 @@
+const { OFF, TYPESCRIPT_CONVERSION } = require('eslint-config-helpers');
+
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
   extends: '../../.eslintrc.js',
@@ -7,6 +9,6 @@ module.exports = {
     },
   },
   rules: {
-    '@typescript-eslint/no-explicit-any': 'off', // TSCONVERSION
+    '@typescript-eslint/no-explicit-any': OFF(TYPESCRIPT_CONVERSION),
   },
 };

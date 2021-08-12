@@ -1,3 +1,5 @@
+const { ERROR, OFF, UNKNOWN, TYPESCRIPT_CONVERSION } = require('eslint-config-helpers');
+
 /** @type { import('eslint').Linter.Config } */
 module.exports = {
   extends: '../../.eslintrc.js',
@@ -7,12 +9,12 @@ module.exports = {
     },
   },
   rules: {
-    'filenames/match-exported': 'off',
-    camelcase: 'off',
-    '@typescript-eslint/no-use-before-define': 'off', // TSCONVERSION
-    '@typescript-eslint/no-explicit-any': 'off', // TSCONVERSION
-    'react/no-find-dom-node': 'off',
-    'no-restricted-properties': ['error', {
+    'filenames/match-exported': OFF(UNKNOWN),
+    camelcase: OFF(UNKNOWN),
+    '@typescript-eslint/no-use-before-define': OFF(TYPESCRIPT_CONVERSION),
+    '@typescript-eslint/no-explicit-any': OFF(TYPESCRIPT_CONVERSION),
+    'react/no-find-dom-node': OFF(UNKNOWN),
+    'no-restricted-properties': [ERROR, {
       property: 'openExternal',
       message: 'use the `clickLink` function in `electron-helpers.ts` instead.  see https://security.stackexchange.com/questions/225799/dangers-of-electrons-shell-openexternal-on-untrusted-content for more information.',
     }],
