@@ -425,7 +425,7 @@ class GitStagingModal extends PureComponent<Props, State> {
           {hasChanges ? this._renderItems(itemsList) : this._renderEmpty()}
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             <i className="fa fa-code-fork" /> {branch}{' '}
             {loading && <i className="fa fa-refresh fa-spin" />}
           </div>
