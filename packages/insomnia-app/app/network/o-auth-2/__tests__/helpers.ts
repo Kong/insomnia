@@ -1,6 +1,6 @@
 import electron from 'electron';
 import EventEmitter from 'events';
-type certVerifyProceFn=((request: Request, callback: (verificationResult: number) => void) => void) | (null);
+type certVerifyProceFn = ((request: Request, callback: (verificationResult: number) => void) => void) | (null);
 
 export function createBWRedirectMock(redirectTo, certifiateVerifyMock:certVerifyProceFn = () => {
 }) {

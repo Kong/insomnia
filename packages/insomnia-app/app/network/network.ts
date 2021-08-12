@@ -140,7 +140,7 @@ export async function _actuallySend(
   workspace: Workspace,
   settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
   environment?: Environment | null,
-  validateSSL=true,
+  validateSSL = true,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];

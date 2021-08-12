@@ -5,8 +5,8 @@ import * as uuid from 'uuid';
 import * as models from '../../models/index';
 
 enum ChromiumVerificationResult {
-  BLIND_TRUST=0,
-  USE_CHROMIUM_RESULT=-3
+  BLIND_TRUST = 0,
+  USE_CHROMIUM_RESULT = -3
 }
 
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
