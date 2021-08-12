@@ -122,6 +122,7 @@ import {
   selectWorkspacesForActiveSpace,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
+import { AppHooks } from './app-hooks';
 
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
@@ -1097,12 +1098,13 @@ class App extends PureComponent<AppProps, State> {
   }
 
   /**
-   * Update document.title to be "Workspace (Environment) – Request" when not home
+   * Update document.title to be "Space - Workspace (Environment) – Request" when not home
    * @private
    */
   _updateDocumentTitle() {
     const {
       activeWorkspace,
+      activeSpace,
       activeApiSpec,
       activeEnvironment,
       activeRequest,
@@ -1113,7 +1115,8 @@ class App extends PureComponent<AppProps, State> {
     if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else if (activeWorkspace && activeApiSpec) {
-      title = isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
+      title = activeSpace.name;
+      title += ` - ${isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName}`;
 
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
@@ -1240,10 +1243,7 @@ class App extends PureComponent<AppProps, State> {
     });
 
     if (!vcs) {
-      const directory = path.join(getDataDirectory(), 'version-control');
-      const driver = new FileSystemDriver({
-        directory,
-      });
+      const driver = FileSystemDriver.create(getDataDirectory());
 
       vcs = new VCS(driver, async conflicts => {
         return new Promise(resolve => {
@@ -1255,7 +1255,7 @@ class App extends PureComponent<AppProps, State> {
       });
     }
 
-    if (activeWorkspace) { 
+    if (activeWorkspace) {
       await vcs.switchProject(activeWorkspace._id);
     } else {
       vcs.clearProject();
@@ -1514,6 +1514,8 @@ class App extends PureComponent<AppProps, State> {
     return (
       <KeydownBinder onKeydown={this._handleKeyDown}>
         <GrpcProvider>
+          <AppHooks />
+
           <div className="app" key={uniquenessKey}>
             <ErrorBoundary showAlert>
               <Wrapper

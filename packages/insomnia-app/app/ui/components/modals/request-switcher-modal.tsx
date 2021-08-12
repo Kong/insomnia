@@ -32,7 +32,7 @@ const mapStateToProps = (state: RootState) => {
   const activeRequest = selectActiveRequest(state);
   // the request switcher modal does not know about grpc requests yet
   const normalizedRequest = activeRequest && isRequest(activeRequest) ? activeRequest : undefined;
-  
+
   return {
     activeRequest: normalizedRequest,
     workspace: selectActiveWorkspace(state),
@@ -42,7 +42,7 @@ const mapStateToProps = (state: RootState) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
+const mapDispatchToProps = dispatch => {
   const bound = bindActionCreators({ activateWorkspace }, dispatch);
   return {
     handleActivateWorkspace: bound.activateWorkspace,
@@ -174,7 +174,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   async _activateWorkspace(workspace: Workspace) {
-    await this.props.handleActivateWorkspace(workspace);
+    await this.props.handleActivateWorkspace({ workspace });
 
     this.modal?.hide();
   }
@@ -412,7 +412,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
         <Modal
           ref={this._setModalRef}
           dontFocus={!disableInput}
-          className={isModalVisible ? '' : 'hide'}>
+          className={isModalVisible ? '' : 'hide'}
+        >
           <ModalHeader hideCloseButton>
             {title || (
               <Fragment>
@@ -505,7 +506,8 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                 {workspace ? <button
                   className="btn btn--outlined btn--compact"
                   disabled={!searchString}
-                  onClick={this._activateCurrentIndex}>
+                  onClick={this._activateCurrentIndex}
+                >
                   Create a request named {searchString}
                 </button> : null}
               </div>
@@ -523,5 +525,3 @@ export default connect(
   null,
   { forwardRef: true }
 )(RequestSwitcherModal);
-
-

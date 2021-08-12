@@ -149,14 +149,16 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
           onOpen={this._handleDropdownOpen}
           // @ts-expect-error -- TSCONVERSION appears to be genuine
           onHide={this._handleDropdownHide}
-          {...(other as Record<string, any>)}>
+          {...(other as Record<string, any>)}
+        >
           <DropdownButton className="row">
             <div
               className="ellipsis"
               style={{
                 maxWidth: '400px',
               }}
-              title={displayName}>
+              title={displayName}
+            >
               {displayName}
             </div>
             <i className="fa fa-caret-down space-left" />
@@ -179,7 +181,8 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
             <DropdownItem
               key={p.label}
               onClick={() => this._handlePluginClick(p)}
-              stayOpenAfterClick>
+              stayOpenAfterClick
+            >
               {loadingActions[p.label] ? (
                 <i className="fa fa-refresh fa-spin" />
               ) : (
@@ -197,7 +200,8 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
                 <DropdownItem
                   key="generateConfig"
                   onClick={this._handleGenerateConfig}
-                  value={p.label}>
+                  value={p.label}
+                >
                   <i className="fa fa-code" />
                   {p.label}
                 </DropdownItem>

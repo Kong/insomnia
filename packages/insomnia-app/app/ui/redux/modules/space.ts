@@ -16,7 +16,7 @@ export const createSpace = () => dispatch => {
     placeholder: defaultValue,
     defaultValue,
     selectText: true,
-    onComplete: async (name) => {
+    onComplete: async name => {
       const space = await models.space.create({ name });
       trackEvent('Space', 'Create');
       dispatch(setActiveSpace(space._id));

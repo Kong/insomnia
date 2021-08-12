@@ -85,7 +85,7 @@ describe('Unit Test Suite', () => {
 
     it.each([generateIdIsh(workspace), workspace._id, workspace.name])(
       'should load all suites that match by workspace id: %o',
-      (identifier) => {
+      identifier => {
         const result = loadTestSuites(db, identifier);
         expect(result).toHaveLength(2);
         expect(result).toContain(suite1);
@@ -95,7 +95,7 @@ describe('Unit Test Suite', () => {
 
     it.each([generateIdIsh(spec), spec._id, spec.fileName])(
       'should load all suites that match by apiSpec id: %o',
-      (identifier) => {
+      identifier => {
         const result = loadTestSuites(db, identifier);
         expect(result).toHaveLength(2);
         expect(result).toContain(suite1);
@@ -105,7 +105,7 @@ describe('Unit Test Suite', () => {
 
     it.each([generateIdIsh(suite1), suite1._id, suite1.name])(
       'should load single suite that matches by id: %o',
-      (identifier) => {
+      identifier => {
         const result = loadTestSuites(db, identifier);
         expect(result).toHaveLength(1);
         expect(result).toContain(suite1);

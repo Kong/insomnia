@@ -50,7 +50,8 @@ class EnvironmentsDropdown extends PureComponent<Props> {
       <DropdownItem
         key={environment._id}
         value={environment._id}
-        onClick={this._handleActivateEnvironment}>
+        onClick={this._handleActivateEnvironment}
+      >
         <i
           className="fa fa-random"
           style={{
@@ -97,14 +98,16 @@ class EnvironmentsDropdown extends PureComponent<Props> {
         <Dropdown
           ref={this._setDropdownRef}
           {...(other as Record<string, any>)}
-          className={className}>
+          className={className}
+        >
           <DropdownButton className="btn btn--super-compact no-wrap">
             <div className="sidebar__menu__thing">
               {!activeEnvironment && subEnvironments.length > 0 && (
                 <Tooltip
                   message="No environments active. Please select one to use."
                   className="space-right"
-                  position="right">
+                  position="right"
+                >
                   <i className="fa fa-exclamation-triangle notice" />
                 </Tooltip>
               )}

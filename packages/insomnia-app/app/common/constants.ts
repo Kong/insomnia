@@ -141,7 +141,7 @@ export const ACTIVITY_MIGRATION: GlobalActivity = 'migration';
 export const ACTIVITY_ANALYTICS: GlobalActivity = 'analytics';
 export const DEPRECATED_ACTIVITY_INSOMNIA = 'insomnia';
 
-export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity => 
+export const isWorkspaceActivity = (activity?: string): activity is GlobalActivity =>
   isDesignActivity(activity) || isCollectionActivity(activity);
 
 export const isDesignActivity = (activity?: string): activity is GlobalActivity => {
@@ -164,7 +164,7 @@ export const isCollectionActivity = (activity?: string): activity is GlobalActiv
   switch (activity) {
     case ACTIVITY_DEBUG:
       return true;
-      
+
     case ACTIVITY_SPEC:
     case ACTIVITY_UNIT_TEST:
     case ACTIVITY_HOME:
@@ -318,8 +318,8 @@ export const SORT_ORDERS = [
   SORT_TYPE_ASC,
 ];
 export const sortOrderName: Record<SortOrder, string> = {
-  [SORT_NAME_ASC]: 'Name Ascending',
-  [SORT_NAME_DESC]: 'Name Descending',
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
   [SORT_CREATED_ASC]: 'Oldest First',
   [SORT_CREATED_DESC]: 'Newest First',
   [SORT_HTTP_METHOD]: 'HTTP Method',
@@ -327,7 +327,7 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_ASC]: 'Requests First',
 };
 
-export type SpaceSortOrder = 
+export type SpaceSortOrder =
   | 'name-asc'
   | 'name-desc'
   | 'created-asc'
@@ -343,8 +343,8 @@ export const SPACE_SORT_ORDERS = [
 ];
 
 export const spaceSortOrderName: Record<SpaceSortOrder, string> = {
-  [SORT_NAME_ASC]: 'Name Ascending',
-  [SORT_NAME_DESC]: 'Name Descending',
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
   [SORT_CREATED_ASC]: 'Oldest First',
   [SORT_CREATED_DESC]: 'Newest First',
   [SORT_MODIFIED_DESC]: 'Last Modified',

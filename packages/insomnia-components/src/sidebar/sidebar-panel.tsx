@@ -23,7 +23,8 @@ export const SidebarPanel: FunctionComponent<SidebarPanelProps> = ({ childrenVis
       duration: 0.2,
       ease: 'easeInOut',
       delay: 0,
-    }}>
+    }}
+  >
     {children}
   </StyledPanel>
 );

@@ -42,7 +42,8 @@ class TimeTag extends PureComponent<Props> {
             'tag--small': small,
           },
           className,
-        )}>
+        )}
+      >
         <Tooltip message={description} position="bottom" delay={tooltipDelay}>
           {number}&nbsp;{unit}
         </Tooltip>

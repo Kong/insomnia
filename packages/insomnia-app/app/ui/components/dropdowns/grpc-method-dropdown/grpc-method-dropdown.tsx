@@ -61,7 +61,8 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
               value={fullPath}
               disabled={disabled}
               selected={fullPath === selectedMethod?.path}
-              icon={<GrpcMethodTag methodType={type} />}>
+              icon={<GrpcMethodTag methodType={type} />}
+            >
               <Tooltip message={fullPath} position="right" delay={500}>
                 {getShortGrpcPath(segments, fullPath)}
               </Tooltip>

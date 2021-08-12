@@ -153,7 +153,8 @@ class CodePromptModal extends PureComponent<Props, State> {
               : {
                 minHeight: '10rem',
               }
-          }>
+          }
+        >
           {showCopyButton ? (
             <div className="pad-top-sm pad-right-sm">
               <CopyButton content={defaultValue} className="pull-right" />

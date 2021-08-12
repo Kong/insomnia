@@ -122,7 +122,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
             e.preventDefault();
 
             this._handlePopHistory();
-          }}>
+          }}
+        >
           <i className="fa--skinny fa fa-angle-left" /> Schema
         </a>
       );
@@ -150,7 +151,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
           e.preventDefault();
 
           this._handlePopHistory();
-        }}>
+        }}
+      >
         <i className="fa--skinny fa fa-angle-left" /> {name}
       </a>
     );
@@ -200,7 +202,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
           <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
           <button
             className="btn btn--compact graphql-explorer__header__close-btn"
-            onClick={handleClose}>
+            onClick={handleClose}
+          >
             <i className="fa fa-close" />
           </button>
         </div>

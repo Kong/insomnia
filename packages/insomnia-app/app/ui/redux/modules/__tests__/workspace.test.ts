@@ -115,12 +115,43 @@ describe('workspace', () => {
   });
 
   describe('activateWorkspace', () => {
+    it('should do nothing if workspace cannot be found', async () => {
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def' }));
+
+      await store.dispatch(activateWorkspace({ workspaceId: 'DOES_NOT_EXIST' }));
+
+      expect(store.getActions()).toEqual([]);
+    });
+
+    it('should activate space and workspace and activity using workspaceId', async () => {
+      const space = await models.space.create();
+      const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
+      const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def' }));
+
+      await store.dispatch(activateWorkspace({ workspaceId: workspace._id }));
+
+      expect(store.getActions()).toEqual([
+        {
+          type: SET_ACTIVE_SPACE,
+          spaceId: space._id,
+        },
+        {
+          type: SET_ACTIVE_WORKSPACE,
+          workspaceId: workspace._id,
+        },
+        {
+          type: SET_ACTIVE_ACTIVITY,
+          activity: ACTIVITY_SPEC,
+        },
+      ]);
+    });
+
     it('should activate space and workspace and activity from home', async () => {
       const space = await models.space.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def' }));
 
-      await store.dispatch(activateWorkspace(workspace));
+      await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
@@ -143,7 +174,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
 
-      await store.dispatch(activateWorkspace(workspace));
+      await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
@@ -166,7 +197,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id, activeActivity }));
 
-      await store.dispatch(activateWorkspace(workspace));
+      await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
@@ -185,7 +216,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id, activeActivity }));
 
-      await store.dispatch(activateWorkspace(workspace));
+      await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
@@ -204,7 +235,7 @@ describe('workspace', () => {
       const workspace = await models.workspace.create({ scope: 'collection', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
 
-      await store.dispatch(activateWorkspace(workspace));
+      await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
@@ -229,7 +260,7 @@ describe('workspace', () => {
       await models.workspaceMeta.updateByParentId(workspace._id, { activeActivity: ACTIVITY_UNIT_TEST });
       const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
 
-      await store.dispatch(activateWorkspace(workspace));
+      await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {

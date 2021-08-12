@@ -7,11 +7,11 @@ const fixturesPath = path.join(__dirname, './fixtures');
 const fixtures = fs.readdirSync(fixturesPath);
 
 describe('Fixtures', () => {
-  describe.each(fixtures)('Import %s', (name) => {
+  describe.each(fixtures)('Import %s', name => {
     const dir = path.join(fixturesPath, `./${name}`);
     const inputs = fs
       .readdirSync(dir)
-      .filter((name) => name.match(/^(.+)-?input\.[^.]+$/));
+      .filter(name => name.match(/^(.+)-?input\.[^.]+$/));
 
     for (const input of inputs) {
       const prefix = input.replace(/-input\.[^.]+/, '');

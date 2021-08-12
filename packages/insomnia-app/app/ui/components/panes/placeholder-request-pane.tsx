@@ -34,7 +34,8 @@ const PlaceholderRequestPane: FC<Props> = ({
                   <code>
                     <Hotkey
                       keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_SHOW_CREATE.id]}
-                      useFallbackMessage />
+                      useFallbackMessage
+                    />
                   </code>
                 </td>
               </tr>
@@ -44,7 +45,8 @@ const PlaceholderRequestPane: FC<Props> = ({
                   <code>
                     <Hotkey
                       keyBindings={hotKeyRegistry[hotKeyRefs.REQUEST_QUICK_SWITCH.id]}
-                      useFallbackMessage />
+                      useFallbackMessage
+                    />
                   </code>
                 </td>
               </tr>
@@ -54,7 +56,8 @@ const PlaceholderRequestPane: FC<Props> = ({
                   <code>
                     <Hotkey
                       keyBindings={hotKeyRegistry[hotKeyRefs.ENVIRONMENT_SHOW_EDITOR.id]}
-                      useFallbackMessage />
+                      useFallbackMessage
+                    />
                   </code>
                 </td>
               </tr>

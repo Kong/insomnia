@@ -282,7 +282,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           type="button"
           key="cancel-interval"
           className="urlbar__send-btn danger"
-          onClick={this._handleStopInterval}>
+          onClick={this._handleStopInterval}
+        >
           Stop
         </button>
       );
@@ -292,7 +293,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           type="button"
           key="cancel-timeout"
           className="urlbar__send-btn danger"
-          onClick={this._handleStopTimeout}>
+          onClick={this._handleStopTimeout}
+        >
           Cancel
         </button>
       );
@@ -306,7 +308,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           <DropdownButton
             className="urlbar__send-btn"
             onContextMenu={this._handleMetaClickSend}
-            onClick={this._handleClickSend}>
+            onClick={this._handleClickSend}
+          >
             {downloadPath ? 'Download' : 'Send'}
           </DropdownButton>
           <DropdownDivider>Basic</DropdownDivider>
@@ -329,7 +332,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
               stayOpenAfterClick
               addIcon
               buttonClass={PromptButton}
-              onClick={this._handleClearDownloadLocation}>
+              onClick={this._handleClearDownloadLocation}
+            >
               <i className="fa fa-stop-circle" /> Stop Auto-Download
             </DropdownItem>
           ) : (
@@ -364,7 +368,8 @@ class RequestUrlBar extends PureComponent<Props, State> {
           <MethodDropdown
             ref={this._setMethodDropdownRef}
             onChange={this._handleMethodChange}
-            method={method}>
+            method={method}
+          >
             {method} <i className="fa fa-caret-down" />
           </MethodDropdown>
           <form onSubmit={this._handleFormSubmit}>

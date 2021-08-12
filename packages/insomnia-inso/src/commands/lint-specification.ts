@@ -59,7 +59,7 @@ export async function lintSpecification(
 
   if (results.length) {
     logger.log(`${results.length} lint errors found. \n`);
-    results.forEach((r) =>
+    results.forEach(r =>
       logger.log(`${r.range.start.line}:${r.range.start.character} - ${r.message}`),
     );
     return false;

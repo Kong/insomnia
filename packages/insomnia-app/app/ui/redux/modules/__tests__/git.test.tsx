@@ -94,7 +94,7 @@ describe('git', () => {
         'No document found in the repository for import. Would you like to create a new one?',
       );
       // Confirm
-      await alertArgs.onConfirm();
+      await alertArgs.onConfirm?.();
       // Should show new design doc prompt
       const promptArgs = getAndClearShowPromptMockArgs();
       expect(promptArgs.title).toBe('Create New Design Document');
@@ -289,7 +289,7 @@ describe('git', () => {
           it?
         </Fragment>,
       );
-      await alertArgs.onConfirm();
+      await alertArgs.onConfirm?.();
     };
 
     it('should retry clone with .git suffix and succeed', async () => {

@@ -190,14 +190,16 @@ class Tooltip extends PureComponent<Props, State> {
         ref={this._setTooltipRef}
         id={this._id}
         onMouseEnter={this._handleMouseEnter}
-        onMouseLeave={this._handleMouseLeave}>
+        onMouseLeave={this._handleMouseLeave}
+      >
         <div
           className={bubbleClasses}
           onClick={this._handleStopClick}
           role="tooltip"
           aria-hidden={!visible}
           aria-describedby={this._id}
-          ref={this._setBubbleRef}>
+          ref={this._setBubbleRef}
+        >
           {message}
         </div>
         {children}

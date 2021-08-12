@@ -139,7 +139,8 @@ class SyncHistoryModal extends PureComponent<Props, State> {
                   <td className="text-right">
                     <PromptButton
                       className="btn btn--micro btn--outlined"
-                      onClick={() => this._handleClickRollback(snapshot)}>
+                      onClick={() => this._handleClickRollback(snapshot)}
+                    >
                       Restore
                     </PromptButton>
                   </td>

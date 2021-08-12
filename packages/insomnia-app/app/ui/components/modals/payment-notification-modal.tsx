@@ -54,7 +54,8 @@ class PaymentNotificationModal extends PureComponent {
               style={{
                 maxWidth: '30rem',
                 margin: 'auto',
-              }}>
+              }}
+            >
               Your Insomnia Plus trial has come to an end. Please enter your billing info to
               continue using Plus features like encrypted data synchronization and backup.
             </p>
@@ -67,7 +68,8 @@ class PaymentNotificationModal extends PureComponent {
               <Link
                 button
                 href="https://app.insomnia.rest/app/subscribe/"
-                className="btn btn--compact btn--outlined">
+                className="btn btn--compact btn--outlined"
+              >
                 Update Billing
               </Link>
             </p>

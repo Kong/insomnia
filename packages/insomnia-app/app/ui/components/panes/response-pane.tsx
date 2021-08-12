@@ -247,7 +247,8 @@ class ResponsePane extends PureComponent<Props> {
         <Tabs
           className={classnames(paneBodyClasses, 'react-tabs')}
           onSelect={this._handleTabSelect}
-          forceRenderTabPanel>
+          forceRenderTabPanel
+        >
           <TabList>
             <Tab tabIndex="-1">
               <PreviewModeDropdown

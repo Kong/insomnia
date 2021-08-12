@@ -60,10 +60,15 @@ module.exports = {
     'camelcase': ['error', { allow: ['__export_format', '__export_date', '__export_source'] }],
     'comma-dangle': ['error', 'always-multiline'],
     'comma-spacing': 'error',
+    'consistent-return': 'warn',
     'default-case': 'error',
     'default-case-last': 'error',
     'filenames/match-exported': ['error', 'kebab'],
     'indent': ['error', 2, { SwitchCase: 1 }],
+    'eol-last': ['error', 'always'],
+    'eqeqeq': ['error', 'smart'],
+    'arrow-parens': ['error', 'as-needed'],
+    'arrow-spacing': 'error',
     'keyword-spacing': 'off', // successor('@typescript-eslint/keyword-spacing')
     'no-async-promise-executor': 'off',
     'no-case-declarations': 'off',
@@ -73,10 +78,14 @@ module.exports = {
     'no-unused-vars': 'off',
     'no-use-before-define': 'off',
     'no-var': 'error',
+    'no-trailing-spaces': 'error',
+    'no-multiple-empty-lines': ['error', { 'max': 1, 'maxEOF': 0 }],
     'object-curly-spacing': ['error', 'always'],
     'quotes': 'off',
     'semi': ['error', 'always'],
     'space-before-function-paren': ['error', { anonymous: 'never', named: 'never', asyncArrow: 'always' }],
+    'space-infix-ops': 'off', // successor('@typescript-eslint/space-infix-ops')
+    'space-unary-ops': 'error',
     'space-in-parens': 'error',
     'spaced-comment': ['error', 'always', {
       exceptions: ['/', '*', '-', '* '], // for ASCII art :)
@@ -97,8 +106,21 @@ module.exports = {
     'react/jsx-indent': ['error', 2],
     'react/jsx-indent-props': ['error', 2],
     'react/prop-types': 'off',
+    'react/function-component-definition': ['error', {
+      'namedComponents':  'arrow-function',
+      'unnamedComponents': 'arrow-function',
+    }],
+    'react/jsx-max-props-per-line': ['error', { 'maximum': 1, 'when': 'multiline' }],
+    'react/jsx-closing-bracket-location': ['error', 'line-aligned'],
+    'react/prefer-stateless-function': 'warn', // TODO: fix this and change to error
+    'react/jsx-key': ['error', { 'checkFragmentShorthand': true }],
+    'react/no-array-index-key': 'warn',
+    'react/self-closing-comp': 'error',
 
-    'react-hooks/exhaustive-deps': 'error',
+    'react-hooks/exhaustive-deps': ['error', {
+      // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+      'additionalHooks': '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+    }],
     'react-hooks/rules-of-hooks': 'error',
 
     '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
@@ -112,6 +134,7 @@ module.exports = {
     '@typescript-eslint/no-redeclare': 'error',
     '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
     '@typescript-eslint/no-use-before-define': 'error',
+    '@typescript-eslint/space-infix-ops': 'error',
     '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
 
     'simple-import-sort/imports': 'error',

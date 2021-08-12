@@ -122,7 +122,7 @@ class MarkdownPreview extends PureComponent<Props, State> {
         {renderError && <p className="notice error no-margin">Failed to render: {renderError}</p>}
         <div className="markdown-preview__content selectable">
           {heading ? <h1>{heading}</h1> : null}
-          <div dangerouslySetInnerHTML={{ __html: compiled }}></div>
+          <div dangerouslySetInnerHTML={{ __html: compiled }} />
         </div>
       </div>
     );

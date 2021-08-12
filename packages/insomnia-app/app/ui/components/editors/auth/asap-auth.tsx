@@ -99,7 +99,8 @@ class AsapAuth extends PureComponent<Props> {
           <div
             className={classnames('form-control form-control--underlined no-margin', {
               'form-control--inactive': authentication.disabled,
-            })}>
+            })}
+          >
             <OneLineEditor
               id={id}
               mode={mode}
@@ -152,7 +153,8 @@ class AsapAuth extends PureComponent<Props> {
               {
                 'form-control--inactive': authentication.disabled,
               },
-            )}>
+            )}
+          >
             <button className="btn btn--clicky wide" onClick={this._handleEditPrivateKey}>
               <i className="fa fa-edit space-right" />
               {authentication.privateKey ? 'Click to Edit' : 'Click to Add'}
@@ -184,7 +186,8 @@ class AsapAuth extends PureComponent<Props> {
                     id="enabled"
                     onClick={this._handleDisable}
                     value={!authentication.disabled}
-                    title={authentication.disabled ? 'Enable item' : 'Disable item'}>
+                    title={authentication.disabled ? 'Enable item' : 'Disable item'}
+                  >
                     {authentication.disabled ? (
                       <i className="fa fa-square-o" />
                     ) : (

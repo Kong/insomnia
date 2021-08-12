@@ -328,7 +328,8 @@ class GitStagingModal extends PureComponent<Props, State> {
           {item.editable && <Tooltip message={item.added ? 'Delete' : 'Rollback'}>
             <button
               className="btn btn--micro space-right"
-              onClick={() => this._handleRollback([item])}>
+              onClick={() => this._handleRollback([item])}
+            >
               <i className={classnames('fa', item.added ? 'fa-trash' : 'fa-undo')} />
             </button>
           </Tooltip>}
@@ -350,7 +351,8 @@ class GitStagingModal extends PureComponent<Props, State> {
         <strong>{title}</strong>
         <PromptButton
           className="btn pull-right btn--micro"
-          onClick={() => this._handleRollback(items)}>
+          onClick={() => this._handleRollback(items)}
+        >
           {rollbackLabel}
         </PromptButton>
         <table className="table--fancy table--outlined margin-top-sm">

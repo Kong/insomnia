@@ -55,24 +55,28 @@ class CookieList extends PureComponent<CookieListProps> {
               <th
                 style={{
                   minWidth: '10rem',
-                }}>
+                }}
+              >
                 Domain
               </th>
               <th
                 style={{
                   width: '90%',
-                }}>
+                }}
+              >
                 Cookie
               </th>
               <th
                 style={{
                   width: '2rem',
                 }}
-                className="text-right">
+                className="text-right"
+              >
                 <Dropdown right>
                   <DropdownButton
                     title="Add cookie"
-                    className="btn btn--super-duper-compact btn--outlined txt-md">
+                    className="btn btn--super-duper-compact btn--outlined txt-md"
+                  >
                     Actions <i className="fa fa-caret-down" />
                   </DropdownButton>
                   <DropdownItem onClick={this._handleCookieAdd}>
@@ -100,7 +104,8 @@ class CookieList extends PureComponent<CookieListProps> {
                     <button
                       className="btn btn--super-compact btn--outlined"
                       onClick={() => { handleShowModifyCookieModal(cookie); }}
-                      title="Edit cookie properties">
+                      title="Edit cookie properties"
+                    >
                       Edit
                     </button>{' '}
                     <PromptButton
@@ -108,7 +113,8 @@ class CookieList extends PureComponent<CookieListProps> {
                       addIcon
                       confirmMessage=""
                       onClick={() => this._handleDeleteCookie(cookie)}
-                      title="Delete cookie">
+                      title="Delete cookie"
+                    >
                       <i className="fa fa-trash-o" />
                     </PromptButton>
                   </td>

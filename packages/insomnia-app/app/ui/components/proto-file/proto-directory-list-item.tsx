@@ -31,7 +31,8 @@ const ProtoDirectoryListItem: FunctionComponent<Props> = ({ dir, indentLevel, ha
             variant="text"
             title="Delete Directory"
             onClick={handleDeleteCallback}
-            bg="danger">
+            bg="danger"
+          >
             <i className="fa fa-trash-o" />
           </Button>
         </div>

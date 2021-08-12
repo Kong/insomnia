@@ -146,7 +146,8 @@ export class DropdownItem<T> extends PureComponent<DropdownItemProps<T>> {
         type="button"
         onClick={this._handleClick}
         disabled={disabled}
-        selected={selected}>
+        selected={selected}
+      >
         {icon && <StyledIconContainer>{icon}</StyledIconContainer>}
         {inner}
         {right && <StyledRightNode>{right}</StyledRightNode>}

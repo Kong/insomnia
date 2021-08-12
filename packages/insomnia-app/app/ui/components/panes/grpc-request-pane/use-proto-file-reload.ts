@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useAsync } from 'react-use';
 
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { GrpcDispatch, GrpcRequestState } from '../../../context/grpc';
@@ -10,7 +10,7 @@ const useProtoFileReload = (
   grpcDispatch: GrpcDispatch,
   { _id, protoFileId }: GrpcRequest,
 ): void => {
-  useEffect(() => {
+  useAsync(async () => {
     // don't actually reload until the request has stopped running or if methods do not need to be reloaded
     if (!reloadMethods || running) {
       return;
@@ -18,12 +18,8 @@ const useProtoFileReload = (
 
     grpcDispatch(grpcActions.clear(_id));
 
-    const func = async () => {
-      // @ts-expect-error -- TSCONVERSION
-      grpcDispatch(await grpcActions.loadMethods(_id, protoFileId));
-    };
-
-    func();
+    // @ts-expect-error -- TSCONVERSION
+    grpcDispatch(await grpcActions.loadMethods(_id, protoFileId));
   }, [_id, protoFileId, reloadMethods, grpcDispatch, running]);
 };
 

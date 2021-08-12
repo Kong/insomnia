@@ -39,14 +39,16 @@ class ResponseHeadersViewer extends PureComponent<Props> {
                   style={{
                     width: '50%',
                   }}
-                  className="force-wrap">
+                  className="force-wrap"
+                >
                   {h.name}
                 </td>
                 <td
                   style={{
                     width: '50%',
                   }}
-                  className="force-wrap">
+                  className="force-wrap"
+                >
                   {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
                 </td>
               </tr>

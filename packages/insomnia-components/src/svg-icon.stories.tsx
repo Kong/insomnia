@@ -46,13 +46,15 @@ export const reference = () => (
               <TableData
                 style={{
                   fontSize: '1rem',
-                }}>
+                }}
+              >
                 <SvgIcon icon={name} />
               </TableData>
               <TableData
                 style={{
                   fontSize: '1.5rem',
-                }}>
+                }}
+              >
                 <SvgIcon icon={name} />
               </TableData>
             </TableRow>

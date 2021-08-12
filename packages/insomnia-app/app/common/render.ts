@@ -310,7 +310,7 @@ export async function getRenderContext(
   }: RenderContextOptions,
 ): Promise<Record<string, any>> {
   const ancestors = _ancestors || await getRenderContextAncestors(request);
-  
+
   const space = ancestors.find(isSpace);
   const workspace = ancestors.find(isWorkspace);
 

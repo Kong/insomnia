@@ -664,7 +664,8 @@ class TagEditor extends PureComponent<Props, State> {
           <div
             className={classnames('form-control form-control--outlined width-auto', {
               'form-control--no-label': argDefinition.type !== 'boolean',
-            })}>
+            })}
+          >
             <Dropdown right>
               <DropdownButton className="btn btn--clicky">
                 <i className="fa fa-gear" />
@@ -675,7 +676,8 @@ class TagEditor extends PureComponent<Props, State> {
                   variable: false,
                   argIndex,
                 }}
-                onClick={this._handleChangeArgVariable}>
+                onClick={this._handleChangeArgVariable}
+              >
                 <i className={'fa ' + (isVariable ? '' : 'fa-check')} /> Static Value
               </DropdownItem>
               <DropdownItem
@@ -683,7 +685,8 @@ class TagEditor extends PureComponent<Props, State> {
                   variable: true,
                   argIndex,
                 }}
-                onClick={this._handleChangeArgVariable}>
+                onClick={this._handleChangeArgVariable}
+              >
                 <i className={'fa ' + (isVariable ? 'fa-check' : '')} /> Environment Variable
               </DropdownItem>
             </Dropdown>
@@ -712,7 +715,8 @@ class TagEditor extends PureComponent<Props, State> {
         key={name}
         className="btn btn--clicky btn--largest"
         type="button"
-        onClick={() => this._handleActionClick(action)}>
+        onClick={() => this._handleActionClick(action)}
+      >
         {icon}
         {name}
       </button>
@@ -752,7 +756,8 @@ class TagEditor extends PureComponent<Props, State> {
             <select
               ref={this._setSelectRef}
               onChange={this._handleChangeTag}
-              value={activeTagDefinition ? activeTagDefinition.name : ''}>
+              value={activeTagDefinition ? activeTagDefinition.name : ''}
+            >
               {this.state.tagDefinitions.map((tagDefinition, i) => (
                 <option key={`${i}::${tagDefinition.name}`} value={tagDefinition.name}>
                   {tagDefinition.displayName} – {tagDefinition.description}
@@ -791,7 +796,8 @@ class TagEditor extends PureComponent<Props, State> {
                 position: 'relative',
               }}
               className="txt-sm pull-right icon inline-block"
-              onClick={this._handleRefresh}>
+              onClick={this._handleRefresh}
+            >
               refresh{' '}
               <i
                 className={classnames('fa fa-refresh', {

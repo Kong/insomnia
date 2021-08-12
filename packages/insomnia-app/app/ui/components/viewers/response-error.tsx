@@ -40,7 +40,8 @@ class ResponseError extends PureComponent<Props> {
           className="selectable pad force-pre-wrap"
           style={{
             fontSize: `${fontSize}px`,
-          }}>
+          }}
+        >
           {error}
         </pre>
         <hr />
@@ -51,7 +52,8 @@ class ResponseError extends PureComponent<Props> {
           <Link
             button
             className="btn btn--clicky margin-top-sm"
-            href="https://insomnia.rest/support">
+            href="https://insomnia.rest/support"
+          >
             Contact Support
           </Link>
         </div>

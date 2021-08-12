@@ -35,7 +35,8 @@ export const dimensions = () => {
       width={selectWidth()}
       height={selectHeight()}
       variant={select('Variant', ButtonVariantEnum, 'outlined')}
-      bg={select('Background', ButtonThemeEnum, 'default')}>
+      bg={select('Background', ButtonThemeEnum, 'default')}
+    >
       <SvgIcon icon={select('Icon', IconEnum, IconEnum.gear)} />
     </CircleButton>
   );
