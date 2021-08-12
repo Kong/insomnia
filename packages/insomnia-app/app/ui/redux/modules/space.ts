@@ -28,7 +28,7 @@ export const createSpace = () => dispatch => {
 
 export const removeSpace = (space: Space) => dispatch => {
   const message = isRemoteSpace(space)
-    ? `Deleting a remote space will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. This cannot be undone. Are you sure you want to delete ${space.name}?`
+    ? `Deleting a remote space will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. The space will continue to exist remotely. Deleting this space locally cannot be undone. Are you sure you want to delete ${space.name}?`
     : `Deleting a space will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${space.name}?`;
 
   showAlert({
