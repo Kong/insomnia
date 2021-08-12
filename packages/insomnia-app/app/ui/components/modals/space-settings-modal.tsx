@@ -6,7 +6,7 @@ import { bindActionCreators } from 'redux';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models/index';
-import { isBaseSpace, isRemoteSpace } from '../../../models/space';
+import { isRemoteSpace, spaceHasSettings } from '../../../models/space';
 import { RootState } from '../../redux/modules';
 import * as spaceActions from '../../redux/modules/space';
 import { selectActiveSpace } from '../../redux/selectors';
@@ -49,7 +49,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
 
   render() {
     const { space } = this.props;
-    if (isBaseSpace(space)) {
+    if (!spaceHasSettings(space)) {
       return null;
     }
 
