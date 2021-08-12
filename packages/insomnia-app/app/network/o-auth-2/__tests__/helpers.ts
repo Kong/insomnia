@@ -1,8 +1,8 @@
 import electron from 'electron';
 import EventEmitter from 'events';
-type certVerifyProceFn = ((request: Request, callback: (verificationResult: number) => void) => void) | (null);
+type certVerifyProcFn = ((request: Request, callback: (verificationResult: number) => void) => void) | (null);
 
-export function createBWRedirectMock(redirectTo, certifiateVerifyMock:certVerifyProceFn = () => {
+export function createBWRedirectMock(redirectTo, certificateVerifyMock:certVerifyProcFn = () => {
 }) {
   electron.remote.BrowserWindow = jest.fn(function() {
     this._emitter = new EventEmitter();
@@ -20,7 +20,7 @@ export function createBWRedirectMock(redirectTo, certifiateVerifyMock:certVerify
     this.webContents.getURL = () => redirectTo;
 
     this.webContents.session = {
-      setCertificateVerifyProc: certifiateVerifyMock,
+      setCertificateVerifyProc: certificateVerifyMock,
     };
 
     this._emitter.emit('ready-to-show');
