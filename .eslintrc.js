@@ -84,6 +84,8 @@ module.exports = {
     'quotes': 'off',
     'semi': ['error', 'always'],
     'space-before-function-paren': ['error', { anonymous: 'never', named: 'never', asyncArrow: 'always' }],
+    'space-infix-ops': 'off', // successor('@typescript-eslint/space-infix-ops')
+    'space-unary-ops': 'error',
     'space-in-parens': 'error',
     'spaced-comment': ['error', 'always', {
       exceptions: ['/', '*', '-', '* '], // for ASCII art :)
@@ -115,7 +117,10 @@ module.exports = {
     'react/no-array-index-key': 'warn',
     'react/self-closing-comp': 'error',
 
-    'react-hooks/exhaustive-deps': 'error',
+    'react-hooks/exhaustive-deps': ['error', {
+      // From react-use https://github.com/streamich/react-use/issues/1703#issuecomment-770972824
+      'additionalHooks': '^use(Async|AsyncFn|AsyncRetry|Debounce|UpdateEffect|IsomorphicLayoutEffect|DeepCompareEffect|ShallowCompareEffect)$',
+    }],
     'react-hooks/rules-of-hooks': 'error',
 
     '@typescript-eslint/array-type': ['error', { default: 'array', readonly: 'array' }],
@@ -129,6 +134,7 @@ module.exports = {
     '@typescript-eslint/no-redeclare': 'error',
     '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
     '@typescript-eslint/no-use-before-define': 'error',
+    '@typescript-eslint/space-infix-ops': 'error',
     '@typescript-eslint/quotes': ['error', 'single', { avoidEscape: true }],
 
     'simple-import-sort/imports': 'error',
