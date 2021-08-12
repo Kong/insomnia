@@ -15,7 +15,7 @@ export const isBaseSpace = (space: Space) => space._id === BASE_SPACE_ID;
 export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
 export const isLocalSpace = (space: Space): space is LocalSpace => space.remoteId === null;
 export const isRemoteSpace = (space: Space): space is RemoteSpace => !isLocalSpace(space);
-export const spaceHasSettings = (space: Space) => isLocalSpace(space) && !isBaseSpace(space);
+export const spaceHasSettings = (space: Space) => !isBaseSpace(space);
 
 interface CommonSpace {
   name: string;
