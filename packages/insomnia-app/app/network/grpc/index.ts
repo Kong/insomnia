@@ -2,7 +2,8 @@ import * as grpc from '@grpc/grpc-js';
 import { Call, ServiceError } from '@grpc/grpc-js';
 import { ServiceClient } from '@grpc/grpc-js/build/src/make-client';
 
-import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
+import { trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent } from '../../common/segment-event';
 import * as models from '../../models';
 import type { GrpcRequest } from '../../models/grpc-request';
 import callCache from './call-cache';

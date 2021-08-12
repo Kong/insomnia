@@ -19,6 +19,7 @@ import {
   isDevelopment,
 } from './constants';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './electron-helpers';
+import { SegmentEvent } from './segment-event';
 
 const DIMENSION_PLATFORM = 1;
 const DIMENSION_VERSION = 2;
@@ -113,21 +114,6 @@ export async function getDeviceId() {
 }
 
 let segmentClient: Analytics | null = null;
-
-export enum SegmentEvent {
-  collectionCreate = 'Collection Created',
-  documentCreate = 'Document Created',
-  requestCreate = 'Request Created',
-  requestExecute = 'Request Executed',
-  spaceLocalCreate = 'Local Space Created',
-  spaceLocalDelete = 'Local Space Deleted',
-  testSuiteCreate = 'Test Suite Created',
-  testSuiteDelete = 'Test Suite Deleted',
-  unitTestCreate = 'Unit Test Created',
-  unitTestDelete = 'Unit Test Deleted',
-  unitTestRun = 'Ran Individual Unit Test',
-  unitTestRunAll = 'Ran All Unit Tests',
-}
 
 export async function trackSegmentEvent(event: SegmentEvent, properties?: Record<string, any>) {
   const settings = await models.settings.getOrCreate();

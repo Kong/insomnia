@@ -2,6 +2,7 @@ import { trackSegmentEvent } from '../../common/analytics';
 import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
 import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
+import { SegmentEvent } from '../../common/segment-event';
 import * as models from '../../models';
 import { BASE_SPACE_ID } from '../../models/space';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
@@ -29,10 +30,10 @@ const buildImportRawConfig = (options: PluginImportOptions, activeSpaceId: strin
 
 const getWorkspaces = (activeSpaceId?: string) => {
   if (activeSpaceId) {
-    trackSegmentEvent('Plugin export loading workspaces for active space');
+    trackSegmentEvent(SegmentEvent.pluginExportLoadWorkspacesInSpace);
     return models.workspace.findByParentId(activeSpaceId);
   } else {
-    trackSegmentEvent('Plugin export loading all workspace');
+    trackSegmentEvent(SegmentEvent.pluginExportLoadAllWokspace);
     return models.workspace.all();
   }
 };
