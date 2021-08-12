@@ -120,9 +120,9 @@ class MarkdownPreview extends PureComponent<Props, State> {
     return (
       <div ref={this._setPreviewRef} className={classnames('markdown-preview', className)}>
         {renderError && <p className="notice error no-margin">Failed to render: {renderError}</p>}
-        <div className="markdown-preview__content selectable">
-          {heading ? <h1>{heading}</h1> : null}
-          <div dangerouslySetInnerHTML={{ __html: compiled }} />
+        <div className="selectable">
+          {heading ? <h1 className="markdown-preview__content-title">{heading}</h1> : null}
+          <div className="markdown-preview__content" dangerouslySetInnerHTML={{ __html: compiled }} />
         </div>
       </div>
     );
