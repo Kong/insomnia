@@ -1,4 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HelpTooltip } from 'insomnia-components';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
@@ -15,7 +16,6 @@ import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
 
 export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
