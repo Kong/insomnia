@@ -4,6 +4,11 @@ import * as uuid from 'uuid';
 
 import * as models from '../../models/index';
 
+enum ChromiumVerificationResult {
+  BLIND_TRUST=0,
+  USE_CHROMIUM_RESULT=-3
+}
+
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 let authWindowSessionId;
 
@@ -126,23 +131,14 @@ export function authorizeUserInWindow(
       // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
       _parseUrl(url, 'did-fail-load');
     });
-    child.webContents.on('certificate-error', (event, _url, err, _certificate, callback) => {
-      // Listen for certificate-error to be able to respect user settings to determine whether to
-      // validate SSL certificates during authentication.
+    child.webContents.session.setCertificateVerifyProc((_request, callback) => {
       if (validateAuthSSL) {
-        // Log error to console if certificate failed validation and user is not ignoring validation
-        // errors.
-        console.error(`[oauth2] unable to validate certificate during authorization: ${err}`);
-        // Close child window
-        child.close();
-        // Reject promise
-        reject(new Error(err));
+        // Use results of Chromium's cert verification
+        callback(ChromiumVerificationResult.USE_CHROMIUM_RESULT);
       } else {
-        // Allow auth page to load
-        event.preventDefault();
+        // Don't verify; blindly trust cert
+        callback(ChromiumVerificationResult.BLIND_TRUST);
       }
-
-      callback(!validateAuthSSL);
     });
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
