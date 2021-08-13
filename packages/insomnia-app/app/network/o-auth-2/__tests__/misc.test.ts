@@ -1,5 +1,9 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
-import { responseToObject } from '../misc';
+import * as models from '../../../models';
+import { authorizeUserInWindow, responseToObject } from '../misc';
+import { certVerifyProcFn, createBWRedirectMock } from './helpers';
+
+const MOCK_AUTHORIZATION_URL = 'https://foo.com';
 
 describe('responseToObject()', () => {
   beforeEach(globalBeforeEach);
@@ -50,5 +54,72 @@ describe('responseToObject()', () => {
       str: 'hi',
       missing: 'found it!',
     });
+  });
+});
+
+describe('authorizeUserInWindow()', () => {
+  beforeEach(async () => {
+    await globalBeforeEach();
+    await models.settings.all();
+  });
+
+  it('uses chromium result in setCertificateVerifyProc callback when validateAuthSSL is true', async () => {
+    // Arrange
+    let verificationFunction: certVerifyProcFn = jest.fn();
+    const mockCallback = jest.fn();
+    createBWRedirectMock('', (fn: certVerifyProcFn) => {
+      verificationFunction = fn;
+    });
+
+    await models.settings.patch({
+      validateAuthSSL: true,
+    });
+
+    try {
+      // We don't really care about the result here, since we're only testing an event handler.
+      await authorizeUserInWindow(MOCK_AUTHORIZATION_URL, /.*/);
+    } catch (e) {
+      // no-op
+    } finally {
+      // Act
+      if (verificationFunction) {
+        verificationFunction(null, mockCallback);
+      } else {
+        throw new Error('setCertificateVerifyProc was never called, so cb is null');
+      }
+
+      // Assert
+      expect(mockCallback).toHaveBeenCalledWith(-3);
+    }
+  });
+
+  it('blindly trusts cert in setCertificateVerifyProc callback when validateSSL is false', async () => {
+    // Arrange
+    let verificationFunction: certVerifyProcFn = jest.fn();
+    const mockCallback = jest.fn();
+    createBWRedirectMock('', (fn: certVerifyProcFn) => {
+      verificationFunction = fn;
+    });
+
+    await models.settings.patch({
+      validateAuthSSL: false,
+    });
+
+    try {
+      // We don't really care about the result here, since we're only testing an event handler.
+      await authorizeUserInWindow(MOCK_AUTHORIZATION_URL, /.*/);
+    } catch (e) {
+      // no-op
+    } finally {
+      // Act
+      if (verificationFunction) {
+        verificationFunction(null, mockCallback);
+      } else {
+        throw new Error('setCertificateVerifyProc was never called, so cb is null');
+      }
+
+      // Assert
+      expect(mockCallback).toHaveBeenCalledWith(0);
+    }
   });
 });
