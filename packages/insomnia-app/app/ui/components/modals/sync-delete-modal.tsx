@@ -5,6 +5,7 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import type { Workspace } from '../../../models/workspace';
+import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -52,9 +53,15 @@ class SyncDeleteModal extends PureComponent<Props, State> {
   async _handleDelete(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     const { vcs } = this.props;
+    const { workspaceName } = this.state;
 
     try {
-      await vcs.archiveProject();
+      await interceptAccessError({
+        action: 'delete',
+        callback: () => vcs.archiveProject(),
+        resourceName: workspaceName,
+        resourceType: strings.collection.singular.toLowerCase(),
+      });
       this.hide();
     } catch (err) {
       this.setState({

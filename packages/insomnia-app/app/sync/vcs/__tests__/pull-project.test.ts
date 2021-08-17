@@ -105,15 +105,9 @@ describe('pullProject()', () => {
   });
 
   describe('pulling an existing project', () => {
-    beforeEach(() => {
-      vcs.getRemoteBranches.mockResolvedValue([DEFAULT_BRANCH_NAME]);
-    });
-
-    afterEach(() => {
-    });
-
     it('should overwrite the parentId only for a workspace with the space id', async () => {
       // Arrange
+      vcs.getRemoteBranches.mockResolvedValue([DEFAULT_BRANCH_NAME]);
       const existingWrk = await models.workspace.create({ _id: project.rootDocumentId, name: project.name });
       const existingReq = await models.request.create({ parentId: existingWrk._id });
 
@@ -141,5 +135,17 @@ describe('pullProject()', () => {
 
       expect(vcs.pull).toHaveBeenCalledWith([], space?.remoteId);
     });
+  });
+
+  it('should throw the corrected intercepted error', async () => {
+    // Arrange
+    vcs.getRemoteBranches.mockRejectedValue(new Error('invalid access to project'));
+
+    // Act
+    const action = () => pullProject({ vcs, project, remoteSpaces: [] });
+
+    // Assert
+    expect(vcs.pull).not.toHaveBeenCalled();
+    await expect(action).rejects.toThrowError('You no longer have permission to pull the "name" collection.  Contact your team administrator if you think this is an error.');
   });
 });
