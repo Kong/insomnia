@@ -25,7 +25,11 @@ export function generateDeclarativeConfigFromSpec(
     // see: https://github.com/Kong/studio/issues/93
     const result: DeclarativeConfigResult = JSON.parse(JSON.stringify(declarativeConfigResult));
     return result;
-  } catch (err) {
-    throw new Error('Failed to generate spec: ' + err.message);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      err.message = `Failed to generate spec: ${err.message}`;
+      throw err;
+    }
+    throw err;
   }
 }
