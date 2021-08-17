@@ -68,7 +68,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
               {isRemote && (
                 <>
                   <HelpTooltip className="space-left">
-                    To rename a ${strings.remoteSpace.singular.toLowerCase()} ${strings.space.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
+                    To rename a {strings.remoteSpace.singular.toLowerCase()} {strings.space.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
                   </HelpTooltip>
                   <input disabled readOnly defaultValue={space.name} />
                 </>
