@@ -8,7 +8,7 @@
     <br />
     <br />
   </h1>
-  <h3>A CLI for <a href="https://insomnia.rest">Insomnia Designer</a></h3>
+  <h3>A CLI for <a href="https://insomnia.rest">Insomnia</a></h3>
   <pre>npm install --global <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
   <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/demo.gif" alt=""/>
   <br />
@@ -17,25 +17,32 @@
 Table of Contents
 =================
 
-* [Data source](#data-source)
-* [The `[identifier]` argument](#the-identifier-argument)
-* [Global options](#global-options)
-* [Commands](#commands)
-  + [ `inso generate config` ](#-inso-generate-config-identifier)
-  + [ `inso lint spec` ](#-inso-lint-spec-identifier)
-  + [ `inso run test` ](#-inso-run-test-identifier)
-  + [ `inso export spec` ](#-inso-export-spec-identifier)
-  + [ `inso script` ](#-inso-script-name)
-* [Configuration](#configuration)
-* [Git Bash](#git-bash)
-* [Continuous Integration](#continuous-integration)
-* [Development](#development)
+- [Table of Contents](#table-of-contents)
+- [Data source](#data-source)
+- [The `[identifier]` argument](#the-identifier-argument)
+- [Global options](#global-options)
+- [Commands](#commands)
+  - [`$ inso generate config [identifier]`](#-inso-generate-config-identifier)
+    - [Examples](#examples)
+  - [`$ inso lint spec [identifier]`](#-inso-lint-spec-identifier)
+    - [Examples](#examples-1)
+  - [`$ inso run test [identifier]`](#-inso-run-test-identifier)
+    - [Examples](#examples-2)
+  - [`$ inso export spec [identifier]`](#-inso-export-spec-identifier)
+    - [Examples](#examples-3)
+  - [`$ inso script <name>`](#-inso-script-name)
+    - [Examples](#examples-4)
+- [Configuration](#configuration)
+    - [Example](#example)
+- [Git Bash](#git-bash)
+- [Continuous Integration](#continuous-integration)
+- [Development](#development)
 
 # Data source
 
-`inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Designer. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
+`inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Insomnia. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
 
-If `inso` cannot find the `.insomnia` directory, it will try to run against the Designer app data directory (if found). You can override both the working directory, and the app data directory, using the `--workingDir` and `--appDataDir` global options.
+If `inso` cannot find the `.insomnia` directory, it will try to run against the Insomnia app data directory (if found). You can override both the working directory, and the app data directory, using the `--workingDir` and `--appDataDir` global options.
 
 # The `[identifier]` argument
 
@@ -63,7 +70,7 @@ Additionally, if the `[identifier]` argument is omitted from the command, `inso`
 
 ## `$ inso generate config [identifier]`
 
-Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-kong-kubernetes-config) and [Declarative](https://insomnia.rest/plugins/insomnia-plugin-kong-declarative-config) config plugins for Designer, this command can generate configuration from an API specification, using [openapi-2-kong](https://www.npmjs.com/package/openapi-2-kong).
+Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-kong-kubernetes-config) and [Declarative](https://insomnia.rest/plugins/insomnia-plugin-kong-declarative-config) config plugins for Insomnia, this command can generate configuration from an API specification, using [openapi-2-kong](https://www.npmjs.com/package/openapi-2-kong).
 
 **`[identifier]`**: this can be a **document name, id, or a file path** relative to the working directory.
 
@@ -115,7 +122,7 @@ inso generate config spc_46c5a4 > output.yaml
 
 ## `$ inso lint spec [identifier]`
 
-Designer has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso` , in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
+Insomnia has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso` , in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
 
 **`[identifier]`**: this can be a **document name, or id**.
 
@@ -138,7 +145,7 @@ inso lint spec "Sample Specification"
 
 ## `$ inso run test [identifier]`
 
-API Unit Testing was introduced with Designer 2020.3.0, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
+API Unit Testing was introduced with Insomnia Designer 2020.3.0, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
 
 **`[identifier]`**: this can be the **name or id** of a **workspace, document, or unit test suite**.
 
@@ -310,7 +317,7 @@ scripts:
 
   lint: inso lint spec Demo # must be invoked as `inso script lint`
 
-  gen-conf: inso generate config "Designer Demo" --type declarative
+  gen-conf: inso generate config "Insomnia Demo" --type declarative
   gen-conf:k8s: inso gen-conf --type kubernetes
 ```
 
@@ -343,11 +350,11 @@ jobs:
       - name: Install inso
         run: npm install --global insomnia-inso
       - name: Lint
-        run: inso lint spec "Designer Demo" --ci
+        run: inso lint spec "Insomnia Demo" --ci
       - name: Run test suites
-        run: inso run test "Designer Demo" --env UnitTest --ci
+        run: inso run test "Insomnia Demo" --env UnitTest --ci
       - name: Generate declarative config
-        run: inso generate config "Designer Demo" --type declarative --ci
+        run: inso generate config "Insomnia Demo" --type declarative --ci
 ```
 
 # Development
