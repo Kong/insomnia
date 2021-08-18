@@ -2,9 +2,7 @@ import { Reducer, useCallback, useMemo, useReducer } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 
-import { getDataDirectory } from '../../common/electron-helpers';
 import { isRemoteSpace } from '../../models/space';
-import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
 import { Project } from '../../sync/types';
 import { ProjectWithTeam } from '../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../sync/vcs/pull-project';
@@ -91,8 +89,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
 
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
-      const driver = FileSystemDriver.create(getDataDirectory());
-      const newVCS = new VCS(driver);
+      const newVCS = vcs.newInstance();
       // Remove all projects for workspace first
       await newVCS.removeProjectsForRoot(project.rootDocumentId);
 
