@@ -56,7 +56,7 @@ export async function runInsomniaTests(
     return false;
   }
 
-  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern, disableCertValidation, src, fromFile } = options;
+  const { reporter, bail, keepFile, appDataDir, workingDir, env, ci, testNamePattern, disableCertValidation, src } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,

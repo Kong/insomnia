@@ -3,11 +3,8 @@ import path from 'path';
 import { globalBeforeAll, globalBeforeEach } from '../jest/before';
 import { logger } from '../logger';
 import _gitAdapter from './adapters/git-adapter';
-import _neDbAdapter from './adapters/ne-db-adapter';
 import _insomniaAdapter from './adapters/insomnia-adapter';
-import { globalBeforeAll, globalBeforeEach } from '../jest/before';
-import { logger } from '../logger';
-import path from 'path';
+import _neDbAdapter from './adapters/ne-db-adapter';
 import { emptyDb, loadDb } from './index';
 
 jest.mock('./adapters/git-adapter');

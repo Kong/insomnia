@@ -1,9 +1,10 @@
 import fs from 'fs';
-import type { Database, DbAdapter } from '../index';
 import YAML from 'yaml';
+
+import { UNKNOWN } from '../../types';
+import type { Database, DbAdapter } from '../index';
 import { emptyDb } from '../index';
 import { BaseModel } from '../models/types';
-import { UNKNOWN } from '../../types';
 
 /**
  * When exporting from Insomnia, the `models.[kind].type` is converted from PascalCase to snake_case.

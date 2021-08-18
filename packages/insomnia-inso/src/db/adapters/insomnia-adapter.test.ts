@@ -1,4 +1,5 @@
 import path from 'path';
+
 import insomniaAdapter from './insomnia-adapter';
 
 describe('insomniaAdapter()', () => {
