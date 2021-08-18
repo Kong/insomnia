@@ -554,7 +554,6 @@ export function describeChanges<T extends BaseModel>(a: T, b: T): string[] {
   return changes;
 }
 
-// delete collection, branches, push, pull
 export const interceptAccessError = async <T>(
   {
     callback,
@@ -569,12 +568,9 @@ export const interceptAccessError = async <T>(
   }
 ) => {
   try {
-    console.log('trying');
     return await callback();
   } catch (error: unknown) {
-    console.log('catching', error);
     if (error instanceof Error && error.message.includes('invalid access')) {
-      // TODO make sure the stack trace remains
       throw new Error(`You no longer have permission to ${action} the "${resourceName}" ${resourceType}.  Contact your team administrator if you think this is an error.`);
     }
     throw error;
