@@ -222,7 +222,7 @@ class CodePromptModal extends PureComponent<Props, State> {
               ))}
             </Dropdown>
           ) : null}
-          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
+          <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this.hide}>
             {submitName || 'Submit'}
           </button>

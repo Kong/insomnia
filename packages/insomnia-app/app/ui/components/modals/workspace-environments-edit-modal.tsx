@@ -602,7 +602,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
           </div>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             * Environment data can be used for&nbsp;
             <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
           </div>
