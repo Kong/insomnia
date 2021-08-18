@@ -5,8 +5,7 @@ import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
-import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
-import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
+import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
@@ -272,7 +271,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
     try {
       const bodyJson = JSON.stringify({
-        query: introspectionQuery,
+        query: getIntrospectionQuery(),
         operationName: 'IntrospectionQuery',
       });
       const introspectionRequest = await db.upsert(
