@@ -102,11 +102,11 @@ export class VCS {
   async switchProject(rootDocumentId: string) {
     const project = await this._getProjectByRootDocument(rootDocumentId);
 
-    if (project === null) {
-      return;
+    if (project !== null) {
+      await this.setProject(project);
+    } else {
+      this._project = null;
     }
-
-    await this.setProject(project);
   }
 
   async switchAndCreateProjectIfNotExist(rootDocumentId: string, name: string) {
