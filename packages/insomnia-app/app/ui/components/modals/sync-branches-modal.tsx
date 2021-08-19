@@ -7,6 +7,7 @@ import { database as db } from '../../../common/database';
 import { Space } from '../../../models/space';
 import type { Workspace } from '../../../models/workspace';
 import type { StatusCandidate } from '../../../sync/types';
+import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -149,9 +150,13 @@ class SyncBranchesModal extends PureComponent<Props, State> {
         error: '',
         ...newState,
       });
-      const remoteBranches = (await vcs.getRemoteBranches())
-        .filter(b => !branches.includes(b))
-        .sort();
+
+      const remoteBranches = await interceptAccessError({
+        callback: async () => (await vcs.getRemoteBranches()).filter(b => !branches.includes(b)).sort(),
+        action: 'get',
+        resourceName: 'remote',
+        resourceType: 'branches',
+      });
       this.setState({
         remoteBranches,
       });
