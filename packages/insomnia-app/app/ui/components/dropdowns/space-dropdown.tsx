@@ -101,7 +101,7 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
       {spaces.filter(isBaseSpace).map(renderSpace)}
-      <DropdownDivider>All spaces{' '}{loading && spinner}</DropdownDivider>
+      <DropdownDivider>All {strings.space.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
       {spaces.filter(isNotBaseSpace).map(renderSpace)}
       {spaceHasSettings(activeSpace) && <>
         <DropdownDivider />

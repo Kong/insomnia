@@ -78,7 +78,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
                 // @ts-expect-error -- TSCONVERSION props are spread into an input element
                   type="text"
                   delay={500}
-                  placeholder="My Space"
+                  placeholder={`My ${strings.space.singular}`}
                   defaultValue={space.name}
                   onChange={this._handleRename}
                 />
