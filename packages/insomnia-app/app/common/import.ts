@@ -260,7 +260,7 @@ export async function importRaw(
       // If workspace, check and set the scope and parentId while importing a new workspace
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
-        await createWorkspaceInSpace(resource as Workspace, getProjectId);
+        await createWorkspaceInProject(resource as Workspace, getProjectId);
       }
 
       newDoc = await db.docCreate(model.type, resource);
@@ -334,7 +334,7 @@ async function updateWorkspaceScope(
   }
 }
 
-async function createWorkspaceInSpace(
+async function createWorkspaceInProject(
   resource: Workspace,
   getProjectId?: () => Promise<string>,
 ) {
