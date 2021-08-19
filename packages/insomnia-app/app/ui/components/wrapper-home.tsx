@@ -360,7 +360,7 @@ class WrapperHome extends PureComponent<Props, State> {
                 <Breadcrumb
                   crumbs={[
                     {
-                      id: 'space',
+                      id: 'project',
                       node: <ProjectDropdown vcs={vcs || undefined} />,
                     },
                   ]}
