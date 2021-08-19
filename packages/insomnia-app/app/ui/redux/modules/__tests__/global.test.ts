@@ -118,7 +118,7 @@ describe('global', () => {
         spaceId,
       };
       expect(setActiveSpace(spaceId)).toStrictEqual(expectedEvent);
-      expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeSpaceId`)).toBe(
+      expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeProjectId`)).toBe(
         JSON.stringify(spaceId),
       );
     });
@@ -256,7 +256,7 @@ describe('global', () => {
     it('should initialize from local storage', () => {
       const spaceId = 'id';
       global.localStorage.setItem(
-        `${LOCALSTORAGE_PREFIX}::activeSpaceId`,
+        `${LOCALSTORAGE_PREFIX}::activeProjectId`,
         JSON.stringify(spaceId),
       );
       const expectedEvent = {
@@ -280,7 +280,7 @@ describe('global', () => {
       const sortOrder = SORT_MODIFIED_DESC;
 
       global.localStorage.setItem(
-        `${LOCALSTORAGE_PREFIX}::space-sort-order`,
+        `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`,
         JSON.stringify(sortOrder),
       );
 
