@@ -7,7 +7,7 @@ import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveSpace } from './global';
 
 export const createSpace = () => dispatch => {
-  const defaultValue = 'My Space';
+  const defaultValue = `My ${strings.space.singular}`;
 
   showPrompt({
     title: `Create New ${strings.space.singular}`,
