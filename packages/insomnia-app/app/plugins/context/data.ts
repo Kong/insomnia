@@ -24,7 +24,7 @@ const buildImportRawConfig = (options: PluginImportOptions, activeProjectId: str
   getWorkspaceScope: options.scope && (() => (
     Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
   ),
-  getSpaceId: () => Promise.resolve(activeProjectId),
+  getProjectId: () => Promise.resolve(activeProjectId),
 });
 
 const getWorkspaces = (activeProjectId?: string) => {

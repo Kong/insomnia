@@ -311,7 +311,7 @@ export async function getRenderContext(
 ): Promise<Record<string, any>> {
   const ancestors = _ancestors || await getRenderContextAncestors(request);
 
-  const space = ancestors.find(isProject);
+  const project = ancestors.find(isProject);
   const workspace = ancestors.find(isWorkspace);
 
   if (!workspace) {
@@ -395,7 +395,7 @@ export async function getRenderContext(
   baseContext.getEnvironmentId = () => environmentId;
 
   // It is possible for a space to not exist because this code path can be reached via Inso/insomnia-send-request which has no concept of a space.
-  baseContext.getSpaceId = () => space?._id;
+  baseContext.getProjectId = () => project?._id;
 
   // Generate the context we need to render
   return buildRenderContext({ ancestors, rootEnvironment, subEnvironment: subEnvironment || undefined, baseContext });
