@@ -23,7 +23,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
   wrapperProps: {
     activeApiSpec,
     activeWorkspace,
-    activeSpace,
+    activeProject: activeSpace,
     activeEnvironment,
     settings,
     activity,

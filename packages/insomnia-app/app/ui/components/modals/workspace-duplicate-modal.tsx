@@ -47,8 +47,8 @@ const ProjectOption: FC<Project> = project => (
 const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, InnerProps> = ({ workspace, apiSpec, onDone, hide, vcs }, ref) => {
   const dispatch = useDispatch();
 
-  const spaces = useSelector(selectProjects);
-  const activeSpace = useSelector(selectActiveProject);
+  const projects = useSelector(selectProjects);
+  const activeProject = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const title = `Duplicate ${getWorkspaceLabel(workspace).singular}`;
@@ -63,12 +63,12 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     } } = useForm<FormFields>({
       defaultValues: {
         newName: defaultWorkspaceName,
-        projectId: activeSpace._id,
+        projectId: activeProject._id,
       },
     });
 
   const onSubmit = useCallback(async ({ projectId, newName }: FormFields) => {
-    const duplicateToProject = spaces.find(project => project._id === projectId);
+    const duplicateToProject = projects.find(project => project._id === projectId);
     if (!duplicateToProject) {
       throw new Error('Project could not be found');
     }
@@ -84,7 +84,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     dispatch(activateWorkspace({ workspace: newWorkspace }));
     hide();
     onDone?.();
-  }, [dispatch, hide, isLoggedIn, onDone, spaces, vcs, workspace]);
+  }, [dispatch, hide, isLoggedIn, onDone, projects, vcs, workspace]);
 
   return <Modal ref={ref} onShow={reset}>
     <ModalHeader>{title}</ModalHeader>
@@ -101,7 +101,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
           <label>
             {strings.project.singular} to duplicate into
             <select {...register('projectId')}>
-              {spaces.map(ProjectOption)}
+              {projects.map(ProjectOption)}
             </select>
           </label>
         </div>

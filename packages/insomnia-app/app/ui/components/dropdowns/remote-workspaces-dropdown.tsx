@@ -31,12 +31,12 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
-  const space = useSelector(selectActiveProject);
-  if (!space) {
+  const project = useSelector(selectActiveProject);
+  if (!project) {
     return null;
   }
 
-  const isRemote = isRemoteProject(space);
+  const isRemote = isRemoteProject(project);
 
   // Don't show the pull dropdown if we are not in a remote space
   if (!isRemote) {

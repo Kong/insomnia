@@ -8,8 +8,8 @@ import { ACTIVITY_HOME } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { BASE_PROJECT_ID } from '../../../../models/project';
 import { getAndClearShowAlertMockArgs, getAndClearShowPromptMockArgs } from '../../../../test-utils';
-import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE } from '../global';
-import { createSpace, removeSpace } from '../project';
+import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT } from '../global';
+import { createProject, removeProject } from '../project';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../common/analytics');
@@ -22,7 +22,7 @@ describe('space', () => {
   describe('createSpace', () => {
     it('should create space', async () => {
       const store = mockStore(await reduxStateForTest());
-      store.dispatch(createSpace());
+      store.dispatch(createProject());
 
       const {
         title,
@@ -44,16 +44,16 @@ describe('space', () => {
       const spaceName = 'name';
       await onComplete?.(spaceName);
 
-      const spaces = await models.project.all();
-      expect(spaces).toHaveLength(1);
-      const space = spaces[0];
-      expect(space.name).toBe(spaceName);
+      const projects = await models.project.all();
+      expect(projects).toHaveLength(1);
+      const project = projects[0];
+      expect(project.name).toBe(spaceName);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalCreate);
       expect(trackEvent).toHaveBeenCalledWith('Space', 'Create');
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          projectId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_ACTIVITY,
@@ -66,10 +66,10 @@ describe('space', () => {
   describe('removeSpace', () => {
     it('should remove space', async () => {
       const store = mockStore(await reduxStateForTest());
-      const spaceOne = await models.project.create({ name: 'My Space' });
+      const projectOne = await models.project.create({ name: 'My Space' });
       const spaceTwo = await models.project.create();
 
-      store.dispatch(removeSpace(spaceOne));
+      store.dispatch(removeProject(projectOne));
 
       const {
         title,
@@ -88,15 +88,15 @@ describe('space', () => {
 
       await onConfirm();
 
-      const spaces = await models.project.all();
-      expect(spaces).toHaveLength(1);
-      const space = spaces[0];
-      expect(space).toBe(spaceTwo);
+      const projects = await models.project.all();
+      expect(projects).toHaveLength(1);
+      const project = projects[0];
+      expect(project).toBe(spaceTwo);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalDelete);
       expect(trackEvent).toHaveBeenCalledWith('Project', 'Delete');
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
+          type: SET_ACTIVE_PROJECT,
           projectId: BASE_PROJECT_ID,
         },
         {

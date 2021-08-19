@@ -5,10 +5,10 @@ import * as models from '../../models';
 import { isRemoteProject, RemoteProject } from '../../models/project';
 import {  isCollection, Workspace } from '../../models/workspace';
 import { Team } from '../types';
-import { initializeSpaceFromTeam } from './initialize-model-from';
+import { initializeProjectFromTeam } from './initialize-model-from';
 import { VCS } from './vcs';
 
-export const logCollectionMovedToSpace = (collection: Workspace, remoteSpace: RemoteProject) => {
+export const logCollectionMovedToProject = (collection: Workspace, remoteSpace: RemoteProject) => {
   console.log('[sync] collection has been moved to the remote space to which it belongs', {
     collection: {
       id : collection._id,
@@ -21,7 +21,7 @@ export const logCollectionMovedToSpace = (collection: Workspace, remoteSpace: Re
   });
 };
 
-export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
+export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
   console.log('[sync] checking for collections which need to be moved into a remote space');
 
   // If not logged in, exit
@@ -30,10 +30,10 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
   }
 
   const collections = (await models.workspace.all()).filter(isCollection);
-  const remoteSpaces = (await models.project.all()).filter(isRemoteProject);
+  const remoteProjects = (await models.project.all()).filter(isRemoteProject);
 
   // Are there any collections that have sync setup but are not in a remote space?
-  const isNotInRemoteProject = (collection: Workspace) => !Boolean(remoteSpaces.find(project => project._id === collection.parentId));
+  const isNotInRemoteProject = (collection: Workspace) => !Boolean(remoteProjects.find(project => project._id === collection.parentId));
   const hasLocalProject = (collection: Workspace) => vcs.hasBackendProjectForRootDocument(collection._id);
 
   const needsMigration = await asyncFilter(collections, async coll => await hasLocalProject(coll) && isNotInRemoteProject(coll));
@@ -43,29 +43,29 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
     return;
   }
 
-  const remoteProjectsInAnyTeam = await vcs.remoteBackendProjectsInAnyTeam();
-  const findRemoteProject = (collection: Workspace) => remoteProjectsInAnyTeam.find(project => project.rootDocumentId === collection._id);
-  const findRemoteProjectByTeam = (team: Team) => remoteSpaces.find(project => project.remoteId === team.id);
+  const remoteBackendProjectsInAnyTeam = await vcs.remoteBackendProjectsInAnyTeam();
+  const findRemoteBackendProject = (collection: Workspace) => remoteBackendProjectsInAnyTeam.find(project => project.rootDocumentId === collection._id);
+  const findRemoteBackendProjectByTeam = (team: Team) => remoteProjects.find(project => project.remoteId === team.id);
 
   const upsert: (Workspace | RemoteProject)[] = [];
 
   for (const collection of needsMigration) {
-    const remoteProject = findRemoteProject(collection);
+    const remoteBackendProject = findRemoteBackendProject(collection);
 
-    if (!remoteProject) {
+    if (!remoteBackendProject) {
       return;
     }
 
-    let remoteSpace = findRemoteProjectByTeam(remoteProject.team);
+    let remoteProject = findRemoteBackendProjectByTeam(remoteBackendProject.team);
 
-    if (!remoteSpace) {
-      remoteSpace = await initializeSpaceFromTeam(remoteProject.team);
-      upsert.push(remoteSpace);
+    if (!remoteProject) {
+      remoteProject = await initializeProjectFromTeam(remoteBackendProject.team);
+      upsert.push(remoteProject);
     }
 
-    collection.parentId = remoteSpace._id;
+    collection.parentId = remoteProject._id;
     upsert.push(collection);
-    logCollectionMovedToSpace(collection, remoteSpace);
+    logCollectionMovedToProject(collection, remoteProject);
   }
 
   if (upsert.length) {

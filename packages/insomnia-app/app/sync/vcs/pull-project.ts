@@ -3,20 +3,20 @@ import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
 import { RemoteProject } from '../../models/project';
 import { isWorkspace } from '../../models/workspace';
-import { initializeSpaceFromTeam, initializeWorkspaceFromProject } from './initialize-model-from';
+import { initializeProjectFromTeam, initializeWorkspaceFromBackendProject } from './initialize-model-from';
 import { BackendProjectWithTeam } from './normalize-project-team';
 import { interceptAccessError } from './util';
 import { VCS } from './vcs';
 
 interface Options {
   vcs: VCS;
-  project: BackendProjectWithTeam;
-  remoteSpaces: RemoteProject[];
+  backendProject: BackendProjectWithTeam;
+  remoteProjects: RemoteProject[];
 }
 
-export const pullProject = async ({ vcs, project, remoteSpaces }: Options) => {
+export const pullProject = async ({ vcs, backendProject, remoteProjects }: Options) => {
   // Set project, checkout master, and pull
-  await vcs.setBackendProject(project);
+  await vcs.setBackendProject(backendProject);
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
   const remoteBranches = await interceptAccessError({
     action: 'pull',
@@ -27,25 +27,25 @@ export const pullProject = async ({ vcs, project, remoteSpaces }: Options) => {
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
   // Find or create the remote space locally
-  let space = remoteSpaces.find(({ remoteId }) => remoteId === project.team.id);
-  if (!space) {
-    space = await initializeSpaceFromTeam(project.team);
-    await database.upsert(space);
+  let project = remoteProjects.find(({ remoteId }) => remoteId === backendProject.team.id);
+  if (!project) {
+    project = await initializeProjectFromTeam(backendProject.team);
+    await database.upsert(project);
   }
 
   // The default branch does not exist, so we create it and the workspace locally
   if (defaultBranchMissing) {
-    const workspace = await initializeWorkspaceFromProject(project, space);
+    const workspace = await initializeWorkspaceFromBackendProject(backendProject, project);
     await database.upsert(workspace);
   } else {
-    await vcs.pull([], space.remoteId); // There won't be any existing docs since it's a new pull
+    await vcs.pull([], project.remoteId); // There won't be any existing docs since it's a new pull
 
     const flushId = await database.bufferChanges();
 
     // @ts-expect-error -- TSCONVERSION
     for (const doc of (await vcs.allDocuments() || [])) {
       if (isWorkspace(doc)) {
-        doc.parentId = space._id;
+        doc.parentId = project._id;
       }
       await database.upsert(doc);
     }
@@ -53,5 +53,5 @@ export const pullProject = async ({ vcs, project, remoteSpaces }: Options) => {
     await database.flushChanges(flushId);
   }
 
-  return space;
+  return project;
 };

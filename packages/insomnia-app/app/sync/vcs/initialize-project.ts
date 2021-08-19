@@ -35,12 +35,12 @@ export const pushSnapshotOnInitialize = async ({
   vcs,
   workspace,
   workspaceMeta,
-  space: { _id: projectId, remoteId: spaceRemoteId },
+  project: { _id: projectId, remoteId: projectRemoteId },
 }: {
   vcs: VCS;
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space: Project;
+  project: Project;
 }) => {
   const spaceIsForWorkspace = projectId === workspace.parentId;
   const markedForPush = workspaceMeta?.pushSnapshotOnInitialize;
@@ -51,8 +51,8 @@ export const pushSnapshotOnInitialize = async ({
   // This race condition causes us to hit this codepath twice while activating a workspace but the first time it has no project so we shouldn't do anything
   const hasProject = vcs.hasBackendProject();
 
-  if (markedForPush && spaceIsForWorkspace && spaceRemoteId && hasProject) {
+  if (markedForPush && spaceIsForWorkspace && projectRemoteId && hasProject) {
     await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
-    await vcs.push(spaceRemoteId);
+    await vcs.push(projectRemoteId);
   }
 };

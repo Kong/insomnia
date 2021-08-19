@@ -27,11 +27,11 @@ import {
   initSpaceSortOrder,
   LOCALSTORAGE_PREFIX,
   SET_ACTIVE_ACTIVITY,
-  SET_ACTIVE_SPACE,
+  SET_ACTIVE_PROJECT,
   SET_ACTIVE_WORKSPACE,
   SET_DASHBOARD_SORT_ORDER,
   setActiveActivity,
-  setActiveSpace,
+  setActiveProject,
   setActiveWorkspace,
 } from '../global';
 
@@ -114,10 +114,10 @@ describe('global', () => {
     it('should update local storage', () => {
       const projectId = 'id';
       const expectedEvent = {
-        type: SET_ACTIVE_SPACE,
+        type: SET_ACTIVE_PROJECT,
         projectId,
       };
-      expect(setActiveSpace(projectId)).toStrictEqual(expectedEvent);
+      expect(setActiveProject(projectId)).toStrictEqual(expectedEvent);
       expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeProjectId`)).toBe(
         JSON.stringify(projectId),
       );
@@ -260,7 +260,7 @@ describe('global', () => {
         JSON.stringify(projectId),
       );
       const expectedEvent = {
-        type: SET_ACTIVE_SPACE,
+        type: SET_ACTIVE_PROJECT,
         projectId,
       };
       expect(initActiveSpace()).toStrictEqual(expectedEvent);
@@ -268,7 +268,7 @@ describe('global', () => {
 
     it('should default to base space if not exist', () => {
       const expectedEvent = {
-        type: SET_ACTIVE_SPACE,
+        type: SET_ACTIVE_PROJECT,
         projectId: BASE_PROJECT_ID,
       };
       expect(initActiveSpace()).toStrictEqual(expectedEvent);

@@ -181,7 +181,7 @@ class WrapperHome extends PureComponent<Props, State> {
   _handleCollectionCreate() {
     const {
       handleCreateWorkspace,
-      wrapperProps: { activeSpace, vcs, isLoggedIn },
+      wrapperProps: { activeProject: activeSpace, vcs, isLoggedIn },
     } = this.props;
 
     handleCreateWorkspace({
@@ -321,7 +321,7 @@ class WrapperHome extends PureComponent<Props, State> {
       workspaces,
       isLoading,
       vcs,
-      activeSpace,
+      activeProject: activeSpace,
       workspaceMetas,
       apiSpecs,
     } = wrapperProps;

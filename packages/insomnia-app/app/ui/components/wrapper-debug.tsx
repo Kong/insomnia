@@ -56,7 +56,7 @@ interface Props {
 class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, activeWorkspaceMeta, activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
+    const { vcs, activeWorkspace, activeWorkspaceMeta, activeProject: activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
       return null;

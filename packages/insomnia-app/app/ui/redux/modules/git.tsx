@@ -147,7 +147,7 @@ export const cloneGitRepository = ({ createFsClient }: {
 }) => {
   return (dispatch, getState: () => RootState) => {
     // TODO: in the future we should ask which space to clone into...?
-    const activeSpace = selectActiveProject(getState());
+    const activeProject = selectActiveProject(getState());
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
       onSubmitEdits: async repoSettingsPatch => {
@@ -258,7 +258,7 @@ export const cloneGitRepository = ({ createFsClient }: {
                 const doc: BaseModel = YAML.parse(docYaml.toString());
                 if (isWorkspace(doc)) {
                   // @ts-expect-error parentId can be string or null for a workspace
-                  doc.parentId = activeSpace?._id || null;
+                  doc.parentId = activeProject?._id || null;
                 }
                 forceWorkspaceScopeToDesign(doc);
                 await db.upsert(doc);

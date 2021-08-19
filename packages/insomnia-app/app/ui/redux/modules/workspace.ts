@@ -9,7 +9,7 @@ import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../mode
 import { showPrompt } from '../../components/modals';
 import { selectActiveActivity, selectActiveProject, selectAllWorkspaces } from '../selectors';
 import { RootState } from '.';
-import { setActiveActivity, setActiveSpace, setActiveWorkspace } from './global';
+import { setActiveActivity, setActiveProject, setActiveWorkspace } from './global';
 
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
@@ -41,7 +41,7 @@ export const createWorkspace = ({ scope, onCreate }: {
   onCreate?: OnWorkspaceCreateCallback;
 }) => {
   return (dispatch, getState) => {
-    const activeSpace = selectActiveProject(getState());
+    const activeProject = selectActiveProject(getState());
 
     const design = isDesign({
       scope,
@@ -61,7 +61,7 @@ export const createWorkspace = ({ scope, onCreate }: {
             {
               name,
               scope,
-              parentId: activeSpace._id,
+              parentId: activeProject._id,
             },
             onCreate,
           ),
@@ -88,7 +88,7 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
 
     // Activate the correct space
     const nextProjectId = workspace.parentId;
-    dispatch(setActiveSpace(nextProjectId));
+    dispatch(setActiveProject(nextProjectId));
 
     // Activate the correct workspace
     const nextWorkspaceId = workspace._id;

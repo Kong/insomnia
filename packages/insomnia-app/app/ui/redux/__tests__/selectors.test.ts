@@ -16,8 +16,8 @@ describe('selectors', () => {
       // set first as selected
       const state = await reduxStateForTest({ activeProjectId: spaceA._id });
 
-      const space = selectActiveProject(state);
-      expect(space).toStrictEqual(spaceA);
+      const project = selectActiveProject(state);
+      expect(project).toStrictEqual(spaceA);
     });
 
     it('should return base space if active space not found', async () => {
@@ -28,8 +28,8 @@ describe('selectors', () => {
       // set first as selected
       const state = await reduxStateForTest({ activeProjectId: 'some-other-space' });
 
-      const space = selectActiveProject(state);
-      expect(space).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: BASE_PROJECT_ID }));
+      const project = selectActiveProject(state);
+      expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: BASE_PROJECT_ID }));
     });
 
     it('should return base space if no active space', async () => {
@@ -40,8 +40,8 @@ describe('selectors', () => {
       // set base as selected
       const state = await reduxStateForTest({ activeProjectId: undefined });
 
-      const space = selectActiveProject(state);
-      expect(space).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: BASE_PROJECT_ID }));
+      const project = selectActiveProject(state);
+      expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: BASE_PROJECT_ID }));
     });
   });
 });

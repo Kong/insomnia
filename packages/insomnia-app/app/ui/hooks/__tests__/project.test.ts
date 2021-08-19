@@ -12,7 +12,7 @@ import { BASE_PROJECT_ID, Project } from '../../../models/project';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
-import { useRemoteSpaces } from '../project';
+import { useRemoteProjects } from '../project';
 
 jest.mock('../../../sync/vcs/vcs');
 
@@ -27,7 +27,7 @@ describe('useRemoteSpaces', () => {
   it('should not load teams if VCS is not set', async () => {
     const store = mockStore(await reduxStateForTest());
 
-    const { result } = renderHook(() => useRemoteSpaces(), { wrapper: withReduxStore(store) });
+    const { result } = renderHook(() => useRemoteProjects(), { wrapper: withReduxStore(store) });
     expect(result.current.loading).toBe(false);
   });
 
@@ -36,7 +36,7 @@ describe('useRemoteSpaces', () => {
 
     const vcs = newMockedVcs();
 
-    const { result } = renderHook(() => useRemoteSpaces(vcs), { wrapper: withReduxStore(store) });
+    const { result } = renderHook(() => useRemoteProjects(vcs), { wrapper: withReduxStore(store) });
     result.current.refresh();
 
     expect(vcs.teams).not.toHaveBeenCalled();
@@ -54,7 +54,7 @@ describe('useRemoteSpaces', () => {
     vcs1.teams.mockResolvedValue([team1]);
     vcs2.teams.mockResolvedValue([team2]);
 
-    const { result, rerender, waitFor } = renderHook((prop: VCS) => useRemoteSpaces(prop), { initialProps: vcs1, wrapper: withReduxStore(store) });
+    const { result, rerender, waitFor } = renderHook((prop: VCS) => useRemoteProjects(prop), { initialProps: vcs1, wrapper: withReduxStore(store) });
 
     // Wait for effect
     await waitFor(() => result.current.loading === true);
@@ -70,9 +70,9 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs2.teams).toHaveBeenCalledTimes(1);
 
-    const allSpaces = await models.project.all();
-    expect(allSpaces).toHaveLength(3);
-    expect(allSpaces).toEqual(expect.arrayContaining([
+    const allProjects = await models.project.all();
+    expect(allProjects).toHaveLength(3);
+    expect(allProjects).toEqual(expect.arrayContaining([
       expect.objectContaining<Partial<Project>>({
         _id: BASE_PROJECT_ID,
       }),
@@ -93,7 +93,7 @@ describe('useRemoteSpaces', () => {
     const vcs = newMockedVcs();
     vcs.teams.mockResolvedValue([]);
 
-    const { result, waitFor } = renderHook(() => useRemoteSpaces(vcs), { wrapper: withReduxStore(store) });
+    const { result, waitFor } = renderHook(() => useRemoteProjects(vcs), { wrapper: withReduxStore(store) });
 
     // Wait for effect
     await waitFor(() => result.current.loading === true);
@@ -112,9 +112,9 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs.teams).toHaveBeenCalledTimes(3);
 
-    const allSpaces = await models.project.all();
-    expect(allSpaces).toHaveLength(3);
-    expect(allSpaces).toEqual(expect.arrayContaining([
+    const allProjects = await models.project.all();
+    expect(allProjects).toHaveLength(3);
+    expect(allProjects).toEqual(expect.arrayContaining([
       expect.objectContaining<Partial<Project>>({
         _id: BASE_PROJECT_ID,
       }),

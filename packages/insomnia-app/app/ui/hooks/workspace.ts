@@ -49,35 +49,35 @@ const reducer: Reducer<State, Action> = (prevState, action) => {
 export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
   const workspaces = useSelector(selectAllWorkspaces);
-  const activeSpace = useSelector(selectActiveProject);
-  const remoteSpaces = useSelector(selectRemoteProjects);
+  const activeProject = useSelector(selectActiveProject);
+  const remoteProjects = useSelector(selectRemoteProjects);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   // Local state
-  const [{ loading, localBackendProjects: localProjects, remoteBackendProjects: remoteProjects, pullingBackendProjects: pullingProjects }, _dispatch] = useReducer(reducer, initialState);
+  const [{ loading, localBackendProjects: localProjects, remoteBackendProjects, pullingBackendProjects: pullingProjects }, _dispatch] = useReducer(reducer, initialState);
   const dispatch = useSafeReducerDispatch(_dispatch);
 
   // Refresh remote spaces
   const refresh = useCallback(async () => {
-    if (!vcs || !isLoggedIn || !isRemoteProject(activeSpace)) {
+    if (!vcs || !isLoggedIn || !isRemoteProject(activeProject)) {
       return;
     }
 
     dispatch({ type: 'loadBackendProjects' });
-    const remote = await vcs.remoteBackendProjects(activeSpace.remoteId);
+    const remote = await vcs.remoteBackendProjects(activeProject.remoteId);
     const local = await vcs.localBackendProjects();
     dispatch({ type: 'saveBackendProjects', local, remote });
-  }, [vcs, isLoggedIn, activeSpace, dispatch]);
+  }, [vcs, isLoggedIn, activeProject, dispatch]);
 
   // Find remote spaces that haven't been pulled
-  const missingProjects = useMemo(() => remoteProjects.filter(({ id, rootDocumentId }) => {
+  const missingProjects = useMemo(() => remoteBackendProjects.filter(({ id, rootDocumentId }) => {
     const localProjectExists = localProjects.find(p => p.id === id);
     const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
     // Mark as missing if:
     //   - the project doesn't yet exists locally
     //   - the project exists locally but somehow the workspace doesn't anymore
     return !(workspaceExists && localProjectExists);
-  }), [localProjects, remoteProjects, workspaces]);
+  }), [localProjects, remoteBackendProjects, workspaces]);
 
   // Pull a remote space
   const pull = useCallback(async (project: BackendProjectWithTeam) => {
@@ -93,7 +93,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
       // Remove all projects for workspace first
       await newVCS.removeBackendProjectsForRoot(project.rootDocumentId);
 
-      await pullProject({ vcs: newVCS, project, remoteSpaces });
+      await pullProject({ vcs: newVCS, backendProject: project, remoteProjects });
 
       await refresh();
     } catch (err) {
@@ -104,7 +104,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     } finally {
       dispatch({ type: 'stopPullingBackendProject', projectId: project.id });
     }
-  }, [vcs, refresh, remoteSpaces, dispatch]);
+  }, [vcs, refresh, remoteProjects, dispatch]);
 
   // If the refresh callback changes, refresh
   useAsync(refresh, [refresh]);

@@ -24,7 +24,7 @@ import {
   getAndClearShowPromptMockArgs,
 } from '../../../../test-utils';
 import { cloneGitRepository, setupGitRepository } from '../git';
-import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE, SET_ACTIVE_WORKSPACE } from '../global';
+import { LOAD_START, LOAD_STOP, SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 
 jest.mock('../../../components/modals');
 jest.mock('../../../../sync/git/shallow-clone');
@@ -121,7 +121,7 @@ describe('git', () => {
           type: LOAD_STOP,
         },
         {
-          type: SET_ACTIVE_SPACE,
+          type: SET_ACTIVE_PROJECT,
           projectId: BASE_PROJECT_ID,
         },
         {

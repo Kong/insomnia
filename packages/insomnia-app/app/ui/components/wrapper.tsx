@@ -472,7 +472,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activeEnvironment,
       activeGitRepository,
       activeWorkspace,
-      activeSpace,
+      activeProject: activeSpace,
       activeApiSpec,
       activeWorkspaceClientCertificates,
       activity,

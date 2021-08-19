@@ -56,7 +56,7 @@ export const LOAD_START = 'global/load-start';
 export const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
-export const SET_ACTIVE_SPACE = 'global/activate-space';
+export const SET_ACTIVE_PROJECT = 'global/activate-space';
 export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
@@ -82,7 +82,7 @@ function activeActivityReducer(state: string | null = null, action) {
 
 function activeSpaceReducer(state: string = BASE_PROJECT_ID, action) {
   switch (action.type) {
-    case SET_ACTIVE_SPACE:
+    case SET_ACTIVE_PROJECT:
       return action.projectId;
 
     default:
@@ -378,11 +378,11 @@ export const setActiveActivity = (activity: GlobalActivity) => {
   };
 };
 
-export const setActiveSpace = (projectId: string) => {
+export const setActiveProject = (projectId: string) => {
   const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
   window.localStorage.setItem(key, JSON.stringify(projectId));
   return {
-    type: SET_ACTIVE_SPACE,
+    type: SET_ACTIVE_PROJECT,
     projectId,
   };
 };
@@ -668,7 +668,7 @@ export function initActiveSpace() {
     // Nothing here...
   }
 
-  return setActiveSpace(projectId || BASE_PROJECT_ID);
+  return setActiveProject(projectId || BASE_PROJECT_ID);
 }
 
 export function initSpaceSortOrder() {

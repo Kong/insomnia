@@ -15,7 +15,7 @@ import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
-import { logCollectionMovedToSpace } from '../../../sync/vcs/migrate-collections';
+import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
 import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../../sync/vcs/pull-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
@@ -149,7 +149,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     const { vcs, workspace, workspaceMeta, space } = this.props;
 
     try {
-      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, space });
+      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project: space });
       await this.refreshMainAttributes();
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);
@@ -331,11 +331,11 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       loadingProjectPull: true,
     });
 
-    const pulledIntoSpace = await pullProject({ vcs, project: p, remoteSpaces });
-    if (pulledIntoSpace._id !== space._id) {
+    const pulledIntoProject = await pullProject({ vcs, backendProject: p, remoteProjects: remoteSpaces });
+    if (pulledIntoProject._id !== space._id) {
       // If pulled into a different space, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
-      logCollectionMovedToSpace(workspace, pulledIntoSpace);
+      logCollectionMovedToProject(workspace, pulledIntoProject);
     }
 
     await this.refreshMainAttributes({

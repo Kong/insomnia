@@ -4,9 +4,9 @@ import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { BASE_PROJECT_ID, isRemoteProject, Project } from '../../../models/project';
 import { showAlert, showPrompt } from '../../components/modals';
-import { setActiveActivity, setActiveSpace } from './global';
+import { setActiveActivity, setActiveProject } from './global';
 
-export const createSpace = () => dispatch => {
+export const createProject = () => dispatch => {
   const defaultValue = `My ${strings.project.singular}`;
 
   showPrompt({
@@ -17,16 +17,16 @@ export const createSpace = () => dispatch => {
     defaultValue,
     selectText: true,
     onComplete: async name => {
-      const space = await models.project.create({ name });
+      const project = await models.project.create({ name });
       trackEvent('Project', 'Create');
-      dispatch(setActiveSpace(space._id));
+      dispatch(setActiveProject(project._id));
       dispatch(setActiveActivity(ACTIVITY_HOME));
       trackSegmentEvent(SegmentEvent.projectLocalCreate);
     },
   });
 };
 
-export const removeSpace = (space: Project) => dispatch => {
+export const removeProject = (space: Project) => dispatch => {
   const message = isRemoteProject(space)
     ? `Deleting a ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. The ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will continue to exist remotely. Deleting this ${strings.project.singular.toLowerCase()} locally cannot be undone. Are you sure you want to delete ${space.name}?`
     : `Deleting a ${strings.project.singular.toLowerCase()} will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${space.name}?`;
@@ -41,7 +41,7 @@ export const removeSpace = (space: Project) => dispatch => {
       await models.project.remove(space);
       trackEvent('Project', 'Delete');
       // Show base space
-      dispatch(setActiveSpace(BASE_PROJECT_ID));
+      dispatch(setActiveProject(BASE_PROJECT_ID));
       // Show home in case not already on home
       dispatch(setActiveActivity(ACTIVITY_HOME));
       trackSegmentEvent(SegmentEvent.projectLocalDelete);

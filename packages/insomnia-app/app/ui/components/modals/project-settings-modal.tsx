@@ -30,12 +30,12 @@ class SpaceSettingsModal extends PureComponent<Props> {
   }
 
   _handleRemoveSpace() {
-    this.props.handleRemoveSpace(this.props.space);
+    this.props.handleRemoveSpace(this.props.project);
     this.hide();
   }
 
   async _handleRename(name: string) {
-    const { space } = this.props;
+    const { project: space } = this.props;
     await models.project.update(space, { name });
   }
 
@@ -48,20 +48,20 @@ class SpaceSettingsModal extends PureComponent<Props> {
   }
 
   render() {
-    const { space } = this.props;
-    if (!projectHasSettings(space)) {
+    const { project } = this.props;
+    if (!projectHasSettings(project)) {
       return null;
     }
 
-    const isRemote = isRemoteProject(space);
+    const isRemote = isRemoteProject(project);
 
     return (
       <Modal ref={this._handleSetModalRef} freshState>
-        <ModalHeader key={`header::${space._id}`}>
+        <ModalHeader key={`header::${project._id}`}>
           {strings.project.singular} Settings{' '}
-          <div className="txt-sm selectable faint monospace">{space._id}</div>
+          <div className="txt-sm selectable faint monospace">{project._id}</div>
         </ModalHeader>
-        <ModalBody key={`body::${space._id}`} className="pad">
+        <ModalBody key={`body::${project._id}`} className="pad">
           <div className="form-control form-control--outlined">
             <label>
               Name
@@ -70,7 +70,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
                   <HelpTooltip className="space-left">
                     To rename a {strings.remoteProject.singular.toLowerCase()} {strings.project.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
                   </HelpTooltip>
-                  <input disabled readOnly defaultValue={space.name} />
+                  <input disabled readOnly defaultValue={project.name} />
                 </>
               )}
               {!isRemote && (
@@ -79,7 +79,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
                   type="text"
                   delay={500}
                   placeholder={`My ${strings.project.singular}`}
-                  defaultValue={space.name}
+                  defaultValue={project.name}
                   onChange={this._handleRename}
                 />
               )}
@@ -102,14 +102,14 @@ class SpaceSettingsModal extends PureComponent<Props> {
 }
 
 const mapStateToProps = (state: RootState) => {
-  const space = selectActiveProject(state);
-  return { space };
+  const project = selectActiveProject(state);
+  return { project };
 };
 
 const mapDispatchToProps = dispatch => {
   const boundSpaceActions = bindActionCreators(projectActions, dispatch);
   return {
-    handleRemoveSpace: boundSpaceActions.removeSpace,
+    handleRemoveSpace: boundSpaceActions.removeProject,
   };
 };
 

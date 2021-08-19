@@ -6,9 +6,9 @@ import styled from 'styled-components';
 import { strings } from '../../../common/strings';
 import { isBaseProject, isNotBaseProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
-import { useRemoteSpaces } from '../../hooks/project';
-import { setActiveSpace } from '../../redux/modules/global';
-import { createSpace } from '../../redux/modules/project';
+import { useRemoteProjects } from '../../hooks/project';
+import { setActiveProject } from '../../redux/modules/global';
+import { createProject } from '../../redux/modules/project';
 import { selectActiveProject, selectProjects } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/project-settings-modal';
@@ -40,8 +40,8 @@ const TooltipIcon = ({ message, icon }: { message: string, icon: SvgIconProps['i
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
 const home = <TooltipIcon message={`${strings.baseProject.singular} ${strings.project.singular} (Always ${strings.localProject.singular})`} icon="home" />;
-const remoteSpace = <TooltipIcon message={`${strings.remoteProject.singular} ${strings.project.singular}`} icon="globe" />;
-const localSpace = <TooltipIcon message={`${strings.localProject.singular} ${strings.project.singular}`} icon="laptop" />;
+const remoteProject = <TooltipIcon message={`${strings.remoteProject.singular} ${strings.project.singular}`} icon="globe" />;
+const localProject = <TooltipIcon message={`${strings.localProject.singular} ${strings.project.singular}`} icon="laptop" />;
 
 interface Props {
   vcs?: VCS;
@@ -59,7 +59,7 @@ const SpaceDropdownItem: FC<{
   return (
     <DropdownItem
       key={_id}
-      icon={isBase ? home : isRemote ? remoteSpace : localSpace}
+      icon={isBase ? home : isRemote ? remoteProject : localProject}
       right={isActive && <Checkmark icon="checkmark" />}
       value={_id}
       onClick={setActive}
@@ -71,39 +71,39 @@ const SpaceDropdownItem: FC<{
 SpaceDropdownItem.displayName = DropdownItem.name; // This is required because the Dropdown component will otherwise silently disregard this component.
 
 export const SpaceDropdown: FC<Props> = ({ vcs }) => {
-  const { loading, refresh } = useRemoteSpaces(vcs);
+  const { loading, refresh } = useRemoteProjects(vcs);
 
-  const spaces = useSelector(selectProjects);
+  const projects = useSelector(selectProjects);
 
-  const activeSpace = useSelector(selectActiveProject);
+  const activeProject = useSelector(selectActiveProject);
   const dispatch = useDispatch();
-  const setActive = useCallback((projectId: string) => dispatch(setActiveSpace(projectId)), [dispatch]);
-  const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
+  const setActive = useCallback((projectId: string) => dispatch(setActiveProject(projectId)), [dispatch]);
+  const createNew = useCallback(() => dispatch(createProject()), [dispatch]);
   const showSettings = useCallback(() => showModal(SpaceSettingsModal), []);
 
   // dropdown button
   const button = useMemo(() => (
-    <button type="button" className="row" title={activeSpace.name}>
-      {activeSpace.name}
+    <button type="button" className="row" title={activeProject.name}>
+      {activeProject.name}
       <i className="fa fa-caret-down space-left" />
     </button>
-  ), [activeSpace]);
+  ), [activeProject]);
 
-  const renderSpace = useCallback((space: Project) => (
+  const renderProject = useCallback((project: Project) => (
     <SpaceDropdownItem
-      key={space._id}
-      isActive={space._id === activeSpace._id}
+      key={project._id}
+      isActive={project._id === activeProject._id}
       setActive={setActive}
-      space={space}
+      space={project}
     />
-  ), [setActive, activeSpace._id]);
+  ), [setActive, activeProject._id]);
 
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      {spaces.filter(isBaseProject).map(renderSpace)}
+      {projects.filter(isBaseProject).map(renderProject)}
       <DropdownDivider>All {strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
-      {spaces.filter(isNotBaseProject).map(renderSpace)}
-      {projectHasSettings(activeSpace) && <>
+      {projects.filter(isNotBaseProject).map(renderProject)}
+      {projectHasSettings(activeProject) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>
           {strings.project.singular} Settings
