@@ -49,7 +49,7 @@ describe('space', () => {
       const project = projects[0];
       expect(project.name).toBe(spaceName);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalCreate);
-      expect(trackEvent).toHaveBeenCalledWith('Space', 'Create');
+      expect(trackEvent).toHaveBeenCalledWith('Project', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_PROJECT,
