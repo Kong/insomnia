@@ -7,7 +7,7 @@ import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { trackEvent } from '../../../common/analytics';
-import type { GlobalActivity, SpaceSortOrder } from '../../../common/constants';
+import type { GlobalActivity, ProjectSortOrder } from '../../../common/constants';
 import {
   ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
@@ -90,7 +90,7 @@ function activeSpaceReducer(state: string = BASE_PROJECT_ID, action) {
   }
 }
 
-function spaceSortOrderReducer(state: SpaceSortOrder = 'modified-desc', action) {
+function spaceSortOrderReducer(state: ProjectSortOrder = 'modified-desc', action) {
   switch (action.type) {
     case SET_DASHBOARD_SORT_ORDER:
       return action.payload.sortOrder;
@@ -153,7 +153,7 @@ function loginStateChangeReducer(state = false, action) {
 export interface GlobalState {
   isLoading: boolean;
   activeProjectId: string;
-  projectSortOrder: SpaceSortOrder;
+  projectSortOrder: ProjectSortOrder;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
@@ -387,7 +387,7 @@ export const setActiveSpace = (spaceId: string) => {
   };
 };
 
-export const setSpaceSortOrder = (sortOrder: SpaceSortOrder) => {
+export const setSpaceSortOrder = (sortOrder: ProjectSortOrder) => {
   const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
   window.localStorage.setItem(key, JSON.stringify(sortOrder));
   return {
@@ -672,7 +672,7 @@ export function initActiveSpace() {
 }
 
 export function initSpaceSortOrder() {
-  let spaceSortOrder: SpaceSortOrder = 'modified-desc';
+  let spaceSortOrder: ProjectSortOrder = 'modified-desc';
 
   try {
     const spaceSortOrderKey = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;

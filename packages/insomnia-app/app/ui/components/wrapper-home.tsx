@@ -18,7 +18,7 @@ import { unreachableCase } from 'ts-assert-unreachable';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   AUTOBIND_CFG,
-  SpaceSortOrder,
+  ProjectSortOrder,
 } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
@@ -60,7 +60,7 @@ interface State {
   filter: string;
 }
 
-function orderSpaceCards(orderBy: SpaceSortOrder) {
+function orderSpaceCards(orderBy: ProjectSortOrder) {
   return (cardA: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>, cardB: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>) => {
     switch (orderBy) {
       case 'modified-desc':
