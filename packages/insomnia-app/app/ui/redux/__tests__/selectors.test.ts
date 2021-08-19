@@ -14,7 +14,7 @@ describe('selectors', () => {
       await models.space.create();
 
       // set first as selected
-      const state = await reduxStateForTest({ activeSpaceId: spaceA._id });
+      const state = await reduxStateForTest({ activeProjectId: spaceA._id });
 
       const space = selectActiveSpace(state);
       expect(space).toStrictEqual(spaceA);
@@ -26,7 +26,7 @@ describe('selectors', () => {
       await models.space.create();
 
       // set first as selected
-      const state = await reduxStateForTest({ activeSpaceId: 'some-other-space' });
+      const state = await reduxStateForTest({ activeProjectId: 'some-other-space' });
 
       const space = selectActiveSpace(state);
       expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_SPACE_ID }));
@@ -38,7 +38,7 @@ describe('selectors', () => {
       await models.space.create();
 
       // set base as selected
-      const state = await reduxStateForTest({ activeSpaceId: undefined });
+      const state = await reduxStateForTest({ activeProjectId: undefined });
 
       const space = selectActiveSpace(state);
       expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_SPACE_ID }));

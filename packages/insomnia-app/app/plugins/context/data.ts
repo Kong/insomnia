@@ -19,33 +19,33 @@ interface InsomniaExport {
 
 type HarExport = Omit<InsomniaExport, 'format'>;
 
-const buildImportRawConfig = (options: PluginImportOptions, activeSpaceId: string): ImportRawConfig => ({
+const buildImportRawConfig = (options: PluginImportOptions, activeProjectId: string): ImportRawConfig => ({
   getWorkspaceId: () => Promise.resolve(options.workspaceId || null),
   getWorkspaceScope: options.scope && (() => (
     Promise.resolve<WorkspaceScope>(options.scope as WorkspaceScope))
   ),
-  getSpaceId: () => Promise.resolve(activeSpaceId),
+  getSpaceId: () => Promise.resolve(activeProjectId),
 });
 
-const getWorkspaces = (activeSpaceId?: string) => {
-  if (activeSpaceId) {
+const getWorkspaces = (activeProjectId?: string) => {
+  if (activeProjectId) {
     trackSegmentEvent(SegmentEvent.pluginExportLoadWorkspacesInSpace);
-    return models.workspace.findByParentId(activeSpaceId);
+    return models.workspace.findByParentId(activeProjectId);
   } else {
     trackSegmentEvent(SegmentEvent.pluginExportLoadAllWokspace);
     return models.workspace.all();
   }
 };
 
-// Only in the case of running unit tests from Inso via send-request can activeSpaceId be undefined. This is because the concept of a space doesn't exist in git/insomnia sync or an export file
-export const init = (activeSpaceId?: string) => ({
+// Only in the case of running unit tests from Inso via send-request can activeProjectId be undefined. This is because the concept of a space doesn't exist in git/insomnia sync or an export file
+export const init = (activeProjectId?: string) => ({
   data: {
     import: {
       uri: async (uri: string, options: PluginImportOptions = {}) => {
-        await importUri(uri, buildImportRawConfig(options, activeSpaceId || BASE_SPACE_ID));
+        await importUri(uri, buildImportRawConfig(options, activeProjectId || BASE_SPACE_ID));
       },
       raw: async (text: string, options: PluginImportOptions = {}) => {
-        await importRaw(text, buildImportRawConfig(options, activeSpaceId || BASE_SPACE_ID));
+        await importRaw(text, buildImportRawConfig(options, activeProjectId || BASE_SPACE_ID));
       },
     },
     export: {
@@ -54,7 +54,7 @@ export const init = (activeSpaceId?: string) => ({
         includePrivate,
         format,
       }: InsomniaExport = {}) => exportWorkspacesData(
-        workspace ? [workspace] : await getWorkspaces(activeSpaceId),
+        workspace ? [workspace] : await getWorkspaces(activeProjectId),
         Boolean(includePrivate),
         format || 'json',
       ),
@@ -63,7 +63,7 @@ export const init = (activeSpaceId?: string) => ({
         workspace,
         includePrivate,
       }: HarExport = {}) => exportWorkspacesHAR(
-        workspace ? [workspace] : await getWorkspaces(activeSpaceId),
+        workspace ? [workspace] : await getWorkspaces(activeProjectId),
         Boolean(includePrivate),
       ),
     },

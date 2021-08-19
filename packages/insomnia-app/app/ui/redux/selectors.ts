@@ -83,9 +83,9 @@ export const selectRemoteSpaces = createSelector(
 
 export const selectActiveSpace = createSelector(
   selectEntities,
-  (state: RootState) => state.global.activeSpaceId,
-  (entities, activeSpaceId) => {
-    return entities.spaces[activeSpaceId] || entities.spaces[BASE_SPACE_ID];
+  (state: RootState) => state.global.activeProjectId,
+  (entities, activeProjectId) => {
+    return entities.spaces[activeProjectId] || entities.spaces[BASE_SPACE_ID];
   },
 );
 

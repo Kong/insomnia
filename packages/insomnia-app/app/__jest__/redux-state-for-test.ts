@@ -9,7 +9,7 @@ export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Prom
   global: {
     activeWorkspaceId: null,
     activeActivity: ACTIVITY_HOME,
-    activeSpaceId: BASE_SPACE_ID,
+    activeProjectId: BASE_SPACE_ID,
     spaceSortOrder: 'modified-desc',
     isLoading: false,
     isLoggedIn: false,

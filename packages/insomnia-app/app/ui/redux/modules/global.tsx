@@ -152,7 +152,7 @@ function loginStateChangeReducer(state = false, action) {
 
 export interface GlobalState {
   isLoading: boolean;
-  activeSpaceId: string;
+  activeProjectId: string;
   spaceSortOrder: SpaceSortOrder;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
@@ -164,7 +164,7 @@ export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
   spaceSortOrder: spaceSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
-  activeSpaceId: activeSpaceReducer,
+  activeProjectId: activeSpaceReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
