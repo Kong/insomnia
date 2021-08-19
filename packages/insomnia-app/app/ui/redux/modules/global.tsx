@@ -25,6 +25,7 @@ import {
   exportWorkspacesData,
   exportWorkspacesHAR,
 } from '../../../common/export';
+import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { Environment, isEnvironment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
@@ -493,7 +494,7 @@ export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
     dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
-      message: <>There are no workspaces to export in the <strong>{activeProjectName}</strong> space.</>,
+      message: <>There are no workspaces to export in the <strong>{activeProjectName}</strong> {strings.project.singular.toLowerCase()}.</>,
     });
     return;
   }
