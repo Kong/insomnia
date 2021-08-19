@@ -181,14 +181,14 @@ class WrapperHome extends PureComponent<Props, State> {
   _handleCollectionCreate() {
     const {
       handleCreateWorkspace,
-      wrapperProps: { activeProject: activeSpace, vcs, isLoggedIn },
+      wrapperProps: { activeProject, vcs, isLoggedIn },
     } = this.props;
 
     handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
       onCreate: async workspace => {
         // Don't mark for sync if not logged in at the time of creation
-        if (isLoggedIn && vcs && isRemoteProject(activeSpace)) {
+        if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
           await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
@@ -321,7 +321,7 @@ class WrapperHome extends PureComponent<Props, State> {
       workspaces,
       isLoading,
       vcs,
-      activeProject: activeSpace,
+      activeProject,
       workspaceMetas,
       apiSpecs,
     } = wrapperProps;
@@ -340,7 +340,7 @@ class WrapperHome extends PureComponent<Props, State> {
         <WorkspaceCard
           {...props}
           key={props.apiSpec._id}
-          activeSpace={activeSpace}
+          activeProject={activeProject}
           onSelect={() => handleActivateWorkspace({ workspace: props.workspace })}
           filter={filter}
         />

@@ -210,7 +210,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
       isPinned,
       request,
       requestGroup,
-      activeSpace,
+      activeProject,
     } = this.props;
     const { dragDirection } = this.state;
     let node;
@@ -284,7 +284,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
                 requestGroup={requestGroup}
                 hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions to have network capabilities
                 activeEnvironment={activeEnvironment}
-                activeSpace={activeSpace}
+                activeProject={activeProject}
               />
             </div>
             {isPinned && (
@@ -328,7 +328,7 @@ const dragTarget: DropTargetSpec<Props> = {
 };
 
 const mapStateToProps = (state: RootState) => ({
-  activeSpace: selectActiveProject(state),
+  activeProject: selectActiveProject(state),
   activeEnvironment: selectActiveEnvironment(state),
 });
 

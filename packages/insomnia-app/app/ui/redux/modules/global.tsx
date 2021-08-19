@@ -80,7 +80,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeSpaceReducer(state: string = BASE_PROJECT_ID, action) {
+function activeProjectReducer(state: string = BASE_PROJECT_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_PROJECT:
       return action.projectId;
@@ -90,7 +90,7 @@ function activeSpaceReducer(state: string = BASE_PROJECT_ID, action) {
   }
 }
 
-function spaceSortOrderReducer(state: ProjectSortOrder = 'modified-desc', action) {
+function projectSortOrderReducer(state: ProjectSortOrder = 'modified-desc', action) {
   switch (action.type) {
     case SET_DASHBOARD_SORT_ORDER:
       return action.payload.sortOrder;
@@ -162,9 +162,9 @@ export interface GlobalState {
 
 export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
-  projectSortOrder: spaceSortOrderReducer,
+  projectSortOrder: projectSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
-  activeProjectId: activeSpaceReducer,
+  activeProjectId: activeProjectReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
@@ -486,14 +486,14 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
 export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
   const state = getState();
-  const activeSpaceName = selectActiveProjectName(state);
+  const activeProjectName = selectActiveProjectName(state);
   const workspaces = selectWorkspacesForActiveProject(state);
 
   if (!workspaces.length) {
     dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
-      message: <>There are no workspaces to export in the <strong>{activeSpaceName}</strong> space.</>,
+      message: <>There are no workspaces to export in the <strong>{activeProjectName}</strong> space.</>,
     });
     return;
   }
@@ -656,7 +656,7 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
   });
 };
 
-export function initActiveSpace() {
+export function initActiveProject() {
   let projectId: string | null = null;
 
   try {
@@ -768,7 +768,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
 };
 
 export const init = () => [
-  initActiveSpace(),
+  initActiveProject(),
   initSpaceSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),

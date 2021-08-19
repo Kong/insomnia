@@ -39,7 +39,7 @@ interface Props extends Partial<DropdownProps> {
   hotKeyRegistry: HotKeyRegistry;
   handleSetRequestPinned: Function;
   activeEnvironment?: Environment | null;
-  activeSpace: Project;
+  activeProject: Project;
 }
 
 // Setup state for plugin actions
@@ -103,11 +103,11 @@ class RequestActionsDropdown extends PureComponent<Props, State> {
     }));
 
     try {
-      const { activeEnvironment, activeSpace, request, requestGroup } = this.props;
+      const { activeEnvironment, activeProject, request, requestGroup } = this.props;
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(activeSpace._id),
+        ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };

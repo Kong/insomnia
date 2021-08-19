@@ -20,7 +20,7 @@ export interface WorkspaceCardProps {
   apiSpec: ApiSpec;
   workspace: Workspace;
   filter: string;
-  activeSpace: Project;
+  activeProject: Project;
   lastActiveBranch?: string | null;
   lastModifiedTimestamp: number;
   lastCommitTime?: number | null;
@@ -39,7 +39,7 @@ const WorkspaceCard: FC<WorkspaceCardProps> = ({
   lastActiveBranch,
   lastModifiedTimestamp,
   workspace,
-  activeSpace,
+  activeProject,
   lastCommitTime,
   modifiedLocally,
   lastCommitAuthor,
@@ -81,7 +81,7 @@ const WorkspaceCard: FC<WorkspaceCardProps> = ({
     <WorkspaceCardDropdown
       apiSpec={apiSpec}
       workspace={workspace}
-      space={activeSpace}
+      space={activeProject}
     />
   );
 

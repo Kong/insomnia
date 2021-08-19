@@ -7,7 +7,7 @@ import { selectActiveProject } from '../selectors';
 describe('selectors', () => {
   beforeEach(globalBeforeEach);
 
-  describe('selectActiveSpace', () => {
+  describe('selectActiveProject', () => {
     it('should return the active space', async () => {
       // create two spaces
       const spaceA = await models.project.create();

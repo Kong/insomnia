@@ -56,7 +56,7 @@ interface Props {
 class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, activeWorkspaceMeta, activeProject: activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
+    const { vcs, activeWorkspace, activeWorkspaceMeta, activeProject, syncItems, isLoggedIn } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
       return null;
@@ -67,11 +67,11 @@ class WrapperDebug extends PureComponent<Props> {
 
     let insomniaSync: ReactNode = null;
 
-    if (isLoggedIn && collection && isRemoteProject(activeSpace) && vcs) {
+    if (isLoggedIn && collection && isRemoteProject(activeProject) && vcs) {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}
-        space={activeSpace}
+        space={activeProject}
         vcs={vcs}
         syncItems={syncItems}
       />;

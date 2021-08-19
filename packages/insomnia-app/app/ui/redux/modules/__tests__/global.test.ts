@@ -22,7 +22,7 @@ import { BASE_PROJECT_ID } from '../../../../models/project';
 import {
   goToNextActivity,
   initActiveActivity,
-  initActiveSpace,
+  initActiveProject,
   initActiveWorkspace,
   initSpaceSortOrder,
   LOCALSTORAGE_PREFIX,
@@ -110,7 +110,7 @@ describe('global', () => {
     });
   });
 
-  describe('setActiveSpace', () => {
+  describe('setActiveProject', () => {
     it('should update local storage', () => {
       const projectId = 'id';
       const expectedEvent = {
@@ -252,7 +252,7 @@ describe('global', () => {
     });
   });
 
-  describe('initActiveSpace', () => {
+  describe('initActiveProject', () => {
     it('should initialize from local storage', () => {
       const projectId = 'id';
       global.localStorage.setItem(
@@ -263,7 +263,7 @@ describe('global', () => {
         type: SET_ACTIVE_PROJECT,
         projectId,
       };
-      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+      expect(initActiveProject()).toStrictEqual(expectedEvent);
     });
 
     it('should default to base space if not exist', () => {
@@ -271,7 +271,7 @@ describe('global', () => {
         type: SET_ACTIVE_PROJECT,
         projectId: BASE_PROJECT_ID,
       };
-      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+      expect(initActiveProject()).toStrictEqual(expectedEvent);
     });
   });
 

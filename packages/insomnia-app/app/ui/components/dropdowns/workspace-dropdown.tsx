@@ -34,7 +34,7 @@ interface Props {
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
   activeApiSpec: ApiSpec;
-  activeSpace: Project;
+  activeProject: Project;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
   className?: string;
@@ -59,13 +59,13 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
     this.setState(state => ({
       loadingActions: { ...state.loadingActions, [p.label]: true },
     }));
-    const { activeEnvironment, activeWorkspace, activeSpace } = this.props;
+    const { activeEnvironment, activeWorkspace, activeProject } = this.props;
 
     try {
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(activeSpace._id),
+        ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };
