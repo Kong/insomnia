@@ -150,7 +150,7 @@ describe('NeDBClient', () => {
     it('should set workspace parentId to the space', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
-      const spaceId = 'prj_1';
+      const spaceId = `${models.space.prefix}_1`;
       const neDbClient = new NeDBClient(workspaceId, spaceId);
       const upsertSpy = jest.spyOn(db, 'upsert');
 
@@ -177,7 +177,7 @@ describe('NeDBClient', () => {
     it('should force to a design workspace when writing', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
-      const spaceId = 'prj_1';
+      const spaceId = `${models.space.prefix}_1`;
       const neDbClient = new NeDBClient(workspaceId, spaceId);
       const upsertSpy = jest.spyOn(db, 'upsert');
 
