@@ -34,11 +34,11 @@ describe('space', () => {
         selectText,
       } = getAndClearShowPromptMockArgs();
 
-      expect(title).toBe('Create New Space');
+      expect(title).toBe('Create New Project');
       expect(submitName).toBe('Create');
       expect(cancelable).toBe(true);
       expect(defaultValue).toBe(placeholder);
-      expect(placeholder).toBe('My Space');
+      expect(placeholder).toBe('My Project');
       expect(selectText).toBe(true);
 
       const spaceName = 'name';
@@ -66,7 +66,7 @@ describe('space', () => {
   describe('removeSpace', () => {
     it('should remove space', async () => {
       const store = mockStore(await reduxStateForTest());
-      const projectOne = await models.project.create({ name: 'My Space' });
+      const projectOne = await models.project.create({ name: 'My Project' });
       const spaceTwo = await models.project.create();
 
       store.dispatch(removeProject(projectOne));
