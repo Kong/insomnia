@@ -29,7 +29,7 @@ import {
   SET_ACTIVE_ACTIVITY,
   SET_ACTIVE_SPACE,
   SET_ACTIVE_WORKSPACE,
-  SET_SPACE_SORT_ORDER,
+  SET_DASHBOARD_SORT_ORDER,
   setActiveActivity,
   setActiveSpace,
   setActiveWorkspace,
@@ -288,7 +288,7 @@ describe('global', () => {
         'payload': {
           sortOrder,
         },
-        'type': SET_SPACE_SORT_ORDER,
+        'type': SET_DASHBOARD_SORT_ORDER,
       };
 
       expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
@@ -299,7 +299,7 @@ describe('global', () => {
         'payload': {
           sortOrder: SORT_MODIFIED_DESC,
         },
-        'type': SET_SPACE_SORT_ORDER,
+        'type': SET_DASHBOARD_SORT_ORDER,
       };
 
       expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);

@@ -57,7 +57,7 @@ export const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
 export const SET_ACTIVE_SPACE = 'global/activate-space';
-export const SET_SPACE_SORT_ORDER = 'global/space-sort-order';
+export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
@@ -92,7 +92,7 @@ function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
 
 function spaceSortOrderReducer(state: SpaceSortOrder = 'modified-desc', action) {
   switch (action.type) {
-    case SET_SPACE_SORT_ORDER:
+    case SET_DASHBOARD_SORT_ORDER:
       return action.payload.sortOrder;
 
     default:
@@ -391,7 +391,7 @@ export const setSpaceSortOrder = (sortOrder: SpaceSortOrder) => {
   const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
   window.localStorage.setItem(key, JSON.stringify(sortOrder));
   return {
-    type: SET_SPACE_SORT_ORDER,
+    type: SET_DASHBOARD_SORT_ORDER,
     payload: {
       sortOrder,
     },
