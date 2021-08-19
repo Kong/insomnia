@@ -5,7 +5,7 @@ import type { BaseModel } from './index';
 
 export const name = 'Space';
 export const type = 'Space';
-export const prefix = 'sp';
+export const prefix = 'prj';
 export const canDuplicate = false;
 export const canSync = false;
 
