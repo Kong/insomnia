@@ -1,7 +1,7 @@
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
-import { RemoteSpace } from '../../models/space';
+import { RemoteSpace } from '../../models/project';
 import { isWorkspace } from '../../models/workspace';
 import { initializeSpaceFromTeam, initializeWorkspaceFromProject } from './initialize-model-from';
 import { ProjectWithTeam } from './normalize-project-team';

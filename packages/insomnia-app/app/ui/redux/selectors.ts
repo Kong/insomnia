@@ -5,9 +5,9 @@ import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { BASE_PROJECT_ID, isRemoteSpace } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { BASE_PROJECT_ID, isRemoteSpace } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 

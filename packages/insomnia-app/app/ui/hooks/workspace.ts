@@ -2,7 +2,7 @@ import { Reducer, useCallback, useMemo, useReducer } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 
-import { isRemoteSpace } from '../../models/space';
+import { isRemoteSpace } from '../../models/project';
 import { Project } from '../../sync/types';
 import { ProjectWithTeam } from '../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../sync/vcs/pull-project';

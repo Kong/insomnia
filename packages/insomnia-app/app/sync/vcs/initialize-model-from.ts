@@ -1,6 +1,6 @@
 import * as models from '../../models';
-import { RemoteSpace } from '../../models/space';
-import { Space } from '../../models/space';
+import { RemoteSpace } from '../../models/project';
+import { Space } from '../../models/project';
 import { Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { Team } from '../types';
 import { Project } from '../types';

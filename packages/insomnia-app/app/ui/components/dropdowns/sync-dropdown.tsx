@@ -10,7 +10,7 @@ import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { isRemoteSpace, Space } from '../../../models/space';
+import { isRemoteSpace, Space } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';

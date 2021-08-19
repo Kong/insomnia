@@ -3,7 +3,7 @@ import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
 import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
 import * as models from '../../models';
-import { BASE_PROJECT_ID } from '../../models/space';
+import { BASE_PROJECT_ID } from '../../models/project';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 
 interface PluginImportOptions {

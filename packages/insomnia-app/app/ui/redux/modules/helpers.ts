@@ -1,5 +1,5 @@
 import { strings } from '../../../common/strings';
-import { Space } from '../../../models/space';
+import { Space } from '../../../models/project';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';

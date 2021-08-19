@@ -10,9 +10,9 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
+import { Space } from '../../../models/project';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
-import { Space } from '../../../models/space';
 import { incrementDeletedRequests } from '../../../models/stats';
 // Plugin action related imports
 import type { RequestAction } from '../../../plugins';

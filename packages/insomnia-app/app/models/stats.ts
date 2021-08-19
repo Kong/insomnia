@@ -1,9 +1,9 @@
 import { database as db } from '../common/database';
 import { isGrpcRequest } from './grpc-request';
 import type { BaseModel } from './index';
+import { Space } from './project';
 import { isRequest } from './request';
 import type { RequestGroup } from './request-group';
-import { Space } from './space';
 import type { Workspace } from './workspace';
 
 export const name = 'Stats';

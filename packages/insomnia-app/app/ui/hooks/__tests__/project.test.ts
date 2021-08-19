@@ -8,11 +8,11 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../__jest__/with-redux-store';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID, Space } from '../../../models/space';
+import { BASE_PROJECT_ID, Space } from '../../../models/project';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
-import { useRemoteSpaces } from '../space';
+import { useRemoteSpaces } from '../project';
 
 jest.mock('../../../sync/vcs/vcs');
 

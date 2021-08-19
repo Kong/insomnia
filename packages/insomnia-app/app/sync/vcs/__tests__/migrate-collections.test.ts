@@ -5,7 +5,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { isLoggedIn as _isLoggedIn } from '../../../account/session';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID } from '../../../models/space';
+import { BASE_PROJECT_ID } from '../../../models/project';
 import { projectWithTeamSchema, teamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { initializeSpaceFromTeam } from '../initialize-model-from';

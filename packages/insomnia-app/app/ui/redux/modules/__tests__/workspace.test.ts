@@ -10,7 +10,7 @@ import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
 import { CookieJar } from '../../../../models/cookie-jar';
 import { Environment } from '../../../../models/environment';
-import { BASE_PROJECT_ID } from '../../../../models/space';
+import { BASE_PROJECT_ID } from '../../../../models/project';
 import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../../models/workspace';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';

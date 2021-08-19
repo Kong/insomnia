@@ -5,7 +5,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models/index';
-import { BASE_PROJECT_ID, Space } from '../../../models/space';
+import { BASE_PROJECT_ID, Space } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import * as plugin from '../data';
 

@@ -2,7 +2,7 @@ import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/ana
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID, isRemoteSpace, Space } from '../../../models/space';
+import { BASE_PROJECT_ID, isRemoteSpace, Space } from '../../../models/project';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveSpace } from './global';
 

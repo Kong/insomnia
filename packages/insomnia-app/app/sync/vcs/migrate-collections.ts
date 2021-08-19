@@ -2,7 +2,7 @@ import { isLoggedIn } from '../../account/session';
 import { asyncFilter } from '../../common/async-array-helpers';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isRemoteSpace, RemoteSpace } from '../../models/space';
+import { isRemoteSpace, RemoteSpace } from '../../models/project';
 import {  isCollection, Workspace } from '../../models/workspace';
 import { Team } from '../types';
 import { initializeSpaceFromTeam } from './initialize-model-from';

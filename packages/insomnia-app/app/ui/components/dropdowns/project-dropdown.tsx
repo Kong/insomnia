@@ -4,14 +4,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
-import { isBaseSpace, isNotBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/space';
+import { isBaseSpace, isNotBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
-import { useRemoteSpaces } from '../../hooks/space';
+import { useRemoteSpaces } from '../../hooks/project';
 import { setActiveSpace } from '../../redux/modules/global';
-import { createSpace } from '../../redux/modules/space';
+import { createSpace } from '../../redux/modules/project';
 import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
 import { showModal } from '../modals';
-import SpaceSettingsModal from '../modals/space-settings-modal';
+import SpaceSettingsModal from '../modals/project-settings-modal';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 
 const Checkmark = styled(SvgIcon)({

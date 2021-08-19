@@ -18,7 +18,7 @@ import {
 } from '../../../../common/constants';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
-import { BASE_PROJECT_ID } from '../../../../models/space';
+import { BASE_PROJECT_ID } from '../../../../models/project';
 import {
   goToNextActivity,
   initActiveActivity,

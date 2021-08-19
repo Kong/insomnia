@@ -3,9 +3,9 @@ import React, { Fragment, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
+import { isRemoteSpace } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
-import { isRemoteSpace } from '../../models/space';
 import { isCollection, isDesign } from '../../models/workspace';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SyncDropdown from './dropdowns/sync-dropdown';

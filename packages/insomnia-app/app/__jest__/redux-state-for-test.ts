@@ -1,5 +1,5 @@
 import { ACTIVITY_HOME } from '../common/constants';
-import { BASE_PROJECT_ID } from '../models/space';
+import { BASE_PROJECT_ID } from '../models/project';
 import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
 import { GlobalState } from '../ui/redux/modules/global';

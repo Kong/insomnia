@@ -11,7 +11,7 @@ import * as models from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { isBaseSpace, isLocalSpace, isRemoteSpace, Space } from '../../../models/space';
+import { isBaseSpace, isLocalSpace, isRemoteSpace, Space } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { initializeLocalProjectAndMarkForSync } from '../../../sync/vcs/initialize-project';
 import { VCS } from '../../../sync/vcs/vcs';

@@ -1,7 +1,7 @@
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { Space } from '../../models/space';
+import { Space } from '../../models/project';
 import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCS } from './vcs';

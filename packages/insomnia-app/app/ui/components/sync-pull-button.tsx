@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../common/constants';
-import { Space } from '../../models/space';
+import { Space } from '../../models/project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showError } from './modals';
 

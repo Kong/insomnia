@@ -4,7 +4,7 @@ import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { BASE_PROJECT_ID, isSpaceId } from './space';
+import { BASE_PROJECT_ID, isSpaceId } from './project';
 
 export const name = 'Workspace';
 export const type = 'Workspace';

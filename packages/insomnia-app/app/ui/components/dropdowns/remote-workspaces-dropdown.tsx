@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
-import { isRemoteSpace } from '../../../models/space';
+import { isRemoteSpace } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { selectActiveSpace } from '../../redux/selectors';

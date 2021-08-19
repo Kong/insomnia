@@ -10,7 +10,7 @@ import {
 import { fuzzyMatchAll } from '../../common/misc';
 import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
-import { Space } from '../../models/space';
+import { Space } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import Highlight from './base/highlight';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';

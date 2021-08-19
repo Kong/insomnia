@@ -1,7 +1,7 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID, Space } from '../../../models/space';
+import { BASE_PROJECT_ID, Space } from '../../../models/project';
 import { selectActiveSpace } from '../selectors';
 
 describe('selectors', () => {
