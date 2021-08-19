@@ -70,7 +70,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
   const onSubmit = useCallback(async ({ projectId, newName }: FormFields) => {
     const duplicateToProject = spaces.find(project => project._id === projectId);
     if (!duplicateToProject) {
-      throw new Error('Space could not be found');
+      throw new Error('Project could not be found');
     }
 
     const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: projectId });
