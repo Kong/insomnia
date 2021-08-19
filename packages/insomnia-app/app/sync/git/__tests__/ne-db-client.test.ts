@@ -150,8 +150,8 @@ describe('NeDBClient', () => {
     it('should set workspace parentId to the space', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
-      const spaceId = `${models.project.prefix}_1`;
-      const neDbClient = new NeDBClient(workspaceId, spaceId);
+      const projectId = `${models.project.prefix}_1`;
+      const neDbClient = new NeDBClient(workspaceId, projectId);
       const upsertSpy = jest.spyOn(db, 'upsert');
 
       // @ts-expect-error not sure why scope is being typed as never
@@ -159,7 +159,7 @@ describe('NeDBClient', () => {
 
       // @ts-expect-error parentId can be string or null for a workspace
       const workspaceInFile = workspaceBuilder.parentId(null).build();
-      const workspaceInDb = workspaceBuilder.parentId(spaceId).build();
+      const workspaceInDb = workspaceBuilder.parentId(projectId).build();
 
       const filePath = path.join(GIT_INSOMNIA_DIR, models.workspace.type, `${workspaceId}.yml`);
 
@@ -177,11 +177,11 @@ describe('NeDBClient', () => {
     it('should force to a design workspace when writing', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
-      const spaceId = `${models.project.prefix}_1`;
-      const neDbClient = new NeDBClient(workspaceId, spaceId);
+      const projectId = `${models.project.prefix}_1`;
+      const neDbClient = new NeDBClient(workspaceId, projectId);
       const upsertSpy = jest.spyOn(db, 'upsert');
 
-      workspaceBuilder._id(workspaceId).parentId(spaceId).certificates(null);
+      workspaceBuilder._id(workspaceId).parentId(projectId).certificates(null);
 
       // @ts-expect-error not sure why scope is being typed as never
       const workspaceInFile = workspaceBuilder.scope('collection').build();

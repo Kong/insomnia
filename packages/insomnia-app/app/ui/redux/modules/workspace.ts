@@ -87,8 +87,8 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
     const activeActivity = selectActiveActivity(getState()) || undefined;
 
     // Activate the correct space
-    const nextSpaceId = workspace.parentId;
-    dispatch(setActiveSpace(nextSpaceId));
+    const nextProjectId = workspace.parentId;
+    dispatch(setActiveSpace(nextProjectId));
 
     // Activate the correct workspace
     const nextWorkspaceId = workspace._id;

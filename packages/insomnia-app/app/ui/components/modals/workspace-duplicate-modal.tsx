@@ -31,7 +31,7 @@ interface Options {
 
 interface FormFields {
   newName: string;
-  spaceId: string;
+  projectId: string;
 }
 
 interface InnerProps extends Options, Props {
@@ -63,17 +63,17 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     } } = useForm<FormFields>({
       defaultValues: {
         newName: defaultWorkspaceName,
-        spaceId: activeSpace._id,
+        projectId: activeSpace._id,
       },
     });
 
-  const onSubmit = useCallback(async ({ spaceId, newName }: FormFields) => {
-    const duplicateToSpace = spaces.find(space => space._id === spaceId);
+  const onSubmit = useCallback(async ({ projectId, newName }: FormFields) => {
+    const duplicateToSpace = spaces.find(space => space._id === projectId);
     if (!duplicateToSpace) {
       throw new Error('Space could not be found');
     }
 
-    const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: spaceId });
+    const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: projectId });
     await models.workspace.ensureChildren(newWorkspace);
 
     // Mark for sync if logged in and in the expected space
@@ -99,8 +99,8 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
         </div>
         <div className="form-control form-control--outlined">
           <label>
-            {strings.space.singular} to duplicate into
-            <select {...register('spaceId')}>
+            {strings.project.singular} to duplicate into
+            <select {...register('projectId')}>
               {spaces.map(SpaceOption)}
             </select>
           </label>

@@ -35,14 +35,14 @@ export const pushSnapshotOnInitialize = async ({
   vcs,
   workspace,
   workspaceMeta,
-  space: { _id: spaceId, remoteId: spaceRemoteId },
+  space: { _id: projectId, remoteId: spaceRemoteId },
 }: {
   vcs: VCS;
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
   space: Project;
 }) => {
-  const spaceIsForWorkspace = spaceId === workspace.parentId;
+  const spaceIsForWorkspace = projectId === workspace.parentId;
   const markedForPush = workspaceMeta?.pushSnapshotOnInitialize;
 
   // A race condition occurs in App.tsx when updating the active workspace

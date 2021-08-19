@@ -46,8 +46,8 @@ describe('workspace', () => {
   beforeEach(globalBeforeEach);
   describe('createWorkspace', () => {
     it('should create document', async () => {
-      const spaceId = BASE_PROJECT_ID;
-      const store = mockStore(await reduxStateForTest({ activeProjectId: spaceId }));
+      const projectId = BASE_PROJECT_ID;
+      const store = mockStore(await reduxStateForTest({ activeProjectId: projectId }));
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.design }));
@@ -59,14 +59,14 @@ describe('workspace', () => {
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
 
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, spaceId);
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, projectId);
 
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.documentCreate);
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: BASE_PROJECT_ID,
+          projectId: BASE_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -80,8 +80,8 @@ describe('workspace', () => {
     });
 
     it('should create collection', async () => {
-      const spaceId = BASE_PROJECT_ID;
-      const store = mockStore(await reduxStateForTest({ activeProjectId: spaceId }));
+      const projectId = BASE_PROJECT_ID;
+      const store = mockStore(await reduxStateForTest({ activeProjectId: projectId }));
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
@@ -93,14 +93,14 @@ describe('workspace', () => {
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
 
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, spaceId);
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, projectId);
 
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.collectionCreate);
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: BASE_PROJECT_ID,
+          projectId: BASE_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -133,7 +133,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -156,7 +156,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -179,7 +179,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -202,7 +202,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -221,7 +221,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -240,7 +240,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -265,7 +265,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,

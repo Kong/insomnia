@@ -64,8 +64,8 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
   };
 }
 
-export type SetSpaceIdPrompt = () => Promise<string>;
-export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Project[]; activeSpace: Project; }): SetSpaceIdPrompt {
+export type SetProjectIdPrompt = () => Promise<string>;
+export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Project[]; activeSpace: Project; }): SetProjectIdPrompt {
   return function() {
     return new Promise(resolve => {
       // If only one space exists, return that
@@ -82,9 +82,9 @@ export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Project[
         options,
         value: defaultValue,
         noEscape: true,
-        onDone: selectedSpaceId => {
+        onDone: selectedProjectId => {
           // @ts-expect-error onDone can send null as an argument; why/how?
-          resolve(selectedSpaceId);
+          resolve(selectedProjectId);
         },
       });
     });

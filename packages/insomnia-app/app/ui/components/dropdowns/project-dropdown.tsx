@@ -50,7 +50,7 @@ interface Props {
 const SpaceDropdownItem: FC<{
   space: Project;
   isActive: boolean;
-  setActive: (spaceId: string) => void;
+  setActive: (projectId: string) => void;
 }> = ({ isActive, space, setActive }) => {
   const { _id, name } = space;
   const isBase = isBaseProject(space);
@@ -77,7 +77,7 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
 
   const activeSpace = useSelector(selectActiveProject);
   const dispatch = useDispatch();
-  const setActive = useCallback((spaceId: string) => dispatch(setActiveSpace(spaceId)), [dispatch]);
+  const setActive = useCallback((projectId: string) => dispatch(setActiveSpace(projectId)), [dispatch]);
   const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
   const showSettings = useCallback(() => showModal(SpaceSettingsModal), []);
 

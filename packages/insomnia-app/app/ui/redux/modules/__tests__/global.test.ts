@@ -112,14 +112,14 @@ describe('global', () => {
 
   describe('setActiveSpace', () => {
     it('should update local storage', () => {
-      const spaceId = 'id';
+      const projectId = 'id';
       const expectedEvent = {
         type: SET_ACTIVE_SPACE,
-        spaceId,
+        projectId,
       };
-      expect(setActiveSpace(spaceId)).toStrictEqual(expectedEvent);
+      expect(setActiveSpace(projectId)).toStrictEqual(expectedEvent);
       expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeProjectId`)).toBe(
-        JSON.stringify(spaceId),
+        JSON.stringify(projectId),
       );
     });
   });
@@ -254,14 +254,14 @@ describe('global', () => {
 
   describe('initActiveSpace', () => {
     it('should initialize from local storage', () => {
-      const spaceId = 'id';
+      const projectId = 'id';
       global.localStorage.setItem(
         `${LOCALSTORAGE_PREFIX}::activeProjectId`,
-        JSON.stringify(spaceId),
+        JSON.stringify(projectId),
       );
       const expectedEvent = {
         type: SET_ACTIVE_SPACE,
-        spaceId,
+        projectId,
       };
       expect(initActiveSpace()).toStrictEqual(expectedEvent);
     });
@@ -269,7 +269,7 @@ describe('global', () => {
     it('should default to base space if not exist', () => {
       const expectedEvent = {
         type: SET_ACTIVE_SPACE,
-        spaceId: BASE_PROJECT_ID,
+        projectId: BASE_PROJECT_ID,
       };
       expect(initActiveSpace()).toStrictEqual(expectedEvent);
     });

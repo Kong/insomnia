@@ -122,7 +122,7 @@ describe('git', () => {
         },
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: BASE_PROJECT_ID,
+          projectId: BASE_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,

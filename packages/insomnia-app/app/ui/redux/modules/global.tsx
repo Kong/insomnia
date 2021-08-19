@@ -83,7 +83,7 @@ function activeActivityReducer(state: string | null = null, action) {
 function activeSpaceReducer(state: string = BASE_PROJECT_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
-      return action.spaceId;
+      return action.projectId;
 
     default:
       return state;
@@ -378,12 +378,12 @@ export const setActiveActivity = (activity: GlobalActivity) => {
   };
 };
 
-export const setActiveSpace = (spaceId: string) => {
+export const setActiveSpace = (projectId: string) => {
   const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
-  window.localStorage.setItem(key, JSON.stringify(spaceId));
+  window.localStorage.setItem(key, JSON.stringify(projectId));
   return {
     type: SET_ACTIVE_SPACE,
-    spaceId,
+    projectId,
   };
 };
 
@@ -657,18 +657,18 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
 };
 
 export function initActiveSpace() {
-  let spaceId: string | null = null;
+  let projectId: string | null = null;
 
   try {
     const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
-    spaceId = JSON.parse(item);
+    projectId = JSON.parse(item);
   } catch (e) {
     // Nothing here...
   }
 
-  return setActiveSpace(spaceId || BASE_PROJECT_ID);
+  return setActiveSpace(projectId || BASE_PROJECT_ID);
 }
 
 export function initSpaceSortOrder() {

@@ -53,7 +53,7 @@ describe('space', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          projectId: space._id,
         },
         {
           type: SET_ACTIVE_ACTIVITY,
@@ -97,7 +97,7 @@ describe('space', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: BASE_PROJECT_ID,
+          projectId: BASE_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_ACTIVITY,
