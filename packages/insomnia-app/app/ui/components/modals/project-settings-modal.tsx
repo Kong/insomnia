@@ -8,7 +8,7 @@ import { strings } from '../../../common/strings';
 import * as models from '../../../models/index';
 import { isRemoteSpace, spaceHasSettings } from '../../../models/project';
 import { RootState } from '../../redux/modules';
-import * as spaceActions from '../../redux/modules/project';
+import * as projectActions from '../../redux/modules/project';
 import { selectActiveSpace } from '../../redux/selectors';
 import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
@@ -107,7 +107,7 @@ const mapStateToProps = (state: RootState) => {
 };
 
 const mapDispatchToProps = dispatch => {
-  const boundSpaceActions = bindActionCreators(spaceActions, dispatch);
+  const boundSpaceActions = bindActionCreators(projectActions, dispatch);
   return {
     handleRemoveSpace: boundSpaceActions.removeSpace,
   };
