@@ -1258,7 +1258,7 @@ class App extends PureComponent<AppProps, State> {
     if (activeWorkspace) {
       await vcs.switchProject(activeWorkspace._id);
     } else {
-      vcs.clearProject();
+      vcs.clearBackendProject();
     }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
@@ -1292,7 +1292,7 @@ class App extends PureComponent<AppProps, State> {
 
       // Delete VCS project if workspace deleted
       if (vcs && isWorkspace(doc) && type === db.CHANGE_REMOVE) {
-        await vcs.removeProjectsForRoot(doc._id);
+        await vcs.removeBackendProjectsForRoot(doc._id);
       }
     }
 

@@ -6,14 +6,14 @@ import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
 import { isRemoteProject } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
-import { projectWithTeamSchema } from '../../__schemas__/type-schemas';
+import { backendProjectWithTeamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { pullProject } from '../pull-project';
 import { VCS } from '../vcs';
 
 jest.mock('../vcs');
 
-const project = createBuilder(projectWithTeamSchema).build();
+const project = createBuilder(backendProjectWithTeamSchema).build();
 
 const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
@@ -27,7 +27,7 @@ describe('pullProject()', () => {
   });
 
   afterEach(() => {
-    expect(vcs.setProject).toHaveBeenCalledWith(project);
+    expect(vcs.setBackendProject).toHaveBeenCalledWith(project);
     expect(vcs.checkout).toHaveBeenCalledWith([], DEFAULT_BRANCH_NAME);
   });
 

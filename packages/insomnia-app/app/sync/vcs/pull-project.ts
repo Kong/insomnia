@@ -4,19 +4,19 @@ import { database } from '../../common/database';
 import { RemoteSpace } from '../../models/project';
 import { isWorkspace } from '../../models/workspace';
 import { initializeSpaceFromTeam, initializeWorkspaceFromProject } from './initialize-model-from';
-import { ProjectWithTeam } from './normalize-project-team';
+import { BackendProjectWithTeam } from './normalize-project-team';
 import { interceptAccessError } from './util';
 import { VCS } from './vcs';
 
 interface Options {
   vcs: VCS;
-  project: ProjectWithTeam;
+  project: BackendProjectWithTeam;
   remoteSpaces: RemoteSpace[];
 }
 
 export const pullProject = async ({ vcs, project, remoteSpaces }: Options) => {
   // Set project, checkout master, and pull
-  await vcs.setProject(project);
+  await vcs.setBackendProject(project);
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
   const remoteBranches = await interceptAccessError({
     action: 'pull',

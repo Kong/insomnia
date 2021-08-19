@@ -16,7 +16,7 @@ import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
 import { logCollectionMovedToSpace } from '../../../sync/vcs/migrate-collections';
-import { ProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
+import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../../sync/vcs/pull-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
@@ -76,7 +76,7 @@ interface State {
   loadingPull: boolean;
   loadingProjectPull: boolean;
   loadingPush: boolean;
-  remoteProjects: ProjectWithTeam[];
+  remoteProjects: BackendProjectWithTeam[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -108,8 +108,8 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   async refreshMainAttributes(extraState: Partial<State> = {}) {
     const { vcs, syncItems, workspace, space } = this.props;
 
-    if (!vcs.hasProject() && isRemoteProject(space)) {
-      const remoteProjects = await vcs.remoteProjectsInAnyTeam();
+    if (!vcs.hasBackendProject() && isRemoteProject(space)) {
+      const remoteProjects = await vcs.remoteBackendProjectsInAnyTeam();
       const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({
         remoteProjects: matchedProjects,
@@ -180,7 +180,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
 
     // Update if new sync items
     if (syncItems !== prevProps.syncItems) {
-      if (vcs.hasProject()) {
+      if (vcs.hasBackendProject()) {
         vcs.status(syncItems, {}).then(status => {
           this.setState({
             status,
@@ -313,7 +313,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       loadingProjectPull: true,
     });
     const { vcs, workspace } = this.props;
-    await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+    await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
     await this.refreshMainAttributes({
       loadingProjectPull: false,
     });
@@ -325,7 +325,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSetProject(p: ProjectWithTeam) {
+  async _handleSetProject(p: BackendProjectWithTeam) {
     const { vcs, remoteSpaces, space, workspace, handleActivateWorkspace } = this.props;
     this.setState({
       loadingProjectPull: true,
@@ -521,7 +521,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       );
     }
 
-    if (!vcs.hasProject()) {
+    if (!vcs.hasBackendProject()) {
       return (
         <div className={className}>
           <Dropdown className="wide tall" onOpen={this._handleOpen}>

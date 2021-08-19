@@ -3,7 +3,7 @@ import { RemoteSpace } from '../../models/project';
 import { Space } from '../../models/project';
 import { Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { Team } from '../types';
-import { Project } from '../types';
+import { BackendProject } from '../types';
 
 export const initializeSpaceFromTeam = (team: Team) => models.initModel<RemoteSpace>(
   models.space.type,
@@ -14,11 +14,11 @@ export const initializeSpaceFromTeam = (team: Team) => models.initModel<RemoteSp
   }
 );
 
-export const initializeWorkspaceFromProject = (project: Project, space: Space) => models.initModel<Workspace>(
+export const initializeWorkspaceFromProject = (backendProject: BackendProject, space: Space) => models.initModel<Workspace>(
   models.workspace.type,
   {
-    _id: project.rootDocumentId,
-    name: project.name,
+    _id: backendProject.rootDocumentId,
+    name: backendProject.name,
     parentId: space._id,
     scope: WorkspaceScopeKeys.collection,
   }

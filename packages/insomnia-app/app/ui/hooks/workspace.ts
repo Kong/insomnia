@@ -3,8 +3,8 @@ import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 
 import { isRemoteProject } from '../../models/project';
-import { Project } from '../../sync/types';
-import { ProjectWithTeam } from '../../sync/vcs/normalize-project-team';
+import { BackendProject } from '../../sync/types';
+import { BackendProjectWithTeam } from '../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../sync/vcs/pull-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
@@ -13,34 +13,34 @@ import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';
 
 interface State {
   loading: boolean;
-  localProjects: Project[];
-  remoteProjects: ProjectWithTeam[];
-  pullingProjects: Record<string, boolean>;
+  localBackendProjects: BackendProject[];
+  remoteBackendProjects: BackendProjectWithTeam[];
+  pullingBackendProjects: Record<string, boolean>;
 }
 
 const initialState: State = {
   loading: false,
-  localProjects: [],
-  remoteProjects: [],
-  pullingProjects: {},
+  localBackendProjects: [],
+  remoteBackendProjects: [],
+  pullingBackendProjects: {},
 };
 
 type Action =
-  | { type: 'loadProjects' }
-  | { type: 'saveProjects', local: State['localProjects'], remote: State['remoteProjects']}
-  | { type: 'startPullingProject', projectId: string }
-  | { type: 'stopPullingProject', projectId: string }
+  | { type: 'loadBackendProjects' }
+  | { type: 'saveBackendProjects', local: State['localBackendProjects'], remote: State['remoteBackendProjects']}
+  | { type: 'startPullingBackendProject', projectId: string }
+  | { type: 'stopPullingBackendProject', projectId: string }
 
 const reducer: Reducer<State, Action> = (prevState, action) => {
   switch (action.type) {
-    case 'loadProjects':
+    case 'loadBackendProjects':
       return { ...prevState, loading: true };
-    case 'saveProjects':
-      return { ...prevState, localProjects: action.local, remoteProjects: action.remote, loading: false };
-    case 'startPullingProject':
-      return { ...prevState, pullingProjects: { ...prevState.pullingProjects, [action.projectId]: true } };
-    case 'stopPullingProject':
-      return { ...prevState, pullingProjects: { ...prevState.pullingProjects, [action.projectId]: false } };
+    case 'saveBackendProjects':
+      return { ...prevState, localBackendProjects: action.local, remoteBackendProjects: action.remote, loading: false };
+    case 'startPullingBackendProject':
+      return { ...prevState, pullingBackendProjects: { ...prevState.pullingBackendProjects, [action.projectId]: true } };
+    case 'stopPullingBackendProject':
+      return { ...prevState, pullingBackendProjects: { ...prevState.pullingBackendProjects, [action.projectId]: false } };
     default:
       return prevState;
   }
@@ -54,7 +54,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   // Local state
-  const [{ loading, localProjects, remoteProjects, pullingProjects }, _dispatch] = useReducer(reducer, initialState);
+  const [{ loading, localBackendProjects: localProjects, remoteBackendProjects: remoteProjects, pullingBackendProjects: pullingProjects }, _dispatch] = useReducer(reducer, initialState);
   const dispatch = useSafeReducerDispatch(_dispatch);
 
   // Refresh remote spaces
@@ -63,10 +63,10 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
       return;
     }
 
-    dispatch({ type: 'loadProjects' });
-    const remote = await vcs.remoteProjects(activeSpace.remoteId);
-    const local = await vcs.localProjects();
-    dispatch({ type: 'saveProjects', local, remote });
+    dispatch({ type: 'loadBackendProjects' });
+    const remote = await vcs.remoteBackendProjects(activeSpace.remoteId);
+    const local = await vcs.localBackendProjects();
+    dispatch({ type: 'saveBackendProjects', local, remote });
   }, [vcs, isLoggedIn, activeSpace, dispatch]);
 
   // Find remote spaces that haven't been pulled
@@ -80,18 +80,18 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   }), [localProjects, remoteProjects, workspaces]);
 
   // Pull a remote space
-  const pull = useCallback(async (project: ProjectWithTeam) => {
+  const pull = useCallback(async (project: BackendProjectWithTeam) => {
     if (!vcs) {
       throw new Error('VCS is not defined');
     }
 
-    dispatch({ type: 'startPullingProject', projectId: project.id });
+    dispatch({ type: 'startPullingBackendProject', projectId: project.id });
 
     try {
       // Clone old VCS so we don't mess anything up while working on other projects
       const newVCS = vcs.newInstance();
       // Remove all projects for workspace first
-      await newVCS.removeProjectsForRoot(project.rootDocumentId);
+      await newVCS.removeBackendProjectsForRoot(project.rootDocumentId);
 
       await pullProject({ vcs: newVCS, project, remoteSpaces });
 
@@ -102,7 +102,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
         message: `Failed to pull workspace. ${err.message}`,
       });
     } finally {
-      dispatch({ type: 'stopPullingProject', projectId: project.id });
+      dispatch({ type: 'stopPullingBackendProject', projectId: project.id });
     }
   }, [vcs, refresh, remoteSpaces, dispatch]);
 

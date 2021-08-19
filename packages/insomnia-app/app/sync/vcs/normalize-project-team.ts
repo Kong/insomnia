@@ -1,17 +1,17 @@
-import { Project, Team } from '../types';
+import { BackendProject, Team } from '../types';
 
-export interface ProjectWithTeams extends Project {
+export interface BackendProjectWithTeams extends BackendProject {
   teams: Team[];
 }
 
-export interface ProjectWithTeam extends Project {
+export interface BackendProjectWithTeam extends BackendProject {
   team: Team;
 }
 
-export const normalizeProjectTeam = (project: ProjectWithTeams): ProjectWithTeam => ({
-  id: project.id,
-  name: project.name,
-  rootDocumentId: project.rootDocumentId,
+export const normalizeBackendProjectTeam = (backend: BackendProjectWithTeams): BackendProjectWithTeam => ({
+  id: backend.id,
+  name: backend.name,
+  rootDocumentId: backend.rootDocumentId,
   // A project is guaranteed to exist on exactly one team
-  team: project.teams[0],
+  team: backend.teams[0],
 });
