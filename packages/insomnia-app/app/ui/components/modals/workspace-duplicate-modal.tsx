@@ -11,7 +11,7 @@ import * as models from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { isBaseProject, isLocalProject, isRemoteProject, Space } from '../../../models/project';
+import { isBaseProject, isLocalProject, isRemoteProject, Project } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { initializeLocalProjectAndMarkForSync } from '../../../sync/vcs/initialize-project';
 import { VCS } from '../../../sync/vcs/vcs';
@@ -38,9 +38,9 @@ interface InnerProps extends Options, Props {
   hide: () => void,
 }
 
-const SpaceOption: FC<Space> = space => (
+const SpaceOption: FC<Project> = space => (
   <option key={space._id} value={space._id}>
-    {space.name} ({isBaseProject(space) ? strings.baseSpace.singular : isLocalProject(space) ? strings.localSpace.singular : strings.remoteSpace.singular})
+    {space.name} ({isBaseProject(space) ? strings.baseProject.singular : isLocalProject(space) ? strings.localProject.singular : strings.remoteProject.singular})
   </option>
 );
 

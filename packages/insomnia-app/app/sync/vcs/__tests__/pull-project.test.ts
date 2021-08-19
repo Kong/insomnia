@@ -42,7 +42,7 @@ describe('pullProject()', () => {
 
     it('should use existing space', async () => {
       // Arrange
-      const space = await models.space.create({
+      const space = await models.project.create({
         name: `${project.team.name} unique`,
         remoteId: project.team.id,
       });
@@ -69,7 +69,7 @@ describe('pullProject()', () => {
       await pullProject({ vcs, project, remoteSpaces: [] });
 
       // Assert
-      const space = await models.space.getByRemoteId(project.team.id);
+      const space = await models.project.getByRemoteId(project.team.id);
       expect(space?.name).toBe(project.team.name);
 
       const workspaces = await models.workspace.all();
@@ -91,7 +91,7 @@ describe('pullProject()', () => {
       await pullProject({ vcs, project, remoteSpaces: [] });
 
       // Assert
-      const space = await models.space.getByRemoteId(project.team.id);
+      const space = await models.project.getByRemoteId(project.team.id);
 
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
@@ -117,7 +117,7 @@ describe('pullProject()', () => {
       await pullProject({ vcs, project, remoteSpaces: [] });
 
       // Assert
-      const space = await models.space.getByRemoteId(project.team.id);
+      const space = await models.project.getByRemoteId(project.team.id);
 
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);

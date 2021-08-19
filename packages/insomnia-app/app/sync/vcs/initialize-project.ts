@@ -1,7 +1,7 @@
 import { database } from '../../common/database';
 import * as models from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { Space } from '../../models/project';
+import { Project } from '../../models/project';
 import { isCollection, Workspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { VCS } from './vcs';
@@ -40,7 +40,7 @@ export const pushSnapshotOnInitialize = async ({
   vcs: VCS;
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space: Space;
+  space: Project;
 }) => {
   const spaceIsForWorkspace = spaceId === workspace.parentId;
   const markedForPush = workspaceMeta?.pushSnapshotOnInitialize;

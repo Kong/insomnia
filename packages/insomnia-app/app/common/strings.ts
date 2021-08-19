@@ -7,11 +7,11 @@ type StringId =
   | 'collection'
   | 'document'
   | 'home'
-  | 'space'
+  | 'project'
   | 'workspace'
-  | 'baseSpace'
-  | 'localSpace'
-  | 'remoteSpace'
+  | 'baseProject'
+  | 'localProject'
+  | 'remoteProject'
   ;
 
 export const strings: Record<StringId, StringInfo> = {
@@ -27,7 +27,7 @@ export const strings: Record<StringId, StringInfo> = {
     singular: 'Dashboard',
     plural: 'Dashboards',
   },
-  space: {
+  project: {
     singular: 'Project',
     plural: 'Projects',
   },
@@ -35,15 +35,15 @@ export const strings: Record<StringId, StringInfo> = {
     singular: 'Workspace',
     plural: 'Workspaces',
   },
-  baseSpace: {
+  baseProject: {
     singular: 'Base',
     plural: 'Base',
   },
-  localSpace: {
+  localProject: {
     singular: 'Local',
     plural: 'Local',
   },
-  remoteSpace: {
+  remoteProject: {
     singular: 'Remote',
     plural: 'Remote',
   },

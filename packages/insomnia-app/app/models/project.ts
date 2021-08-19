@@ -3,35 +3,35 @@ import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
 import type { BaseModel } from './index';
 
-export const name = 'Space';
-export const type = 'Space';
+export const name = 'Project';
+export const type = 'Project';
 export const prefix = 'proj';
 export const canDuplicate = false;
 export const canSync = false;
 
-export const BASE_PROJECT_ID = `${prefix}_base-space`;
+export const BASE_PROJECT_ID = `${prefix}_base-project`;
 
-export const isBaseProject = (project: Space) => project._id === BASE_PROJECT_ID;
-export const isNotBaseProject = (project: Space) => !isBaseProject(project);
-export const isLocalProject = (project: Space): project is LocalSpace => project.remoteId === null;
-export const isRemoteProject = (project: Space): project is RemoteSpace => !isLocalProject(project);
-export const projectHasSettings = (project: Space) => !isBaseProject(project);
+export const isBaseProject = (project: Project) => project._id === BASE_PROJECT_ID;
+export const isNotBaseProject = (project: Project) => !isBaseProject(project);
+export const isLocalProject = (project: Project): project is LocalProject => project.remoteId === null;
+export const isRemoteProject = (project: Project): project is RemoteProject => !isLocalProject(project);
+export const projectHasSettings = (project: Project) => !isBaseProject(project);
 
-interface CommonSpace {
+interface CommonProject {
   name: string;
 }
 
-export interface RemoteSpace extends BaseModel, CommonSpace {
+export interface RemoteProject extends BaseModel, CommonProject {
   remoteId: string;
 }
 
-export interface LocalSpace extends BaseModel, CommonSpace {
+export interface LocalProject extends BaseModel, CommonProject {
   remoteId: null;
 }
 
-export type Space = LocalSpace | RemoteSpace;
+export type Project = LocalProject | RemoteProject;
 
-export const isProject = (model: Pick<BaseModel, 'type'>): model is Space => (
+export const isProject = (model: Pick<BaseModel, 'type'>): model is Project => (
   model.type === type
 );
 
@@ -39,14 +39,14 @@ export const isProjectId = (id: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 
-export function init(): Partial<Space> {
+export function init(): Partial<Project> {
   return {
     name: 'My Space',
     remoteId: null, // `null` is necessary for the model init logic to work properly
   };
 }
 
-export function migrate(project: Space) {
+export function migrate(project: Project) {
   return project;
 }
 
@@ -54,32 +54,32 @@ export function createId() {
   return generateId(prefix);
 }
 
-export function create(patch: Partial<Space> = {}) {
-  return db.docCreate<Space>(type, patch);
+export function create(patch: Partial<Project> = {}) {
+  return db.docCreate<Project>(type, patch);
 }
 
 export function getById(_id: string) {
-  return db.getWhere<Space>(type, { _id });
+  return db.getWhere<Project>(type, { _id });
 }
 
 export function getByRemoteId(remoteId: string) {
-  return db.getWhere<Space>(type, { remoteId });
+  return db.getWhere<Project>(type, { remoteId });
 }
 
-export function remove(project: Space) {
+export function remove(project: Project) {
   return db.remove(project);
 }
 
-export function update(project: Space, patch: Partial<Space>) {
+export function update(project: Project, patch: Partial<Project>) {
   return db.docUpdate(project, patch);
 }
 
 export async function all() {
-  const projects = await db.all<Space>(type);
+  const projects = await db.all<Project>(type);
 
   if (!projects.find(c => c._id === BASE_PROJECT_ID)) {
     await create({ _id: BASE_PROJECT_ID, name: getAppName(), remoteId: null });
-    return db.all<Space>(type);
+    return db.all<Project>(type);
   }
 
   return projects;

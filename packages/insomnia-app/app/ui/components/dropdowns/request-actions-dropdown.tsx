@@ -10,7 +10,7 @@ import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import type { Environment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import { Space } from '../../../models/project';
+import { Project } from '../../../models/project';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { incrementDeletedRequests } from '../../../models/stats';
@@ -39,7 +39,7 @@ interface Props extends Partial<DropdownProps> {
   hotKeyRegistry: HotKeyRegistry;
   handleSetRequestPinned: Function;
   activeEnvironment?: Environment | null;
-  activeSpace: Space;
+  activeSpace: Project;
 }
 
 // Setup state for plugin actions

@@ -8,7 +8,7 @@ import * as models from '../../../models';
 import type { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { Space } from '../../../models/project';
+import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import type { DocumentAction } from '../../../plugins';
@@ -23,7 +23,7 @@ import { showWorkspaceDuplicateModal } from '../modals/workspace-duplicate-modal
 interface Props {
   workspace: Workspace;
   apiSpec: ApiSpec;
-  space: Space;
+  space: Project;
 }
 
 const spinner = <i className="fa fa-refresh fa-spin" />;

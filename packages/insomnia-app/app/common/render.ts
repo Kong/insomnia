@@ -6,7 +6,7 @@ import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isProject, Space } from '../models/project';
+import { isProject, Project } from '../models/project';
 import type { Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -556,13 +556,13 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-type RenderContextAncestor = Request | GrpcRequest | RequestGroup | Workspace | Space;
+type RenderContextAncestor = Request | GrpcRequest | RequestGroup | Workspace | Project;
 export async function getRenderContextAncestors(base?: Request | GrpcRequest | Workspace): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,
     models.grpcRequest.type,
     models.requestGroup.type,
     models.workspace.type,
-    models.space.type,
+    models.project.type,
   ]);
 }

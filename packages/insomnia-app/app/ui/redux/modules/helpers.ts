@@ -1,5 +1,5 @@
 import { strings } from '../../../common/strings';
-import { Space } from '../../../models/project';
+import { Project } from '../../../models/project';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
@@ -65,7 +65,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
 }
 
 export type SetSpaceIdPrompt = () => Promise<string>;
-export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[]; activeSpace: Space; }): SetSpaceIdPrompt {
+export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Project[]; activeSpace: Project; }): SetSpaceIdPrompt {
   return function() {
     return new Promise(resolve => {
       // If only one space exists, return that
@@ -78,7 +78,7 @@ export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[];
 
       showSelectModal({
         title: 'Import',
-        message: `Select a ${strings.space.singular.toLowerCase()} to import into`,
+        message: `Select a ${strings.project.singular.toLowerCase()} to import into`,
         options,
         value: defaultValue,
         noEscape: true,

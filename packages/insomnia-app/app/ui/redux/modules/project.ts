@@ -2,22 +2,22 @@ import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/ana
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID, isRemoteProject, Space } from '../../../models/project';
+import { BASE_PROJECT_ID, isRemoteProject, Project } from '../../../models/project';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveSpace } from './global';
 
 export const createSpace = () => dispatch => {
-  const defaultValue = `My ${strings.space.singular}`;
+  const defaultValue = `My ${strings.project.singular}`;
 
   showPrompt({
-    title: `Create New ${strings.space.singular}`,
+    title: `Create New ${strings.project.singular}`,
     submitName: 'Create',
     cancelable: true,
     placeholder: defaultValue,
     defaultValue,
     selectText: true,
     onComplete: async name => {
-      const space = await models.space.create({ name });
+      const space = await models.project.create({ name });
       trackEvent('Project', 'Create');
       dispatch(setActiveSpace(space._id));
       dispatch(setActiveActivity(ACTIVITY_HOME));
@@ -26,19 +26,19 @@ export const createSpace = () => dispatch => {
   });
 };
 
-export const removeSpace = (space: Space) => dispatch => {
+export const removeSpace = (space: Project) => dispatch => {
   const message = isRemoteProject(space)
-    ? `Deleting a ${strings.remoteSpace.singular.toLowerCase()} ${strings.space.singular.toLowerCase()} will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. The ${strings.remoteSpace.singular.toLowerCase()} ${strings.space.singular.toLowerCase()} will continue to exist remotely. Deleting this ${strings.space.singular.toLowerCase()} locally cannot be undone. Are you sure you want to delete ${space.name}?`
-    : `Deleting a ${strings.space.singular.toLowerCase()} will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${space.name}?`;
+    ? `Deleting a ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. The ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will continue to exist remotely. Deleting this ${strings.project.singular.toLowerCase()} locally cannot be undone. Are you sure you want to delete ${space.name}?`
+    : `Deleting a ${strings.project.singular.toLowerCase()} will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${space.name}?`;
 
   showAlert({
-    title: `Delete ${strings.space.singular}`,
+    title: `Delete ${strings.project.singular}`,
     message,
     addCancel: true,
     okLabel: 'Delete',
     onConfirm: async () => {
       await models.stats.incrementDeletedRequestsForDescendents(space);
-      await models.space.remove(space);
+      await models.project.remove(space);
       trackEvent('Project', 'Delete');
       // Show base space
       dispatch(setActiveSpace(BASE_PROJECT_ID));

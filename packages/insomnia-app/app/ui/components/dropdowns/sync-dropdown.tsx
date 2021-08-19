@@ -10,7 +10,7 @@ import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { isRemoteProject, Space } from '../../../models/project';
+import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
@@ -57,7 +57,7 @@ const mapDispatchToProps = dispatch => {
 interface Props extends ReduxProps {
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space: Space;
+  space: Project;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;

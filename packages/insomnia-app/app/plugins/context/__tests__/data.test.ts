@@ -5,7 +5,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models/index';
-import { BASE_PROJECT_ID, Space } from '../../../models/project';
+import { BASE_PROJECT_ID, Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import * as plugin from '../data';
 
@@ -23,11 +23,11 @@ describe('init()', () => {
 });
 
 describe('app.import.*', () => {
-  let space: Space;
+  let space: Project;
 
   beforeEach(async () => {
     await globalBeforeEach();
-    space = await models.space.create();
+    space = await models.project.create();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,
@@ -134,10 +134,10 @@ describe('app.import.*', () => {
 });
 
 describe('app.export.*', () => {
-  let space: Space;
+  let space: Project;
   beforeEach(async () => {
     await globalBeforeEach();
-    space = await models.space.create();
+    space = await models.project.create();
     await models.workspace.create({
       _id: 'wrk_1',
       created: 111,

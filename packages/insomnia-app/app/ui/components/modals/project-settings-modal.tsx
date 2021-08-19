@@ -36,7 +36,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
 
   async _handleRename(name: string) {
     const { space } = this.props;
-    await models.space.update(space, { name });
+    await models.project.update(space, { name });
   }
 
   show() {
@@ -58,7 +58,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
     return (
       <Modal ref={this._handleSetModalRef} freshState>
         <ModalHeader key={`header::${space._id}`}>
-          {strings.space.singular} Settings{' '}
+          {strings.project.singular} Settings{' '}
           <div className="txt-sm selectable faint monospace">{space._id}</div>
         </ModalHeader>
         <ModalBody key={`body::${space._id}`} className="pad">
@@ -68,7 +68,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
               {isRemote && (
                 <>
                   <HelpTooltip className="space-left">
-                    To rename a {strings.remoteSpace.singular.toLowerCase()} {strings.space.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
+                    To rename a {strings.remoteProject.singular.toLowerCase()} {strings.project.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
                   </HelpTooltip>
                   <input disabled readOnly defaultValue={space.name} />
                 </>
@@ -78,7 +78,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
                 // @ts-expect-error -- TSCONVERSION props are spread into an input element
                   type="text"
                   delay={500}
-                  placeholder={`My ${strings.space.singular}`}
+                  placeholder={`My ${strings.project.singular}`}
                   defaultValue={space.name}
                   onChange={this._handleRename}
                 />

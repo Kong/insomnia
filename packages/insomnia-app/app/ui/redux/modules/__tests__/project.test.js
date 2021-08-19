@@ -44,7 +44,7 @@ describe('space', () => {
       const spaceName = 'name';
       await onComplete?.(spaceName);
 
-      const spaces = await models.space.all();
+      const spaces = await models.project.all();
       expect(spaces).toHaveLength(1);
       const space = spaces[0];
       expect(space.name).toBe(spaceName);
@@ -66,8 +66,8 @@ describe('space', () => {
   describe('removeSpace', () => {
     it('should remove space', async () => {
       const store = mockStore(await reduxStateForTest());
-      const spaceOne = await models.space.create({ name: 'My Space' });
-      const spaceTwo = await models.space.create();
+      const spaceOne = await models.project.create({ name: 'My Space' });
+      const spaceTwo = await models.project.create();
 
       store.dispatch(removeSpace(spaceOne));
 
@@ -84,11 +84,11 @@ describe('space', () => {
       expect(addCancel).toBe(true);
       expect(okLabel).toBe('Delete');
 
-      await expect(models.space.all()).resolves.toHaveLength(2);
+      await expect(models.project.all()).resolves.toHaveLength(2);
 
       await onConfirm();
 
-      const spaces = await models.space.all();
+      const spaces = await models.project.all();
       expect(spaces).toHaveLength(1);
       const space = spaces[0];
       expect(space).toBe(spaceTwo);

@@ -49,10 +49,10 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     // Arrange
     const vcs = newMockedVcs();
 
-    const baseSpace = await models.space.getById(BASE_PROJECT_ID);
+    const baseSpace = await models.project.getById(BASE_PROJECT_ID);
     const workspaceInBase = await models.workspace.create({ parentId: baseSpace?._id });
 
-    const localSpace = await models.space.create();
+    const localSpace = await models.project.create();
     const workspaceInLocal = await models.workspace.create({ parentId: localSpace._id });
 
     vcs.hasBackendProjectForRootDocument.mockResolvedValue(false); // no local backend project
@@ -70,7 +70,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     // Arrange
     const vcs = newMockedVcs();
 
-    const remoteSpace = await models.space.create({ remoteId: 'str' });
+    const remoteSpace = await models.project.create({ remoteId: 'str' });
     const workspaceInRemote = await models.workspace.create({ parentId: remoteSpace._id });
 
     vcs.hasBackendProjectForRootDocument.mockResolvedValue(true); // has local backend project
@@ -87,7 +87,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     // Arrange
     const vcs = newMockedVcs();
 
-    const localSpace = await models.space.create();
+    const localSpace = await models.project.create();
     const workspaceInLocal = await models.workspace.create({ scope: 'design', parentId: localSpace._id });
 
     vcs.hasBackendProjectForRootDocument.mockResolvedValue(true); // has local backend project
@@ -103,7 +103,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
   it('does migrate if collection in non-remote space with local backend project - create remote space', async () => {
     // Arrange
     const vcs = newMockedVcs();
-    const localSpace = await models.space.create();
+    const localSpace = await models.project.create();
     const workspaceInLocal = await models.workspace.create({ parentId: localSpace._id });
 
     const team = teamBuilder.build();
@@ -120,7 +120,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
 
     // Assert
     expect(vcs.remoteBackendProjectsInAnyTeam).toHaveBeenCalledTimes(1);
-    const createdRemoteSpace = await models.space.getByRemoteId(team.id);
+    const createdRemoteSpace = await models.project.getByRemoteId(team.id);
     await expect(models.workspace.getById(workspaceInLocal._id)).resolves.toMatchObject({
       ...workspaceInLocal,
       parentId: createdRemoteSpace?._id,
@@ -130,7 +130,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
   it('does migrate if collection in non-remote space with local backend project - use existing remote space', async () => {
     // Arrange
     const vcs = newMockedVcs();
-    const localSpace = await models.space.create();
+    const localSpace = await models.project.create();
     const workspaceInLocal = await models.workspace.create({ parentId: localSpace._id });
 
     const team = teamBuilder.build();

@@ -80,7 +80,7 @@ describe('initialize-project', () => {
     });
 
     it('should not push if no active project', async () => {
-      const space = await models.space.create({ remoteId: null });
+      const space = await models.project.create({ remoteId: null });
       const workspace = await models.workspace.create({ parentId: space._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.clearBackendProject();
@@ -92,7 +92,7 @@ describe('initialize-project', () => {
     });
 
     it('should not push snapshot if not remote space', async () => {
-      const space = await models.space.create({ remoteId: null });
+      const space = await models.project.create({ remoteId: null });
       const workspace = await models.workspace.create({ parentId: space._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
@@ -104,8 +104,8 @@ describe('initialize-project', () => {
     });
 
     it('should not push snapshot if workspace not in space', async () => {
-      const space = await models.space.create({ remoteId: 'abc' });
-      const anotherSpace = await models.space.create({ remoteId: 'def' });
+      const space = await models.project.create({ remoteId: 'abc' });
+      const anotherSpace = await models.project.create({ remoteId: 'def' });
       const workspace = await models.workspace.create({ parentId: anotherSpace._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
@@ -117,7 +117,7 @@ describe('initialize-project', () => {
     });
 
     it('should not push snapshot if not marked for push', async () => {
-      const space = await models.space.create({ remoteId: 'abc' });
+      const space = await models.project.create({ remoteId: 'abc' });
       const workspace = await models.workspace.create({ parentId: space._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: false });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
@@ -129,7 +129,7 @@ describe('initialize-project', () => {
     });
 
     it('should push snapshot if conditions are met', async () => {
-      const space = await models.space.create({ remoteId: 'abc' });
+      const space = await models.project.create({ remoteId: 'abc' });
       const workspace = await models.workspace.create({ parentId: space._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);

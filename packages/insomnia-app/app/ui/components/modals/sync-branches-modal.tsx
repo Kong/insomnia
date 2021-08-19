@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { Space } from '../../../models/project';
+import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import type { StatusCandidate } from '../../../sync/types';
 import { interceptAccessError } from '../../../sync/vcs/util';
@@ -17,7 +17,7 @@ import SyncPullButton from '../sync-pull-button';
 
 interface Props {
   workspace: Workspace;
-  space: Space;
+  space: Project;
   syncItems: StatusCandidate[];
   vcs: VCS;
 }

@@ -13,7 +13,7 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import { GrpcRequestMeta } from '../../../models/grpc-request-meta';
 import { OAuth2Token } from '../../../models/o-auth-2-token';
 import { PluginData } from '../../../models/plugin-data';
-import { Space } from '../../../models/project';
+import { Project } from '../../../models/project';
 import { ProtoDirectory } from '../../../models/proto-directory';
 import { ProtoFile } from '../../../models/proto-file';
 import { Request } from '../../../models/request';
@@ -47,7 +47,7 @@ type EntityRecord<T extends BaseModel> = Record<string, T>;
 export interface EntitiesState {
   stats: EntityRecord<Stats>;
   settings: EntityRecord<Settings>;
-  projects: EntityRecord<Space>,
+  projects: EntityRecord<Project>,
   workspaces: EntityRecord<Workspace>,
   workspaceMetas: EntityRecord<WorkspaceMeta>,
   environments: EntityRecord<Environment>,
@@ -168,7 +168,7 @@ export async function allDocs() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
   return [
     ...(await models.settings.all()),
-    ...(await models.space.all()),
+    ...(await models.project.all()),
     ...(await models.workspace.all()),
     ...(await models.workspaceMeta.all()),
     ...(await models.gitRepository.all()),

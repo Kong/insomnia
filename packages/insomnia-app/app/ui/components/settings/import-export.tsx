@@ -80,7 +80,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           </DropdownItem>}
           <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />
-            All {strings.document.plural} and {strings.collection.plural} from the "{spaceName}" {strings.space.singular}
+            All {strings.document.plural} and {strings.collection.plural} from the "{spaceName}" {strings.project.singular}
           </DropdownItem>
         </Dropdown>
           &nbsp;&nbsp;

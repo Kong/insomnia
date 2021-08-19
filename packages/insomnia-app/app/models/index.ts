@@ -21,7 +21,7 @@ import * as _grpcRequest from './grpc-request';
 import * as _grpcRequestMeta from './grpc-request-meta';
 import * as _oAuth2Token from './o-auth-2-token';
 import * as _pluginData from './plugin-data';
-import * as _space from './project';
+import * as _project from './project';
 import * as _protoDirectory from './proto-directory';
 import * as _protoFile from './proto-file';
 import * as _request from './request';
@@ -66,7 +66,7 @@ export const requestMeta = _requestMeta;
 export const requestVersion = _requestVersion;
 export const response = _response;
 export const settings = _settings;
-export const space = _space;
+export const project = _project;
 export const stats = _stats;
 export const unitTest = _unitTest;
 export const unitTestSuite = _unitTestSuite;
@@ -85,7 +85,7 @@ export function all() {
   return [
     stats,
     settings,
-    space,
+    project,
     workspace,
     workspaceMeta,
     environment,

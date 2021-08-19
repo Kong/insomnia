@@ -1,7 +1,7 @@
 
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
-import { RemoteSpace } from '../../models/project';
+import { RemoteProject } from '../../models/project';
 import { isWorkspace } from '../../models/workspace';
 import { initializeSpaceFromTeam, initializeWorkspaceFromProject } from './initialize-model-from';
 import { BackendProjectWithTeam } from './normalize-project-team';
@@ -11,7 +11,7 @@ import { VCS } from './vcs';
 interface Options {
   vcs: VCS;
   project: BackendProjectWithTeam;
-  remoteSpaces: RemoteSpace[];
+  remoteSpaces: RemoteProject[];
 }
 
 export const pullProject = async ({ vcs, project, remoteSpaces }: Options) => {

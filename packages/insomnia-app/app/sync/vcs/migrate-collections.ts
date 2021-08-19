@@ -2,13 +2,13 @@ import { isLoggedIn } from '../../account/session';
 import { asyncFilter } from '../../common/async-array-helpers';
 import { database } from '../../common/database';
 import * as models from '../../models';
-import { isRemoteProject, RemoteSpace } from '../../models/project';
+import { isRemoteProject, RemoteProject } from '../../models/project';
 import {  isCollection, Workspace } from '../../models/workspace';
 import { Team } from '../types';
 import { initializeSpaceFromTeam } from './initialize-model-from';
 import { VCS } from './vcs';
 
-export const logCollectionMovedToSpace = (collection: Workspace, remoteSpace: RemoteSpace) => {
+export const logCollectionMovedToSpace = (collection: Workspace, remoteSpace: RemoteProject) => {
   console.log('[sync] collection has been moved to the remote space to which it belongs', {
     collection: {
       id : collection._id,
@@ -30,7 +30,7 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
   }
 
   const collections = (await models.workspace.all()).filter(isCollection);
-  const remoteSpaces = (await models.space.all()).filter(isRemoteProject);
+  const remoteSpaces = (await models.project.all()).filter(isRemoteProject);
 
   // Are there any collections that have sync setup but are not in a remote space?
   const isNotInRemoteSpace = (collection: Workspace) => !Boolean(remoteSpaces.find(space => space._id === collection.parentId));
@@ -47,7 +47,7 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
   const findRemoteProject = (collection: Workspace) => remoteProjectsInAnyTeam.find(project => project.rootDocumentId === collection._id);
   const findRemoteSpaceByTeam = (team: Team) => remoteSpaces.find(space => space.remoteId === team.id);
 
-  const upsert: (Workspace | RemoteSpace)[] = [];
+  const upsert: (Workspace | RemoteProject)[] = [];
 
   for (const collection of needsMigration) {
     const remoteProject = findRemoteProject(collection);

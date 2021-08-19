@@ -124,7 +124,7 @@ describe('workspace', () => {
     });
 
     it('should activate space and workspace and activity using workspaceId', async () => {
-      const space = await models.space.create();
+      const space = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
@@ -147,7 +147,7 @@ describe('workspace', () => {
     });
 
     it('should activate space and workspace and activity from home', async () => {
-      const space = await models.space.create();
+      const space = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
@@ -170,7 +170,7 @@ describe('workspace', () => {
     });
 
     it('should switch to the default design activity', async () => {
-      const space = await models.space.create();
+      const space = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: space._id, activeWorkspaceId: workspace._id }));
 
@@ -193,7 +193,7 @@ describe('workspace', () => {
     });
 
     it.each([ACTIVITY_UNIT_TEST, ACTIVITY_SPEC, ACTIVITY_DEBUG])('should not switch activity if already in a supported design activity: %s', async activeActivity => {
-      const space = await models.space.create();
+      const space = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: space._id, activeWorkspaceId: workspace._id, activeActivity }));
 
@@ -212,7 +212,7 @@ describe('workspace', () => {
     });
 
     it.each([ACTIVITY_DEBUG])('should not switch activity if already in a supported collection activity: %s', async activeActivity => {
-      const space = await models.space.create();
+      const space = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: space._id, activeWorkspaceId: workspace._id, activeActivity }));
 
@@ -231,7 +231,7 @@ describe('workspace', () => {
     });
 
     it('should switch to the default collection activity', async () => {
-      const space = await models.space.create();
+      const space = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'collection', parentId: space._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: space._id, activeWorkspaceId: workspace._id }));
 
@@ -254,7 +254,7 @@ describe('workspace', () => {
     });
 
     it('should switch to the cached activity', async () => {
-      const space = await models.space.create();
+      const space = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
       await models.workspace.ensureChildren(workspace);
       await models.workspaceMeta.updateByParentId(workspace._id, { activeActivity: ACTIVITY_UNIT_TEST });

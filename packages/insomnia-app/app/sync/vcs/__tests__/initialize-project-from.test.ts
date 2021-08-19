@@ -2,7 +2,7 @@ import { createBuilder } from '@develohpanda/fluent-builder';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import * as models from '../../../models';
-import { isRemoteProject, Space } from '../../../models/project';
+import { isRemoteProject, Project } from '../../../models/project';
 import { isCollection, Workspace, WorkspaceScopeKeys } from '../../../models/workspace';
 import { projectSchema, teamSchema } from '../../__schemas__/type-schemas';
 import { initializeSpaceFromTeam, initializeWorkspaceFromProject } from '../initialize-model-from';
@@ -22,8 +22,8 @@ describe('initializeSpaceFromTeam', () => {
 
     // Assert
     expect(isRemoteProject(space)).toBe(true);
-    expect(space).toMatchObject<Partial<Space>>({
-      _id:`${models.space.prefix}_${team.id}`,
+    expect(space).toMatchObject<Partial<Project>>({
+      _id:`${models.project.prefix}_${team.id}`,
       remoteId: team.id,
       name: team.name,
     });
@@ -35,7 +35,7 @@ describe('initializeWorkspaceFromProject', () => {
 
   it('should initialize workspac with properties from the project and space', async () => {
     // Arrange
-    const space = await models.space.create();
+    const space = await models.project.create();
     const project = projectBuilder.build();
 
     // Act

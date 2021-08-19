@@ -24,7 +24,7 @@ const getRenderedRequest = async (args: Parameters<typeof getRenderedRequestAndC
 describe('actuallySend()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    await models.space.all();
+    await models.project.all();
   });
 
   it('sends a generic request', async () => {

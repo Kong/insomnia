@@ -8,7 +8,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../__jest__/with-redux-store';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID, Space } from '../../../models/project';
+import { BASE_PROJECT_ID, Project } from '../../../models/project';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
@@ -41,7 +41,7 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs.teams).not.toHaveBeenCalled();
     expect(result.current.loading).toBe(false);
-    await expect(models.space.all()).resolves.toHaveLength(1);
+    await expect(models.project.all()).resolves.toHaveLength(1);
   });
 
   it('should load teams each time VCS changes', async () => {
@@ -70,17 +70,17 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs2.teams).toHaveBeenCalledTimes(1);
 
-    const allSpaces = await models.space.all();
+    const allSpaces = await models.project.all();
     expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
-      expect.objectContaining<Partial<Space>>({
+      expect.objectContaining<Partial<Project>>({
         _id: BASE_PROJECT_ID,
       }),
-      expect.objectContaining<Partial<Space>>({
+      expect.objectContaining<Partial<Project>>({
         remoteId: team1.id,
         name: team1.name,
       }),
-      expect.objectContaining<Partial<Space>>({
+      expect.objectContaining<Partial<Project>>({
         remoteId: team2.id,
         name: team2.name,
       }),
@@ -100,7 +100,7 @@ describe('useRemoteSpaces', () => {
     await waitFor(() => result.current.loading === false);
 
     expect(vcs.teams).toHaveBeenCalledTimes(1);
-    await expect(models.space.all()).resolves.toHaveLength(1);
+    await expect(models.project.all()).resolves.toHaveLength(1);
 
     const team1 = { id: 'id1', name: 'team1' };
     const team2 = { id: 'id2', name: 'team2' };
@@ -112,17 +112,17 @@ describe('useRemoteSpaces', () => {
 
     expect(vcs.teams).toHaveBeenCalledTimes(3);
 
-    const allSpaces = await models.space.all();
+    const allSpaces = await models.project.all();
     expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
-      expect.objectContaining<Partial<Space>>({
+      expect.objectContaining<Partial<Project>>({
         _id: BASE_PROJECT_ID,
       }),
-      expect.objectContaining<Partial<Space>>({
+      expect.objectContaining<Partial<Project>>({
         remoteId: team1.id,
         name: team1.name,
       }),
-      expect.objectContaining<Partial<Space>>({
+      expect.objectContaining<Partial<Project>>({
         remoteId: team2.id,
         name: team2.name,
       }),

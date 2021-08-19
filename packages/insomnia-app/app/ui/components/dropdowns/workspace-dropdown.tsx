@@ -11,7 +11,7 @@ import { executeHotKey } from '../../../common/hotkeys-listener';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import { ApiSpec } from '../../../models/api-spec';
 import type { Environment } from '../../../models/environment';
-import { Space } from '../../../models/project';
+import { Project } from '../../../models/project';
 import { isRequest } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { isDesign, Workspace } from '../../../models/workspace';
@@ -34,7 +34,7 @@ interface Props {
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
   activeApiSpec: ApiSpec;
-  activeSpace: Space;
+  activeSpace: Project;
   hotKeyRegistry: HotKeyRegistry;
   isLoading: boolean;
   className?: string;
