@@ -531,7 +531,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
             {syncMenuHeader}
             {remoteProjects.length === 0 && (
               <DropdownItem onClick={this._handleEnableSync}>
-                <i className="fa fa-plus-circle" /> Create Local Project
+                <i className="fa fa-plus-circle" /> Create Locally
               </DropdownItem>
             )}
             {remoteProjects.map(p => (
