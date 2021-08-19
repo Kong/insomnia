@@ -19,7 +19,7 @@ import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScop
 
 export interface ImportOptions {
   workspaceId?: string;
-  forceToSpace?: 'active' | 'prompt';
+  forceToProject?: 'active' | 'prompt';
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
 }
@@ -46,7 +46,7 @@ const convertToRawConfig = ({
   forceToScope,
   forceToWorkspace,
   workspaceId,
-  forceToSpace,
+  forceToProject,
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
   const activeProject = selectActiveProject(state);
@@ -56,7 +56,7 @@ state: RootState): ImportRawConfig => {
     getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
     getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
     // Currently, just return the active space instead of prompting for which space to import into
-    getProjectId: forceToSpace === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject._id),
+    getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject._id),
   });
 };
 

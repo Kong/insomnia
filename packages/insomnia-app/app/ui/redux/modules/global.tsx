@@ -205,7 +205,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         ),
         addCancel: true,
       });
-      dispatch(importUri(args.uri, { workspaceId: args.workspaceId, forceToSpace: 'prompt' }));
+      dispatch(importUri(args.uri, { workspaceId: args.workspaceId, forceToProject: 'prompt' }));
       break;
 
     case COMMAND_PLUGIN_INSTALL:
