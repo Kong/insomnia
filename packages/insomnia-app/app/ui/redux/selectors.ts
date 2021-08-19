@@ -7,7 +7,7 @@ import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { BASE_SPACE_ID, isRemoteSpace } from '../../models/space';
+import { BASE_PROJECT_ID, isRemoteSpace } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 
@@ -85,7 +85,7 @@ export const selectActiveSpace = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeProjectId,
   (entities, activeProjectId) => {
-    return entities.spaces[activeProjectId] || entities.spaces[BASE_SPACE_ID];
+    return entities.spaces[activeProjectId] || entities.spaces[BASE_PROJECT_ID];
   },
 );
 

@@ -2,7 +2,7 @@ import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/ana
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { BASE_SPACE_ID, isRemoteSpace, Space } from '../../../models/space';
+import { BASE_PROJECT_ID, isRemoteSpace, Space } from '../../../models/space';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveSpace } from './global';
 
@@ -41,7 +41,7 @@ export const removeSpace = (space: Space) => dispatch => {
       await models.space.remove(space);
       trackEvent('Project', 'Delete');
       // Show base space
-      dispatch(setActiveSpace(BASE_SPACE_ID));
+      dispatch(setActiveSpace(BASE_PROJECT_ID));
       // Show home in case not already on home
       dispatch(setActiveActivity(ACTIVITY_HOME));
       trackSegmentEvent(SegmentEvent.spaceLocalDelete);

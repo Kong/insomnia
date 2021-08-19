@@ -31,7 +31,7 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { Settings } from '../../../models/settings';
-import { BASE_SPACE_ID } from '../../../models/space';
+import { BASE_PROJECT_ID } from '../../../models/space';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
@@ -80,7 +80,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
+function activeSpaceReducer(state: string = BASE_PROJECT_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_SPACE:
       return action.spaceId;
@@ -668,7 +668,7 @@ export function initActiveSpace() {
     // Nothing here...
   }
 
-  return setActiveSpace(spaceId || BASE_SPACE_ID);
+  return setActiveSpace(spaceId || BASE_PROJECT_ID);
 }
 
 export function initSpaceSortOrder() {

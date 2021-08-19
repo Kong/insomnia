@@ -6,7 +6,7 @@ import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../../common/constants';
 import * as models from '../../../../models';
-import { BASE_SPACE_ID } from '../../../../models/space';
+import { BASE_PROJECT_ID } from '../../../../models/space';
 import { getAndClearShowAlertMockArgs, getAndClearShowPromptMockArgs } from '../../../../test-utils';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE } from '../global';
 import { createSpace, removeSpace } from '../space';
@@ -97,7 +97,7 @@ describe('space', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: BASE_SPACE_ID,
+          spaceId: BASE_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_ACTIVITY,

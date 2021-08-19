@@ -8,7 +8,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../__jest__/with-redux-store';
 import * as models from '../../../models';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { BASE_PROJECT_ID, Space } from '../../../models/space';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
@@ -74,7 +74,7 @@ describe('useRemoteSpaces', () => {
     expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
       expect.objectContaining<Partial<Space>>({
-        _id: BASE_SPACE_ID,
+        _id: BASE_PROJECT_ID,
       }),
       expect.objectContaining<Partial<Space>>({
         remoteId: team1.id,
@@ -116,7 +116,7 @@ describe('useRemoteSpaces', () => {
     expect(allSpaces).toHaveLength(3);
     expect(allSpaces).toEqual(expect.arrayContaining([
       expect.objectContaining<Partial<Space>>({
-        _id: BASE_SPACE_ID,
+        _id: BASE_PROJECT_ID,
       }),
       expect.objectContaining<Partial<Space>>({
         remoteId: team1.id,

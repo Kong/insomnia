@@ -3,7 +3,7 @@ import { exportWorkspacesData, exportWorkspacesHAR } from '../../common/export';
 import type { ImportRawConfig } from '../../common/import';
 import { importRaw, importUri } from '../../common/import';
 import * as models from '../../models';
-import { BASE_SPACE_ID } from '../../models/space';
+import { BASE_PROJECT_ID } from '../../models/space';
 import type { Workspace, WorkspaceScope } from '../../models/workspace';
 
 interface PluginImportOptions {
@@ -42,10 +42,10 @@ export const init = (activeProjectId?: string) => ({
   data: {
     import: {
       uri: async (uri: string, options: PluginImportOptions = {}) => {
-        await importUri(uri, buildImportRawConfig(options, activeProjectId || BASE_SPACE_ID));
+        await importUri(uri, buildImportRawConfig(options, activeProjectId || BASE_PROJECT_ID));
       },
       raw: async (text: string, options: PluginImportOptions = {}) => {
-        await importRaw(text, buildImportRawConfig(options, activeProjectId || BASE_SPACE_ID));
+        await importRaw(text, buildImportRawConfig(options, activeProjectId || BASE_PROJECT_ID));
       },
     },
     export: {

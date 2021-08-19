@@ -5,7 +5,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import * as models from '../../../models/index';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
+import { BASE_PROJECT_ID, Space } from '../../../models/space';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
 import * as plugin from '../data';
 
@@ -15,7 +15,7 @@ describe('init()', () => {
   beforeEach(globalBeforeEach);
 
   it('initializes correctly', async () => {
-    const { data } = plugin.init(BASE_SPACE_ID);
+    const { data } = plugin.init(BASE_PROJECT_ID);
     expect(Object.keys(data)).toEqual(['import', 'export']);
     expect(Object.keys(data.export).sort()).toEqual(['har', 'insomnia']);
     expect(Object.keys(data.import).sort()).toEqual(['raw', 'uri']);

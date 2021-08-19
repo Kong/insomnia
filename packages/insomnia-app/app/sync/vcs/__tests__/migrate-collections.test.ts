@@ -5,7 +5,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { isLoggedIn as _isLoggedIn } from '../../../account/session';
 import { database } from '../../../common/database';
 import * as models from '../../../models';
-import { BASE_SPACE_ID } from '../../../models/space';
+import { BASE_PROJECT_ID } from '../../../models/space';
 import { projectWithTeamSchema, teamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { initializeSpaceFromTeam } from '../initialize-model-from';
@@ -49,7 +49,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     // Arrange
     const vcs = newMockedVcs();
 
-    const baseSpace = await models.space.getById(BASE_SPACE_ID);
+    const baseSpace = await models.space.getById(BASE_PROJECT_ID);
     const workspaceInBase = await models.workspace.create({ parentId: baseSpace?._id });
 
     const localSpace = await models.space.create();

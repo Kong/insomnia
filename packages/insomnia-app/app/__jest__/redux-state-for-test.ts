@@ -1,5 +1,5 @@
 import { ACTIVITY_HOME } from '../common/constants';
-import { BASE_SPACE_ID } from '../models/space';
+import { BASE_PROJECT_ID } from '../models/space';
 import { RootState } from '../ui/redux/modules';
 import * as entities from '../ui/redux/modules/entities';
 import { GlobalState } from '../ui/redux/modules/global';
@@ -9,7 +9,7 @@ export const reduxStateForTest = async (global: Partial<GlobalState> = {}): Prom
   global: {
     activeWorkspaceId: null,
     activeActivity: ACTIVITY_HOME,
-    activeProjectId: BASE_SPACE_ID,
+    activeProjectId: BASE_PROJECT_ID,
     spaceSortOrder: 'modified-desc',
     isLoading: false,
     isLoggedIn: false,

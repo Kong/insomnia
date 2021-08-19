@@ -18,7 +18,7 @@ import {
 } from '../../../../common/constants';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
-import { BASE_SPACE_ID } from '../../../../models/space';
+import { BASE_PROJECT_ID } from '../../../../models/space';
 import {
   goToNextActivity,
   initActiveActivity,
@@ -269,7 +269,7 @@ describe('global', () => {
     it('should default to base space if not exist', () => {
       const expectedEvent = {
         type: SET_ACTIVE_SPACE,
-        spaceId: BASE_SPACE_ID,
+        spaceId: BASE_PROJECT_ID,
       };
       expect(initActiveSpace()).toStrictEqual(expectedEvent);
     });

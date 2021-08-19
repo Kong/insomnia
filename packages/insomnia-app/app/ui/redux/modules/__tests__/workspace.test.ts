@@ -10,7 +10,7 @@ import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
 import { CookieJar } from '../../../../models/cookie-jar';
 import { Environment } from '../../../../models/environment';
-import { BASE_SPACE_ID } from '../../../../models/space';
+import { BASE_PROJECT_ID } from '../../../../models/space';
 import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../../models/workspace';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
@@ -46,7 +46,7 @@ describe('workspace', () => {
   beforeEach(globalBeforeEach);
   describe('createWorkspace', () => {
     it('should create document', async () => {
-      const spaceId = BASE_SPACE_ID;
+      const spaceId = BASE_PROJECT_ID;
       const store = mockStore(await reduxStateForTest({ activeProjectId: spaceId }));
 
       // @ts-expect-error redux-thunk types
@@ -66,7 +66,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: BASE_SPACE_ID,
+          spaceId: BASE_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -80,7 +80,7 @@ describe('workspace', () => {
     });
 
     it('should create collection', async () => {
-      const spaceId = BASE_SPACE_ID;
+      const spaceId = BASE_PROJECT_ID;
       const store = mockStore(await reduxStateForTest({ activeProjectId: spaceId }));
 
       // @ts-expect-error redux-thunk types
@@ -100,7 +100,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
-          spaceId: BASE_SPACE_ID,
+          spaceId: BASE_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,

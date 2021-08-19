@@ -9,9 +9,9 @@ export const prefix = 'proj';
 export const canDuplicate = false;
 export const canSync = false;
 
-export const BASE_SPACE_ID = `${prefix}_base-space`;
+export const BASE_PROJECT_ID = `${prefix}_base-space`;
 
-export const isBaseSpace = (space: Space) => space._id === BASE_SPACE_ID;
+export const isBaseSpace = (space: Space) => space._id === BASE_PROJECT_ID;
 export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
 export const isLocalSpace = (space: Space): space is LocalSpace => space.remoteId === null;
 export const isRemoteSpace = (space: Space): space is RemoteSpace => !isLocalSpace(space);
@@ -77,8 +77,8 @@ export function update(space: Space, patch: Partial<Space>) {
 export async function all() {
   const spaces = await db.all<Space>(type);
 
-  if (!spaces.find(c => c._id === BASE_SPACE_ID)) {
-    await create({ _id: BASE_SPACE_ID, name: getAppName(), remoteId: null });
+  if (!spaces.find(c => c._id === BASE_PROJECT_ID)) {
+    await create({ _id: BASE_PROJECT_ID, name: getAppName(), remoteId: null });
     return db.all<Space>(type);
   }
 
