@@ -59,7 +59,7 @@ import { registerModal, showModal } from './modals/index';
 import LoginModal from './modals/login-modal';
 import NunjucksModal from './modals/nunjucks-modal';
 import PaymentNotificationModal from './modals/payment-notification-modal';
-import SpaceSettingsModal from './modals/project-settings-modal';
+import ProjectSettingsModal from './modals/project-settings-modal';
 import PromptModal from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
 import RequestCreateModal from './modals/request-create-modal';
@@ -531,7 +531,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} settings={settings} />
-            <SpaceSettingsModal ref={registerModal} />
+            <ProjectSettingsModal ref={registerModal} />
             <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
 
             <CodePromptModal

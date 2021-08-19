@@ -40,8 +40,8 @@ import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
 import { selectProjectSortOrder } from '../redux/selectors';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
-import { SpaceDropdown } from './dropdowns/project-dropdown';
-import { SpaceSortDropdown } from './dropdowns/project-sort-dropdown';
+import { ProjectDropdown } from './dropdowns/project-dropdown';
+import { ProjectSortDropdown } from './dropdowns/project-sort-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
 import KeydownBinder from './keydown-binder';
 import { showPrompt } from './modals';
@@ -308,7 +308,7 @@ class WrapperHome extends PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        <SpaceSortDropdown value={sortOrder} onSelect={handleSetSpaceSortOrder} />
+        <ProjectSortDropdown value={sortOrder} onSelect={handleSetSpaceSortOrder} />
         <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
       </div>
@@ -361,7 +361,7 @@ class WrapperHome extends PureComponent<Props, State> {
                   crumbs={[
                     {
                       id: 'space',
-                      node: <SpaceDropdown vcs={vcs || undefined} />,
+                      node: <ProjectDropdown vcs={vcs || undefined} />,
                     },
                   ]}
                 />

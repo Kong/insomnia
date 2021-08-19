@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { Project_SORT_ORDERS, ProjectSortOrder, spaceSortOrderName } from '../../../common/constants';
 import { svgPlacementHack } from './dropdown-placement-hacks';
 
-interface SpaceSortDropdownProps {
+interface ProjectSortDropdownProps {
   value: ProjectSortOrder;
   onSelect: (value: ProjectSortOrder) => void;
 }
@@ -17,7 +17,7 @@ const Checkmark = styled(SvgIcon)({
   },
 });
 
-export const SpaceSortDropdown: FC<SpaceSortDropdownProps> = ({ onSelect, value }) => {
+export const ProjectSortDropdown: FC<ProjectSortDropdownProps> = ({ onSelect, value }) => {
   return (
     <Dropdown
       className="margin-left"

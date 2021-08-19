@@ -47,14 +47,14 @@ interface Props {
   vcs?: VCS;
 }
 
-const SpaceDropdownItem: FC<{
-  space: Project;
+const ProjectDropdownItem: FC<{
+  project: Project;
   isActive: boolean;
   setActive: (projectId: string) => void;
-}> = ({ isActive, space, setActive }) => {
-  const { _id, name } = space;
-  const isBase = isBaseProject(space);
-  const isRemote = isRemoteProject(space);
+}> = ({ isActive, project, setActive }) => {
+  const { _id, name } = project;
+  const isBase = isBaseProject(project);
+  const isRemote = isRemoteProject(project);
 
   return (
     <DropdownItem
@@ -68,9 +68,9 @@ const SpaceDropdownItem: FC<{
     </DropdownItem>
   );
 };
-SpaceDropdownItem.displayName = DropdownItem.name; // This is required because the Dropdown component will otherwise silently disregard this component.
+ProjectDropdownItem.displayName = DropdownItem.name; // This is required because the Dropdown component will otherwise silently disregard this component.
 
-export const SpaceDropdown: FC<Props> = ({ vcs }) => {
+export const ProjectDropdown: FC<Props> = ({ vcs }) => {
   const { loading, refresh } = useRemoteProjects(vcs);
 
   const projects = useSelector(selectProjects);
@@ -90,11 +90,11 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   ), [activeProject]);
 
   const renderProject = useCallback((project: Project) => (
-    <SpaceDropdownItem
+    <ProjectDropdownItem
       key={project._id}
       isActive={project._id === activeProject._id}
       setActive={setActive}
-      space={project}
+      project={project}
     />
   ), [setActive, activeProject._id]);
 
