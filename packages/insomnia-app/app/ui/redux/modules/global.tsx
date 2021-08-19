@@ -388,7 +388,7 @@ export const setActiveProject = (projectId: string) => {
   };
 };
 
-export const setSpaceSortOrder = (sortOrder: ProjectSortOrder) => {
+export const setProjectSortOrder = (sortOrder: ProjectSortOrder) => {
   const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
   window.localStorage.setItem(key, JSON.stringify(sortOrder));
   return {
@@ -672,21 +672,21 @@ export function initActiveProject() {
   return setActiveProject(projectId || BASE_PROJECT_ID);
 }
 
-export function initSpaceSortOrder() {
-  let spaceSortOrder: ProjectSortOrder = 'modified-desc';
+export function initProjectSortOrder() {
+  let projectSortOrder: ProjectSortOrder = 'modified-desc';
 
   try {
-    const spaceSortOrderKey = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
-    const stringifiedSpaceSortOrder = window.localStorage.getItem(spaceSortOrderKey);
+    const projectSortOrderKey = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
+    const stringifiedProjectSortOrder = window.localStorage.getItem(projectSortOrderKey);
 
-    if (stringifiedSpaceSortOrder) {
-      spaceSortOrder = JSON.parse(stringifiedSpaceSortOrder);
+    if (stringifiedProjectSortOrder) {
+      projectSortOrder = JSON.parse(stringifiedProjectSortOrder);
     }
   } catch (e) {
     // Nothing here...
   }
 
-  return setSpaceSortOrder(spaceSortOrder);
+  return setProjectSortOrder(projectSortOrder);
 }
 
 export function initActiveWorkspace() {
@@ -770,7 +770,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
 
 export const init = () => [
   initActiveProject(),
-  initSpaceSortOrder(),
+  initProjectSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
 ];

@@ -57,7 +57,7 @@ export async function migrate(doc: Workspace) {
     fileName: doc.name,
   });
   doc = _migrateScope(doc);
-  doc = _migrateIntoBaseSpace(doc);
+  doc = _migrateIntoBaseProject(doc);
   return doc;
 }
 
@@ -70,7 +70,7 @@ export function findByParentId(parentId: string) {
 }
 
 export async function create(patch: Partial<Workspace> = {}) {
-  expectParentToBeSpace(patch.parentId);
+  expectParentToBeProject(patch.parentId);
   return db.docCreate<Workspace>(type, patch);
 }
 
@@ -83,7 +83,7 @@ export function count() {
 }
 
 export function update(workspace: Workspace, patch: Partial<Workspace>) {
-  expectParentToBeSpace(patch.parentId);
+  expectParentToBeProject(patch.parentId);
   return db.docUpdate(workspace, patch);
 }
 
@@ -158,7 +158,7 @@ function _migrateScope(workspace: MigrationWorkspace) {
   return workspace as Workspace;
 }
 
-function _migrateIntoBaseSpace(workspace: Workspace) {
+function _migrateIntoBaseProject(workspace: Workspace) {
   if (!workspace.parentId) {
     workspace.parentId = BASE_PROJECT_ID;
   }
@@ -172,8 +172,8 @@ export async function ensureChildren({ _id }: Workspace) {
   await models.workspaceMeta.getOrCreateByParentId(_id);
 }
 
-function expectParentToBeSpace(parentId?: string | null) {
+function expectParentToBeProject(parentId?: string | null) {
   if (parentId && !isProjectId(parentId)) {
-    throw new Error('Expected the parent of a Workspace to be a Space');
+    throw new Error('Expected the parent of a Workspace to be a Project');
   }
 }

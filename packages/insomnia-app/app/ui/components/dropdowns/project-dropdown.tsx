@@ -11,7 +11,7 @@ import { setActiveProject } from '../../redux/modules/global';
 import { createProject } from '../../redux/modules/project';
 import { selectActiveProject, selectProjects } from '../../redux/selectors';
 import { showModal } from '../modals';
-import SpaceSettingsModal from '../modals/project-settings-modal';
+import ProjectSettingsModal from '../modals/project-settings-modal';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
 
 const Checkmark = styled(SvgIcon)({
@@ -79,7 +79,7 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
   const dispatch = useDispatch();
   const setActive = useCallback((projectId: string) => dispatch(setActiveProject(projectId)), [dispatch]);
   const createNew = useCallback(() => dispatch(createProject()), [dispatch]);
-  const showSettings = useCallback(() => showModal(SpaceSettingsModal), []);
+  const showSettings = useCallback(() => showModal(ProjectSettingsModal), []);
 
   // dropdown button
   const button = useMemo(() => (

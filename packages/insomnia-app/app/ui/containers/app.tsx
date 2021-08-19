@@ -1098,7 +1098,7 @@ class App extends PureComponent<AppProps, State> {
   }
 
   /**
-   * Update document.title to be "Space - Workspace (Environment) – Request" when not home
+   * Update document.title to be "Project - Workspace (Environment) – Request" when not home
    * @private
    */
   _updateDocumentTitle() {

@@ -342,7 +342,7 @@ export const Project_SORT_ORDERS = [
   SORT_CREATED_DESC,
 ];
 
-export const spaceSortOrderName: Record<ProjectSortOrder, string> = {
+export const projectSortOrderName: Record<ProjectSortOrder, string> = {
   [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
   [SORT_NAME_DESC]: 'Name Descending (Z-A)',
   [SORT_CREATED_ASC]: 'Oldest First',

@@ -8,21 +8,21 @@ import { Team } from '../types';
 import { initializeProjectFromTeam } from './initialize-model-from';
 import { VCS } from './vcs';
 
-export const logCollectionMovedToProject = (collection: Workspace, remoteSpace: RemoteProject) => {
-  console.log('[sync] collection has been moved to the remote space to which it belongs', {
+export const logCollectionMovedToProject = (collection: Workspace, remoteProject: RemoteProject) => {
+  console.log('[sync] collection has been moved to the remote project to which it belongs', {
     collection: {
       id : collection._id,
       name: collection.name,
     },
-    space: {
-      id: remoteSpace._id,
-      name: remoteSpace.name,
+    project: {
+      id: remoteProject._id,
+      name: remoteProject.name,
     },
   });
 };
 
 export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
-  console.log('[sync] checking for collections which need to be moved into a remote space');
+  console.log('[sync] checking for collections which need to be moved into a remote project');
 
   // If not logged in, exit
   if (!isLoggedIn()) {

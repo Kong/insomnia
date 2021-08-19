@@ -22,21 +22,21 @@ export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof 
 type Props = ReduxProps
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SpaceSettingsModal extends PureComponent<Props> {
+class ProjectSettingsModal extends PureComponent<Props> {
   modal: Modal | null = null;
 
   _handleSetModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _handleRemoveSpace() {
-    this.props.handleRemoveSpace(this.props.project);
+  _handleRemoveProject() {
+    this.props.handleRemoveProject(this.props.project);
     this.hide();
   }
 
   async _handleRename(name: string) {
-    const { project: space } = this.props;
-    await models.project.update(space, { name });
+    const { project } = this.props;
+    await models.project.update(project, { name });
   }
 
   show() {
@@ -88,7 +88,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
           <h2>Actions</h2>
           <div className="form-control form-control--padded">
             <PromptButton
-              onClick={this._handleRemoveSpace}
+              onClick={this._handleRemoveProject}
               addIcon
               className="width-auto btn btn--clicky inline-block"
             >
@@ -107,10 +107,10 @@ const mapStateToProps = (state: RootState) => {
 };
 
 const mapDispatchToProps = dispatch => {
-  const boundSpaceActions = bindActionCreators(projectActions, dispatch);
+  const boundProjectActions = bindActionCreators(projectActions, dispatch);
   return {
-    handleRemoveSpace: boundSpaceActions.removeProject,
+    handleRemoveProject: boundProjectActions.removeProject,
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(SpaceSettingsModal);
+export default connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(ProjectSettingsModal);

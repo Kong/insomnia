@@ -10,14 +10,14 @@ describe('selectors', () => {
   describe('selectActiveProject', () => {
     it('should return the active project', async () => {
       // create two projects
-      const spaceA = await models.project.create();
+      const projectA = await models.project.create();
       await models.project.create();
 
       // set first as selected
-      const state = await reduxStateForTest({ activeProjectId: spaceA._id });
+      const state = await reduxStateForTest({ activeProjectId: projectA._id });
 
       const project = selectActiveProject(state);
-      expect(project).toStrictEqual(spaceA);
+      expect(project).toStrictEqual(projectA);
     });
 
     it('should return base project if active project not found', async () => {

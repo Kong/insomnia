@@ -17,7 +17,7 @@ import SyncPullButton from '../sync-pull-button';
 
 interface Props {
   workspace: Workspace;
-  space: Project;
+  project: Project;
   syncItems: StatusCandidate[];
   vcs: VCS;
 }
@@ -181,7 +181,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { vcs, space } = this.props;
+    const { vcs, project: space } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -301,7 +301,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                         <SyncPullButton
                           className="btn btn--micro btn--outlined space-left"
                           branch={name}
-                          space={space}
+                          project={space}
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
                           vcs={vcs}

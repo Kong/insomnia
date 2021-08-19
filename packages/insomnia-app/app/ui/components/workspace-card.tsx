@@ -81,7 +81,7 @@ const WorkspaceCard: FC<WorkspaceCardProps> = ({
     <WorkspaceCardDropdown
       apiSpec={apiSpec}
       workspace={workspace}
-      space={activeProject}
+      project={activeProject}
     />
   );
 

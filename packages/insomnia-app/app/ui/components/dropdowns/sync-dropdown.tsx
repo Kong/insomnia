@@ -44,7 +44,7 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 const mapStateToProps = (state: RootState) => ({
-  remoteSpaces: selectRemoteProjects(state),
+  remoteProjects: selectRemoteProjects(state),
 });
 
 const mapDispatchToProps = dispatch => {
@@ -57,7 +57,7 @@ const mapDispatchToProps = dispatch => {
 interface Props extends ReduxProps {
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space: Project;
+  project: Project;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;
@@ -106,9 +106,9 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 
   async refreshMainAttributes(extraState: Partial<State> = {}) {
-    const { vcs, syncItems, workspace, space } = this.props;
+    const { vcs, syncItems, workspace, project } = this.props;
 
-    if (!vcs.hasBackendProject() && isRemoteProject(space)) {
+    if (!vcs.hasBackendProject() && isRemoteProject(project)) {
       const remoteProjects = await vcs.remoteBackendProjectsInAnyTeam();
       const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({
@@ -146,10 +146,10 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       initializing: true,
     });
 
-    const { vcs, workspace, workspaceMeta, space } = this.props;
+    const { vcs, workspace, workspaceMeta, project } = this.props;
 
     try {
-      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project: space });
+      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
       await this.refreshMainAttributes();
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);
@@ -221,7 +221,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handlePushChanges() {
-    const { vcs, space: { remoteId } } = this.props;
+    const { vcs, project: { remoteId } } = this.props;
     this.setState({
       loadingPush: true,
     });
@@ -247,7 +247,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handlePullChanges() {
-    const { vcs, syncItems, space: { remoteId } } = this.props;
+    const { vcs, syncItems, project: { remoteId } } = this.props;
     this.setState({
       loadingPull: true,
     });
@@ -326,13 +326,13 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handleSetProject(p: BackendProjectWithTeam) {
-    const { vcs, remoteSpaces, space, workspace, handleActivateWorkspace } = this.props;
+    const { vcs, remoteProjects, project, workspace, handleActivateWorkspace } = this.props;
     this.setState({
       loadingProjectPull: true,
     });
 
-    const pulledIntoProject = await pullProject({ vcs, backendProject: p, remoteProjects: remoteSpaces });
-    if (pulledIntoProject._id !== space._id) {
+    const pulledIntoProject = await pullProject({ vcs, backendProject: p, remoteProjects });
+    if (pulledIntoProject._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
       logCollectionMovedToProject(workspace, pulledIntoProject);

@@ -33,7 +33,7 @@ import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
-import { setSpaceSortOrder } from '../redux/modules/global';
+import { setProjectSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
@@ -60,7 +60,7 @@ interface State {
   filter: string;
 }
 
-function orderSpaceCards(orderBy: ProjectSortOrder) {
+function orderProjectCards(orderBy: ProjectSortOrder) {
   return (cardA: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>, cardB: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>) => {
     switch (orderBy) {
       case 'modified-desc':
@@ -74,7 +74,7 @@ function orderSpaceCards(orderBy: ProjectSortOrder) {
       case 'created-desc':
         return sortMethodMap['created-desc'](cardA.workspace, cardB.workspace);
       default:
-        return unreachableCase(orderBy, `Space Ordering "${orderBy}" is invalid`);
+        return unreachableCase(orderBy, `Project Ordering "${orderBy}" is invalid`);
     }
   };
 }
@@ -287,7 +287,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { wrapperProps, handleSetSpaceSortOrder, sortOrder } = this.props;
+    const { wrapperProps, handleSetProjectSortOrder, sortOrder } = this.props;
     const { vcs } = wrapperProps;
     return (
       <div className="row row--right pad-left wide">
@@ -308,7 +308,7 @@ class WrapperHome extends PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        <ProjectSortDropdown value={sortOrder} onSelect={handleSetSpaceSortOrder} />
+        <ProjectSortDropdown value={sortOrder} onSelect={handleSetProjectSortOrder} />
         <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
       </div>
@@ -335,7 +335,7 @@ class WrapperHome extends PureComponent<Props, State> {
         })
       )
       .filter(isNotNullOrUndefined)
-      .sort(orderSpaceCards(sortOrder))
+      .sort(orderProjectCards(sortOrder))
       .map(props => (
         <WorkspaceCard
           {...props}
@@ -416,7 +416,7 @@ const mapDispatchToProps = dispatch => {
       importFile,
       importClipBoard,
       importUri,
-      setSpaceSortOrder,
+      setProjectSortOrder,
       activateWorkspace,
     },
     dispatch
@@ -428,7 +428,7 @@ const mapDispatchToProps = dispatch => {
     handleImportFile: bound.importFile,
     handleImportUri: bound.importUri,
     handleImportClipboard: bound.importClipBoard,
-    handleSetSpaceSortOrder: bound.setSpaceSortOrder,
+    handleSetProjectSortOrder: bound.setProjectSortOrder,
     handleActivateWorkspace: bound.activateWorkspace,
   });
 };

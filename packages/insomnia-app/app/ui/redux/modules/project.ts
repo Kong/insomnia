@@ -26,10 +26,10 @@ export const createProject = () => dispatch => {
   });
 };
 
-export const removeProject = (space: Project) => dispatch => {
-  const message = isRemoteProject(space)
-    ? `Deleting a ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. The ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will continue to exist remotely. Deleting this ${strings.project.singular.toLowerCase()} locally cannot be undone. Are you sure you want to delete ${space.name}?`
-    : `Deleting a ${strings.project.singular.toLowerCase()} will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${space.name}?`;
+export const removeProject = (project: Project) => dispatch => {
+  const message = isRemoteProject(project)
+    ? `Deleting a ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will delete all local copies and changes of ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. All changes that are not synced will be lost. The ${strings.remoteProject.singular.toLowerCase()} ${strings.project.singular.toLowerCase()} will continue to exist remotely. Deleting this ${strings.project.singular.toLowerCase()} locally cannot be undone. Are you sure you want to delete ${project.name}?`
+    : `Deleting a ${strings.project.singular.toLowerCase()} will delete all ${strings.document.plural.toLowerCase()} and ${strings.collection.plural.toLowerCase()} within. This cannot be undone. Are you sure you want to delete ${project.name}?`;
 
   showAlert({
     title: `Delete ${strings.project.singular}`,
@@ -37,8 +37,8 @@ export const removeProject = (space: Project) => dispatch => {
     addCancel: true,
     okLabel: 'Delete',
     onConfirm: async () => {
-      await models.stats.incrementDeletedRequestsForDescendents(space);
-      await models.project.remove(space);
+      await models.stats.incrementDeletedRequestsForDescendents(project);
+      await models.project.remove(project);
       trackEvent('Project', 'Delete');
       // Show base project
       dispatch(setActiveProject(BASE_PROJECT_ID));

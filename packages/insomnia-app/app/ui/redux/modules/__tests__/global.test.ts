@@ -24,7 +24,7 @@ import {
   initActiveActivity,
   initActiveProject,
   initActiveWorkspace,
-  initSpaceSortOrder,
+  initProjectSortOrder,
   LOCALSTORAGE_PREFIX,
   SET_ACTIVE_ACTIVITY,
   SET_ACTIVE_PROJECT,
@@ -291,7 +291,7 @@ describe('global', () => {
         'type': SET_DASHBOARD_SORT_ORDER,
       };
 
-      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
+      expect(initProjectSortOrder()).toStrictEqual(expectedEvent);
     });
 
     it('should default to modified-desc if not exist', async () => {
@@ -302,7 +302,7 @@ describe('global', () => {
         'type': SET_DASHBOARD_SORT_ORDER,
       };
 
-      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
+      expect(initProjectSortOrder()).toStrictEqual(expectedEvent);
     });
   });
 

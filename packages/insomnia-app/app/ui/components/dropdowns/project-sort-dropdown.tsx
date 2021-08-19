@@ -2,7 +2,7 @@ import { Button, Dropdown, DropdownItem, SvgIcon } from 'insomnia-components';
 import React, { FC } from 'react';
 import styled from 'styled-components';
 
-import { Project_SORT_ORDERS, ProjectSortOrder, spaceSortOrderName } from '../../../common/constants';
+import { Project_SORT_ORDERS, ProjectSortOrder, projectSortOrderName } from '../../../common/constants';
 import { svgPlacementHack } from './dropdown-placement-hacks';
 
 interface ProjectSortDropdownProps {
@@ -34,7 +34,7 @@ export const ProjectSortDropdown: FC<ProjectSortDropdownProps> = ({ onSelect, va
           key={order}
           right={value === order && <Checkmark icon="checkmark" />}
         >
-          {spaceSortOrderName[order]}
+          {projectSortOrderName[order]}
         </DropdownItem>
       ))}
     </Dropdown>

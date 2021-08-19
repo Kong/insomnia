@@ -41,13 +41,13 @@ describe('project', () => {
       expect(placeholder).toBe('My Project');
       expect(selectText).toBe(true);
 
-      const spaceName = 'name';
-      await onComplete?.(spaceName);
+      const projectName = 'name';
+      await onComplete?.(projectName);
 
       const projects = await models.project.all();
       expect(projects).toHaveLength(1);
       const project = projects[0];
-      expect(project.name).toBe(spaceName);
+      expect(project.name).toBe(projectName);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalCreate);
       expect(trackEvent).toHaveBeenCalledWith('Project', 'Create');
       expect(store.getActions()).toEqual([
@@ -67,7 +67,7 @@ describe('project', () => {
     it('should remove project', async () => {
       const store = mockStore(await reduxStateForTest());
       const projectOne = await models.project.create({ name: 'My Project' });
-      const spaceTwo = await models.project.create();
+      const projectTwo = await models.project.create();
 
       store.dispatch(removeProject(projectOne));
 
@@ -80,7 +80,7 @@ describe('project', () => {
       } = getAndClearShowAlertMockArgs();
 
       expect(title).toBe('Delete Project');
-      expect(message).toBe('Deleting a project will delete all documents and collections within. This cannot be undone. Are you sure you want to delete My Space?');
+      expect(message).toBe('Deleting a project will delete all documents and collections within. This cannot be undone. Are you sure you want to delete My Project?');
       expect(addCancel).toBe(true);
       expect(okLabel).toBe('Delete');
 
@@ -91,7 +91,7 @@ describe('project', () => {
       const projects = await models.project.all();
       expect(projects).toHaveLength(1);
       const project = projects[0];
-      expect(project).toBe(spaceTwo);
+      expect(project).toBe(projectTwo);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalDelete);
       expect(trackEvent).toHaveBeenCalledWith('Project', 'Delete');
       expect(store.getActions()).toEqual([

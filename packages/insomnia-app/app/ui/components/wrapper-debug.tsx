@@ -71,7 +71,7 @@ class WrapperDebug extends PureComponent<Props> {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}
-        space={activeProject}
+        project={activeProject}
         vcs={vcs}
         syncItems={syncItems}
       />;

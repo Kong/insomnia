@@ -41,7 +41,7 @@ export const isProjectId = (id: string | null) => (
 
 export function init(): Partial<Project> {
   return {
-    name: 'My Space',
+    name: 'My Project',
     remoteId: null, // `null` is necessary for the model init logic to work properly
   };
 }

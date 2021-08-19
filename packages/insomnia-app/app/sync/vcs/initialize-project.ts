@@ -42,7 +42,7 @@ export const pushSnapshotOnInitialize = async ({
   workspaceMeta?: WorkspaceMeta;
   project: Project;
 }) => {
-  const spaceIsForWorkspace = projectId === workspace.parentId;
+  const projectIsForWorkspace = projectId === workspace.parentId;
   const markedForPush = workspaceMeta?.pushSnapshotOnInitialize;
 
   // A race condition occurs in App.tsx when updating the active workspace
@@ -51,7 +51,7 @@ export const pushSnapshotOnInitialize = async ({
   // This race condition causes us to hit this codepath twice while activating a workspace but the first time it has no project so we shouldn't do anything
   const hasProject = vcs.hasBackendProject();
 
-  if (markedForPush && spaceIsForWorkspace && projectRemoteId && hasProject) {
+  if (markedForPush && projectIsForWorkspace && projectRemoteId && hasProject) {
     await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: false });
     await vcs.push(projectRemoteId);
   }
