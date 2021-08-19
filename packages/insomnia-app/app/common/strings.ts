@@ -28,8 +28,8 @@ export const strings: Record<StringId, StringInfo> = {
     plural: 'Dashboards',
   },
   space: {
-    singular: 'Space',
-    plural: 'Spaces',
+    singular: 'Project',
+    plural: 'Projects',
   },
   workspace: {
     singular: 'Workspace',

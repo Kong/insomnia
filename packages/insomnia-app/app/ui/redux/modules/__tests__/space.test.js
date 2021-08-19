@@ -80,7 +80,7 @@ describe('space', () => {
       } = getAndClearShowAlertMockArgs();
 
       expect(title).toBe('Delete Space');
-      expect(message).toBe('Deleting a space will delete all documents and collections within. This cannot be undone. Are you sure you want to delete My Space?');
+      expect(message).toBe('Deleting a project will delete all documents and collections within. This cannot be undone. Are you sure you want to delete My Space?');
       expect(addCancel).toBe(true);
       expect(okLabel).toBe('Delete');
 

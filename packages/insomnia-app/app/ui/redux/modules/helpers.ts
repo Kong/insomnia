@@ -1,3 +1,4 @@
+import { strings } from '../../../common/strings';
 import { Space } from '../../../models/space';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
@@ -77,7 +78,7 @@ export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[];
 
       showSelectModal({
         title: 'Import',
-        message: 'Select a space to import into',
+        message: `Select a ${strings.space.singular.toLowerCase()} to import into`,
         options,
         value: defaultValue,
         noEscape: true,
