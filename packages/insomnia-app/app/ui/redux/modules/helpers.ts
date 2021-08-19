@@ -65,16 +65,16 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
 }
 
 export type SetProjectIdPrompt = () => Promise<string>;
-export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Project[]; activeSpace: Project; }): SetProjectIdPrompt {
+export function askToImportIntoProject({ projects, activeProject }: { projects: Project[]; activeProject: Project; }): SetProjectIdPrompt {
   return function() {
     return new Promise(resolve => {
-      // If only one space exists, return that
-      if (spaces.length === 1) {
-        return resolve(spaces[0]._id);
+      // If only one project exists, return that
+      if (projects.length === 1) {
+        return resolve(projects[0]._id);
       }
 
-      const options = spaces.map(space => ({ name: space.name, value: space._id }));
-      const defaultValue = activeSpace._id;
+      const options = projects.map(project => ({ name: project.name, value: project._id }));
+      const defaultValue = activeProject._id;
 
       showSelectModal({
         title: 'Import',

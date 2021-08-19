@@ -15,7 +15,7 @@ import AlertModal from '../../components/modals/alert-modal';
 import { selectActiveProject, selectProjects } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';
-import { askToImportIntoSpace, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
+import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
 
 export interface ImportOptions {
   workspaceId?: string;
@@ -49,14 +49,14 @@ const convertToRawConfig = ({
   forceToSpace,
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
-  const activeSpace = selectActiveProject(state);
-  const spaces = selectProjects(state);
+  const activeProject = selectActiveProject(state);
+  const projects = selectProjects(state);
 
   return ({
     getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
     getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
     // Currently, just return the active space instead of prompting for which space to import into
-    getProjectId: forceToSpace === 'prompt' ? askToImportIntoSpace({ spaces, activeSpace }) : () => Promise.resolve(activeSpace._id),
+    getProjectId: forceToSpace === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject._id),
   });
 };
 
