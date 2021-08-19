@@ -379,7 +379,7 @@ export const setActiveActivity = (activity: GlobalActivity) => {
 };
 
 export const setActiveSpace = (spaceId: string) => {
-  const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
+  const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
   window.localStorage.setItem(key, JSON.stringify(spaceId));
   return {
     type: SET_ACTIVE_SPACE,
@@ -388,7 +388,7 @@ export const setActiveSpace = (spaceId: string) => {
 };
 
 export const setSpaceSortOrder = (sortOrder: SpaceSortOrder) => {
-  const key = `${LOCALSTORAGE_PREFIX}::space-sort-order`;
+  const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
   window.localStorage.setItem(key, JSON.stringify(sortOrder));
   return {
     type: SET_SPACE_SORT_ORDER,
@@ -660,7 +660,7 @@ export function initActiveSpace() {
   let spaceId: string | null = null;
 
   try {
-    const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
+    const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
     spaceId = JSON.parse(item);
@@ -675,7 +675,7 @@ export function initSpaceSortOrder() {
   let spaceSortOrder: SpaceSortOrder = 'modified-desc';
 
   try {
-    const spaceSortOrderKey = `${LOCALSTORAGE_PREFIX}::space-sort-order`;
+    const spaceSortOrderKey = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
     const stringifiedSpaceSortOrder = window.localStorage.getItem(spaceSortOrderKey);
 
     if (stringifiedSpaceSortOrder) {
