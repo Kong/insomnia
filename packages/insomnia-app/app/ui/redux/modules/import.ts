@@ -12,7 +12,7 @@ import * as models from '../../../models';
 import { Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showError, showModal } from '../../components/modals';
 import AlertModal from '../../components/modals/alert-modal';
-import { selectActiveSpace, selectSpaces } from '../selectors';
+import { selectActiveProject, selectProjects } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';
 import { askToImportIntoSpace, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
@@ -49,8 +49,8 @@ const convertToRawConfig = ({
   forceToSpace,
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
-  const activeSpace = selectActiveSpace(state);
-  const spaces = selectSpaces(state);
+  const activeSpace = selectActiveProject(state);
+  const spaces = selectProjects(state);
 
   return ({
     getWorkspaceScope: askToSetWorkspaceScope(forceToScope),

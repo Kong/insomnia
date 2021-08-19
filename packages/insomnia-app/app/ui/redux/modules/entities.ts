@@ -47,7 +47,7 @@ type EntityRecord<T extends BaseModel> = Record<string, T>;
 export interface EntitiesState {
   stats: EntityRecord<Stats>;
   settings: EntityRecord<Settings>;
-  spaces: EntityRecord<Space>,
+  projects: EntityRecord<Space>,
   workspaces: EntityRecord<Workspace>,
   workspaceMetas: EntityRecord<WorkspaceMeta>,
   environments: EntityRecord<Environment>,
@@ -75,7 +75,7 @@ export interface EntitiesState {
 export const initialEntitiesState: EntitiesState = {
   stats: {},
   settings: {},
-  spaces: {},
+  projects: {},
   workspaces: {},
   workspaceMetas: {},
   environments: {},

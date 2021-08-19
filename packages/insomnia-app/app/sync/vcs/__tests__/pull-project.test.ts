@@ -4,7 +4,7 @@ import { mocked } from 'ts-jest/utils';
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { DEFAULT_BRANCH_NAME } from '../../../common/constants';
 import * as models from '../../../models';
-import { isRemoteSpace } from '../../../models/project';
+import { isRemoteProject } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { projectWithTeamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
@@ -48,7 +48,7 @@ describe('pullProject()', () => {
       });
 
       // Act
-      await pullProject({ vcs, project, remoteSpaces: [space].filter(isRemoteSpace) });
+      await pullProject({ vcs, project, remoteSpaces: [space].filter(isRemoteProject) });
 
       // Assert
       expect(space?.name).not.toBe(project.team.name); // should not rename if the space already exists

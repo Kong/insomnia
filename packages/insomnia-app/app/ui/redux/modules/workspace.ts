@@ -7,7 +7,7 @@ import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showPrompt } from '../../components/modals';
-import { selectActiveActivity, selectActiveSpace, selectAllWorkspaces } from '../selectors';
+import { selectActiveActivity, selectActiveProject, selectAllWorkspaces } from '../selectors';
 import { RootState } from '.';
 import { setActiveActivity, setActiveSpace, setActiveWorkspace } from './global';
 
@@ -41,7 +41,7 @@ export const createWorkspace = ({ scope, onCreate }: {
   onCreate?: OnWorkspaceCreateCallback;
 }) => {
   return (dispatch, getState) => {
-    const activeSpace = selectActiveSpace(getState());
+    const activeSpace = selectActiveProject(getState());
 
     const design = isDesign({
       scope,

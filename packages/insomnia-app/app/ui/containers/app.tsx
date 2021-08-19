@@ -48,7 +48,7 @@ import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isNotBaseSpace } from '../../models/project';
+import { isNotBaseProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
@@ -102,11 +102,11 @@ import {
   selectActiveEnvironment,
   selectActiveGitRepository,
   selectActiveOAuth2Token,
+  selectActiveProject,
   selectActiveRequest,
   selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
-  selectActiveSpace,
   selectActiveUnitTestResult,
   selectActiveUnitTests,
   selectActiveUnitTestSuite,
@@ -119,7 +119,7 @@ import {
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
-  selectWorkspacesForActiveSpace,
+  selectWorkspacesForActiveProject,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
@@ -1339,7 +1339,7 @@ class App extends PureComponent<AppProps, State> {
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await db.all(type);
               const filteredEntites = allEntities
-                .filter(isNotBaseSpace); // don't clear the base space
+                .filter(isNotBaseProject); // don't clear the base space
               await db.batchModifyDocs({ remove: filteredEntites });
               db.flushChanges(bufferId);
             }
@@ -1363,7 +1363,7 @@ class App extends PureComponent<AppProps, State> {
                   console.log(`[developer] clearing all "${type}" entities`);
                   const allEntities = await db.all(type);
                   const filteredEntites = allEntities
-                    .filter(isNotBaseSpace); // don't clear the base space
+                    .filter(isNotBaseProject); // don't clear the base space
                   await db.batchModifyDocs({ remove: filteredEntites });
                 });
               await Promise.all(promises);
@@ -1597,8 +1597,8 @@ function mapStateToProps(state: RootState) {
   const settings = selectSettings(state);
 
   // Workspace stuff
-  const activeSpace = selectActiveSpace(state);
-  const workspaces = selectWorkspacesForActiveSpace(state);
+  const activeSpace = selectActiveProject(state);
+  const workspaces = selectWorkspacesForActiveProject(state);
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
   const activeWorkspace = selectActiveWorkspace(state);
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state);

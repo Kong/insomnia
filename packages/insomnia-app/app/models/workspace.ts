@@ -4,7 +4,7 @@ import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { BASE_PROJECT_ID, isSpaceId } from './project';
+import { BASE_PROJECT_ID, isProjectId } from './project';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -173,7 +173,7 @@ export async function ensureChildren({ _id }: Workspace) {
 }
 
 function expectParentToBeSpace(parentId?: string | null) {
-  if (parentId && !isSpaceId(parentId)) {
+  if (parentId && !isProjectId(parentId)) {
     throw new Error('Expected the parent of a Workspace to be a Space');
   }
 }

@@ -4,12 +4,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
-import { isBaseSpace, isNotBaseSpace, isRemoteSpace, Space, spaceHasSettings } from '../../../models/project';
+import { isBaseProject, isNotBaseProject, isRemoteProject, projectHasSettings, Space } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteSpaces } from '../../hooks/project';
 import { setActiveSpace } from '../../redux/modules/global';
 import { createSpace } from '../../redux/modules/project';
-import { selectActiveSpace, selectSpaces } from '../../redux/selectors';
+import { selectActiveProject, selectProjects } from '../../redux/selectors';
 import { showModal } from '../modals';
 import SpaceSettingsModal from '../modals/project-settings-modal';
 import { svgPlacementHack, tooltipIconPlacementHack } from './dropdown-placement-hacks';
@@ -53,8 +53,8 @@ const SpaceDropdownItem: FC<{
   setActive: (spaceId: string) => void;
 }> = ({ isActive, space, setActive }) => {
   const { _id, name } = space;
-  const isBase = isBaseSpace(space);
-  const isRemote = isRemoteSpace(space);
+  const isBase = isBaseProject(space);
+  const isRemote = isRemoteProject(space);
 
   return (
     <DropdownItem
@@ -73,9 +73,9 @@ SpaceDropdownItem.displayName = DropdownItem.name; // This is required because t
 export const SpaceDropdown: FC<Props> = ({ vcs }) => {
   const { loading, refresh } = useRemoteSpaces(vcs);
 
-  const spaces = useSelector(selectSpaces);
+  const spaces = useSelector(selectProjects);
 
-  const activeSpace = useSelector(selectActiveSpace);
+  const activeSpace = useSelector(selectActiveProject);
   const dispatch = useDispatch();
   const setActive = useCallback((spaceId: string) => dispatch(setActiveSpace(spaceId)), [dispatch]);
   const createNew = useCallback(() => dispatch(createSpace()), [dispatch]);
@@ -100,10 +100,10 @@ export const SpaceDropdown: FC<Props> = ({ vcs }) => {
 
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      {spaces.filter(isBaseSpace).map(renderSpace)}
+      {spaces.filter(isBaseProject).map(renderSpace)}
       <DropdownDivider>All {strings.space.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
-      {spaces.filter(isNotBaseSpace).map(renderSpace)}
-      {spaceHasSettings(activeSpace) && <>
+      {spaces.filter(isNotBaseProject).map(renderSpace)}
+      {projectHasSettings(activeSpace) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>
           {strings.space.singular} Settings

@@ -6,10 +6,10 @@ import { bindActionCreators } from 'redux';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models/index';
-import { isRemoteSpace, spaceHasSettings } from '../../../models/project';
+import { isRemoteProject, projectHasSettings } from '../../../models/project';
 import { RootState } from '../../redux/modules';
 import * as projectActions from '../../redux/modules/project';
-import { selectActiveSpace } from '../../redux/selectors';
+import { selectActiveProject } from '../../redux/selectors';
 import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -49,11 +49,11 @@ class SpaceSettingsModal extends PureComponent<Props> {
 
   render() {
     const { space } = this.props;
-    if (!spaceHasSettings(space)) {
+    if (!projectHasSettings(space)) {
       return null;
     }
 
-    const isRemote = isRemoteSpace(space);
+    const isRemote = isRemoteProject(space);
 
     return (
       <Modal ref={this._handleSetModalRef} freshState>
@@ -102,7 +102,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
 }
 
 const mapStateToProps = (state: RootState) => {
-  const space = selectActiveSpace(state);
+  const space = selectActiveProject(state);
   return { space };
 };
 

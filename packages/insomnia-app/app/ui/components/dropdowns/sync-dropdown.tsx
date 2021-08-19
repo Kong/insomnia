@@ -10,7 +10,7 @@ import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { isRemoteSpace, Space } from '../../../models/project';
+import { isRemoteProject, Space } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
@@ -22,7 +22,7 @@ import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectRemoteSpaces } from '../../redux/selectors';
+import { selectRemoteProjects } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import PromptButton from '../base/prompt-button';
@@ -44,7 +44,7 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 const mapStateToProps = (state: RootState) => ({
-  remoteSpaces: selectRemoteSpaces(state),
+  remoteSpaces: selectRemoteProjects(state),
 });
 
 const mapDispatchToProps = dispatch => {
@@ -108,7 +108,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   async refreshMainAttributes(extraState: Partial<State> = {}) {
     const { vcs, syncItems, workspace, space } = this.props;
 
-    if (!vcs.hasProject() && isRemoteSpace(space)) {
+    if (!vcs.hasProject() && isRemoteProject(space)) {
       const remoteProjects = await vcs.remoteProjectsInAnyTeam();
       const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({

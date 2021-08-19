@@ -26,7 +26,7 @@ import { isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
-import { isRemoteSpace } from '../../models/project';
+import { isRemoteProject } from '../../models/project';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
@@ -37,7 +37,7 @@ import { setSpaceSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
-import { selectSpaceSortOrder } from '../redux/selectors';
+import { selectProjectSortOrder } from '../redux/selectors';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
 import { SpaceDropdown } from './dropdowns/project-dropdown';
@@ -188,7 +188,7 @@ class WrapperHome extends PureComponent<Props, State> {
       scope: WorkspaceScopeKeys.collection,
       onCreate: async workspace => {
         // Don't mark for sync if not logged in at the time of creation
-        if (isLoggedIn && vcs && isRemoteSpace(activeSpace)) {
+        if (isLoggedIn && vcs && isRemoteProject(activeSpace)) {
           await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
@@ -405,7 +405,7 @@ class WrapperHome extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  sortOrder: selectSpaceSortOrder(state),
+  sortOrder: selectProjectSortOrder(state),
 });
 
 const mapDispatchToProps = dispatch => {

@@ -3,7 +3,7 @@ import React, { Fragment, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
-import { isRemoteSpace } from '../../models/project';
+import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
@@ -67,7 +67,7 @@ class WrapperDebug extends PureComponent<Props> {
 
     let insomniaSync: ReactNode = null;
 
-    if (isLoggedIn && collection && isRemoteSpace(activeSpace) && vcs) {
+    if (isLoggedIn && collection && isRemoteProject(activeSpace) && vcs) {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}

@@ -47,7 +47,7 @@ import SettingsModal, {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveSpaceName, selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
+import { selectActiveProjectName, selectSettings, selectWorkspacesForActiveProject } from '../selectors';
 import { importUri } from './import';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
@@ -153,7 +153,7 @@ function loginStateChangeReducer(state = false, action) {
 export interface GlobalState {
   isLoading: boolean;
   activeProjectId: string;
-  spaceSortOrder: SpaceSortOrder;
+  projectSortOrder: SpaceSortOrder;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
@@ -162,7 +162,7 @@ export interface GlobalState {
 
 export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
-  spaceSortOrder: spaceSortOrderReducer,
+  projectSortOrder: spaceSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeProjectId: activeSpaceReducer,
   activeWorkspaceId: activeWorkspaceReducer,
@@ -486,8 +486,8 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
 export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
   const state = getState();
-  const activeSpaceName = selectActiveSpaceName(state);
-  const workspaces = selectWorkspacesForActiveSpace(state);
+  const activeSpaceName = selectActiveProjectName(state);
+  const workspaces = selectWorkspacesForActiveProject(state);
 
   if (!workspaces.length) {
     dispatch(loadStop());

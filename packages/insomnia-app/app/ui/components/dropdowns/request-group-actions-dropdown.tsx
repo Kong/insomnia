@@ -13,7 +13,7 @@ import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { RootState } from '../../redux/modules';
-import { selectActiveEnvironment, selectActiveSpace } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import {
   DropdownButton,
   DropdownDivider,
@@ -28,7 +28,7 @@ import EnvironmentEditModal from '../modals/environment-edit-modal';
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
 const mapStateToProps = (state: RootState) => ({
-  activeSpace: selectActiveSpace(state),
+  activeSpace: selectActiveProject(state),
   activeEnvironment: selectActiveEnvironment(state),
 });
 

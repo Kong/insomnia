@@ -6,7 +6,7 @@ import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
-import { isSpace, Space } from '../models/project';
+import { isProject, Space } from '../models/project';
 import type { Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
 import { isWorkspace, Workspace } from '../models/workspace';
@@ -311,7 +311,7 @@ export async function getRenderContext(
 ): Promise<Record<string, any>> {
   const ancestors = _ancestors || await getRenderContextAncestors(request);
 
-  const space = ancestors.find(isSpace);
+  const space = ancestors.find(isProject);
   const workspace = ancestors.find(isWorkspace);
 
   if (!workspace) {

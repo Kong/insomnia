@@ -2,7 +2,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import * as models from '../../../models';
 import { BASE_PROJECT_ID, Space } from '../../../models/project';
-import { selectActiveSpace } from '../selectors';
+import { selectActiveProject } from '../selectors';
 
 describe('selectors', () => {
   beforeEach(globalBeforeEach);
@@ -16,7 +16,7 @@ describe('selectors', () => {
       // set first as selected
       const state = await reduxStateForTest({ activeProjectId: spaceA._id });
 
-      const space = selectActiveSpace(state);
+      const space = selectActiveProject(state);
       expect(space).toStrictEqual(spaceA);
     });
 
@@ -28,7 +28,7 @@ describe('selectors', () => {
       // set first as selected
       const state = await reduxStateForTest({ activeProjectId: 'some-other-space' });
 
-      const space = selectActiveSpace(state);
+      const space = selectActiveProject(state);
       expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_PROJECT_ID }));
     });
 
@@ -40,7 +40,7 @@ describe('selectors', () => {
       // set base as selected
       const state = await reduxStateForTest({ activeProjectId: undefined });
 
-      const space = selectActiveSpace(state);
+      const space = selectActiveProject(state);
       expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_PROJECT_ID }));
     });
   });

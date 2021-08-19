@@ -17,7 +17,7 @@ import { isRequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveSpace } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveWorkspace, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import Button from '../base/button';
 import Highlight from '../base/highlight';
 import Modal from '../base/modal';
@@ -36,7 +36,7 @@ const mapStateToProps = (state: RootState) => {
   return {
     activeRequest: normalizedRequest,
     workspace: selectActiveWorkspace(state),
-    workspaces: selectWorkspacesForActiveSpace(state),
+    workspaces: selectWorkspacesForActiveProject(state),
     requestMetas: selectRequestMetas(state),
     workspaceChildren: selectWorkspaceRequestsAndRequestGroups(state),
   };

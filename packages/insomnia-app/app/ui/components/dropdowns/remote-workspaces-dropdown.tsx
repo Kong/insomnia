@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 
 import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
-import { isRemoteSpace } from '../../../models/project';
+import { isRemoteProject } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
-import { selectActiveSpace } from '../../redux/selectors';
+import { selectActiveProject } from '../../redux/selectors';
 import HelpTooltip from '../help-tooltip';
 
 interface Props {
@@ -31,12 +31,12 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
-  const space = useSelector(selectActiveSpace);
+  const space = useSelector(selectActiveProject);
   if (!space) {
     return null;
   }
 
-  const isRemote = isRemoteSpace(space);
+  const isRemote = isRemoteProject(space);
 
   // Don't show the pull dropdown if we are not in a remote space
   if (!isRemote) {

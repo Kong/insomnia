@@ -11,12 +11,12 @@ import * as models from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { isBaseSpace, isLocalSpace, isRemoteSpace, Space } from '../../../models/project';
+import { isBaseProject, isLocalProject, isRemoteProject, Space } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { initializeLocalProjectAndMarkForSync } from '../../../sync/vcs/initialize-project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveSpace, selectIsLoggedIn, selectSpaces } from '../../redux/selectors';
+import { selectActiveProject, selectIsLoggedIn, selectProjects } from '../../redux/selectors';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
@@ -40,15 +40,15 @@ interface InnerProps extends Options, Props {
 
 const SpaceOption: FC<Space> = space => (
   <option key={space._id} value={space._id}>
-    {space.name} ({isBaseSpace(space) ? strings.baseSpace.singular : isLocalSpace(space) ? strings.localSpace.singular : strings.remoteSpace.singular})
+    {space.name} ({isBaseProject(space) ? strings.baseSpace.singular : isLocalProject(space) ? strings.localSpace.singular : strings.remoteSpace.singular})
   </option>
 );
 
 const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, InnerProps> = ({ workspace, apiSpec, onDone, hide, vcs }, ref) => {
   const dispatch = useDispatch();
 
-  const spaces = useSelector(selectSpaces);
-  const activeSpace = useSelector(selectActiveSpace);
+  const spaces = useSelector(selectProjects);
+  const activeSpace = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const title = `Duplicate ${getWorkspaceLabel(workspace).singular}`;
@@ -77,7 +77,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     await models.workspace.ensureChildren(newWorkspace);
 
     // Mark for sync if logged in and in the expected space
-    if (isLoggedIn && vcs && isRemoteSpace(duplicateToSpace)) {
+    if (isLoggedIn && vcs && isRemoteProject(duplicateToSpace)) {
       await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }
 

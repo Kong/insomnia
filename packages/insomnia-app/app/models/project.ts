@@ -11,11 +11,11 @@ export const canSync = false;
 
 export const BASE_PROJECT_ID = `${prefix}_base-space`;
 
-export const isBaseSpace = (space: Space) => space._id === BASE_PROJECT_ID;
-export const isNotBaseSpace = (space: Space) => !isBaseSpace(space);
-export const isLocalSpace = (space: Space): space is LocalSpace => space.remoteId === null;
-export const isRemoteSpace = (space: Space): space is RemoteSpace => !isLocalSpace(space);
-export const spaceHasSettings = (space: Space) => !isBaseSpace(space);
+export const isBaseProject = (project: Space) => project._id === BASE_PROJECT_ID;
+export const isNotBaseProject = (project: Space) => !isBaseProject(project);
+export const isLocalProject = (project: Space): project is LocalSpace => project.remoteId === null;
+export const isRemoteProject = (project: Space): project is RemoteSpace => !isLocalProject(project);
+export const projectHasSettings = (project: Space) => !isBaseProject(project);
 
 interface CommonSpace {
   name: string;
@@ -31,11 +31,11 @@ export interface LocalSpace extends BaseModel, CommonSpace {
 
 export type Space = LocalSpace | RemoteSpace;
 
-export const isSpace = (model: Pick<BaseModel, 'type'>): model is Space => (
+export const isProject = (model: Pick<BaseModel, 'type'>): model is Space => (
   model.type === type
 );
 
-export const isSpaceId = (id: string | null) => (
+export const isProjectId = (id: string | null) => (
   id?.startsWith(`${prefix}_`)
 );
 
@@ -46,8 +46,8 @@ export function init(): Partial<Space> {
   };
 }
 
-export function migrate(doc: Space) {
-  return doc;
+export function migrate(project: Space) {
+  return project;
 }
 
 export function createId() {
@@ -66,21 +66,21 @@ export function getByRemoteId(remoteId: string) {
   return db.getWhere<Space>(type, { remoteId });
 }
 
-export function remove(obj: Space) {
-  return db.remove(obj);
+export function remove(project: Space) {
+  return db.remove(project);
 }
 
-export function update(space: Space, patch: Partial<Space>) {
-  return db.docUpdate(space, patch);
+export function update(project: Space, patch: Partial<Space>) {
+  return db.docUpdate(project, patch);
 }
 
 export async function all() {
-  const spaces = await db.all<Space>(type);
+  const projects = await db.all<Space>(type);
 
-  if (!spaces.find(c => c._id === BASE_PROJECT_ID)) {
+  if (!projects.find(c => c._id === BASE_PROJECT_ID)) {
     await create({ _id: BASE_PROJECT_ID, name: getAppName(), remoteId: null });
     return db.all<Space>(type);
   }
 
-  return spaces;
+  return projects;
 }

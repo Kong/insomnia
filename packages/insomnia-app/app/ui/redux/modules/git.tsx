@@ -17,7 +17,7 @@ import { shallowClone } from '../../../sync/git/shallow-clone';
 import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
 import { showAlert, showError, showModal } from '../../components/modals';
 import GitRepositorySettingsModal from '../../components/modals/git-repository-settings-modal';
-import { selectActiveSpace } from '../selectors';
+import { selectActiveProject } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';
 import { createWorkspace } from './workspace';
@@ -147,7 +147,7 @@ export const cloneGitRepository = ({ createFsClient }: {
 }) => {
   return (dispatch, getState: () => RootState) => {
     // TODO: in the future we should ask which space to clone into...?
-    const activeSpace = selectActiveSpace(getState());
+    const activeSpace = selectActiveProject(getState());
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
       onSubmitEdits: async repoSettingsPatch => {

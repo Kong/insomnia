@@ -2,13 +2,13 @@ import { Reducer, useCallback, useMemo, useReducer } from 'react';
 import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 
-import { isRemoteSpace } from '../../models/project';
+import { isRemoteProject } from '../../models/project';
 import { Project } from '../../sync/types';
 import { ProjectWithTeam } from '../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../sync/vcs/pull-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
-import { selectActiveSpace, selectAllWorkspaces, selectIsLoggedIn, selectRemoteSpaces } from '../redux/selectors';
+import { selectActiveProject, selectAllWorkspaces, selectIsLoggedIn, selectRemoteProjects } from '../redux/selectors';
 import { useSafeReducerDispatch } from './use-safe-reducer-dispatch';
 
 interface State {
@@ -49,8 +49,8 @@ const reducer: Reducer<State, Action> = (prevState, action) => {
 export const useRemoteWorkspaces = (vcs?: VCS) => {
   // Fetch from redux
   const workspaces = useSelector(selectAllWorkspaces);
-  const activeSpace = useSelector(selectActiveSpace);
-  const remoteSpaces = useSelector(selectRemoteSpaces);
+  const activeSpace = useSelector(selectActiveProject);
+  const remoteSpaces = useSelector(selectRemoteProjects);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   // Local state
@@ -59,7 +59,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
 
   // Refresh remote spaces
   const refresh = useCallback(async () => {
-    if (!vcs || !isLoggedIn || !isRemoteSpace(activeSpace)) {
+    if (!vcs || !isLoggedIn || !isRemoteProject(activeSpace)) {
       return;
     }
 

@@ -13,7 +13,7 @@ import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
-import { selectActiveEnvironment, selectActiveSpace } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import Editable from '../base/editable';
 import Highlight from '../base/highlight';
 import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
@@ -328,7 +328,7 @@ const dragTarget: DropTargetSpec<Props> = {
 };
 
 const mapStateToProps = (state: RootState) => ({
-  activeSpace: selectActiveSpace(state),
+  activeSpace: selectActiveProject(state),
   activeEnvironment: selectActiveEnvironment(state),
 });
 
