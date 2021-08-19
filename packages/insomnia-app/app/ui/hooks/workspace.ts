@@ -57,7 +57,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   const [{ loading, localBackendProjects: localProjects, remoteBackendProjects, pullingBackendProjects: pullingProjects }, _dispatch] = useReducer(reducer, initialState);
   const dispatch = useSafeReducerDispatch(_dispatch);
 
-  // Refresh remote spaces
+  // Refresh remote project
   const refresh = useCallback(async () => {
     if (!vcs || !isLoggedIn || !isRemoteProject(activeProject)) {
       return;
@@ -69,7 +69,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     dispatch({ type: 'saveBackendProjects', local, remote });
   }, [vcs, isLoggedIn, activeProject, dispatch]);
 
-  // Find remote spaces that haven't been pulled
+  // Find remote project that haven't been pulled
   const missingProjects = useMemo(() => remoteBackendProjects.filter(({ id, rootDocumentId }) => {
     const localProjectExists = localProjects.find(p => p.id === id);
     const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
@@ -79,7 +79,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
     return !(workspaceExists && localProjectExists);
   }), [localProjects, remoteBackendProjects, workspaces]);
 
-  // Pull a remote space
+  // Pull a remote project
   const pull = useCallback(async (project: BackendProjectWithTeam) => {
     if (!vcs) {
       throw new Error('VCS is not defined');

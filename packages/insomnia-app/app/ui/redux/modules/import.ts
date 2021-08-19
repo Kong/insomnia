@@ -55,7 +55,7 @@ state: RootState): ImportRawConfig => {
   return ({
     getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
     getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    // Currently, just return the active space instead of prompting for which space to import into
+    // Currently, just return the active project instead of prompting for which project to import into
     getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject._id),
   });
 };

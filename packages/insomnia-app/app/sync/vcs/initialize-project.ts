@@ -27,7 +27,7 @@ export const initializeLocalProjectAndMarkForSync = async ({ vcs, workspace }: {
   // Snapshot
   await vcs.takeSnapshot(stage, 'Initial Snapshot');
 
-  // Mark for pushing to the active space
+  // Mark for pushing to the active project
   await models.workspaceMeta.updateByParentId(workspace._id, { pushSnapshotOnInitialize: true });
 };
 

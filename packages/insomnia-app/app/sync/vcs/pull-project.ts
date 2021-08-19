@@ -26,7 +26,7 @@ export const pullProject = async ({ vcs, backendProject, remoteProjects }: Optio
 
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
-  // Find or create the remote space locally
+  // Find or create the remote project locally
   let project = remoteProjects.find(({ remoteId }) => remoteId === backendProject.team.id);
   if (!project) {
     project = await initializeProjectFromTeam(backendProject.team);

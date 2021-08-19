@@ -40,7 +40,7 @@ export const removeProject = (space: Project) => dispatch => {
       await models.stats.incrementDeletedRequestsForDescendents(space);
       await models.project.remove(space);
       trackEvent('Project', 'Delete');
-      // Show base space
+      // Show base project
       dispatch(setActiveProject(BASE_PROJECT_ID));
       // Show home in case not already on home
       dispatch(setActiveActivity(ACTIVITY_HOME));

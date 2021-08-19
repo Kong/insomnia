@@ -333,7 +333,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
 
     const pulledIntoProject = await pullProject({ vcs, backendProject: p, remoteProjects: remoteSpaces });
     if (pulledIntoProject._id !== space._id) {
-      // If pulled into a different space, reactivate the workspace
+      // If pulled into a different project, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
       logCollectionMovedToProject(workspace, pulledIntoProject);
     }

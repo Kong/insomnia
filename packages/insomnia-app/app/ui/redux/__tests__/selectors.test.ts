@@ -8,8 +8,8 @@ describe('selectors', () => {
   beforeEach(globalBeforeEach);
 
   describe('selectActiveProject', () => {
-    it('should return the active space', async () => {
-      // create two spaces
+    it('should return the active project', async () => {
+      // create two projects
       const spaceA = await models.project.create();
       await models.project.create();
 
@@ -20,8 +20,8 @@ describe('selectors', () => {
       expect(project).toStrictEqual(spaceA);
     });
 
-    it('should return base space if active space not found', async () => {
-      // create two spaces
+    it('should return base project if active project not found', async () => {
+      // create two projects
       await models.project.create();
       await models.project.create();
 
@@ -32,8 +32,8 @@ describe('selectors', () => {
       expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: BASE_PROJECT_ID }));
     });
 
-    it('should return base space if no active space', async () => {
-      // create two spaces
+    it('should return base project if no active project', async () => {
+      // create two projects
       await models.project.create();
       await models.project.create();
 

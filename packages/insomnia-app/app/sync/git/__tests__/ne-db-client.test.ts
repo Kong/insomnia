@@ -72,7 +72,7 @@ describe('NeDBClient', () => {
       expect(YAML.parse((await pNeDB.readFile(wrk1Yml, 'utf8')).toString())).toEqual(
         expect.objectContaining({
           _id: 'wrk_1',
-          parentId: null, // should be reset to default value instead of the active space id
+          parentId: null, // should be reset to default value instead of the active project id
         }),
       );
       expect(YAML.parse((await pNeDB.readFile(req1Yml, 'utf8')).toString())).toEqual(
@@ -147,7 +147,7 @@ describe('NeDBClient', () => {
       upsertSpy.mockRestore();
     });
 
-    it('should set workspace parentId to the space', async () => {
+    it('should set workspace parentId to the project', async () => {
       // Arrange
       const workspaceId = 'wrk_1';
       const projectId = `${models.project.prefix}_1`;

@@ -21,7 +21,7 @@ const mockStore = configureMockStore<RootState>(middlewares);
 
 const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
-describe('useRemoteSpaces', () => {
+describe('useRemoteProjects', () => {
   beforeEach(globalBeforeEach);
 
   it('should not load teams if VCS is not set', async () => {

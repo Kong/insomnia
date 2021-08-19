@@ -91,7 +91,7 @@ describe('initialize-project', () => {
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
     });
 
-    it('should not push snapshot if not remote space', async () => {
+    it('should not push snapshot if not remote project', async () => {
       const project = await models.project.create({ remoteId: null });
       const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
@@ -103,7 +103,7 @@ describe('initialize-project', () => {
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
     });
 
-    it('should not push snapshot if workspace not in space', async () => {
+    it('should not push snapshot if workspace not in project', async () => {
       const project = await models.project.create({ remoteId: 'abc' });
       const anotherProject = await models.project.create({ remoteId: 'def' });
       const workspace = await models.workspace.create({ parentId: anotherProject._id });

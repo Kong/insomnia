@@ -32,7 +32,7 @@ export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
   const collections = (await models.workspace.all()).filter(isCollection);
   const remoteProjects = (await models.project.all()).filter(isRemoteProject);
 
-  // Are there any collections that have sync setup but are not in a remote space?
+  // Are there any collections that have sync setup but are not in a remote project?
   const isNotInRemoteProject = (collection: Workspace) => !Boolean(remoteProjects.find(project => project._id === collection.parentId));
   const hasLocalProject = (collection: Workspace) => vcs.hasBackendProjectForRootDocument(collection._id);
 

@@ -1339,7 +1339,7 @@ class App extends PureComponent<AppProps, State> {
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await db.all(type);
               const filteredEntites = allEntities
-                .filter(isNotBaseProject); // don't clear the base space
+                .filter(isNotBaseProject); // don't clear the base project
               await db.batchModifyDocs({ remove: filteredEntites });
               db.flushChanges(bufferId);
             }
@@ -1363,7 +1363,7 @@ class App extends PureComponent<AppProps, State> {
                   console.log(`[developer] clearing all "${type}" entities`);
                   const allEntities = await db.all(type);
                   const filteredEntites = allEntities
-                    .filter(isNotBaseProject); // don't clear the base space
+                    .filter(isNotBaseProject); // don't clear the base project
                   await db.batchModifyDocs({ remove: filteredEntites });
                 });
               await Promise.all(promises);

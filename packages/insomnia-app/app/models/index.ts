@@ -42,8 +42,8 @@ export interface BaseModel {
   _id: string;
   type: string;
   // TSCONVERSION -- parentId is always required for all models, except 4:
-  //   - Stats, Settings, and Space, which never have a parentId
-  //   - Workspace optionally has a parentId (which will be the id of a Space)
+  //   - Stats, Settings, and Project, which never have a parentId
+  //   - Workspace optionally has a parentId (which will be the id of a project)
   parentId: string; // or null
   modified: number;
   created: number;
@@ -80,7 +80,7 @@ export const workspaceMeta = _workspaceMeta;
 
 export function all() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
-  // For example, stats, settings, space and workspace are global models, with space and workspace being the top-most parents,
+  // For example, stats, settings, project and workspace are global models, with project and workspace being the top-most parents,
   // so they must be at the top
   return [
     stats,

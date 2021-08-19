@@ -17,10 +17,10 @@ jest.mock('../../../../common/analytics');
 const middlewares = [thunk];
 const mockStore = configureMockStore(middlewares);
 
-describe('space', () => {
+describe('project', () => {
   beforeEach(globalBeforeEach);
-  describe('createSpace', () => {
-    it('should create space', async () => {
+  describe('createProject', () => {
+    it('should create project', async () => {
       const store = mockStore(await reduxStateForTest());
       store.dispatch(createProject());
 
@@ -63,8 +63,8 @@ describe('space', () => {
     });
   });
 
-  describe('removeSpace', () => {
-    it('should remove space', async () => {
+  describe('removeProject', () => {
+    it('should remove project', async () => {
       const store = mockStore(await reduxStateForTest());
       const projectOne = await models.project.create({ name: 'My Project' });
       const spaceTwo = await models.project.create();

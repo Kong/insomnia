@@ -266,7 +266,7 @@ describe('global', () => {
       expect(initActiveProject()).toStrictEqual(expectedEvent);
     });
 
-    it('should default to base space if not exist', () => {
+    it('should default to base project if not exist', () => {
       const expectedEvent = {
         type: SET_ACTIVE_PROJECT,
         projectId: BASE_PROJECT_ID,
@@ -275,7 +275,7 @@ describe('global', () => {
     });
   });
 
-  describe('initSpaceSortOrder', () => {
+  describe('initProjectSortOrder', () => {
     it('should initialize from local storage', () => {
       const sortOrder = SORT_MODIFIED_DESC;
 

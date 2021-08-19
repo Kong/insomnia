@@ -38,12 +38,12 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
 
   const isRemote = isRemoteProject(project);
 
-  // Don't show the pull dropdown if we are not in a remote space
+  // Don't show the pull dropdown if we are not in a remote project
   if (!isRemote) {
     return null;
   }
 
-  // Show a disabled button if remote space but not logged in
+  // Show a disabled button if remote project but not logged in
   if (!isLoggedIn()) {
     return (
       <Tooltip message="Please log in to access your remote collections" position="bottom">

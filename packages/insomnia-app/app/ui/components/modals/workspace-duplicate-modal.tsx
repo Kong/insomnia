@@ -76,7 +76,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: projectId });
     await models.workspace.ensureChildren(newWorkspace);
 
-    // Mark for sync if logged in and in the expected space
+    // Mark for sync if logged in and in the expected project
     if (isLoggedIn && vcs && isRemoteProject(duplicateToProject)) {
       await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }

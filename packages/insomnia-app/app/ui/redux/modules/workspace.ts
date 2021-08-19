@@ -86,7 +86,7 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
 
     const activeActivity = selectActiveActivity(getState()) || undefined;
 
-    // Activate the correct space
+    // Activate the correct project
     const nextProjectId = workspace.parentId;
     dispatch(setActiveProject(nextProjectId));
 
@@ -107,6 +107,6 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
       dispatch(setActiveActivity(nextActivity));
     }
 
-    // TODO: dispatch one action to activate the space, workspace and activity in one go to avoid jumps in the UI
+    // TODO: dispatch one action to activate the project, workspace and activity in one go to avoid jumps in the UI
   };
 };

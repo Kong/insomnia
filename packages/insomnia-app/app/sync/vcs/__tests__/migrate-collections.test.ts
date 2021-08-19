@@ -23,7 +23,7 @@ const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 const projectWithTeamBuilder = createBuilder(backendProjectWithTeamSchema);
 const teamBuilder = createBuilder(teamSchema);
 
-describe('migrateCollectionsIntoRemoteSpace', () => {
+describe('migrateCollectionsIntoRemoteProject', () => {
   beforeEach(async () => {
     await globalBeforeEach();
     // Always return logged in
@@ -45,7 +45,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     expect(vcs.remoteBackendProjectsInAnyTeam).not.toHaveBeenCalled();
   });
 
-  it('does not migrate if collection is in non-remote space but no local backend project exists', async () => {
+  it('does not migrate if collection is in non-remote project but no local backend project exists', async () => {
     // Arrange
     const vcs = newMockedVcs();
 
@@ -66,7 +66,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     await expect(models.workspace.getById(workspaceInLocal._id)).resolves.toStrictEqual(workspaceInLocal);
   });
 
-  it('does not migrate if all collections are in a remote space already', async () => {
+  it('does not migrate if all collections are in a remote project already', async () => {
     // Arrange
     const vcs = newMockedVcs();
 
@@ -100,7 +100,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     await expect(models.workspace.getById(workspaceInLocal._id)).resolves.toStrictEqual(workspaceInLocal);
   });
 
-  it('does migrate if collection in non-remote space with local backend project - create remote space', async () => {
+  it('does migrate if collection in non-remote project with local backend project - create remote project', async () => {
     // Arrange
     const vcs = newMockedVcs();
     const localProject = await models.project.create();
@@ -127,7 +127,7 @@ describe('migrateCollectionsIntoRemoteSpace', () => {
     });
   });
 
-  it('does migrate if collection in non-remote space with local backend project - use existing remote space', async () => {
+  it('does migrate if collection in non-remote project with local backend project - use existing remote project', async () => {
     // Arrange
     const vcs = newMockedVcs();
     const localProject = await models.project.create();

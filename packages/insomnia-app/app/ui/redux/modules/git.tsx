@@ -146,7 +146,7 @@ export const cloneGitRepository = ({ createFsClient }: {
   createFsClient: () => git.PromiseFsClient;
 }) => {
   return (dispatch, getState: () => RootState) => {
-    // TODO: in the future we should ask which space to clone into...?
+    // TODO: in the future we should ask which project to clone into...?
     const activeProject = selectActiveProject(getState());
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,

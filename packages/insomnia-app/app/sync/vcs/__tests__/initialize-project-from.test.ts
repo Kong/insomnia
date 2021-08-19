@@ -10,10 +10,10 @@ import { initializeProjectFromTeam, initializeWorkspaceFromBackendProject } from
 const teamBuilder = createBuilder(teamSchema);
 const backendProjectBuilder = createBuilder(projectSchema);
 
-describe('initializeSpaceFromTeam', () => {
+describe('initializeProjectFromTeam', () => {
   beforeEach(globalBeforeEach);
 
-  it('should initialize space with properties from the team', async () => {
+  it('should initialize project with properties from the team', async () => {
     // Arrange
     const team = teamBuilder.build();
 
@@ -33,7 +33,7 @@ describe('initializeSpaceFromTeam', () => {
 describe('initializeWorkspaceFromProject', () => {
   beforeEach(globalBeforeEach);
 
-  it('should initialize workspac with properties from the project and space', async () => {
+  it('should initialize workspac with properties from the backendProject and project', async () => {
     // Arrange
     const project = await models.project.create();
     const backendProject = backendProjectBuilder.build();

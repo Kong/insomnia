@@ -40,7 +40,7 @@ describe('pullProject()', () => {
       expect(vcs.pull).not.toHaveBeenCalledWith([], expect.anything());
     });
 
-    it('should use existing space', async () => {
+    it('should use existing project', async () => {
       // Arrange
       const project = await models.project.create({
         name: `${backendProject.team.name} unique`,
@@ -51,7 +51,7 @@ describe('pullProject()', () => {
       await pullProject({ vcs, backendProject: backendProject, remoteProjects: [project].filter(isRemoteProject) });
 
       // Assert
-      expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the space already exists
+      expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the project already exists
 
       const workspaces = await models.workspace.all();
       expect(workspaces).toHaveLength(1);
@@ -64,7 +64,7 @@ describe('pullProject()', () => {
       }));
     });
 
-    it('should insert a space and workspace with parent', async () => {
+    it('should insert a project and workspace with parent', async () => {
       // Act
       await pullProject({ vcs, backendProject: backendProject, remoteProjects: [] });
 

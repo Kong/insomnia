@@ -123,7 +123,7 @@ describe('workspace', () => {
       expect(store.getActions()).toEqual([]);
     });
 
-    it('should activate space and workspace and activity using workspaceId', async () => {
+    it('should activate project and workspace and activity using workspaceId', async () => {
       const project = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
@@ -146,7 +146,7 @@ describe('workspace', () => {
       ]);
     });
 
-    it('should activate space and workspace and activity from home', async () => {
+    it('should activate project and workspace and activity from home', async () => {
       const project = await models.project.create();
       const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
       const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
