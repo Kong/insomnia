@@ -118,7 +118,7 @@ export enum SegmentEvent {
   collectionCreate = 'Collection Created',
   documentCreate = 'Document Created',
   pluginExportLoadAllWokspace = 'Plugin export loading all workspace',
-  pluginExportLoadWorkspacesInSpace = 'Plugin export loading workspaces for active space',
+  pluginExportLoadWorkspacesInProject = 'Plugin export loading workspaces for active project',
   requestCreate = 'Request Created',
   requestExecute = 'Request Executed',
   spaceLocalCreate = 'Local Project Created',

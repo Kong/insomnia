@@ -29,7 +29,7 @@ const buildImportRawConfig = (options: PluginImportOptions, activeProjectId: str
 
 const getWorkspaces = (activeProjectId?: string) => {
   if (activeProjectId) {
-    trackSegmentEvent(SegmentEvent.pluginExportLoadWorkspacesInSpace);
+    trackSegmentEvent(SegmentEvent.pluginExportLoadWorkspacesInProject);
     return models.workspace.findByParentId(activeProjectId);
   } else {
     trackSegmentEvent(SegmentEvent.pluginExportLoadAllWokspace);
