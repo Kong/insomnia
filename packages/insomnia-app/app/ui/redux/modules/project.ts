@@ -21,7 +21,7 @@ export const createSpace = () => dispatch => {
       trackEvent('Project', 'Create');
       dispatch(setActiveSpace(space._id));
       dispatch(setActiveActivity(ACTIVITY_HOME));
-      trackSegmentEvent(SegmentEvent.spaceLocalCreate);
+      trackSegmentEvent(SegmentEvent.projectLocalCreate);
     },
   });
 };
@@ -44,7 +44,7 @@ export const removeSpace = (space: Space) => dispatch => {
       dispatch(setActiveSpace(BASE_PROJECT_ID));
       // Show home in case not already on home
       dispatch(setActiveActivity(ACTIVITY_HOME));
-      trackSegmentEvent(SegmentEvent.spaceLocalDelete);
+      trackSegmentEvent(SegmentEvent.projectLocalDelete);
     },
   });
 };

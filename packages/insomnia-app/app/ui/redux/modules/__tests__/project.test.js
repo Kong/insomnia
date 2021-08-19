@@ -48,7 +48,7 @@ describe('space', () => {
       expect(spaces).toHaveLength(1);
       const space = spaces[0];
       expect(space.name).toBe(spaceName);
-      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.spaceLocalCreate);
+      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalCreate);
       expect(trackEvent).toHaveBeenCalledWith('Space', 'Create');
       expect(store.getActions()).toEqual([
         {
@@ -79,7 +79,7 @@ describe('space', () => {
         onConfirm,
       } = getAndClearShowAlertMockArgs();
 
-      expect(title).toBe('Delete Space');
+      expect(title).toBe('Delete Project');
       expect(message).toBe('Deleting a project will delete all documents and collections within. This cannot be undone. Are you sure you want to delete My Space?');
       expect(addCancel).toBe(true);
       expect(okLabel).toBe('Delete');
@@ -92,8 +92,8 @@ describe('space', () => {
       expect(spaces).toHaveLength(1);
       const space = spaces[0];
       expect(space).toBe(spaceTwo);
-      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.spaceLocalDelete);
-      expect(trackEvent).toHaveBeenCalledWith('Space', 'Delete');
+      expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalDelete);
+      expect(trackEvent).toHaveBeenCalledWith('Project', 'Delete');
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_SPACE,
