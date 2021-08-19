@@ -38,9 +38,9 @@ interface InnerProps extends Options, Props {
   hide: () => void,
 }
 
-const SpaceOption: FC<Project> = space => (
-  <option key={space._id} value={space._id}>
-    {space.name} ({isBaseProject(space) ? strings.baseProject.singular : isLocalProject(space) ? strings.localProject.singular : strings.remoteProject.singular})
+const ProjectOption: FC<Project> = project => (
+  <option key={project._id} value={project._id}>
+    {project.name} ({isBaseProject(project) ? strings.baseProject.singular : isLocalProject(project) ? strings.localProject.singular : strings.remoteProject.singular})
   </option>
 );
 
@@ -68,8 +68,8 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     });
 
   const onSubmit = useCallback(async ({ projectId, newName }: FormFields) => {
-    const duplicateToSpace = spaces.find(space => space._id === projectId);
-    if (!duplicateToSpace) {
+    const duplicateToProject = spaces.find(project => project._id === projectId);
+    if (!duplicateToProject) {
       throw new Error('Space could not be found');
     }
 
@@ -77,7 +77,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     await models.workspace.ensureChildren(newWorkspace);
 
     // Mark for sync if logged in and in the expected space
-    if (isLoggedIn && vcs && isRemoteProject(duplicateToSpace)) {
+    if (isLoggedIn && vcs && isRemoteProject(duplicateToProject)) {
       await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }
 
@@ -101,7 +101,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
           <label>
             {strings.project.singular} to duplicate into
             <select {...register('projectId')}>
-              {spaces.map(SpaceOption)}
+              {spaces.map(ProjectOption)}
             </select>
           </label>
         </div>

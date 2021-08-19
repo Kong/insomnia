@@ -33,10 +33,10 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
   const remoteSpaces = (await models.project.all()).filter(isRemoteProject);
 
   // Are there any collections that have sync setup but are not in a remote space?
-  const isNotInRemoteSpace = (collection: Workspace) => !Boolean(remoteSpaces.find(space => space._id === collection.parentId));
+  const isNotInRemoteProject = (collection: Workspace) => !Boolean(remoteSpaces.find(project => project._id === collection.parentId));
   const hasLocalProject = (collection: Workspace) => vcs.hasBackendProjectForRootDocument(collection._id);
 
-  const needsMigration = await asyncFilter(collections, async coll => await hasLocalProject(coll) && isNotInRemoteSpace(coll));
+  const needsMigration = await asyncFilter(collections, async coll => await hasLocalProject(coll) && isNotInRemoteProject(coll));
 
   // If nothing to migrate, exit
   if (!needsMigration.length) {
@@ -45,7 +45,7 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
 
   const remoteProjectsInAnyTeam = await vcs.remoteBackendProjectsInAnyTeam();
   const findRemoteProject = (collection: Workspace) => remoteProjectsInAnyTeam.find(project => project.rootDocumentId === collection._id);
-  const findRemoteSpaceByTeam = (team: Team) => remoteSpaces.find(space => space.remoteId === team.id);
+  const findRemoteProjectByTeam = (team: Team) => remoteSpaces.find(project => project.remoteId === team.id);
 
   const upsert: (Workspace | RemoteProject)[] = [];
 
@@ -56,7 +56,7 @@ export const migrateCollectionsIntoRemoteSpace = async (vcs: VCS) => {
       return;
     }
 
-    let remoteSpace = findRemoteSpaceByTeam(remoteProject.team);
+    let remoteSpace = findRemoteProjectByTeam(remoteProject.team);
 
     if (!remoteSpace) {
       remoteSpace = await initializeSpaceFromTeam(remoteProject.team);
