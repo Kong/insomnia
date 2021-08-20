@@ -26,7 +26,7 @@ describe('selectors', () => {
       await models.project.create();
 
       // set first as selected
-      const state = await reduxStateForTest({ activeProjectId: 'some-other-space' });
+      const state = await reduxStateForTest({ activeProjectId: 'some-other-project' });
 
       const project = selectActiveProject(state);
       expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: BASE_PROJECT_ID }));
