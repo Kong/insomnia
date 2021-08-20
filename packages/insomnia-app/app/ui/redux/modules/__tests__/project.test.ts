@@ -45,8 +45,8 @@ describe('project', () => {
       await onComplete?.(projectName);
 
       const projects = await models.project.all();
-      expect(projects).toHaveLength(1);
-      const project = projects[0];
+      expect(projects).toHaveLength(2);
+      const project = projects[1];
       expect(project.name).toBe(projectName);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalCreate);
       expect(trackEvent).toHaveBeenCalledWith('Project', 'Create');
@@ -84,14 +84,14 @@ describe('project', () => {
       expect(addCancel).toBe(true);
       expect(okLabel).toBe('Delete');
 
-      await expect(models.project.all()).resolves.toHaveLength(2);
+      await expect(models.project.all()).resolves.toHaveLength(3);
 
       await onConfirm();
 
       const projects = await models.project.all();
-      expect(projects).toHaveLength(1);
-      const project = projects[0];
-      expect(project).toBe(projectTwo);
+      expect(projects).toHaveLength(2);
+      const project = projects[1];
+      expect(project).toStrictEqual(projectTwo);
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.projectLocalDelete);
       expect(trackEvent).toHaveBeenCalledWith('Project', 'Delete');
       expect(store.getActions()).toEqual([
