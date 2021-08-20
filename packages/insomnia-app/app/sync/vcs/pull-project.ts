@@ -5,6 +5,7 @@ import { RemoteSpace } from '../../models/space';
 import { isWorkspace } from '../../models/workspace';
 import { initializeSpaceFromTeam, initializeWorkspaceFromProject } from './initialize-model-from';
 import { ProjectWithTeam } from './normalize-project-team';
+import { interceptAccessError } from './util';
 import { VCS } from './vcs';
 
 interface Options {
@@ -17,7 +18,12 @@ export const pullProject = async ({ vcs, project, remoteSpaces }: Options) => {
   // Set project, checkout master, and pull
   await vcs.setProject(project);
   await vcs.checkout([], DEFAULT_BRANCH_NAME);
-  const remoteBranches = await vcs.getRemoteBranches();
+  const remoteBranches = await interceptAccessError({
+    action: 'pull',
+    callback: () => vcs.getRemoteBranches(),
+    resourceName: project.name,
+  });
+
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
 
   // Find or create the remote space locally

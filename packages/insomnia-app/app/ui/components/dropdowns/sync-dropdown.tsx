@@ -18,6 +18,7 @@ import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
 import { logCollectionMovedToSpace } from '../../../sync/vcs/migrate-collections';
 import { ProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
 import { pullProject } from '../../../sync/vcs/pull-project';
+import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
@@ -226,7 +227,13 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     });
 
     try {
-      await vcs.push(remoteId);
+      const branch = await vcs.getBranch();
+      await interceptAccessError({
+        callback: async () => await vcs.push(remoteId),
+        action: 'push',
+        resourceName: branch,
+        resourceType: 'branch',
+      });
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Push Error',
@@ -246,7 +253,13 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     });
 
     try {
-      const delta = await vcs.pull(syncItems, remoteId);
+      const branch = await vcs.getBranch();
+      const delta = await interceptAccessError({
+        callback: async () => await vcs.pull(syncItems, remoteId),
+        action: 'pull',
+        resourceName: branch,
+        resourceType: 'branch',
+      });
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
