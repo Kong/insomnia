@@ -28,8 +28,8 @@ const initialState: State = {
 type Action =
   | { type: 'loadBackendProjects' }
   | { type: 'saveBackendProjects', local: State['localBackendProjects'], remote: State['remoteBackendProjects']}
-  | { type: 'startPullingBackendProject', projectId: string }
-  | { type: 'stopPullingBackendProject', projectId: string }
+  | { type: 'startPullingBackendProject', backendProjectId: string }
+  | { type: 'stopPullingBackendProject', backendProjectId: string }
 
 const reducer: Reducer<State, Action> = (prevState, action) => {
   switch (action.type) {
@@ -38,9 +38,9 @@ const reducer: Reducer<State, Action> = (prevState, action) => {
     case 'saveBackendProjects':
       return { ...prevState, localBackendProjects: action.local, remoteBackendProjects: action.remote, loading: false };
     case 'startPullingBackendProject':
-      return { ...prevState, pullingBackendProjects: { ...prevState.pullingBackendProjects, [action.projectId]: true } };
+      return { ...prevState, pullingBackendProjects: { ...prevState.pullingBackendProjects, [action.backendProjectId]: true } };
     case 'stopPullingBackendProject':
-      return { ...prevState, pullingBackendProjects: { ...prevState.pullingBackendProjects, [action.projectId]: false } };
+      return { ...prevState, pullingBackendProjects: { ...prevState.pullingBackendProjects, [action.backendProjectId]: false } };
     default:
       return prevState;
   }
@@ -54,46 +54,46 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   // Local state
-  const [{ loading, localBackendProjects: localProjects, remoteBackendProjects, pullingBackendProjects: pullingProjects }, _dispatch] = useReducer(reducer, initialState);
+  const [{ loading, localBackendProjects, remoteBackendProjects, pullingBackendProjects }, _dispatch] = useReducer(reducer, initialState);
   const dispatch = useSafeReducerDispatch(_dispatch);
 
-  // Refresh remote project
+  // Refresh remote backend project
   const refresh = useCallback(async () => {
     if (!vcs || !isLoggedIn || !isRemoteProject(activeProject)) {
       return;
     }
 
     dispatch({ type: 'loadBackendProjects' });
-    const remote = await vcs.remoteBackendProjects(activeProject.remoteId);
-    const local = await vcs.localBackendProjects();
-    dispatch({ type: 'saveBackendProjects', local, remote });
+    const remoteBackendProjects = await vcs.remoteBackendProjects(activeProject.remoteId);
+    const localBackendProjects = await vcs.localBackendProjects();
+    dispatch({ type: 'saveBackendProjects', local: localBackendProjects, remote: remoteBackendProjects });
   }, [vcs, isLoggedIn, activeProject, dispatch]);
 
-  // Find remote project that haven't been pulled
-  const missingProjects = useMemo(() => remoteBackendProjects.filter(({ id, rootDocumentId }) => {
-    const localProjectExists = localProjects.find(p => p.id === id);
+  // Find remote backend project that haven't been pulled
+  const missingBackendProjects = useMemo(() => remoteBackendProjects.filter(({ id, rootDocumentId }) => {
+    const localBackendProjectExists = localBackendProjects.find(p => p.id === id);
     const workspaceExists = workspaces.find(w => w._id === rootDocumentId);
     // Mark as missing if:
-    //   - the project doesn't yet exists locally
-    //   - the project exists locally but somehow the workspace doesn't anymore
-    return !(workspaceExists && localProjectExists);
-  }), [localProjects, remoteBackendProjects, workspaces]);
+    //   - the backend project doesn't yet exists locally
+    //   - the backend project exists locally but somehow the workspace doesn't anymore
+    return !(workspaceExists && localBackendProjectExists);
+  }), [localBackendProjects, remoteBackendProjects, workspaces]);
 
-  // Pull a remote project
-  const pull = useCallback(async (project: BackendProjectWithTeam) => {
+  // Pull a remote backend project
+  const pull = useCallback(async (backendProject: BackendProjectWithTeam) => {
     if (!vcs) {
       throw new Error('VCS is not defined');
     }
 
-    dispatch({ type: 'startPullingBackendProject', projectId: project.id });
+    dispatch({ type: 'startPullingBackendProject', backendProjectId: backendProject.id });
 
     try {
-      // Clone old VCS so we don't mess anything up while working on other projects
+      // Clone old VCS so we don't mess anything up while working on other backend projects
       const newVCS = vcs.newInstance();
-      // Remove all projects for workspace first
-      await newVCS.removeBackendProjectsForRoot(project.rootDocumentId);
+      // Remove all backend projects for workspace first
+      await newVCS.removeBackendProjectsForRoot(backendProject.rootDocumentId);
 
-      await pullBackendProject({ vcs: newVCS, backendProject: project, remoteProjects });
+      await pullBackendProject({ vcs: newVCS, backendProject, remoteProjects });
 
       await refresh();
     } catch (err) {
@@ -102,7 +102,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
         message: `Failed to pull workspace. ${err.message}`,
       });
     } finally {
-      dispatch({ type: 'stopPullingBackendProject', projectId: project.id });
+      dispatch({ type: 'stopPullingBackendProject', backendProjectId: backendProject.id });
     }
   }, [vcs, refresh, remoteProjects, dispatch]);
 
@@ -111,8 +111,8 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
 
   return {
     loading,
-    missingProjects,
-    pullingProjects,
+    missingBackendProjects,
+    pullingBackendProjects,
     refresh,
     pull,
   };

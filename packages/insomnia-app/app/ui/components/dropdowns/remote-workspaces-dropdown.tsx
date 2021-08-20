@@ -26,8 +26,8 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
   const {
     loading,
     refresh,
-    missingProjects,
-    pullingProjects,
+    missingBackendProjects,
+    pullingBackendProjects,
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
@@ -62,17 +62,17 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
         </HelpTooltip>{' '}
         {loading && <i className="fa fa-spin fa-refresh" />}
       </DropdownDivider>
-      {missingProjects.length === 0 && (
+      {missingBackendProjects.length === 0 && (
         <DropdownItem disabled>Nothing to pull</DropdownItem>
       )}
-      {missingProjects.map(p => (
+      {missingBackendProjects.map(p => (
         <DropdownItem
           key={p.id}
           stayOpenAfterClick
           value={p}
           onClick={pull}
           icon={
-            pullingProjects[p.id] ? (
+            pullingBackendProjects[p.id] ? (
               <i className="fa fa-refresh fa-spin" />
             ) : (
               <i className="fa fa-cloud-download" />
