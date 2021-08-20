@@ -23,7 +23,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
   wrapperProps: {
     activeApiSpec,
     activeWorkspace,
-    activeSpace,
+    activeProject,
     activeEnvironment,
     settings,
     activity,
@@ -48,7 +48,7 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
       activeApiSpec={activeApiSpec}
-      activeSpace={activeSpace}
+      activeProject={activeProject}
       hotKeyRegistry={settings.hotKeyRegistry}
       isLoading={isLoading}
     />

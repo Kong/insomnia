@@ -5,30 +5,30 @@ import * as models from '../../../models';
 import { snapshotStateEntrySchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { Snapshot } from '../../types';
-import { initializeLocalProjectAndMarkForSync, pushSnapshotOnInitialize } from '../initialize-project';
+import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../initialize-backend-project';
 import { VCS } from '../vcs';
 
 const snapshotStateBuilder = createBuilder(snapshotStateEntrySchema);
 
-describe('initialize-project', () => {
+describe('initialize-backend-project', () => {
   beforeEach(globalBeforeEach);
 
-  describe('initializeLocalProjectAndMarkForSync()', () => {
+  describe('initializeLocalBackendProjectAndMarkForSync()', () => {
     it('should do nothing if not request collection', async () => {
       // Arrange
       const workspace = await models.workspace.create({ scope: 'design' });
       await models.workspace.ensureChildren(workspace);
       const vcs = new VCS(new MemoryDriver());
-      const switchAndCreateProjectIfNotExistSpy = jest.spyOn(vcs, 'switchAndCreateProjectIfNotExist');
+      const switchAndCreateBackendProjectIfNotExistSpy = jest.spyOn(vcs, 'switchAndCreateBackendProjectIfNotExist');
 
       // Act
-      await initializeLocalProjectAndMarkForSync({ workspace, vcs });
+      await initializeLocalBackendProjectAndMarkForSync({ workspace, vcs });
 
       // Assert
-      expect(switchAndCreateProjectIfNotExistSpy).not.toHaveBeenCalled();
+      expect(switchAndCreateBackendProjectIfNotExistSpy).not.toHaveBeenCalled();
       const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(workspaceMeta?.pushSnapshotOnInitialize).toBe(false);
-      switchAndCreateProjectIfNotExistSpy.mockClear();
+      switchAndCreateBackendProjectIfNotExistSpy.mockClear();
     });
     it('should create a local project and commit', async () => {
       const workspace = await models.workspace.create();
@@ -38,7 +38,7 @@ describe('initialize-project', () => {
 
       const vcs = new VCS(new MemoryDriver());
 
-      await initializeLocalProjectAndMarkForSync({ workspace, vcs });
+      await initializeLocalBackendProjectAndMarkForSync({ workspace, vcs });
 
       const historyCount = await vcs.getHistoryCount();
       expect(historyCount).toBe(1);
@@ -80,63 +80,63 @@ describe('initialize-project', () => {
     });
 
     it('should not push if no active project', async () => {
-      const space = await models.space.create({ remoteId: null });
-      const workspace = await models.workspace.create({ parentId: space._id });
+      const project = await models.project.create({ remoteId: null });
+      const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
-      vcs.clearProject();
+      vcs.clearBackendProject();
 
-      await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
     });
 
-    it('should not push snapshot if not remote space', async () => {
-      const space = await models.space.create({ remoteId: null });
-      const workspace = await models.workspace.create({ parentId: space._id });
+    it('should not push snapshot if not remote project', async () => {
+      const project = await models.project.create({ remoteId: null });
+      const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
-      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
     });
 
-    it('should not push snapshot if workspace not in space', async () => {
-      const space = await models.space.create({ remoteId: 'abc' });
-      const anotherSpace = await models.space.create({ remoteId: 'def' });
-      const workspace = await models.workspace.create({ parentId: anotherSpace._id });
+    it('should not push snapshot if workspace not in project', async () => {
+      const project = await models.project.create({ remoteId: 'abc' });
+      const anotherProject = await models.project.create({ remoteId: 'def' });
+      const workspace = await models.workspace.create({ parentId: anotherProject._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
-      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
     });
 
     it('should not push snapshot if not marked for push', async () => {
-      const space = await models.space.create({ remoteId: 'abc' });
-      const workspace = await models.workspace.create({ parentId: space._id });
+      const project = await models.project.create({ remoteId: 'abc' });
+      const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: false });
-      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
     });
 
     it('should push snapshot if conditions are met', async () => {
-      const space = await models.space.create({ remoteId: 'abc' });
-      const workspace = await models.workspace.create({ parentId: space._id });
+      const project = await models.project.create({ remoteId: 'abc' });
+      const workspace = await models.workspace.create({ parentId: project._id });
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
-      vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+      vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, space, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
-      expect(pushSpy).toHaveBeenCalledWith(space.remoteId);
+      expect(pushSpy).toHaveBeenCalledWith(project.remoteId);
       const updatedMeta = await models.workspaceMeta.getByParentId(workspace._id);
       expect(updatedMeta?.pushSnapshotOnInitialize).toBe(false);
     });

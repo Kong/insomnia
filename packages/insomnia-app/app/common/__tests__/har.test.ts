@@ -9,7 +9,7 @@ import * as render from '../render';
 describe('export', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    await models.space.all();
+    await models.project.all();
   });
 
   describe('exportHar()', () => {

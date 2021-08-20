@@ -23,7 +23,7 @@ import { SidebarRequestRow } from './sidebar-request-row';
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
 const mapStateToProps = (state: RootState) => ({
-  activeSpace: selectActiveRequest(state),
+  activeProject: selectActiveRequest(state), // TODO this seems wrong (!?!)
   activeEnvironment: selectActiveEnvironment(state),
 });
 

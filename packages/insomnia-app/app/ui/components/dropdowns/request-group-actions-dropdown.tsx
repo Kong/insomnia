@@ -13,7 +13,7 @@ import type { RequestGroupAction } from '../../../plugins';
 import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { RootState } from '../../redux/modules';
-import { selectActiveEnvironment, selectActiveSpace } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import {
   DropdownButton,
   DropdownDivider,
@@ -28,7 +28,7 @@ import EnvironmentEditModal from '../modals/environment-edit-modal';
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
 const mapStateToProps = (state: RootState) => ({
-  activeSpace: selectActiveSpace(state),
+  activeProject: selectActiveProject(state),
   activeEnvironment: selectActiveEnvironment(state),
 });
 
@@ -96,11 +96,11 @@ export class UnconnectedRequestGroupActionsDropdown extends PureComponent<Props,
     }));
 
     try {
-      const { activeEnvironment, requestGroup, activeSpace } = this.props;
+      const { activeEnvironment, requestGroup, activeProject } = this.props;
       const activeEnvironmentId = activeEnvironment ? activeEnvironment._id : null;
       const context = {
         ...(pluginContexts.app.init(RENDER_PURPOSE_NO_RENDER) as Record<string, any>),
-        ...pluginContexts.data.init(activeSpace._id),
+        ...pluginContexts.data.init(activeProject._id),
         ...(pluginContexts.store.init(p.plugin) as Record<string, any>),
         ...(pluginContexts.network.init(activeEnvironmentId) as Record<string, any>),
       };

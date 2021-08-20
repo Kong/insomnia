@@ -7,7 +7,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { exportAllToFile } from '../../redux/modules/global';
 import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
-import { selectActiveSpaceName, selectActiveWorkspace } from '../../redux/selectors';
+import { selectActiveProjectName, selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import ExportRequestsModal from '../modals/export-requests-modal';
@@ -19,7 +19,7 @@ interface Props {
 
 export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
-  const spaceName = useSelector(selectActiveSpaceName) ?? getAppName();
+  const projectName = useSelector(selectActiveProjectName) ?? getAppName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
 
   const handleImportUri = useCallback(() => {
@@ -80,7 +80,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           </DropdownItem>}
           <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />
-            All {strings.document.plural} and {strings.collection.plural} from the "{spaceName}" {strings.space.singular}
+            All {strings.document.plural} and {strings.collection.plural} from the "{projectName}" {strings.project.singular}
           </DropdownItem>
         </Dropdown>
           &nbsp;&nbsp;

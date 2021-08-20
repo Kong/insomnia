@@ -3,9 +3,9 @@ import React, { Fragment, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG, GlobalActivity, SortOrder } from '../../common/constants';
 import { isGrpcRequest } from '../../models/grpc-request';
+import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
-import { isRemoteSpace } from '../../models/space';
 import { isCollection, isDesign } from '../../models/workspace';
 import EnvironmentsDropdown from './dropdowns/environments-dropdown';
 import SyncDropdown from './dropdowns/sync-dropdown';
@@ -56,7 +56,7 @@ interface Props {
 class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
-    const { vcs, activeWorkspace, activeWorkspaceMeta, activeSpace, syncItems, isLoggedIn } = this.props.wrapperProps;
+    const { vcs, activeWorkspace, activeWorkspaceMeta, activeProject, syncItems, isLoggedIn } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
       return null;
@@ -67,11 +67,11 @@ class WrapperDebug extends PureComponent<Props> {
 
     let insomniaSync: ReactNode = null;
 
-    if (isLoggedIn && collection && isRemoteSpace(activeSpace) && vcs) {
+    if (isLoggedIn && collection && isRemoteProject(activeProject) && vcs) {
       insomniaSync = <SyncDropdown
         workspace={activeWorkspace}
         workspaceMeta={activeWorkspaceMeta}
-        space={activeSpace}
+        project={activeProject}
         vcs={vcs}
         syncItems={syncItems}
       />;
