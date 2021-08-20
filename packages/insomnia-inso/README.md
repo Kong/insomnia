@@ -138,7 +138,7 @@ inso lint spec "Sample Specification"
 
 ## `$ inso run test [identifier]`
 
-API Unit Testing was introduced with Insomnia Designer 2020.3.0, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
+API unit tests can be written and run within Insomnia, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
 
 **`[identifier]`**: this can be the **name or id** of a **workspace, document, or unit test suite**.
 
