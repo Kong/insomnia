@@ -10,7 +10,7 @@ import { VCS } from '../vcs';
 
 const snapshotStateBuilder = createBuilder(snapshotStateEntrySchema);
 
-describe('initialize-project', () => {
+describe('initialize-backend-project', () => {
   beforeEach(globalBeforeEach);
 
   describe('initializeLocalBackendProjectAndMarkForSync()', () => {
