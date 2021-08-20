@@ -105,7 +105,7 @@ describe('pullBackendProject()', () => {
   });
 
   describe('pulling an existing project', () => {
-    it('should overwrite the parentId only for a workspace with the space id', async () => {
+    it('should overwrite the parentId only for a workspace with the project id', async () => {
       // Arrange
       vcs.getRemoteBranches.mockResolvedValue([DEFAULT_BRANCH_NAME]);
       const existingWrk = await models.workspace.create({ _id: backendProject.rootDocumentId, name: backendProject.name });
