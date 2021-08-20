@@ -5,7 +5,7 @@ import { useAsync } from 'react-use';
 import { isRemoteProject } from '../../models/project';
 import { BackendProject } from '../../sync/types';
 import { BackendProjectWithTeam } from '../../sync/vcs/normalize-project-team';
-import { pullProject } from '../../sync/vcs/pull-project';
+import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';
 import { selectActiveProject, selectAllWorkspaces, selectIsLoggedIn, selectRemoteProjects } from '../redux/selectors';
@@ -93,7 +93,7 @@ export const useRemoteWorkspaces = (vcs?: VCS) => {
       // Remove all projects for workspace first
       await newVCS.removeBackendProjectsForRoot(project.rootDocumentId);
 
-      await pullProject({ vcs: newVCS, backendProject: project, remoteProjects });
+      await pullBackendProject({ vcs: newVCS, backendProject: project, remoteProjects });
 
       await refresh();
     } catch (err) {

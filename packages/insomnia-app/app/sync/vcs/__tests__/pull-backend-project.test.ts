@@ -8,7 +8,7 @@ import { isRemoteProject } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { backendProjectWithTeamSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
-import { pullProject } from '../pull-project';
+import { pullBackendProject } from '../pull-backend-project';
 import { VCS } from '../vcs';
 
 jest.mock('../vcs');
@@ -17,7 +17,7 @@ const backendProject = createBuilder(backendProjectWithTeamSchema).build();
 
 const newMockedVcs = () => mocked(new VCS(new MemoryDriver()), true);
 
-describe('pullProject()', () => {
+describe('pullBackendProject()', () => {
   let vcs = newMockedVcs();
 
   beforeEach(async () => {
@@ -48,7 +48,7 @@ describe('pullProject()', () => {
       });
 
       // Act
-      await pullProject({ vcs, backendProject: backendProject, remoteProjects: [project].filter(isRemoteProject) });
+      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [project].filter(isRemoteProject) });
 
       // Assert
       expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the project already exists
@@ -66,7 +66,7 @@ describe('pullProject()', () => {
 
     it('should insert a project and workspace with parent', async () => {
       // Act
-      await pullProject({ vcs, backendProject: backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [] });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
@@ -88,7 +88,7 @@ describe('pullProject()', () => {
       await models.workspace.create({ _id: backendProject.rootDocumentId, name: 'someName' });
 
       // Act
-      await pullProject({ vcs, backendProject: backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [] });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
@@ -114,7 +114,7 @@ describe('pullProject()', () => {
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
-      await pullProject({ vcs, backendProject: backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [] });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);

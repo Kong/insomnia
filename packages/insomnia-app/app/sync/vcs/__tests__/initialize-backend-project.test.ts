@@ -5,7 +5,7 @@ import * as models from '../../../models';
 import { snapshotStateEntrySchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
 import { Snapshot } from '../../types';
-import { initializeLocalProjectAndMarkForSync, pushSnapshotOnInitialize } from '../initialize-project';
+import { initializeLocalBackendProjectAndMarkForSync, pushSnapshotOnInitialize } from '../initialize-backend-project';
 import { VCS } from '../vcs';
 
 const snapshotStateBuilder = createBuilder(snapshotStateEntrySchema);
@@ -13,7 +13,7 @@ const snapshotStateBuilder = createBuilder(snapshotStateEntrySchema);
 describe('initialize-project', () => {
   beforeEach(globalBeforeEach);
 
-  describe('initializeLocalProjectAndMarkForSync()', () => {
+  describe('initializeLocalBackendProjectAndMarkForSync()', () => {
     it('should do nothing if not request collection', async () => {
       // Arrange
       const workspace = await models.workspace.create({ scope: 'design' });
@@ -22,7 +22,7 @@ describe('initialize-project', () => {
       const switchAndCreateBackendProjectIfNotExistSpy = jest.spyOn(vcs, 'switchAndCreateBackendProjectIfNotExist');
 
       // Act
-      await initializeLocalProjectAndMarkForSync({ workspace, vcs });
+      await initializeLocalBackendProjectAndMarkForSync({ workspace, vcs });
 
       // Assert
       expect(switchAndCreateBackendProjectIfNotExistSpy).not.toHaveBeenCalled();
@@ -38,7 +38,7 @@ describe('initialize-project', () => {
 
       const vcs = new VCS(new MemoryDriver());
 
-      await initializeLocalProjectAndMarkForSync({ workspace, vcs });
+      await initializeLocalBackendProjectAndMarkForSync({ workspace, vcs });
 
       const historyCount = await vcs.getHistoryCount();
       expect(historyCount).toBe(1);

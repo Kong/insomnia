@@ -13,7 +13,7 @@ import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import { isBaseProject, isLocalProject, isRemoteProject, Project } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
-import { initializeLocalProjectAndMarkForSync } from '../../../sync/vcs/initialize-project';
+import { initializeLocalBackendProjectAndMarkForSync } from '../../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveProject, selectIsLoggedIn, selectProjects } from '../../redux/selectors';
@@ -78,7 +78,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
 
     // Mark for sync if logged in and in the expected project
     if (isLoggedIn && vcs && isRemoteProject(duplicateToProject)) {
-      await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
+      await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }
 
     dispatch(activateWorkspace({ workspace: newWorkspace }));

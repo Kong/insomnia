@@ -30,7 +30,7 @@ import { isRemoteProject } from '../../models/project';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
-import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
+import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
 import { setProjectSortOrder } from '../redux/modules/global';
@@ -189,7 +189,7 @@ class WrapperHome extends PureComponent<Props, State> {
       onCreate: async workspace => {
         // Don't mark for sync if not logged in at the time of creation
         if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
-          await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+          await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
     });

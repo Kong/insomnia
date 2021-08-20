@@ -14,7 +14,7 @@ interface Options {
   remoteProjects: RemoteProject[];
 }
 
-export const pullProject = async ({ vcs, backendProject, remoteProjects }: Options) => {
+export const pullBackendProject = async ({ vcs, backendProject, remoteProjects }: Options) => {
   // Set project, checkout master, and pull
   await vcs.setBackendProject(backendProject);
   await vcs.checkout([], DEFAULT_BRANCH_NAME);

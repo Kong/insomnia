@@ -14,10 +14,10 @@ import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
-import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
+import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
 import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
 import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
-import { pullProject } from '../../../sync/vcs/pull-project';
+import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
@@ -331,7 +331,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       loadingProjectPull: true,
     });
 
-    const pulledIntoProject = await pullProject({ vcs, backendProject: p, remoteProjects });
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject: p, remoteProjects });
     if (pulledIntoProject._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
