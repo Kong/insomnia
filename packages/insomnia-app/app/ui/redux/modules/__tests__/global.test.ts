@@ -24,7 +24,7 @@ import {
   initActiveActivity,
   initActiveProject,
   initActiveWorkspace,
-  initProjectSortOrder,
+  initDashboardSortOrder,
   LOCALSTORAGE_PREFIX,
   SET_ACTIVE_ACTIVITY,
   SET_ACTIVE_PROJECT,
@@ -275,7 +275,7 @@ describe('global', () => {
     });
   });
 
-  describe('initProjectSortOrder', () => {
+  describe('initDashboardSortOrder', () => {
     it('should initialize from local storage', () => {
       const sortOrder = SORT_MODIFIED_DESC;
 
@@ -291,7 +291,7 @@ describe('global', () => {
         'type': SET_DASHBOARD_SORT_ORDER,
       };
 
-      expect(initProjectSortOrder()).toStrictEqual(expectedEvent);
+      expect(initDashboardSortOrder()).toStrictEqual(expectedEvent);
     });
 
     it('should default to modified-desc if not exist', async () => {
@@ -302,7 +302,7 @@ describe('global', () => {
         'type': SET_DASHBOARD_SORT_ORDER,
       };
 
-      expect(initProjectSortOrder()).toStrictEqual(expectedEvent);
+      expect(initDashboardSortOrder()).toStrictEqual(expectedEvent);
     });
   });
 

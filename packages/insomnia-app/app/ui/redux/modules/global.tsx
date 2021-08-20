@@ -7,7 +7,7 @@ import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { trackEvent } from '../../../common/analytics';
-import type { GlobalActivity, ProjectSortOrder } from '../../../common/constants';
+import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
@@ -91,7 +91,7 @@ function activeProjectReducer(state: string = BASE_PROJECT_ID, action) {
   }
 }
 
-function projectSortOrderReducer(state: ProjectSortOrder = 'modified-desc', action) {
+function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', action) {
   switch (action.type) {
     case SET_DASHBOARD_SORT_ORDER:
       return action.payload.sortOrder;
@@ -154,7 +154,7 @@ function loginStateChangeReducer(state = false, action) {
 export interface GlobalState {
   isLoading: boolean;
   activeProjectId: string;
-  projectSortOrder: ProjectSortOrder;
+  dashboardSortOrder: DashboardSortOrder;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
@@ -163,7 +163,7 @@ export interface GlobalState {
 
 export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
-  projectSortOrder: projectSortOrderReducer,
+  dashboardSortOrder: dashboardSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
   activeProjectId: activeProjectReducer,
   activeWorkspaceId: activeWorkspaceReducer,
@@ -388,7 +388,7 @@ export const setActiveProject = (projectId: string) => {
   };
 };
 
-export const setProjectSortOrder = (sortOrder: ProjectSortOrder) => {
+export const setDashboardSortOrder = (sortOrder: DashboardSortOrder) => {
   const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
   window.localStorage.setItem(key, JSON.stringify(sortOrder));
   return {
@@ -672,21 +672,21 @@ export function initActiveProject() {
   return setActiveProject(projectId || BASE_PROJECT_ID);
 }
 
-export function initProjectSortOrder() {
-  let projectSortOrder: ProjectSortOrder = 'modified-desc';
+export function initDashboardSortOrder() {
+  let dashboardSortOrder: DashboardSortOrder = 'modified-desc';
 
   try {
-    const projectSortOrderKey = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
-    const stringifiedProjectSortOrder = window.localStorage.getItem(projectSortOrderKey);
+    const dashboardSortOrderKey = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
+    const stringifiedDashboardSortOrder = window.localStorage.getItem(dashboardSortOrderKey);
 
-    if (stringifiedProjectSortOrder) {
-      projectSortOrder = JSON.parse(stringifiedProjectSortOrder);
+    if (stringifiedDashboardSortOrder) {
+      dashboardSortOrder = JSON.parse(stringifiedDashboardSortOrder);
     }
   } catch (e) {
     // Nothing here...
   }
 
-  return setProjectSortOrder(projectSortOrder);
+  return setDashboardSortOrder(dashboardSortOrder);
 }
 
 export function initActiveWorkspace() {
@@ -770,7 +770,7 @@ export const initActiveActivity = () => (dispatch, getState) => {
 
 export const init = () => [
   initActiveProject(),
-  initProjectSortOrder(),
+  initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
 ];

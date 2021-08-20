@@ -89,9 +89,9 @@ export const selectActiveProject = createSelector(
   },
 );
 
-export const selectProjectSortOrder = createSelector(
+export const selectDashboardSortOrder = createSelector(
   selectGlobal,
-  global => global.projectSortOrder
+  global => global.dashboardSortOrder
 );
 
 export const selectAllWorkspaces = createSelector(
