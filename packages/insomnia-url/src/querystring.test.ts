@@ -187,7 +187,7 @@ describe('querystring', () => {
       expect(url).toBe('https://google.com/?s=foo%20bar%20100%25&hi%24');
     });
 
-    it('encodes querystring with mixed projects', () => {
+    it('encodes querystring with mixed spaces', () => {
       const url = smartEncodeUrl('https://google.com?s=foo %20100%');
       expect(url).toBe('https://google.com/?s=foo%20%20100%25');
     });
