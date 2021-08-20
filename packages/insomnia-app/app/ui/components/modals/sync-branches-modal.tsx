@@ -181,7 +181,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { vcs, project: space } = this.props;
+    const { vcs, project } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -301,7 +301,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                         <SyncPullButton
                           className="btn btn--micro btn--outlined space-left"
                           branch={name}
-                          project={space}
+                          project={project}
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
                           vcs={vcs}

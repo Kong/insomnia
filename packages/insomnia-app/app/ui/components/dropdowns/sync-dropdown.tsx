@@ -76,7 +76,7 @@ interface State {
   loadingPull: boolean;
   loadingProjectPull: boolean;
   loadingPush: boolean;
-  remoteProjects: BackendProjectWithTeam[];
+  remoteBackendProjects: BackendProjectWithTeam[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -102,17 +102,17 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       stage: {},
       unstaged: {},
     },
-    remoteProjects: [],
+    remoteBackendProjects: [],
   }
 
   async refreshMainAttributes(extraState: Partial<State> = {}) {
     const { vcs, syncItems, workspace, project } = this.props;
 
     if (!vcs.hasBackendProject() && isRemoteProject(project)) {
-      const remoteProjects = await vcs.remoteBackendProjectsInAnyTeam();
-      const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
+      const remoteBackendProjects = await vcs.remoteBackendProjectsInAnyTeam();
+      const matchedBackendProjects = remoteBackendProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({
-        remoteProjects: matchedProjects,
+        remoteBackendProjects: matchedBackendProjects,
       });
       return;
     }
@@ -325,13 +325,13 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSetProject(p: BackendProjectWithTeam) {
+  async _handleSetProject(backendProject: BackendProjectWithTeam) {
     const { vcs, remoteProjects, project, workspace, handleActivateWorkspace } = this.props;
     this.setState({
       loadingProjectPull: true,
     });
 
-    const pulledIntoProject = await pullBackendProject({ vcs, backendProject: p, remoteProjects });
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
     if (pulledIntoProject._id !== project._id) {
       // If pulled into a different project, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
@@ -490,7 +490,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       loadingPull,
       loadingPush,
       loadingProjectPull,
-      remoteProjects,
+      remoteBackendProjects,
       compare: { ahead, behind },
     } = this.state;
     const canCreateSnapshot =
@@ -529,12 +529,12 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
               <i className="fa fa-code-fork " /> Setup Sync
             </DropdownButton>
             {syncMenuHeader}
-            {remoteProjects.length === 0 && (
+            {remoteBackendProjects.length === 0 && (
               <DropdownItem onClick={this._handleEnableSync}>
                 <i className="fa fa-plus-circle" /> Create Locally
               </DropdownItem>
             )}
-            {remoteProjects.map(p => (
+            {remoteBackendProjects.map(p => (
               <DropdownItem key={p.id} onClick={() => this._handleSetProject(p)}>
                 <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
               </DropdownItem>
