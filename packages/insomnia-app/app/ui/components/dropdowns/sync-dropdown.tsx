@@ -16,7 +16,7 @@ import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
 import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
 import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
-import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
+import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
 import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';

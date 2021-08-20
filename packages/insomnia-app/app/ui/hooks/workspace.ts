@@ -4,7 +4,7 @@ import { useAsync } from 'react-use';
 
 import { isRemoteProject } from '../../models/project';
 import { BackendProject } from '../../sync/types';
-import { BackendProjectWithTeam } from '../../sync/vcs/normalize-project-team';
+import { BackendProjectWithTeam } from '../../sync/vcs/normalize-backend-project-team';
 import { pullBackendProject } from '../../sync/vcs/pull-backend-project';
 import { VCS } from '../../sync/vcs/vcs';
 import { showAlert } from '../components/modals';

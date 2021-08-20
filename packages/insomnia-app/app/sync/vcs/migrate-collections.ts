@@ -45,7 +45,7 @@ export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
 
   const remoteBackendProjectsInAnyTeam = await vcs.remoteBackendProjectsInAnyTeam();
   const findRemoteBackendProject = (collection: Workspace) => remoteBackendProjectsInAnyTeam.find(project => project.rootDocumentId === collection._id);
-  const findRemoteBackendProjectByTeam = (team: Team) => remoteProjects.find(project => project.remoteId === team.id);
+  const findRemoteProjectByTeam = (team: Team) => remoteProjects.find(project => project.remoteId === team.id);
 
   const upsert: (Workspace | RemoteProject)[] = [];
 
@@ -56,7 +56,7 @@ export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
       return;
     }
 
-    let remoteProject = findRemoteBackendProjectByTeam(remoteBackendProject.team);
+    let remoteProject = findRemoteProjectByTeam(remoteBackendProject.team);
 
     if (!remoteProject) {
       remoteProject = await initializeProjectFromTeam(remoteBackendProject.team);

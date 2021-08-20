@@ -12,6 +12,6 @@ export const normalizeBackendProjectTeam = (backend: BackendProjectWithTeams): B
   id: backend.id,
   name: backend.name,
   rootDocumentId: backend.rootDocumentId,
-  // A project is guaranteed to exist on exactly one team
+  // A backend project is guaranteed to exist on exactly one team
   team: backend.teams[0],
 });

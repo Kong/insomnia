@@ -85,7 +85,7 @@ describe('initialize-backend-project', () => {
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.clearBackendProject();
 
-      await pushSnapshotOnInitialize({ vcs, project: project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
@@ -97,7 +97,7 @@ describe('initialize-backend-project', () => {
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, project: project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
@@ -110,7 +110,7 @@ describe('initialize-backend-project', () => {
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, project: project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).not.toHaveBeenCalled();
       await expect(models.workspaceMeta.getByParentId(workspace._id)).resolves.toStrictEqual(workspaceMeta);
@@ -134,7 +134,7 @@ describe('initialize-backend-project', () => {
       const workspaceMeta = await models.workspaceMeta.create({ parentId: workspace._id, pushSnapshotOnInitialize: true });
       vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
 
-      await pushSnapshotOnInitialize({ vcs, project: project, workspace, workspaceMeta });
+      await pushSnapshotOnInitialize({ vcs, project, workspace, workspaceMeta });
 
       expect(pushSpy).toHaveBeenCalledWith(project.remoteId);
       const updatedMeta = await models.workspaceMeta.getByParentId(workspace._id);

@@ -48,7 +48,7 @@ describe('pullBackendProject()', () => {
       });
 
       // Act
-      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [project].filter(isRemoteProject) });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [project].filter(isRemoteProject) });
 
       // Assert
       expect(project?.name).not.toBe(backendProject.team.name); // should not rename if the project already exists
@@ -66,7 +66,7 @@ describe('pullBackendProject()', () => {
 
     it('should insert a project and workspace with parent', async () => {
       // Act
-      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [] });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
@@ -88,7 +88,7 @@ describe('pullBackendProject()', () => {
       await models.workspace.create({ _id: backendProject.rootDocumentId, name: 'someName' });
 
       // Act
-      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [] });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
@@ -114,7 +114,7 @@ describe('pullBackendProject()', () => {
       vcs.allDocuments.mockResolvedValue([existingWrk, existingReq]);
 
       // Act
-      await pullBackendProject({ vcs, backendProject: backendProject, remoteProjects: [] });
+      await pullBackendProject({ vcs, backendProject, remoteProjects: [] });
 
       // Assert
       const project = await models.project.getByRemoteId(backendProject.team.id);
