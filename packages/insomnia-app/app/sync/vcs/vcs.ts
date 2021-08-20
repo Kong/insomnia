@@ -24,7 +24,7 @@ import type {
   StatusCandidate,
   Team,
 } from '../types';
-import { BackendProjectWithTeams, normalizeBackendProjectTeam } from './normalize-project-team';
+import { BackendProjectWithTeams, normalizeBackendProjectTeam } from './normalize-backend-project-team';
 import * as paths from './paths';
 import {
   compareBranches,
@@ -1311,7 +1311,7 @@ export class VCS {
     const project = await this._getBackendProject();
 
     if (project === null) {
-      throw new Error('Failed to find local project id=' + this._backendProjectId());
+      throw new Error('Failed to find local backend project id=' + this._backendProjectId());
     }
 
     return project;
@@ -1362,7 +1362,7 @@ export class VCS {
 
   _backendProjectId() {
     if (this._backendProject === null) {
-      throw new Error('No active project');
+      throw new Error('No active backend project');
     }
 
     return this._backendProject.id;
@@ -1416,37 +1416,37 @@ export class VCS {
 
   async _getBackendProjectByRootDocument(rootDocumentId: string) {
     if (!rootDocumentId) {
-      throw new Error('No root document ID supplied for project');
+      throw new Error('No root document ID supplied for backend project');
     }
 
     // First, try finding the project
-    const projects = await this._allBackendProjects();
-    let matchedProjects = projects.filter(p => p.rootDocumentId === rootDocumentId);
+    const backendProjects = await this._allBackendProjects();
+    let matchedBackendProjects = backendProjects.filter(p => p.rootDocumentId === rootDocumentId);
 
     // If there is more than one project for root, try pruning unused ones by branch activity
-    if (matchedProjects.length > 1) {
-      for (const p of matchedProjects) {
+    if (matchedBackendProjects.length > 1) {
+      for (const p of matchedBackendProjects) {
         const branches = await this._getBranches(p.id);
 
         if (!branches.find(b => b.snapshots.length > 0)) {
           await this._removeProject(p);
-          matchedProjects = matchedProjects.filter(({ id }) => id !== p.id);
+          matchedBackendProjects = matchedBackendProjects.filter(({ id }) => id !== p.id);
           console.log(`[sync] Remove inactive project for root ${rootDocumentId}`);
         }
       }
     }
 
     // If there are still too many, error out
-    if (matchedProjects.length > 1) {
-      console.log('[sync] Multiple projects matched for root', {
-        projects,
-        matchedProjects,
+    if (matchedBackendProjects.length > 1) {
+      console.log('[sync] Multiple backend projects matched for root', {
+        backendProjects,
+        matchedBackendProjects,
         rootDocumentId,
       });
-      throw new Error('More than one project matched query');
+      throw new Error('More than one backend project matched query');
     }
 
-    return matchedProjects[0] || null;
+    return matchedBackendProjects[0] || null;
   }
 
   async _getOrCreateBackendProjectByRootDocument(rootDocumentId: string, name: string) {
@@ -1461,7 +1461,7 @@ export class VCS {
         rootDocumentId,
       };
       await this._storeBackendProject(project);
-      console.log(`[sync] Created project ${project.id}`);
+      console.log(`[sync] Created backend project ${project.id}`);
     }
 
     return project;
