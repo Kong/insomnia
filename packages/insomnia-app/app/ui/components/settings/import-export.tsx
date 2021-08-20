@@ -19,7 +19,7 @@ interface Props {
 
 export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
-  const spaceName = useSelector(selectActiveProjectName) ?? getAppName();
+  const projectName = useSelector(selectActiveProjectName) ?? getAppName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
 
   const handleImportUri = useCallback(() => {
@@ -80,7 +80,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           </DropdownItem>}
           <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />
-            All {strings.document.plural} and {strings.collection.plural} from the "{spaceName}" {strings.project.singular}
+            All {strings.document.plural} and {strings.collection.plural} from the "{projectName}" {strings.project.singular}
           </DropdownItem>
         </Dropdown>
           &nbsp;&nbsp;
