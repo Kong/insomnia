@@ -142,7 +142,7 @@ describe('pullBackendProject()', () => {
     vcs.getRemoteBranches.mockRejectedValue(new Error('invalid access to project'));
 
     // Act
-    const action = () => pullProject({ vcs, project, remoteSpaces: [] });
+    const action = () => pullBackendProject({ vcs, backendProject, remoteProjects: [] });
 
     // Assert
     expect(vcs.pull).not.toHaveBeenCalled();

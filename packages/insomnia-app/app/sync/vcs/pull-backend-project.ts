@@ -1,4 +1,3 @@
-
 import { DEFAULT_BRANCH_NAME } from '../../common/constants';
 import { database } from '../../common/database';
 import { RemoteProject } from '../../models/project';
@@ -21,7 +20,7 @@ export const pullBackendProject = async ({ vcs, backendProject, remoteProjects }
   const remoteBranches = await interceptAccessError({
     action: 'pull',
     callback: () => vcs.getRemoteBranches(),
-    resourceName: project.name,
+    resourceName: backendProject.name,
   });
 
   const defaultBranchMissing = !remoteBranches.includes(DEFAULT_BRANCH_NAME);
