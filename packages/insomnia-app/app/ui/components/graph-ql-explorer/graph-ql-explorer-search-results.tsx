@@ -137,11 +137,13 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
   }
 
   render() {
+    const {foundTypes, foundFields} = this.state;
     return (
       <div ref={this.ref} className="graphql-explorer__search-reults">
-        <h2 className="graphql-explorer__subheading">Found Types</h2>
+        {!foundTypes.length && !foundFields.length && <p>No results found.</p>}
+        {foundTypes.length > 0 && <h2 className="graphql-explorer__subheading">Found Types</h2>}
         {this.renderFoundTypes()}
-        <h2 className="graphql-explorer__subheading">Found Fields</h2>
+        {foundFields.length > 0 && <h2 className="graphql-explorer__subheading">Found Fields</h2>}
         {this.renderFoundFields()}
       </div>
     );
