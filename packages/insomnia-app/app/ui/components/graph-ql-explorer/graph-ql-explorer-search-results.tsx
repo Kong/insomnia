@@ -15,17 +15,21 @@ interface Props {
 interface State {
   foundTypes: GraphQLNamedType[];
   foundFields: GraphQLFieldWithParentName[];
+  displayedTypeBatches: number;
+  displayedFieldBatches: number;
 }
 
-const MAX_RENDERED_ELEMENTS = 100;
+const BATCH_SIZE = 100;
 
 class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
   // this ref is used to check if the component is still mounted while updating the search results
   ref: React.RefObject<HTMLDivElement> = React.createRef();
 
-  state = {
+  state: State = {
     foundTypes: [],
     foundFields: [],
+    displayedTypeBatches: 1,
+    displayedFieldBatches: 1
   };
 
   componentDidUpdate(prevProps: Props) {
@@ -82,28 +86,30 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
 
   renderFoundTypes() {
     const { onNavigateType } = this.props;
-    const types: GraphQLNamedType[] = [...this.state.foundTypes];
+    const { foundTypes, displayedTypeBatches } = this.state;
 
-    const numberOfTypes = types.length;
-    if (numberOfTypes > MAX_RENDERED_ELEMENTS) {
-      types.length = MAX_RENDERED_ELEMENTS;
-    }
+    const numberOfAllTypes = foundTypes.length;
+    const numberOfTypesToRender = BATCH_SIZE * displayedTypeBatches;
 
-    if (!types.length) {
+    if (!foundTypes.length) {
       return null;
     }
 
     return (
       <>
         <ul className="graphql-explorer__defs">
-          {types.map(type => (
+          {foundTypes.slice(0, numberOfTypesToRender).map(type => (
             <li key={type.name}>
               <GraphQLExplorerTypeLink type={type} onNavigate={onNavigateType} />
             </li>
           ))}
         </ul>
-        {numberOfTypes > MAX_RENDERED_ELEMENTS && (
-          <p>And {numberOfTypes - MAX_RENDERED_ELEMENTS} more types found...</p>
+        {numberOfAllTypes > numberOfTypesToRender && (
+          <p className="more-found-elements-hint"
+            onClick={() => this.setState(({displayedTypeBatches: oldValue}) => ({displayedTypeBatches: oldValue + 1}))}
+          >
+            And {numberOfAllTypes - numberOfTypesToRender} more types found... Click here to show {BATCH_SIZE} more.
+          </p>
         )}
       </>
     );
@@ -111,26 +117,28 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
 
   renderFoundFields() {
     const { onNavigateType, onNavigateField } = this.props;
-    const fields: GraphQLFieldWithParentName[] = [...this.state.foundFields];
+    const { foundFields, displayedFieldBatches } = this.state;
 
-    const numberOfFields = fields.length;
-    if (numberOfFields > MAX_RENDERED_ELEMENTS) {
-      fields.length = MAX_RENDERED_ELEMENTS;
-    }
+    const numberOfAllFields = foundFields.length;
+    const numberOfFieldsToRender = BATCH_SIZE * displayedFieldBatches;
 
-    if (!fields.length) {
+    if (!foundFields.length) {
       return null;
     }
 
     return (
       <>
         <GraphQLExplorerFieldsList
-          fields={fields}
+          fields={foundFields.slice(0, numberOfFieldsToRender)}
           onNavigateType={onNavigateType}
           onNavigateField={onNavigateField}
         />
-        {numberOfFields > MAX_RENDERED_ELEMENTS && (
-          <p>And {numberOfFields - MAX_RENDERED_ELEMENTS} more fields found...</p>
+        {numberOfAllFields > numberOfFieldsToRender && (
+          <p className="more-found-elements-hint"
+            onClick={() => this.setState(({displayedFieldBatches: oldValue}) => ({displayedFieldBatches: oldValue + 1}))}
+          >
+            And {numberOfAllFields - numberOfFieldsToRender} more fields found... Click here to show {BATCH_SIZE} more.
+          </p>
         )}
       </>
     );
