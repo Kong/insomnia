@@ -3,12 +3,12 @@ import { useAsync } from 'react-use';
 import { onLoginLogout } from '../../account/session';
 import { getDataDirectory } from '../../common/electron-helpers';
 import FileSystemDriver from '../../sync/store/drivers/file-system-driver';
-import { migrateCollectionsIntoRemoteSpace } from '../../sync/vcs/migrate-collections';
+import { migrateCollectionsIntoRemoteProject } from '../../sync/vcs/migrate-collections';
 import { VCS } from '../../sync/vcs/vcs';
 
 const check = async () => {
   const driver = FileSystemDriver.create(getDataDirectory());
-  await migrateCollectionsIntoRemoteSpace(new VCS(driver));
+  await migrateCollectionsIntoRemoteProject(new VCS(driver));
 };
 
 // Check on login / logout

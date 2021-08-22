@@ -18,7 +18,7 @@ import { unreachableCase } from 'ts-assert-unreachable';
 import { parseApiSpec, ParsedApiSpec } from '../../common/api-specs';
 import {
   AUTOBIND_CFG,
-  SpaceSortOrder,
+  DashboardSortOrder,
 } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
@@ -26,23 +26,23 @@ import { isNotNullOrUndefined } from '../../common/misc';
 import { descendingNumberSort, sortMethodMap } from '../../common/sorting';
 import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
-import { isRemoteSpace } from '../../models/space';
+import { isRemoteProject } from '../../models/project';
 import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
-import { initializeLocalProjectAndMarkForSync } from '../../sync/vcs/initialize-project';
+import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
-import { setSpaceSortOrder } from '../redux/modules/global';
+import { setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
-import { selectSpaceSortOrder } from '../redux/selectors';
+import { selectDashboardSortOrder } from '../redux/selectors';
 import SettingsButton from './buttons/settings-button';
 import AccountDropdown from './dropdowns/account-dropdown';
+import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
+import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import { SpaceDropdown } from './dropdowns/space-dropdown';
-import { SpaceSortDropdown } from './dropdowns/space-sort-dropdown';
 import KeydownBinder from './keydown-binder';
 import { showPrompt } from './modals';
 import Notice from './notice';
@@ -60,7 +60,7 @@ interface State {
   filter: string;
 }
 
-function orderSpaceCards(orderBy: SpaceSortOrder) {
+function orderDashboardCards(orderBy: DashboardSortOrder) {
   return (cardA: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>, cardB: Pick<WorkspaceCardProps, 'workspace' | 'lastModifiedTimestamp'>) => {
     switch (orderBy) {
       case 'modified-desc':
@@ -74,7 +74,7 @@ function orderSpaceCards(orderBy: SpaceSortOrder) {
       case 'created-desc':
         return sortMethodMap['created-desc'](cardA.workspace, cardB.workspace);
       default:
-        return unreachableCase(orderBy, `Space Ordering "${orderBy}" is invalid`);
+        return unreachableCase(orderBy, `Dashboard ordering "${orderBy}" is invalid`);
     }
   };
 }
@@ -181,15 +181,15 @@ class WrapperHome extends PureComponent<Props, State> {
   _handleCollectionCreate() {
     const {
       handleCreateWorkspace,
-      wrapperProps: { activeSpace, vcs, isLoggedIn },
+      wrapperProps: { activeProject, vcs, isLoggedIn },
     } = this.props;
 
     handleCreateWorkspace({
       scope: WorkspaceScopeKeys.collection,
       onCreate: async workspace => {
         // Don't mark for sync if not logged in at the time of creation
-        if (isLoggedIn && vcs && isRemoteSpace(activeSpace)) {
-          await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
+        if (isLoggedIn && vcs && isRemoteProject(activeProject)) {
+          await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace });
         }
       },
     });
@@ -287,7 +287,7 @@ class WrapperHome extends PureComponent<Props, State> {
   }
 
   renderDashboardMenu() {
-    const { wrapperProps, handleSetSpaceSortOrder, sortOrder } = this.props;
+    const { wrapperProps, handleSetDashboardSortOrder, sortOrder } = this.props;
     const { vcs } = wrapperProps;
     return (
       <div className="row row--right pad-left wide">
@@ -308,7 +308,7 @@ class WrapperHome extends PureComponent<Props, State> {
             <span className="fa fa-search filter-icon" />
           </KeydownBinder>
         </div>
-        <SpaceSortDropdown value={sortOrder} onSelect={handleSetSpaceSortOrder} />
+        <DashboardSortDropdown value={sortOrder} onSelect={handleSetDashboardSortOrder} />
         <RemoteWorkspacesDropdown vcs={vcs} className="margin-left" />
         {this.renderCreateMenu()}
       </div>
@@ -321,7 +321,7 @@ class WrapperHome extends PureComponent<Props, State> {
       workspaces,
       isLoading,
       vcs,
-      activeSpace,
+      activeProject,
       workspaceMetas,
       apiSpecs,
     } = wrapperProps;
@@ -335,12 +335,12 @@ class WrapperHome extends PureComponent<Props, State> {
         })
       )
       .filter(isNotNullOrUndefined)
-      .sort(orderSpaceCards(sortOrder))
+      .sort(orderDashboardCards(sortOrder))
       .map(props => (
         <WorkspaceCard
           {...props}
           key={props.apiSpec._id}
-          activeSpace={activeSpace}
+          activeProject={activeProject}
           onSelect={() => handleActivateWorkspace({ workspace: props.workspace })}
           filter={filter}
         />
@@ -360,8 +360,8 @@ class WrapperHome extends PureComponent<Props, State> {
                 <Breadcrumb
                   crumbs={[
                     {
-                      id: 'space',
-                      node: <SpaceDropdown vcs={vcs || undefined} />,
+                      id: 'project',
+                      node: <ProjectDropdown vcs={vcs || undefined} />,
                     },
                   ]}
                 />
@@ -405,7 +405,7 @@ class WrapperHome extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = state => ({
-  sortOrder: selectSpaceSortOrder(state),
+  sortOrder: selectDashboardSortOrder(state),
 });
 
 const mapDispatchToProps = dispatch => {
@@ -416,7 +416,7 @@ const mapDispatchToProps = dispatch => {
       importFile,
       importClipBoard,
       importUri,
-      setSpaceSortOrder,
+      setDashboardSortOrder,
       activateWorkspace,
     },
     dispatch
@@ -428,7 +428,7 @@ const mapDispatchToProps = dispatch => {
     handleImportFile: bound.importFile,
     handleImportUri: bound.importUri,
     handleImportClipboard: bound.importClipBoard,
-    handleSetSpaceSortOrder: bound.setSpaceSortOrder,
+    handleSetDashboardSortOrder: bound.setDashboardSortOrder,
     handleActivateWorkspace: bound.activateWorkspace,
   });
 };

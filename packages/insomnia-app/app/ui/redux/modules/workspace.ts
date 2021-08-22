@@ -7,9 +7,9 @@ import { database } from '../../../common/database';
 import * as models from '../../../models';
 import { isCollection, isDesign, Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showPrompt } from '../../components/modals';
-import { selectActiveActivity, selectActiveSpace, selectAllWorkspaces } from '../selectors';
+import { selectActiveActivity, selectActiveProject, selectAllWorkspaces } from '../selectors';
 import { RootState } from '.';
-import { setActiveActivity, setActiveSpace, setActiveWorkspace } from './global';
+import { setActiveActivity, setActiveProject, setActiveWorkspace } from './global';
 
 type OnWorkspaceCreateCallback = (arg0: Workspace) => Promise<void> | void;
 
@@ -41,7 +41,7 @@ export const createWorkspace = ({ scope, onCreate }: {
   onCreate?: OnWorkspaceCreateCallback;
 }) => {
   return (dispatch, getState) => {
-    const activeSpace = selectActiveSpace(getState());
+    const activeProject = selectActiveProject(getState());
 
     const design = isDesign({
       scope,
@@ -61,7 +61,7 @@ export const createWorkspace = ({ scope, onCreate }: {
             {
               name,
               scope,
-              parentId: activeSpace._id,
+              parentId: activeProject._id,
             },
             onCreate,
           ),
@@ -86,9 +86,9 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
 
     const activeActivity = selectActiveActivity(getState()) || undefined;
 
-    // Activate the correct space
-    const nextSpaceId = workspace.parentId;
-    dispatch(setActiveSpace(nextSpaceId));
+    // Activate the correct project
+    const nextProjectId = workspace.parentId;
+    dispatch(setActiveProject(nextProjectId));
 
     // Activate the correct workspace
     const nextWorkspaceId = workspace._id;
@@ -107,6 +107,6 @@ export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<
       dispatch(setActiveActivity(nextActivity));
     }
 
-    // TODO: dispatch one action to activate the space, workspace and activity in one go to avoid jumps in the UI
+    // TODO: dispatch one action to activate the project, workspace and activity in one go to avoid jumps in the UI
   };
 };

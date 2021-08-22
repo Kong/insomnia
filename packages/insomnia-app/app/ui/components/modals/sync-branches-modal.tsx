@@ -4,9 +4,10 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { database as db } from '../../../common/database';
-import { Space } from '../../../models/space';
+import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import type { StatusCandidate } from '../../../sync/types';
+import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -16,7 +17,7 @@ import SyncPullButton from '../sync-pull-button';
 
 interface Props {
   workspace: Workspace;
-  space: Space;
+  project: Project;
   syncItems: StatusCandidate[];
   vcs: VCS;
 }
@@ -149,9 +150,13 @@ class SyncBranchesModal extends PureComponent<Props, State> {
         error: '',
         ...newState,
       });
-      const remoteBranches = (await vcs.getRemoteBranches())
-        .filter(b => !branches.includes(b))
-        .sort();
+
+      const remoteBranches = await interceptAccessError({
+        callback: async () => (await vcs.getRemoteBranches()).filter(b => !branches.includes(b)).sort(),
+        action: 'get',
+        resourceName: 'remote',
+        resourceType: 'branches',
+      });
       this.setState({
         remoteBranches,
       });
@@ -176,7 +181,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
   }
 
   render() {
-    const { vcs, space } = this.props;
+    const { vcs, project } = this.props;
     const { branches, remoteBranches, currentBranch, newBranchName, error } = this.state;
     return (
       <Modal ref={this._setModalRef}>
@@ -296,7 +301,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
                         <SyncPullButton
                           className="btn btn--micro btn--outlined space-left"
                           branch={name}
-                          space={space}
+                          project={project}
                           onPull={this.refreshState}
                           disabled={name === currentBranch}
                           vcs={vcs}

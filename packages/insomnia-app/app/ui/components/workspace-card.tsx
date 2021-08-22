@@ -10,7 +10,7 @@ import {
 import { fuzzyMatchAll } from '../../common/misc';
 import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
-import { Space } from '../../models/space';
+import { Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
 import Highlight from './base/highlight';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
@@ -20,7 +20,7 @@ export interface WorkspaceCardProps {
   apiSpec: ApiSpec;
   workspace: Workspace;
   filter: string;
-  activeSpace: Space;
+  activeProject: Project;
   lastActiveBranch?: string | null;
   lastModifiedTimestamp: number;
   lastCommitTime?: number | null;
@@ -39,7 +39,7 @@ const WorkspaceCard: FC<WorkspaceCardProps> = ({
   lastActiveBranch,
   lastModifiedTimestamp,
   workspace,
-  activeSpace,
+  activeProject,
   lastCommitTime,
   modifiedLocally,
   lastCommitAuthor,
@@ -81,7 +81,7 @@ const WorkspaceCard: FC<WorkspaceCardProps> = ({
     <WorkspaceCardDropdown
       apiSpec={apiSpec}
       workspace={workspace}
-      space={activeSpace}
+      project={activeProject}
     />
   );
 

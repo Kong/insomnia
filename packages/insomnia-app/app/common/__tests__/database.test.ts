@@ -263,10 +263,10 @@ describe('_repairDatabase()', () => {
 
   it('fixes duplicate environments', async () => {
     // Create Workspace with no children
-    const space = await models.space.create();
+    const project = await models.project.create();
     const workspace = await models.workspace.create({
       _id: 'w1',
-      parentId: space._id,
+      parentId: project._id,
     });
     const spec = await models.apiSpec.getByParentId(workspace._id);
     expect((await db.withDescendants(workspace)).length).toBe(2);
@@ -444,10 +444,10 @@ describe('_repairDatabase()', () => {
 
   it('fixes duplicate cookie jars', async () => {
     // Create Workspace with no children
-    const space = await models.space.create();
+    const project = await models.project.create();
     const workspace = await models.workspace.create({
       _id: 'w1',
-      parentId: space._id,
+      parentId: project._id,
     });
     const spec = await models.apiSpec.getByParentId(workspace._id);
     expect((await db.withDescendants(workspace)).length).toBe(2);
@@ -717,7 +717,7 @@ describe('withAncestors()', () => {
   beforeEach(globalBeforeEach);
 
   it('should return itself and all parents but exclude siblings', async () => {
-    const spc = await models.space.create();
+    const spc = await models.project.create();
     const wrk = await models.workspace.create({
       parentId: spc._id,
     });

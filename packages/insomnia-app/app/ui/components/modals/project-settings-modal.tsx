@@ -6,10 +6,10 @@ import { bindActionCreators } from 'redux';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models/index';
-import { isRemoteSpace, spaceHasSettings } from '../../../models/space';
+import { isRemoteProject, projectHasSettings } from '../../../models/project';
 import { RootState } from '../../redux/modules';
-import * as spaceActions from '../../redux/modules/space';
-import { selectActiveSpace } from '../../redux/selectors';
+import * as projectActions from '../../redux/modules/project';
+import { selectActiveProject } from '../../redux/selectors';
 import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
@@ -22,21 +22,21 @@ export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof 
 type Props = ReduxProps
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SpaceSettingsModal extends PureComponent<Props> {
+class ProjectSettingsModal extends PureComponent<Props> {
   modal: Modal | null = null;
 
   _handleSetModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _handleRemoveSpace() {
-    this.props.handleRemoveSpace(this.props.space);
+  _handleRemoveProject() {
+    this.props.handleRemoveProject(this.props.project);
     this.hide();
   }
 
   async _handleRename(name: string) {
-    const { space } = this.props;
-    await models.space.update(space, { name });
+    const { project } = this.props;
+    await models.project.update(project, { name });
   }
 
   show() {
@@ -48,29 +48,29 @@ class SpaceSettingsModal extends PureComponent<Props> {
   }
 
   render() {
-    const { space } = this.props;
-    if (!spaceHasSettings(space)) {
+    const { project } = this.props;
+    if (!projectHasSettings(project)) {
       return null;
     }
 
-    const isRemote = isRemoteSpace(space);
+    const isRemote = isRemoteProject(project);
 
     return (
       <Modal ref={this._handleSetModalRef} freshState>
-        <ModalHeader key={`header::${space._id}`}>
-          {strings.space.singular} Settings{' '}
-          <div className="txt-sm selectable faint monospace">{space._id}</div>
+        <ModalHeader key={`header::${project._id}`}>
+          {strings.project.singular} Settings{' '}
+          <div className="txt-sm selectable faint monospace">{project._id}</div>
         </ModalHeader>
-        <ModalBody key={`body::${space._id}`} className="pad">
+        <ModalBody key={`body::${project._id}`} className="pad">
           <div className="form-control form-control--outlined">
             <label>
               Name
               {isRemote && (
                 <>
                   <HelpTooltip className="space-left">
-                    To rename a {strings.remoteSpace.singular.toLowerCase()} {strings.space.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
+                    To rename a {strings.remoteProject.singular.toLowerCase()} {strings.project.singular.toLowerCase()} please visit <a href="https://app.insomnia.rest/app/teams">the insomnia website.</a>
                   </HelpTooltip>
-                  <input disabled readOnly defaultValue={space.name} />
+                  <input disabled readOnly defaultValue={project.name} />
                 </>
               )}
               {!isRemote && (
@@ -78,8 +78,8 @@ class SpaceSettingsModal extends PureComponent<Props> {
                 // @ts-expect-error -- TSCONVERSION props are spread into an input element
                   type="text"
                   delay={500}
-                  placeholder="My Space"
-                  defaultValue={space.name}
+                  placeholder={`My ${strings.project.singular}`}
+                  defaultValue={project.name}
                   onChange={this._handleRename}
                 />
               )}
@@ -88,7 +88,7 @@ class SpaceSettingsModal extends PureComponent<Props> {
           <h2>Actions</h2>
           <div className="form-control form-control--padded">
             <PromptButton
-              onClick={this._handleRemoveSpace}
+              onClick={this._handleRemoveProject}
               addIcon
               className="width-auto btn btn--clicky inline-block"
             >
@@ -102,15 +102,15 @@ class SpaceSettingsModal extends PureComponent<Props> {
 }
 
 const mapStateToProps = (state: RootState) => {
-  const space = selectActiveSpace(state);
-  return { space };
+  const project = selectActiveProject(state);
+  return { project };
 };
 
 const mapDispatchToProps = dispatch => {
-  const boundSpaceActions = bindActionCreators(spaceActions, dispatch);
+  const boundProjectActions = bindActionCreators(projectActions, dispatch);
   return {
-    handleRemoveSpace: boundSpaceActions.removeSpace,
+    handleRemoveProject: boundProjectActions.removeProject,
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(SpaceSettingsModal);
+export default connect(mapStateToProps, mapDispatchToProps, null, { forwardRef: true })(ProjectSettingsModal);

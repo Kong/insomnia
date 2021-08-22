@@ -10,18 +10,19 @@ import { database as db } from '../../../common/database';
 import { docsVersionControl } from '../../../common/documentation';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { isRemoteSpace, Space } from '../../../models/space';
+import { isRemoteProject, Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
 import { WorkspaceMeta } from '../../../models/workspace-meta';
 import { Snapshot, Status, StatusCandidate } from '../../../sync/types';
-import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-project';
-import { logCollectionMovedToSpace } from '../../../sync/vcs/migrate-collections';
-import { ProjectWithTeam } from '../../../sync/vcs/normalize-project-team';
-import { pullProject } from '../../../sync/vcs/pull-project';
+import { pushSnapshotOnInitialize } from '../../../sync/vcs/initialize-backend-project';
+import { logCollectionMovedToProject } from '../../../sync/vcs/migrate-collections';
+import { BackendProjectWithTeam } from '../../../sync/vcs/normalize-backend-project-team';
+import { pullBackendProject } from '../../../sync/vcs/pull-backend-project';
+import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectRemoteSpaces } from '../../redux/selectors';
+import { selectRemoteProjects } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import PromptButton from '../base/prompt-button';
@@ -43,7 +44,7 @@ const REFRESH_PERIOD = 1000 * 60 * 1;
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 const mapStateToProps = (state: RootState) => ({
-  remoteSpaces: selectRemoteSpaces(state),
+  remoteProjects: selectRemoteProjects(state),
 });
 
 const mapDispatchToProps = dispatch => {
@@ -56,7 +57,7 @@ const mapDispatchToProps = dispatch => {
 interface Props extends ReduxProps {
   workspace: Workspace;
   workspaceMeta?: WorkspaceMeta;
-  space: Space;
+  project: Project;
   vcs: VCS;
   syncItems: StatusCandidate[];
   className?: string;
@@ -75,7 +76,7 @@ interface State {
   loadingPull: boolean;
   loadingProjectPull: boolean;
   loadingPush: boolean;
-  remoteProjects: ProjectWithTeam[];
+  remoteBackendProjects: BackendProjectWithTeam[];
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -101,17 +102,17 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       stage: {},
       unstaged: {},
     },
-    remoteProjects: [],
+    remoteBackendProjects: [],
   }
 
   async refreshMainAttributes(extraState: Partial<State> = {}) {
-    const { vcs, syncItems, workspace, space } = this.props;
+    const { vcs, syncItems, workspace, project } = this.props;
 
-    if (!vcs.hasProject() && isRemoteSpace(space)) {
-      const remoteProjects = await vcs.remoteProjectsInAnyTeam();
-      const matchedProjects = remoteProjects.filter(p => p.rootDocumentId === workspace._id);
+    if (!vcs.hasBackendProject() && isRemoteProject(project)) {
+      const remoteBackendProjects = await vcs.remoteBackendProjectsInAnyTeam();
+      const matchedBackendProjects = remoteBackendProjects.filter(p => p.rootDocumentId === workspace._id);
       this.setState({
-        remoteProjects: matchedProjects,
+        remoteBackendProjects: matchedBackendProjects,
       });
       return;
     }
@@ -145,10 +146,10 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       initializing: true,
     });
 
-    const { vcs, workspace, workspaceMeta, space } = this.props;
+    const { vcs, workspace, workspaceMeta, project } = this.props;
 
     try {
-      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, space });
+      await pushSnapshotOnInitialize({ vcs, workspace, workspaceMeta, project });
       await this.refreshMainAttributes();
     } catch (err) {
       console.log('[sync_menu] Error refreshing sync state', err);
@@ -179,7 +180,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
 
     // Update if new sync items
     if (syncItems !== prevProps.syncItems) {
-      if (vcs.hasProject()) {
+      if (vcs.hasBackendProject()) {
         vcs.status(syncItems, {}).then(status => {
           this.setState({
             status,
@@ -220,13 +221,19 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handlePushChanges() {
-    const { vcs, space: { remoteId } } = this.props;
+    const { vcs, project: { remoteId } } = this.props;
     this.setState({
       loadingPush: true,
     });
 
     try {
-      await vcs.push(remoteId);
+      const branch = await vcs.getBranch();
+      await interceptAccessError({
+        callback: async () => await vcs.push(remoteId),
+        action: 'push',
+        resourceName: branch,
+        resourceType: 'branch',
+      });
     } catch (err) {
       showModal(ErrorModal, {
         title: 'Push Error',
@@ -240,13 +247,19 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 
   async _handlePullChanges() {
-    const { vcs, syncItems, space: { remoteId } } = this.props;
+    const { vcs, syncItems, project: { remoteId } } = this.props;
     this.setState({
       loadingPull: true,
     });
 
     try {
-      const delta = await vcs.pull(syncItems, remoteId);
+      const branch = await vcs.getBranch();
+      const delta = await interceptAccessError({
+        callback: async () => await vcs.pull(syncItems, remoteId),
+        action: 'pull',
+        resourceName: branch,
+        resourceType: 'branch',
+      });
       // @ts-expect-error -- TSCONVERSION
       await db.batchModifyDocs(delta);
       this.refreshOnNextSyncItems = true;
@@ -300,7 +313,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       loadingProjectPull: true,
     });
     const { vcs, workspace } = this.props;
-    await vcs.switchAndCreateProjectIfNotExist(workspace._id, workspace.name);
+    await vcs.switchAndCreateBackendProjectIfNotExist(workspace._id, workspace.name);
     await this.refreshMainAttributes({
       loadingProjectPull: false,
     });
@@ -312,17 +325,17 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
     });
   }
 
-  async _handleSetProject(p: ProjectWithTeam) {
-    const { vcs, remoteSpaces, space, workspace, handleActivateWorkspace } = this.props;
+  async _handleSetProject(backendProject: BackendProjectWithTeam) {
+    const { vcs, remoteProjects, project, workspace, handleActivateWorkspace } = this.props;
     this.setState({
       loadingProjectPull: true,
     });
 
-    const pulledIntoSpace = await pullProject({ vcs, project: p, remoteSpaces });
-    if (pulledIntoSpace._id !== space._id) {
-      // If pulled into a different space, reactivate the workspace
+    const pulledIntoProject = await pullBackendProject({ vcs, backendProject, remoteProjects });
+    if (pulledIntoProject._id !== project._id) {
+      // If pulled into a different project, reactivate the workspace
       await handleActivateWorkspace({ workspaceId: workspace._id });
-      logCollectionMovedToSpace(workspace, pulledIntoSpace);
+      logCollectionMovedToProject(workspace, pulledIntoProject);
     }
 
     await this.refreshMainAttributes({
@@ -477,7 +490,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       loadingPull,
       loadingPush,
       loadingProjectPull,
-      remoteProjects,
+      remoteBackendProjects,
       compare: { ahead, behind },
     } = this.state;
     const canCreateSnapshot =
@@ -508,7 +521,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       );
     }
 
-    if (!vcs.hasProject()) {
+    if (!vcs.hasBackendProject()) {
       return (
         <div className={className}>
           <Dropdown className="wide tall" onOpen={this._handleOpen}>
@@ -516,12 +529,12 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
               <i className="fa fa-code-fork " /> Setup Sync
             </DropdownButton>
             {syncMenuHeader}
-            {remoteProjects.length === 0 && (
+            {remoteBackendProjects.length === 0 && (
               <DropdownItem onClick={this._handleEnableSync}>
-                <i className="fa fa-plus-circle" /> Create Local Project
+                <i className="fa fa-plus-circle" /> Create Locally
               </DropdownItem>
             )}
-            {remoteProjects.map(p => (
+            {remoteBackendProjects.map(p => (
               <DropdownItem key={p.id} onClick={() => this._handleSetProject(p)}>
                 <i className="fa fa-cloud-download" /> Pull <strong>{p.name}</strong>
               </DropdownItem>

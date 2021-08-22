@@ -40,7 +40,7 @@ interface ConvertResult {
 
 export interface ImportRawConfig {
   getWorkspaceId: ImportToWorkspacePrompt;
-  getSpaceId?: () => Promise<string>;
+  getProjectId?: () => Promise<string>;
   getWorkspaceScope?: SetWorkspaceScopePrompt;
   enableDiffBasedPatching?: boolean;
   enableDiffDeep?: boolean;
@@ -114,7 +114,7 @@ export async function importRaw(
   {
     getWorkspaceId,
     getWorkspaceScope,
-    getSpaceId,
+    getProjectId,
     enableDiffBasedPatching,
     enableDiffDeep,
     bypassDiffProps,
@@ -260,7 +260,7 @@ export async function importRaw(
       // If workspace, check and set the scope and parentId while importing a new workspace
       if (isWorkspace(model)) {
         await updateWorkspaceScope(resource as Workspace, resultsType, getWorkspaceScope);
-        await createWorkspaceInSpace(resource as Workspace, getSpaceId);
+        await createWorkspaceInProject(resource as Workspace, getProjectId);
       }
 
       newDoc = await db.docCreate(model.type, resource);
@@ -334,13 +334,13 @@ async function updateWorkspaceScope(
   }
 }
 
-async function createWorkspaceInSpace(
+async function createWorkspaceInProject(
   resource: Workspace,
-  getSpaceId?: () => Promise<string>,
+  getProjectId?: () => Promise<string>,
 ) {
-  if (getSpaceId) {
+  if (getProjectId) {
     // Set the workspace parent if creating a new workspace during import
-    resource.parentId = await getSpaceId();
+    resource.parentId = await getProjectId();
   }
 }
 

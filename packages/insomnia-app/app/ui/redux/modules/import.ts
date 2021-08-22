@@ -12,14 +12,14 @@ import * as models from '../../../models';
 import { Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showError, showModal } from '../../components/modals';
 import AlertModal from '../../components/modals/alert-modal';
-import { selectActiveSpace, selectSpaces } from '../selectors';
+import { selectActiveProject, selectProjects } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';
-import { askToImportIntoSpace, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
+import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
 
 export interface ImportOptions {
   workspaceId?: string;
-  forceToSpace?: 'active' | 'prompt';
+  forceToProject?: 'active' | 'prompt';
   forceToWorkspace?: ForceToWorkspace;
   forceToScope?: WorkspaceScope;
 }
@@ -46,17 +46,17 @@ const convertToRawConfig = ({
   forceToScope,
   forceToWorkspace,
   workspaceId,
-  forceToSpace,
+  forceToProject,
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
-  const activeSpace = selectActiveSpace(state);
-  const spaces = selectSpaces(state);
+  const activeProject = selectActiveProject(state);
+  const projects = selectProjects(state);
 
   return ({
     getWorkspaceScope: askToSetWorkspaceScope(forceToScope),
     getWorkspaceId: askToImportIntoWorkspace({ workspaceId, forceToWorkspace }),
-    // Currently, just return the active space instead of prompting for which space to import into
-    getSpaceId: forceToSpace === 'prompt' ? askToImportIntoSpace({ spaces, activeSpace }) : () => Promise.resolve(activeSpace._id),
+    // Currently, just return the active project instead of prompting for which project to import into
+    getProjectId: forceToProject === 'prompt' ? askToImportIntoProject({ projects, activeProject }) : () => Promise.resolve(activeProject._id),
   });
 };
 
