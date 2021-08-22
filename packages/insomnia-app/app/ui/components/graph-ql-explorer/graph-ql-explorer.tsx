@@ -160,7 +160,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
             e.preventDefault();
 
             this._handlePopHistory();
-          }}>
+          }}
+        >
           <i className="fa--skinny fa fa-angle-left" /> Schema
         </a>
       );
@@ -188,7 +189,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
           e.preventDefault();
 
           this._handlePopHistory();
-        }}>
+        }}
+      >
         <i className="fa--skinny fa fa-angle-left" /> {name}
       </a>
     );
@@ -202,10 +204,10 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     return (
       <div className="graphql-explorer__search">
         <div className="form-control form-control--outlined form-control--btn-right">
-          <DebouncedInput 
+          <DebouncedInput
             ref={this._searchInput}
-            onChange={this._handleFilterChange} 
-            placeholder="Search the docs..." 
+            onChange={this._handleFilterChange}
+            placeholder="Search the docs..."
             delay={SEARCH_UPDATE_DELAY_IN_MS}
             initialValue={this.state.filter}
           />
@@ -215,7 +217,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
               onClick={() => {
                 this._searchInput.current?.setValue('');
                 this.setState({ filter: '' });
-              }}>
+              }}
+            >
               <i className="fa fa-times-circle" />
             </button>
           )}

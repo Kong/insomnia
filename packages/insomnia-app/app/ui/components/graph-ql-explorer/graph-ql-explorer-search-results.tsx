@@ -29,7 +29,7 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     foundTypes: [],
     foundFields: [],
     displayedTypeBatches: 1,
-    displayedFieldBatches: 1
+    displayedFieldBatches: 1,
   };
 
   componentDidUpdate(prevProps: Props) {
@@ -105,8 +105,9 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           ))}
         </ul>
         {numberOfAllTypes > numberOfTypesToRender && (
-          <p className="more-found-elements-hint"
-            onClick={() => this.setState(({displayedTypeBatches: oldValue}) => ({displayedTypeBatches: oldValue + 1}))}
+          <p
+            className="more-found-elements-hint"
+            onClick={() => this.setState(({ displayedTypeBatches: oldValue }) => ({ displayedTypeBatches: oldValue + 2 }))}
           >
             And {numberOfAllTypes - numberOfTypesToRender} more types found... Click here to show {BATCH_SIZE} more.
           </p>
@@ -134,8 +135,9 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           onNavigateField={onNavigateField}
         />
         {numberOfAllFields > numberOfFieldsToRender && (
-          <p className="more-found-elements-hint"
-            onClick={() => this.setState(({displayedFieldBatches: oldValue}) => ({displayedFieldBatches: oldValue + 1}))}
+          <p
+            className="more-found-elements-hint"
+            onClick={() => this.setState(({ displayedFieldBatches: oldValue }) => ({ displayedFieldBatches: oldValue + 1 }))}
           >
             And {numberOfAllFields - numberOfFieldsToRender} more fields found... Click here to show {BATCH_SIZE} more.
           </p>
@@ -145,7 +147,7 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
   }
 
   render() {
-    const {foundTypes, foundFields} = this.state;
+    const { foundTypes, foundFields } = this.state;
     return (
       <div ref={this.ref} className="graphql-explorer__search-reults">
         {!foundTypes.length && !foundFields.length && <p>No results found.</p>}

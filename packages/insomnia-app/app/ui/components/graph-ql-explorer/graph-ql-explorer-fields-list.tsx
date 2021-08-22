@@ -15,7 +15,7 @@ interface Props {
   onNavigateField: (field: GraphQLFieldWithParentName) => void;
 }
 
-export function GraphQLExplorerFieldsList(props: Props) {
+export const GraphQLExplorerFieldsList = (props: Props) => {
   const { fields, onNavigateType, onNavigateField } = props;
   return (
     <ul className="graphql-explorer__defs">
@@ -65,4 +65,4 @@ export function GraphQLExplorerFieldsList(props: Props) {
       })}
     </ul>
   );
-}
+};
