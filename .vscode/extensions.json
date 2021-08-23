@@ -7,7 +7,6 @@
     "yzhang.markdown-all-in-one",
     "DavidAnson.vscode-markdownlint",
     "dbaeumer.vscode-eslint",
-    "ms-vsliveshare.vsliveshare",
   ],
   // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
   "unwantedRecommendations": [
