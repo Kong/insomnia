@@ -1,6 +1,7 @@
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { importers } from '../../../../../insomnia-importers/dist/src';
 import { getAppName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -63,7 +64,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     <div>
       <p className="no-margin-top">
         Import format will be automatically detected (
-        <strong>Insomnia, Postman v2, HAR, Curl, Swagger, OpenAPI v3</strong>)
+        <strong>{importers.map(importer => importer.name).join(', ')}</strong>)
       </p>
       <p>
         Don't see your format here? <Link href={docsImportExport}>Add Your Own</Link>.
