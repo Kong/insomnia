@@ -269,9 +269,9 @@ inso gen-conf:k8s -o output.yaml    # generates kubernetes config to output.yaml
 
 # Configuration
 
-Inso can be configured with a configuration file, allowing you to specify options and scripts. For example, when running in a CI environment, you may choose to specify the steps as scripts in a config file, so that the same commands can be run both locally and in CI.
+Inso CLI can be configured with a configuration file, allowing you to specify options and scripts. For example, when running in a CI environment, you may choose to specify the steps as scripts in a config file, so that the same commands can be run both locally and in CI.
 
-Inso uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) for config file management, meaning any of the following items found in the working tree are automatically used:
+Inso CLI uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) for config file management, meaning any of the following items found in the working tree are automatically used:
 
   + `inso` property in `package.json`
   + `.insorc` file in JSON or YAML format
@@ -324,7 +324,7 @@ winpty inso.cmd generate config
 
 # Continuous Integration
 
-`inso` has been designed to run in a CI environment, disabling prompts and providing exit codes to pass or fail the CI workflow accordingly. An example workflow run in Github Actions is as follows. This example will checkout > install NodeJS > install inso > run linting > run unit tests > generate configuration. If any of these steps fail, the GH workflow will as well.
+`inso` has been designed to run in a CI environment, disabling prompts and providing exit codes to pass or fail the CI workflow accordingly. An example workflow run in Github Actions is as follows. This example will checkout > install NodeJS > install Inso CLI > run linting > run unit tests > generate configuration. If any of these steps fail, the GH workflow will as well.
 
 ``` yaml
 # .github/workflows/test.yml
