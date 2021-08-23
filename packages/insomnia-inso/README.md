@@ -324,7 +324,7 @@ winpty inso.cmd generate config
 
 # Continuous Integration
 
-`inso` has been designed to run in a CI environment, disabling prompts and providing exit codes to pass or fail the CI workflow accordingly. An example workflow run in Github Actions is as follows. This example will checkout > install NodeJS > install Inso CLI > run linting > run unit tests > generate configuration. If any of these steps fail, the GH workflow will as well.
+`inso` has been designed to run in a CI environment, disabling prompts and providing exit codes to pass or fail the CI workflow accordingly. An example workflow run in Github Actions is as follows. This example will checkout > install Node.js > install Inso CLI > run linting > run unit tests > generate configuration. If any of these steps fail, the GH workflow will as well.
 
 ``` yaml
 # .github/workflows/test.yml
@@ -338,7 +338,7 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Install NodeJS
+      - name: Install Node.js
         uses: actions/setup-node@v1
       - name: Install inso
         run: npm install --global insomnia-inso
