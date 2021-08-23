@@ -4,7 +4,7 @@
   <br />
   <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/logo.svg" alt=""/>
   <h1>
-    Inso
+    Inso CLI
     <br />
     <br />
   </h1>
