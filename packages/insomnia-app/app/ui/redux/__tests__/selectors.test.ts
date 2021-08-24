@@ -37,7 +37,7 @@ describe('selectors', () => {
       await models.project.create();
       await models.project.create();
 
-      // select the default project
+      // set nothing as active
       const state = await reduxStateForTest({ activeProjectId: undefined });
 
       const project = selectActiveProject(state);
