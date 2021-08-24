@@ -6,6 +6,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { decompressObject } from '../../../common/misc';
+import { strings } from '../../../common/strings';
 import type { Environment } from '../../../models/environment';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
@@ -158,7 +159,7 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
       activeEnvironment,
       ...extraProps
     } = this.props;
-    const environmentName = activeEnvironment ? activeEnvironment.name : 'Base';
+    const environmentName = activeEnvironment ? activeEnvironment.name : strings.defaultProject.singular;
     const isLatestResponseActive = !responses.length || activeResponse._id === responses[0]._id;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>
