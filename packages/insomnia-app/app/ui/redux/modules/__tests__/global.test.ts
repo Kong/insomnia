@@ -18,7 +18,7 @@ import {
 } from '../../../../common/constants';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
-import { BASE_PROJECT_ID } from '../../../../models/project';
+import { DEFAULT_PROJECT_ID } from '../../../../models/project';
 import {
   goToNextActivity,
   initActiveActivity,
@@ -266,10 +266,10 @@ describe('global', () => {
       expect(initActiveProject()).toStrictEqual(expectedEvent);
     });
 
-    it('should default to base project if not exist', () => {
+    it('should default to default project if not exist', () => {
       const expectedEvent = {
         type: SET_ACTIVE_PROJECT,
-        projectId: BASE_PROJECT_ID,
+        projectId: DEFAULT_PROJECT_ID,
       };
       expect(initActiveProject()).toStrictEqual(expectedEvent);
     });

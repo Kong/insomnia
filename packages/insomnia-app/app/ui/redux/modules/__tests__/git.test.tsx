@@ -12,7 +12,7 @@ import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../../common/
 import { ACTIVITY_SPEC } from '../../../../common/constants';
 import * as models from '../../../../models';
 import { gitRepositorySchema } from '../../../../models/__schemas__/model-schemas';
-import { BASE_PROJECT_ID } from '../../../../models/project';
+import { DEFAULT_PROJECT_ID } from '../../../../models/project';
 import { Workspace, WorkspaceScopeKeys } from '../../../../models/workspace';
 import { GIT_INSOMNIA_DIR } from '../../../../sync/git/git-vcs';
 import { MemClient } from '../../../../sync/git/mem-client';
@@ -122,7 +122,7 @@ describe('git', () => {
         },
         {
           type: SET_ACTIVE_PROJECT,
-          projectId: BASE_PROJECT_ID,
+          projectId: DEFAULT_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,

@@ -9,13 +9,13 @@ export const prefix = 'proj';
 export const canDuplicate = false;
 export const canSync = false;
 
-export const BASE_PROJECT_ID = `${prefix}_base-project`;
+export const DEFAULT_PROJECT_ID = `${prefix}_base-project`;
 
-export const isBaseProject = (project: Project) => project._id === BASE_PROJECT_ID;
-export const isNotBaseProject = (project: Project) => !isBaseProject(project);
+export const isDefaultProject = (project: Project) => project._id === DEFAULT_PROJECT_ID;
+export const isNotDefaultProject = (project: Project) => !isDefaultProject(project);
 export const isLocalProject = (project: Project): project is LocalProject => project.remoteId === null;
 export const isRemoteProject = (project: Project): project is RemoteProject => !isLocalProject(project);
-export const projectHasSettings = (project: Project) => !isBaseProject(project);
+export const projectHasSettings = (project: Project) => !isDefaultProject(project);
 
 interface CommonProject {
   name: string;
@@ -77,8 +77,8 @@ export function update(project: Project, patch: Partial<Project>) {
 export async function all() {
   const projects = await db.all<Project>(type);
 
-  if (!projects.find(c => c._id === BASE_PROJECT_ID)) {
-    await create({ _id: BASE_PROJECT_ID, name: getAppName(), remoteId: null });
+  if (!projects.find(c => c._id === DEFAULT_PROJECT_ID)) {
+    await create({ _id: DEFAULT_PROJECT_ID, name: getAppName(), remoteId: null });
     return db.all<Project>(type);
   }
 

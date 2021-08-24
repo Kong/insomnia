@@ -9,7 +9,7 @@ type StringId =
   | 'home'
   | 'project'
   | 'workspace'
-  | 'baseProject'
+  | 'defaultProject'
   | 'localProject'
   | 'remoteProject'
   ;
@@ -35,9 +35,9 @@ export const strings: Record<StringId, StringInfo> = {
     singular: 'Workspace',
     plural: 'Workspaces',
   },
-  baseProject: {
-    singular: 'Base',
-    plural: 'Base',
+  defaultProject: {
+    singular: 'Default',
+    plural: 'Default',
   },
   localProject: {
     singular: 'Local',

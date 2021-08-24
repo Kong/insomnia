@@ -8,7 +8,7 @@ import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { withReduxStore } from '../../../__jest__/with-redux-store';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID, Project } from '../../../models/project';
+import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import MemoryDriver from '../../../sync/store/drivers/memory-driver';
 import { VCS } from '../../../sync/vcs/vcs';
 import { RootState } from '../../redux/modules';
@@ -74,7 +74,7 @@ describe('useRemoteProjects', () => {
     expect(allProjects).toHaveLength(3);
     expect(allProjects).toEqual(expect.arrayContaining([
       expect.objectContaining<Partial<Project>>({
-        _id: BASE_PROJECT_ID,
+        _id: DEFAULT_PROJECT_ID,
       }),
       expect.objectContaining<Partial<Project>>({
         remoteId: team1.id,
@@ -116,7 +116,7 @@ describe('useRemoteProjects', () => {
     expect(allProjects).toHaveLength(3);
     expect(allProjects).toEqual(expect.arrayContaining([
       expect.objectContaining<Partial<Project>>({
-        _id: BASE_PROJECT_ID,
+        _id: DEFAULT_PROJECT_ID,
       }),
       expect.objectContaining<Partial<Project>>({
         remoteId: team1.id,
