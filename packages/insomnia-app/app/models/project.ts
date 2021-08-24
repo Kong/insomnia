@@ -9,7 +9,7 @@ export const prefix = 'proj';
 export const canDuplicate = false;
 export const canSync = false;
 
-export const DEFAULT_PROJECT_ID = `${prefix}_base-project`;
+export const DEFAULT_PROJECT_ID = `${prefix}_default-project`;
 
 export const isDefaultProject = (project: Project) => project._id === DEFAULT_PROJECT_ID;
 export const isNotDefaultProject = (project: Project) => !isDefaultProject(project);
