@@ -1,7 +1,7 @@
+import { importers } from 'insomnia-importers';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { importers } from '../../../../../insomnia-importers/dist/src';
 import { getAppName } from '../../../common/constants';
 import { docsImportExport } from '../../../common/documentation';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
