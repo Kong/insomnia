@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
 import React, { PureComponent } from 'react';
 import { createRef } from 'react';
@@ -14,16 +14,13 @@ import GraphQLExplorerField from './graph-ql-explorer-field';
 import GraphQLExplorerSchema from './graph-ql-explorer-schema';
 import GraphQLExplorerSearchResults from './graph-ql-explorer-search-results';
 import GraphQLExplorerType from './graph-ql-explorer-type';
+import { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
   handleClose: () => void;
   schema: GraphQLSchema | null;
   visible: boolean;
-  reference: null | {
-    type: GraphQLType | null;
-    argument: GraphQLArgument | null;
-    field: GraphQLFieldWithParentName | null;
-  };
+  reference: null | ActiveReference;
 }
 
 interface HistoryItem {
@@ -34,17 +31,6 @@ interface HistoryItem {
 interface State extends HistoryItem {
   history: HistoryItem[];
   filter: string;
-}
-
-type GraphQLFieldAny = GraphQLField<any, any>;
-
-// It is possible for args to be undefined, but the exported type has it as required, so we override it here
-export type GraphQLFieldWithOptionalArgs =
-  & Omit<GraphQLFieldAny, 'args'>
-  & Partial<Pick<GraphQLFieldAny, 'args'>>;
-
-export interface GraphQLFieldWithParentName extends GraphQLFieldWithOptionalArgs {
-  parentName?: string;
 }
 
 const SEARCH_UPDATE_DELAY_IN_MS = 300;

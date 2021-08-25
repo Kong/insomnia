@@ -3,8 +3,8 @@ import React, { Fragment, PureComponent } from 'react';
 
 import MarkdownPreview from '../markdown-preview';
 import GraphQLDefaultValue from './graph-ql-default-value';
-import { GraphQLFieldWithParentName } from './graph-ql-explorer';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import { GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
   onNavigateType: (type: GraphQLType) => void;

@@ -2,9 +2,9 @@ import { GraphQLNamedType, GraphQLSchema, GraphQLType } from 'graphql';
 import React, { PureComponent } from 'react';
 
 import { fuzzyMatchAll } from '../../../common/misc';
-import { GraphQLFieldWithOptionalArgs, GraphQLFieldWithParentName } from './graph-ql-explorer';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import { GraphQLFieldWithOptionalArgs, GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
   schema: GraphQLSchema;
