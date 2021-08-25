@@ -1,6 +1,7 @@
 import type { GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType } from 'graphql';
 import React, { PureComponent } from 'react';
 
+import { fuzzyMatchAll } from '../../../common/misc';
 import { GraphQLFieldWithParentName } from './graph-ql-explorer';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
@@ -65,18 +66,16 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
   searchForFields() {
     const { schema, filter } = this.props;
     const typeMap = schema.getTypeMap();
-    const fields = Object.values(typeMap).reduce((acc, type: any) => {
+    const fields = Object.values(typeMap).reduce((acc: GraphQLFieldWithParentName[], type: any) => {
       if (typeof type.getFields !== 'function') {
         return acc;
       }
 
       const fields: GraphQLField<any, any>[] = type.getFields();
-      const relevantFields: GraphQLFieldWithParentName[] = Object.values(fields)
-        .filter(
-          field =>
-            field.name.toLowerCase().includes(filter.toLowerCase()) ||
-            field.args?.some(arg => arg.name.toLowerCase().includes(filter.toLowerCase())),
-        )
+      const relevantFields: GraphQLFieldWithParentName[] = Object
+        .values(fields)
+        // Fuzzy match on field.name and field.args[*].name
+        .filter(({ name, args }) => Boolean(fuzzyMatchAll(filter, [name, ...args.map(arg => arg.name)], { splitSpace: true, loose: true })))
         .map(field => ({ ...field, parentName: type.name }));
       return [...acc, ...relevantFields];
     }, []);
