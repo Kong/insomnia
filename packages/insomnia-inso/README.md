@@ -295,7 +295,11 @@ Alternatively, you can use the `--config <file>` global option to specify an exa
 
 ### Options
 
-Options from the config file are combined with option defaults and any explicit overrides specified in script or command invocations. This combination is in priority order: command options > config file options > default options.
+Options from the config file are combined with option defaults and any explicit overrides specified in script or command invocations. This combination is in priority order:
+
+1. command options
+1. config file options
+1. default options
 
 Any options specified in this file will apply to all scripts and manual commands. You can override these options by specifying them explicitly, when invoking a script or command.
 
