@@ -107,7 +107,7 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
         {numberOfAllTypes > numberOfTypesToRender && (
           <p
             className="more-found-elements-hint"
-            onClick={() => this.setState(({ displayedTypeBatches: oldValue }) => ({ displayedTypeBatches: oldValue + 2 }))}
+            onClick={() => this.setState(({ displayedTypeBatches: oldValue }) => ({ displayedTypeBatches: oldValue + 1 }))}
           >
             And {numberOfAllTypes - numberOfTypesToRender} more types found... Click here to show {BATCH_SIZE} more.
           </p>
