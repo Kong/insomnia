@@ -1,7 +1,7 @@
 import { GraphQLNamedType, GraphQLSchema, GraphQLType } from 'graphql';
 import React, { PureComponent } from 'react';
 
-import { fuzzyMatchAll } from '../../../common/misc';
+import { fuzzyMatch, fuzzyMatchAll } from '../../../common/misc';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
 import { GraphQLFieldWithOptionalArgs, GraphQLFieldWithParentName } from './graph-ql-types';
@@ -56,9 +56,9 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     const { schema, filter } = this.props;
     const typeMap = schema.getTypeMap();
 
-    const types = Object.values(typeMap).filter(type =>
-      type.name.toLowerCase().includes(filter.toLowerCase()),
-    );
+    const types = Object
+      .values(typeMap)
+      .filter(({ name }) => Boolean(fuzzyMatch(filter, name, { splitSpace: true, loose: true })));
 
     return types;
   }
