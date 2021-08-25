@@ -17,7 +17,7 @@ import {
 type SortableModel = Request | RequestGroup | GrpcRequest;
 type SortFunction<SortableType> = (a: SortableType, b: SortableType) => number;
 
-const ascendingNameSort: SortFunction<{name: string}> = (a, b) => {
+export const ascendingNameSort: SortFunction<{name: string}> = (a, b) => {
   return a.name.localeCompare(b.name);
 };
 

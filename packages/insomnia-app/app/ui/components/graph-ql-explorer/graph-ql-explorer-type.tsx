@@ -4,6 +4,7 @@ import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graph
 import React, { Fragment, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { ascendingNameSort } from '../../../common/sorting';
 import MarkdownPreview from '../markdown-preview';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
 import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
@@ -82,7 +83,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
 
     // @ts-expect-error -- TSCONVERSION
     const fields: GraphQLField<any, any>[] = type.getFields();
-    const sortedFields = Object.values(fields).sort((a, b) => a.name.localeCompare(b.name));
+    const sortedFields = Object.values(fields).sort(ascendingNameSort);
     return (
       <Fragment>
         <h2 className="graphql-explorer__subheading">Fields</h2>
