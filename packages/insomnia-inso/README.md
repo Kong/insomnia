@@ -25,19 +25,13 @@ Table of Contents
   - [Global options](#global-options)
   - [Commands](#commands)
     - [`$ inso generate config [identifier]`](#-inso-generate-config-identifier)
-      - [Generate Config Examples](#generate-config-examples)
     - [`$ inso lint spec [identifier]`](#-inso-lint-spec-identifier)
-      - [Lint Spec Examples](#lint-spec-examples)
     - [`$ inso run test [identifier]`](#-inso-run-test-identifier)
-      - [Run Test Examples](#run-test-examples)
     - [`$ inso export spec [identifier]`](#-inso-export-spec-identifier)
-      - [Export Spec Examples](#export-spec-examples)
     - [`$ inso script <name>`](#-inso-script-name)
-      - [Script Examples](#script-examples)
   - [Configuration](#configuration)
     - [Options](#options)
     - [Scripts](#scripts)
-      - [Script Example](#script-example)
   - [Git Bash](#git-bash)
   - [Continuous Integration](#continuous-integration)
   - [Development](#development)
@@ -84,6 +78,7 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
 | `--tags <tags>` | |comma separated list of tags to apply to each entity|
 
+<!-- omit in toc -->
 #### Generate Config Examples
 
 When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
@@ -131,6 +126,7 @@ Insomnia has the ability to lint and validate your OpenAPI specification as you 
 
 **`[identifier]`**: this can be a **document name, or id**.
 
+<!-- omit in toc -->
 #### Lint Spec Examples
 
 When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
@@ -165,6 +161,7 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 | `--keepFile` | | do not delete the generated test file (useful for debugging)|
 | `--disableCertValidation` | | disable certificate validation for requests with SSL|
 
+<!-- omit in toc -->
 #### Run Test Examples
 
 When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
@@ -215,6 +212,7 @@ This command will extract and export the raw OpenAPI specification from the data
 |- |- |- |
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
 
+<!-- omit in toc -->
 #### Export Spec Examples
 
 When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
@@ -243,6 +241,7 @@ inso export spec spc_46c5a4 > output.yaml
 
 The `inso` [config file](#configuration) supports scripts, akin to NPM scripts defined in a `package.json` file. These scripts can be executed by `inso` by running `inso script <name>` , or simply `inso <name>` as this is the default command. Any options passed to this command, will be forwarded to the script being executed.
 
+<!-- omit in toc -->
 #### Script Examples
 
 When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory, with the following inso config file.
@@ -309,6 +308,7 @@ Only [global options](#global-options) can be set in the config file.
 
 Scripts can have any name, and can be nested. Scripts must be prefixed with `inso` (see example below). Each command behaves the same way, as described in the sections above.
 
+<!-- omit in toc -->
 #### Script Example
 
 ```yaml
