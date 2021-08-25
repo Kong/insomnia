@@ -25,19 +25,13 @@ Table of Contents
   - [Global options](#global-options)
   - [Commands](#commands)
     - [`$ inso generate config [identifier]`](#-inso-generate-config-identifier)
-      - [Generate Config Examples](#generate-config-examples)
     - [`$ inso lint spec [identifier]`](#-inso-lint-spec-identifier)
-      - [Lint Spec Examples](#lint-spec-examples)
     - [`$ inso run test [identifier]`](#-inso-run-test-identifier)
-      - [Run Test Examples](#run-test-examples)
     - [`$ inso export spec [identifier]`](#-inso-export-spec-identifier)
-      - [Export Spec Examples](#export-spec-examples)
     - [`$ inso script <name>`](#-inso-script-name)
-      - [Script Examples](#script-examples)
   - [Configuration](#configuration)
     - [Options](#options)
     - [Scripts](#scripts)
-      - [Script Example](#script-example)
   - [Git Bash](#git-bash)
   - [Continuous Integration](#continuous-integration)
   - [Development](#development)
@@ -84,46 +78,44 @@ Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-k
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
 | `--tags <tags>` | |comma separated list of tags to apply to each entity|
 
-#### Generate Config Examples
-
-When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
-
-Not specifying any arguments will prompt
-
-```shell
-inso generate config
-```
-
-Scope by the document name or id
-
-```shell
-inso generate config spc_46c5a4 --type declarative
-inso generate config "Sample Specification" --type kubernetes
-```
-
-Scope by a file on the filesystem
-
-```shell
-inso generate config spec.yaml
-inso generate config spec.yaml --workingDir another/dir
-
-```
-
-Add tags
-
-```shell
-inso generate config spec.yaml --tags first
-inso generate config spec.yaml --tags "first,second"
-```
-
-Output to file
-
-```shell
-inso generate config spc_46c5a4 --output output.yaml
-inso generate config spc_46c5a4 > output.yaml
-```
-
-</details>
+> **Generate Config Examples**
+>
+> When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
+>
+> Not specifying any arguments will prompt
+>
+> ```shell
+> inso generate config
+> ```
+>
+> Scope by the document name or id
+>
+> ```shell
+> inso generate config spc_46c5a4 --type declarative
+> inso generate config "Sample Specification" --type kubernetes
+> ```
+>
+> Scope by a file on the filesystem
+>
+> ```shell
+> inso generate config spec.yaml
+> inso generate config spec.yaml --workingDir another/dir
+>
+> ```
+>
+> Add tags
+>
+> ```shell
+> inso generate config spec.yaml --tags first
+> inso generate config spec.yaml --tags "first,second"
+> ```
+>
+> Output to file
+>
+> ```shell
+> inso generate config spc_46c5a4 --output output.yaml
+> inso generate config spc_46c5a4 > output.yaml
+> ```
 
 ### `$ inso lint spec [identifier]`
 
@@ -131,22 +123,22 @@ Insomnia has the ability to lint and validate your OpenAPI specification as you 
 
 **`[identifier]`**: this can be a **document name, or id**.
 
-#### Lint Spec Examples
-
-When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
-
-Not specifying any arguments will prompt
-
-```shell
-inso lint spec
-```
-
-Scope by the document name or id
-
-```shell
-inso lint spec spc_46c5a4
-inso lint spec "Sample Specification"
-```
+> **Lint Spec Examples**
+>
+> When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
+>
+> Not specifying any arguments will prompt
+>
+> ```shell
+> inso lint spec
+> ```
+>
+> Scope by the document name or id
+>
+> ```shell
+> inso lint spec spc_46c5a4
+> inso lint spec "Sample Specification"
+> ```
 
 ### `$ inso run test [identifier]`
 
@@ -165,45 +157,45 @@ The test runner is built on top of Mocha, thus many of the options behave as the
 | `--keepFile` | | do not delete the generated test file (useful for debugging)|
 | `--disableCertValidation` | | disable certificate validation for requests with SSL|
 
-#### Run Test Examples
-
-When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
-
-Not specifying any arguments will prompt
-
-```shell
-inso run test
-```
-
-Scope by the document name or id
-
-```shell
-inso run test "Sample Specification" --env "OpenAPI env"
-inso run test spc_46c5a4 --env env_env_ca046a
-```
-
-Don't validate SSL certificates
-
-```shell
-inso run test "Sample Specification" --env "OpenAPI env" --disableSSL
-inso run test spc_46c5a4 --env env_env_ca046a --disableSSL
-```
-
-Scope by the a test suite name or id
-
-```shell
-inso run test "Math Suite" --env "OpenAPI env"
-inso run test uts-7f0f85 --env env_env_ca046a
-```
-
-Scope by test name regex, and control test running and reporting
-
-```shell
-inso run test "Sample Specification" --testNamePattern Math --env env_env_ca046a
-inso run test spc_46c5a4 --reporter progress --bail --keepFile
-```
-
-More examples: [#2338](https://github.com/Kong/insomnia/pull/2338).
+> **Run Test Examples**
+>
+> When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
+>
+> Not specifying any arguments will prompt
+>
+> ```shell
+> inso run test
+> ```
+>
+> Scope by the document name or id
+>
+> ```shell
+> inso run test "Sample Specification" --env "OpenAPI env"
+> inso run test spc_46c5a4 --env env_env_ca046a
+> ```
+>
+> Don't validate SSL certificates
+>
+> ```shell
+> inso run test "Sample Specification" --env "OpenAPI env" --disableSSL
+> inso run test spc_46c5a4 --env env_env_ca046a --disableSSL
+> ```
+>
+> Scope by the a test suite name or id
+>
+> ```shell
+> inso run test "Math Suite" --env "OpenAPI env"
+> inso run test uts-7f0f85 --env env_env_ca046a
+> ```
+>
+> Scope by test name regex, and control test running and reporting
+>
+> ```shell
+> inso run test "Sample Specification" --testNamePattern Math --env env_env_ca046a
+> inso run test spc_46c5a4 --reporter progress --bail --keepFile
+> ```
+>
+> More examples: [#2338](https://github.com/Kong/insomnia/pull/2338).
 
 ### `$ inso export spec [identifier]`
 
@@ -215,69 +207,69 @@ This command will extract and export the raw OpenAPI specification from the data
 |- |- |- |
 | `--output <path>` | `-o` |save the generated config to a file in the working directory|
 
-#### Export Spec Examples
-
-When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
-
-Not specifying any arguments will prompt
-
-```shell
-inso export spec
-```
-
-Scope by the document name or id
-
-```shell
-inso export spec spc_46c5a4
-inso export spec "Sample Specification"
-```
-
-Output to file
-
-```shell
-inso export spec spc_46c5a4 --output output.yaml
-inso export spec spc_46c5a4 > output.yaml
-```
+> **Export Spec Examples**
+>
+> When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory
+>
+> Not specifying any arguments will prompt
+>
+> ```shell
+> inso export spec
+> ```
+>
+> Scope by the document name or id
+>
+> ```shell
+> inso export spec spc_46c5a4
+> inso export spec "Sample Specification"
+> ```
+>
+> Output to file
+>
+> ```shell
+> inso export spec spc_46c5a4 --output output.yaml
+> inso export spec spc_46c5a4 > output.yaml
+> ```
 
 ### `$ inso script <name>`
 
 The `inso` [config file](#configuration) supports scripts, akin to NPM scripts defined in a `package.json` file. These scripts can be executed by `inso` by running `inso script <name>` , or simply `inso <name>` as this is the default command. Any options passed to this command, will be forwarded to the script being executed.
 
-#### Script Examples
-
-When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory, with the following inso config file.
-
-```yaml
-# .insorc.yaml
-scripts:
-  lint: lint spec "Sample Specification"
-
-  gen-conf: generate config "Sample Specification"
-  gen-conf:k8s: gen-conf --type kubernetes
-```
-
-Run commands with or without the `script` prefix
-
-```shell
-inso script gen-conf
-inso gen-conf
-```
-
-If a conflict exists with another command (eg. `lint` ), you must prefix with `script`
-
-```shell
-inso script lint
-inso lint # will not work
-```
-
-Any options passed during script invocation will be forwarded to the script
-
-```shell
-inso gen-conf                       # generates declarative config (default)
-inso gen-conf:k8s                   # generates kubernetes config
-inso gen-conf:k8s -t declarative    # generates declarative config
-inso gen-conf:k8s -o output.yaml    # generates kubernetes config to output.yaml
-```
+> **Script Examples**
+>
+> When running in the [git-repo](https://github.com/Kong/insomnia/tree/develop/packages/insomnia-inso/src/db/fixtures/git-repo) directory, with the following inso config file.
+>
+> ```yaml
+> # .insorc.yaml
+> scripts:
+>   lint: lint spec "Sample Specification"
+>
+>   gen-conf: generate config "Sample Specification"
+>   gen-conf:k8s: gen-conf --type kubernetes
+> ```
+>
+> Run commands with or without the `script` prefix
+>
+> ```shell
+> inso script gen-conf
+> inso gen-conf
+> ```
+>
+> If a conflict exists with another command (eg. `lint` ), you must prefix with `script`
+>
+> ```shell
+> inso script lint
+> inso lint # will not work
+> ```
+>
+> Any options passed during script invocation will be forwarded to the script
+>
+> ```shell
+> inso gen-conf                       # generates declarative config (default)
+> inso gen-conf:k8s                   # generates kubernetes config
+> inso gen-conf:k8s -t declarative    # generates declarative config
+> inso gen-conf:k8s -o output.yaml    # generates kubernetes config to output.yaml
+> ```
 
 ## Configuration
 
@@ -305,26 +297,26 @@ Only [global options](#global-options) can be set in the config file.
 
 Scripts can have any name, and can be nested. Scripts must be prefixed with `inso` (see example below). Each command behaves the same way, as described in the sections above.
 
-#### Script Example
-
-```yaml
-# .insorc.yaml
-
-options:
-  ci: false
-scripts:
-  test-spec: inso run test Demo --env DemoEnv --reporter progress
-  test-spec:200s: inso testSpec --testNamePattern 200
-  test-spec:404s: inso testSpec --testNamePattern 404
-
-  test-math-suites: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env DemoEnv
-  test-request-suite: inso run test uts_bce4af --env DemoEnv --bail
-
-  lint: inso lint spec Demo # must be invoked as `inso script lint`
-
-  gen-conf: inso generate config "Insomnia Demo" --type declarative
-  gen-conf:k8s: inso gen-conf --type kubernetes
-```
+> **Script Example**
+>
+> ```yaml
+> # .insorc.yaml
+> 
+> options:
+>   ci: false
+> scripts:
+>   test-spec: inso run test Demo --env DemoEnv --reporter progress
+>   test-spec:200s: inso testSpec --testNamePattern 200
+>   test-spec:404s: inso testSpec --testNamePattern 404
+> 
+>   test-math-suites: inso run test uts_8783c30a24b24e9a851d96cce48bd1f2 --env DemoEnv
+>   test-request-suite: inso run test uts_bce4af --env DemoEnv --bail
+> 
+>   lint: inso lint spec Demo # must be invoked as `inso script lint`
+> 
+>   gen-conf: inso generate config "Insomnia Demo" --type declarative
+>   gen-conf:k8s: inso gen-conf --type kubernetes
+> ```
 
 ## Git Bash
 
