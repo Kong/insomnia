@@ -11,7 +11,7 @@ import * as models from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { isBaseProject, isLocalProject, isRemoteProject, Project } from '../../../models/project';
+import { isDefaultProject, isLocalProject, isRemoteProject, Project } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../../sync/vcs/vcs';
@@ -40,7 +40,7 @@ interface InnerProps extends Options, Props {
 
 const ProjectOption: FC<Project> = project => (
   <option key={project._id} value={project._id}>
-    {project.name} ({isBaseProject(project) ? strings.baseProject.singular : isLocalProject(project) ? strings.localProject.singular : strings.remoteProject.singular})
+    {project.name} ({isDefaultProject(project) ? strings.defaultProject.singular : isLocalProject(project) ? strings.localProject.singular : strings.remoteProject.singular})
   </option>
 );
 

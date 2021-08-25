@@ -6,7 +6,7 @@ import { reduxStateForTest } from '../../../../__jest__/redux-state-for-test';
 import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../../common/analytics';
 import { ACTIVITY_HOME } from '../../../../common/constants';
 import * as models from '../../../../models';
-import { BASE_PROJECT_ID } from '../../../../models/project';
+import { DEFAULT_PROJECT_ID } from '../../../../models/project';
 import { getAndClearShowAlertMockArgs, getAndClearShowPromptMockArgs } from '../../../../test-utils';
 import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT } from '../global';
 import { createProject, removeProject } from '../project';
@@ -97,7 +97,7 @@ describe('project', () => {
       expect(store.getActions()).toEqual([
         {
           type: SET_ACTIVE_PROJECT,
-          projectId: BASE_PROJECT_ID,
+          projectId: DEFAULT_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_ACTIVITY,
