@@ -2,8 +2,7 @@
 
 [![Npm Version](https://img.shields.io/npm/v/insomnia-plugin-kong-portal.svg)](https://www.npmjs.com/package/insomnia-plugin-kong-portal)
 
-This is a plugin for [Insomnia Designer](https://insomnia.rest) to add the ability to deploy
-API specifications to Kong Portal.
+This is a plugin for [Insomnia](https://insomnia.rest) to add the ability to deploy API specifications to Kong Portal.
 
 ## Installation
 

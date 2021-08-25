@@ -4,11 +4,11 @@
   <br />
   <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/logo.svg" alt=""/>
   <h1>
-    Inso
+    Inso CLI
     <br />
     <br />
   </h1>
-  <h3>A CLI for <a href="https://insomnia.rest">Insomnia Designer</a></h3>
+  <h3>A CLI for <a href="https://insomnia.rest">Insomnia</a></h3>
   <pre>npm install --global <a href="https://www.npmjs.com/package/insomnia-inso">insomnia-inso</a></pre>
   <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/demo.gif" alt=""/>
   <br />
@@ -33,9 +33,9 @@ Table of Contents
 
 # Data source
 
-`inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Designer. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
+`inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Insomnia. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
 
-If `inso` cannot find the `.insomnia` directory, it will try to run against the Designer app data directory (if found). You can override both the working directory, and the app data directory, using the `--workingDir` and `--appDataDir` global options.
+If `inso` cannot find the `.insomnia` directory, it will try to run against the Insomnia app data directory (if found). You can override both the working directory, and the app data directory, using the `--workingDir` and `--appDataDir` global options.
 
 # The `[identifier]` argument
 
@@ -63,7 +63,7 @@ Additionally, if the `[identifier]` argument is omitted from the command, `inso`
 
 ## `$ inso generate config [identifier]`
 
-Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-kong-kubernetes-config) and [Declarative](https://insomnia.rest/plugins/insomnia-plugin-kong-declarative-config) config plugins for Designer, this command can generate configuration from an API specification, using [openapi-2-kong](https://www.npmjs.com/package/openapi-2-kong).
+Similar to the Kong [Kubernetes](https://insomnia.rest/plugins/insomnia-plugin-kong-kubernetes-config) and [Declarative](https://insomnia.rest/plugins/insomnia-plugin-kong-declarative-config) config plugins for Insomnia, this command can generate configuration from an API specification, using [openapi-2-kong](https://www.npmjs.com/package/openapi-2-kong).
 
 **`[identifier]`**: this can be a **document name, id, or a file path** relative to the working directory.
 
@@ -115,7 +115,7 @@ inso generate config spc_46c5a4 > output.yaml
 
 ## `$ inso lint spec [identifier]`
 
-Designer has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso` , in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
+Insomnia has the ability to lint and validate your OpenAPI specification as you write it. This command adds the same functionality to `inso` , in order to run linting during CI workflows. Lint results will be printed to the console, and `inso` will exit with an appropriate exit code.
 
 **`[identifier]`**: this can be a **document name, or id**.
 
@@ -138,7 +138,7 @@ inso lint spec "Sample Specification"
 
 ## `$ inso run test [identifier]`
 
-API Unit Testing was introduced with Designer 2020.3.0, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
+API unit tests can be written and run within Insomnia, and this command adds the functionality to execute those unit tests via the command line, very useful for a CI environment. `inso` will report on test results, and exit with an appropriate exit code.
 
 **`[identifier]`**: this can be the **name or id** of a **workspace, document, or unit test suite**.
 
@@ -269,9 +269,9 @@ inso gen-conf:k8s -o output.yaml    # generates kubernetes config to output.yaml
 
 # Configuration
 
-Inso can be configured with a configuration file, allowing you to specify options and scripts. For example, when running in a CI environment, you may choose to specify the steps as scripts in a config file, so that the same commands can be run both locally and in CI.
+Inso CLI can be configured with a configuration file, allowing you to specify options and scripts. For example, when running in a CI environment, you may choose to specify the steps as scripts in a config file, so that the same commands can be run both locally and in CI.
 
-Inso uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) for config file management, meaning any of the following items found in the working tree are automatically used:
+Inso CLI uses [cosmiconfig](https://github.com/davidtheclark/cosmiconfig) for config file management, meaning any of the following items found in the working tree are automatically used:
 
   + `inso` property in `package.json`
   + `.insorc` file in JSON or YAML format
@@ -310,7 +310,7 @@ scripts:
 
   lint: inso lint spec Demo # must be invoked as `inso script lint`
 
-  gen-conf: inso generate config "Designer Demo" --type declarative
+  gen-conf: inso generate config "Insomnia Demo" --type declarative
   gen-conf:k8s: inso gen-conf --type kubernetes
 ```
 
@@ -324,7 +324,7 @@ winpty inso.cmd generate config
 
 # Continuous Integration
 
-`inso` has been designed to run in a CI environment, disabling prompts and providing exit codes to pass or fail the CI workflow accordingly. An example workflow run in Github Actions is as follows. This example will checkout > install NodeJS > install inso > run linting > run unit tests > generate configuration. If any of these steps fail, the GH workflow will as well.
+`inso` has been designed to run in a CI environment, disabling prompts and providing exit codes to pass or fail the CI workflow accordingly. An example workflow run in Github Actions is as follows. This example will checkout > install Node.js > install Inso CLI > run linting > run unit tests > generate configuration. If any of these steps fail, the GH workflow will as well.
 
 ``` yaml
 # .github/workflows/test.yml
@@ -338,16 +338,16 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      - name: Install NodeJS
+      - name: Install Node.js
         uses: actions/setup-node@v1
       - name: Install inso
         run: npm install --global insomnia-inso
       - name: Lint
-        run: inso lint spec "Designer Demo" --ci
+        run: inso lint spec "Insomnia Demo" --ci
       - name: Run test suites
-        run: inso run test "Designer Demo" --env UnitTest --ci
+        run: inso run test "Insomnia Demo" --env UnitTest --ci
       - name: Generate declarative config
-        run: inso generate config "Designer Demo" --type declarative --ci
+        run: inso generate config "Insomnia Demo" --type declarative --ci
 ```
 
 # Development

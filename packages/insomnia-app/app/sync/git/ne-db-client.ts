@@ -16,20 +16,20 @@ import { BufferEncoding } from './utils';
 
 export class NeDBClient {
   _workspaceId: string;
-  _spaceId: string;
+  _projectId: string;
 
-  constructor(workspaceId: string, spaceId: string) {
+  constructor(workspaceId: string, projectId: string) {
     if (!workspaceId) {
       throw new Error('Cannot use NeDBClient without workspace ID');
     }
 
     this._workspaceId = workspaceId;
-    this._spaceId = spaceId;
+    this._projectId = projectId;
   }
 
-  static createClient(workspaceId: string, spaceId: string): PromiseFsClient {
+  static createClient(workspaceId: string, projectId: string): PromiseFsClient {
     return {
-      promises: new NeDBClient(workspaceId, spaceId),
+      promises: new NeDBClient(workspaceId, projectId),
     };
   }
 
@@ -100,11 +100,11 @@ export class NeDBClient {
     }
 
     if (isWorkspace(doc)) {
-      console.log('[git] setting workspace parent to be that of the active space', { original: doc.parentId, new: this._spaceId });
-      // Whenever we write a workspace into nedb we should set the parentId to be that of the current space
-      // This is because the parentId (or a space) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the space on the client
-      // In order to reproduce this bug, comment out the following line, then clone a repository into a local space, then open the workspace, you'll notice it will have moved into the base space
-      doc.parentId = this._spaceId;
+      console.log('[git] setting workspace parent to be that of the active project', { original: doc.parentId, new: this._projectId });
+      // Whenever we write a workspace into nedb we should set the parentId to be that of the current project
+      // This is because the parentId (or a project) is not synced into git, so it will be cleared whenever git writes the workspace into the db, thereby removing it from the project on the client
+      // In order to reproduce this bug, comment out the following line, then clone a repository into a local project, then open the workspace, you'll notice it will have moved into the default project
+      doc.parentId = this._projectId;
     }
 
     forceWorkspaceScopeToDesign(doc);

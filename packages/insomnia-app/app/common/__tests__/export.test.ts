@@ -8,7 +8,7 @@ import { exportRequestsData, exportRequestsHAR, exportWorkspacesData, exportWork
 describe('exportWorkspacesHAR() and exportRequestsHAR()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    await models.space.all();
+    await models.project.all();
   });
 
   it('exports a single workspace and some requests only as an HTTP Archive', async () => {

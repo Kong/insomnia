@@ -4,12 +4,12 @@ import { useSelector } from 'react-redux';
 import { useAsync } from 'react-use';
 
 import { database } from '../../common/database';
-import { initializeSpaceFromTeam } from '../../sync/vcs/initialize-model-from';
+import { initializeProjectFromTeam } from '../../sync/vcs/initialize-model-from';
 import { VCS } from '../../sync/vcs/vcs';
 import { selectIsLoggedIn } from '../redux/selectors';
 import { useSafeState } from './use-safe-state';
 
-export const useRemoteSpaces = (vcs?: VCS) => {
+export const useRemoteProjects = (vcs?: VCS) => {
   const [loading, setLoading] = useSafeState(false);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
@@ -18,8 +18,8 @@ export const useRemoteSpaces = (vcs?: VCS) => {
       setLoading(true);
 
       const teams = await vcs.teams();
-      const spaces = await Promise.all(teams.map(initializeSpaceFromTeam));
-      await database.batchModifyDocs({ upsert: spaces });
+      const projects = await Promise.all(teams.map(initializeProjectFromTeam));
+      await database.batchModifyDocs({ upsert: projects });
 
       setLoading(false);
     }

@@ -1,4 +1,5 @@
-import { Space } from '../../../models/space';
+import { strings } from '../../../common/strings';
+import { Project } from '../../../models/project';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
 import AskModal from '../../components/modals/ask-modal';
@@ -63,27 +64,27 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
   };
 }
 
-export type SetSpaceIdPrompt = () => Promise<string>;
-export function askToImportIntoSpace({ spaces, activeSpace }: { spaces: Space[]; activeSpace: Space; }): SetSpaceIdPrompt {
+export type SetProjectIdPrompt = () => Promise<string>;
+export function askToImportIntoProject({ projects, activeProject }: { projects: Project[]; activeProject: Project; }): SetProjectIdPrompt {
   return function() {
     return new Promise(resolve => {
-      // If only one space exists, return that
-      if (spaces.length === 1) {
-        return resolve(spaces[0]._id);
+      // If only one project exists, return that
+      if (projects.length === 1) {
+        return resolve(projects[0]._id);
       }
 
-      const options = spaces.map(space => ({ name: space.name, value: space._id }));
-      const defaultValue = activeSpace._id;
+      const options = projects.map(project => ({ name: project.name, value: project._id }));
+      const defaultValue = activeProject._id;
 
       showSelectModal({
         title: 'Import',
-        message: 'Select a space to import into',
+        message: `Select a ${strings.project.singular.toLowerCase()} to import into`,
         options,
         value: defaultValue,
         noEscape: true,
-        onDone: selectedSpaceId => {
+        onDone: selectedProjectId => {
           // @ts-expect-error onDone can send null as an argument; why/how?
-          resolve(selectedSpaceId);
+          resolve(selectedProjectId);
         },
       });
     });

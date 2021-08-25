@@ -5,9 +5,9 @@ import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
-import { BASE_SPACE_ID, isRemoteSpace } from '../../models/space';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { RootState } from './modules';
 
@@ -71,27 +71,27 @@ export const selectRequestMetas = createSelector(
   entities => entities.requestMetas,
 );
 
-export const selectSpaces = createSelector(
+export const selectProjects = createSelector(
   selectEntitiesLists,
-  entities => entities.spaces,
+  entities => entities.projects,
 );
 
-export const selectRemoteSpaces = createSelector(
-  selectSpaces,
-  spaces => spaces.filter(isRemoteSpace),
+export const selectRemoteProjects = createSelector(
+  selectProjects,
+  projects => projects.filter(isRemoteProject),
 );
 
-export const selectActiveSpace = createSelector(
+export const selectActiveProject = createSelector(
   selectEntities,
-  (state: RootState) => state.global.activeSpaceId,
-  (entities, activeSpaceId) => {
-    return entities.spaces[activeSpaceId] || entities.spaces[BASE_SPACE_ID];
+  (state: RootState) => state.global.activeProjectId,
+  (entities, activeProjectId) => {
+    return entities.projects[activeProjectId] || entities.projects[DEFAULT_PROJECT_ID];
   },
 );
 
-export const selectSpaceSortOrder = createSelector(
+export const selectDashboardSortOrder = createSelector(
   selectGlobal,
-  global => global.spaceSortOrder
+  global => global.dashboardSortOrder
 );
 
 export const selectAllWorkspaces = createSelector(
@@ -104,14 +104,14 @@ export const selectAllApiSpecs = createSelector(
   entities => entities.apiSpecs,
 );
 
-export const selectWorkspacesForActiveSpace = createSelector(
+export const selectWorkspacesForActiveProject = createSelector(
   selectAllWorkspaces,
-  selectActiveSpace,
-  (workspaces, activeSpace) => workspaces.filter(w => w.parentId === activeSpace._id),
+  selectActiveProject,
+  (workspaces, activeProject) => workspaces.filter(w => w.parentId === activeProject._id),
 );
 
 export const selectActiveWorkspace = createSelector(
-  selectWorkspacesForActiveSpace,
+  selectWorkspacesForActiveProject,
   (state: RootState) => state.global.activeWorkspaceId,
   (state: RootState) => state.global.activeActivity,
   (workspaces, activeWorkspaceId, activeActivity) => {
@@ -386,9 +386,9 @@ export const selectActiveUnitTests = createSelector(
   },
 );
 
-export const selectActiveSpaceName = createSelector(
-  selectActiveSpace,
-  activeSpace => activeSpace.name,
+export const selectActiveProjectName = createSelector(
+  selectActiveProject,
+  activeProject => activeProject.name,
 );
 
 export const selectActiveUnitTestSuites = createSelector(

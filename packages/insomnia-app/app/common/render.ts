@@ -6,9 +6,9 @@ import * as models from '../models';
 import type { CookieJar } from '../models/cookie-jar';
 import type { Environment } from '../models/environment';
 import type { GrpcRequest, GrpcRequestBody } from '../models/grpc-request';
+import { isProject, Project } from '../models/project';
 import type { Request } from '../models/request';
 import { isRequestGroup, RequestGroup } from '../models/request-group';
-import { isSpace, Space } from '../models/space';
 import { isWorkspace, Workspace } from '../models/workspace';
 import * as templating from '../templating';
 import * as templatingUtils from '../templating/utils';
@@ -311,7 +311,7 @@ export async function getRenderContext(
 ): Promise<Record<string, any>> {
   const ancestors = _ancestors || await getRenderContextAncestors(request);
 
-  const space = ancestors.find(isSpace);
+  const project = ancestors.find(isProject);
   const workspace = ancestors.find(isWorkspace);
 
   if (!workspace) {
@@ -394,8 +394,8 @@ export async function getRenderContext(
 
   baseContext.getEnvironmentId = () => environmentId;
 
-  // It is possible for a space to not exist because this code path can be reached via Inso/insomnia-send-request which has no concept of a space.
-  baseContext.getSpaceId = () => space?._id;
+  // It is possible for a project to not exist because this code path can be reached via Inso/insomnia-send-request which has no concept of a project.
+  baseContext.getProjectId = () => project?._id;
 
   // Generate the context we need to render
   return buildRenderContext({ ancestors, rootEnvironment, subEnvironment: subEnvironment || undefined, baseContext });
@@ -556,13 +556,13 @@ function _getOrderedEnvironmentKeys(finalRenderContext: Record<string, any>): st
   });
 }
 
-type RenderContextAncestor = Request | GrpcRequest | RequestGroup | Workspace | Space;
+type RenderContextAncestor = Request | GrpcRequest | RequestGroup | Workspace | Project;
 export async function getRenderContextAncestors(base?: Request | GrpcRequest | Workspace): Promise<RenderContextAncestor[]> {
   return await db.withAncestors<RenderContextAncestor>(base || null, [
     models.request.type,
     models.grpcRequest.type,
     models.requestGroup.type,
     models.workspace.type,
-    models.space.type,
+    models.project.type,
   ]);
 }

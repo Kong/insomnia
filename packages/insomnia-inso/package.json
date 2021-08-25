@@ -1,8 +1,8 @@
 {
   "name": "insomnia-inso",
-  "version": "2.3.1-alpha.2",
+  "version": "2.3.1-alpha.3",
   "homepage": "https://insomnia.rest",
-  "description": "A CLI for Insomnia Designer - the collaborative API design tool.",
+  "description": "A CLI for Insomnia - The Collaborative API Design Tool",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
   "repository": {

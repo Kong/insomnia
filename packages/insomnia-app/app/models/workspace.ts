@@ -4,7 +4,7 @@ import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { BASE_SPACE_ID, isSpaceId } from './space';
+import { DEFAULT_PROJECT_ID, isProjectId } from './project';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -57,7 +57,7 @@ export async function migrate(doc: Workspace) {
     fileName: doc.name,
   });
   doc = _migrateScope(doc);
-  doc = _migrateIntoBaseSpace(doc);
+  doc = _migrateIntoDefaultProject(doc);
   return doc;
 }
 
@@ -70,7 +70,7 @@ export function findByParentId(parentId: string) {
 }
 
 export async function create(patch: Partial<Workspace> = {}) {
-  expectParentToBeSpace(patch.parentId);
+  expectParentToBeProject(patch.parentId);
   return db.docCreate<Workspace>(type, patch);
 }
 
@@ -83,7 +83,7 @@ export function count() {
 }
 
 export function update(workspace: Workspace, patch: Partial<Workspace>) {
-  expectParentToBeSpace(patch.parentId);
+  expectParentToBeProject(patch.parentId);
   return db.docUpdate(workspace, patch);
 }
 
@@ -158,9 +158,9 @@ function _migrateScope(workspace: MigrationWorkspace) {
   return workspace as Workspace;
 }
 
-function _migrateIntoBaseSpace(workspace: Workspace) {
+function _migrateIntoDefaultProject(workspace: Workspace) {
   if (!workspace.parentId) {
-    workspace.parentId = BASE_SPACE_ID;
+    workspace.parentId = DEFAULT_PROJECT_ID;
   }
 
   return workspace;
@@ -172,8 +172,8 @@ export async function ensureChildren({ _id }: Workspace) {
   await models.workspaceMeta.getOrCreateByParentId(_id);
 }
 
-function expectParentToBeSpace(parentId?: string | null) {
-  if (parentId && !isSpaceId(parentId)) {
-    throw new Error('Expected the parent of a Workspace to be a Space');
+function expectParentToBeProject(parentId?: string | null) {
+  if (parentId && !isProjectId(parentId)) {
+    throw new Error('Expected the parent of a Workspace to be a Project');
   }
 }

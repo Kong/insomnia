@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 
 import { isLoggedIn } from '../../../account/session';
 import { strings } from '../../../common/strings';
-import { isRemoteSpace } from '../../../models/space';
+import { isRemoteProject } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
-import { selectActiveSpace } from '../../redux/selectors';
+import { selectActiveProject } from '../../redux/selectors';
 import HelpTooltip from '../help-tooltip';
 
 interface Props {
@@ -26,24 +26,24 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
   const {
     loading,
     refresh,
-    missingProjects,
-    pullingProjects,
+    missingBackendProjects,
+    pullingBackendProjects,
     pull,
   } = useRemoteWorkspaces(vcs || undefined);
 
-  const space = useSelector(selectActiveSpace);
-  if (!space) {
+  const project = useSelector(selectActiveProject);
+  if (!project) {
     return null;
   }
 
-  const isRemote = isRemoteSpace(space);
+  const isRemote = isRemoteProject(project);
 
-  // Don't show the pull dropdown if we are not in a remote space
+  // Don't show the pull dropdown if we are not in a remote project
   if (!isRemote) {
     return null;
   }
 
-  // Show a disabled button if remote space but not logged in
+  // Show a disabled button if remote project but not logged in
   if (!isLoggedIn()) {
     return (
       <Tooltip message="Please log in to access your remote collections" position="bottom">
@@ -62,17 +62,17 @@ export const RemoteWorkspacesDropdown: FC<Props> = ({ className, vcs }) => {
         </HelpTooltip>{' '}
         {loading && <i className="fa fa-spin fa-refresh" />}
       </DropdownDivider>
-      {missingProjects.length === 0 && (
+      {missingBackendProjects.length === 0 && (
         <DropdownItem disabled>Nothing to pull</DropdownItem>
       )}
-      {missingProjects.map(p => (
+      {missingBackendProjects.map(p => (
         <DropdownItem
           key={p.id}
           stayOpenAfterClick
           value={p}
           onClick={pull}
           icon={
-            pullingProjects[p.id] ? (
+            pullingBackendProjects[p.id] ? (
               <i className="fa fa-refresh fa-spin" />
             ) : (
               <i className="fa fa-cloud-download" />

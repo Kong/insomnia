@@ -17,7 +17,7 @@ import { shallowClone } from '../../../sync/git/shallow-clone';
 import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
 import { showAlert, showError, showModal } from '../../components/modals';
 import GitRepositorySettingsModal from '../../components/modals/git-repository-settings-modal';
-import { selectActiveSpace } from '../selectors';
+import { selectActiveProject } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';
 import { createWorkspace } from './workspace';
@@ -146,8 +146,8 @@ export const cloneGitRepository = ({ createFsClient }: {
   createFsClient: () => git.PromiseFsClient;
 }) => {
   return (dispatch, getState: () => RootState) => {
-    // TODO: in the future we should ask which space to clone into...?
-    const activeSpace = selectActiveSpace(getState());
+    // TODO: in the future we should ask which project to clone into...?
+    const activeProject = selectActiveProject(getState());
     showModal(GitRepositorySettingsModal, {
       gitRepository: null,
       onSubmitEdits: async repoSettingsPatch => {
@@ -258,7 +258,7 @@ export const cloneGitRepository = ({ createFsClient }: {
                 const doc: BaseModel = YAML.parse(docYaml.toString());
                 if (isWorkspace(doc)) {
                   // @ts-expect-error parentId can be string or null for a workspace
-                  doc.parentId = activeSpace?._id || null;
+                  doc.parentId = activeProject?._id || null;
                 }
                 forceWorkspaceScopeToDesign(doc);
                 await db.upsert(doc);

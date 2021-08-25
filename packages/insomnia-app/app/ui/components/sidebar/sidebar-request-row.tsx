@@ -13,7 +13,7 @@ import * as requestOperations from '../../../models/helpers/request-operations';
 import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
-import { selectActiveEnvironment, selectActiveSpace } from '../../redux/selectors';
+import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
 import Editable from '../base/editable';
 import Highlight from '../base/highlight';
 import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
@@ -210,7 +210,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
       isPinned,
       request,
       requestGroup,
-      activeSpace,
+      activeProject,
     } = this.props;
     const { dragDirection } = this.state;
     let node;
@@ -284,7 +284,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
                 requestGroup={requestGroup}
                 hotKeyRegistry={hotKeyRegistry} // Necessary for plugin actions to have network capabilities
                 activeEnvironment={activeEnvironment}
-                activeSpace={activeSpace}
+                activeProject={activeProject}
               />
             </div>
             {isPinned && (
@@ -328,7 +328,7 @@ const dragTarget: DropTargetSpec<Props> = {
 };
 
 const mapStateToProps = (state: RootState) => ({
-  activeSpace: selectActiveSpace(state),
+  activeProject: selectActiveProject(state),
   activeEnvironment: selectActiveEnvironment(state),
 });
 

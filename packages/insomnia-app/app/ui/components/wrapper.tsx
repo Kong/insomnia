@@ -59,6 +59,7 @@ import { registerModal, showModal } from './modals/index';
 import LoginModal from './modals/login-modal';
 import NunjucksModal from './modals/nunjucks-modal';
 import PaymentNotificationModal from './modals/payment-notification-modal';
+import ProjectSettingsModal from './modals/project-settings-modal';
 import PromptModal from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
 import RequestCreateModal from './modals/request-create-modal';
@@ -69,7 +70,6 @@ import RequestSwitcherModal from './modals/request-switcher-modal';
 import ResponseDebugModal from './modals/response-debug-modal';
 import { SelectModal } from './modals/select-modal';
 import SettingsModal from './modals/settings-modal';
-import SpaceSettingsModal from './modals/space-settings-modal';
 import SyncBranchesModal from './modals/sync-branches-modal';
 import SyncDeleteModal from './modals/sync-delete-modal';
 import SyncHistoryModal from './modals/sync-history-modal';
@@ -472,7 +472,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
       activeEnvironment,
       activeGitRepository,
       activeWorkspace,
-      activeSpace,
+      activeProject,
       activeApiSpec,
       activeWorkspaceClientCertificates,
       activity,
@@ -531,7 +531,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
             <FilterHelpModal ref={registerModal} />
             <RequestRenderErrorModal ref={registerModal} />
             <GenerateConfigModal ref={registerModal} settings={settings} />
-            <SpaceSettingsModal ref={registerModal} />
+            <ProjectSettingsModal ref={registerModal} />
             <WorkspaceDuplicateModal ref={registerModal} vcs={vcs || undefined} />
 
             <CodePromptModal
@@ -688,7 +688,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
                   ref={registerModal}
                   workspace={activeWorkspace}
                   vcs={vcs}
-                  space={activeSpace}
+                  project={activeProject}
                   syncItems={syncItems}
                 />
                 <SyncDeleteModal ref={registerModal} workspace={activeWorkspace} vcs={vcs} />

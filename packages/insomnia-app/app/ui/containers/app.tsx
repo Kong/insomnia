@@ -48,11 +48,11 @@ import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
+import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
-import { isNotBaseSpace } from '../../models/space';
 import { isCollection, isWorkspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import * as network from '../../network/network';
@@ -102,11 +102,11 @@ import {
   selectActiveEnvironment,
   selectActiveGitRepository,
   selectActiveOAuth2Token,
+  selectActiveProject,
   selectActiveRequest,
   selectActiveRequestMeta,
   selectActiveRequestResponses,
   selectActiveResponse,
-  selectActiveSpace,
   selectActiveUnitTestResult,
   selectActiveUnitTests,
   selectActiveUnitTestSuite,
@@ -119,7 +119,7 @@ import {
   selectSyncItems,
   selectUnseenWorkspaces,
   selectWorkspaceRequestsAndRequestGroups,
-  selectWorkspacesForActiveSpace,
+  selectWorkspacesForActiveProject,
 } from '../redux/selectors';
 import { selectSidebarChildren } from '../redux/sidebar-selectors';
 import { AppHooks } from './app-hooks';
@@ -1098,13 +1098,13 @@ class App extends PureComponent<AppProps, State> {
   }
 
   /**
-   * Update document.title to be "Space - Workspace (Environment) – Request" when not home
+   * Update document.title to be "Project - Workspace (Environment) – Request" when not home
    * @private
    */
   _updateDocumentTitle() {
     const {
       activeWorkspace,
-      activeSpace,
+      activeProject,
       activeApiSpec,
       activeEnvironment,
       activeRequest,
@@ -1115,7 +1115,7 @@ class App extends PureComponent<AppProps, State> {
     if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
     } else if (activeWorkspace && activeApiSpec) {
-      title = activeSpace.name;
+      title = activeProject.name;
       title += ` - ${isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName}`;
 
       if (activeEnvironment) {
@@ -1143,7 +1143,7 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Check on VCS things
-    const { activeWorkspace, activeSpace, activeGitRepository } = this.props;
+    const { activeWorkspace, activeProject, activeGitRepository } = this.props;
     const changingWorkspace = prevProps.activeWorkspace?._id !== activeWorkspace?._id;
 
     // Update VCS if needed
@@ -1152,16 +1152,16 @@ class App extends PureComponent<AppProps, State> {
     }
 
     // Update Git VCS if needed
-    const changingSpace = prevProps.activeSpace?._id !== activeSpace?._id;
+    const changingProject = prevProps.activeProject?._id !== activeProject?._id;
     const changingGit = prevProps.activeGitRepository?._id !== activeGitRepository?._id;
 
-    if (changingWorkspace || changingSpace || changingGit) {
+    if (changingWorkspace || changingProject || changingGit) {
       this._updateGitVCS();
     }
   }
 
   async _updateGitVCS() {
-    const { activeGitRepository, activeWorkspace, activeSpace } = this.props;
+    const { activeGitRepository, activeWorkspace, activeProject } = this.props;
 
     // Get the vcs and set it to null in the state while we update it
     let gitVCS = this.state.gitVCS;
@@ -1181,7 +1181,7 @@ class App extends PureComponent<AppProps, State> {
       );
 
       /** All app data is stored within a namespaced GIT_INSOMNIA_DIR directory at the root of the repository and is read/written from the local NeDB database */
-      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeSpace._id);
+      const neDbClient = NeDBClient.createClient(activeWorkspace._id, activeProject._id);
 
       /** All git metadata in the GIT_INTERNAL_DIR directory is stored in a git/ directory on the filesystem */
       const gitDataClient = fsClient(baseDir);
@@ -1258,7 +1258,7 @@ class App extends PureComponent<AppProps, State> {
     if (activeWorkspace) {
       await vcs.switchProject(activeWorkspace._id);
     } else {
-      vcs.clearProject();
+      vcs.clearBackendProject();
     }
 
     // Prevent a potential race-condition when _updateVCS() gets called for different workspaces in rapid succession
@@ -1292,7 +1292,7 @@ class App extends PureComponent<AppProps, State> {
 
       // Delete VCS project if workspace deleted
       if (vcs && isWorkspace(doc) && type === db.CHANGE_REMOVE) {
-        await vcs.removeProjectsForRoot(doc._id);
+        await vcs.removeBackendProjectsForRoot(doc._id);
       }
     }
 
@@ -1339,7 +1339,7 @@ class App extends PureComponent<AppProps, State> {
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await db.all(type);
               const filteredEntites = allEntities
-                .filter(isNotBaseSpace); // don't clear the base space
+                .filter(isNotDefaultProject); // don't clear the default project
               await db.batchModifyDocs({ remove: filteredEntites });
               db.flushChanges(bufferId);
             }
@@ -1363,7 +1363,7 @@ class App extends PureComponent<AppProps, State> {
                   console.log(`[developer] clearing all "${type}" entities`);
                   const allEntities = await db.all(type);
                   const filteredEntites = allEntities
-                    .filter(isNotBaseSpace); // don't clear the base space
+                    .filter(isNotDefaultProject); // don't clear the default project
                   await db.batchModifyDocs({ remove: filteredEntites });
                 });
               await Promise.all(promises);
@@ -1597,8 +1597,8 @@ function mapStateToProps(state: RootState) {
   const settings = selectSettings(state);
 
   // Workspace stuff
-  const activeSpace = selectActiveSpace(state);
-  const workspaces = selectWorkspacesForActiveSpace(state);
+  const activeProject = selectActiveProject(state);
+  const workspaces = selectWorkspacesForActiveProject(state);
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
   const activeWorkspace = selectActiveWorkspace(state);
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state);
@@ -1652,7 +1652,7 @@ function mapStateToProps(state: RootState) {
 
   return {
     activity: activeActivity,
-    activeSpace,
+    activeProject,
     activeApiSpec,
     activeCookieJar,
     activeEnvironment,

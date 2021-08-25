@@ -10,11 +10,11 @@ import * as models from '../../../../models';
 import { ApiSpec } from '../../../../models/api-spec';
 import { CookieJar } from '../../../../models/cookie-jar';
 import { Environment } from '../../../../models/environment';
-import { BASE_SPACE_ID } from '../../../../models/space';
+import { DEFAULT_PROJECT_ID } from '../../../../models/project';
 import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../../models/workspace';
 import { WorkspaceMeta } from '../../../../models/workspace-meta';
 import { getAndClearShowPromptMockArgs } from '../../../../test-utils';
-import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_SPACE, SET_ACTIVE_WORKSPACE } from '../global';
+import { SET_ACTIVE_ACTIVITY, SET_ACTIVE_PROJECT, SET_ACTIVE_WORKSPACE } from '../global';
 import { activateWorkspace, createWorkspace } from '../workspace';
 
 jest.mock('../../../components/modals');
@@ -46,8 +46,8 @@ describe('workspace', () => {
   beforeEach(globalBeforeEach);
   describe('createWorkspace', () => {
     it('should create document', async () => {
-      const spaceId = BASE_SPACE_ID;
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: spaceId }));
+      const projectId = DEFAULT_PROJECT_ID;
+      const store = mockStore(await reduxStateForTest({ activeProjectId: projectId }));
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.design }));
@@ -59,14 +59,14 @@ describe('workspace', () => {
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
 
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, spaceId);
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.design, projectId);
 
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.documentCreate);
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: BASE_SPACE_ID,
+          type: SET_ACTIVE_PROJECT,
+          projectId: DEFAULT_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -80,8 +80,8 @@ describe('workspace', () => {
     });
 
     it('should create collection', async () => {
-      const spaceId = BASE_SPACE_ID;
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: spaceId }));
+      const projectId = DEFAULT_PROJECT_ID;
+      const store = mockStore(await reduxStateForTest({ activeProjectId: projectId }));
 
       // @ts-expect-error redux-thunk types
       store.dispatch(createWorkspace({ scope: WorkspaceScopeKeys.collection }));
@@ -93,14 +93,14 @@ describe('workspace', () => {
       const workspaceName = 'name';
       await onComplete?.(workspaceName);
 
-      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, spaceId);
+      const workspaceId = await expectedModelsCreated(workspaceName, WorkspaceScopeKeys.collection, projectId);
 
       expect(trackSegmentEvent).toHaveBeenCalledWith(SegmentEvent.collectionCreate);
       expect(trackEvent).toHaveBeenCalledWith('Workspace', 'Create');
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: BASE_SPACE_ID,
+          type: SET_ACTIVE_PROJECT,
+          projectId: DEFAULT_PROJECT_ID,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -116,24 +116,24 @@ describe('workspace', () => {
 
   describe('activateWorkspace', () => {
     it('should do nothing if workspace cannot be found', async () => {
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def' }));
+      const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
       await store.dispatch(activateWorkspace({ workspaceId: 'DOES_NOT_EXIST' }));
 
       expect(store.getActions()).toEqual([]);
     });
 
-    it('should activate space and workspace and activity using workspaceId', async () => {
-      const space = await models.space.create();
-      const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def' }));
+    it('should activate project and workspace and activity using workspaceId', async () => {
+      const project = await models.project.create();
+      const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
+      const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
       await store.dispatch(activateWorkspace({ workspaceId: workspace._id }));
 
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -146,17 +146,17 @@ describe('workspace', () => {
       ]);
     });
 
-    it('should activate space and workspace and activity from home', async () => {
-      const space = await models.space.create();
-      const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: 'abc', activeWorkspaceId: 'def' }));
+    it('should activate project and workspace and activity from home', async () => {
+      const project = await models.project.create();
+      const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
+      const store = mockStore(await reduxStateForTest({ activeProjectId: 'abc', activeWorkspaceId: 'def' }));
 
       await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -170,16 +170,16 @@ describe('workspace', () => {
     });
 
     it('should switch to the default design activity', async () => {
-      const space = await models.space.create();
-      const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
+      const project = await models.project.create();
+      const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
+      const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id }));
 
       await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -193,16 +193,16 @@ describe('workspace', () => {
     });
 
     it.each([ACTIVITY_UNIT_TEST, ACTIVITY_SPEC, ACTIVITY_DEBUG])('should not switch activity if already in a supported design activity: %s', async activeActivity => {
-      const space = await models.space.create();
-      const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id, activeActivity }));
+      const project = await models.project.create();
+      const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
+      const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id, activeActivity }));
 
       await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -212,16 +212,16 @@ describe('workspace', () => {
     });
 
     it.each([ACTIVITY_DEBUG])('should not switch activity if already in a supported collection activity: %s', async activeActivity => {
-      const space = await models.space.create();
-      const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id, activeActivity }));
+      const project = await models.project.create();
+      const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
+      const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id, activeActivity }));
 
       await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -231,16 +231,16 @@ describe('workspace', () => {
     });
 
     it('should switch to the default collection activity', async () => {
-      const space = await models.space.create();
-      const workspace = await models.workspace.create({ scope: 'collection', parentId: space._id });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
+      const project = await models.project.create();
+      const workspace = await models.workspace.create({ scope: 'collection', parentId: project._id });
+      const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id }));
 
       await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,
@@ -254,18 +254,18 @@ describe('workspace', () => {
     });
 
     it('should switch to the cached activity', async () => {
-      const space = await models.space.create();
-      const workspace = await models.workspace.create({ scope: 'design', parentId: space._id });
+      const project = await models.project.create();
+      const workspace = await models.workspace.create({ scope: 'design', parentId: project._id });
       await models.workspace.ensureChildren(workspace);
       await models.workspaceMeta.updateByParentId(workspace._id, { activeActivity: ACTIVITY_UNIT_TEST });
-      const store = mockStore(await reduxStateForTest({ activeSpaceId: space._id, activeWorkspaceId: workspace._id }));
+      const store = mockStore(await reduxStateForTest({ activeProjectId: project._id, activeWorkspaceId: workspace._id }));
 
       await store.dispatch(activateWorkspace({ workspace }));
 
       expect(store.getActions()).toEqual([
         {
-          type: SET_ACTIVE_SPACE,
-          spaceId: space._id,
+          type: SET_ACTIVE_PROJECT,
+          projectId: project._id,
         },
         {
           type: SET_ACTIVE_WORKSPACE,

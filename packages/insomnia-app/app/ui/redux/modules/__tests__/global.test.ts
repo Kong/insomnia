@@ -18,20 +18,20 @@ import {
 } from '../../../../common/constants';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
-import { BASE_SPACE_ID } from '../../../../models/space';
+import { DEFAULT_PROJECT_ID } from '../../../../models/project';
 import {
   goToNextActivity,
   initActiveActivity,
-  initActiveSpace,
+  initActiveProject,
   initActiveWorkspace,
-  initSpaceSortOrder,
+  initDashboardSortOrder,
   LOCALSTORAGE_PREFIX,
   SET_ACTIVE_ACTIVITY,
-  SET_ACTIVE_SPACE,
+  SET_ACTIVE_PROJECT,
   SET_ACTIVE_WORKSPACE,
-  SET_SPACE_SORT_ORDER,
+  SET_DASHBOARD_SORT_ORDER,
   setActiveActivity,
-  setActiveSpace,
+  setActiveProject,
   setActiveWorkspace,
 } from '../global';
 
@@ -110,16 +110,16 @@ describe('global', () => {
     });
   });
 
-  describe('setActiveSpace', () => {
+  describe('setActiveProject', () => {
     it('should update local storage', () => {
-      const spaceId = 'id';
+      const projectId = 'id';
       const expectedEvent = {
-        type: SET_ACTIVE_SPACE,
-        spaceId,
+        type: SET_ACTIVE_PROJECT,
+        projectId,
       };
-      expect(setActiveSpace(spaceId)).toStrictEqual(expectedEvent);
-      expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeSpaceId`)).toBe(
-        JSON.stringify(spaceId),
+      expect(setActiveProject(projectId)).toStrictEqual(expectedEvent);
+      expect(global.localStorage.getItem(`${LOCALSTORAGE_PREFIX}::activeProjectId`)).toBe(
+        JSON.stringify(projectId),
       );
     });
   });
@@ -252,35 +252,35 @@ describe('global', () => {
     });
   });
 
-  describe('initActiveSpace', () => {
+  describe('initActiveProject', () => {
     it('should initialize from local storage', () => {
-      const spaceId = 'id';
+      const projectId = 'id';
       global.localStorage.setItem(
-        `${LOCALSTORAGE_PREFIX}::activeSpaceId`,
-        JSON.stringify(spaceId),
+        `${LOCALSTORAGE_PREFIX}::activeProjectId`,
+        JSON.stringify(projectId),
       );
       const expectedEvent = {
-        type: SET_ACTIVE_SPACE,
-        spaceId,
+        type: SET_ACTIVE_PROJECT,
+        projectId,
       };
-      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+      expect(initActiveProject()).toStrictEqual(expectedEvent);
     });
 
-    it('should default to base space if not exist', () => {
+    it('should default to default project if not exist', () => {
       const expectedEvent = {
-        type: SET_ACTIVE_SPACE,
-        spaceId: BASE_SPACE_ID,
+        type: SET_ACTIVE_PROJECT,
+        projectId: DEFAULT_PROJECT_ID,
       };
-      expect(initActiveSpace()).toStrictEqual(expectedEvent);
+      expect(initActiveProject()).toStrictEqual(expectedEvent);
     });
   });
 
-  describe('initSpaceSortOrder', () => {
+  describe('initDashboardSortOrder', () => {
     it('should initialize from local storage', () => {
       const sortOrder = SORT_MODIFIED_DESC;
 
       global.localStorage.setItem(
-        `${LOCALSTORAGE_PREFIX}::space-sort-order`,
+        `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`,
         JSON.stringify(sortOrder),
       );
 
@@ -288,10 +288,10 @@ describe('global', () => {
         'payload': {
           sortOrder,
         },
-        'type': SET_SPACE_SORT_ORDER,
+        'type': SET_DASHBOARD_SORT_ORDER,
       };
 
-      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
+      expect(initDashboardSortOrder()).toStrictEqual(expectedEvent);
     });
 
     it('should default to modified-desc if not exist', async () => {
@@ -299,10 +299,10 @@ describe('global', () => {
         'payload': {
           sortOrder: SORT_MODIFIED_DESC,
         },
-        'type': SET_SPACE_SORT_ORDER,
+        'type': SET_DASHBOARD_SORT_ORDER,
       };
 
-      expect(initSpaceSortOrder()).toStrictEqual(expectedEvent);
+      expect(initDashboardSortOrder()).toStrictEqual(expectedEvent);
     });
   });
 

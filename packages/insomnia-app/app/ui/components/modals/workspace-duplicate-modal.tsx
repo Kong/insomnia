@@ -11,12 +11,12 @@ import * as models from '../../../models';
 import { ApiSpec } from '../../../models/api-spec';
 import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
-import { isBaseSpace, isLocalSpace, isRemoteSpace, Space } from '../../../models/space';
+import { isDefaultProject, isLocalProject, isRemoteProject, Project } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
-import { initializeLocalProjectAndMarkForSync } from '../../../sync/vcs/initialize-project';
+import { initializeLocalBackendProjectAndMarkForSync } from '../../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveSpace, selectIsLoggedIn, selectSpaces } from '../../redux/selectors';
+import { selectActiveProject, selectIsLoggedIn, selectProjects } from '../../redux/selectors';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
@@ -31,24 +31,24 @@ interface Options {
 
 interface FormFields {
   newName: string;
-  spaceId: string;
+  projectId: string;
 }
 
 interface InnerProps extends Options, Props {
   hide: () => void,
 }
 
-const SpaceOption: FC<Space> = space => (
-  <option key={space._id} value={space._id}>
-    {space.name} ({isBaseSpace(space) ? strings.baseSpace.singular : isLocalSpace(space) ? strings.localSpace.singular : strings.remoteSpace.singular})
+const ProjectOption: FC<Project> = project => (
+  <option key={project._id} value={project._id}>
+    {project.name} ({isDefaultProject(project) ? strings.defaultProject.singular : isLocalProject(project) ? strings.localProject.singular : strings.remoteProject.singular})
   </option>
 );
 
 const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, InnerProps> = ({ workspace, apiSpec, onDone, hide, vcs }, ref) => {
   const dispatch = useDispatch();
 
-  const spaces = useSelector(selectSpaces);
-  const activeSpace = useSelector(selectActiveSpace);
+  const projects = useSelector(selectProjects);
+  const activeProject = useSelector(selectActiveProject);
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const title = `Duplicate ${getWorkspaceLabel(workspace).singular}`;
@@ -63,28 +63,28 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
     } } = useForm<FormFields>({
       defaultValues: {
         newName: defaultWorkspaceName,
-        spaceId: activeSpace._id,
+        projectId: activeProject._id,
       },
     });
 
-  const onSubmit = useCallback(async ({ spaceId, newName }: FormFields) => {
-    const duplicateToSpace = spaces.find(space => space._id === spaceId);
-    if (!duplicateToSpace) {
-      throw new Error('Space could not be found');
+  const onSubmit = useCallback(async ({ projectId, newName }: FormFields) => {
+    const duplicateToProject = projects.find(project => project._id === projectId);
+    if (!duplicateToProject) {
+      throw new Error('Project could not be found');
     }
 
-    const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: spaceId });
+    const newWorkspace = await workspaceOperations.duplicate(workspace, { name: newName, parentId: projectId });
     await models.workspace.ensureChildren(newWorkspace);
 
-    // Mark for sync if logged in and in the expected space
-    if (isLoggedIn && vcs && isRemoteSpace(duplicateToSpace)) {
-      await initializeLocalProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
+    // Mark for sync if logged in and in the expected project
+    if (isLoggedIn && vcs && isRemoteProject(duplicateToProject)) {
+      await initializeLocalBackendProjectAndMarkForSync({ vcs: vcs.newInstance(), workspace: newWorkspace });
     }
 
     dispatch(activateWorkspace({ workspace: newWorkspace }));
     hide();
     onDone?.();
-  }, [dispatch, hide, isLoggedIn, onDone, spaces, vcs, workspace]);
+  }, [dispatch, hide, isLoggedIn, onDone, projects, vcs, workspace]);
 
   return <Modal ref={ref} onShow={reset}>
     <ModalHeader>{title}</ModalHeader>
@@ -99,9 +99,9 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
         </div>
         <div className="form-control form-control--outlined">
           <label>
-            {strings.space.singular} to duplicate into
-            <select {...register('spaceId')}>
-              {spaces.map(SpaceOption)}
+            {strings.project.singular} to duplicate into
+            <select {...register('projectId')}>
+              {projects.map(ProjectOption)}
             </select>
           </label>
         </div>

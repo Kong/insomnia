@@ -112,7 +112,7 @@ export async function changePasswordWithToken(rawNewPassphrase, confirmationCode
   // Fetch some things
   const { saltEnc, encSymmetricKey } = await _whoami();
   const { saltKey, saltAuth } = await _getAuthSalts(newEmail);
-  // Generate some secrets for the user base'd on password
+  // Generate some secrets for the user based on password
   const newSecret = await crypt.deriveKey(newPassphrase, newEmail, saltEnc);
   const newAuthSecret = await crypt.deriveKey(newPassphrase, newEmail, saltKey);
   const newVerifier = srp

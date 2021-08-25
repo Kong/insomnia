@@ -7,7 +7,7 @@ import { combineReducers, Dispatch } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
 
 import { trackEvent } from '../../../common/analytics';
-import type { GlobalActivity, SpaceSortOrder } from '../../../common/constants';
+import type { DashboardSortOrder, GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_ANALYTICS,
   ACTIVITY_DEBUG,
@@ -25,13 +25,14 @@ import {
   exportWorkspacesData,
   exportWorkspacesHAR,
 } from '../../../common/export';
+import { strings } from '../../../common/strings';
 import * as models from '../../../models';
 import { Environment, isEnvironment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
+import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { Request } from '../../../models/request';
 import { Settings } from '../../../models/settings';
-import { BASE_SPACE_ID } from '../../../models/space';
 import { isWorkspace } from '../../../models/workspace';
 import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
@@ -47,7 +48,7 @@ import SettingsModal, {
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';
-import { selectActiveSpaceName, selectSettings, selectWorkspacesForActiveSpace } from '../selectors';
+import { selectActiveProjectName, selectSettings, selectWorkspacesForActiveProject } from '../selectors';
 import { importUri } from './import';
 
 export const LOCALSTORAGE_PREFIX = 'insomnia::meta';
@@ -56,8 +57,8 @@ export const LOAD_START = 'global/load-start';
 export const LOAD_STOP = 'global/load-stop';
 const LOAD_REQUEST_START = 'global/load-request-start';
 const LOAD_REQUEST_STOP = 'global/load-request-stop';
-export const SET_ACTIVE_SPACE = 'global/activate-space';
-export const SET_SPACE_SORT_ORDER = 'global/space-sort-order';
+export const SET_ACTIVE_PROJECT = 'global/activate-project';
+export const SET_DASHBOARD_SORT_ORDER = 'global/dashboard-sort-order';
 export const SET_ACTIVE_WORKSPACE = 'global/activate-workspace';
 export const SET_ACTIVE_ACTIVITY = 'global/activate-activity';
 const COMMAND_ALERT = 'app/alert';
@@ -80,19 +81,19 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeSpaceReducer(state: string = BASE_SPACE_ID, action) {
+function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action) {
   switch (action.type) {
-    case SET_ACTIVE_SPACE:
-      return action.spaceId;
+    case SET_ACTIVE_PROJECT:
+      return action.projectId;
 
     default:
       return state;
   }
 }
 
-function spaceSortOrderReducer(state: SpaceSortOrder = 'modified-desc', action) {
+function dashboardSortOrderReducer(state: DashboardSortOrder = 'modified-desc', action) {
   switch (action.type) {
-    case SET_SPACE_SORT_ORDER:
+    case SET_DASHBOARD_SORT_ORDER:
       return action.payload.sortOrder;
 
     default:
@@ -152,8 +153,8 @@ function loginStateChangeReducer(state = false, action) {
 
 export interface GlobalState {
   isLoading: boolean;
-  activeSpaceId: string;
-  spaceSortOrder: SpaceSortOrder;
+  activeProjectId: string;
+  dashboardSortOrder: DashboardSortOrder;
   activeWorkspaceId: string | null;
   activeActivity: GlobalActivity | null,
   isLoggedIn: boolean;
@@ -162,9 +163,9 @@ export interface GlobalState {
 
 export const reducer = combineReducers<GlobalState>({
   isLoading: loadingReducer,
-  spaceSortOrder: spaceSortOrderReducer,
+  dashboardSortOrder: dashboardSortOrderReducer,
   loadingRequestIds: loadingRequestsReducer,
-  activeSpaceId: activeSpaceReducer,
+  activeProjectId: activeProjectReducer,
   activeWorkspaceId: activeWorkspaceReducer,
   activeActivity: activeActivityReducer,
   isLoggedIn: loginStateChangeReducer,
@@ -204,7 +205,7 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
         ),
         addCancel: true,
       });
-      dispatch(importUri(args.uri, { workspaceId: args.workspaceId, forceToSpace: 'prompt' }));
+      dispatch(importUri(args.uri, { workspaceId: args.workspaceId, forceToProject: 'prompt' }));
       break;
 
     case COMMAND_PLUGIN_INSTALL:
@@ -378,20 +379,20 @@ export const setActiveActivity = (activity: GlobalActivity) => {
   };
 };
 
-export const setActiveSpace = (spaceId: string) => {
-  const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
-  window.localStorage.setItem(key, JSON.stringify(spaceId));
+export const setActiveProject = (projectId: string) => {
+  const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
+  window.localStorage.setItem(key, JSON.stringify(projectId));
   return {
-    type: SET_ACTIVE_SPACE,
-    spaceId,
+    type: SET_ACTIVE_PROJECT,
+    projectId,
   };
 };
 
-export const setSpaceSortOrder = (sortOrder: SpaceSortOrder) => {
-  const key = `${LOCALSTORAGE_PREFIX}::space-sort-order`;
+export const setDashboardSortOrder = (sortOrder: DashboardSortOrder) => {
+  const key = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
   window.localStorage.setItem(key, JSON.stringify(sortOrder));
   return {
-    type: SET_SPACE_SORT_ORDER,
+    type: SET_DASHBOARD_SORT_ORDER,
     payload: {
       sortOrder,
     },
@@ -486,14 +487,14 @@ const writeExportedFileToFileSystem = (filename: string, jsonData: string, onDon
 export const exportAllToFile = () => async (dispatch: Dispatch, getState) => {
   dispatch(loadStart());
   const state = getState();
-  const activeSpaceName = selectActiveSpaceName(state);
-  const workspaces = selectWorkspacesForActiveSpace(state);
+  const activeProjectName = selectActiveProjectName(state);
+  const workspaces = selectWorkspacesForActiveProject(state);
 
   if (!workspaces.length) {
     dispatch(loadStop());
     showAlert({
       title: 'Cannot export',
-      message: <>There are no workspaces to export in the <strong>{activeSpaceName}</strong> space.</>,
+      message: <>There are no workspaces to export in the <strong>{activeProjectName}</strong> {strings.project.singular.toLowerCase()}.</>,
     });
     return;
   }
@@ -656,36 +657,36 @@ export const exportRequestsToFile = (requestIds: string[]) => async (dispatch: D
   });
 };
 
-export function initActiveSpace() {
-  let spaceId: string | null = null;
+export function initActiveProject() {
+  let projectId: string | null = null;
 
   try {
-    const key = `${LOCALSTORAGE_PREFIX}::activeSpaceId`;
+    const key = `${LOCALSTORAGE_PREFIX}::activeProjectId`;
     const item = window.localStorage.getItem(key);
     // @ts-expect-error -- TSCONVERSION don't parse item if it's null
-    spaceId = JSON.parse(item);
+    projectId = JSON.parse(item);
   } catch (e) {
     // Nothing here...
   }
 
-  return setActiveSpace(spaceId || BASE_SPACE_ID);
+  return setActiveProject(projectId || DEFAULT_PROJECT_ID);
 }
 
-export function initSpaceSortOrder() {
-  let spaceSortOrder: SpaceSortOrder = 'modified-desc';
+export function initDashboardSortOrder() {
+  let dashboardSortOrder: DashboardSortOrder = 'modified-desc';
 
   try {
-    const spaceSortOrderKey = `${LOCALSTORAGE_PREFIX}::space-sort-order`;
-    const stringifiedSpaceSortOrder = window.localStorage.getItem(spaceSortOrderKey);
+    const dashboardSortOrderKey = `${LOCALSTORAGE_PREFIX}::dashboard-sort-order`;
+    const stringifiedDashboardSortOrder = window.localStorage.getItem(dashboardSortOrderKey);
 
-    if (stringifiedSpaceSortOrder) {
-      spaceSortOrder = JSON.parse(stringifiedSpaceSortOrder);
+    if (stringifiedDashboardSortOrder) {
+      dashboardSortOrder = JSON.parse(stringifiedDashboardSortOrder);
     }
   } catch (e) {
     // Nothing here...
   }
 
-  return setSpaceSortOrder(spaceSortOrder);
+  return setDashboardSortOrder(dashboardSortOrder);
 }
 
 export function initActiveWorkspace() {
@@ -768,8 +769,8 @@ export const initActiveActivity = () => (dispatch, getState) => {
 };
 
 export const init = () => [
-  initActiveSpace(),
-  initSpaceSortOrder(),
+  initActiveProject(),
+  initDashboardSortOrder(),
   initActiveWorkspace(),
   initActiveActivity(),
 ];
