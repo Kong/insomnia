@@ -4,7 +4,7 @@ import * as uuid from 'uuid';
 
 import * as models from '../../models/index';
 
-enum ChromiumVerificationResult {
+export enum ChromiumVerificationResult {
   BLIND_TRUST = 0,
   USE_CHROMIUM_RESULT = -3
 }
