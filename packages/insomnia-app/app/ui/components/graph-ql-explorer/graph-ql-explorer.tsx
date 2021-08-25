@@ -20,14 +20,14 @@ interface Props {
   schema: GraphQLSchema | null;
   visible: boolean;
   reference: null | {
-    type: GraphQLType | GraphQLEnumType | null;
+    type: GraphQLType | null;
     argument: GraphQLArgument | null;
     field: GraphQLField<any, any> | null;
   };
 }
 
 interface HistoryItem {
-  currentType: null | GraphQLType | GraphQLEnumType;
+  currentType: null | GraphQLType;
   currentField: null | GraphQLField<any, any>;
 }
 
@@ -216,7 +216,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
               className="form-control__right"
               onClick={() => {
                 this._searchInput.current?.setValue('');
-                this.setState({ filter: '' });
+                this._handleFilterChange('');
               }}
             >
               <i className="fa fa-times-circle" />
