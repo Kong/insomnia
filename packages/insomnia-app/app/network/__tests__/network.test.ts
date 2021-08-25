@@ -722,8 +722,8 @@ describe('actuallySend()', () => {
         POSTFIELDS: 'foo=bar',
         POST: 1,
         PROXY: '',
-        SSL_VERIFYHOST: 0,
-        SSL_VERIFYPEER: 0,
+        SSL_VERIFYHOST: 0, // should disbale SSL
+        SSL_VERIFYPEER: 0, // should disbale SSL
         TIMEOUT_MS: 0,
         URL: 'http://localhost/?foo%20bar=hello%26world',
         USERAGENT: `insomnia/${getAppVersion()}`,

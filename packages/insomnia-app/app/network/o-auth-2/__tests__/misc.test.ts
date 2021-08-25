@@ -67,9 +67,9 @@ describe('authorizeUserInWindow()', () => {
     // Arrange
     let verificationFunction: certVerifyProcFn = jest.fn();
     const mockCallback = jest.fn();
-    createBWRedirectMock('', (fn: certVerifyProcFn) => {
+    createBWRedirectMock({ certificateVerifyMock: fn => {
       verificationFunction = fn;
-    });
+    } });
 
     await models.settings.patch({
       validateAuthSSL: true,
@@ -97,9 +97,9 @@ describe('authorizeUserInWindow()', () => {
     // Arrange
     let verificationFunction: certVerifyProcFn = jest.fn();
     const mockCallback = jest.fn();
-    createBWRedirectMock('', (fn: certVerifyProcFn) => {
+    createBWRedirectMock({ certificateVerifyMock: (fn: certVerifyProcFn) => {
       verificationFunction = fn;
-    });
+    } });
 
     await models.settings.patch({
       validateAuthSSL: false,
