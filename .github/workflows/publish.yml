@@ -36,11 +36,11 @@ jobs:
         asset: ".deb"
 
     - name: Upload .deb to Pulp
-      uses: docker://kong/release-script:1.7.0
+      uses: docker://kong/release-script:latest
       env:
         PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
         PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}
         PULP_HOST: ${{ secrets.PULP_HOST }}
       with:
         entrypoint: python3
-        args: '/usr/src/code/main.py --file ${{ steps.download.outputs.name }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
+        args: '/usr/src/code/main.py release --file ${{ steps.download.outputs.name }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'
