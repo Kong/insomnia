@@ -21,4 +21,11 @@ Headers can be added by setting a `DEFAULT_HEADERS` environment variable.
 	}
 }
 ```
-
+Default header can be removed by setting value to null. For example, use folder environment variables to remove authorization header from anonymous calls
+```json
+{
+  "DEFAULT_HEADERS": {
+    "Authorization": "null"
+  }
+}
+```
