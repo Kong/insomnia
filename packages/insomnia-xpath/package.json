@@ -1,6 +1,6 @@
 {
   "name": "insomnia-xpath",
-  "version": "2.3.1-alpha.1",
+  "version": "2.3.1",
   "author": "Kong <office@konghq.com>",
   "description": "Query XML using XPath",
   "license": "MIT",
@@ -32,7 +32,7 @@
     "@types/xmldom": "0.1.30"
   },
   "dependencies": {
-    "insomnia-cookies": "2.3.1-alpha.1",
+    "insomnia-cookies": "2.3.1",
     "xmldom": "^0.5.0",
     "xpath": "0.0.27"
   },
