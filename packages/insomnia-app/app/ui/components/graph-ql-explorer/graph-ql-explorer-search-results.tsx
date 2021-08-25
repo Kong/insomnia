@@ -104,12 +104,13 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           ))}
         </ul>
         {numberOfAllTypes > numberOfTypesToRender && (
-          <p
-            className="more-found-elements-hint"
+          <a
+            href="#"
+            className="surprise"
             onClick={() => this.setState(({ displayedTypeBatches: oldValue }) => ({ displayedTypeBatches: oldValue + 1 }))}
           >
             And {numberOfAllTypes - numberOfTypesToRender} more types found... Click here to show {BATCH_SIZE} more.
-          </p>
+          </a>
         )}
       </>
     );
@@ -134,12 +135,13 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
           onNavigateField={onNavigateField}
         />
         {numberOfAllFields > numberOfFieldsToRender && (
-          <p
-            className="more-found-elements-hint"
+          <a
+            href="#"
+            className="surprise"
             onClick={() => this.setState(({ displayedFieldBatches: oldValue }) => ({ displayedFieldBatches: oldValue + 1 }))}
           >
             And {numberOfAllFields - numberOfFieldsToRender} more fields found... Click here to show {BATCH_SIZE} more.
-          </p>
+          </a>
         )}
       </>
     );
