@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { EditorFromTextArea, TextMarker } from 'codemirror';
 import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { GraphQLArgument, GraphQLSchema, GraphQLType } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
@@ -24,7 +24,7 @@ import type { ResponsePatch } from '../../../../network/network';
 import * as network from '../../../../network/network';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
 import CodeEditor from '../../codemirror/code-editor';
-import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
+import GraphqlExplorer, { GraphQLFieldWithOptionalArgs } from '../../graph-ql-explorer/graph-ql-explorer';
 import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
@@ -45,7 +45,7 @@ interface GraphQLBody {
 interface ActiveReference {
   type: GraphQLType | null;
   argument: GraphQLArgument | null;
-  field: GraphQLField<any, any> | null;
+  field: GraphQLFieldWithOptionalArgs | null;
 }
 
 interface Props {

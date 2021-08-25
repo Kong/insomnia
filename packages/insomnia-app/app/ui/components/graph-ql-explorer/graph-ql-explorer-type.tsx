@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLInterfaceType, GraphQLObjectType, GraphQLUnionType } from 'graphql';
 import React, { Fragment, PureComponent } from 'react';
 
@@ -82,7 +82,7 @@ class GraphQLExplorerType extends PureComponent<Props> {
     }
 
     // @ts-expect-error -- TSCONVERSION
-    const fields: GraphQLField<any, any>[] = type.getFields();
+    const fields: GraphQLFieldWithOptionalArgs[] = type.getFields();
     const sortedFields = Object.values(fields).sort(ascendingNameSort);
     return (
       <Fragment>

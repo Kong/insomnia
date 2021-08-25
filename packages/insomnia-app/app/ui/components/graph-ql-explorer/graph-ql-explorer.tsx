@@ -22,13 +22,13 @@ interface Props {
   reference: null | {
     type: GraphQLType | null;
     argument: GraphQLArgument | null;
-    field: GraphQLField<any, any> | null;
+    field: GraphQLFieldWithParentName | null;
   };
 }
 
 interface HistoryItem {
   currentType: null | GraphQLType;
-  currentField: null | GraphQLField<any, any>;
+  currentField: null | GraphQLFieldWithParentName;
 }
 
 interface State extends HistoryItem {
@@ -36,7 +36,14 @@ interface State extends HistoryItem {
   filter: string;
 }
 
-export interface GraphQLFieldWithParentName extends GraphQLField<any, any> {
+type GraphQLFieldAny = GraphQLField<any, any>;
+
+// It is possible for args to be undefined, but the exported type has it as required, so we override it here
+export type GraphQLFieldWithOptionalArgs =
+  & Omit<GraphQLFieldAny, 'args'>
+  & Partial<Pick<GraphQLFieldAny, 'args'>>;
+
+export interface GraphQLFieldWithParentName extends GraphQLFieldWithOptionalArgs {
   parentName?: string;
 }
 
