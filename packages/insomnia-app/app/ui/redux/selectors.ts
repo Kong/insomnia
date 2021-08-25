@@ -5,7 +5,7 @@ import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { BASE_PROJECT_ID, isRemoteProject } from '../../models/project';
+import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { UnitTestResult } from '../../models/unit-test-result';
@@ -85,7 +85,7 @@ export const selectActiveProject = createSelector(
   selectEntities,
   (state: RootState) => state.global.activeProjectId,
   (entities, activeProjectId) => {
-    return entities.projects[activeProjectId] || entities.projects[BASE_PROJECT_ID];
+    return entities.projects[activeProjectId] || entities.projects[DEFAULT_PROJECT_ID];
   },
 );
 

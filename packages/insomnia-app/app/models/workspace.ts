@@ -4,7 +4,7 @@ import { database as db } from '../common/database';
 import { strings } from '../common/strings';
 import type { BaseModel } from './index';
 import * as models from './index';
-import { BASE_PROJECT_ID, isProjectId } from './project';
+import { DEFAULT_PROJECT_ID, isProjectId } from './project';
 
 export const name = 'Workspace';
 export const type = 'Workspace';
@@ -57,7 +57,7 @@ export async function migrate(doc: Workspace) {
     fileName: doc.name,
   });
   doc = _migrateScope(doc);
-  doc = _migrateIntoBaseProject(doc);
+  doc = _migrateIntoDefaultProject(doc);
   return doc;
 }
 
@@ -158,9 +158,9 @@ function _migrateScope(workspace: MigrationWorkspace) {
   return workspace as Workspace;
 }
 
-function _migrateIntoBaseProject(workspace: Workspace) {
+function _migrateIntoDefaultProject(workspace: Workspace) {
   if (!workspace.parentId) {
-    workspace.parentId = BASE_PROJECT_ID;
+    workspace.parentId = DEFAULT_PROJECT_ID;
   }
 
   return workspace;

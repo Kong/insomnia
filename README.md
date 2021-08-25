@@ -31,7 +31,7 @@ for opening issues, coding standards, and notes on development.
 ## Developing
 
 Development on Insomnia can be done on Mac, Windows, or Linux as long as you have
-[NodeJS](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
+[Node.js](https://nodejs.org) and [Git](https://git-scm.com/). See the `.nvmrc` file located in the project for the correct Node version.
 
 <details>
 <summary>Initial Dev Setup</summary>
