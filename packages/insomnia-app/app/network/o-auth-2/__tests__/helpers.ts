@@ -8,7 +8,7 @@ interface Options {
 
 export function createBWRedirectMock({
   redirectTo,
-  setCertificateVerifyProc,
+  setCertificateVerifyProc = () => {},
 }: Options) {
   electron.remote.BrowserWindow = jest.fn(function() {
     this._emitter = new EventEmitter();
