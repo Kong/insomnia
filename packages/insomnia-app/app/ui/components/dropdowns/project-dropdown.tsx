@@ -53,13 +53,13 @@ const ProjectDropdownItem: FC<{
   setActive: (projectId: string) => void;
 }> = ({ isActive, project, setActive }) => {
   const { _id, name } = project;
-  const isBase = isDefaultProject(project);
+  const isDefault = isDefaultProject(project);
   const isRemote = isRemoteProject(project);
 
   return (
     <DropdownItem
       key={_id}
-      icon={isBase ? home : isRemote ? remoteProject : localProject}
+      icon={isDefault ? home : isRemote ? remoteProject : localProject}
       right={isActive && <Checkmark icon="checkmark" />}
       value={_id}
       onClick={setActive}
