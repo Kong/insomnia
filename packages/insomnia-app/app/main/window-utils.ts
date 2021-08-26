@@ -22,8 +22,7 @@ import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard } = electron;
 // So we can use native modules in renderer
-// NOTE: This will be deprecated in Electron 10 and impossible in 11
-//   https://github.com/electron/electron/issues/18397
+// NOTE: This was (deprecated in Electron 10)[https://github.com/electron/electron/issues/18397] and (removed in Electron 14)[https://github.com/electron/electron/pull/26874]
 app.allowRendererProcessReuse = false;
 
 const DEFAULT_WIDTH = 1280;
