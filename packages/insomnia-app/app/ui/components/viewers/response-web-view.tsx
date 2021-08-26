@@ -48,22 +48,20 @@ class ResponseWebView extends PureComponent<Props> {
 
     const { body, contentType, url } = this.props;
     const bodyWithBase = body.replace('<head>', `<head><base href="${url}">`);
-    // @ts-expect-error -- TSCONVERSION type mismatch
-    webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
-    // NOTE: We *should* be setting the base URL by specifying the baseURLForDataURL
-    // option, but there is a bug in baseURLForDataURL since Electron 6 (still exists
-    // in 9) that makes it impossible.
+
+    // NOTE: We *should* be setting the base URL by specifying the baseURLForDataURL option, but there is a bug in baseURLForDataURL since Electron 6 (that still exists in 9) that makes it impossible.
     //
-    // For now we inject the <base> tag to achieve a similar effect. This was actually the
-    // way we did it before discovering the baseURLForDataURL setting.
+    // For now we inject the <base> tag to achieve a similar effect. This was actually the way we did it before discovering the baseURLForDataURL setting.
     //
     //    https://github.com/electron/electron/issues/20700
     //
     // webview.loadURL(`data:${contentType},${encodeURIComponent(body)}`, {
     //   baseURLForDataURL: url,
     // });
-    // This is kind of hacky but electron-context-menu fails to save images if
-    // this isn't here.
+    // @ts-expect-error -- TSCONVERSION type mismatch
+    webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
+
+    // This is kind of hacky but electron-context-menu fails to save images if this isn't here.
     // @ts-expect-error -- TSCONVERSION type mismatch
     webview.webContents = webview;
     // @ts-expect-error -- TSCONVERSION type mismatch
