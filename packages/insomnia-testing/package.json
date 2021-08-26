@@ -29,12 +29,13 @@
     "@types/mkdirp": "^1.0.1",
     "@types/mocha": "^8.2.1",
     "@types/webpack": "^4.41.26",
+    "jest": "^27.0.6",
+    "ts-jest": "^27.0.5",
     "ts-loader": "^8.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "axios": "^0.21.1",
     "chai": "^4.3.4",
     "mkdirp": "^1.0.4",
     "mocha": "^8.3.2"

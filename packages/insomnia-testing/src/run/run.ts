@@ -5,25 +5,26 @@ import Mocha, { Reporter, ReporterConstructor } from 'mocha';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-import Insomnia, { InsomniaOptions } from './insomnia';
+import { TestResults } from './entities';
+import { Insomnia, InsomniaOptions } from './insomnia';
 import { JavaScriptReporter } from './javascript-reporter';
 
 declare global {
   namespace NodeJS {
     interface Global {
-      insomnia?: Insomnia;
+      // Not sure how to type the generic type here
+      insomnia?: Insomnia<{}>;
       chai?: typeof chai;
     }
   }
 }
 
-const runInternal = async <T>(
+const runInternal = async <TReturn, TNetworkResponse>(
   testSrc: string | string[],
-  options: InsomniaOptions,
+  options: InsomniaOptions<TNetworkResponse>,
   reporter: Reporter | ReporterConstructor = 'spec',
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type not available, and postponing anyway until the impending move to all jest (and no mocha)
-  extractResult: (runner: { [key: string]: any }) => T,
-): Promise<T> => new Promise((resolve, reject) => {
+  extractResult: (runner: Mocha.Runner) => TReturn,
+): Promise<TReturn> => new Promise((resolve, reject) => {
   const { bail, keepFile, testFilter } = options;
 
   // Add global `insomnia` helper.
@@ -83,32 +84,34 @@ const writeTempFile = (sourceCode: string) => {
   return path;
 };
 
-type CliOptions = InsomniaOptions & {
+type CliOptions<TNetworkResponse> = InsomniaOptions<TNetworkResponse> & {
   reporter?: Reporter
 }
 
 /**
  * Run a test file using Mocha
  */
-export const runTestsCli = async (
+export const runTestsCli = async <TNetworkResponse>(
   testSrc: string | string[],
-  { reporter, ...options }: CliOptions = {},
+  { reporter, ...options }: CliOptions<TNetworkResponse>,
 ) => runInternal(
   testSrc,
   options,
   reporter,
-  runner => !runner.stats.failures,
+  runner => Boolean(runner.stats?.failures),
 );
 
 /**
  * Run a test file using Mocha and returns JS results
  */
-export const runTests = async <T>(
+export const runTests = async <TNetworkResponse>(
   testSrc: string | string[],
-  options: InsomniaOptions = {},
-) => runInternal<T>(
+  options: InsomniaOptions<TNetworkResponse>,
+) => runInternal(
   testSrc,
   options,
   JavaScriptReporter,
-  runner => runner.testResults,
+  // @ts-expect-error the `testResults` property is added onto the runner by the JavascriptReporter
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  runner => runner.testResults as TestResults,
 );
