@@ -98,7 +98,7 @@ export const runTestsCli = async <TNetworkResponse>(
   testSrc,
   options,
   reporter,
-  runner => Boolean(runner.stats?.failures),
+  runner => !Boolean(runner.stats?.failures),
 );
 
 /**
