@@ -1,4 +1,4 @@
-import electron, { BrowserWindow } from 'electron';
+import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
 import { Curl } from 'node-libcurl';
 import * as os from 'os';
@@ -25,9 +25,6 @@ const { app, Menu, shell, dialog, clipboard } = electron;
 // NOTE: This will be deprecated in Electron 10 and impossible in 11
 //   https://github.com/electron/electron/issues/18397
 app.allowRendererProcessReuse = false;
-
-// Note: this hack is required because MenuItemConstructorOptions is not exported from the electron types as of 9.3.5
-type MenuItemConstructorOptions = Parameters<typeof Menu.buildFromTemplate>[0][0];
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 700;
@@ -330,8 +327,7 @@ export function createWindow() {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
-        // @ts-expect-error -- TSCONVERSION TSCONVERSION `Accelerator` type from electron is needed here as a cast but is not exported as of the 9.3.5 types
-        accelerator: !isMac() ? 'F1' : null,
+        ...(isMac() ? {} : { accelerator: 'F1' }),
         click: () => {
           clickLink(docsBase);
         },
