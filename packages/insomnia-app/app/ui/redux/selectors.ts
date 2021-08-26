@@ -5,7 +5,7 @@ import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
-import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
+import { DEFAULT_PROJECT_ID, isRemoteProject, sortProjects } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { UnitTestResult } from '../../models/unit-test-result';
@@ -73,7 +73,7 @@ export const selectRequestMetas = createSelector(
 
 export const selectProjects = createSelector(
   selectEntitiesLists,
-  entities => entities.projects,
+  entities => sortProjects(entities.projects),
 );
 
 export const selectRemoteProjects = createSelector(

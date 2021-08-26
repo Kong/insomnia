@@ -1,3 +1,5 @@
+import { ascend, descend, prop, sortWith } from 'ramda';
+
 import { getAppName } from '../common/constants';
 import { database as db } from '../common/database';
 import { generateId } from '../common/misc';
@@ -16,6 +18,13 @@ export const isNotDefaultProject = (project: Project) => !isDefaultProject(proje
 export const isLocalProject = (project: Project): project is LocalProject => project.remoteId === null;
 export const isRemoteProject = (project: Project): project is RemoteProject => !isLocalProject(project);
 export const projectHasSettings = (project: Project) => !isDefaultProject(project);
+
+export const sortProjects = sortWith<Project>([
+  descend(isDefaultProject),
+  descend(isLocalProject),
+  descend(isRemoteProject),
+  ascend(prop('name')),
+]);
 
 interface CommonProject {
   name: string;
