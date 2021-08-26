@@ -14,27 +14,27 @@
   <img src="https://raw.githubusercontent.com/Kong/insomnia/develop/packages/insomnia-inso/assets/demo.gif" alt=""/>
   <br />
 </div>
+<br />
 <!-- markdownlint-enable no-inline-html  -->
 
-Table of Contents
-=================
+<!-- omit in toc -->
+## Table of Contents
 
-- [Table of Contents](#table-of-contents)
-  - [Data source](#data-source)
-  - [The `[identifier]` argument](#the-identifier-argument)
-  - [Global options](#global-options)
-  - [Commands](#commands)
-    - [`$ inso generate config [identifier]`](#-inso-generate-config-identifier)
-    - [`$ inso lint spec [identifier]`](#-inso-lint-spec-identifier)
-    - [`$ inso run test [identifier]`](#-inso-run-test-identifier)
-    - [`$ inso export spec [identifier]`](#-inso-export-spec-identifier)
-    - [`$ inso script <name>`](#-inso-script-name)
-  - [Configuration](#configuration)
-    - [Options](#options)
-    - [Scripts](#scripts)
-  - [Git Bash](#git-bash)
-  - [Continuous Integration](#continuous-integration)
-  - [Development](#development)
+- [Data source](#data-source)
+- [The `[identifier]` argument](#the-identifier-argument)
+- [Global options](#global-options)
+- [Commands](#commands)
+  - [`$ inso generate config [identifier]`](#-inso-generate-config-identifier)
+  - [`$ inso lint spec [identifier]`](#-inso-lint-spec-identifier)
+  - [`$ inso run test [identifier]`](#-inso-run-test-identifier)
+  - [`$ inso export spec [identifier]`](#-inso-export-spec-identifier)
+  - [`$ inso script <name>`](#-inso-script-name)
+- [Configuration](#configuration)
+  - [Options](#options)
+  - [Scripts](#scripts)
+- [Git Bash](#git-bash)
+- [Continuous Integration](#continuous-integration)
+- [Development](#development)
 
 ## Data source
 
