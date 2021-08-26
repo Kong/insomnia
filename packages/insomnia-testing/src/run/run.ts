@@ -112,6 +112,5 @@ export const runTests = async <TNetworkResponse>(
   options,
   JavaScriptReporter,
   // @ts-expect-error the `testResults` property is added onto the runner by the JavascriptReporter
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   runner => runner.testResults as TestResults,
 );
