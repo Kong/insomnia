@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import contextMenu from 'electron-context-menu';
 import { EventEmitter } from 'events';
-import React, { PureComponent } from 'react';
+import React, { createRef, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 
@@ -13,36 +13,40 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseWebView extends PureComponent<Props> {
-  _webview: HTMLElement | null = null;
+export class ResponseWebView extends PureComponent<Props> {
+  webview = createRef<HTMLWebViewElement>();
 
-  _handleSetWebViewRef(n: HTMLElement) {
-    this._webview = n;
-
-    if (this._webview) {
-      this._webview.addEventListener('dom-ready', this._handleDOMReady);
-    }
-  }
-
-  _handleDOMReady() {
-    if (!this._webview) {
+  componentDidMount() {
+    if (!this.webview.current) {
+      // This is not supposed to be possible in react since the webview is not conditionally rendered (i.e. it's always rendered), but putting an error here just in case.
+      console.error('ResponseWebView was mounted without a ref to the underlying webview');
       return;
     }
 
-    this._webview.removeEventListener('dom-ready', this._handleDOMReady);
+    this.webview.current.addEventListener('dom-ready', this._handleDOMReady);
+  }
+
+  componentDidUpdate() {
+    this._setBody();
+  }
+
+  _handleDOMReady() {
+    if (!this.webview.current) {
+      return;
+    }
+
+    this.webview.current.removeEventListener('dom-ready', this._handleDOMReady);
 
     contextMenu({
       // @ts-expect-error -- TSCONVERSION type mismatch
-      window: this._webview,
+      window: this.webview.current,
     });
 
     this._setBody();
   }
 
   _setBody() {
-    const webview = this._webview;
-
-    if (!webview) {
+    if (!this.webview.current) {
       return;
     }
 
@@ -59,25 +63,23 @@ class ResponseWebView extends PureComponent<Props> {
     //   baseURLForDataURL: url,
     // });
     // @ts-expect-error -- TSCONVERSION type mismatch
-    webview.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
+    this.webview.current.loadURL(`data:${contentType},${encodeURIComponent(bodyWithBase)}`);
 
     // This is kind of hacky but electron-context-menu fails to save images if this isn't here.
     // @ts-expect-error -- TSCONVERSION type mismatch
-    webview.webContents = webview;
+    this.webview.current.webContents = this.webview.current;
     // @ts-expect-error -- TSCONVERSION type mismatch
-    webview.webContents.session = new EventEmitter();
-  }
-
-  componentDidUpdate() {
-    this._setBody();
+    this.webview.current.webContents.session = new EventEmitter();
   }
 
   render() {
     const { webpreferences } = this.props;
     return (
-      <webview ref={this._handleSetWebViewRef} src="about:blank" webpreferences={webpreferences} />
+      <webview
+        ref={this.webview}
+        src="about:blank"
+        webpreferences={webpreferences}
+      />
     );
   }
 }
-
-export default ResponseWebView;

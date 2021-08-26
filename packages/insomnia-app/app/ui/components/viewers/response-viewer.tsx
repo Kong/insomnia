@@ -19,7 +19,7 @@ import ResponseError from './response-error';
 import MultipartViewer from './response-multipart';
 import PDFViewer from './response-pdf-viewer';
 import ResponseRaw from './response-raw';
-import ResponseWebView from './response-web-view';
+import { ResponseWebView } from './response-web-view';
 
 let alwaysShowLargeResponses = false;
 
