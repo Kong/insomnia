@@ -186,13 +186,11 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Undo`,
         accelerator: 'CmdOrCtrl+Z',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'undo:',
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
         accelerator: 'Shift+CmdOrCtrl+Z',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'redo:',
       },
       {
@@ -201,25 +199,21 @@ export function createWindow() {
       {
         label: `Cu${MNEMONIC_SYM}t`,
         accelerator: 'CmdOrCtrl+X',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'cut:',
       },
       {
         label: `${MNEMONIC_SYM}Copy`,
         accelerator: 'CmdOrCtrl+C',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'copy:',
       },
       {
         label: `${MNEMONIC_SYM}Paste`,
         accelerator: 'CmdOrCtrl+V',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'paste:',
       },
       {
         label: `Select ${MNEMONIC_SYM}All`,
         accelerator: 'CmdOrCtrl+A',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'selectAll:',
       },
     ],
