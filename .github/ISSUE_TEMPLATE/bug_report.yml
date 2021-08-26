@@ -1,6 +1,5 @@
 name: Bug Report
 description: Report an Insomnia bug
-title: ""
 labels: [B-bug, S-unverified]
 body:
 - type: checkboxes
@@ -14,7 +13,7 @@ body:
   attributes:
     label: Insomnia Version
     description: What version of Insmonia are you using?
-    placeholder: 2021.5
+    placeholder: "2021.5"
   validations:
     required: true
 - type: dropdown
@@ -46,7 +45,7 @@ body:
   attributes:
     label: Last Known Working Insomnia version
     description: What is the last version of Insomnia this worked in, if applicable?
-    placeholder: 2021.4
+    placeholder: "2021.4"
 - type: textarea
   attributes:
     label: Expected Behavior
