@@ -31,3 +31,4 @@ schema.graphql
 packages/insomnia-smoke-test/screenshots
 *.tsbuildinfo
 dist
+.history
