@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
-import { isDefaultProject, isNotDefaultProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
+import { isDefaultProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteProjects } from '../../hooks/project';
 import { setActiveProject } from '../../redux/modules/global';
@@ -100,9 +100,8 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
 
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      {projects.filter(isDefaultProject).map(renderProject)}
-      <DropdownDivider>All {strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
-      {projects.filter(isNotDefaultProject).map(renderProject)}
+      <DropdownDivider>{strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
+      {projects.map(renderProject)}
       {projectHasSettings(activeProject) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>
