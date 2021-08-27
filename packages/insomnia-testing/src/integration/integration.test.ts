@@ -26,7 +26,8 @@ describe('integration', () => {
     ]);
     const sendRequest = mockedSendRequest();
 
-    const { stats } = await runTests(testSrc, { sendRequest });
+    const { stats, failures } = await runTests(testSrc, { sendRequest });
+    expect(failures).toEqual([]);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
@@ -55,12 +56,14 @@ describe('integration', () => {
 
     const sendRequest = mockedSendRequest();
 
-    const { stats } = await runTests(testSrc, { sendRequest });
+    const { stats, failures } = await runTests(testSrc, { sendRequest });
+    expect(failures).toEqual([]);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
 
-    const { stats: stats2 } = await runTests(testSrc, { sendRequest });
+    const { stats: stats2, failures: failures2 } = await runTests(testSrc, { sendRequest });
+    expect(failures2).toEqual([]);
     expect(stats2.tests).toBe(2);
     expect(stats2.failures).toBe(0);
     expect(stats2.passes).toBe(2);
