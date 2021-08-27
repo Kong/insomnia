@@ -76,8 +76,8 @@ class PromptModal extends PureComponent<{}, State> {
   async _done(rawValue: string) {
     const { onComplete, upperCase } = this.state;
     const value = upperCase ? rawValue.toUpperCase() : rawValue;
-    await onComplete?.(value);
     this.hide();
+    await onComplete?.(value);
   }
 
   _handleCancel() {
