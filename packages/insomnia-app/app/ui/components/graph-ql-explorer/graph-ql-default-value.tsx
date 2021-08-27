@@ -1,9 +1,10 @@
-import type { GraphQLField } from 'graphql';
 import { astFromValue, print } from 'graphql';
 import React, { PureComponent } from 'react';
 
+import { GraphQLFieldWithParentName } from './graph-ql-types';
+
 interface Props {
-  field: GraphQLField<any, any>;
+  field: GraphQLFieldWithParentName;
 }
 
 class GraphQLDefaultValue extends PureComponent<Props> {

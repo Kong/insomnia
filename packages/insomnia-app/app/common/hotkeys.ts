@@ -129,6 +129,7 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
   ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
+  GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey('graphql_explorer_focus_filter', 'Focus GraphQL Explorer Filter'),
   // Designer-specific
   SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
   SHOW_TEST: defineHotKey('activity_test', 'Show Test Activity'),
@@ -272,6 +273,10 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.ENVIRONMENT_UNCOVER_VARIABLES.id]: keyBinds(
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
     keyComb(false, true, true, false, keyboardKeys.u.keyCode),
+  ),
+  [hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER.id]: keyBinds(
+    keyComb(false, false, true, true, keyboardKeys.f.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.f.keyCode),
   ),
   [hotKeyRefs.SHOW_SPEC_EDITOR.id]: keyBinds(
     keyComb(false, false, true, true, keyboardKeys.s.keyCode),

@@ -6,7 +6,7 @@ import React, { Fragment, PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props {
-  onNavigate: (type: Record<string, any>) => void;
+  onNavigate: (type: GraphQLType) => void;
   type: GraphQLType;
 }
 
