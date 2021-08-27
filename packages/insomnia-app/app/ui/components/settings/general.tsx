@@ -109,11 +109,6 @@ class General extends PureComponent<Props, State> {
     restartApp();
   }
 
-  async _handleFontSizeChange(el: React.SyntheticEvent<HTMLInputElement>) {
-    const settings = await this._handleUpdateSetting(el);
-    setFont(settings);
-  }
-
   async _handleFontChange(el: React.SyntheticEvent<HTMLInputElement>) {
     const settings = await this._handleUpdateSetting(el);
     setFont(settings);
@@ -302,7 +297,7 @@ class General extends PureComponent<Props, State> {
           {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
             min: MIN_INTERFACE_FONT_SIZE,
             max: MAX_INTERFACE_FONT_SIZE,
-            onBlur: this._handleFontSizeChange,
+            onBlur: this._handleFontChange,
           })}
         </div>
 
