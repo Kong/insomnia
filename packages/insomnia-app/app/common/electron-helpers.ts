@@ -3,12 +3,17 @@ import mkdirp from 'mkdirp';
 import { join } from 'path';
 
 import appConfig from '../../config/config.json';
+import install from '../plugins/install';
 
 export function clickLink(href: string) {
-  const { protocol } = new URL(href);
+  const { protocol, searchParams } = new URL(href);
   if (protocol === 'http:' || protocol === 'https:') {
     // eslint-disable-next-line no-restricted-properties -- this is, other than tests, what _should be_ the one and only place in this project where this is called.
     electron.shell.openExternal(href);
+  }
+  const name = searchParams.get('name');
+  if (protocol === 'insomnia:' && name !== null) {
+    install(name);
   }
 }
 
