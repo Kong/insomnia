@@ -31,7 +31,7 @@ import {
   SortOrder,
 } from '../../common/constants';
 import { database as db } from '../../common/database';
-import { getDataDirectory } from '../../common/electron-helpers';
+import { getDataDirectory, setMenuBarVisibility } from '../../common/electron-helpers';
 import { exportHarRequest } from '../../common/har';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
@@ -1427,6 +1427,8 @@ class App extends PureComponent<AppProps, State> {
       false,
     );
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
+
+    setMenuBarVisibility(!this.props.settings.autoHideMenuBar);
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);
