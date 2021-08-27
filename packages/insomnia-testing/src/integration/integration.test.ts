@@ -1,7 +1,7 @@
 
 import { generate } from '../generate';
 import { runTests } from '../run';
-import { mockedSendRequest, mockedSendRequestMultiple } from '../send-request-mock';
+import { mockedSendRequest, mockedSendRequestMultiple } from '../test-helpers/send-request-mock';
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
