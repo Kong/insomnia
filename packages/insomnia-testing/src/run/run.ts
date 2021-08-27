@@ -12,8 +12,7 @@ import { JavaScriptReporter } from './javascript-reporter';
 declare global {
   namespace NodeJS {
     interface Global {
-      // Not sure how to type the generic type here
-      insomnia?: Insomnia<{}>;
+      insomnia?: Insomnia;
       chai?: typeof chai;
     }
   }
@@ -24,7 +23,7 @@ const runInternal = async <TReturn, TNetworkResponse>(
   options: InsomniaOptions<TNetworkResponse>,
   reporter: Reporter | ReporterConstructor = 'spec',
   extractResult: (runner: Mocha.Runner) => TReturn,
-): Promise<TReturn> => new Promise((resolve, reject) => {
+) => new Promise<TReturn>((resolve, reject) => {
   const { bail, keepFile, testFilter } = options;
 
   // Add global `insomnia` helper.

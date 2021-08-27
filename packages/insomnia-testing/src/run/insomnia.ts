@@ -12,7 +12,7 @@ export interface InsomniaOptions<TResponse> {
  * tests, and will provide a bunch of utility functions for sending
  * requests, etc.
  */
-export class Insomnia<TResponse> {
+export class Insomnia<TResponse = {}> {
   activeRequestId: string | null;
   activeEnvironmentId: string | null = null;
   sendRequest: SendRequestCallback<TResponse>;
