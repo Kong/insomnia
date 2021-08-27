@@ -34,7 +34,7 @@ import * as globalActions from '../../redux/modules/global';
 import Link from '../base/link';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import HelpTooltip from '../help-tooltip';
-import Tooltip from '../tooltip';
+import { BooleanSetting } from './boolean-setting';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -158,30 +158,6 @@ class General extends PureComponent<Props, State> {
     );
   }
 
-  renderBooleanSetting(label: string, name: string, help?: string, forceRestart?: boolean) {
-    const { settings } = this.props;
-
-    if (!settings.hasOwnProperty(name)) {
-      throw new Error(`Invalid boolean setting name ${name}`);
-    }
-
-    const onChange = forceRestart ? this._handleUpdateSettingAndRestart : this._handleUpdateSetting;
-    return (
-      <div className="form-control form-control--thin">
-        <label className="inline-block">
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-          {forceRestart && (
-            <Tooltip message="Will restart app" className="space-left">
-              <i className="fa fa-refresh super-duper-faint" />
-            </Tooltip>
-          )}
-          <input type="checkbox" name={name} checked={settings[name]} onChange={onChange} />
-        </label>
-      </div>
-    );
-  }
-
   renderTextSetting(label: string, name: string, help: string, props: Record<string, any>) {
     const { settings } = this.props;
 
@@ -217,17 +193,31 @@ class General extends PureComponent<Props, State> {
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
           <div>
-            {this.renderBooleanSetting('Use bulk header editor', 'useBulkHeaderEditor', '')}
-            {this.renderBooleanSetting(
-              'Vertical request/response layout',
-              'forceVerticalLayout',
-              '',
-            )}
+            <BooleanSetting
+              label="Use bulk header editor"
+              setting="useBulkHeaderEditor"
+            />
+            <BooleanSetting
+              label="Vertical request/response layout"
+              setting="forceVerticalLayout"
+            />
           </div>
           <div>
-            {this.renderBooleanSetting('Reveal passwords', 'showPasswords', '')}
-            {!isMac() && this.renderBooleanSetting('Hide menu bar', 'autoHideMenuBar', '', true)}
-            {this.renderBooleanSetting('Raw template syntax', 'nunjucksPowerUserMode', '', true)}
+            <BooleanSetting
+              label="Reveal passwords"
+              setting="showPasswords"
+            />
+            {!isMac() && (
+              <BooleanSetting
+                label="Hide menu bar"
+                setting="autoHideMenuBar"
+              />
+            )}
+            <BooleanSetting
+              label="Raw template syntax"
+              setting="nunjucksPowerUserMode"
+              forceRestart
+            />
           </div>
         </div>
         <div className="row-fill row-fill--top pad-top-sm">
@@ -266,10 +256,19 @@ class General extends PureComponent<Props, State> {
 
         <div className="row-fill row-fill--top">
           <div>
-            {this.renderBooleanSetting('Indent with tabs', 'editorIndentWithTabs', '')}
-            {this.renderBooleanSetting('Wrap text editor lines', 'editorLineWrapping', '')}
+            <BooleanSetting
+              label="Indent with tabs"
+              setting="editorIndentWithTabs"
+            />
+            <BooleanSetting
+              label="Wrap text editor lines"
+              setting="editorLineWrapping"
+            />
           </div>
-          <div>{this.renderBooleanSetting('Font ligatures', 'fontVariantLigatures', '')}</div>
+          <div><BooleanSetting
+            label="Font ligatures"
+            setting="fontVariantLigatures"
+          /></div>
         </div>
 
         <div className="form-row pad-top-sm">
@@ -371,23 +370,29 @@ class General extends PureComponent<Props, State> {
 
         <div className="row-fill row-fill--top">
           <div>
-            {this.renderBooleanSetting('Validate certificates', 'validateSSL', '')}
-            {this.renderBooleanSetting('Follow redirects', 'followRedirects', '')}
-            {this.renderBooleanSetting(
-              'Filter responses by environment',
-              'filterResponsesByEnv',
-              'Only show responses that were sent under the currently-active environment. This ' +
-              'adds additional separation when working with Development, Staging, Production ' +
-              'environments, for example.',
-            )}
+            <BooleanSetting
+              label="Validate certificates"
+              setting="validateSSL"
+            />
+            <BooleanSetting
+              label="Follow redirects"
+              setting="followRedirects"
+            />
+            <BooleanSetting
+              label="Filter responses by environment"
+              setting="filterResponsesByEnv"
+              help="Only show responses that were sent under the currently-active environment. This adds additional separation when working with Development, Staging, Production environments, for example."
+            />
           </div>
           <div>
-            {this.renderBooleanSetting('Disable JS in HTML preview', 'disableHtmlPreviewJs', '')}
-            {this.renderBooleanSetting(
-              'Disable Links in response viewer',
-              'disableResponsePreviewLinks',
-              '',
-            )}
+            <BooleanSetting
+              label="Disable JS in HTML preview"
+              setting="disableHtmlPreviewJs"
+            />
+            <BooleanSetting
+              label="Disable Links in response viewer"
+              setting="disableResponsePreviewLinks"
+            />
           </div>
         </div>
 
@@ -454,11 +459,11 @@ class General extends PureComponent<Props, State> {
 
         <h2>Security</h2>
         <div className="form-row pad-top-sm">
-          {this.renderBooleanSetting(
-            'Clear OAuth 2 session on start',
-            'clearOAuth2SessionOnRestart',
-            'Clears the session of the OAuth2 popup window every time Insomnia is launched',
-          )}
+          <BooleanSetting
+            label="Clear OAuth 2 session on start"
+            setting="clearOAuth2SessionOnRestart"
+            help="Clears the session of the OAuth2 popup window every time Insomnia is launched"
+          />
           <button
             className="btn btn--clicky pointer"
             style={{
@@ -486,7 +491,10 @@ class General extends PureComponent<Props, State> {
           </HelpTooltip>
         </h2>
 
-        {this.renderBooleanSetting('Enable proxy', 'proxyEnabled', '')}
+        <BooleanSetting
+          label="Enable proxy"
+          setting="proxyEnabled"
+        />
 
         <div className="form-row pad-top-sm">
           {this.renderTextSetting('HTTP Proxy', 'httpProxy', '', {
@@ -519,11 +527,11 @@ class General extends PureComponent<Props, State> {
               </div>
               <h2>Software Updates</h2>
             </div>
-            {this.renderBooleanSetting(
-              'Automatically download and install updates',
-              'updateAutomatically',
-              'If disabled, you will receive a notification when a new update is available',
-            )}
+            <BooleanSetting
+              label="Automatically download and install updates"
+              setting="updateAutomatically"
+              help="If disabled, you will receive a notification when a new update is available"
+            />
             <div className="form-control form-control--outlined pad-top-sm">
               <label>
                 Update Channel
@@ -545,11 +553,10 @@ class General extends PureComponent<Props, State> {
           <Fragment>
             <hr className="pad-top" />
             <h2>Software Updates</h2>
-            {this.renderBooleanSetting(
-              'Do not notify of new releases',
-              'disableUpdateNotification',
-              '',
-            )}
+            <BooleanSetting
+              label="Do not notify of new releases"
+              setting="disableUpdateNotification"
+            />
           </Fragment>
         )}
 
@@ -570,15 +577,10 @@ class General extends PureComponent<Props, State> {
         <hr className="pad-top" />
         <h2>Data Sharing</h2>
         <div className="form-control form-control--thin">
-          <label className="inline-block">
-            Send Usage Statistics{' '}
-            <input
-              type="checkbox"
-              name="enableAnalytics"
-              checked={!!settings.enableAnalytics}
-              onChange={this._handleUpdateSetting}
-            />
-          </label>
+          <BooleanSetting
+            label="Send Usage Statistics"
+            setting="enableAnalytics"
+          />
           <p className="txt-sm faint">
             Help Kong improve its products by sending anonymous data about features and plugins
             used, hardware and software configuration, statistics on number of requests,{' '}
@@ -604,16 +606,22 @@ class General extends PureComponent<Props, State> {
             <hr className="pad-top" />
             <h2>Development</h2>
             <div className="form-row pad-top-sm">
-              {this.renderBooleanSetting(
-                'Has been prompted to migrate from Insomnia Designer',
-                'hasPromptedToMigrateFromDesigner',
-              )}
+              <BooleanSetting
+                label="Has been prompted to migrate from Insomnia Designer"
+                setting="hasPromptedToMigrateFromDesigner"
+              />
             </div>
             <div className="form-row pad-top-sm">
-              {this.renderBooleanSetting('Has seen onboarding experience', 'hasPromptedOnboarding')}
+              <BooleanSetting
+                label="Has seen onboarding experience"
+                setting="hasPromptedOnboarding"
+              />
             </div>
             <div className="form-row pad-top-sm">
-              {this.renderBooleanSetting('Has seen analytics prompt', 'hasPromptedAnalytics')}
+              <BooleanSetting
+                label="Has seen analytics prompt"
+                setting="hasPromptedAnalytics"
+              />
             </div>
           </>
         )}
