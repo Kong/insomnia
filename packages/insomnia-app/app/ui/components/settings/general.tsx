@@ -24,7 +24,7 @@ import {
   updatesSupported,
 } from '../../../common/constants';
 import { docsKeyMaps } from '../../../common/documentation';
-import { restartApp } from '../../../common/electron-helpers';
+import { restartApp, setMenuBarVisibility } from '../../../common/electron-helpers';
 import { snapNumberToLimits } from '../../../common/misc';
 import { strings } from '../../../common/strings';
 import type { Settings } from '../../../models/settings';
@@ -211,6 +211,9 @@ class General extends PureComponent<Props, State> {
               <BooleanSetting
                 label="Hide menu bar"
                 setting="autoHideMenuBar"
+                callback={() => {
+                  setMenuBarVisibility(settings.autoHideMenuBar);
+                }}
               />
             )}
             <BooleanSetting
