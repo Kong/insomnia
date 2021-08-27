@@ -13,6 +13,7 @@
   "scripts": {
     "build": "lerna run build --parallel",
     "lint": "lerna run lint --stream --no-bail",
+    "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version --exact --preid beta --force-publish",
@@ -70,6 +71,7 @@
     "eslint-plugin-standard": "^5.0.0",
     "jest": "^26.6.3",
     "lerna": "^3.22.0",
+    "markdownlint-cli2": "^0.2.0",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.6",
     "type-fest": "^1.0.2",
