@@ -12,13 +12,11 @@ export const BooleanSetting: FC<{
   setting: keyof BaseSettings;
   help?: string;
   forceRestart?: boolean;
-  callback?: () => void;
 }> = ({
   label,
   setting,
   help,
   forceRestart,
-  callback,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -31,8 +29,7 @@ export const BooleanSetting: FC<{
     await models.settings.patch({
       [setting]: checked,
     });
-    callback?.();
-  }, [callback, setting]);
+  }, [setting]);
 
   return (
     <div className="form-control form-control--thin">
