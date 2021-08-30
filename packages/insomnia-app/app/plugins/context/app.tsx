@@ -3,6 +3,7 @@ import React from 'react';
 
 import * as analytics from '../../../app/common/analytics';
 import { axiosRequest as axios } from '../../../app/network/axios-request';
+import { getAppId, getAppName, getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
 import {
   RENDER_PURPOSE_GENERAL,
@@ -92,6 +93,15 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
 
           default:
             throw new Error(`Unknown path name ${name}`);
+        }
+      },
+
+      getInfo() {
+        return {
+          version: getAppVersion(),
+          appId: getAppId(), 
+          name: getAppName(),
+          platform: getAppPlatform()
         }
       },
 
