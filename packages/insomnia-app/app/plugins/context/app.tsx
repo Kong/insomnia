@@ -89,7 +89,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
 
             // don't resolve the overall promise until the modal has hidden after clicking submit
             onHide() {
-              if (shouldResolve){
+              if (shouldResolve) {
                 resolve(resolveWith);
               }
             },
