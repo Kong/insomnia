@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.build.json",
+  "include": [
+    ".eslintrc.js",
+    "app",
+    "config",
+    "jest.config.js",
+    "package.json",
+    "scripts",
+    "send-request",
+    "webpack"
+  ],
+  "exclude": [
+    "**/@types/mocha",
+    "**/main.min.js",
+    "bin",
+    "config",
+    "node_modules"
+  ]
+}

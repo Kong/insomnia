@@ -1,32 +1,6 @@
-.spec-editor {
-  display: grid;
-  width: 100%;
-  height: 100%;
-
-  grid-template-areas: 'appheader appheader' 'body-left body-right';
-  grid-template-rows: auto 1fr;
-  grid-template-columns: 1fr 1fr;
-
-  border-left: 1px solid var(--hl-md);
-
-  &.preview-hidden {
-    grid-template-columns: 1fr 0;
-  }
-
-  &__body {
-    grid-area: body-left;
-    background: var(--color-bg);
-    color: var(--color-font);
-    display: grid;
-    grid-template-columns: 100%;
-    grid-template-rows: 1fr auto;
-  }
-}
-
 #swagger-ui-wrapper {
-  border-left: 1px solid var(--hl-sm);
+  height: 100%;
   overflow-y: scroll;
-  grid-area: body-right;
 
   .nostyle,
   .renderedMarkdown,
@@ -67,7 +41,7 @@
   }
 
   code {
-    color: var(--color-font);
+    color: var(--color-warning);
     background-color: var(--hl-md);
   }
 

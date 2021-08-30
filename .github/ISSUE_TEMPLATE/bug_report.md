@@ -1,11 +1,20 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: Short issue title
-labels: "Bug \U0001F41B"
+about: Create a bug report for Insomnia
+title: ''
+labels: B-bug, S-unverified
 assignees: ''
 
 ---
+
+<!--
+Thank you for filing a bug report! 🐛 Please provide a short summary of the bug,
+along with any information you feel relevant to replicating the bug.
+
+If you cannot produce a minimal reproduction case (something that would work in
+isolation), please provide the steps or even link to a repository that causes
+the problematic output to occur. 
+-->
 
 **Describe the bug**
 A clear and concise description of what the bug is.

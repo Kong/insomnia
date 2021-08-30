@@ -1,0 +1,1 @@
+{"_id":"ut_d9e46e1fae344232991d1724124480ee","type":"UnitTest","parentId":"uts_db079ef8d1a74a7da6158175ebd89b00","modified":1607311749442,"created":1607311745076,"requestId":"req_5a77fa051cae441783d6e20a364a60f7","name":"Returns 200","code":"const response = await insomnia.send();\nexpect(response.status).to.equal(200);\nexpect(JSON.parse(response.data).id).to.equal('1')"}
