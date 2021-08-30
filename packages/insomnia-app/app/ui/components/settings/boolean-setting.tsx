@@ -2,13 +2,14 @@ import React, { ChangeEvent, FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models/index';
+import { BaseSettings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import HelpTooltip from '../help-tooltip';
 import Tooltip from '../tooltip';
 
 export const BooleanSetting: FC<{
   label: string;
-  setting: string;
+  setting: keyof BaseSettings;
   help?: string;
   forceRestart?: boolean;
   callback?: () => void;
@@ -44,7 +45,7 @@ export const BooleanSetting: FC<{
           </Tooltip>
         )}
         <input
-          checked={settings[setting]}
+          checked={Boolean(settings[setting])}
           name={setting}
           onChange={onChange}
           type="checkbox"
