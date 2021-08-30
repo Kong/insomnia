@@ -28,11 +28,11 @@ export const BooleanSetting: FC<{
 
   const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
-    await models.settings.update(settings, {
+    await models.settings.patch({
       [setting]: checked,
     });
     callback?.();
-  }, [callback, setting, settings]);
+  }, [callback, setting]);
 
   return (
     <div className="form-control form-control--thin">
