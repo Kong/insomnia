@@ -16,6 +16,7 @@ describe('init()', () => {
       'prompt',
       'showGenericModalDialog',
       'showSaveDialog',
+      'clipboard',
     ]);
   });
 });
