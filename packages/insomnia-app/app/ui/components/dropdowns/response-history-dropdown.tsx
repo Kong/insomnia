@@ -55,7 +55,7 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
     });
   }
 
-  renderDropdownItem(response: Response, i: number) {
+  renderDropdownItem(response: Response) {
     const { activeResponse, requestVersions } = this.props;
     const activeResponseId = activeResponse ? activeResponse._id : 'n/a';
     const active = response._id === activeResponseId;
