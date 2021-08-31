@@ -419,7 +419,7 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
       // @ts-expect-error -- TSCONVERSION
       segment,
       // @ts-expect-error -- TSCONVERSION
-      displayValue,
+      displayValue: displayValue || '',
       // @ts-expect-error -- TSCONVERSION
       comment: value,
       // @ts-expect-error -- TSCONVERSION
