@@ -45,7 +45,7 @@ body:
   attributes:
     label: Last Known Working Insomnia version
     description: What is the last version of Insomnia this worked in, if applicable?
-    placeholder: "2021.4"
+    placeholder: "2021.4.0"
 - type: textarea
   attributes:
     label: Expected Behavior
