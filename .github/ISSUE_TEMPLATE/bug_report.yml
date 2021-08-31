@@ -13,7 +13,7 @@ body:
   attributes:
     label: Insomnia Version
     description: What version of Insmonia are you using?
-    placeholder: "2021.5"
+    placeholder: "2021.5.0"
   validations:
     required: true
 - type: dropdown
