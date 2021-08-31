@@ -59,3 +59,16 @@ export function restartApp() {
   app.relaunch();
   app.exit();
 }
+
+export const setMenuBarVisibility = (visible: boolean) => {
+  const { BrowserWindow } = electron.remote || electron;
+  BrowserWindow.getAllWindows()
+    .forEach(window => {
+      // the `setMenuBarVisibility` signature uses `visible` semantics
+      window.setMenuBarVisibility(visible);
+
+      // the `setAutoHideMenu` signature uses `hide` semantics
+      const hide = !visible;
+      window.setAutoHideMenuBar(hide);
+    });
+};

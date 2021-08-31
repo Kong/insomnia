@@ -73,7 +73,7 @@ export interface RequestBody {
   params?: RequestBodyParameter[];
 }
 
-interface BaseRequest {
+export interface BaseRequest {
   url: string;
   name: string;
   description: string;
