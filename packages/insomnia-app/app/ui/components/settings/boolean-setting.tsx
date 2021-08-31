@@ -37,7 +37,7 @@ export const BooleanSetting: FC<{
         {label}
         {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
         {forceRestart && (
-          <Tooltip message="Will restart app" className="space-left">
+          <Tooltip message="Will restart the app" className="space-left">
             <i className="fa fa-refresh super-duper-faint" />
           </Tooltip>
         )}
