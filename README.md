@@ -3,7 +3,7 @@
 [![Slack Channel](https://chat.insomnia.rest/badge.svg)](https://chat.insomnia.rest/)
 [![license](https://img.shields.io/github/license/Kong/insomnia.svg)](https://github.com/Kong/insomnia/blob/master/LICENSE)
 
-Insomnia is a cross-platform _REST client_, built on top of [Electron](http://electron.atom.io/).
+Insomnia is an open-source, cross-platform API Client for GraphQL, REST, and gRPC.
 
 ![Insomnia REST Client Screenshot](https://raw.githubusercontent.com/Kong/insomnia/develop/screenshots/main.png)
 
