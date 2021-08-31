@@ -771,7 +771,9 @@ class TagEditor extends PureComponent<Props, State> {
           this.renderArg(argDefinition, activeTagData.args, index),
         )}
 
-        {!!activeTagDefinition?.actions?.length && this.renderActions(activeTagDefinition.actions)}
+        {activeTagDefinition?.actions && activeTagDefinition?.actions?.length > 0 ? (
+          this.renderActions(activeTagDefinition.actions)
+        ) : null}
 
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
