@@ -732,7 +732,7 @@ class TagEditor extends PureComponent<Props, State> {
 
     let finalPreview = preview;
 
-    if (activeTagDefinition && activeTagDefinition.disablePreview) {
+    if (activeTagDefinition?.disablePreview) {
       finalPreview = activeTagDefinition.disablePreview(activeTagData.args)
         ? preview.replace(/./g, '*')
         : preview;
@@ -767,12 +767,13 @@ class TagEditor extends PureComponent<Props, State> {
             </select>
           </label>
         </div>
-        {activeTagDefinition &&
-          activeTagDefinition.args.map((argDefinition: NunjucksParsedTagArg, index) =>
-            this.renderArg(argDefinition, activeTagData.args, index),
-          )}
+        {activeTagDefinition?.args.map((argDefinition: NunjucksParsedTagArg, index) =>
+          this.renderArg(argDefinition, activeTagData.args, index),
+        )}
 
-        {activeTagDefinition?.actions?.length && this.renderActions(activeTagDefinition.actions)}
+        {activeTagDefinition?.actions && activeTagDefinition?.actions?.length > 0 ? (
+          this.renderActions(activeTagDefinition.actions)
+        ) : null}
 
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">
