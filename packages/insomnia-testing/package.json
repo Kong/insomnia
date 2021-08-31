@@ -1,7 +1,7 @@
 {
   "name": "insomnia-testing",
   "license": "Apache-2.0",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "author": "Kong <office@konghq.com>",
   "repository": {
     "type": "git",
@@ -34,7 +34,6 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "axios": "^0.21.1",
     "chai": "^4.3.4",
     "mkdirp": "^1.0.4",
     "mocha": "^8.3.2"

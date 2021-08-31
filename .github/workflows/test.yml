@@ -30,6 +30,8 @@ jobs:
         run: npm run bootstrap
       - name: Lint
         run: npm run lint
+      - name: Lint Markdown
+        run: npm run lint:markdown
       - name: Run tests
         run: npm test
       - name: Build for smoke tests

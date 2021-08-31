@@ -1,12 +1,7 @@
-import _axios from 'axios';
 
-import { AxiosMock } from '../__mocks__/axios';
 import { generate } from '../generate';
 import { runTests } from '../run';
-
-const axios = _axios as AxiosMock;
-
-jest.mock('axios');
+import { mockedSendRequest, mockedSendRequestMultiple } from '../test-helpers/send-request-mock';
 
 describe('integration', () => {
   it('generates and runs basic tests', async () => {
@@ -29,7 +24,10 @@ describe('integration', () => {
         ],
       },
     ]);
-    const { stats } = await runTests(testSrc);
+    const sendRequest = mockedSendRequest();
+
+    const { stats, failures } = await runTests(testSrc, { sendRequest });
+    expect(failures).toEqual([]);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
@@ -55,44 +53,16 @@ describe('integration', () => {
         ],
       },
     ]);
-    const { stats, failures } = await runTests(testSrc);
-    expect(failures).toEqual([]);
-    expect(stats.tests).toBe(2);
-    expect(stats.failures).toBe(0);
-    expect(stats.passes).toBe(2);
-    const { stats: stats2 } = await runTests(testSrc);
-    expect(failures).toEqual([]);
-    expect(stats2.tests).toBe(2);
-    expect(stats2.failures).toBe(0);
-    expect(stats2.passes).toBe(2);
-  });
 
-  it('generates and runs more than once', async () => {
-    const testSrc = generate([
-      {
-        name: 'Example TestSuite',
-        suites: [],
-        tests: [
-          {
-            name: 'should return -1 when the value is not present',
-            code:
-              'expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.be.true;',
-            defaultRequestId: null,
-          },
-          {
-            name: 'is an empty test',
-            code: '',
-            defaultRequestId: null,
-          },
-        ],
-      },
-    ]);
-    const { stats, failures } = await runTests(testSrc);
+    const sendRequest = mockedSendRequest();
+
+    const { stats, failures } = await runTests(testSrc, { sendRequest });
     expect(failures).toEqual([]);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
-    const { stats: stats2, failures: failures2 } = await runTests(testSrc);
+
+    const { stats: stats2, failures: failures2 } = await runTests(testSrc, { sendRequest });
     expect(failures2).toEqual([]);
     expect(stats2.tests).toBe(2);
     expect(stats2.failures).toBe(0);
@@ -100,27 +70,17 @@ describe('integration', () => {
   });
 
   it('sends an HTTP request', async () => {
-    axios.__setResponse('GET', '200.insomnia.rest', {
+    const response1 = {
       status: 200,
-      headers: {
-        'content-type': 'application/json',
-      },
-      data: {
-        foo: 'bar',
-      },
-      statusText: '',
-      config: {},
-    });
+      statusMessage: 'abc',
+    };
 
-    axios.__setResponse('GET', '301.insomnia.rest', {
+    const response2 = {
       status: 301,
-      headers: {
-        location: '/blog',
-      },
-      data: undefined,
-      statusText: '',
-      config: {},
-    });
+      statusMessage: 'def',
+    };
+
+    const sendRequest = mockedSendRequestMultiple(response1, response2);
 
     const testSrc = generate([
       {
@@ -131,36 +91,33 @@ describe('integration', () => {
             name: 'Tests referencing request by ID',
             defaultRequestId: null,
             code: [
-              'const resp = await insomnia.send(\'req_123\');',
-              'expect(resp.status).to.equal(301);',
+              'const resp = await insomnia.send(\'foo\');',
+              'expect(resp.status).to.equal(200);',
+              'expect(resp.statusMessage).to.equal(\'abc\');',
             ].join('\n'),
           },
           {
             name: 'Tests referencing default request',
-            defaultRequestId: 'req_123',
+            defaultRequestId: 'bar',
             code: [
               'const resp = await insomnia.send();',
               'expect(resp.status).to.equal(301);',
+              'expect(resp.statusMessage).to.equal(\'def\');',
             ].join('\n'),
           },
         ],
       },
     ]);
 
-    const { stats, failures, passes } = await runTests(testSrc, {
-      requests: [
-        {
-          _id: 'req_123',
-          url: '301.insomnia.rest',
-          method: 'get',
-        },
-      ],
-    });
+    const { stats, failures, passes } = await runTests(testSrc, { sendRequest });
 
     expect(failures).toEqual([]);
     expect(passes.length).toBe(2);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(0);
     expect(stats.passes).toBe(2);
+
+    expect(sendRequest).toHaveBeenNthCalledWith(1, 'foo');
+    expect(sendRequest).toHaveBeenNthCalledWith(2, 'bar');
   });
 });
