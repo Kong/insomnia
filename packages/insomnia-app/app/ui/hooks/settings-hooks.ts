@@ -1,7 +1,8 @@
-import { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { setMenuBarVisibility } from "../../common/electron-helpers";
-import { selectSettings } from "../redux/selectors";
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+
+import { setMenuBarVisibility } from '../../common/electron-helpers';
+import { selectSettings } from '../redux/selectors';
 
 export const useMenuBarVisibility = () => {
   const { autoHideMenuBar } = useSelector(selectSettings);
@@ -9,4 +10,4 @@ export const useMenuBarVisibility = () => {
   useEffect(() => {
     setMenuBarVisibility(!autoHideMenuBar);
   }, [autoHideMenuBar]);
-}
+};
