@@ -20,7 +20,7 @@ describe('init()', () => {
       'prompt',
       'showGenericModalDialog',
       'showSaveDialog',
-    ]);
+    ].sort());
     expect(Object.keys(result.app.clipboard).sort()).toEqual([
       'clear',
       'readText',
