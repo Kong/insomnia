@@ -16,7 +16,7 @@ export interface PluginConfig {
 
 export type PluginConfigMap = Record<string, PluginConfig>;
 
-interface BaseSettings {
+export interface BaseSettings {
   autoHideMenuBar: boolean;
   autocompleteDelay: number;
   deviceId: string | null;
