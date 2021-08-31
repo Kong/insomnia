@@ -69,10 +69,10 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
           return Promise.resolve(options.defaultValue || '');
         }
 
-        // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted
-        return new Promise((resolve, reject) => {
+        // This custom promise converts the prompt modal from being callback-based to reject when the modal is cancelled and resolve when the modal is submitted and hidden
+        return new Promise<string>((resolve, reject) => {
           let shouldResolve = false;
-          let resolveWith: string;
+          let resolveWith: string | null = null;
 
           showPrompt({
             title,
@@ -89,7 +89,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
 
             // don't resolve the overall promise until the modal has hidden after clicking submit
             onHide() {
-              if (shouldResolve) {
+              if (shouldResolve && resolveWith !== null) {
                 resolve(resolveWith);
               }
             },
