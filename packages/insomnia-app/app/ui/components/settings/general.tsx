@@ -368,6 +368,7 @@ class General extends PureComponent<Props, State> {
             <BooleanSetting
               label="Validate certificates"
               setting="validateSSL"
+              help="Indicates whether SSL certificates should be validated for API requests. This does not affect SSL certificate validation during authentication."
             />
             <BooleanSetting
               label="Follow redirects"
@@ -468,6 +469,13 @@ class General extends PureComponent<Props, State> {
           >
             Clear OAuth 2 session
           </button>
+        </div>
+        <div className="form-row pad-top-sm">
+          <BooleanSetting
+            label="Validate certificates during authentication"
+            setting="validateAuthSSL"
+            help="Indicates whether SSL certificates should be validated during authentication flows"
+          />
         </div>
 
         <hr className="pad-top" />

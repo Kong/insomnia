@@ -138,8 +138,9 @@ export async function _actuallySend(
   renderedRequest: RenderedRequest,
   renderContext: Record<string, any>,
   workspace: Workspace,
-  settings: Settings,
+  settings: Omit<Settings, 'validateSSL' | 'validateAuthSSL'>,
   environment?: Environment | null,
+  validateSSL = true,
 ) {
   return new Promise<ResponsePatch>(async resolve => {
     const timeline: ResponseTimelineEntry[] = [];
@@ -419,7 +420,7 @@ export async function _actuallySend(
       }
 
       // SSL Validation
-      if (settings.validateSSL) {
+      if (validateSSL) {
         addTimelineText('Enable SSL validation');
       } else {
         setOpt(Curl.option.SSL_VERIFYHOST, 0);
@@ -906,6 +907,7 @@ export async function sendWithSettings(
     workspace,
     settings,
     environment,
+    settings.validateAuthSSL,
   );
 }
 
@@ -988,6 +990,7 @@ export async function send(
     workspace,
     settings,
     environment,
+    settings.validateSSL,
   );
   console.log(
     response.error

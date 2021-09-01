@@ -619,6 +619,119 @@ describe('actuallySend()', () => {
     });
   });
 
+  it('disables ssl verification when configured to do so', async () => {
+    const workspace = await models.workspace.create();
+    const settings = await models.settings.create();
+    const cookies = [
+      {
+        creation: new Date('2016-10-05T04:40:49.505Z'),
+        key: 'foo',
+        value: 'barrrrr',
+        expires: new Date('2096-10-12T04:40:49.000Z'),
+        domain: 'notlocalhost',
+        path: '/',
+        hostOnly: true,
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+      },
+      {
+        creation: new Date('2016-10-05T04:40:49.505Z'),
+        key: 'foo',
+        value: 'bar',
+        expires: new Date('2096-10-12T04:40:49.000Z'),
+        domain: 'localhost',
+        path: '/',
+        hostOnly: true,
+        lastAccessed: new Date('2096-10-05T04:40:49.505Z'),
+      },
+    ];
+    const cookieJar = await models.cookieJar.getOrCreateForParentId(workspace._id);
+    await models.cookieJar.update(cookieJar, {
+      parentId: workspace._id,
+      cookies,
+    });
+    const request = Object.assign(models.request.init(), {
+      _id: 'req_123',
+      parentId: workspace._id,
+      headers: [
+        {
+          name: 'Content-Type',
+          value: 'application/json',
+        },
+        {
+          name: 'Empty',
+          value: '',
+        },
+      ],
+      parameters: [
+        {
+          name: 'foo bar',
+          value: 'hello&world',
+        },
+      ],
+      method: 'POST',
+      body: {
+        mimeType: CONTENT_TYPE_FORM_URLENCODED,
+        params: [
+          {
+            name: 'foo',
+            value: 'bar',
+          },
+        ],
+      },
+      url: 'http://localhost',
+      authentication: {
+        type: AUTH_BASIC,
+        username: 'user',
+        password: 'pass',
+      },
+    });
+    const renderedRequest = await getRenderedRequest({ request });
+    const response = await networkUtils._actuallySend(
+      renderedRequest,
+      CONTEXT,
+      workspace,
+      settings,
+      null,
+      false
+    );
+    const bodyBuffer = models.response.getBodyBuffer(response);
+    const body = JSON.parse(String(bodyBuffer));
+    expect(body).toEqual({
+      meta: {},
+      features: {
+        Raw: true,
+      },
+      options: {
+        COOKIELIST: [
+          'notlocalhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbarrrrr',
+          'localhost\tFALSE\t/\tFALSE\t4000855249\tfoo\tbar',
+        ],
+        ACCEPT_ENCODING: '',
+        COOKIEFILE: '',
+        FOLLOWLOCATION: true,
+        HTTPHEADER: [
+          'Content-Type: application/json',
+          'Empty;',
+          'Expect:',
+          'Transfer-Encoding:',
+          'Authorization: Basic dXNlcjpwYXNz',
+          'Accept: */*',
+          'Accept-Encoding:',
+        ],
+        NOPROGRESS: true,
+        POSTFIELDS: 'foo=bar',
+        POST: 1,
+        PROXY: '',
+        SSL_VERIFYHOST: 0, // should disbale SSL
+        SSL_VERIFYPEER: 0, // should disbale SSL
+        TIMEOUT_MS: 0,
+        URL: 'http://localhost/?foo%20bar=hello%26world',
+        USERAGENT: `insomnia/${getAppVersion()}`,
+        VERBOSE: true,
+      },
+    });
+  });
+
   it('sets HTTP version', async () => {
     const workspace = await models.workspace.create();
     const settings = await models.settings.create();
