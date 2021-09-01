@@ -419,7 +419,7 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
       // @ts-expect-error -- TSCONVERSION
       segment,
       // @ts-expect-error -- TSCONVERSION
-      displayValue: displayValue ?? '',
+      displayValue,
       // @ts-expect-error -- TSCONVERSION
       comment: value,
       // @ts-expect-error -- TSCONVERSION
@@ -469,7 +469,7 @@ function renderHintMatch(li, _self, data) {
   const { displayText, segment } = data;
   const markedName = replaceWithSurround(displayText, segment, '<strong>', '</strong>');
   const { char, title } = ICONS[data.type];
-  const safeValue = escapeHTML(data.displayValue);
+  const safeValue = escapeHTML(data.displayValue ?? '');
   li.className += ` fancy-hint type--${data.type}`;
   li.innerHTML = `
     <label class="label" title="${title}">${char}</label>
