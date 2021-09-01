@@ -1,6 +1,8 @@
 import fs from 'fs';
+import path from 'path';
 import YAML from 'yaml';
 
+import { InsoError } from '../../errors';
 import { UNKNOWN } from '../../types';
 import { DbAdapter } from '../index';
 import { emptyDb } from '../index';
@@ -62,38 +64,51 @@ const parseRaw = ({ _type, ...rest }: RawTypeModel): ParsedTypeModel => ({
   type: parseRawType(_type),
 });
 
-const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
+const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   // Sanity check - do db files exist and is it a file?
-  const existsAndIsFile = fs.existsSync(path) && fs.lstatSync(path).isFile();
+  const existsAndIsFile = fs.existsSync(filePath) && fs.lstatSync(filePath).isFile();
+
   if (!existsAndIsFile) {
     return null;
   }
+
+  const fileName = path.basename(filePath);
 
   // Init an empty database
   const db = emptyDb();
 
   // Now, reading and parsing
-  const content = await fs.promises.readFile(path, { encoding: 'utf-8' });
-  const parsed = YAML.parse(content);
-
-  // We are supporting only v4 files
-  if (parsed.__export_format !== 4) {
-    return null;
+  const content = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
+  let parsed: {
+    __export_format: number,
+    resources: RawTypeModel[],
+  } | undefined;
+  try {
+    parsed = YAML.parse(content);
+  } catch (e) {
+    throw new InsoError(`Failed to parse ${fileName}.`, e);
   }
 
-  // Read resources field which should contains all available objects
-  const rawModels = parsed.resources as RawTypeModel[];
+  // We are supporting only v4 files
+  if (!parsed) {
+    throw new InsoError(`Failed to parse ${fileName}.`);
+  } else if (!parsed.__export_format) {
+    throw new InsoError(`Expected Insomnia V4 export file; unexpected data found in ${fileName}.`);
+  } else if (parsed.__export_format !== 4) {
+    throw new InsoError(`Expected Insomnia V4 export file; found V${parsed.__export_format} in ${fileName}.`);
+  }
 
-  // Transform to set for faster comparison
+  // Transform filter to a set for faster search
   // If it is undefined, it will return an empty set
   const toFilter = new Set<string>(filterTypes);
 
-  // Execute translation between un-mapped and mapped models
-  rawModels.forEach(model => {
+  // Execute translation between raw and imported models
+  parsed.resources.forEach(model => {
     // If there is no filter to apply, or this model is included in the filter
     if (!toFilter.size || toFilter.has(parseRawType(model._type))) {
       // Rename field, transform value and return a new object
       const obj = parseRaw(model);
+
       // Store it, only if the key value exists
       (db[obj.type] as UNKNOWN[])?.push(obj);
     }
