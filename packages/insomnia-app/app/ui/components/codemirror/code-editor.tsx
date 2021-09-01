@@ -28,6 +28,7 @@ import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import FilterHelpModal from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
+import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -990,7 +991,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorValueBeforeChange(doc, change) {
+  _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
     const value = this.codeMirror?.getDoc().getValue();
 
     // If we're in single-line mode, merge all changed lines into one
@@ -999,12 +1000,14 @@ class CodeEditor extends Component<Props, State> {
         .join('') // join all changed lines into one
         .replace(/\n/g, ' ');
       // Convert all whitespace to spaces
-      change.update(change.from, change.to, [text]);
+      change.update?.(change.from, change.to, [text]);
     }
 
     // Don't allow non-breaking spaces because they break the GraphQL syntax
-    if (doc.options.mode === 'graphql' && change.text && change.text.length > 0) {
-      change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
+    if (doc.getOption('mode') === 'graphql') {
+      const text = change.text.map(normalizeIrregularWhitespace);
+
+      change.update?.(change.from, change.to, text);
     }
 
     // Suppress lint on empty doc or single space exists (default value)
