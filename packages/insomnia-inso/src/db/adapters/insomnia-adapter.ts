@@ -2,7 +2,7 @@ import fs from 'fs';
 import YAML from 'yaml';
 
 import { UNKNOWN } from '../../types';
-import type { Database, DbAdapter } from '../index';
+import { DbAdapter } from '../index';
 import { emptyDb } from '../index';
 import { BaseModel } from '../models/types';
 
@@ -27,8 +27,16 @@ import { BaseModel } from '../models/types';
  * @see packages/insomnia-app/app/common/import.js
  */
 
+type RawTypeKey = 'api_spec'
+  | 'environment'
+  | 'request'
+  | 'request_group'
+  | 'workspace'
+  | 'unit_test_suite'
+  | 'unit_test';
+
 /* eslint-disable camelcase */
-const modelTypeToExportTypeMap: Record<string, keyof Database> = {
+const rawTypeToParsedTypeMap: Record<RawTypeKey, BaseModel['type']> = {
   api_spec: 'ApiSpec',
   environment: 'Environment',
   request: 'Request',
@@ -39,16 +47,19 @@ const modelTypeToExportTypeMap: Record<string, keyof Database> = {
 };
 /* eslint-enable camelcase */
 
-export interface RawBaseModel {
-  _id: string;
-  _type: string;
-  parentId: string;
-}
+type ExtraProperties = Record<string, unknown>;
 
-const transformRawToImported = (item: RawBaseModel): BaseModel => ({
-  _id: item._id,
-  parentId: item.parentId,
-  type: modelTypeToExportTypeMap[item._type],
+type RawTypeModel = {
+  _type: RawTypeKey;
+} & ExtraProperties;
+
+type ParsedTypeModel = Pick<BaseModel, 'type'> & ExtraProperties;
+
+const parseRawType = (type: RawTypeModel['_type']): ParsedTypeModel['type'] => rawTypeToParsedTypeMap[type];
+
+const parseRaw = ({ _type, ...rest }: RawTypeModel): ParsedTypeModel => ({
+  ...rest,
+  type: parseRawType(_type),
 });
 
 const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
@@ -71,18 +82,18 @@ const insomniaAdapter: DbAdapter = async (path, filterTypes) => {
   }
 
   // Read resources field which should contains all available objects
-  const importedModels = parsed.resources;
+  const rawModels = parsed.resources as RawTypeModel[];
 
   // Transform to set for faster comparison
   // If it is undefined, it will return an empty set
   const toFilter = new Set<string>(filterTypes);
 
   // Execute translation between un-mapped and mapped models
-  importedModels.forEach((item: RawBaseModel) => {
+  rawModels.forEach(model => {
     // If there is no filter to apply, or this model is included in the filter
-    if (!toFilter.size || toFilter.has(modelTypeToExportTypeMap[item._type])) {
+    if (!toFilter.size || toFilter.has(parseRawType(model._type))) {
       // Rename field, transform value and return a new object
-      const obj = transformRawToImported(item);
+      const obj = parseRaw(model);
       // Store it, only if the key value exists
       (db[obj.type] as UNKNOWN[])?.push(obj);
     }
