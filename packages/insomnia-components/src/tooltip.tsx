@@ -69,7 +69,7 @@ export class Tooltip extends PureComponent<TooltipProps, State> {
   state: State = {
     visible: false,
     movedToBody: false,
-  }
+  };
 
   _handleStopClick(e: MouseEvent) {
     e.stopPropagation();

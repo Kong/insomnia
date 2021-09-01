@@ -58,7 +58,7 @@ class RequestSettingsModal extends PureComponent<Props, State> {
     workspaces: [],
     justCopied: false,
     justMoved: false,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

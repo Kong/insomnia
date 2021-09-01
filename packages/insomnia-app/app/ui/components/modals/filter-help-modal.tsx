@@ -15,7 +15,7 @@ interface State {
 class FilterHelpModal extends PureComponent<{}, State> {
   state: State = {
     isJson: true,
-  }
+  };
 
   modal: Modal | null = null;
 

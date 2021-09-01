@@ -16,12 +16,12 @@ interface Props {
 }
 
 interface State {
-  left: number | null,
-  top: number | null,
-  bottom: number | null,
-  right: number | null,
-  maxWidth: number | null,
-  maxHeight: number | null,
+  left: number | null;
+  top: number | null;
+  bottom: number | null;
+  right: number | null;
+  maxWidth: number | null;
+  maxHeight: number | null;
   visible: boolean;
 }
 
@@ -41,7 +41,7 @@ class Tooltip extends PureComponent<Props, State> {
     maxWidth: null,
     maxHeight: null,
     visible: false,
-  }
+  };
 
   _setTooltipRef(n: HTMLDivElement) {
     this._tooltip = n;

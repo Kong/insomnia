@@ -156,7 +156,7 @@ export interface GlobalState {
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
   activeWorkspaceId: string | null;
-  activeActivity: GlobalActivity | null,
+  activeActivity: GlobalActivity | null;
   isLoggedIn: boolean;
   loadingRequestIds: Record<string, number>;
 }
@@ -462,8 +462,8 @@ const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix,
   selectedFormat,
 }: {
-  exportedFileNamePrefix: string,
-  selectedFormat: SelectedFormat,
+  exportedFileNamePrefix: string;
+  selectedFormat: SelectedFormat;
 }) => {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');

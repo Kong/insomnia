@@ -64,7 +64,7 @@ class General extends PureComponent<Props, State> {
   state: State = {
     fonts: null,
     fontsMono: null,
-  }
+  };
 
   async componentDidMount() {
     const allFonts = await fontScanner.getAvailableFonts();

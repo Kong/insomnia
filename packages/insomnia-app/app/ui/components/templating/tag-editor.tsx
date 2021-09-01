@@ -64,7 +64,7 @@ class TagEditor extends PureComponent<Props, State> {
     preview: '',
     error: '',
     variables: [],
-  }
+  };
 
   async load() {
     const activeTagData = templateUtils.tokenizeTag(this.props.defaultValue);

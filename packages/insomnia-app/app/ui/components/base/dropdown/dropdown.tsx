@@ -14,26 +14,26 @@ import DropdownItem from './dropdown-item';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
 export interface DropdownProps {
-  children: ReactNode,
-  right?: boolean,
-  outline?: boolean,
-  wide?: boolean,
-  onOpen?: Function,
-  onHide?: Function,
-  className?: string,
-  style?: CSSProperties,
-  beside?: boolean,
+  children: ReactNode;
+  right?: boolean;
+  outline?: boolean;
+  wide?: boolean;
+  onOpen?: Function;
+  onHide?: Function;
+  className?: string;
+  style?: CSSProperties;
+  beside?: boolean;
 }
 
 interface State {
-  open: boolean,
-  dropUp: boolean,
-  filter: string,
-  filterVisible: boolean,
-  filterItems?: number[] | null,
-  filterActiveIndex: number,
-  forcedPosition?: {x: number, y: number} | null,
-  uniquenessKey: number,
+  open: boolean;
+  dropUp: boolean;
+  filter: string;
+  filterVisible: boolean;
+  filterItems?: number[] | null;
+  filterActiveIndex: number;
+  forcedPosition?: {x: number; y: number} | null;
+  uniquenessKey: number;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -54,7 +54,7 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     forcedPosition: null,
     // Use this to force new menu every time dropdown opens
     uniquenessKey: 0,
-  }
+  };
 
   _setRef(n: HTMLDivElement) {
     this._node = n;

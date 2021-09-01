@@ -5,11 +5,10 @@ import { Pluggable, Taggable } from './outputs';
 // The `Plugin` type is intentionally focused on the _Kong_ plugin definitions without knowledge of declarative-config or kubernetes or any other transforms.
 // It happens to be the case, yes, that the DC shape directly matches the Kong plugin shape in all cases, but this is by coincidence, as far as the types are concerned.  Other transformers, e.g. Kubernetes, use this same `Plugin` type but resituate it quite a bit.  It just so happens that declarative config does not do this (yet).
 // Finally, if nothing else it serves as useful documentation to distinguish when we're talking about declarative-config vs kong-config.
-export type DCPlugin = Plugin
+export type DCPlugin = Plugin;
 
 export interface DCRoute extends Taggable, Pluggable {
   methods: string[];
-  // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
   name: string;
   paths: string[];
   strip_path: boolean;

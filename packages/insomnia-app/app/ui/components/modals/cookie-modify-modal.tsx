@@ -39,7 +39,7 @@ class CookieModifyModal extends PureComponent<Props, State> {
   state: State = {
     cookie: null,
     rawValue: '',
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

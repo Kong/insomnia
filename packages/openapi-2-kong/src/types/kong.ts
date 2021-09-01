@@ -25,7 +25,7 @@ export interface XKongServiceDefaults {
   [xKongServiceDefaults]?: Partial<DCService>;
 }
 
-export type XKongPluginProperty<Name extends string = string> = XKongProperty<`plugin-${Name}`>
+export type XKongPluginProperty<Name extends string = string> = XKongProperty<`plugin-${Name}`>;
 
 // Note: it's important that `Name` doesn't have a default argument.  We want to force the consumer of this type to specify the name as specifically as possible because this value is instrumental to how the plugins are used and discriminated.
 export interface PluginBase<Name extends string> extends Taggable {
@@ -57,7 +57,7 @@ export interface PluginBase<Name extends string> extends Taggable {
  *
  * see: https://docs.konghq.com/hub/kong-inc/openid-connect/#enabling-the-plugin-globally
  */
-export type GlobalPluginBase<Name extends string> = Omit<PluginBase<Name>, 'service' | 'route' | 'consumer'>
+export type GlobalPluginBase<Name extends string> = Omit<PluginBase<Name>, 'service' | 'route' | 'consumer'>;
 
 /** used for user-defined or yet-untyped plugins */
 export type XKongPlugin<Plugin extends PluginBase<string>> = Partial<
@@ -65,7 +65,7 @@ export type XKongPlugin<Plugin extends PluginBase<string>> = Partial<
     XKongPluginProperty<Plugin['name']>,
     Plugin
   >
->
+>;
 
 export interface BodySchema {
   /** The request body schema specification */
@@ -111,7 +111,7 @@ Permalink
 }
 
 /** see: https://docs.konghq.com/hub/kong-inc/request-validator/#parameter-schema-definition */
-export type ParameterSchema = ParameterSchemaRequired | (ParameterSchemaRequired & ParameterSchemaOptional)
+export type ParameterSchema = ParameterSchemaRequired | (ParameterSchemaRequired & ParameterSchemaOptional);
 
 export interface ParameterSchemas {
   /**
@@ -157,7 +157,7 @@ export interface RequestValidatorPlugin extends PluginBase<RequestValidator> {
   } & RequireAtLeastOne<BodySchema & ParameterSchemas>;
 }
 export const xKongPluginRequestValidator: XKongPluginProperty<RequestValidator> = 'x-kong-plugin-request-validator';
-export type XKongPluginRequestValidator = XKongPlugin<RequestValidatorPlugin>
+export type XKongPluginRequestValidator = XKongPlugin<RequestValidatorPlugin>;
 
 /** see: https://docs.konghq.com/hub/kong-inc/key-auth/#parameters */
 export type KeyAuth = 'key-auth';
@@ -244,10 +244,10 @@ export interface RequestTerminationPlugin extends PluginBase<RequestTermination>
      * @defaultValue application/json; charset=utf-8
      */
     content_type?: string;
-  }
+  };
 }
 export const xKongPluginRequestTermination: XKongPluginProperty<RequestTermination> = 'x-kong-plugin-request-termination';
-export type XKongPluginRequestTermination = XKongPlugin<RequestTerminationPlugin>
+export type XKongPluginRequestTermination = XKongPlugin<RequestTerminationPlugin>;
 
 /** see: https://docs.konghq.com/hub/kong-inc/basic-auth/#parameters */
 export type BasicAuth = 'basic-auth';
@@ -269,10 +269,10 @@ export interface BasicAuthPlugin extends Omit<PluginBase<BasicAuth>, 'consumer'>
      * Please note that this value must refer to the Consumer id attribute which is internal to Kong, and not its custom_id.
      */
     anonymous?: string;
-  }
+  };
 }
 export const xKongBasicAuth: XKongPluginProperty<BasicAuth> = 'x-kong-plugin-basic-auth';
-export type XKongBasicAuthPlugin = XKongPlugin<BasicAuthPlugin>
+export type XKongBasicAuthPlugin = XKongPlugin<BasicAuthPlugin>;
 
 export type AuthMethod =
   | 'password'
@@ -282,7 +282,7 @@ export type AuthMethod =
   | 'introspection'
   | 'kong_oauth2'
   | 'refresh_token'
-  | 'session'
+  | 'session';
 
 export type OpenIDConnect = 'openid-connect';
 
@@ -299,7 +299,7 @@ export interface OpenIDConnectPlugin extends GlobalPluginBase<OpenIDConnect> {
     issuer?: string;
     scopes_required?: string[];
     auth_methods?: AuthMethod[];
-  }
+  };
 }
 export const xKongOpenIDConnect: XKongPluginProperty<OpenIDConnect> = 'x-kong-plugin-openid-connect';
 export type XOpenIDConnectPlugin = XKongPlugin<OpenIDConnectPlugin>;

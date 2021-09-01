@@ -84,8 +84,8 @@ const writeTempFile = (sourceCode: string) => {
 };
 
 type CliOptions<TNetworkResponse> = InsomniaOptions<TNetworkResponse> & {
-  reporter?: Reporter
-}
+  reporter?: Reporter;
+};
 
 /**
  * Run a test file using Mocha

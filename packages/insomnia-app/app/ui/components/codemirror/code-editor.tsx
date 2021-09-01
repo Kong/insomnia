@@ -86,63 +86,63 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 export type CodeEditorOnChange = (value: string) => void;
 
 interface Props {
-  indentWithTabs?: boolean,
-  onChange?: CodeEditorOnChange,
-  onCursorActivity?: Function,
-  onFocus?: Function,
-  onBlur?: Function,
-  onClickLink?: CodeMirrorLinkClickCallback,
-  onKeyDown?: Function,
-  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>,
-  onClick?: React.MouseEventHandler<HTMLDivElement>,
-  onPaste?: Function,
-  onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void,
-  render?: HandleRender,
-  nunjucksPowerUserMode?: boolean,
-  getRenderContext?: HandleGetRenderContext,
-  getAutocompleteConstants?: Function,
-  getAutocompleteSnippets?: Function,
-  keyMap?: string,
-  mode?: string,
-  id?: string,
-  placeholder?: string,
-  lineWrapping?: boolean,
-  hideLineNumbers?: boolean,
-  hideGutters?: boolean,
-  noMatchBrackets?: boolean,
-  hideScrollbars?: boolean,
-  fontSize?: number,
-  indentSize?: number,
-  defaultValue?: string,
-  tabIndex?: number,
-  autoPrettify?: boolean,
-  manualPrettify?: boolean,
-  noLint?: boolean,
-  noDragDrop?: boolean,
-  noStyleActiveLine?: boolean,
-  className?: string,
-  style?: Object,
-  updateFilter?: (filter: string) => void,
-  defaultTabBehavior?: boolean,
-  readOnly?: boolean,
-  type?: string,
-  filter?: string,
-  filterHistory?: string[],
-  singleLine?: boolean,
-  debounceMillis?: number,
-  dynamicHeight?: boolean,
-  autoCloseBrackets?: boolean,
-  hintOptions?: Object,
-  lintOptions?: Object,
-  infoOptions?: Object,
-  jumpOptions?: Object,
-  uniquenessKey?: string,
-  isVariableUncovered?: boolean,
-  raw?: boolean,
+  indentWithTabs?: boolean;
+  onChange?: CodeEditorOnChange;
+  onCursorActivity?: Function;
+  onFocus?: Function;
+  onBlur?: Function;
+  onClickLink?: CodeMirrorLinkClickCallback;
+  onKeyDown?: Function;
+  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  onPaste?: Function;
+  onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
+  render?: HandleRender;
+  nunjucksPowerUserMode?: boolean;
+  getRenderContext?: HandleGetRenderContext;
+  getAutocompleteConstants?: Function;
+  getAutocompleteSnippets?: Function;
+  keyMap?: string;
+  mode?: string;
+  id?: string;
+  placeholder?: string;
+  lineWrapping?: boolean;
+  hideLineNumbers?: boolean;
+  hideGutters?: boolean;
+  noMatchBrackets?: boolean;
+  hideScrollbars?: boolean;
+  fontSize?: number;
+  indentSize?: number;
+  defaultValue?: string;
+  tabIndex?: number;
+  autoPrettify?: boolean;
+  manualPrettify?: boolean;
+  noLint?: boolean;
+  noDragDrop?: boolean;
+  noStyleActiveLine?: boolean;
+  className?: string;
+  style?: Object;
+  updateFilter?: (filter: string) => void;
+  defaultTabBehavior?: boolean;
+  readOnly?: boolean;
+  type?: string;
+  filter?: string;
+  filterHistory?: string[];
+  singleLine?: boolean;
+  debounceMillis?: number;
+  dynamicHeight?: boolean;
+  autoCloseBrackets?: boolean;
+  hintOptions?: Object;
+  lintOptions?: Object;
+  infoOptions?: Object;
+  jumpOptions?: Object;
+  uniquenessKey?: string;
+  isVariableUncovered?: boolean;
+  raw?: boolean;
 }
 
 interface State {
-  filter: string
+  filter: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

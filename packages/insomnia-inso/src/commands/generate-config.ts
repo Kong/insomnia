@@ -26,7 +26,7 @@ export type GenerateConfigOptions = GlobalOptions & {
   output?: string;
 
   /** a comma-separated list of tags */
-  tags?: string,
+  tags?: string;
 };
 
 const validateOptions = (

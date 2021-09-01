@@ -46,7 +46,7 @@ export interface RenderContextAndKeys {
   keys: {
     name: string;
     value: any;
-  }[]
+  }[];
 }
 
 export type HandleGetRenderContext = () => Promise<RenderContextAndKeys>;
