@@ -32,7 +32,7 @@ const StyledTooltip = styled(Tooltip)({
   ...tooltipIconPlacementHack,
 });
 
-const TooltipIcon = ({ message, icon }: { message: string, icon: SvgIconProps['icon'] }) => (
+const TooltipIcon = ({ message, icon }: { message: string; icon: SvgIconProps['icon'] }) => (
   <StyledTooltip message={message}>
     <StyledSvgIcon icon={icon} />
   </StyledTooltip>

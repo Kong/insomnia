@@ -65,7 +65,7 @@ class Toast extends PureComponent<{}, State> {
     notification: null,
     visible: false,
     appName: getAppName(),
-  }
+  };
 
   _handlePostCTACleanup() {
     const { notification } = this.state;

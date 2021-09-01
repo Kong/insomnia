@@ -23,7 +23,7 @@ import type { WrapperProps } from './wrapper';
 interface Props {
   forceRefreshKey: number;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
   handleChangeEnvironment: Function;
   handleDeleteResponse: Function;
   handleDeleteResponses: Function;

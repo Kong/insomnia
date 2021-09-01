@@ -5,9 +5,9 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import CodeEditor from '../codemirror/code-editor';
 
 interface Props {
-  value: string,
-  fontSize?: number,
-  responseId?: string,
+  value: string;
+  fontSize?: number;
+  responseId?: string;
 }
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseRaw extends PureComponent<Props> {

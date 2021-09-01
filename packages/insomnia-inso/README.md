@@ -40,7 +40,7 @@
 
 `inso` will first try to find a `.insomnia` directory in it's working directory. This directory is generated in a git repository when using git sync in Insomnia. When `inso` is used in a CI environment, it will always run against the `.insomnia` directory.
 
-If `inso` cannot find the `.insomnia` directory, it will try to run against the Insomnia app data directory (if found). You can override both the working directory, and the app data directory, using the `--workingDir` and `--appDataDir` global options.
+If `inso` cannot find the `.insomnia` directory, it will try to run against the Insomnia app data directory (if found). You can override both the working directory, and the data directory, using the `--workingDir` and `--src` global options.
 
 ## The `[identifier]` argument
 
@@ -56,7 +56,7 @@ Additionally, if the `[identifier]` argument is omitted from the command, `inso`
 |Global option|Alias|Description|
 |- |- |- |
 | `--workingDir <dir>` | `-w` |set working directory|
-| `--appDataDir <dir>` | `-a` |set the app data directory|
+| `--src <file|dir>` | |set the app data source|
 | `--config <path>` | |path to the configuration file|
 | `--ci` | | run in CI, disables all prompts |
 | `--verbose` | | show additional logs while running a command |

@@ -16,7 +16,7 @@ export const noConsoleLog = async <T>(callback: () => Promise<T>): Promise<T> =>
 
 export type LogsByType = {
   [t in logType]?: string[]
-}
+};
 
 export type ModifiedConsola = ReturnType<typeof consola.create> & { __getLogs: () => LogsByType};
 

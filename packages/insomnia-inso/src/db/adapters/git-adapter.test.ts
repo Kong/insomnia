@@ -3,7 +3,8 @@ import path from 'path';
 import gitAdapter from './git-adapter';
 
 describe('gitAdapter()', () => {
-  const fixturesPath = 'src/db/fixtures';
+  const fixturesPath = path.join(__dirname, '../fixtures');
+
   it('should seed with git-repo directory', async () => {
     const workingDir = path.join(fixturesPath, 'git-repo');
     const db = await gitAdapter(workingDir);

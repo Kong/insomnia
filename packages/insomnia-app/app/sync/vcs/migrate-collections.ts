@@ -53,7 +53,7 @@ export const migrateCollectionsIntoRemoteProject = async (vcs: VCS) => {
     const remoteBackendProject = findRemoteBackendProject(collection);
 
     if (!remoteBackendProject) {
-      return;
+      continue;
     }
 
     let remoteProject = findRemoteProjectByTeam(remoteBackendProject.team);

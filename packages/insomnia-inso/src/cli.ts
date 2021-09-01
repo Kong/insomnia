@@ -20,7 +20,7 @@ const prepareCommand = (options: Partial<GenerateConfigOptions>) => {
   return options;
 };
 
-type CreateCommand = (command: string) => commander.Command
+type CreateCommand = (command: string) => commander.Command;
 
 const makeGenerateCommand = (commandCreator: CreateCommand) => {
   // inso generate
@@ -174,9 +174,10 @@ export const go = (args?: string[], exitOverride?: boolean) => {
   // Global options
   cmd
     .option('-w, --workingDir <dir>', 'set working directory')
-    .option('-a, --appDataDir <dir>', 'set the app data directory')
+    .option('-a, --appDataDir <dir>', 'set the app data directory (deprecated; use --src instead)')
     .option('--config <path>', 'path to configuration file')
     .option('--verbose', 'show additional logs while running the command')
+    .option('--src <file|dir>', 'set the app data source')
     .option('--printOptions', 'print the loaded options')
     .option('--ci', 'run in CI, disables all prompts');
 

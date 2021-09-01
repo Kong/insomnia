@@ -49,7 +49,7 @@ interface State {
 class UnconnectedSidebarRequestGroupRow extends PureComponent<Props, State> {
   state: State = {
     dragDirection: 0,
-  }
+  };
 
   private dropdownRef = createRef<UnconnectedRequestGroupActionsDropdown>();
   private expandTagRef = createRef<HTMLDivElement>();

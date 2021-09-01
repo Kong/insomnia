@@ -40,7 +40,7 @@ class SyncBranchesModal extends PureComponent<Props, State> {
     branches: [],
     remoteBranches: [],
     currentBranch: '',
-  }
+  };
 
   _setModalRef(m: Modal) {
     this.modal = m;

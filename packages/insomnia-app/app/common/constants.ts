@@ -332,7 +332,7 @@ export type DashboardSortOrder =
   | 'name-desc'
   | 'created-asc'
   | 'created-desc'
-  | 'modified-desc'
+  | 'modified-desc';
 
 export const DASHBOARD_SORT_ORDERS = [
   SORT_MODIFIED_DESC,

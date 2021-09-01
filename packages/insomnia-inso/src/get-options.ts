@@ -18,6 +18,7 @@ export type GlobalOptions = {
   verbose?: boolean;
   printOptions?: boolean;
   config?: string;
+  src?: string;
 } & ConfigFileOptions;
 
 const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
@@ -25,6 +26,7 @@ const OptionsSupportedInConfigFile: (keyof GlobalOptions)[] = [
   'workingDir',
   'ci',
   'verbose',
+  'src',
   'printOptions',
 ];
 
@@ -63,7 +65,7 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
 
 interface CommandObj {
   parent?: CommandObj;
-  opts: () => GenerateConfigOptions
+  opts: () => GenerateConfigOptions;
 }
 
 export const extractCommandOptions = <T extends GenerateConfigOptions>(cmd: CommandObj): Partial<T> => {

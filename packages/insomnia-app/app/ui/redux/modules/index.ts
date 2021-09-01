@@ -42,6 +42,6 @@ export const reducer = combineReducers({
 });
 
 export interface RootState {
-  entities: entities.EntitiesState
-  global: global.GlobalState,
+  entities: entities.EntitiesState;
+  global: global.GlobalState;
 }

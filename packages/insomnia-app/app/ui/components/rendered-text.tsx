@@ -13,7 +13,7 @@ class RenderedText extends PureComponent<Props, State> {
   state: State = {
     renderedText: '',
     error: '',
-  }
+  };
 
   async _render() {
     const { render, children } = this.props;

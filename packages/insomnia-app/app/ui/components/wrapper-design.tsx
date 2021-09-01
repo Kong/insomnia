@@ -21,7 +21,7 @@ const spectral = initializeSpectral();
 
 interface Props {
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
   handleUpdateApiSpec: (s: ApiSpec) => Promise<void>;
   wrapperProps: WrapperProps;
 }

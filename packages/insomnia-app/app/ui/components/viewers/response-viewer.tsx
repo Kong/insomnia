@@ -57,7 +57,7 @@ class ResponseViewer extends Component<Props, State> {
     blockingBecauseTooLarge: false,
     bodyBuffer: null,
     error: '',
-  }
+  };
 
   refresh() {
     // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw

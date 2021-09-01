@@ -40,7 +40,7 @@ class GitBranchesModal extends PureComponent<Props, State> {
     branches: [],
     remoteBranches: [],
     newBranchName: '',
-  }
+  };
 
   _setModalRef(ref: Modal) {
     this.modal = ref;

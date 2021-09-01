@@ -17,7 +17,7 @@ interface InsomniaPlugin {
   dist: {
     shasum: string;
     tarball: string;
-  }
+  };
 }
 
 export default async function(lookupName: string) {
