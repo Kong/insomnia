@@ -25,7 +25,7 @@ describe('init()', () => {
       'clear',
       'readText',
       'writeText',
-    ]);
+    ].sort());
   });
 });
 
