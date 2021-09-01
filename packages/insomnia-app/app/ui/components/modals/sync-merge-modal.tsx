@@ -27,7 +27,7 @@ class SyncMergeModal extends PureComponent<Props, State> {
 
   state: State = {
     conflicts: [],
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

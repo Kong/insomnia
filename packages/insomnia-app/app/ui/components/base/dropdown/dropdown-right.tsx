@@ -2,8 +2,8 @@ import classnames from 'classnames';
 import React, { PureComponent, ReactNode } from 'react';
 
 interface Props {
-  children: ReactNode,
-  className?: string,
+  children: ReactNode;
+  className?: string;
 }
 
 class DropdownRight extends PureComponent<Props> {

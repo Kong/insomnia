@@ -63,7 +63,7 @@ export const loadCosmiConfig = (configFile?: string): Partial<ConfigFileOptions>
 
 interface CommandObj {
   parent?: CommandObj;
-  opts: () => GenerateConfigOptions
+  opts: () => GenerateConfigOptions;
 }
 
 export const extractCommandOptions = <T extends GenerateConfigOptions>(cmd: CommandObj): Partial<T> => {

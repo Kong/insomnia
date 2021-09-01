@@ -21,7 +21,7 @@ class TimeFromNow extends PureComponent<Props, State> {
 
   state: State = {
     text: '',
-  }
+  };
 
   _update() {
     const { timestamp, capitalize } = this.props;

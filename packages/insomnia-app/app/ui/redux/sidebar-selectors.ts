@@ -30,16 +30,16 @@ export const sortByMetaKeyOrId = (a: SidebarModel, b: SidebarModel): number => {
 };
 
 interface Child {
-  doc: SidebarModel,
-  hidden: boolean,
-  collapsed: boolean,
+  doc: SidebarModel;
+  hidden: boolean;
+  collapsed: boolean;
   pinned: boolean;
   children: Child[];
 }
 
 export interface SidebarChildren {
-  all: Child[],
-  pinned: Child[],
+  all: Child[];
+  pinned: Child[];
 }
 
 export const selectSidebarChildren = createSelector(

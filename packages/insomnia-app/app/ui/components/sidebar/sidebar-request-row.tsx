@@ -56,7 +56,7 @@ class UnconnectedSidebarRequestRow extends PureComponent<Props, State> {
     dragDirection: 0,
     isEditing: false,
     renderedUrl: '',
-  }
+  };
 
   _urlUpdateInterval: NodeJS.Timeout | null = null;
   _requestActionsDropdown: RequestActionsDropdown | null = null;

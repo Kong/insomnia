@@ -50,7 +50,7 @@ class EnvironmentEditor extends PureComponent<Props, State> {
 
   state: State = {
     error: null,
-  }
+  };
 
   _handleChange() {
     let error: string | null = null;

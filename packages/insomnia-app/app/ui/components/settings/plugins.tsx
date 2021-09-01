@@ -48,7 +48,7 @@ class Plugins extends PureComponent<Props, State> {
     installPluginErrMsg: '',
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
-  }
+  };
 
   _handleClearError() {
     this.setState({ error: null });

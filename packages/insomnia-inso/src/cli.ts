@@ -20,7 +20,7 @@ const prepareCommand = (options: Partial<GenerateConfigOptions>) => {
   return options;
 };
 
-type CreateCommand = (command: string) => commander.Command
+type CreateCommand = (command: string) => commander.Command;
 
 const makeGenerateCommand = (commandCreator: CreateCommand) => {
   // inso generate

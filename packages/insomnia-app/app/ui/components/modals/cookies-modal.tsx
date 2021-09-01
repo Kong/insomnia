@@ -34,7 +34,7 @@ class CookiesModal extends PureComponent<Props, State> {
   state: State = {
     filter: '',
     visibleCookieIndexes: null,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

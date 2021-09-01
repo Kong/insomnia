@@ -20,8 +20,8 @@ export const getDbChoice = (
   idIsh: string,
   message: string,
   config: {
-        indent?: number
-        hint?: string
+        indent?: number;
+        hint?: string;
     } = {},
 ) => ({
   name: idIsh,

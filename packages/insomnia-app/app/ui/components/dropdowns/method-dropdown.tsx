@@ -10,11 +10,11 @@ const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';
 
 interface Props {
-  onChange: Function,
-  method: string,
-  right?: boolean,
-  showGrpc?: boolean,
-  className?: string,
+  onChange: Function;
+  method: string;
+  right?: boolean;
+  showGrpc?: boolean;
+  className?: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

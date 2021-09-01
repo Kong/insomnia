@@ -561,7 +561,7 @@ export const interceptAccessError = async <T>(
     resourceName,
     resourceType = strings.collection.singular.toLowerCase(),
   }: {
-    callback: () => T | Promise<T>,
+    callback: () => T | Promise<T>;
     action: string;
     resourceName: string;
     resourceType?: string;
