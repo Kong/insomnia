@@ -3,7 +3,8 @@ import path from 'path';
 import neDbAdapter from './ne-db-adapter';
 
 describe('neDbAdapter()', () => {
-  const fixturesPath = 'src/db/fixtures';
+  const fixturesPath = path.join(__dirname, '../fixtures');
+
   it('should seed with nedb directory', async () => {
     const workingDir = path.join(fixturesPath, 'nedb');
     const db = await neDbAdapter(workingDir);

@@ -3,7 +3,7 @@ import path from 'path';
 import insomniaAdapter from './insomnia-adapter';
 
 describe('insomniaAdapter()', () => {
-  const fixturesPath = 'src/db/fixtures';
+  const fixturesPath = path.join(__dirname, '../fixtures');
 
   it('should seed with data file (JSON)', async () => {
     const pathname = path.join(fixturesPath, 'insomnia-v4', 'insomnia_v4.json');
