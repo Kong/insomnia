@@ -93,9 +93,9 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   if (!parsed) {
     throw new InsoError(`Failed to parse ${fileName}.`);
   } else if (!parsed.__export_format) {
-    throw new InsoError(`Expected Insomnia V4 export file; unexpected data found in ${fileName}.`);
+    throw new InsoError(`Expected an Insomnia v4 export file; unexpected data found in ${fileName}.`);
   } else if (parsed.__export_format !== 4) {
-    throw new InsoError(`Expected Insomnia V4 export file; found V${parsed.__export_format} in ${fileName}.`);
+    throw new InsoError(`Expected an Insomnia v4 export file; found an Insomnia v${parsed.__export_format} export file in ${fileName}.`);
   }
 
   // Transform filter to a set for faster search
