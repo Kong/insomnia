@@ -49,11 +49,12 @@ export const generateConfig = async (
     return false;
   }
 
-  const { type, output, tags, appDataDir, workingDir, ci } = options;
+  const { type, output, tags, appDataDir, workingDir, ci, src } = options;
   const db = await loadDb({
     workingDir,
     appDataDir,
     filterTypes: ['ApiSpec'],
+    src,
   });
 
   let result: ConversionResult | null = null;
