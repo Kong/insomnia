@@ -1,9 +1,9 @@
 import React, { ButtonHTMLAttributes, PureComponent, ReactNode } from 'react';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
-  children: ReactNode,
-  noWrap?: boolean,
-  className?: string,
+  children: ReactNode;
+  noWrap?: boolean;
+  className?: string;
 }
 
 class DropdownButton extends PureComponent<Props> {

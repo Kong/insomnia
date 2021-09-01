@@ -1,3 +1,6 @@
+import electron from 'electron';
+import { mocked } from 'ts-jest/utils';
+
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { RENDER_PURPOSE_SEND } from '../../../common/render';
 import * as modals from '../../../ui/components/modals';
@@ -11,12 +14,18 @@ describe('init()', () => {
     expect(Object.keys(result)).toEqual(['app', '__private']);
     expect(Object.keys(result.app).sort()).toEqual([
       'alert',
+      'clipboard',
       'dialog',
       'getPath',
       'prompt',
       'showGenericModalDialog',
       'showSaveDialog',
-    ]);
+    ].sort());
+    expect(Object.keys(result.app.clipboard).sort()).toEqual([
+      'clear',
+      'readText',
+      'writeText',
+    ].sort());
   });
 });
 
@@ -93,5 +102,47 @@ describe('app.prompt()', () => {
         },
       ],
     ]);
+  });
+});
+
+describe('app.clipboard', () => {
+  it('writes to clipboard', () => {
+    // Arrange
+    const mockedClipboard = mocked(electron.clipboard);
+    const context = plugin.init();
+    const text = 'abc';
+
+    // Act
+    context.app.clipboard.writeText(text);
+
+    // Assert
+    expect(mockedClipboard.writeText).toHaveBeenCalledWith(text);
+  });
+
+  it('reads from clipboard', () => {
+    // Arrange
+    const text = 'abc';
+    const mockedClipboard = mocked(electron.clipboard);
+    mockedClipboard.readText.mockReturnValue(text);
+    const context = plugin.init();
+
+    // Act
+    const outputText = context.app.clipboard.readText();
+
+    // Assert
+    expect(outputText).toBe(text);
+    expect(mockedClipboard.readText).toHaveBeenCalled();
+  });
+
+  it('clears clipboard', () => {
+    // Arrange
+    const mockedClipboard = mocked(electron.clipboard);
+    const context = plugin.init();
+
+    // Act
+    context.app.clipboard.clear();
+
+    // Assert
+    expect(mockedClipboard.clear).toHaveBeenCalled();
   });
 });

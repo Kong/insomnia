@@ -61,7 +61,7 @@ class GitSyncDropdown extends PureComponent<Props, State> {
     log: [],
     branch: '',
     branches: [],
-  }
+  };
 
   _setDropdownRef(n: Dropdown) {
     this._dropdown = n;

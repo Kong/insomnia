@@ -26,7 +26,7 @@ interface State {
 class PasswordEditor extends PureComponent<Props, State> {
   state: State = {
     showPassword: false,
-  }
+  };
 
   _handleShowPassword() {
     this.setState({

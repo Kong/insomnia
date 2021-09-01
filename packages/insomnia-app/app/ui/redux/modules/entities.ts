@@ -47,29 +47,29 @@ type EntityRecord<T extends BaseModel> = Record<string, T>;
 export interface EntitiesState {
   stats: EntityRecord<Stats>;
   settings: EntityRecord<Settings>;
-  projects: EntityRecord<Project>,
-  workspaces: EntityRecord<Workspace>,
-  workspaceMetas: EntityRecord<WorkspaceMeta>,
-  environments: EntityRecord<Environment>,
-  gitRepositories: EntityRecord<GitRepository>,
-  cookieJars: EntityRecord<CookieJar>,
-  apiSpecs: EntityRecord<ApiSpec>,
-  requestGroups: EntityRecord<RequestGroup>,
-  requestGroupMetas: EntityRecord<RequestGroupMeta>,
-  requests: EntityRecord<Request>,
-  requestVersions: EntityRecord<RequestVersion>,
-  requestMetas: EntityRecord<RequestMeta>,
-  responses: EntityRecord<Response>,
-  oAuth2Tokens: EntityRecord<OAuth2Token>,
-  clientCertificates: EntityRecord<ClientCertificate>,
-  pluginDatas: EntityRecord<PluginData>,
-  unitTestSuites: EntityRecord<UnitTestSuite>,
-  unitTestResults: EntityRecord<UnitTestResult>,
-  unitTests: EntityRecord<UnitTest>,
-  protoFiles: EntityRecord<ProtoFile>,
-  protoDirectories: EntityRecord<ProtoDirectory>,
-  grpcRequests: EntityRecord<GrpcRequest>,
-  grpcRequestMetas: EntityRecord<GrpcRequestMeta>
+  projects: EntityRecord<Project>;
+  workspaces: EntityRecord<Workspace>;
+  workspaceMetas: EntityRecord<WorkspaceMeta>;
+  environments: EntityRecord<Environment>;
+  gitRepositories: EntityRecord<GitRepository>;
+  cookieJars: EntityRecord<CookieJar>;
+  apiSpecs: EntityRecord<ApiSpec>;
+  requestGroups: EntityRecord<RequestGroup>;
+  requestGroupMetas: EntityRecord<RequestGroupMeta>;
+  requests: EntityRecord<Request>;
+  requestVersions: EntityRecord<RequestVersion>;
+  requestMetas: EntityRecord<RequestMeta>;
+  responses: EntityRecord<Response>;
+  oAuth2Tokens: EntityRecord<OAuth2Token>;
+  clientCertificates: EntityRecord<ClientCertificate>;
+  pluginDatas: EntityRecord<PluginData>;
+  unitTestSuites: EntityRecord<UnitTestSuite>;
+  unitTestResults: EntityRecord<UnitTestResult>;
+  unitTests: EntityRecord<UnitTest>;
+  protoFiles: EntityRecord<ProtoFile>;
+  protoDirectories: EntityRecord<ProtoDirectory>;
+  grpcRequests: EntityRecord<GrpcRequest>;
+  grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
 }
 
 export const initialEntitiesState: EntitiesState = {

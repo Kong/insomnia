@@ -26,7 +26,7 @@ class GitLogModal extends PureComponent<Props, State> {
   state: State = {
     logs: [],
     branch: '??',
-  }
+  };
 
   _setModalRef(ref: Modal) {
     this.modal = ref;

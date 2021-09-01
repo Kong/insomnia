@@ -37,7 +37,7 @@ interface State {
 class SettingsModal extends PureComponent<Props, State> {
   state: State = {
     currentTabIndex: null,
-  }
+  };
 
   modal: Modal | null = null;
 

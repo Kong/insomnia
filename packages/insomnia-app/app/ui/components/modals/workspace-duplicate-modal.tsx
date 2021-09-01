@@ -35,7 +35,7 @@ interface FormFields {
 }
 
 interface InnerProps extends Options, Props {
-  hide: () => void,
+  hide: () => void;
 }
 
 const ProjectOption: FC<Project> = project => (

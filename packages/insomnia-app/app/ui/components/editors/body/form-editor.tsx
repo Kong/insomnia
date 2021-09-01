@@ -6,12 +6,12 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 import KeyValueEditor from '../../key-value-editor/editor';
 
 interface Props {
-  onChange: Function,
-  parameters: any[],
-  nunjucksPowerUserMode: boolean,
-  isVariableUncovered: boolean,
-  handleRender?: HandleRender,
-  handleGetRenderContext?: HandleGetRenderContext,
+  onChange: Function;
+  parameters: any[];
+  nunjucksPowerUserMode: boolean;
+  isVariableUncovered: boolean;
+  handleRender?: HandleRender;
+  handleGetRenderContext?: HandleGetRenderContext;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

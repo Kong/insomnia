@@ -11,7 +11,7 @@ export enum ForceToWorkspace {
 }
 
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
-export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; }): ImportToWorkspacePrompt {
+export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace }): ImportToWorkspacePrompt {
   return function() {
     if (!workspaceId) {
       return null;
@@ -65,7 +65,7 @@ export function askToSetWorkspaceScope(scope?: WorkspaceScope): SetWorkspaceScop
 }
 
 export type SetProjectIdPrompt = () => Promise<string>;
-export function askToImportIntoProject({ projects, activeProject }: { projects: Project[]; activeProject: Project; }): SetProjectIdPrompt {
+export function askToImportIntoProject({ projects, activeProject }: { projects: Project[]; activeProject: Project }): SetProjectIdPrompt {
   return function() {
     return new Promise(resolve => {
       // If only one project exists, return that

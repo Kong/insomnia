@@ -15,7 +15,7 @@ interface Props {
   vcs?: VCS | null;
 }
 
-const PullButton: FC<{disabled?: boolean, className?: string}> = ({ disabled, className }) => (
+const PullButton: FC<{disabled?: boolean; className?: string}> = ({ disabled, className }) => (
   <Button className={className} disabled={disabled}>
     Pull
     <i className="fa fa-caret-down pad-left-sm" />

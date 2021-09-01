@@ -45,7 +45,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
   state: State = {
     configs: [],
     activeTab: 0,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

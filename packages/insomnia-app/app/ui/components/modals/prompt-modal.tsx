@@ -25,7 +25,7 @@ interface State {
   cancelable?: boolean | null;
   onComplete?: (arg0: string) => Promise<void> | void;
   onCancel?: (() => void) | null;
-  onHide?: () => void,
+  onHide?: () => void;
   onDeleteHint?: ((arg0: string) => void) | null;
   currentValue: string;
   loading: boolean;
@@ -45,7 +45,7 @@ export interface PromptModalOptions {
   label?: string;
   hints?: string[];
   onComplete?: (arg0: string) => Promise<void> | void;
-  onHide?: () => void,
+  onHide?: () => void;
   onDeleteHint?: (arg0: string) => void;
   onCancel?: () => void;
 }
@@ -74,7 +74,7 @@ class PromptModal extends PureComponent<{}, State> {
     onHide: undefined,
     currentValue: '',
     loading: false,
-  }
+  };
 
   async _done(rawValue: string) {
     const { onComplete, upperCase } = this.state;

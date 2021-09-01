@@ -31,7 +31,7 @@ import OAuth2Auth from './o-auth-2-auth';
 
 interface Props {
   handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext
+  handleGetRenderContext: HandleGetRenderContext;
   handleUpdateSettingsShowPasswords: (showPasswords: boolean) => Promise<Settings>;
   nunjucksPowerUserMode: boolean;
   onChange: (arg0: Request, arg1: RequestAuthentication) => Promise<Request>;

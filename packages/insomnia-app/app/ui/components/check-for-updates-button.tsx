@@ -21,7 +21,7 @@ class CheckForUpdatesButton extends PureComponent<Props, State> {
     status: '',
     checking: false,
     updateAvailable: false,
-  }
+  };
 
   _listenerCheckComplete(_e, updateAvailable: true, status: string) {
     this.setState({

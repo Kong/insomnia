@@ -131,7 +131,7 @@ export type WrapperProps = AppProps & {
   isVariableUncovered: boolean;
   vcs: VCS | null;
   gitVCS: GitVCS | null;
-}
+};
 
 interface State {
   forceRefreshKey: number;
@@ -151,7 +151,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   state: State = {
     forceRefreshKey: Date.now(),
     activeGitBranch: 'no-vcs',
-  }
+  };
 
   // Request updaters
   async _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
@@ -230,7 +230,7 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     return null;
   }
 
-  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: {workspaceId?: string, nextActivity: GlobalActivity}) {
+  async _handleWorkspaceActivityChange({ workspaceId, nextActivity }: {workspaceId?: string; nextActivity: GlobalActivity}) {
     const { activity, activeApiSpec, handleSetActiveActivity } = this.props;
 
     // Remember last activity on workspace for later, but only if it isn't HOME

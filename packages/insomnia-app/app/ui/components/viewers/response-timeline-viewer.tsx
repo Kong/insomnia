@@ -6,10 +6,10 @@ import { Response } from '../../../models/response';
 import CodeEditor from '../codemirror/code-editor';
 
 interface Props {
-  response: Response,
-  editorFontSize: number,
-  editorIndentSize: number,
-  editorLineWrapping: boolean,
+  response: Response;
+  editorFontSize: number;
+  editorIndentSize: number;
+  editorLineWrapping: boolean;
 }
 
 interface State {
