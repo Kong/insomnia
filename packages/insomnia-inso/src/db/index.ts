@@ -87,8 +87,7 @@ export const loadDb = async ({
   } // return empty db
 
   appDataDir && logger.warn(
-    'The option --app-data-dir has been deprecated and will be removed in future releases.\n' +
-    'Please, consider using --src as alternative',
+    'The option `--appDataDir` has been deprecated and will be removed in future releases. Please use `--src` as an alternative',
   );
 
   if (!db) {
