@@ -21,7 +21,7 @@ class RequestRenderErrorModal extends PureComponent<{}, State> {
   state: State = {
     error: null,
     request: null,
-  }
+  };
 
   modal: Modal | null = null;
 

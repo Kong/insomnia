@@ -19,7 +19,7 @@ import HelpTooltip from '../help-tooltip';
 
 export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
-type Props = ReduxProps
+type Props = ReduxProps;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ProjectSettingsModal extends PureComponent<Props> {

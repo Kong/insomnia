@@ -111,9 +111,9 @@ export function generateRequestValidatorPlugin({
   tags,
   operation,
 }: {
-  plugin?: Partial<RequestValidatorPlugin>,
-  tags: string[],
-  operation?: OA3Operation,
+  plugin?: Partial<RequestValidatorPlugin>;
+  tags: string[];
+  operation?: OA3Operation;
 }) {
   const config: Partial<RequestValidatorPlugin['config']> = {
     version: 'draft4',
@@ -183,10 +183,10 @@ export function generateGlobalPlugins(api: OpenApi3Spec, tags: string[]) {
 }
 
 export const generateOperationPlugins = ({ operation, pathPlugins, parentValidatorPlugin, tags }: {
-  operation: OA3Operation,
-  pathPlugins: DCPlugin[],
-  parentValidatorPlugin?: RequestValidatorPlugin | null,
-  tags: string[],
+  operation: OA3Operation;
+  pathPlugins: DCPlugin[];
+  parentValidatorPlugin?: RequestValidatorPlugin | null;
+  tags: string[];
 }) => {
   const operationPlugins = generatePlugins(operation, tags);
 

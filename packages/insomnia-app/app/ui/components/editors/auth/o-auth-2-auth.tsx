@@ -63,7 +63,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     error: '',
     loading: false,
     showAdvanced, // Remember from last time
-  }
+  };
 
   _handleToggleAdvanced() {
     // Remember this for the entirety of the session

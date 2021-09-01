@@ -125,6 +125,20 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
         return filePath || null;
       },
 
+      clipboard: {
+        readText(): string {
+          return electron.clipboard.readText();
+        },
+
+        writeText(text: string): void {
+          electron.clipboard.writeText(text);
+        },
+
+        clear(): void {
+          electron.clipboard.clear();
+        },
+      },
+
       // ~~~~~~~~~~~~~~~~~~ //
       // Deprecated Methods //
       // ~~~~~~~~~~~~~~~~~~ //

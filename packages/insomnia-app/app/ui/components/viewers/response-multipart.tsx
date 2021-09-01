@@ -56,7 +56,7 @@ class ResponseMultipart extends PureComponent<Props, State> {
     activePart: -1,
     parts: [],
     error: null,
-  }
+  };
 
   componentDidMount() {
     this._setParts();

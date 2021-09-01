@@ -23,7 +23,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   state: State = {
     error: null,
     info: null,
-  }
+  };
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {

@@ -103,7 +103,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
       unstaged: {},
     },
     remoteBackendProjects: [],
-  }
+  };
 
   async refreshMainAttributes(extraState: Partial<State> = {}) {
     const { vcs, syncItems, workspace, project } = this.props;

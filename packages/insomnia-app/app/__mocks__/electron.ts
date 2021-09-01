@@ -74,6 +74,11 @@ const electron = {
   shell: {
     openExternal: jest.fn(),
   },
+  clipboard: {
+    writeText: jest.fn(),
+    readText: jest.fn(),
+    clear: jest.fn(),
+  },
 };
 
 // WARNING: changing this to `export default` will break the mock and be incredibly hard to debug. Ask me how I know.

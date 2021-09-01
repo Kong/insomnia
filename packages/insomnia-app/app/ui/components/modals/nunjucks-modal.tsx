@@ -26,7 +26,7 @@ interface State {
 class NunjucksModal extends PureComponent<Props, State> {
   state: State = {
     defaultTemplate: '',
-  }
+  };
 
   _onDone: Function | null = null;
   _currentTemplate: string | null = null;

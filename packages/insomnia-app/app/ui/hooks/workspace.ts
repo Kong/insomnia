@@ -27,9 +27,9 @@ const initialState: State = {
 
 type Action =
   | { type: 'loadBackendProjects' }
-  | { type: 'saveBackendProjects', local: State['localBackendProjects'], remote: State['remoteBackendProjects']}
-  | { type: 'startPullingBackendProject', backendProjectId: string }
-  | { type: 'stopPullingBackendProject', backendProjectId: string }
+  | { type: 'saveBackendProjects'; local: State['localBackendProjects']; remote: State['remoteBackendProjects']}
+  | { type: 'startPullingBackendProject'; backendProjectId: string }
+  | { type: 'stopPullingBackendProject'; backendProjectId: string };
 
 const reducer: Reducer<State, Action> = (prevState, action) => {
   switch (action.type) {

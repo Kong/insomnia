@@ -32,7 +32,7 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
   state: State = {
     inputs: {},
     gitRepository: null,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

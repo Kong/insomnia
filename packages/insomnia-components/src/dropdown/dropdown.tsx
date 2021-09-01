@@ -177,7 +177,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     forcedPosition: null,
     // Use this to force new menu every time dropdown opens
     uniquenessKey: 0,
-  }
+  };
 
   constructor(props: DropdownProps) {
     super(props);

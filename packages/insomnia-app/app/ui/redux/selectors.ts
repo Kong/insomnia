@@ -13,7 +13,7 @@ import { RootState } from './modules';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
-}
+};
 
 // ~~~~~~~~~ //
 // Selectors //

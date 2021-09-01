@@ -127,19 +127,19 @@ import { AppHooks } from './app-hooks';
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
-  showDragOverlay: boolean,
-  draggingSidebar: boolean,
-  draggingPaneHorizontal: boolean,
-  draggingPaneVertical: boolean,
-  sidebarWidth: number,
-  paneWidth: number,
-  paneHeight: number,
-  isVariableUncovered: boolean,
-  vcs: VCS | null,
-  gitVCS: GitVCS | null,
-  forceRefreshCounter: number,
-  forceRefreshHeaderCounter: number,
-  isMigratingChildren: boolean,
+  showDragOverlay: boolean;
+  draggingSidebar: boolean;
+  draggingPaneHorizontal: boolean;
+  draggingPaneVertical: boolean;
+  sidebarWidth: number;
+  paneWidth: number;
+  paneHeight: number;
+  isVariableUncovered: boolean;
+  vcs: VCS | null;
+  gitVCS: GitVCS | null;
+  forceRefreshCounter: number;
+  forceRefreshHeaderCounter: number;
+  isMigratingChildren: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)

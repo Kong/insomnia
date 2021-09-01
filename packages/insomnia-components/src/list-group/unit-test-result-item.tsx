@@ -10,7 +10,7 @@ export interface UnitTestResultItemProps {
     duration: string;
     err?: {
       message: string;
-    }
+    };
     title: string;
   };
 }

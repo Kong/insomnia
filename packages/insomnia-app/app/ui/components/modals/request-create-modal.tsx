@@ -38,7 +38,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
     selectedContentType: null,
     selectedMethod: METHOD_GET,
     parentId: null,
-  }
+  };
 
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
