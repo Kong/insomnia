@@ -70,7 +70,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
         </HelpTooltip>
       </div>
       <p>
-        Don't see your format here? <Link href={docsImportExport}>Add Your Own</Link>.
+        Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
       </p>
       <div className="pad-top">
         <Dropdown outline>
