@@ -80,8 +80,8 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   // Now, reading and parsing
   const content = await fs.promises.readFile(filePath, { encoding: 'utf-8' });
   let parsed: {
-    __export_format: number,
-    resources: RawTypeModel[],
+    __export_format: number;
+    resources: RawTypeModel[];
   } | undefined;
   try {
     parsed = YAML.parse(content);
