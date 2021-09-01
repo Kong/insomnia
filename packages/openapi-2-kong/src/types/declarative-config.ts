@@ -9,7 +9,6 @@ export type DCPlugin = Plugin;
 
 export interface DCRoute extends Taggable, Pluggable {
   methods: string[];
-  // eslint-disable-next-line camelcase -- this is defined by a spec that is out of our control
   name: string;
   paths: string[];
   strip_path: boolean;
