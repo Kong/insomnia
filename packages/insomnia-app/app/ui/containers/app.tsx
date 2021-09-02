@@ -557,7 +557,11 @@ class App extends PureComponent<AppProps, State> {
     const har = await exportHarRequest(request._id, environmentId);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert('shell', 'curl');
-    clipboard.writeText(cmd);
+
+    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
+    if (cmd) {
+      clipboard.writeText(cmd);
+    }
   }
 
   static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {

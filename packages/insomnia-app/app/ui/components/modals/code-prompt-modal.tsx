@@ -167,10 +167,8 @@ class CodePromptModal extends PureComponent<Props, State> {
                 defaultValue={defaultValue}
                 placeholder={placeholder}
                 onChange={this._handleChange}
-                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                handleGetRenderContext={enableRender ? handleGetRenderContext : null}
-                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                handleRender={enableRender ? handleRender : null}
+                handleGetRenderContext={enableRender ? handleGetRenderContext : undefined}
+                handleRender={enableRender ? handleRender : undefined}
                 mode={mode}
                 keyMap={editorKeyMap}
                 indentSize={editorIndentSize}
@@ -192,10 +190,8 @@ class CodePromptModal extends PureComponent<Props, State> {
                   onChange={this._handleChange}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
-                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                  getRenderContext={enableRender ? handleGetRenderContext : null}
-                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                  render={enableRender ? handleRender : null}
+                  getRenderContext={handleGetRenderContext}
+                  render={handleRender}
                   mode={mode}
                   keyMap={editorKeyMap}
                   indentSize={editorIndentSize}

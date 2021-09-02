@@ -91,7 +91,7 @@ export type CodeEditorOnChange = (value: string) => void;
 interface Props {
   indentWithTabs?: boolean;
   onChange?: CodeEditorOnChange;
-  onCursorActivity?: (cm: CodeMirror.Editor) => void;
+  onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
   onFocus?: (e: FocusEvent) => void;
   onBlur?: (e: FocusEvent) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
@@ -104,7 +104,7 @@ interface Props {
   nunjucksPowerUserMode?: boolean;
   getRenderContext?: HandleGetRenderContext;
   getAutocompleteConstants?: () => string[];
-  getAutocompleteSnippets?: () => Promise<CodeMirror.Snippet[]>;
+  getAutocompleteSnippets?: () => CodeMirror.Snippet[];
   keyMap?: string;
   mode?: string;
   id?: string;
@@ -919,7 +919,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorCursorActivity(instance: CodeMirror.Editor) {
+  _codemirrorCursorActivity(instance: CodeMirror.EditorFromTextArea) {
     if (this.props.onCursorActivity) {
       this.props.onCursorActivity(instance);
     }
@@ -942,7 +942,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.Editor, e: KeyboardEvent) {
+  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.EditorFromTextArea, e: KeyboardEvent) {
     // Enable graphql completion if we're in that mode
     if (doc.getOption('mode') === 'graphql') {
       // Only operate on one-letter keys. This will filter out
@@ -967,13 +967,13 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorFocus(_doc: CodeMirror.Editor, e: FocusEvent) {
+  _codemirrorFocus(_doc: CodeMirror.EditorFromTextArea, e: FocusEvent) {
     if (this.props.onFocus) {
       this.props.onFocus(e);
     }
   }
 
-  _codemirrorBlur(_doc: CodeMirror.Editor, e: FocusEvent) {
+  _codemirrorBlur(_doc: CodeMirror.EditorFromTextArea, e: FocusEvent) {
     this._persistState();
 
     if (this.props.onBlur) {
@@ -989,7 +989,7 @@ class CodeEditor extends Component<Props, State> {
     this._persistState();
   }
 
-  _codemirrorKeyHandled(_codeMirror: CodeMirror.Editor, _keyName: string, event: KeyboardEvent) {
+  _codemirrorKeyHandled(_codeMirror: CodeMirror.EditorFromTextArea, _keyName: string, event: KeyboardEvent) {
     const { keyMap } = this.props;
     const { keyCode } = event;
     const isVimKeyMap = keyMap === EDITOR_KEY_MAP_VIM;
@@ -1000,7 +1000,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
+  _codemirrorValueBeforeChange(doc: CodeMirror.EditorFromTextArea, change: CodeMirror.EditorChangeCancellable) {
     const value = this.codeMirror?.getDoc().getValue();
 
     // If we're in single-line mode, merge all changed lines into one
@@ -1027,13 +1027,13 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorPaste(_cm: CodeMirror.Editor, e: ClipboardEvent) {
+  _codemirrorPaste(_cm: CodeMirror.EditorFromTextArea, e: ClipboardEvent) {
     if (this.props.onPaste) {
       this.props.onPaste(e);
     }
   }
 
-  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.Editor, e: Event) {
+  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.EditorFromTextArea, e: Event) {
     const { type } = this.props;
 
     if (type && type.toLowerCase() === 'password') {

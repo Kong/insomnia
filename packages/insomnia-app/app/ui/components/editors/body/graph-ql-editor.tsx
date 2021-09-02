@@ -667,6 +667,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
       // @ts-expect-error -- TSCONVERSION
       explorerContainer,
     );
+
     return (
       <div className="graphql-editor">
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
@@ -706,19 +707,19 @@ class GraphQLEditor extends PureComponent<Props, State> {
             dynamicHeight
             manualPrettify
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-            hintOptions={{
+            hintOptions={schema ? {
               schema,
               completeSingle: false,
-            }}
-            infoOptions={{
+            } : undefined}
+            infoOptions={schema ? {
               schema,
               renderDescription: GraphQLEditor.renderMarkdown,
               onClick: this._handleClickReference,
-            }}
-            jumpOptions={{
+            } : undefined}
+            jumpOptions={schema ? {
               schema,
               onClick: this._handleClickReference,
-            }}
+            } : undefined}
             lintOptions={
               schema
                 ? {

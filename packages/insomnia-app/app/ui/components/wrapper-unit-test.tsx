@@ -437,7 +437,6 @@ class WrapperUnitTest extends PureComponent<Props, State> {
           lintOptions={WrapperUnitTest.lintOptions}
           onChange={this._handleUnitTestCodeChange.bind(this, unitTest)}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          // @ts-expect-error -- TSCONVERSION
           isVariableUncovered={settings.isVariableUncovered}
           mode="javascript"
           lineWrapping={settings.editorLineWrapping}
@@ -473,8 +472,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
             bg="surprise"
             onClick={this._handleRunTests}
             size="default"
-            // @ts-expect-error -- TSCONVERSION
-            disabled={testsRunning}
+            disabled={Boolean(testsRunning)}
           >
             {testsRunning ? 'Running... ' : 'Run Tests'}
             <i className="fa fa-play space-left" />
@@ -519,8 +517,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
                   <DropdownItem
                     stayOpenAfterClick
                     onClick={this._handleRunTests}
-                    // @ts-expect-error -- TSCONVERSION
-                    disabled={testsRunning}
+                    disabled={Boolean(testsRunning)}
                   >
                     {testsRunning ? 'Running... ' : 'Run Tests'}
                   </DropdownItem>

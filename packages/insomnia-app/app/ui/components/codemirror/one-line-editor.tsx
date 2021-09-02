@@ -4,8 +4,9 @@ import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import Input from '../base/debounced-input';
-import CodeEditor from './code-editor';
+import CodeEditor, { CodeEditorOnChange } from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -16,15 +17,15 @@ interface Props {
   id?: string;
   type?: string;
   mode?: string;
-  onBlur?: Function;
-  onKeyDown?: Function;
-  onFocus?: Function;
-  onChange?: Function;
-  onPaste?: Function;
-  render?: Function;
-  getRenderContext?: Function;
+  onBlur?: () => void;
+  onKeyDown?: (e: KeyboardEvent, value?: any) => void;
+  onFocus?: (e: FocusEvent) => void;
+  onChange?: CodeEditorOnChange;
+  onPaste?: (e: ClipboardEvent) => void;
+  render?: HandleRender;
+  getRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
-  getAutocompleteConstants?: Function | null;
+  getAutocompleteConstants?: () => string[];
   placeholder?: string;
   className?: string;
   forceEditor?: boolean;
@@ -382,14 +383,10 @@ class OneLineEditor extends PureComponent<Props, State> {
             onKeyDown={this._handleKeyDown}
             onFocus={this._handleEditorFocus}
             onMouseLeave={this._handleEditorMouseLeave}
-            // @ts-expect-error -- TSCONVERSION
             onChange={onChange}
-            // @ts-expect-error -- TSCONVERSION
             render={render}
-            // @ts-expect-error -- TSCONVERSION
             getRenderContext={getRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
-            // @ts-expect-error -- TSCONVERSION
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}

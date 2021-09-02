@@ -1,7 +1,7 @@
 import 'codemirror';
 
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
-import { GraphQLJumpOptions, ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
+import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 
 import { HandleGetRenderContext, HandleRender } from './common/render';
 import { NunjucksParsedTag } from './templating/utils';
@@ -44,28 +44,20 @@ declare module 'codemirror' {
   interface Snippet {
     name: string;
     displayValue: string;
-    value: () => Promise<unknown>;
+    value: string | (() => Promise<unknown>);
   }
 
   interface EnvironmentAutocompleteOptions {
-    getConstants?: () => ShowHintOptions['constants'];
-    getVariables?: () => Promise<ShowHintOptions['variables']>;
-    getSnippets?: () => Promise<ShowHintOptions['snippets']>;
-    getTags?: () => Promise<ShowHintOptions['tags']>;
+    getConstants?: () => string[];
+    getVariables?: () => Promise<Variable[]>;
+    getSnippets?: () => Snippet[];
+    getTags?: () => Promise<NunjucksParsedTag[]>;
   }
 
   interface EditorConfiguration {
     info?: GraphQLInfoOptions;
     jump?: ModifiedGraphQLJumpOptions;
     environmentAutocomplete?: EnvironmentAutocompleteOptions;
-  }
-
-  interface ShowHintOptions {
-    constants: string[];
-    variables: Variable[];
-    snippets: Snippet[];
-    tags: NunjucksParsedTag[];
-    showAllOnNoMatch;
   }
   /* eslint-enable @typescript-eslint/no-empty-interface */
 }
