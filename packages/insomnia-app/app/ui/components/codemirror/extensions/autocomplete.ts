@@ -108,8 +108,9 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
           widget.close();
           return CodeMirror.Pass;
         },
-      }, // Good for debugging
-      // ,closeOnUnfocus: false
+      },
+      // Good for debugging
+      // closeOnUnfocus: false,
     });
   }
 
