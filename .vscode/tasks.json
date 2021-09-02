@@ -56,7 +56,7 @@
       "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/webpack-dev-server --config webpack/webpack.config.development.ts"
     },
     {
-      "label": "Insomnia: Compile",
+      "label": "Insomnia: Compile (Watch)",
       "detail": "Compile Renderer (Watch) | Compile Main",
       "dependsOn": [
         "Insomnia: Compile Renderer (Watch)",

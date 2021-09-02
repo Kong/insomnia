@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch: Electron",
+      "name": "Electron: main",
       "type": "node",
       "request": "launch",
       "protocol": "inspector",
       "sourceMaps": true,
       "presentation": {
-        "hidden": false,
+        "hidden": true,
         "group": "Insomnia",
         "order": 1
       },
@@ -22,7 +22,7 @@
       "windows": {
         "type": "node",
         "request": "launch",
-        "name": "Launch: Electron",
+        "name": "Electron: main",
         "runtimeExecutable": "${workspaceFolder}/packages/insomnia-app/node_modules/.bin/electron.cmd"
       },
       "env": {
@@ -32,11 +32,11 @@
       }
     },
     {
-      "name": "Attach: Electron Renderer",
-      "type": "chrome",
+      "name": "Electron: renderer",
+      "type": "pwa-chrome",
       "request": "attach",
       "presentation": {
-        "hidden": false,
+        "hidden": true,
         "group": "Insomnia",
         "order": 2
       },
@@ -56,10 +56,10 @@
         "group": "Insomnia",
         "order": 0
       },
-      "preLaunchTask": "Insomnia: Compile",
+      "preLaunchTask": "Insomnia: Compile (Watch)",
       "configurations": [
-        "Launch: Electron",
-        "Attach: Electron Renderer",
+        "Electron: main",
+        "Electron: renderer",
       ],
     }
   ]
