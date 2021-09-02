@@ -1,10 +1,11 @@
 import 'codemirror/addon/mode/overlay';
 
-import CodeMirror from 'codemirror';
+import CodeMirror, { EnvironmentAutocompleteOptions, ShowHintOptions } from 'codemirror';
 
 import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
 import * as models from '../../../../models';
 import { getDefaultFill } from '../../../../templating/utils';
+import { isNunjucksMode } from '../modes/nunjucks';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -54,7 +55,7 @@ CodeMirror.defineExtension('closeHintDropdown', function() {
   this.state.completionActive?.close();
 });
 
-CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
+CodeMirror.defineOption('environmentAutocomplete', null, (cm, options: EnvironmentAutocompleteOptions) => {
   if (!options) {
     return;
   }
@@ -91,7 +92,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     // Actually show the hint
     cm.showHint({
       // Insomnia-specific options
-      // @ts-expect-error -- TSCONVERSION needs investigation
       constants: constants || [],
       variables: variables || [],
       snippets: snippets || [],
@@ -114,7 +114,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     });
   }
 
-  function completeIfInVariableName(cm) {
+  function completeIfInVariableName(cm: CodeMirror.Editor) {
     completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
@@ -124,7 +124,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return CodeMirror.Pass;
   }
 
-  function completeIfAfterTagOrVarOpen(cm) {
+  function completeIfAfterTagOrVarOpen(cm: CodeMirror.Editor) {
     completeAfter(
       cm,
       () => {
@@ -138,7 +138,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     return CodeMirror.Pass;
   }
 
-  function completeForce(cm) {
+  function completeForce(cm: CodeMirror.Editor) {
     completeAfter(cm, null, true);
     return CodeMirror.Pass;
   }
@@ -196,7 +196,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
  * @param options
  * @returns {Promise.<{list: Array, from, to}>}
  */
-function hint(cm, options) {
+function hint(cm: CodeMirror.Editor, options: ShowHintOptions) {
   // Add type to all things (except constants, which need to convert to an object)
   const variablesToMatch = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
   const snippetsToMatch = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
@@ -230,12 +230,15 @@ function hint(cm, options) {
   // Actually try to match the list of things
   const lowPriorityMatches = [];
   const highPriorityMatches = [];
-  let mode;
 
-  try {
-    mode = cm.getOption('mode').baseMode;
-  } catch (e) {
-    mode = 'unknown';
+  const modeOption = cm.getOption('mode') ?? 'unknown';
+
+  let mode = 'unknown';
+
+  if (typeof modeOption === 'string') {
+    mode = modeOption;
+  } else if (isNunjucksMode(modeOption)) {
+    mode = modeOption.baseMode;
   }
 
   // Match variables

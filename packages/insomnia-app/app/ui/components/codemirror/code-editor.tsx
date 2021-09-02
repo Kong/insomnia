@@ -3,7 +3,9 @@ import './base-imports';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import clone from 'clone';
-import CodeMirror, { CodeMirrorLinkClickCallback } from 'codemirror';
+import CodeMirror, { CodeMirrorLinkClickCallback, ShowHintOptions } from 'codemirror';
+import { GraphQLInfoOptions } from 'codemirror-graphql/info';
+import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
@@ -89,20 +91,20 @@ export type CodeEditorOnChange = (value: string) => void;
 interface Props {
   indentWithTabs?: boolean;
   onChange?: CodeEditorOnChange;
-  onCursorActivity?: Function;
-  onFocus?: Function;
-  onBlur?: Function;
+  onCursorActivity?: (cm: CodeMirror.Editor) => void;
+  onFocus?: (e: FocusEvent) => void;
+  onBlur?: (e: FocusEvent) => void;
   onClickLink?: CodeMirrorLinkClickCallback;
-  onKeyDown?: Function;
+  onKeyDown?: (e: KeyboardEvent, value: string) => void;
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
-  onPaste?: Function;
+  onPaste?: (e: ClipboardEvent) => void;
   onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
   render?: HandleRender;
   nunjucksPowerUserMode?: boolean;
   getRenderContext?: HandleGetRenderContext;
-  getAutocompleteConstants?: Function;
-  getAutocompleteSnippets?: Function;
+  getAutocompleteConstants?: () => string[];
+  getAutocompleteSnippets?: () => Promise<CodeMirror.Snippet[]>;
   keyMap?: string;
   mode?: string;
   id?: string;
@@ -133,10 +135,10 @@ interface Props {
   debounceMillis?: number;
   dynamicHeight?: boolean;
   autoCloseBrackets?: boolean;
-  hintOptions?: Object;
-  lintOptions?: Object;
-  infoOptions?: Object;
-  jumpOptions?: Object;
+  hintOptions?: ShowHintOptions;
+  lintOptions?: any;
+  infoOptions?: GraphQLInfoOptions;
+  jumpOptions?: ModifiedGraphQLJumpOptions;
   uniquenessKey?: string;
   isVariableUncovered?: boolean;
   raw?: boolean;
@@ -144,6 +146,10 @@ interface Props {
 
 interface State {
   filter: string;
+}
+
+function isMarkerRange(mark: CodeMirror.Position | CodeMirror.MarkerRange | undefined): mark is CodeMirror.MarkerRange {
+  return Boolean(mark && 'from' in mark);
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -238,7 +244,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  setCursor(ch, line = 0) {
+  setCursor(ch: number, line = 0) {
     if (this.codeMirror) {
       if (!this.hasFocus()) {
         this.focus();
@@ -296,7 +302,7 @@ class CodeEditor extends Component<Props, State> {
 
   getSelectionStart() {
     if (!this.codeMirror) {
-      return;
+      return null;
     }
 
     const selections = this.codeMirror.listSelections();
@@ -310,7 +316,7 @@ class CodeEditor extends Component<Props, State> {
 
   getSelectionEnd() {
     if (!this.codeMirror) {
-      return;
+      return null;
     }
 
     const selections = this.codeMirror.listSelections();
@@ -348,26 +354,23 @@ class CodeEditor extends Component<Props, State> {
       return;
     }
 
-    // @ts-expect-error this is a (Node & ParentNode) in the types, but I think it's actually supposed to be Element
-    this.codeMirror.getTextArea().parentNode?.setAttribute(name, value);
+    this.codeMirror.getTextArea().parentElement?.setAttribute(name, value);
   }
 
-  removeAttribute(name) {
+  removeAttribute(name: string) {
     if (!this.codeMirror) {
       return;
     }
 
-    // @ts-expect-error this is a (Node & ParentNode) in the types, but I think it's actually supposed to be Element
-    this.codeMirror.getTextArea().parentNode?.removeAttribute(name);
+    this.codeMirror.getTextArea().parentElement?.removeAttribute(name);
   }
 
-  getAttribute(name) {
+  getAttribute(name: string) {
     if (!this.codeMirror) {
       return;
     }
 
-    // @ts-expect-error this is a (Node & ParentNode) in the types, but I think it's actually supposed to be Element
-    this.codeMirror.getTextArea().parentNode?.getAttribute(name);
+    this.codeMirror.getTextArea().parentElement?.getAttribute(name);
   }
 
   clearSelection() {
@@ -412,16 +415,20 @@ class CodeEditor extends Component<Props, State> {
 
     const marks = this.codeMirror
       .getAllMarks()
-      // @ts-expect-error -- TSCONVERSION
-      .filter(c => c.__isFold)
+      .filter(mark => mark.__isFold)
       .map(mark => {
-        // @ts-expect-error -- TSCONVERSION
-        const { from, to } = mark.find();
-        return {
-          from,
-          to,
-        };
+        const result = mark.find();
+
+        if (isMarkerRange(result)) {
+          return result;
+        } else {
+          return {
+            from: undefined,
+            to: undefined,
+          };
+        }
       });
+
     editorStates[uniquenessKey] = {
       scroll: this.codeMirror.getScrollInfo(),
       selections: this.codeMirror.listSelections(),
@@ -472,7 +479,7 @@ class CodeEditor extends Component<Props, State> {
       return;
     }
 
-    const foldOptions = {
+    const foldOptions: CodeMirror.EditorConfiguration['foldOptions'] = {
       widget: (from, to) => {
         let count;
         // Get open / close token
@@ -539,7 +546,7 @@ class CodeEditor extends Component<Props, State> {
         if (cm.somethingSelected()) {
           cm.indentSelection('add');
         } else {
-          cm.replaceSelection(this._indentChars(), 'end', '+input');
+          cm.replaceSelection(this._indentChars(), 'end');
         }
       },
     });
@@ -593,7 +600,7 @@ class CodeEditor extends Component<Props, State> {
     this.codeMirror.on('cursorActivity', this._codemirrorCursorActivity);
   }
 
-  static _isJSON(mode) {
+  static _isJSON(mode?: string) {
     if (!mode) {
       return false;
     }
@@ -601,7 +608,7 @@ class CodeEditor extends Component<Props, State> {
     return mode.indexOf('json') !== -1;
   }
 
-  static _isYAML(mode) {
+  static _isYAML(mode?: string) {
     if (!mode) {
       return false;
     }
@@ -609,7 +616,7 @@ class CodeEditor extends Component<Props, State> {
     return mode.indexOf('yaml') !== -1;
   }
 
-  static _isXML(mode) {
+  static _isXML(mode?: string) {
     if (!mode) {
       return false;
     }
@@ -617,7 +624,7 @@ class CodeEditor extends Component<Props, State> {
     return mode.indexOf('xml') !== -1;
   }
 
-  static _isEDN(mode) {
+  static _isEDN(mode?: string) {
     if (!mode) {
       return false;
     }
@@ -635,11 +642,11 @@ class CodeEditor extends Component<Props, State> {
     this._prettify(this.codeMirror?.getValue());
   }
 
-  _prettify(code) {
+  _prettify(code?: string) {
     this._codemirrorSetValue(code, true);
   }
 
-  _prettifyJSON(code) {
+  _prettifyJSON(code: string) {
     try {
       let jsonString = code;
 
@@ -661,7 +668,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  static _prettifyEDN(code) {
+  static _prettifyEDN(code: string) {
     try {
       return zprint(code, null);
     } catch (e) {
@@ -669,7 +676,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _prettifyXML(code) {
+  _prettifyXML(code: string) {
     if (this.props.updateFilter && this.state.filter) {
       try {
         const results = queryXPath(code, this.state.filter);
@@ -733,11 +740,11 @@ class CodeEditor extends Component<Props, State> {
     // NOTE: YAML is not valid when indented with Tabs
     const isYaml = typeof rawMode === 'string' ? rawMode.includes('yaml') : false;
     const actuallyIndentWithTabs = indentWithTabs && !isYaml;
-    const options: any = {
+    const options: CodeMirror.EditorConfiguration = {
       readOnly: !!readOnly,
       placeholder: placeholder || '',
       mode: mode,
-      tabIndex: typeof tabIndex === 'number' ? tabIndex : null,
+      tabindex: typeof tabIndex === 'number' ? tabIndex : undefined,
       dragDrop: !noDragDrop,
       scrollbarStyle: hideScrollbars ? 'null' : 'native',
       styleActiveLine: !noStyleActiveLine,
@@ -762,15 +769,15 @@ class CodeEditor extends Component<Props, State> {
     }
 
     if (!hideGutters && options.lint) {
-      options.gutters.push('CodeMirror-lint-markers');
+      options.gutters?.push('CodeMirror-lint-markers');
     }
 
     if (!hideGutters && options.lineNumbers) {
-      options.gutters.push('CodeMirror-linenumbers');
+      options.gutters?.push('CodeMirror-linenumbers');
     }
 
     if (!hideGutters && options.foldGutter) {
-      options.gutters.push('CodeMirror-foldgutter');
+      options.gutters?.push('CodeMirror-foldgutter');
     }
 
     if (hintOptions) {
@@ -795,7 +802,7 @@ class CodeEditor extends Component<Props, State> {
 
     // Setup the hint options
     if (getRenderContext || getAutocompleteConstants || getAutocompleteSnippets) {
-      let getVariables: (() => Promise<Object[]>) | undefined;
+      let getVariables: (() => Promise<CodeMirror.Variable[]>) | undefined;
       let getTags: (() => Promise<NunjucksParsedTag[]>) | undefined;
 
       if (getRenderContext) {
@@ -844,15 +851,18 @@ class CodeEditor extends Component<Props, State> {
     }
 
     // Strip of charset if there is one
-    Object.keys(options).map(key => {
-      this._codemirrorSmartSetOption(key, options[key]);
-    });
+    Object.keys(options).map(key =>
+      this._codemirrorSmartSetOption(
+          key as keyof CodeMirror.EditorConfiguration,
+          options[key]
+      )
+    );
   }
 
   /**
    * Set option if it's different than in the current Codemirror instance
    */
-  _codemirrorSmartSetOption(key, value) {
+  _codemirrorSmartSetOption<K extends keyof CodeMirror.EditorConfiguration>(key: K, value: CodeMirror.EditorConfiguration[K]) {
     const cm = this.codeMirror;
     let shouldSetOption = false;
 
@@ -875,8 +885,7 @@ class CodeEditor extends Component<Props, State> {
     // Set the option safely. When setting "lint", for example, it can throw an exception
     // and cause the editor to break.
     try {
-      // @ts-expect-error -- TSCONVERSION
-      cm.setOption(key, value);
+      cm?.setOption(key, value);
     } catch (err) {
       console.log('Failed to set CodeMirror option', err.message, {
         key,
@@ -885,7 +894,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  static _normalizeMode(mode) {
+  static _normalizeMode(mode?: string) {
     const mimeType = mode ? mode.split(';')[0] : 'text/plain';
 
     if (mimeType.includes('graphql-variables')) {
@@ -910,15 +919,15 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorCursorActivity(instance) {
+  _codemirrorCursorActivity(instance: CodeMirror.Editor) {
     if (this.props.onCursorActivity) {
       this.props.onCursorActivity(instance);
     }
   }
 
-  async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, e) {
+  async _codemirrorKeyDown(doc: CodeMirror.EditorFromTextArea, e: KeyboardEvent & {codemirrorIgnore: boolean}) {
     // Use default tab behaviour if we're told
-    if (this.props.defaultTabBehavior && e.keyCode === TAB_KEY) {
+    if (this.props.defaultTabBehavior && e.code === TAB_KEY.toString()) {
       e.codemirrorIgnore = true;
     }
 
@@ -933,9 +942,9 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorTriggerCompletionKeyUp(doc, e) {
+  _codemirrorTriggerCompletionKeyUp(doc: CodeMirror.Editor, e: KeyboardEvent) {
     // Enable graphql completion if we're in that mode
-    if (doc.options.mode === 'graphql') {
+    if (doc.getOption('mode') === 'graphql') {
       // Only operate on one-letter keys. This will filter out
       // any special keys (Backspace, Enter, etc)
       if (e.metaKey || e.ctrlKey || e.altKey || e.key.length > 1) {
@@ -958,13 +967,13 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorFocus(_doc, e) {
+  _codemirrorFocus(_doc: CodeMirror.Editor, e: FocusEvent) {
     if (this.props.onFocus) {
       this.props.onFocus(e);
     }
   }
 
-  _codemirrorBlur(_doc, e) {
+  _codemirrorBlur(_doc: CodeMirror.Editor, e: FocusEvent) {
     this._persistState();
 
     if (this.props.onBlur) {
@@ -980,7 +989,7 @@ class CodeEditor extends Component<Props, State> {
     this._persistState();
   }
 
-  _codemirrorKeyHandled(_codeMirror, _keyName, event) {
+  _codemirrorKeyHandled(_codeMirror: CodeMirror.Editor, _keyName: string, event: KeyboardEvent) {
     const { keyMap } = this.props;
     const { keyCode } = event;
     const isVimKeyMap = keyMap === EDITOR_KEY_MAP_VIM;
@@ -1018,13 +1027,13 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorPaste(_cm, e) {
+  _codemirrorPaste(_cm: CodeMirror.Editor, e: ClipboardEvent) {
     if (this.props.onPaste) {
       this.props.onPaste(e);
     }
   }
 
-  _codemirrorPreventWhenTypePassword(_cm, e) {
+  _codemirrorPreventWhenTypePassword(_cm: CodeMirror.Editor, e: Event) {
     const { type } = this.props;
 
     if (type && type.toLowerCase() === 'password') {
@@ -1063,7 +1072,7 @@ class CodeEditor extends Component<Props, State> {
    * @param code the code to set in the editor
    * @param forcePrettify
    */
-  _codemirrorSetValue(code, forcePrettify = false) {
+  _codemirrorSetValue(code = '', forcePrettify = false) {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
@@ -1089,10 +1098,10 @@ class CodeEditor extends Component<Props, State> {
       }
     }
 
-    this.codeMirror?.setValue(code || '');
+    this.codeMirror?.setValue(code);
   }
 
-  _handleFilterHistorySelect(filter) {
+  _handleFilterHistorySelect(filter = '') {
     this._filterInput.value = filter;
 
     this._setFilter(filter);
@@ -1102,7 +1111,7 @@ class CodeEditor extends Component<Props, State> {
     this._setFilter(e.target.value);
   }
 
-  _setFilter(filter) {
+  _setFilter(filter = '') {
     if (this._filterTimeout !== null) {
       clearTimeout(this._filterTimeout);
     }

@@ -5,6 +5,7 @@ import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { GraphQLSchema } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
+import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import React, { PureComponent } from 'react';
@@ -163,12 +164,16 @@ class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  _handleClickReference(reference: ActiveReference, event: React.MouseEvent) {
+  _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
     event.preventDefault();
-    this.setState({
-      explorerVisible: true,
-      activeReference: reference,
-    });
+
+    if (reference) {
+      this.setState({
+        explorerVisible: true,
+        activeReference: reference,
+      });
+    }
+
   }
 
   _handleQueryFocus() {
@@ -702,16 +707,16 @@ class GraphQLEditor extends PureComponent<Props, State> {
             manualPrettify
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
             hintOptions={{
-              schema: schema || null,
+              schema,
               completeSingle: false,
             }}
             infoOptions={{
-              schema: schema || null,
+              schema,
               renderDescription: GraphQLEditor.renderMarkdown,
               onClick: this._handleClickReference,
             }}
             jumpOptions={{
-              schema: schema || null,
+              schema,
               onClick: this._handleClickReference,
             }}
             lintOptions={
