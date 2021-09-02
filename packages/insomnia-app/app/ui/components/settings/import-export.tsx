@@ -66,7 +66,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       <div className="no-margin-top">
         Import format will be automatically detected.
         <HelpTooltip className="space-left">
-          supported formats include: {importers.map(importer => importer.name).join(', ')}
+          Supported formats include: {importers.map(importer => importer.name).join(', ')}
         </HelpTooltip>
       </div>
       <p>
