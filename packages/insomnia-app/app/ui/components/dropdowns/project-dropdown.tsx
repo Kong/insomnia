@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
-import { isBaseProject, isNotBaseProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
+import { isDefaultProject, isNotDefaultProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteProjects } from '../../hooks/project';
 import { setActiveProject } from '../../redux/modules/global';
@@ -32,14 +32,14 @@ const StyledTooltip = styled(Tooltip)({
   ...tooltipIconPlacementHack,
 });
 
-const TooltipIcon = ({ message, icon }: { message: string, icon: SvgIconProps['icon'] }) => (
+const TooltipIcon = ({ message, icon }: { message: string; icon: SvgIconProps['icon'] }) => (
   <StyledTooltip message={message}>
     <StyledSvgIcon icon={icon} />
   </StyledTooltip>
 );
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
-const home = <TooltipIcon message={`${strings.baseProject.singular} ${strings.project.singular} (Always ${strings.localProject.singular})`} icon="home" />;
+const home = <TooltipIcon message={`${strings.defaultProject.singular} ${strings.project.singular} (Always ${strings.localProject.singular})`} icon="home" />;
 const remoteProject = <TooltipIcon message={`${strings.remoteProject.singular} ${strings.project.singular}`} icon="globe" />;
 const localProject = <TooltipIcon message={`${strings.localProject.singular} ${strings.project.singular}`} icon="laptop" />;
 
@@ -53,7 +53,7 @@ const ProjectDropdownItem: FC<{
   setActive: (projectId: string) => void;
 }> = ({ isActive, project, setActive }) => {
   const { _id, name } = project;
-  const isBase = isBaseProject(project);
+  const isBase = isDefaultProject(project);
   const isRemote = isRemoteProject(project);
 
   return (
@@ -100,9 +100,9 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
 
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      {projects.filter(isBaseProject).map(renderProject)}
+      {projects.filter(isDefaultProject).map(renderProject)}
       <DropdownDivider>All {strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
-      {projects.filter(isNotBaseProject).map(renderProject)}
+      {projects.filter(isNotDefaultProject).map(renderProject)}
       {projectHasSettings(activeProject) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>

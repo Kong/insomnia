@@ -2,7 +2,7 @@ import 'codemirror/addon/mode/overlay';
 
 import CodeMirror from 'codemirror';
 
-import { escapeHTML, escapeRegex } from '../../../../common/misc';
+import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
 import * as models from '../../../../models';
 import { getDefaultFill } from '../../../../templating/utils';
 
@@ -466,16 +466,24 @@ function replaceWithSurround(text, find, prefix, suffix) {
  */
 function renderHintMatch(li, _self, data) {
   // Bold the matched text
-  const { displayText, segment } = data;
+  const { displayText, segment, displayValue } = data;
   const markedName = replaceWithSurround(displayText, segment, '<strong>', '</strong>');
   const { char, title } = ICONS[data.type];
-  const safeValue = escapeHTML(data.displayValue);
+
+  let safeValue = '';
+  if (isNotNullOrUndefined<string>(displayValue)) {
+    const escaped = escapeHTML(displayValue);
+    safeValue = `
+      <div class="value" title=${escaped}>
+        ${escaped}
+      </div>
+    `;
+  }
+
   li.className += ` fancy-hint type--${data.type}`;
   li.innerHTML = `
     <label class="label" title="${title}">${char}</label>
     <div class="name">${markedName}</div>
-    <div class="value" title=${safeValue}>
-      ${safeValue}
-    </div>
+    ${safeValue}
   `;
 }

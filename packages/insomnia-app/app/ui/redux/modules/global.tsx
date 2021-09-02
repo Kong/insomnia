@@ -30,7 +30,7 @@ import * as models from '../../../models';
 import { Environment, isEnvironment } from '../../../models/environment';
 import { GrpcRequest } from '../../../models/grpc-request';
 import * as requestOperations from '../../../models/helpers/request-operations';
-import { BASE_PROJECT_ID } from '../../../models/project';
+import { DEFAULT_PROJECT_ID } from '../../../models/project';
 import { Request } from '../../../models/request';
 import { Settings } from '../../../models/settings';
 import { isWorkspace } from '../../../models/workspace';
@@ -81,7 +81,7 @@ function activeActivityReducer(state: string | null = null, action) {
   }
 }
 
-function activeProjectReducer(state: string = BASE_PROJECT_ID, action) {
+function activeProjectReducer(state: string = DEFAULT_PROJECT_ID, action) {
   switch (action.type) {
     case SET_ACTIVE_PROJECT:
       return action.projectId;
@@ -156,7 +156,7 @@ export interface GlobalState {
   activeProjectId: string;
   dashboardSortOrder: DashboardSortOrder;
   activeWorkspaceId: string | null;
-  activeActivity: GlobalActivity | null,
+  activeActivity: GlobalActivity | null;
   isLoggedIn: boolean;
   loadingRequestIds: Record<string, number>;
 }
@@ -462,8 +462,8 @@ const showSaveExportedFileDialog = async ({
   exportedFileNamePrefix,
   selectedFormat,
 }: {
-  exportedFileNamePrefix: string,
-  selectedFormat: SelectedFormat,
+  exportedFileNamePrefix: string;
+  selectedFormat: SelectedFormat;
 }) => {
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
@@ -669,7 +669,7 @@ export function initActiveProject() {
     // Nothing here...
   }
 
-  return setActiveProject(projectId || BASE_PROJECT_ID);
+  return setActiveProject(projectId || DEFAULT_PROJECT_ID);
 }
 
 export function initDashboardSortOrder() {

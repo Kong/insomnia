@@ -1,0 +1,80 @@
+name: Bug Report
+description: Report an Insomnia bug
+labels: [B-bug, S-unverified]
+body:
+- type: checkboxes
+  attributes:
+    label: Is there an existing issue for this?
+    description: Please search to see if an issue already exists for the bug you encountered.
+    options:
+      - label: I have searched the [issue tracker](https://www.github.com/Kong/insomnia/issues) for a bug that matches the one I want to file, without success.
+        required: true
+- type: input
+  attributes:
+    label: Insomnia Version
+    description: What version of Insmonia are you using?
+    placeholder: "2021.5.0"
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: What operating system are you using?
+    options:
+      - Windows
+      - macOS
+      - Ubuntu
+      - Other Linux
+      - Other (specify below)
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Operating System Version
+    description: |-
+      What operating system version are you using?
+      On Windows, click Start button > Settings > System > About.
+      On macOS, click the Apple Menu > About This Mac.
+      On Linux, use `lsb_release` or `uname -a`.
+    placeholder: "e.g. Windows 10 version 1909, macOS Catalina 10.15.7, or Ubuntu 20.04"
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Installation method
+    description: How did you install Insomnia?
+    placeholder: "e.g. download from insomnia.rest, homebrew, apt, etc."
+  validations:
+    required: true
+- type: input
+  attributes:
+    label: Last Known Working Insomnia version
+    description: What is the last version of Insomnia this worked in, if applicable?
+    placeholder: "2021.4.0"
+- type: textarea
+  attributes:
+    label: Expected Behavior
+    description: A clear and concise description of what you expected to happen.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Actual Behavior
+    description: A clear description of what actually happens.
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: Reproduction Steps
+    description: Provide steps to reproduce the behavior
+    placeholder: |
+      1. Go to '...'
+      2. Click on '....'
+      3. Scroll down to '....'
+      4. See error
+- type: textarea
+  attributes:
+    label: Additional Information
+    description: |
+      If your problem needs further explanation, please add more information here.
+
+      Tip: You can attach images or log files by clicking this area to highlight it and then dragging files in.

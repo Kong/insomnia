@@ -24,7 +24,7 @@ class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
     error: null,
     message: '',
     addCancel: false,
-  }
+  };
 
   _setModalRef(m: Modal) {
     this.modal = m;

@@ -63,7 +63,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
     isPrivate: false,
     showDescription: false,
     defaultPreviewMode: false,
-  }
+  };
 
   _workspaceUpdate(patch: Record<string, any>) {
     models.workspace.update(this.props.workspace, patch);

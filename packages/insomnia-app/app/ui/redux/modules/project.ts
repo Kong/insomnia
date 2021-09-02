@@ -2,7 +2,7 @@ import { SegmentEvent, trackEvent, trackSegmentEvent } from '../../../common/ana
 import { ACTIVITY_HOME } from '../../../common/constants';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
-import { BASE_PROJECT_ID, isRemoteProject, Project } from '../../../models/project';
+import { DEFAULT_PROJECT_ID, isRemoteProject, Project } from '../../../models/project';
 import { showAlert, showPrompt } from '../../components/modals';
 import { setActiveActivity, setActiveProject } from './global';
 
@@ -40,8 +40,8 @@ export const removeProject = (project: Project) => dispatch => {
       await models.stats.incrementDeletedRequestsForDescendents(project);
       await models.project.remove(project);
       trackEvent('Project', 'Delete');
-      // Show base project
-      dispatch(setActiveProject(BASE_PROJECT_ID));
+      // Show default project
+      dispatch(setActiveProject(DEFAULT_PROJECT_ID));
       // Show home in case not already on home
       dispatch(setActiveActivity(ACTIVITY_HOME));
       trackSegmentEvent(SegmentEvent.projectLocalDelete);

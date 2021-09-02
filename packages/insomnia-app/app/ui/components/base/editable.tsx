@@ -20,15 +20,15 @@ export const shouldSave = (oldValue, newValue, preventBlank = false) => {
 };
 
 interface Props {
-  onSubmit: (value?: string) => void,
-  value: string,
-  fallbackValue?: string,
-  blankValue?: string,
-  renderReadView?: Function,
-  singleClick?: boolean,
-  onEditStart?: Function,
-  className?: string,
-  preventBlank?: boolean,
+  onSubmit: (value?: string) => void;
+  value: string;
+  fallbackValue?: string;
+  blankValue?: string;
+  renderReadView?: Function;
+  singleClick?: boolean;
+  onEditStart?: Function;
+  className?: string;
+  preventBlank?: boolean;
 }
 
 interface State {
@@ -39,7 +39,7 @@ interface State {
 class Editable extends PureComponent<Props, State> {
   state: State = {
     editing: false,
-  }
+  };
 
   _input: HTMLInputElement | null = null;
 

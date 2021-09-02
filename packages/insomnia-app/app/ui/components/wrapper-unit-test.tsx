@@ -34,7 +34,7 @@ import type { WrapperProps } from './wrapper';
 interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
   wrapperProps: WrapperProps;
 }
 
@@ -255,7 +255,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _runTests(unitTests: UnitTest[]) {
-    const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
+    const { activeWorkspace, activeEnvironment } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
       return;
@@ -283,14 +283,14 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       },
     ]);
     const sendRequest = getSendRequestCallback(activeEnvironment?._id);
-    let results;
 
     try {
-      results = await runTests(src, {
-        requests,
-        // @ts-expect-error -- TSCONVERSION
-        sendRequest,
+      const results = await runTests(src, { sendRequest });
+      await models.unitTestResult.create({
+        results,
+        parentId: activeWorkspace._id,
       });
+      this.setState({ testsRunning: null });
     } catch (err) {
       // Set the state after a timeout so the user still sees the loading state
       setTimeout(() => {
@@ -301,14 +301,6 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       }, 400);
       return;
     }
-
-    await models.unitTestResult.create({
-      results,
-      parentId: activeWorkspace._id,
-    });
-    this.setState({
-      testsRunning: null,
-    });
   }
 
   buildSelectableRequests(): {

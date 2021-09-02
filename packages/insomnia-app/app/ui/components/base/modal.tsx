@@ -11,19 +11,19 @@ import KeydownBinder from '../keydown-binder';
 let globalZIndex = 1000;
 
 export interface ModalProps {
-  tall?: boolean,
-  wide?: boolean,
-  skinny?: boolean,
-  noEscape?: boolean,
-  dontFocus?: boolean,
-  closeOnKeyCodes?: any[],
-  onShow?: Function,
-  onHide?: Function,
-  onCancel?: Function,
-  onKeyDown?: Function,
-  freshState?: boolean,
-  children?: ReactNode,
-  className?: string,
+  tall?: boolean;
+  wide?: boolean;
+  skinny?: boolean;
+  noEscape?: boolean;
+  dontFocus?: boolean;
+  closeOnKeyCodes?: any[];
+  onShow?: Function;
+  onHide?: Function;
+  onCancel?: Function;
+  onKeyDown?: Function;
+  freshState?: boolean;
+  children?: ReactNode;
+  className?: string;
 }
 
 interface State {

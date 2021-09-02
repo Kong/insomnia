@@ -80,7 +80,7 @@ describe('cli', () => {
 
       const logs = logger.__getLogs();
 
-      expect(logs.log[0]).toContainEqual({
+      expect(logs.log?.[0]).toContainEqual({
         type: 'declarative',
         printOptions: true,
         verbose: true,
@@ -151,10 +151,11 @@ describe('cli', () => {
     });
 
     it('should call generateConfig with global options', () => {
-      inso('lint spec file.yaml -w dir1 -a dir2 --ci');
+      inso('lint spec file.yaml -w dir1 -a dir2 --src src --ci');
       expect(lintSpecification).toHaveBeenCalledWith('file.yaml', {
         workingDir: 'dir1',
         appDataDir: 'dir2',
+        src: 'src',
         ci: true,
       });
     });
@@ -192,12 +193,13 @@ describe('cli', () => {
     });
 
     it('should call runInsomniaTests with global options', () => {
-      inso('run test uts_123 -w dir1 -a dir2 --ci');
+      inso('run test uts_123 -w dir1 -a dir2 --src src --ci');
       expect(runInsomniaTests).toHaveBeenCalledWith(
         'uts_123',
         expect.objectContaining({
           workingDir: 'dir1',
           appDataDir: 'dir2',
+          src: 'src',
           ci: true,
         }),
       );

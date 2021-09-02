@@ -15,7 +15,7 @@ interface State {
 class Lazy extends PureComponent<Props> {
   state: State = {
     show: false,
-  }
+  };
 
   show() {
     this.setState({

@@ -48,7 +48,7 @@ import { isEnvironment } from '../../models/environment';
 import { GrpcRequest, isGrpcRequest, isGrpcRequestId } from '../../models/grpc-request';
 import { GrpcRequestMeta } from '../../models/grpc-request-meta';
 import * as requestOperations from '../../models/helpers/request-operations';
-import { isNotBaseProject } from '../../models/project';
+import { isNotDefaultProject } from '../../models/project';
 import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
@@ -127,19 +127,19 @@ import { AppHooks } from './app-hooks';
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
-  showDragOverlay: boolean,
-  draggingSidebar: boolean,
-  draggingPaneHorizontal: boolean,
-  draggingPaneVertical: boolean,
-  sidebarWidth: number,
-  paneWidth: number,
-  paneHeight: number,
-  isVariableUncovered: boolean,
-  vcs: VCS | null,
-  gitVCS: GitVCS | null,
-  forceRefreshCounter: number,
-  forceRefreshHeaderCounter: number,
-  isMigratingChildren: boolean,
+  showDragOverlay: boolean;
+  draggingSidebar: boolean;
+  draggingPaneHorizontal: boolean;
+  draggingPaneVertical: boolean;
+  sidebarWidth: number;
+  paneWidth: number;
+  paneHeight: number;
+  isVariableUncovered: boolean;
+  vcs: VCS | null;
+  gitVCS: GitVCS | null;
+  forceRefreshCounter: number;
+  forceRefreshHeaderCounter: number;
+  isMigratingChildren: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -1339,7 +1339,7 @@ class App extends PureComponent<AppProps, State> {
               console.log(`[developer] clearing all "${type}" entities`);
               const allEntities = await db.all(type);
               const filteredEntites = allEntities
-                .filter(isNotBaseProject); // don't clear the base project
+                .filter(isNotDefaultProject); // don't clear the default project
               await db.batchModifyDocs({ remove: filteredEntites });
               db.flushChanges(bufferId);
             }
@@ -1363,7 +1363,7 @@ class App extends PureComponent<AppProps, State> {
                   console.log(`[developer] clearing all "${type}" entities`);
                   const allEntities = await db.all(type);
                   const filteredEntites = allEntities
-                    .filter(isNotBaseProject); // don't clear the base project
+                    .filter(isNotDefaultProject); // don't clear the default project
                   await db.batchModifyDocs({ remove: filteredEntites });
                 });
               await Promise.all(promises);

@@ -28,7 +28,7 @@ interface Props {
 }
 
 interface State {
-  state: States
+  state: States;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -37,7 +37,7 @@ class PromptButton extends PureComponent<Props> {
   _triggerTimeout: NodeJS.Timeout | null = null;
   state: State = {
     state: STATE_DEFAULT,
-  }
+  };
 
   _confirm(...args) {
     if (this._triggerTimeout !== null) {

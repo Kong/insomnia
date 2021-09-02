@@ -2,6 +2,13 @@ import electron from 'electron';
 import querystring from 'querystring';
 import * as uuid from 'uuid';
 
+import * as models from '../../models/index';
+
+export enum ChromiumVerificationResult {
+  BLIND_TRUST = 0,
+  USE_CHROMIUM_RESULT = -3
+}
+
 const LOCALSTORAGE_KEY_SESSION_ID = 'insomnia::current-oauth-session-id';
 let authWindowSessionId;
 
@@ -58,8 +65,22 @@ export function authorizeUserInWindow(
   urlSuccessRegex = /(code=).*/,
   urlFailureRegex = /(error=).*/,
 ) {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>(async (resolve, reject) => {
     let finalUrl: string | null = null;
+
+    // Fetch user setting to determine whether to validate SSL certificates during auth
+    const {
+      validateAuthSSL,
+    } = await models.settings.getOrCreate();
+
+    // Create a child window
+    const child = new electron.remote.BrowserWindow({
+      webPreferences: {
+        nodeIntegration: false,
+        partition: authWindowSessionId,
+      },
+      show: false,
+    });
 
     function _parseUrl(currentUrl: string, source: string) {
       if (currentUrl.match(urlSuccessRegex)) {
@@ -84,14 +105,6 @@ export function authorizeUserInWindow(
       }
     }
 
-    // Create a child window
-    const child = new electron.remote.BrowserWindow({
-      webPreferences: {
-        nodeIntegration: false,
-        partition: authWindowSessionId,
-      },
-      show: false,
-    });
     // Finish on close
     child.on('close', () => {
       if (finalUrl) {
@@ -118,8 +131,26 @@ export function authorizeUserInWindow(
       // Listen for did-fail-load to be able to parse the URL even when the callback server is unreachable
       _parseUrl(url, 'did-fail-load');
     });
+    child.webContents.session.setCertificateVerifyProc((_request, callback) => {
+      if (validateAuthSSL) {
+        // Use results of Chromium's cert verification
+        callback(ChromiumVerificationResult.USE_CHROMIUM_RESULT);
+      } else {
+        // Don't verify; blindly trust cert
+        callback(ChromiumVerificationResult.BLIND_TRUST);
+      }
+    });
     // Show the window to the user after it loads
     child.on('ready-to-show', child.show.bind(child));
-    child.loadURL(url);
+
+    try {
+      await child.loadURL(url);
+    } catch (e) {
+      // Reject with error to show result in OAuth2 tab
+      reject(e);
+      // Need to close child window here since an exception in loadURL precludes normal call in
+      // _parseUrl
+      child.close();
+    }
   });
 }

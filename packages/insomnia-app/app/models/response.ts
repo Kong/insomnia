@@ -220,7 +220,7 @@ export function getBodyStream<T extends Response, TFail extends Readable>(
 }
 
 export const getBodyBuffer = <TFail = null>(
-  response?: { bodyPath?: string, bodyCompression?: Compression },
+  response?: { bodyPath?: string; bodyCompression?: Compression },
   readFailureValue?: TFail | null,
 ) => getBodyBufferFromPath(
     response?.bodyPath || '',

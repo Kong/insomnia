@@ -123,9 +123,9 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
   const defaultParent = WORKSPACE_ID;
 
   const endpointsSchemas: ({
-    path: string,
-    method: string,
-    tags?: string[],
+    path: string;
+    method: string;
+    tags?: string[];
   } & OpenAPIV3.SchemaObject)[] = Object.keys(document.paths)
     .map(path => {
       const schemasPerMethod = document.paths[path];

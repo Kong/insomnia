@@ -36,7 +36,7 @@ class ExportRequestsModal extends PureComponent<Props, State> {
 
   state: State = {
     treeRoot: null,
-  }
+  };
 
   setModalRef(modal: Modal) {
     if (modal != null) {

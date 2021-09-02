@@ -1230,7 +1230,7 @@ export class VCS {
     const symmetricKey = await crypt.generateAES256Key();
     const symmetricKeyStr = JSON.stringify(symmetricKey);
 
-    const teamKeys: {accountId: string, encSymmetricKey: string}[] = [];
+    const teamKeys: {accountId: string; encSymmetricKey: string}[] = [];
     let encSymmetricKey: string | undefined;
 
     if (teamId) {

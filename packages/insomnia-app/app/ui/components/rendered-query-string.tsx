@@ -7,8 +7,8 @@ import { HandleRender } from '../../common/render';
 import CopyButton from './base/copy-button';
 
 interface Props {
-  request: any,
-  handleRender: HandleRender,
+  request: any;
+  handleRender: HandleRender;
 }
 
 interface State {
