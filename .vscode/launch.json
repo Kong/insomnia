@@ -1,0 +1,66 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Electron: main",
+      "type": "node",
+      "request": "launch",
+      "protocol": "inspector",
+      "sourceMaps": true,
+      "presentation": {
+        "hidden": true,
+        "group": "Insomnia",
+        "order": 1
+      },
+      "cwd": "${workspaceFolder}/packages/insomnia-app",
+      "runtimeExecutable": "${workspaceFolder}/packages/insomnia-app/node_modules/.bin/electron",
+      "runtimeArgs": ["--remote-debugging-port=9222", "."],
+      "outputCapture": "std",
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${workspaceFolder}/packages/insomnia-app/app/*"
+      },
+      "windows": {
+        "type": "node",
+        "request": "launch",
+        "name": "Electron: main",
+        "runtimeExecutable": "${workspaceFolder}/packages/insomnia-app/node_modules/.bin/electron.cmd"
+      },
+      "env": {
+        "TS_NODE_PROJECT": "tsconfig.webpack.json",
+        "NODE_ENV": "development",
+        "ELECTRON_IS_DEV": "1"
+      }
+    },
+    {
+      "name": "Electron: renderer",
+      "type": "pwa-chrome",
+      "request": "attach",
+      "presentation": {
+        "hidden": true,
+        "group": "Insomnia",
+        "order": 2
+      },
+      "port": 9222,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${workspaceFolder}/packages/insomnia-app/app/*"
+      },
+      "webRoot": "${workspaceFolder}/packages/insomnia-app/app",
+      "timeout": 60000
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Insomnia",
+      "presentation": {
+        "hidden": false,
+        "group": "Insomnia",
+        "order": 0
+      },
+      "preLaunchTask": "Insomnia: Compile (Watch)",
+      "configurations": [
+        "Electron: main",
+        "Electron: renderer",
+      ],
+    }
+  ]
+}
