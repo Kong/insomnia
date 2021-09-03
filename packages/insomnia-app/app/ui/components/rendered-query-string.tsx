@@ -31,8 +31,7 @@ export const RenderedQueryString: FC<Props> = ({ request, handleRender }) => {
   const [previewString, setPreviewString] = useState(defaultPreview);
 
   useAsync(async () => {
-    const enabledParameters = request.parameters.filter(parameter => !parameter.disabled);
-
+    const enabledParameters = request.parameters.filter(({ disabled }) => !disabled);
     try {
       const result = await handleRender({
         url: request.url,
@@ -51,7 +50,7 @@ export const RenderedQueryString: FC<Props> = ({ request, handleRender }) => {
       console.error(error);
       setPreviewString(defaultPreview);
     }
-  }, [request, handleRender]);
+  }, [request.url, request.parameters, request.settingEncodeUrl, handleRender]);
 
   const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
