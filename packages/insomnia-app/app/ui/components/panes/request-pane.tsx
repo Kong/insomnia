@@ -28,7 +28,7 @@ import ErrorBoundary from '../error-boundary';
 import MarkdownPreview from '../markdown-preview';
 import { showModal } from '../modals';
 import RequestSettingsModal from '../modals/request-settings-modal';
-import RenderedQueryString from '../rendered-query-string';
+import { RenderedQueryString } from '../rendered-query-string';
 import RequestUrlBar from '../request-url-bar';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
 import PlaceholderRequestPane from './placeholder-request-pane';

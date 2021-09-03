@@ -17,7 +17,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CopyButton extends PureComponent<Props, State> {
+export class CopyButton extends PureComponent<Props, State> {
   state: State = {
     showConfirmation: false,
   };
@@ -74,5 +74,3 @@ class CopyButton extends PureComponent<Props, State> {
     );
   }
 }
-
-export default CopyButton;

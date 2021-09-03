@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { exportHarRequest } from '../../../common/har';
-import CopyButton from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
 import Modal from '../base/modal';
