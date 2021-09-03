@@ -142,7 +142,7 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
   return null;
 }
 
-export function _buildBearerHeader(accessToken: string, prefix: string) {
+export const _buildBearerHeader = (accessToken: string, prefix: string) => {
   if (!accessToken) {
     return null;
   }
@@ -159,4 +159,4 @@ export function _buildBearerHeader(accessToken: string, prefix: string) {
   }
 
   return header;
-}
+};

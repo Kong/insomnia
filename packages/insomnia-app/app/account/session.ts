@@ -258,7 +258,7 @@ function _getAuthSalts(email) {
   );
 }
 
-function _getSessionData() {
+const _getSessionData = () => {
   const sessionId = getCurrentSessionId();
 
   if (!sessionId || !window) {
@@ -270,7 +270,7 @@ function _getSessionData() {
     return null;
   }
   return JSON.parse(dataStr);
-}
+};
 
 function _unsetSessionData() {
   const sessionId = getCurrentSessionId();
