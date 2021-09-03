@@ -13,11 +13,15 @@ const Wrapper = styled.div({
   alignItems: 'center',
   overflow: 'auto',
   position: 'relative',
+  height: '100%',
+  gap: 'var(--padding-sm)',
   width: '100%',
 });
 
 const CopyButton = styled(_CopyButton)({
   alignSelf: 'start',
+  position: 'sticky',
+  top: 0,
 });
 
 interface Props {
