@@ -56,7 +56,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
   state: State = {
     currentInterval: null,
     currentTimeout: null,
-  }
+  };
 
   _lastPastedText: string | null = null;
 

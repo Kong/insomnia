@@ -26,7 +26,7 @@ class WrapperModal extends PureComponent<{}, State> {
     tall: false,
     skinny: false,
     wide: false,
-  }
+  };
 
   _setModalRef(m: Modal) {
     this.modal = m;

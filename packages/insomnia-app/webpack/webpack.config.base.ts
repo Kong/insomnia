@@ -3,7 +3,7 @@
 import 'webpack-dev-server';
 
 import path from 'path';
-import { Configuration, DefinePlugin, optimize } from 'webpack';
+import { Configuration, DefinePlugin, NormalModuleReplacementPlugin, optimize } from 'webpack';
 
 import pkg from '../package.json';
 
@@ -83,6 +83,11 @@ const configuration: Configuration = {
     new DefinePlugin({
       'process.env.RELEASE_DATE': JSON.stringify(new Date()),
     }),
+    // see: https://github.com/Kong/insomnia/pull/3469 for why this transform is needed
+    new NormalModuleReplacementPlugin(
+      /node_modules\/vscode-languageserver-types\/lib\/umd\/main\.js/,
+      '../esm/main.js',
+    ),
   ],
   target: 'electron-renderer',
 };

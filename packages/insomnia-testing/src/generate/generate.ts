@@ -3,15 +3,15 @@ import { writeFile } from 'fs';
 import { escapeJsStr, indent } from './util';
 
 export interface Test {
-  name: string
-  code: string
-  defaultRequestId: string | null
+  name: string;
+  code: string;
+  defaultRequestId: string | null;
 }
 
 export interface TestSuite {
-  name: string
-  suites: TestSuite[]
-  tests?: Test[]
+  name: string;
+  suites: TestSuite[];
+  tests?: Test[];
 }
 
 export const generate = (suites: TestSuite[]) => {

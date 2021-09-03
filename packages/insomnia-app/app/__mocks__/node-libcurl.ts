@@ -19,7 +19,7 @@ class Curl extends EventEmitter {
     EFFECTIVE_URL: 'EFFECTIVE_URL',
     SIZE_DOWNLOAD: 'SIZE_DOWNLOAD',
     TOTAL_TIME: 'TOTAL_TIME',
-  }
+  };
 
   static option = {
     ACCEPT_ENCODING: 'ACCEPT_ENCODING',
@@ -62,7 +62,7 @@ class Curl extends EventEmitter {
     VERBOSE: 'VERBOSE',
     WRITEFUNCTION: 'WRITEFUNCTION',
     XFERINFOFUNCTION: 'XFERINFOFUNCTION',
-  }
+  };
 
   static getVersion() {
     return 'libcurl/7.54.0 LibreSSL/2.0.20 zlib/1.2.11 nghttp2/1.24.0';

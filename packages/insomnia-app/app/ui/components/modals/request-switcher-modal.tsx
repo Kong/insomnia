@@ -87,7 +87,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     hideNeverActiveRequests: false,
     isModalVisible: true,
     title: null,
-  }
+  };
 
   _handleInputKeydown(e: React.KeyboardEvent<HTMLDivElement>) {
     const keyCode = e.keyCode;

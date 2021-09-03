@@ -72,7 +72,7 @@ export const createWorkspace = ({ scope, onCreate }: {
   };
 };
 
-export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<{workspace: Workspace, workspaceId: string}>) => {
+export const activateWorkspace = ({ workspace, workspaceId }: RequireExactlyOne<{workspace: Workspace; workspaceId: string}>) => {
   return async (dispatch: Dispatch, getState: () => RootState) => {
     // If we have no workspace but we do have an id, search for it
     if (!workspace && workspaceId) {

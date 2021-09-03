@@ -8,7 +8,7 @@ import { VCS } from './vcs';
 
 const blankStage = {};
 
-export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace; }) => {
+export const initializeLocalBackendProjectAndMarkForSync = async ({ vcs, workspace }: { vcs: VCS; workspace: Workspace }) => {
   if (!isCollection(workspace)) {
     // Don't initialize and mark for sync unless we're in a collection
     return;

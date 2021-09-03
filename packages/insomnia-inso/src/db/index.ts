@@ -4,6 +4,7 @@ import { getAppDataDir } from '../data-directory';
 import { logger } from '../logger';
 import { getDefaultAppName } from '../util';
 import gitAdapter from './adapters/git-adapter';
+import insomniaAdapter from './adapters/insomnia-adapter';
 import neDbAdapter from './adapters/ne-db-adapter';
 import type {
   ApiSpec,
@@ -43,28 +44,37 @@ interface Options {
   workingDir?: string;
   appDataDir?: string;
   filterTypes?: (keyof Database)[];
+  src?: string;
 }
 
 export const loadDb = async ({
   workingDir,
   appDataDir,
   filterTypes,
+  src,
 }: Options = {}) => {
   let db: Database | null = null;
 
   // try load from git
-  if (!appDataDir) {
+  if (!appDataDir && !src) {
     const dir = workingDir || '.';
     db = await gitAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from git repository at \`${path.resolve(dir)}\``);
-  } // try load from nedb
+  }
 
+  // try load from file (higher priority)
+  if (src) {
+    db = await insomniaAdapter(src, filterTypes);
+    db && logger.debug(`Data store configured from file at \`${path.resolve(src)}\``);
+  }
+
+  // try load from nedb
   if (!db) {
-    const dir = appDataDir || getAppDataDir(getDefaultAppName());
+    const dir = src || appDataDir || getAppDataDir(getDefaultAppName());
     db = await neDbAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from app data directory at \`${path.resolve(dir)}\``); // Try to load from the Designer data dir, if the Core data directory does not exist
 
-    if (!db && !appDataDir) {
+    if (!db && !appDataDir && !src) {
       const designerDir = getAppDataDir('Insomnia Designer');
       db = await neDbAdapter(designerDir);
       db &&
@@ -76,9 +86,13 @@ export const loadDb = async ({
     }
   } // return empty db
 
+  appDataDir && logger.warn(
+    'The option `--appDataDir` has been deprecated and will be removed in future releases. Please use `--src` as an alternative',
+  );
+
   if (!db) {
     logger.warn(
-      'No git or app data store found, re-run `inso` with `--verbose` to see tracing information',
+      'No git, app data store or Insomnia V4 export file found, re-run `inso` with `--verbose` to see tracing information',
     );
     db = emptyDb();
   }

@@ -21,16 +21,16 @@ const isUncontrolledInput = <T extends unknown>(dropdown: DropdownItemProps<T>):
 );
 
 export type DropdownItemProps<T = string> = {
-  buttonClass?: string,
-  stayOpenAfterClick?: boolean,
-  disabled?: boolean,
-  children?: ReactNode,
-  icon?: ReactNode,
-  right?: ReactNode,
-  className?: string,
-  color?: string,
-  selected?: boolean,
-} & (ControlledDropdown<T> | UncontrolledDropdown)
+  buttonClass?: string;
+  stayOpenAfterClick?: boolean;
+  disabled?: boolean;
+  children?: ReactNode;
+  icon?: ReactNode;
+  right?: ReactNode;
+  className?: string;
+  color?: string;
+  selected?: boolean;
+} & (ControlledDropdown<T> | UncontrolledDropdown);
 
 const StyledButton = styled.button<{ selected?: boolean }>`
   display: flex;

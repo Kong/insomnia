@@ -1,3 +1,4 @@
+import { importers } from 'insomnia-importers';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -10,6 +11,7 @@ import { importClipBoard, importFile, importUri } from '../../redux/modules/impo
 import { selectActiveProjectName, selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
+import HelpTooltip from '../help-tooltip';
 import ExportRequestsModal from '../modals/export-requests-modal';
 import { showModal, showPrompt } from '../modals/index';
 
@@ -61,12 +63,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
 
   return (
     <div>
-      <p className="no-margin-top">
-        Import format will be automatically detected (
-        <strong>Insomnia, Postman v2, HAR, Curl, Swagger, OpenAPI v3</strong>)
-      </p>
+      <div className="no-margin-top">
+        Import format will be automatically detected.
+        <HelpTooltip className="space-left">
+          Supported formats include: {importers.map(importer => importer.name).join(', ')}
+        </HelpTooltip>
+      </div>
       <p>
-        Don't see your format here? <Link href={docsImportExport}>Add Your Own</Link>.
+        Your format isn't supported? <Link href={docsImportExport}>Add Your Own</Link>.
       </p>
       <div className="pad-top">
         <Dropdown outline>

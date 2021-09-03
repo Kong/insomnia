@@ -42,9 +42,9 @@ interface State {
   placeholder: string;
   hint: string;
   mode: string;
-  hideMode: boolean,
-  enableRender: boolean,
-  showCopyButton: boolean,
+  hideMode: boolean;
+  enableRender: boolean;
+  showCopyButton: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -59,7 +59,7 @@ class CodePromptModal extends PureComponent<Props, State> {
     hideMode: false,
     enableRender: false,
     showCopyButton: false,
-  }
+  };
 
   modal: Modal | null = null;
   _onModeChange: Function = () => {};

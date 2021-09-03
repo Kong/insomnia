@@ -2,7 +2,7 @@ import { Application } from 'spectron';
 
 import findAsync from './find-async';
 
-interface WaitUntilOpenedOptions {modalName?: string, title?: string}
+interface WaitUntilOpenedOptions {modalName?: string; title?: string}
 export const waitUntilOpened = async (app, { modalName, title }: WaitUntilOpenedOptions) => {
   if (modalName) {
     const modal = await app.client.react$(modalName);

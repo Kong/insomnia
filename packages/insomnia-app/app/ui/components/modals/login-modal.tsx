@@ -24,7 +24,7 @@ class LoginModal extends PureComponent<{}, State> {
     error: '',
     title: '',
     message: '',
-  }
+  };
 
   modal: Modal | null = null;
   _passwordInput: HTMLInputElement | null = null;

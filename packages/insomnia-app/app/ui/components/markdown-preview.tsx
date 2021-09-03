@@ -10,11 +10,11 @@ import { markdownToHTML } from '../../common/markdown-to-html';
 import { HandleRender } from '../../common/render';
 
 interface Props {
-  markdown: string,
-  handleRender?: HandleRender,
-  className?: string,
-  debounceMillis?: number,
-  heading?: string,
+  markdown: string;
+  handleRender?: HandleRender;
+  className?: string;
+  debounceMillis?: number;
+  heading?: string;
 }
 
 interface State {
@@ -27,7 +27,7 @@ class MarkdownPreview extends PureComponent<Props, State> {
   state: State = {
     compiled: '',
     renderError: '',
-  }
+  };
 
   _compileTimeout: NodeJS.Timeout | null = null;
   _preview: HTMLDivElement | null = null;

@@ -76,7 +76,7 @@ export interface OA3ServerKubernetesBackend {
   'x-kubernetes-backend'?: {
     serviceName: string;
     servicePort: number;
-  }
+  };
 }
 
 export interface OA3ServerKubernetesService {

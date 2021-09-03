@@ -242,7 +242,7 @@ const IndividualTheme: FC<{
   isLight: boolean;
   isInOsThemeMode: boolean;
   onChangeTheme: (name: string, mode: ColorScheme) => Promise<void>;
-  theme: PluginTheme
+  theme: PluginTheme;
 }> = ({
   isActive,
   isDark,

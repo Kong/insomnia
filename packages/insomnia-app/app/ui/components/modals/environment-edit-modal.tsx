@@ -32,7 +32,7 @@ class EnvironmentEditModal extends PureComponent<Props, State> {
   state: State = {
     requestGroup: null,
     isValid: true,
-  }
+  };
 
   modal: Modal | null = null;
   _envEditor: EnvironmentEditor | null = null;

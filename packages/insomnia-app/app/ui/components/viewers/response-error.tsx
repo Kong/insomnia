@@ -5,9 +5,9 @@ import { showModal } from '../modals/index';
 import SettingsModal from '../modals/settings-modal';
 
 interface Props {
-  error: string,
-  url: string,
-  fontSize: number,
+  error: string;
+  url: string;
+  fontSize: number;
 }
 class ResponseError extends PureComponent<Props> {
   render() {
