@@ -87,7 +87,7 @@ sudo dnf install libcurl-devel
 ```
 
 </details>
-<br/>
+
 Also on Linux, if Electron is failing during the bootstrap process, run the following
 
 ```shell
