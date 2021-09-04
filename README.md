@@ -47,6 +47,8 @@ npm test
 npm run app-start
 ```
 
+### Linux
+
 If you are on Linux, you may need to install the following supporting packages:
 
 <details>
@@ -85,13 +87,15 @@ sudo dnf install libcurl-devel
 ```
 
 </details>
-
+<br/>
 Also on Linux, if Electron is failing during the bootstrap process, run the following
 
 ```shell
 # Clear Electron install conflicts
 rm -rf ~/.cache/electron
 ```
+
+### Windows
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
 
