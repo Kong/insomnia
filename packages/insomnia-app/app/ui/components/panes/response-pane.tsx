@@ -27,7 +27,7 @@ import SizeTag from '../tags/size-tag';
 import StatusTag from '../tags/status-tag';
 import TimeTag from '../tags/time-tag';
 import ResponseCookiesViewer from '../viewers/response-cookies-viewer';
-import ResponseHeadersViewer from '../viewers/response-headers-viewer';
+import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
 import ResponseTimelineViewer from '../viewers/response-timeline-viewer';
 import ResponseViewer from '../viewers/response-viewer';
 import BlankPane from './blank-pane';
