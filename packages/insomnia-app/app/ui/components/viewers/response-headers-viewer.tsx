@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { URL } from 'url';
 
 import type { ResponseHeader } from '../../../models/response';
-import CopyButton from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import Link from '../base/link';
 
 interface Props {
