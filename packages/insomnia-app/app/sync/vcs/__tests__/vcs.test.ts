@@ -2,12 +2,16 @@ import { createBuilder } from '@develohpanda/fluent-builder';
 
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { baseModelSchema, workspaceModelSchema } from '../../../models/__schemas__/model-schemas';
+import { projectSchema } from '../../__schemas__/type-schemas';
 import MemoryDriver from '../../store/drivers/memory-driver';
+import { BackendProject } from '../../types';
+import * as paths from '../paths';
 import { describeChanges } from '../util';
 import { VCS } from '../vcs';
 
 const baseModelBuilder = createBuilder(baseModelSchema);
 const workspaceModelBuilder = createBuilder(workspaceModelSchema);
+const projectBuilder = createBuilder(projectSchema);
 
 function newDoc(id) {
   return baseModelBuilder.reset()._id(id).build();
@@ -15,7 +19,7 @@ function newDoc(id) {
 
 async function vcs(branch) {
   const v = new VCS(new MemoryDriver());
-  await v.switchAndCreateProjectIfNotExist('workspace_1', 'Test Workspace');
+  await v.switchAndCreateBackendProjectIfNotExist('workspace_1', 'Test Workspace');
   await v.checkout([], branch);
   return v;
 }
@@ -932,6 +936,34 @@ describe('VCS', () => {
       expect(await v.getHistory(2)).toStrictEqual([s1, s2]);
       // Get the last 3 items (only 2 exist)
       expect(await v.getHistory(3)).toStrictEqual([s1, s2]);
+    });
+  });
+
+  describe('hasBackendProjectForRootDocument', () => {
+    let vcs: VCS;
+    let backendProject: BackendProject;
+
+    beforeEach(async () => {
+      backendProject = projectBuilder.reset().build();
+
+      const driver = new MemoryDriver();
+      vcs = new VCS(driver);
+
+      driver.setItem(paths.projects(), Buffer.from(JSON.stringify([backendProject])));
+      driver.setItem(paths.projectBase(backendProject.id), Buffer.from(''));
+      driver.setItem(paths.project(backendProject.id), Buffer.from(JSON.stringify(backendProject)));
+    });
+
+    it('should return true if has project', async () => {
+      const hasProject = await vcs.hasBackendProjectForRootDocument(backendProject.rootDocumentId);
+
+      expect(hasProject).toBe(true);
+    });
+
+    it('should return false if has no project', async () => {
+      const hasProject = await vcs.hasBackendProjectForRootDocument('some other id');
+
+      expect(hasProject).toBe(false);
     });
   });
 });

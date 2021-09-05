@@ -318,8 +318,8 @@ export const SORT_ORDERS = [
   SORT_TYPE_ASC,
 ];
 export const sortOrderName: Record<SortOrder, string> = {
-  [SORT_NAME_ASC]: 'Name Ascending',
-  [SORT_NAME_DESC]: 'Name Descending',
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
   [SORT_CREATED_ASC]: 'Oldest First',
   [SORT_CREATED_DESC]: 'Newest First',
   [SORT_HTTP_METHOD]: 'HTTP Method',
@@ -327,14 +327,14 @@ export const sortOrderName: Record<SortOrder, string> = {
   [SORT_TYPE_ASC]: 'Requests First',
 };
 
-export type SpaceSortOrder =
+export type DashboardSortOrder =
   | 'name-asc'
   | 'name-desc'
   | 'created-asc'
   | 'created-desc'
-  | 'modified-desc'
+  | 'modified-desc';
 
-export const SPACE_SORT_ORDERS = [
+export const DASHBOARD_SORT_ORDERS = [
   SORT_MODIFIED_DESC,
   SORT_NAME_ASC,
   SORT_NAME_DESC,
@@ -342,9 +342,9 @@ export const SPACE_SORT_ORDERS = [
   SORT_CREATED_DESC,
 ];
 
-export const spaceSortOrderName: Record<SpaceSortOrder, string> = {
-  [SORT_NAME_ASC]: 'Name Ascending',
-  [SORT_NAME_DESC]: 'Name Descending',
+export const dashboardSortOrderName: Record<DashboardSortOrder, string> = {
+  [SORT_NAME_ASC]: 'Name Ascending (A-Z)',
+  [SORT_NAME_DESC]: 'Name Descending (Z-A)',
   [SORT_CREATED_ASC]: 'Oldest First',
   [SORT_CREATED_DESC]: 'Newest First',
   [SORT_MODIFIED_DESC]: 'Last Modified',

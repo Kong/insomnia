@@ -8,7 +8,7 @@ import type { ApiSpec } from '../../../models/api-spec';
 import type { Settings } from '../../../models/settings';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
-import CopyButton from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import Modal from '../base/modal';
 import ModalBody from '../base/modal-body';
 import ModalFooter from '../base/modal-footer';
@@ -45,7 +45,7 @@ class GenerateConfigModal extends PureComponent<Props, State> {
   state: State = {
     configs: [],
     activeTab: 0,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

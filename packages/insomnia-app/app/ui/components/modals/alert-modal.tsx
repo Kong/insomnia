@@ -24,7 +24,7 @@ class AlertModal extends PureComponent<{}, State> {
     message: '',
     addCancel: false,
     okLabel: '',
-  }
+  };
 
   modal: Modal | null = null;
   _cancel: HTMLButtonElement | null = null;

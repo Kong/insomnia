@@ -13,6 +13,7 @@ import { GrpcRequest } from '../../../models/grpc-request';
 import { GrpcRequestMeta } from '../../../models/grpc-request-meta';
 import { OAuth2Token } from '../../../models/o-auth-2-token';
 import { PluginData } from '../../../models/plugin-data';
+import { Project } from '../../../models/project';
 import { ProtoDirectory } from '../../../models/proto-directory';
 import { ProtoFile } from '../../../models/proto-file';
 import { Request } from '../../../models/request';
@@ -22,7 +23,6 @@ import { RequestMeta } from '../../../models/request-meta';
 import { RequestVersion } from '../../../models/request-version';
 import { Response } from '../../../models/response';
 import { Settings } from '../../../models/settings';
-import { Space } from '../../../models/space';
 import { Stats } from '../../../models/stats';
 import { UnitTest } from '../../../models/unit-test';
 import { UnitTestResult } from '../../../models/unit-test-result';
@@ -47,35 +47,35 @@ type EntityRecord<T extends BaseModel> = Record<string, T>;
 export interface EntitiesState {
   stats: EntityRecord<Stats>;
   settings: EntityRecord<Settings>;
-  spaces: EntityRecord<Space>,
-  workspaces: EntityRecord<Workspace>,
-  workspaceMetas: EntityRecord<WorkspaceMeta>,
-  environments: EntityRecord<Environment>,
-  gitRepositories: EntityRecord<GitRepository>,
-  cookieJars: EntityRecord<CookieJar>,
-  apiSpecs: EntityRecord<ApiSpec>,
-  requestGroups: EntityRecord<RequestGroup>,
-  requestGroupMetas: EntityRecord<RequestGroupMeta>,
-  requests: EntityRecord<Request>,
-  requestVersions: EntityRecord<RequestVersion>,
-  requestMetas: EntityRecord<RequestMeta>,
-  responses: EntityRecord<Response>,
-  oAuth2Tokens: EntityRecord<OAuth2Token>,
-  clientCertificates: EntityRecord<ClientCertificate>,
-  pluginDatas: EntityRecord<PluginData>,
-  unitTestSuites: EntityRecord<UnitTestSuite>,
-  unitTestResults: EntityRecord<UnitTestResult>,
-  unitTests: EntityRecord<UnitTest>,
-  protoFiles: EntityRecord<ProtoFile>,
-  protoDirectories: EntityRecord<ProtoDirectory>,
-  grpcRequests: EntityRecord<GrpcRequest>,
-  grpcRequestMetas: EntityRecord<GrpcRequestMeta>
+  projects: EntityRecord<Project>;
+  workspaces: EntityRecord<Workspace>;
+  workspaceMetas: EntityRecord<WorkspaceMeta>;
+  environments: EntityRecord<Environment>;
+  gitRepositories: EntityRecord<GitRepository>;
+  cookieJars: EntityRecord<CookieJar>;
+  apiSpecs: EntityRecord<ApiSpec>;
+  requestGroups: EntityRecord<RequestGroup>;
+  requestGroupMetas: EntityRecord<RequestGroupMeta>;
+  requests: EntityRecord<Request>;
+  requestVersions: EntityRecord<RequestVersion>;
+  requestMetas: EntityRecord<RequestMeta>;
+  responses: EntityRecord<Response>;
+  oAuth2Tokens: EntityRecord<OAuth2Token>;
+  clientCertificates: EntityRecord<ClientCertificate>;
+  pluginDatas: EntityRecord<PluginData>;
+  unitTestSuites: EntityRecord<UnitTestSuite>;
+  unitTestResults: EntityRecord<UnitTestResult>;
+  unitTests: EntityRecord<UnitTest>;
+  protoFiles: EntityRecord<ProtoFile>;
+  protoDirectories: EntityRecord<ProtoDirectory>;
+  grpcRequests: EntityRecord<GrpcRequest>;
+  grpcRequestMetas: EntityRecord<GrpcRequestMeta>;
 }
 
 export const initialEntitiesState: EntitiesState = {
   stats: {},
   settings: {},
-  spaces: {},
+  projects: {},
   workspaces: {},
   workspaceMetas: {},
   environments: {},
@@ -168,7 +168,7 @@ export async function allDocs() {
   // NOTE: This list should be from most to least specific (ie. parents above children)
   return [
     ...(await models.settings.all()),
-    ...(await models.space.all()),
+    ...(await models.project.all()),
     ...(await models.workspace.all()),
     ...(await models.workspaceMeta.all()),
     ...(await models.gitRepository.all()),

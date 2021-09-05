@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import CopyButton from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -42,9 +42,9 @@ interface State {
   placeholder: string;
   hint: string;
   mode: string;
-  hideMode: boolean,
-  enableRender: boolean,
-  showCopyButton: boolean,
+  hideMode: boolean;
+  enableRender: boolean;
+  showCopyButton: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -59,7 +59,7 @@ class CodePromptModal extends PureComponent<Props, State> {
     hideMode: false,
     enableRender: false,
     showCopyButton: false,
-  }
+  };
 
   modal: Modal | null = null;
   _onModeChange: Function = () => {};
@@ -222,7 +222,7 @@ class CodePromptModal extends PureComponent<Props, State> {
               ))}
             </Dropdown>
           ) : null}
-          <div className="margin-left faint italic txt-sm tall">{hint ? `* ${hint}` : ''}</div>
+          <div className="margin-left faint italic txt-sm">{hint ? `* ${hint}` : ''}</div>
           <button className="btn" onClick={this.hide}>
             {submitName || 'Submit'}
           </button>

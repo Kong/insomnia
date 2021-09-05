@@ -18,7 +18,7 @@ import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import installPlugin from '../../../plugins/install';
 import { reload } from '../../../templating/index';
-import CopyButton from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import Link from '../base/link';
 import HelpTooltip from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
@@ -48,7 +48,7 @@ class Plugins extends PureComponent<Props, State> {
     installPluginErrMsg: '',
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
-  }
+  };
 
   _handleClearError() {
     this.setState({ error: null });

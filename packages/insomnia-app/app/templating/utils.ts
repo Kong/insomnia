@@ -109,7 +109,7 @@ export function tokenizeTag(tagStr: string) {
     // Adding an "invisible" at the end helps us terminate the last arg
     const c = argsStr.charAt(i) || ',';
 
-    // Do nothing if we're still on a space o comma
+    // Do nothing if we're still on a space or comma
     if (currentArg === null && c.match(/[\s,]/)) {
       continue;
     }

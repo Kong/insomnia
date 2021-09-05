@@ -1,4 +1,4 @@
-import electron, { BrowserWindow } from 'electron';
+import electron, { BrowserWindow, MenuItemConstructorOptions } from 'electron';
 import fs from 'fs';
 import { Curl } from 'node-libcurl';
 import * as os from 'os';
@@ -22,12 +22,8 @@ import LocalStorage from './local-storage';
 
 const { app, Menu, shell, dialog, clipboard } = electron;
 // So we can use native modules in renderer
-// NOTE: This will be deprecated in Electron 10 and impossible in 11
-//   https://github.com/electron/electron/issues/18397
+// NOTE: This was (deprecated in Electron 10)[https://github.com/electron/electron/issues/18397] and (removed in Electron 14)[https://github.com/electron/electron/pull/26874]
 app.allowRendererProcessReuse = false;
-
-// Note: this hack is required because MenuItemConstructorOptions is not exported from the electron types as of 9.3.5
-type MenuItemConstructorOptions = Parameters<typeof Menu.buildFromTemplate>[0][0];
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 700;
@@ -95,6 +91,7 @@ export function createWindow() {
       enableRemoteModule: true,
       // TODO: enable context isolation
       contextIsolation: false,
+      disableBlinkFeatures: 'Auxclick',
     },
   });
 
@@ -120,6 +117,11 @@ export function createWindow() {
     e.preventDefault();
     clickLink(url);
   });
+
+  mainWindow?.webContents.on('new-window', e => {
+    e.preventDefault();
+  });
+
   // Load the html of the app.
   const url = process.env.APP_RENDER_URL;
   const appUrl = url || `file://${app.getAppPath()}/renderer.html`;
@@ -183,13 +185,11 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Undo`,
         accelerator: 'CmdOrCtrl+Z',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'undo:',
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
         accelerator: 'Shift+CmdOrCtrl+Z',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'redo:',
       },
       {
@@ -198,25 +198,21 @@ export function createWindow() {
       {
         label: `Cu${MNEMONIC_SYM}t`,
         accelerator: 'CmdOrCtrl+X',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'cut:',
       },
       {
         label: `${MNEMONIC_SYM}Copy`,
         accelerator: 'CmdOrCtrl+C',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'copy:',
       },
       {
         label: `${MNEMONIC_SYM}Paste`,
         accelerator: 'CmdOrCtrl+V',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'paste:',
       },
       {
         label: `Select ${MNEMONIC_SYM}All`,
         accelerator: 'CmdOrCtrl+A',
-        // @ts-expect-error -- TSCONVERSION missing in official electron types
         selector: 'selectAll:',
       },
     ],
@@ -324,8 +320,7 @@ export function createWindow() {
     submenu: [
       {
         label: `${MNEMONIC_SYM}Help and Support`,
-        // @ts-expect-error -- TSCONVERSION TSCONVERSION `Accelerator` type from electron is needed here as a cast but is not exported as of the 9.3.5 types
-        accelerator: !isMac() ? 'F1' : null,
+        ...(isMac() ? {} : { accelerator: 'F1' }),
         click: () => {
           clickLink(docsBase);
         },

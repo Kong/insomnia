@@ -67,7 +67,7 @@ export interface K8sIngressSpec {
 export interface KubernetesResource {
   apiVersion: string;
   kind: string;
-  metadata: K8sMetadata,
+  metadata: K8sMetadata;
 }
 
 /** see: https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/custom-resources/#kongingress */
@@ -97,7 +97,7 @@ export interface K8sKongPluginBase<Plugin extends PluginBase<string>> extends Ku
   plugin: Plugin['name'];
 }
 
-export type K8sKongPlugin = K8sKongPluginBase<Plugin>
+export type K8sKongPlugin = K8sKongPluginBase<Plugin>;
 
 export type K8sManifest =
   | K8sIngress

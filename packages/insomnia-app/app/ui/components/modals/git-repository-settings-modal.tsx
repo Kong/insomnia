@@ -32,7 +32,7 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
   state: State = {
     inputs: {},
     gitRepository: null,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -227,7 +227,7 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
           </ModalBody>
           <ModalFooter>
             {gitRepository && (
-              <div className="margin-left txt-xs faint tall monospace selectable">
+              <div className="margin-left txt-xs faint monospace selectable">
                 {gitRepository._id}
               </div>
             )}

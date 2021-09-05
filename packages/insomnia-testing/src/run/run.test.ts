@@ -1,4 +1,5 @@
-import { TestResults } from './entities';
+import { mocked } from 'ts-jest/utils';
+
 import { SendRequestCallback } from './insomnia';
 import { runTests } from './run';
 
@@ -27,44 +28,37 @@ describe('Example', () => {
 `;
 
 describe('run', () => {
+  const getMockedSendRequest = () => mocked<SendRequestCallback<{status: number}>>(jest.fn().mockResolvedValue({ status: 200 }));
+
   it('runs a mocha suite', async () => {
-    const { stats } = await runTests(exampleTest);
+    const { stats } = await runTests(exampleTest, { sendRequest: getMockedSendRequest() });
     expect(stats.passes).toBe(1);
     expect(stats.tests).toBe(2);
     expect(stats.failures).toBe(1);
   });
 
   it('runs empty mocha suite', async () => {
-    const { stats } = await runTests(exampleEmptySuite);
+    const { stats } = await runTests(exampleEmptySuite, { sendRequest: getMockedSendRequest() });
     expect(stats.passes).toBe(0);
     expect(stats.tests).toBe(0);
     expect(stats.failures).toBe(0);
   });
 
   it('works on multiple files', async () => {
-    const { stats } = await runTests([exampleTest, exampleTest]);
+    const { stats } = await runTests([exampleTest, exampleTest], { sendRequest: getMockedSendRequest() });
     expect(stats.passes).toBe(2);
     expect(stats.tests).toBe(4);
     expect(stats.failures).toBe(2);
   });
 
   it('calls sendRequest() callback', async () => {
-    const sendRequest = jest.fn(() =>
-      Promise.resolve({
-        status: 200,
-      }),
-    ) as unknown as SendRequestCallback;
-    const { stats }: TestResults = await runTests(
+    const sendRequest = getMockedSendRequest();
+
+    const { stats } = await runTests(
       exampleTestWithRequest,
-      {
-        requests: [
-          {
-            _id: 'req_123',
-          },
-        ],
-        sendRequest,
-      },
+      { sendRequest },
     );
+
     expect(sendRequest).toHaveBeenCalledWith('req_123');
     expect(stats.passes).toBe(1);
   });
@@ -73,7 +67,7 @@ describe('run', () => {
     let err;
 
     try {
-      await runTests('this is invalid');
+      await runTests('this is invalid', { sendRequest: getMockedSendRequest() });
     } catch (e) {
       err = e;
     }

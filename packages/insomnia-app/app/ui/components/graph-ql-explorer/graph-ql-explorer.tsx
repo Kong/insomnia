@@ -1,33 +1,39 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { GraphQLSchema, GraphQLType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
 import React, { PureComponent } from 'react';
+import { createRef } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
+import DebouncedInput from '../base/debounced-input';
+import KeydownBinder from '../keydown-binder';
 import GraphQLExplorerEnum from './graph-ql-explorer-enum';
 import GraphQLExplorerField from './graph-ql-explorer-field';
 import GraphQLExplorerSchema from './graph-ql-explorer-schema';
+import GraphQLExplorerSearchResults from './graph-ql-explorer-search-results';
 import GraphQLExplorerType from './graph-ql-explorer-type';
+import { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
   handleClose: () => void;
   schema: GraphQLSchema | null;
   visible: boolean;
-  reference: null | {
-    type: GraphQLType | GraphQLEnumType | null;
-    argument: GraphQLArgument | null;
-    field: GraphQLField<any, any> | null;
-  };
+  reference: null | ActiveReference;
 }
 
 interface HistoryItem {
-  currentType: null | GraphQLType | GraphQLEnumType;
-  currentField: null | GraphQLField<any, any>;
+  currentType: null | GraphQLType;
+  currentField: null | GraphQLFieldWithParentName;
 }
 
 interface State extends HistoryItem {
   history: HistoryItem[];
+  filter: string;
 }
+
+const SEARCH_UPDATE_DELAY_IN_MS = 300;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLExplorer extends PureComponent<Props, State> {
@@ -35,9 +41,34 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     history: [],
     currentType: null,
     currentField: null,
+    filter: '',
+  };
+
+  _searchInput = createRef<DebouncedInput>();
+
+  _handleKeydown(e: KeyboardEvent) {
+    executeHotKey(e, hotKeyRefs.GRAPHQL_EXPLORER_FOCUS_FILTER, () => {
+      this._navigateToSchema();
+      this._focusAndSelectFilterInput();
+    });
   }
 
-  _handleNavigateType(type: GraphQLType | GraphQLEnumType) {
+  _focusAndSelectFilterInput() {
+    if (this._searchInput) {
+      this._searchInput.current?.focus();
+      this._searchInput.current?.select();
+    }
+  }
+
+  _navigateToSchema() {
+    this.setState({
+      currentType: null,
+      currentField: null,
+      history: this._addToHistory(),
+    });
+  }
+
+  _handleNavigateType(type: GraphQLType) {
     this.setState({
       currentType: type,
       currentField: null,
@@ -45,7 +76,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     });
   }
 
-  _handleNavigateField(field: GraphQLField<any, any>) {
+  _handleNavigateField(field: GraphQLFieldWithParentName) {
     this.setState({
       currentType: field.type,
       currentField: field,
@@ -158,6 +189,37 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     );
   }
 
+  _handleFilterChange(filter: string) {
+    this.setState({ filter });
+  }
+
+  renderSearchInput() {
+    return (
+      <div className="graphql-explorer__search">
+        <div className="form-control form-control--outlined form-control--btn-right">
+          <DebouncedInput
+            ref={this._searchInput}
+            onChange={this._handleFilterChange}
+            placeholder="Search the docs..."
+            delay={SEARCH_UPDATE_DELAY_IN_MS}
+            initialValue={this.state.filter}
+          />
+          {this.state.filter && (
+            <button
+              className="form-control__right"
+              onClick={() => {
+                this._searchInput.current?.setValue('');
+                this._handleFilterChange('');
+              }}
+            >
+              <i className="fa fa-times-circle" />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   render() {
     const { schema, handleClose, visible } = this.props;
 
@@ -184,7 +246,24 @@ class GraphQLExplorer extends PureComponent<Props, State> {
         />
       );
     } else if (schema) {
-      child = <GraphQLExplorerSchema onNavigateType={this._handleNavigateType} schema={schema} />;
+      child = (
+        <>
+          {this.renderSearchInput()}
+          {this.state.filter ? (
+            <GraphQLExplorerSearchResults
+              schema={schema}
+              filter={this.state.filter}
+              onNavigateType={this._handleNavigateType}
+              onNavigateField={this._handleNavigateField}
+            />
+          ) : (
+            <GraphQLExplorerSchema
+              onNavigateType={this._handleNavigateType}
+              schema={schema}
+            />
+          )}
+        </>
+      );
     }
 
     if (!child) {
@@ -196,19 +275,21 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     const typeName = currentType ? currentType.name : null;
     const schemaName = schema ? 'Schema' : null;
     return (
-      <div className="graphql-explorer theme--dialog">
-        <div className="graphql-explorer__header">
-          {this.renderHistoryItem()}
-          <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
-          <button
-            className="btn btn--compact graphql-explorer__header__close-btn"
-            onClick={handleClose}
-          >
-            <i className="fa fa-close" />
-          </button>
+      <KeydownBinder onKeydown={this._handleKeydown}>
+        <div className="graphql-explorer theme--dialog">
+          <div className="graphql-explorer__header">
+            {this.renderHistoryItem()}
+            <h1>{fieldName || typeName || schemaName || 'Unknown'}</h1>
+            <button
+              className="btn btn--compact graphql-explorer__header__close-btn"
+              onClick={handleClose}
+            >
+              <i className="fa fa-close" />
+            </button>
+          </div>
+          <div className="graphql-explorer__body">{child}</div>
         </div>
-        <div className="graphql-explorer__body">{child}</div>
-      </div>
+      </KeydownBinder>
     );
   }
 }

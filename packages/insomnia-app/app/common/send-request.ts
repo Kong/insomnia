@@ -53,7 +53,7 @@ async function sendAndTransform(requestId: string, environmentId?: string) {
   try {
     plugins.ignorePlugin('insomnia-plugin-kong-bundle');
     const res = await send(requestId, environmentId);
-    const headersObj = {};
+    const headersObj: Record<string, string> = {};
 
     for (const h of res.headers || []) {
       const name = h.name || '';

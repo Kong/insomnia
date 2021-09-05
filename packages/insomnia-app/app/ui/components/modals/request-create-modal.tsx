@@ -38,7 +38,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
     selectedContentType: null,
     selectedMethod: METHOD_GET,
     parentId: null,
-  }
+  };
 
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
@@ -196,7 +196,7 @@ class RequestCreateModal extends PureComponent<{}, State> {
         </ModalBody>
         <ModalFooter>
           {!this._isGrpcSelected() && (
-            <div className="margin-left italic txt-sm tall">
+            <div className="margin-left italic txt-sm">
               * Tip: paste Curl command into URL afterwards to import it
             </div>
           )}

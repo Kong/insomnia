@@ -31,7 +31,7 @@ class AskModal extends PureComponent<{}, State> {
     yesText: 'Yes',
     noText: 'No',
     loading: false,
-  }
+  };
 
   modal: Modal | null = null;
   yesButton: HTMLButtonElement | null = null;

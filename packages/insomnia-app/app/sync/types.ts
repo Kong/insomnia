@@ -5,7 +5,7 @@ export interface Team {
   name: string;
 }
 
-export interface Project {
+export interface BackendProject {
   id: string;
   name: string;
   rootDocumentId: string;

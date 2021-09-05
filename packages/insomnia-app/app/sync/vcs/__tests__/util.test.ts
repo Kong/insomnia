@@ -12,6 +12,7 @@ import {
   getStagable,
   hash,
   hashDocument,
+  interceptAccessError,
   preMergeCheck,
   stateDelta,
   threeWayMerge,
@@ -996,3 +997,42 @@ const newCandidate = (key: string, n: number) => statusCandidateBuilder
   .build();
 
 const newBranch = (snapshots: string[]) => branchBuilder.snapshots(snapshots).build();
+
+describe('interceptAccessError', () => {
+  it('intercepts an error', async () => {
+    // Arrange
+
+    // Act
+    const action = async () => await interceptAccessError({
+      action: 'action',
+      callback: () => {
+        throw new Error('DANGER! invalid access to the fifth dimensional nebulo 9.');
+      },
+      resourceName: 'resourceName',
+      resourceType: 'resourceType',
+    }) as Error;
+
+    // Assert
+    const result = expect(action).rejects;
+    result.toBeInstanceOf(Error);
+    result.toThrowError('You no longer have permission to action the "resourceName" resourceType.  Contact your team administrator if you think this is an error.');
+  });
+
+  it('does not intercept errors it doesn\'t care about', async () => {
+    // Arrange
+    const message = 'Having been rejected by the planet smasher, Ziltoid seeks the council of the omnidimensional creator.';
+
+    // Act
+    const action = async () => await interceptAccessError({
+      action: 'action',
+      callback: () => { throw new Error(message); },
+      resourceName: 'resourceName',
+      resourceType: 'resourceType',
+    }) as Error;
+
+    // Assert
+    const result = expect(action).rejects;
+    result.toBeInstanceOf(Error);
+    result.toThrowError(message);
+  });
+});

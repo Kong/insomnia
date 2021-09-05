@@ -1,7 +1,7 @@
 .graphql-explorer {
   display: grid;
   grid-template-columns: 100%;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   position: fixed;
   right: 0;
   top: 0;
@@ -81,5 +81,16 @@
 
   a {
     font-weight: normal !important;
+  }
+
+  &__search {
+    // Nothing yet
+    font-size: var(--font-size-sm);
+
+    .form-control input {
+      padding: var(--padding-xs);
+      margin-top: 0;
+      background: transparent;
+    }
   }
 }

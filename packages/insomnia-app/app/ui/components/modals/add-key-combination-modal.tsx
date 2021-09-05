@@ -27,7 +27,7 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
     checkKeyCombinationDuplicate: misc.nullFn,
     onAddKeyCombination: misc.nullFn,
     pressedKeyCombination: null,
-  }
+  };
 
   _setModalRef(modal: Modal) {
     this._modal = modal;

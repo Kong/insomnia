@@ -7,7 +7,7 @@ import type { Workspace } from '../../models/workspace';
 
 interface Props {
   activity: GlobalActivity;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
   workspace: Workspace;
 }
 

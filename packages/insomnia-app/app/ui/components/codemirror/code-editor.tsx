@@ -28,6 +28,7 @@ import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
 import FilterHelpModal from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
+import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 
 const TAB_KEY = 9;
 const TAB_SIZE = 4;
@@ -86,63 +87,63 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 export type CodeEditorOnChange = (value: string) => void;
 
 interface Props {
-  indentWithTabs?: boolean,
-  onChange?: CodeEditorOnChange,
-  onCursorActivity?: Function,
-  onFocus?: Function,
-  onBlur?: Function,
-  onClickLink?: CodeMirrorLinkClickCallback,
-  onKeyDown?: Function,
-  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>,
-  onClick?: React.MouseEventHandler<HTMLDivElement>,
-  onPaste?: Function,
-  onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void,
-  render?: HandleRender,
-  nunjucksPowerUserMode?: boolean,
-  getRenderContext?: HandleGetRenderContext,
-  getAutocompleteConstants?: Function,
-  getAutocompleteSnippets?: Function,
-  keyMap?: string,
-  mode?: string,
-  id?: string,
-  placeholder?: string,
-  lineWrapping?: boolean,
-  hideLineNumbers?: boolean,
-  hideGutters?: boolean,
-  noMatchBrackets?: boolean,
-  hideScrollbars?: boolean,
-  fontSize?: number,
-  indentSize?: number,
-  defaultValue?: string,
-  tabIndex?: number,
-  autoPrettify?: boolean,
-  manualPrettify?: boolean,
-  noLint?: boolean,
-  noDragDrop?: boolean,
-  noStyleActiveLine?: boolean,
-  className?: string,
-  style?: Object,
-  updateFilter?: (filter: string) => void,
-  defaultTabBehavior?: boolean,
-  readOnly?: boolean,
-  type?: string,
-  filter?: string,
-  filterHistory?: string[],
-  singleLine?: boolean,
-  debounceMillis?: number,
-  dynamicHeight?: boolean,
-  autoCloseBrackets?: boolean,
-  hintOptions?: Object,
-  lintOptions?: Object,
-  infoOptions?: Object,
-  jumpOptions?: Object,
-  uniquenessKey?: string,
-  isVariableUncovered?: boolean,
-  raw?: boolean,
+  indentWithTabs?: boolean;
+  onChange?: CodeEditorOnChange;
+  onCursorActivity?: Function;
+  onFocus?: Function;
+  onBlur?: Function;
+  onClickLink?: CodeMirrorLinkClickCallback;
+  onKeyDown?: Function;
+  onMouseLeave?: React.MouseEventHandler<HTMLDivElement>;
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  onPaste?: Function;
+  onCodeMirrorInit?: (editor: CodeMirror.EditorFromTextArea) => void;
+  render?: HandleRender;
+  nunjucksPowerUserMode?: boolean;
+  getRenderContext?: HandleGetRenderContext;
+  getAutocompleteConstants?: Function;
+  getAutocompleteSnippets?: Function;
+  keyMap?: string;
+  mode?: string;
+  id?: string;
+  placeholder?: string;
+  lineWrapping?: boolean;
+  hideLineNumbers?: boolean;
+  hideGutters?: boolean;
+  noMatchBrackets?: boolean;
+  hideScrollbars?: boolean;
+  fontSize?: number;
+  indentSize?: number;
+  defaultValue?: string;
+  tabIndex?: number;
+  autoPrettify?: boolean;
+  manualPrettify?: boolean;
+  noLint?: boolean;
+  noDragDrop?: boolean;
+  noStyleActiveLine?: boolean;
+  className?: string;
+  style?: Object;
+  updateFilter?: (filter: string) => void;
+  defaultTabBehavior?: boolean;
+  readOnly?: boolean;
+  type?: string;
+  filter?: string;
+  filterHistory?: string[];
+  singleLine?: boolean;
+  debounceMillis?: number;
+  dynamicHeight?: boolean;
+  autoCloseBrackets?: boolean;
+  hintOptions?: Object;
+  lintOptions?: Object;
+  infoOptions?: Object;
+  jumpOptions?: Object;
+  uniquenessKey?: string;
+  isVariableUncovered?: boolean;
+  raw?: boolean;
 }
 
 interface State {
-  filter: string
+  filter: string;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -990,7 +991,7 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
-  _codemirrorValueBeforeChange(doc, change) {
+  _codemirrorValueBeforeChange(doc: CodeMirror.Editor, change: CodeMirror.EditorChangeCancellable) {
     const value = this.codeMirror?.getDoc().getValue();
 
     // If we're in single-line mode, merge all changed lines into one
@@ -999,7 +1000,14 @@ class CodeEditor extends Component<Props, State> {
         .join('') // join all changed lines into one
         .replace(/\n/g, ' ');
       // Convert all whitespace to spaces
-      change.update(change.from, change.to, [text]);
+      change.update?.(change.from, change.to, [text]);
+    }
+
+    // Don't allow non-breaking spaces because they break the GraphQL syntax
+    if (doc.getOption('mode') === 'graphql') {
+      const text = change.text.map(normalizeIrregularWhitespace);
+
+      change.update?.(change.from, change.to, text);
     }
 
     // Suppress lint on empty doc or single space exists (default value)
@@ -1007,11 +1015,6 @@ class CodeEditor extends Component<Props, State> {
       this._codemirrorSmartSetOption('lint', false);
     } else {
       this._codemirrorSmartSetOption('lint', this.props.lintOptions || true);
-
-      // Don't allow non-breaking spaces because they break the GraphQL syntax
-      if (doc.options.mode === 'graphql' && change.text && change.text.length > 1) {
-        change.text = change.text.map(text => text.replace(/\u00A0/g, ' '));
-      }
     }
   }
 

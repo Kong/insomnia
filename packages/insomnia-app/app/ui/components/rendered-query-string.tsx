@@ -1,104 +1,76 @@
-import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { buildQueryStringFromParams, joinUrlAndQueryString, smartEncodeUrl } from 'insomnia-url';
-import React, { PureComponent } from 'react';
+import React, { FC, useState } from 'react';
+import { useAsync } from 'react-use';
+import styled from 'styled-components';
 
-import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleRender } from '../../common/render';
-import CopyButton from './base/copy-button';
+import { Request } from '../../models/request';
+import { CopyButton as _CopyButton } from './base/copy-button';
+
+const Wrapper = styled.div({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  overflow: 'auto',
+  position: 'relative',
+  height: '100%',
+  gap: 'var(--padding-sm)',
+  width: '100%',
+});
+
+const CopyButton = styled(_CopyButton)({
+  alignSelf: 'start',
+  position: 'sticky',
+  top: 0,
+});
 
 interface Props {
-  request: any,
-  handleRender: HandleRender,
+  request: Request;
+  handleRender: HandleRender;
 }
 
-interface State {
-  string: string;
-}
+const defaultPreview = '...';
 
-@autoBindMethodsForReact(AUTOBIND_CFG)
-class RenderedQueryString extends PureComponent<Props, State> {
-  state: State = {
-    string: '',
-  };
+export const RenderedQueryString: FC<Props> = ({ request, handleRender }) => {
+  const [previewString, setPreviewString] = useState(defaultPreview);
 
-  _interval: NodeJS.Timeout | null = null;
-
-  async _debouncedUpdate(props: Props) {
-    if (this._interval !== null) {
-      clearTimeout(this._interval);
-      this._interval = setTimeout(() => {
-        this._update(props);
-      }, 300);
-    }
-  }
-
-  async _update(props: Props) {
-    const { request } = props;
-    const enabledParameters = request.parameters.filter(p => !p.disabled);
-    let result;
-
+  useAsync(async () => {
+    const enabledParameters = request.parameters.filter(({ disabled }) => !disabled);
     try {
-      result = await props.handleRender({
+      const result = await handleRender({
         url: request.url,
         parameters: enabledParameters,
       });
-    } catch (err) {
-      // Just ignore failures
-    }
+      if (!result) {
+        return;
+      }
 
-    if (result) {
       const { url, parameters } = result;
       const qs = buildQueryStringFromParams(parameters);
       const fullUrl = joinUrlAndQueryString(url, qs);
-      this.setState({
-        string: smartEncodeUrl(fullUrl, request.settingEncodeUrl),
-      });
+      const encoded = smartEncodeUrl(fullUrl, request.settingEncodeUrl);
+      setPreviewString(encoded === '' ? defaultPreview : encoded);
+    } catch (error: unknown) {
+      console.error(error);
+      setPreviewString(defaultPreview);
     }
-  }
+  }, [request.url, request.parameters, request.settingEncodeUrl, handleRender]);
 
-  componentDidMount() {
-    this._update(this.props);
-  }
+  const className = previewString === defaultPreview ? 'super-duper-faint' : 'selectable force-wrap';
 
-  componentWillUnmount() {
-    if (this._interval !== null) {
-      clearTimeout(this._interval);
-    }
-  }
+  return (
+    <Wrapper>
+      <span className={className}>{previewString}</span>
 
-  // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    if (nextProps.request._id !== this.props.request._id) {
-      this._update(nextProps);
-    } else {
-      this._debouncedUpdate(nextProps);
-    }
-  }
-
-  render() {
-    const { string } = this.state;
-
-    const inner = string ? (
-      <span className="selectable force-wrap">{this.state.string}</span>
-    ) : (
-      <span className="super-duper-faint italic">...</span>
-    );
-
-    return (
-      <div className="wide scrollable">
-        <CopyButton
-          size="small"
-          content={this.state.string}
-          className="pull-right"
-          title="Copy URL"
-          confirmMessage=""
-        >
-          <i className="fa fa-copy" />
-        </CopyButton>
-        {inner}
-      </div>
-    );
-  }
-}
-
-export default RenderedQueryString;
+      <CopyButton
+        size="small"
+        content={previewString}
+        disabled={previewString === defaultPreview}
+        title="Copy URL"
+        confirmMessage=""
+      >
+        <i className="fa fa-copy" />
+      </CopyButton>
+    </Wrapper>
+  );
+};

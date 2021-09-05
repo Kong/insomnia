@@ -8,7 +8,7 @@ import type { RequestBodyParameter } from '../models/request';
 export const DEFAULT_BOUNDARY = 'X-INSOMNIA-BOUNDARY';
 
 interface Multipart {
-  boundary: typeof DEFAULT_BOUNDARY,
+  boundary: typeof DEFAULT_BOUNDARY;
   filePath: string;
   contentLength: number;
 }

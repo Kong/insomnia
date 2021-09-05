@@ -382,7 +382,7 @@ class SyncStagingModal extends PureComponent<Props, State> {
           {this.renderTable(addedKeys, 'Unversioned Objects')}
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             <i className="fa fa-code-fork" /> {branch}
           </div>
           <div>

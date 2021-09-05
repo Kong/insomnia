@@ -3,10 +3,9 @@ import classnames from 'classnames';
 import { EditorFromTextArea, TextMarker } from 'codemirror';
 import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { GraphQLSchema } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
-import { buildClientSchema } from 'graphql/utilities/buildClientSchema';
-import { introspectionQuery } from 'graphql/utilities/introspectionQuery';
+import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
@@ -26,6 +25,7 @@ import * as network from '../../../../network/network';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
 import CodeEditor from '../../codemirror/code-editor';
 import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
+import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
@@ -41,12 +41,6 @@ interface GraphQLBody {
   query: string;
   variables?: Record<string, any>;
   operationName?: string;
-}
-
-interface ActiveReference {
-  type: GraphQLType | null;
-  argument: GraphQLArgument | null;
-  field: GraphQLField<any, any> | null;
 }
 
 interface Props {
@@ -272,7 +266,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
     try {
       const bodyJson = JSON.stringify({
-        query: introspectionQuery,
+        query: getIntrospectionQuery(),
         operationName: 'IntrospectionQuery',
       });
       const introspectionRequest = await db.upsert(

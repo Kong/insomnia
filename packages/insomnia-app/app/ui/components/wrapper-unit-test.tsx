@@ -11,7 +11,7 @@ import {
 import { generate, runTests, Test } from 'insomnia-testing';
 import React, { PureComponent, ReactNode } from 'react';
 
-import { trackSegmentEvent } from '../../common/analytics';
+import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { getSendRequestCallback } from '../../common/send-request';
@@ -34,7 +34,7 @@ import type { WrapperProps } from './wrapper';
 interface Props {
   children: SidebarChildObjects;
   gitSyncDropdown: ReactNode;
-  handleActivityChange: (options: {workspaceId?: string, nextActivity: GlobalActivity}) => Promise<void>;
+  handleActivityChange: (options: {workspaceId?: string; nextActivity: GlobalActivity}) => Promise<void>;
   wrapperProps: WrapperProps;
 }
 
@@ -145,7 +145,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
           name,
         });
         await this._handleSetActiveUnitTestSuite(unitTestSuite);
-        trackSegmentEvent('Test Suite Created');
+        trackSegmentEvent(SegmentEvent.testSuiteCreate);
       },
     });
   }
@@ -164,7 +164,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
           code: this.generateSendReqSnippet('', ''),
           name,
         });
-        trackSegmentEvent('Unit Test Created');
+        trackSegmentEvent(SegmentEvent.unitTestCreate);
       },
     });
   }
@@ -178,12 +178,12 @@ class WrapperUnitTest extends PureComponent<Props, State> {
   async _handleRunTests() {
     const { activeUnitTests } = this.props.wrapperProps;
     await this._runTests(activeUnitTests);
-    trackSegmentEvent('Ran All Unit Tests');
+    trackSegmentEvent(SegmentEvent.unitTestRunAll);
   }
 
   async _handleRunTest(unitTest: UnitTest) {
     await this._runTests([unitTest]);
-    trackSegmentEvent('Ran Individual Unit Test');
+    trackSegmentEvent(SegmentEvent.unitTestRun);
   }
 
   async _handleDeleteTest(unitTest: UnitTest) {
@@ -197,7 +197,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTest.remove(unitTest);
-        trackSegmentEvent('Unit Test Deleted');
+        trackSegmentEvent(SegmentEvent.unitTestDelete);
       },
     });
   }
@@ -223,7 +223,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       addCancel: true,
       onConfirm: async () => {
         await models.unitTestSuite.remove(unitTestSuite);
-        trackSegmentEvent('Test Suite Deleted');
+        trackSegmentEvent(SegmentEvent.testSuiteDelete);
       },
     });
   }
@@ -255,7 +255,7 @@ class WrapperUnitTest extends PureComponent<Props, State> {
   }
 
   async _runTests(unitTests: UnitTest[]) {
-    const { requests, activeWorkspace, activeEnvironment } = this.props.wrapperProps;
+    const { activeWorkspace, activeEnvironment } = this.props.wrapperProps;
 
     if (!activeWorkspace) {
       return;
@@ -283,14 +283,14 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       },
     ]);
     const sendRequest = getSendRequestCallback(activeEnvironment?._id);
-    let results;
 
     try {
-      results = await runTests(src, {
-        requests,
-        // @ts-expect-error -- TSCONVERSION
-        sendRequest,
+      const results = await runTests(src, { sendRequest });
+      await models.unitTestResult.create({
+        results,
+        parentId: activeWorkspace._id,
       });
+      this.setState({ testsRunning: null });
     } catch (err) {
       // Set the state after a timeout so the user still sees the loading state
       setTimeout(() => {
@@ -301,14 +301,6 @@ class WrapperUnitTest extends PureComponent<Props, State> {
       }, 400);
       return;
     }
-
-    await models.unitTestResult.create({
-      results,
-      parentId: activeWorkspace._id,
-    });
-    this.setState({
-      testsRunning: null,
-    });
   }
 
   buildSelectableRequests(): {

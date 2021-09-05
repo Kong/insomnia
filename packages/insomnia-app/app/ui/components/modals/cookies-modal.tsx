@@ -34,7 +34,7 @@ class CookiesModal extends PureComponent<Props, State> {
   state: State = {
     filter: '',
     visibleCookieIndexes: null,
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;
@@ -194,7 +194,7 @@ class CookiesModal extends PureComponent<Props, State> {
           )}
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left faint italic txt-sm tall">
+          <div className="margin-left faint italic txt-sm">
             * cookies are automatically sent with relevant requests
           </div>
           <button className="btn" onClick={this.hide}>

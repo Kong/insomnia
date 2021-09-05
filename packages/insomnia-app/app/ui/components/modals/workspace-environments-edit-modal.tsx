@@ -152,7 +152,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     subEnvironments: [],
     rootEnvironment: null,
     selectedEnvironmentId: null,
-  }
+  };
 
   colorChangeTimeout: NodeJS.Timeout | null = null;
 
@@ -367,7 +367,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     ))).then(() => {
       db.flushChanges();
     });
-  }
+  };
 
   _handleClickColorChange(environment: Environment) {
     if (!environment.color) {
@@ -426,7 +426,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
     handleChangeEnvironment(environment._id);
     this._handleShowEnvironment(environment);
-  }
+  };
 
   render() {
     const {
@@ -602,7 +602,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
           </div>
         </ModalBody>
         <ModalFooter>
-          <div className="margin-left italic txt-sm tall">
+          <div className="margin-left italic txt-sm">
             * Environment data can be used for&nbsp;
             <Link href={docsTemplateTags}>Nunjucks Templating</Link> in your requests
           </div>

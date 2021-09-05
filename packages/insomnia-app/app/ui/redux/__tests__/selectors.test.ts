@@ -1,47 +1,47 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import * as models from '../../../models';
-import { BASE_SPACE_ID, Space } from '../../../models/space';
-import { selectActiveSpace } from '../selectors';
+import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
+import { selectActiveProject } from '../selectors';
 
 describe('selectors', () => {
   beforeEach(globalBeforeEach);
 
-  describe('selectActiveSpace', () => {
-    it('should return the active space', async () => {
-      // create two spaces
-      const spaceA = await models.space.create();
-      await models.space.create();
+  describe('selectActiveProject', () => {
+    it('should return the active project', async () => {
+      // create two projects
+      const projectA = await models.project.create();
+      await models.project.create();
 
       // set first as selected
-      const state = await reduxStateForTest({ activeSpaceId: spaceA._id });
+      const state = await reduxStateForTest({ activeProjectId: projectA._id });
 
-      const space = selectActiveSpace(state);
-      expect(space).toStrictEqual(spaceA);
+      const project = selectActiveProject(state);
+      expect(project).toStrictEqual(projectA);
     });
 
-    it('should return base space if active space not found', async () => {
-      // create two spaces
-      await models.space.create();
-      await models.space.create();
+    it('should return default project if active project not found', async () => {
+      // create two projects
+      await models.project.create();
+      await models.project.create();
 
       // set first as selected
-      const state = await reduxStateForTest({ activeSpaceId: 'some-other-space' });
+      const state = await reduxStateForTest({ activeProjectId: 'some-other-project' });
 
-      const space = selectActiveSpace(state);
-      expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_SPACE_ID }));
+      const project = selectActiveProject(state);
+      expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: DEFAULT_PROJECT_ID }));
     });
 
-    it('should return base space if no active space', async () => {
-      // create two spaces
-      await models.space.create();
-      await models.space.create();
+    it('should return default project if no active project', async () => {
+      // create two projects
+      await models.project.create();
+      await models.project.create();
 
-      // set base as selected
-      const state = await reduxStateForTest({ activeSpaceId: undefined });
+      // set nothing as active
+      const state = await reduxStateForTest({ activeProjectId: undefined });
 
-      const space = selectActiveSpace(state);
-      expect(space).toStrictEqual(expect.objectContaining<Partial<Space>>({ _id: BASE_SPACE_ID }));
+      const project = selectActiveProject(state);
+      expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: DEFAULT_PROJECT_ID }));
     });
   });
 });
