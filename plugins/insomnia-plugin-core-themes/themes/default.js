@@ -2,24 +2,6 @@ module.exports = {
   name: 'default',
   displayName: 'Core Default',
   theme: {
-    rawCss: `
-    .swagger-ui .btn {
-      color: white;
-      border: 2px solid gray;
-    }
-
-    .swagger-ui .dialog-ux .modal-ux {
-      background: #212121;
-    }
-
-    .swagger-ui input[type=text] {
-      background: #212121;
-    }
-
-    .swagger-ui label {
-      color: white;
-    }
-    `,
     background: {
       default: '#555',
       success: '#59a210',
