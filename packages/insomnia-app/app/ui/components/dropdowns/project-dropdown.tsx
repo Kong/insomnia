@@ -1,4 +1,5 @@
 import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps, Tooltip } from 'insomnia-components';
+import { partition } from 'ramda';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
@@ -98,10 +99,13 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
     />
   ), [setActive, activeProject._id]);
 
+  const [defaultProject, userProjects] = partition(isDefaultProject, projects);
+
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      <DropdownDivider>{strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
-      {projects.map(renderProject)}
+      {defaultProject.map(renderProject)}
+      <DropdownDivider>All {strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
+      {userProjects.map(renderProject)}
       {projectHasSettings(activeProject) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>
