@@ -200,6 +200,15 @@
   & > *:last-child {
     margin-right: 0;
   }
+
+  &--start {
+    align-items: start;
+
+    & > * {
+      width: unset;
+    }
+
+  }
 }
 
 .icon {
@@ -267,6 +276,10 @@
     padding: 0 var(--padding-md);
     min-height: var(--line-height-sm);
     height: unset;
+  }
+
+  &.btn--largest {
+    width: 100%;
   }
 }
 
@@ -366,7 +379,6 @@ label {
       left: var(--padding-xxs);
       right: var(--padding-xxs);
       border-radius: var(--radius-sm);
-      background-color: var(--hl-sm);
     }
   }
 }

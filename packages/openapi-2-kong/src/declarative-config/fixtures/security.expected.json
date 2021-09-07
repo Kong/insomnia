@@ -1,0 +1,115 @@
+{
+  "services": [
+    {
+      "protocol": "http",
+      "host": "Security_Example",
+      "port": 80,
+      "path": "/path",
+      "name": "Security_Example",
+      "plugins": [],
+      "routes": [
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_security.yaml"],
+          "name": "Security_Example-only_oath2-get",
+          "plugins": [
+            {
+              "config": { "auth_methods": ["client_credentials"] },
+              "name": "openid-connect",
+              "tags": ["OAS3_import", "OAS3file_security.yaml"]
+            }
+          ],
+          "paths": ["/only/oath2$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_security.yaml"],
+          "name": "Security_Example-only_key-get",
+          "plugins": [
+            {
+              "config": { "key_names": ["api_key_by_me"] },
+              "name": "key-auth",
+              "tags": ["OAS3_import", "OAS3file_security.yaml"]
+            }
+          ],
+          "paths": ["/only/key$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_security.yaml"],
+          "name": "Security_Example-and_based_auth-get",
+          "plugins": [
+            {
+              "config": { "auth_methods": ["client_credentials"] },
+              "name": "openid-connect",
+              "tags": ["OAS3_import", "OAS3file_security.yaml"]
+            }
+          ],
+          "paths": ["/and/based/auth$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_security.yaml"],
+          "name": "Security_Example-or_based_auth-get",
+          "plugins": [
+            {
+              "config": { "key_names": ["api_key_by_me"] },
+              "name": "key-auth",
+              "tags": ["OAS3_import", "OAS3file_security.yaml"]
+            }
+          ],
+          "paths": ["/or/based/auth$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_security.yaml"],
+          "name": "Security_Example-only_oidc-get",
+          "plugins": [
+            {
+              "config": {
+                "scopes_required": ["write:pets"],
+                "issuer": "http://example.org/oid-discovery"
+              },
+              "name": "openid-connect",
+              "tags": ["OAS3_import", "OAS3file_security.yaml"]
+            }
+          ],
+          "paths": ["/only/oidc$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_security.yaml"],
+          "name": "Security_Example-only_basic-get",
+          "plugins": [
+            {
+              "name": "basic-auth",
+              "tags": ["OAS3_import", "OAS3file_security.yaml", "should match"],
+              "config": { "hide_credentials": true }
+            }
+          ],
+          "paths": ["/only/basic$"]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_security.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_security.yaml"],
+      "name": "Security_Example",
+      "targets": [
+        {
+          "target": "backend.com:80",
+          "tags": ["OAS3_import", "OAS3file_security.yaml"]
+        }
+      ]
+    }
+  ],
+  "_format_version": "1.1"
+}

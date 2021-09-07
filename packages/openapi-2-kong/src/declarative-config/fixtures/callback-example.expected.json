@@ -1,0 +1,35 @@
+{
+  "services": [
+    {
+      "protocol": "http",
+      "host": "Callback_Example",
+      "port": 80,
+      "path": "/path",
+      "name": "Callback_Example",
+      "plugins": [],
+      "routes": [
+        {
+          "methods": ["POST"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_callback-example.yaml"],
+          "name": "Callback_Example-streams-post",
+          "paths": ["/streams$"]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_callback-example.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_callback-example.yaml"],
+      "name": "Callback_Example",
+      "targets": [
+        {
+          "target": "backend.com:80",
+          "tags": ["OAS3_import", "OAS3file_callback-example.yaml"]
+        }
+      ]
+    }
+  ],
+  "_format_version": "1.1"
+}
