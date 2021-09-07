@@ -222,9 +222,8 @@ export const newCommand = (command: string, args: any) => async (dispatch: Dispa
           if (!isYes) {
             return;
           }
-
           try {
-            await install(args.name);
+            await install(args.name, args.skipStdErrOutputCheck);
             showModal(SettingsModal, TAB_INDEX_PLUGINS);
           } catch (err) {
             showError({

@@ -40,7 +40,7 @@ interface InsomniaPlugin {
   };
 }
 
-export default async function(lookupName: string) {
+export default async function(lookupName: string, skipStdErrOutputCheck: boolean) {
   return new Promise<void>(async (resolve, reject) => {
     let info: InsomniaPlugin | null = null;
 
@@ -58,7 +58,7 @@ export default async function(lookupName: string) {
       request.on('error', err => {
         reject(new Error(`Failed to make plugin request ${info?.dist.tarball}: ${err.message}`));
       });
-      const { tmpDir } = await _installPluginToTmpDir(lookupName);
+      const { tmpDir } = await _installPluginToTmpDir(lookupName, skipStdErrOutputCheck);
       console.log(`[plugins] Moving plugin from ${tmpDir} to ${pluginDir}`);
 
       // Move entire module to plugins folder
@@ -160,7 +160,7 @@ async function _isInsomniaPlugin(lookupName: string) {
   });
 }
 
-async function _installPluginToTmpDir(lookupName: string) {
+async function _installPluginToTmpDir(lookupName: string, skipStdErrOutputCheck: boolean) {
   return new Promise<{ tmpDir: string }>((resolve, reject) => {
     const tmpDir = path.join(getTempDir(), `${lookupName}-${Date.now()}`);
     mkdirp.sync(tmpDir);
@@ -200,8 +200,10 @@ async function _installPluginToTmpDir(lookupName: string) {
           return;
         }
 
-        if (stderr && !containsOnlyDeprecationWarnings(stderr)) {
-          reject(new Error(`Yarn error ${stderr.toString()}`));
+        // At this stage are usually displayed warnings message by Yarn
+        // When skipStdErrOutputCheck = true, the next statement is skipped
+        if (!skipStdErrOutputCheck && stderr && !containsOnlyDeprecationWarnings(stderr)) {
+          reject(new Error(`Yarn std check error: ${stderr.toString()}`));
           return;
         }
 

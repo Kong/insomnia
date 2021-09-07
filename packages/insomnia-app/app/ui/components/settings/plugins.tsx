@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
-import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
+import React, { ChangeEvent, FormEvent, MouseEvent, PureComponent } from 'react';
 
 import {
   AUTOBIND_CFG,
@@ -35,6 +35,7 @@ interface State {
   installPluginErrMsg: string;
   isInstallingFromNpm: boolean;
   isRefreshingPlugins: boolean;
+  skipStdErrOutputCheck: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -48,7 +49,25 @@ class Plugins extends PureComponent<Props, State> {
     installPluginErrMsg: '',
     isInstallingFromNpm: false,
     isRefreshingPlugins: false,
+    skipStdErrOutputCheck: false,
   };
+
+  _handleSecurityCriteria(e: MouseEvent<HTMLButtonElement>) {
+    // Prevent multiple installations
+    if (this.state.isInstallingFromNpm) return;
+    // Necessary to avoid released/nullified synthetic event
+    e.persist();
+    // After updating the state with the new configuration
+    // callback will be triggered starting a fresh (insecure) installation
+    this.setState(prevState => ({
+      ...prevState,
+      skipStdErrOutputCheck: true,
+    }), () => {
+      // Just a trick to restart the process without re-submitting
+      // The event will be stopped by the callee
+      this._handleAddFromNpm(e as unknown as FormEvent<HTMLFormElement>);
+    });
+  }
 
   _handleClearError() {
     this.setState({ error: null });
@@ -70,12 +89,13 @@ class Plugins extends PureComponent<Props, State> {
     // @ts-expect-error -- TSCONVERSION
     const newState: State = {
       isInstallingFromNpm: false,
+      skipStdErrOutputCheck: false,
       error: null,
       installPluginErrMsg: '',
     };
 
     try {
-      await installPlugin(this.state.npmPluginValue.trim());
+      await installPlugin(this.state.npmPluginValue.trim(), this.state.skipStdErrOutputCheck);
       await this._handleRefreshPlugins();
       newState.npmPluginValue = ''; // Clear input if successful install
     } catch (err) {
@@ -302,6 +322,16 @@ class Plugins extends PureComponent<Props, State> {
                   <code>{error.stack || error}</code>
                 </pre>
               </details>
+              {error.message.includes('std check') && (
+                <details>
+                  <summary>Is it a false-positive?</summary>
+                  <div className="force-wrap selectable">
+                    <p>Insomnia does its best to avoid false-positive errors but this does not exclude from happening for
+                      some edge cases.</p>
+                    <Link href={'#'} onClick={this._handleSecurityCriteria}>Try to install un-safely</Link>
+                  </div>
+                </details>
+              )}
             </div>
           </div>
         )}
