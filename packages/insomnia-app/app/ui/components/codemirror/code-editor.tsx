@@ -20,6 +20,8 @@ import {
   EDITOR_KEY_MAP_VIM,
   isMac,
 } from '../../../common/constants';
+import { hotKeyRefs } from '../../../common/hotkeys';
+import { executeHotKey } from '../../../common/hotkeys-listener';
 import { keyboardKeys as keyCodes } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
@@ -28,6 +30,7 @@ import { NunjucksParsedTag } from '../../../templating/utils';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
+import KeydownBinder from '../keydown-binder';
 import FilterHelpModal from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
@@ -698,6 +701,10 @@ class CodeEditor extends Component<Props, State> {
     }
   }
 
+  async _handleKeyDown(event: KeyboardEvent) {
+    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handleBeautify);
+  }
+
   /**
    * Sets options on the CodeMirror editor while also sanitizing them
    */
@@ -1243,28 +1250,30 @@ class CodeEditor extends Component<Props, State> {
     }
 
     return (
-      <div className={classes} style={style} data-editor-type={type}>
-        <div
-          className={classnames('editor__container', 'input', className)}
-          style={styles}
-          onClick={onClick}
-          onMouseLeave={onMouseLeave}
-        >
-          <textarea
-            key={isVariableUncovered ? 'foo' : 'bar'}
-            id={id}
-            ref={this._handleInitTextarea}
-            style={{
-              display: 'none',
-            }}
-            readOnly={readOnly}
-            autoComplete="off"
-            // NOTE: When setting this to empty string, it breaks the _ignoreNextChange logic on initial component mount
-            defaultValue=" "
-          />
+      <KeydownBinder onKeydown={this._handleKeyDown}>
+        <div className={classes} style={style} data-editor-type={type}>
+          <div
+            className={classnames('editor__container', 'input', className)}
+            style={styles}
+            onClick={onClick}
+            onMouseLeave={onMouseLeave}
+          >
+            <textarea
+              key={isVariableUncovered ? 'foo' : 'bar'}
+              id={id}
+              ref={this._handleInitTextarea}
+              style={{
+                display: 'none',
+              }}
+              readOnly={readOnly}
+              autoComplete="off"
+              // NOTE: When setting this to empty string, it breaks the _ignoreNextChange logic on initial component mount
+              defaultValue=" "
+            />
+          </div>
+          {toolbar}
         </div>
-        {toolbar}
-      </div>
+      </KeydownBinder>
     );
   }
 }
