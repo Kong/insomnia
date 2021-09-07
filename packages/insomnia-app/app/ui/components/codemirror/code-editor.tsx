@@ -1250,30 +1250,29 @@ class CodeEditor extends Component<Props, State> {
     }
 
     return (
-      <KeydownBinder onKeydown={this._handleKeyDown}>
-        <div className={classes} style={style} data-editor-type={type}>
-          <div
-            className={classnames('editor__container', 'input', className)}
-            style={styles}
-            onClick={onClick}
-            onMouseLeave={onMouseLeave}
-          >
-            <textarea
-              key={isVariableUncovered ? 'foo' : 'bar'}
-              id={id}
-              ref={this._handleInitTextarea}
-              style={{
-                display: 'none',
-              }}
-              readOnly={readOnly}
-              autoComplete="off"
-              // NOTE: When setting this to empty string, it breaks the _ignoreNextChange logic on initial component mount
-              defaultValue=" "
-            />
-          </div>
-          {toolbar}
+      <div className={classes} style={style} data-editor-type={type}>
+        <KeydownBinder onKeydown={this._handleKeyDown} />
+        <div
+          className={classnames('editor__container', 'input', className)}
+          style={styles}
+          onClick={onClick}
+          onMouseLeave={onMouseLeave}
+        >
+          <textarea
+            key={isVariableUncovered ? 'foo' : 'bar'}
+            id={id}
+            ref={this._handleInitTextarea}
+            style={{
+              display: 'none',
+            }}
+            readOnly={readOnly}
+            autoComplete="off"
+            // NOTE: When setting this to empty string, it breaks the _ignoreNextChange logic on initial component mount
+            defaultValue=" "
+          />
         </div>
-      </KeydownBinder>
+        {toolbar}
+      </div>
     );
   }
 }
