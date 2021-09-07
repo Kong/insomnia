@@ -2,17 +2,12 @@ import 'codemirror';
 
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
+import { GraphQLSchema } from 'graphql';
 
 import { HandleGetRenderContext, HandleRender } from './common/render';
 import { NunjucksParsedTag } from './templating/utils';
 
 type LinkClickCallback = (url: string) => void;
-
-declare module 'codemirror-graphql/jump' {
-  type ModifiedGraphQLJumpOptions = Omit<GraphQLJumpOptions, 'onClick'> & {
-    onClick: GraphQLInfoOptions['onClick'];
-  };
-}
 
 interface InsomniaExtensions {
   closeHintDropdown: () => void;
@@ -48,16 +43,62 @@ declare module 'codemirror' {
   }
 
   interface EnvironmentAutocompleteOptions {
-    getConstants?: () => string[];
-    getVariables?: () => Promise<Variable[]>;
-    getSnippets?: () => Snippet[];
-    getTags?: () => Promise<NunjucksParsedTag[]>;
+    getConstants?: () => string[] | PromiseLike<string[]>;
+    getVariables?: () => Variable[] | PromiseLike<Variable[]>;
+    getSnippets?: () => Snippet[] | PromiseLike<Snippet[]>;
+    getTags?: () => NunjucksParsedTag[] | PromiseLike<NunjucksParsedTag[]>;
   }
 
   interface EditorConfiguration {
     info?: GraphQLInfoOptions;
     jump?: ModifiedGraphQLJumpOptions;
     environmentAutocomplete?: EnvironmentAutocompleteOptions;
+  }
+
+  interface Hint {
+    /**
+     * Custom Insomnia Key. Used for checking the type of the hint
+     */
+    type: 'constant' | 'variable' | 'snippet' | 'tag';
+    /**
+     * Custom Insomnia Key. The segment that matched and produced this hint
+     */
+    segment: string;
+    /**
+     * Custom Insomnia Key. This value gets displayed in the autocomplete menu.
+     */
+    displayValue: string;
+    /**
+     * Custom Insomnia Key. The display value of the hint
+     */
+    comment?: string;
+    // Custom Insomnia Key. Used for sorting the hints
+    score: number;
+    text: string;
+    className?: string;
+    displayText?: string;
+    from?: Position;
+    /** Called if a completion is picked. If provided *you* are responsible for applying the completion */
+    hint?: (cm: Editor, data: Hints, cur: Hint) => void;
+    render?: (element: HTMLLIElement, data: Hints, cur: Hint) => void;
+    to?: Position;
+  }
+
+  interface ShowHintOptions {
+    variables?: Variable[];
+    constants?: string[];
+    snippets?: Snippet[];
+    tags?: NunjucksParsedTag[];
+    showAllOnNoMatch?: boolean;
+  }
+
+  interface LintOptions {
+    schema?: GraphQLSchema;
+  }
+
+  interface EditorEventMap {
+    fold: (instance: Editor, from: Position, to: Position) => void;
+    unfold: (instance: Editor, from: Position, to: Position) => void;
   }
   /* eslint-enable @typescript-eslint/no-empty-interface */
 }
