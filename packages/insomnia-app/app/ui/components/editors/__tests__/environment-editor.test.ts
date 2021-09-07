@@ -28,6 +28,7 @@ describe('ensureKeyIsValid()', () => {
 describe('checkNestedKeys()', () => {
   it('should check nested property and error', () => {
     const obj = {
+      valid: 'abc',
       foo: {
         bar: {
           'b.a$z': 'baz',

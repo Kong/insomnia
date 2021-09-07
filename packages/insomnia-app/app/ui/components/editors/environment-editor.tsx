@@ -27,11 +27,17 @@ export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null =>
  */
 export function checkNestedKeys(obj: Record<string, any>, isRoot = true): string | null {
   for (const key in obj) {
+    let result: string | null = null;
+
     // Nested keys
     if (typeof obj[key] === 'object') {
-      return checkNestedKeys(obj[key], false);
+      result = checkNestedKeys(obj[key], false);
     } else {
-      return ensureKeyIsValid(key, isRoot);
+      result = ensureKeyIsValid(key, isRoot);
+    }
+
+    if (result) {
+      return result;
     }
   }
 
