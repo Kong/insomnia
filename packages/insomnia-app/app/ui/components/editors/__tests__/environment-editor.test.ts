@@ -1,8 +1,6 @@
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../../templating';
 import { checkNestedKeys, ensureKeyIsValid } from '../environment-editor';
 
-const name = NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME;
-
 describe('ensureKeyIsValid()', () => {
   it.each(['$', '$a', '$ab'])('"%s" should be invalid when key begins with $', key => {
     expect(ensureKeyIsValid(key, false)).toBe(`"${key}" cannot begin with '$' or contain a '.'`);
@@ -20,7 +18,28 @@ describe('ensureKeyIsValid()', () => {
     expect(ensureKeyIsValid(key, true)).toBe(`"${key}" is a reserved key`);
   });
 
-  it.each(['a', 'ab', 'a$', 'a$b', 'a-b', `a${name}b`, `${name}ab`, '_'])('"%s" should be valid', key => {
+  it.each([
+    '_',
+    'a',
+    'ab',
+    'a$',
+    'a$b',
+    'a-b',
+    `a${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}b`,
+    `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}ab`,
+  ])('"%s" should be valid as a nested key', key => {
+    expect(ensureKeyIsValid(key, false)).toBe(undefined);
+  });
+
+  it.each([
+    'a',
+    'ab',
+    'a$',
+    'a$b',
+    'a-b',
+    `a${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}b`,
+    `${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}ab`,
+  ])('"%s" should be valid as a root value', key => {
     expect(ensureKeyIsValid(key, false)).toBe(undefined);
   });
 });
