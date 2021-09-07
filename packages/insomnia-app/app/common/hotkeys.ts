@@ -129,7 +129,7 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   CLOSE_DROPDOWN: defineHotKey('closeDropdown', 'Close Dropdown'),
   CLOSE_MODAL: defineHotKey('closeModal', 'Close Modal'),
   ENVIRONMENT_UNCOVER_VARIABLES: defineHotKey('environment_uncoverVariables', 'Uncover Variables'),
-  BEAUTIFY_REQUEST_BODY: defineHotKey('beautifyRequestBody', 'Beautify Request Body'),
+  BEAUTIFY_REQUEST_BODY: defineHotKey('beautifyRequestBody', 'Beautify Active Code Editors'),
   GRAPHQL_EXPLORER_FOCUS_FILTER: defineHotKey('graphql_explorer_focus_filter', 'Focus GraphQL Explorer Filter'),
   // Designer-specific
   SHOW_SPEC_EDITOR: defineHotKey('activity_specEditor', 'Show Spec Activity'),
