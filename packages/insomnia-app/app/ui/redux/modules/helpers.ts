@@ -12,7 +12,7 @@ export enum ForceToWorkspace {
 
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
 export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace }): ImportToWorkspacePrompt {
-  return () => {
+  return function() {
     if (!workspaceId) {
       return null;
     }
