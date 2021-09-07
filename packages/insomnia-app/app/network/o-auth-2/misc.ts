@@ -83,6 +83,12 @@ export function authorizeUserInWindow(
     });
 
     function _parseUrl(currentUrl: string, source: string) {
+      // These are the cookies stored in the electron session store during navigation
+      console.log('cookies in electron session', child.webContents.session.cookies);
+
+      // TODO: at some point, take these cookies and store them in the cookie jar for the current workspace
+      // But see if the expected cookies are present
+
       if (currentUrl.match(urlSuccessRegex)) {
         console.log(
           `[oauth2] ${source}: Matched success redirect to "${currentUrl}" with ${urlSuccessRegex.toString()}`,
