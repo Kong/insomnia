@@ -47,7 +47,12 @@ npm test
 npm run app-start
 ```
 
-If you are on Linux, you may need to install the following supporting packages
+### Linux
+
+If you are on Linux, you may need to install the following supporting packages:
+
+<details>
+<summary>Ubuntu/Debian</summary>
 
 ```shell
 # Update library
@@ -61,12 +66,36 @@ sudo apt-get install font-manager
 sudo apt-get install build-essential
 ```
 
+</details>
+
+<details>
+<summary>Fedora</summary>
+
+```shell
+# Enable FontManager Copr (https://github.com/FontManager/font-manager#fedora-copr)
+sudo dnf copr enable jerrycasiano/FontManager
+
+# Install font configuration library & support
+sudo dnf install font-manager
+sudo dnf install fontconfig-devel
+
+# Build capability for required font-scanner package
+sudo dnf install make automake gcc gcc-c++ kernel-devel
+
+# Install libcurl for node-libcurl
+sudo dnf install libcurl-devel
+```
+
+</details>
+
 Also on Linux, if Electron is failing during the bootstrap process, run the following
 
 ```shell
 # Clear Electron install conflicts
 rm -rf ~/.cache/electron
 ```
+
+### Windows
 
 If you are on Windows and have problems, you may need to install [Windows Build Tools](https://github.com/felixrieseberg/windows-build-tools)
 
