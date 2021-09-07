@@ -418,7 +418,7 @@ class General extends PureComponent<Props, State> {
               name: string;
               value: HttpVersion;
             }[],
-            'Preferred HTTP version to use for requests which will fall back if it cannot be' +
+            'Preferred HTTP version to use for requests which will fall back if it cannot be ' +
             'negotiated',
           )}
         </div>
