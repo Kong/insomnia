@@ -5,42 +5,37 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
 import CodeEditor from '../codemirror/code-editor';
+
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
 const INVALID_NEDB_KEY_REGEX = /^\$|\./;
 
-export const ensureKeyIsValid = (key: string, isRoot = false): string | null => {
+export const ensureKeyIsValid = (key: string, isRoot: boolean): string | null => {
   if (key.match(INVALID_NEDB_KEY_REGEX)) {
     return `"${key}" cannot begin with '$' or contain a '.'`;
   }
 
   if (key === NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME && isRoot) {
-    return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`; // verbiage WIP
+    return `"${NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME}" is a reserved key`;
   }
 
   return null;
 };
 
 /**
- * Recursively check keys of nested object and immediately return when found
- * @param {object} obj - object to analyse
- * @returns {boolean} - if any invalid key is found
+ * Recursively check nested keys in and immediately return when an invalid key found
  */
-export function checkNestedKeys(obj: any, isRoot = true): string | null {
-  let result: string | null = null;
+export function checkNestedKeys(obj: Record<string, any>, isRoot = true): string | null {
   for (const key in obj) {
     // Nested keys
-    if (typeof obj[key] === 'object' && obj.hasOwnProperty(key)) {
-      result = checkNestedKeys(obj[key], false);
+    if (typeof obj[key] === 'object') {
+      return checkNestedKeys(obj[key], false);
     } else {
-      result = ensureKeyIsValid(key, isRoot);
-    }
-    if (result !== null) {
-      break;
+      return ensureKeyIsValid(key, isRoot);
     }
   }
 
-  return result;
+  return null;
 }
 
 export interface EnvironmentInfo {
