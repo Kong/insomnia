@@ -40,10 +40,24 @@ describe('checkNestedKeys()', () => {
     expect(err).toBe('"b.a$z" cannot begin with \'$\' or contain a \'.\'');
   });
 
+  it('should check for complex objects inside array', () => {
+    const obj = {
+      arr: [{
+        bar: {
+          'b.a$z': 'baz',
+        },
+      }],
+    };
+
+    const err = checkNestedKeys(obj);
+
+    expect(err).toBe('"b.a$z" cannot begin with \'$\' or contain a \'.\'');
+  });
+
   it('should check nested properties and pass', () => {
     const obj = {
       foo: {
-        arr: [1, 2, 3],
+        arr: [1, { abc: 123 }, 2],
         val: 'true',
         obj: {
           'b-a-z': 'baz',
