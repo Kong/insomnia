@@ -29,13 +29,20 @@ export function checkNestedKeys(obj: Record<string, any>, isRoot = true): string
   for (const key in obj) {
     let result: string | null = null;
 
-    // Nested keys
-    if (typeof obj[key] === 'object') {
-      result = checkNestedKeys(obj[key], false);
-    } else {
-      result = ensureKeyIsValid(key, isRoot);
+    // Check current key
+    result = ensureKeyIsValid(key, isRoot);
+
+    // Exit if necessary
+    if (result) {
+      return result;
     }
 
+    // Check nested keys
+    if (typeof obj[key] === 'object') {
+      result = checkNestedKeys(obj[key], false);
+    }
+
+    // Exit if necessary
     if (result) {
       return result;
     }

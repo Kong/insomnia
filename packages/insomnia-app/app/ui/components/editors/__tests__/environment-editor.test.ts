@@ -26,44 +26,87 @@ describe('ensureKeyIsValid()', () => {
 });
 
 describe('checkNestedKeys()', () => {
-  it('should check nested property and error', () => {
+  it('should check root property and error', () => {
     const obj = {
-      valid: 'abc',
-      foo: {
-        bar: {
-          'b.a$z': 'baz',
-        },
+      'base-url': 'https://api.insomnia.rest',
+      '$nes.ted': {
+        'path-with-hyphens': '/path-with-hyphen',
       },
+      'ar-ray': [
+        '/first',
+        {
+          'second': 'second',
+        },
+        {
+          'third': 'third',
+        },
+      ],
     };
 
     const err = checkNestedKeys(obj);
 
-    expect(err).toBe('"b.a$z" cannot begin with \'$\' or contain a \'.\'');
+    expect(err).toBe('"$nes.ted" cannot begin with \'$\' or contain a \'.\'');
+  });
+
+  it('should check nested property and error', () => {
+    const obj = {
+      'base-url': 'https://api.insomnia.rest',
+      'nested': {
+        '$path-wi.th-hyphens': '/path-with-hyphen',
+      },
+      'ar-ray': [
+        '/first',
+        {
+          'second': 'second',
+        },
+        {
+          'third': 'third',
+        },
+      ],
+    };
+
+    const err = checkNestedKeys(obj);
+
+    expect(err).toBe('"$path-wi.th-hyphens" cannot begin with \'$\' or contain a \'.\'');
   });
 
   it('should check for complex objects inside array', () => {
     const obj = {
-      arr: [{
-        bar: {
-          'b.a$z': 'baz',
+      'base-url': 'https://api.insomnia.rest',
+      'nested': {
+        'path-with-hyphens': '/path-with-hyphen',
+      },
+      'ar-ray': [
+        '/first',
+        {
+          'second': 'second',
         },
-      }],
+        {
+          'thi.rd': 'third',
+        },
+      ],
     };
 
     const err = checkNestedKeys(obj);
 
-    expect(err).toBe('"b.a$z" cannot begin with \'$\' or contain a \'.\'');
+    expect(err).toBe('"thi.rd" cannot begin with \'$\' or contain a \'.\'');
   });
 
   it('should check nested properties and pass', () => {
     const obj = {
-      foo: {
-        arr: [1, { abc: 123 }, 2],
-        val: 'true',
-        obj: {
-          'b-a-z': 'baz',
-        },
+      'base-url': 'https://api.insomnia.rest',
+      'nested': {
+        'path-with-hyphens': '/path-with-hyphen',
       },
+      'ar-ray': [
+        '/first',
+        {
+          'second': 'second',
+        },
+        {
+          'third': 'third',
+        },
+      ],
     };
 
     const err = checkNestedKeys(obj);
