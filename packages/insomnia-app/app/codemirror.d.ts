@@ -72,16 +72,10 @@ declare module 'codemirror' {
      * Custom Insomnia Key. The display value of the hint
      */
     comment?: string;
-    // Custom Insomnia Key. Used for sorting the hints
+    /**
+     * Custom Insomnia Key. Used for sorting the hints
+     */
     score: number;
-    text: string;
-    className?: string;
-    displayText?: string;
-    from?: Position;
-    /** Called if a completion is picked. If provided *you* are responsible for applying the completion */
-    hint?: (cm: Editor, data: Hints, cur: Hint) => void;
-    render?: (element: HTMLLIElement, data: Hints, cur: Hint) => void;
-    to?: Position;
   }
 
   interface ShowHintOptions {
