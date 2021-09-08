@@ -91,8 +91,8 @@ declare module 'codemirror' {
   }
 
   interface EditorEventMap {
-    fold: (instance: Editor, from: Position, to: Position) => void;
-    unfold: (instance: Editor, from: Position, to: Position) => void;
+    fold: (instance: Editor, from: Position) => void;
+    unfold: (instance: Editor, from: Position) => void;
   }
   /* eslint-enable @typescript-eslint/no-empty-interface */
 }
