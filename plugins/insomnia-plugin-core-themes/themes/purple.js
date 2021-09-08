@@ -6,6 +6,11 @@ module.exports = {
       default: '#555',
     },
     styles: {
+      appHeader: {
+        background: {
+          default: '#fff',
+        },
+      },
       link: {
         foreground: {
           default: '#68a9a2',

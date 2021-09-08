@@ -1,4 +1,4 @@
-# Kong Bundle (Insomnia Designer Plugin)
+# Kong Bundle (Insomnia Plugin)
 
 [![Npm Version](https://img.shields.io/npm/v/insomnia-plugin-kong-bundle.svg)](https://www.npmjs.com/package/insomnia-plugin-kong-bundle)
 

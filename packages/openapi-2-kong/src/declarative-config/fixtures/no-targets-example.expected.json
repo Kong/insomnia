@@ -1,0 +1,37 @@
+{
+  "services": [
+    {
+      "protocol": "http",
+      "host": "Simple_API_overview",
+      "port": 80,
+      "path": "/path",
+      "name": "Simple_API_overview",
+      "plugins": [],
+      "routes": [
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"],
+          "name": "Simple_API_overview-x_kong_name_override_at_method",
+          "paths": ["/$"]
+        },
+        {
+          "methods": ["GET"],
+          "strip_path": false,
+          "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"],
+          "name": "Simple_API_overview-getVersionDetailsv2",
+          "paths": ["/v2$"]
+        }
+      ],
+      "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"]
+    }
+  ],
+  "upstreams": [
+    {
+      "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"],
+      "name": "Simple_API_overview",
+      "targets": []
+    }
+  ],
+  "_format_version": "1.1"
+}

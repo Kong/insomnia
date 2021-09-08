@@ -1,0 +1,262 @@
+openapi: 3.0.2
+##############################
+## API Information Document ##
+##############################
+info:
+  # Define the Default Ingress metadata and annotations for Kubernetes
+  x-kubernetes-ingress-metadata:
+    name: my cloud-api
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt
+      external-dns.alpha.kubernetes.io/hostname: myserver
+      konghq.com/strip-path: 'true'
+  title: my Cloud API
+  version: '1.0.0'
+  contact:
+    name: myserver Support
+    url: https://myserver/support
+    email: support@myserver
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+###################################
+## Kong Plugins for all requests ##
+###################################
+# OpenID Connect Plugin for Kong API Authorization with Keycloak
+x-kong-plugin-openid-connect:
+  name: openid-connect
+  enabled: true
+  config:
+    issuer: <keycloak-realm-auth-endpoint>
+    client_id:
+      - <client-id>
+    client_secret:
+      - <client-secret>
+    auth_methods: ['authorization_code', 'bearer', 'session', 'refresh_token']
+    session_cookie_name: 'cookie-name'
+    refresh_token_param_name: 'Offline-Token'
+    scopes: ['openid', 'profile', 'email']
+    upstream_user_info_header: 'x-userinfo'
+    upstream_access_token_header: 'access-token-name'
+# Enable HTTPS redirect to disable HTTP access for the API server
+x-kong-plugin-https-redirect:
+  name: pre-function
+  config:
+    functions:
+      - |
+        local scheme = kong.request.get_scheme()
+        if scheme == "http" then
+          local host = kong.request.get_host()
+          local query = kong.request.get_path_with_query()
+          local url = "https://" .. host ..query
+          kong.response.set_header("Location",url)
+          return kong.response.exit(302,url)
+        end
+#############
+## Servers ##
+#############
+servers:
+  - url: https://myserver/v1
+    description: The non-production API Server for FRED Studio
+    x-kubernetes-tls:
+      - hosts:
+          - myserver
+        secretName: myserver-tls
+################
+## Components ##
+################
+components:
+  # Security Schemes
+  securitySchemes:
+    StudioOIDC:
+      type: openIdConnect
+      openIdConnectUrl: <well-known-config>
+      ## Required Scopes defined at the Operation Level ##
+  schemas:
+    # define schemas here for components
+    # Schema for error response body
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+    #############################
+    ## Environment API Schemas ##
+    #############################
+    Quotas:
+      type: object
+      properties:
+        quotas:
+          type: object
+        runningNodes:
+          type: object
+        queuedBatches:
+          type: object
+    #######################
+    ## Batch API Schemas ##
+    #######################
+    # Model Upload URL Request Schema
+    BatchModelUploadRequest:
+      type: object
+      properties:
+        modelName:
+          type: string
+    # Model Upload URL Response Schema
+    BatchModelUploadResponse:
+      type: object
+      properties:
+        url:
+          type: string
+    # Batch Submit Request Schema
+    BatchSubmitRequest:
+      type: object
+      properties:
+        batchGuid:
+          type: string
+        computeSize:
+          type: string
+        containerLogLevel:
+          type: string
+        killTime:
+          type: integer
+        cliCommand:
+          type: string
+        batchConfig:
+          type: object
+    # Batch Submit Response Schema
+    BatchSubmitResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    # Batch Get Logs Request Schema
+    BatchGetLogsRequest:
+      type: object
+      properties:
+        batchGuid:
+          type: string
+        limit:
+          type: string
+        interval:
+          type: string
+    # Batch Get Logs Response Schema
+    BatchGetLogsResponse:
+      type: object
+      properties:
+        # results is an array of objects containing the log entries
+        results:
+          type: array
+          items:
+            type: object
+    # Batch Get Results Request Schema
+    BatchGetResultsRequest:
+      type: object
+      properties:
+        fredResultsKey:
+          type: string
+    # Batch Get Results Response Schema
+    BatchGetResultsResponse:
+      type: object
+      properties:
+        url:
+          type: string
+    # Batch Get Status Request Schema
+    BatchGetStatusRequest:
+      type: object
+      properties:
+        batchGuid:
+          type: string
+    # Batch Get Status Response Schema
+    BatchGetStatusResponse:
+      type: object # Not entirely sure what all is being returned here, but I know it's an object!
+    # Batch Validate Config Request Schema
+    BatchValidateConfigRequest:
+      type: object
+      properties:
+        batchConfig:
+          type: object
+    # Batch Validate Config Response Schema
+    BatchValidateConfigResponse:
+      type: object
+      properties:
+        message:
+          type: string
+  # define query parameters here
+  # parameters: # No Parameters defined yet
+  # construct default responses here
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    GeneralError:
+      description: General Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+##############################
+## Paths and API Operations ##
+##############################
+paths:
+  ####################
+  ## Root API Paths ##
+  ####################
+  '/offline-portal':
+    x-kong-plugin-aws-lambda:
+      name: aws-lambda
+      config:
+        aws_key: <iam-lambda-user-accesskey>
+        aws_secret: <iam-lambda-user-secretkey>
+        aws_region: us-east-1
+        function_name: <offline-token-function>
+        timeout: 60000
+        keepalive: 60000
+        port: 443
+        forward_request_headers: true
+    get:
+      operationId: getOfflineToken
+      description: Returns an Offline Token to be consumed by the myserver CLI
+      security:
+        - StudioOIDC:
+            # An array of required scopes for the Operation
+            - offline_access # This is created through Keycloak to enforce different levels of authorization (Scope Defined)
+      responses:
+        '200':
+          description: Offline-Token Portal
+  '/user-info':
+    x-kong-plugin-aws-lambda:
+      name: aws-lambda
+      config:
+        aws_key: <iam-lambda-user-accesskey>
+        aws_secret: <iam-lambda-user-secretkey>
+        aws_region: us-east-1
+        function_name: <user-info-function>
+        timeout: 60000
+        keepalive: 60000
+        port: 443
+        forward_request_headers: true
+    get:
+      description: myserver API User-Info
+      operationId: getUserInfo
+      summary: Returns the User Info from the x-userinfo header forwarded upstream by Kong
+      security:
+        - StudioOIDC:
+            # an array of scopes required to perform the operation
+            - fred_read # This is created through Keycloak to enforce different levels of authorization (Scope not yet defined)
+      responses:
+        '200':
+          description: myserver API User Profile

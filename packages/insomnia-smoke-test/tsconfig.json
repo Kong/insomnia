@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "composite": false,
+    "rootDir": "."
+  },
+  "include": [
+    "__jest__",
+    "cli",
+    "core",
+    "designer",
+    "fixtures",
+    "modules",
+    "server",
+    "jest.config.js",
+    ".eslintrc.js"
+  ]
+}

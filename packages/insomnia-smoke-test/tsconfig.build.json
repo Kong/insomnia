@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true, // this is required because spectron depends on electron but it is not locatable by typescript for the purpose of types
+    "noImplicitAny": false
+  },
+  "include": [
+    "cli",
+    "core",
+    "designer",
+    "fixtures",
+    "modules",
+    "server"
+  ],
+  "exclude": [
+    "dist"
+  ]
+}

@@ -1,12 +1,16 @@
 {
   "name": "insomnia-plugin-file",
-  "version": "2.2.24",
-  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "version": "2.3.2",
+  "author": "Kong <office@konghq.com>",
   "description": "Insomnia file templte tag",
   "license": "MIT",
-  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-file",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "plugins/insomnia-plugin-plugin-file"
+  },
   "bugs": {
-    "url": "https://github.com/kong/insomnia"
+    "url": "https://github.com/Kong/insomnia/issues"
   },
   "main": "index.js",
   "insomnia": {
