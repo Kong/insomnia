@@ -303,6 +303,7 @@ describe('encodeEncoding()', () => {
     expect(utils.encodeEncoding('hello', 'unknown')).toBe('hello');
     expect(utils.encodeEncoding('hello')).toBe('hello');
     expect(utils.encodeEncoding('hello', 'utf8')).toBe('hello');
+    expect(utils.encodeEncoding('', 'base64')).toBe('');
   });
 });
 
@@ -314,5 +315,6 @@ describe('decodeEncoding()', () => {
     expect(utils.decodeEncoding('aGVsbG8=')).toBe('aGVsbG8=');
     expect(utils.decodeEncoding('hello')).toBe('hello');
     expect(utils.decodeEncoding(null)).toBe(null);
+    expect(utils.decodeEncoding('')).toBe('');
   });
 });
