@@ -23,7 +23,6 @@ interface InsomniaExtensions {
 declare module 'codemirror' {
   type CodeMirrorLinkClickCallback = LinkClickCallback;
 
-  /* eslint-disable @typescript-eslint/no-empty-interface */
   interface Editor extends InsomniaExtensions {}
   interface EditorFromTextEditor extends InsomniaExtensions {}
   interface TextMarker {
@@ -94,5 +93,4 @@ declare module 'codemirror' {
     fold: (instance: Editor, from: Position) => void;
     unfold: (instance: Editor, from: Position) => void;
   }
-  /* eslint-enable @typescript-eslint/no-empty-interface */
 }
