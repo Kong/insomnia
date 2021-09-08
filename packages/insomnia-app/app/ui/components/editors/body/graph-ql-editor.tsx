@@ -5,7 +5,7 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, isNamedType, NamedTypeNode, NonNullTypeNode, OperationDefinitionNode } from 'graphql';
+import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
