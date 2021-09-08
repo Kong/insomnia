@@ -42,9 +42,7 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
   lineNumbers: true,
   placeholder: 'Start Typing...',
   foldGutter: true,
-  height: 'auto',
-  // @ts-expect-error -- TSCONVERSION should be autoRefresh: { delay: 2000 }
-  autoRefresh: 2000,
+  autoRefresh: { delay: 2000 },
   lineWrapping: true,
   scrollbarStyle: 'native',
   lint: true,
@@ -103,7 +101,7 @@ interface Props {
   render?: HandleRender;
   nunjucksPowerUserMode?: boolean;
   getRenderContext?: HandleGetRenderContext;
-  getAutocompleteConstants?: () => string[];
+  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   getAutocompleteSnippets?: () => CodeMirror.Snippet[];
   keyMap?: string;
   mode?: string;
@@ -148,8 +146,12 @@ interface State {
   filter: string;
 }
 
-function isMarkerRange(mark: CodeMirror.Position | CodeMirror.MarkerRange | undefined): mark is CodeMirror.MarkerRange {
-  return Boolean(mark && 'from' in mark);
+function isMarkerRange(mark?: CodeMirror.Position | CodeMirror.MarkerRange): mark is CodeMirror.MarkerRange {
+  if (!mark) {
+    return false;
+  }
+
+  return Object.prototype.hasOwnProperty.call(mark, 'from');
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -421,12 +423,12 @@ class CodeEditor extends Component<Props, State> {
 
         if (isMarkerRange(result)) {
           return result;
-        } else {
-          return {
-            from: undefined,
-            to: undefined,
-          };
         }
+
+        return {
+          from: undefined,
+          to: undefined,
+        };
       });
 
     editorStates[uniquenessKey] = {
@@ -524,9 +526,7 @@ class CodeEditor extends Component<Props, State> {
     this.codeMirror.on('blur', this._codemirrorBlur);
     this.codeMirror.on('paste', this._codemirrorPaste);
     this.codeMirror.on('scroll', this._codemirrorScroll);
-    // @ts-expect-error this event does indeed exist, but is not present on the CodeMirror types and declaration merging doesn't seem to want to allow adding it
     this.codeMirror.on('fold', this._codemirrorToggleFold);
-    // @ts-expect-error this event does indeed exist, but is not present on the CodeMirror types and declaration merging doesn't seem to want to allow adding it
     this.codeMirror.on('unfold', this._codemirrorToggleFold);
     this.codeMirror.on('keyHandled', this._codemirrorKeyHandled);
     // Prevent these things if we're type === "password"
@@ -537,9 +537,12 @@ class CodeEditor extends Component<Props, State> {
       line: -1,
       ch: -1,
     });
+
+    let extraKeys = BASE_CODEMIRROR_OPTIONS.extraKeys;
+    extraKeys = extraKeys && typeof extraKeys !== 'string' ? extraKeys : {};
+
     this.codeMirror.setOption('extraKeys', {
-      // @ts-expect-error -- TSCONVERSION
-      ...BASE_CODEMIRROR_OPTIONS.extraKeys,
+      ...extraKeys,
       Tab: cm => {
         // Indent with tabs or spaces
         // From https://github.com/codemirror/CodeMirror/issues/988#issuecomment-14921785
@@ -768,12 +771,14 @@ class CodeEditor extends Component<Props, State> {
       options.indentUnit = indentSize;
     }
 
-    if (!hideGutters && options.lint) {
-      options.gutters?.push('CodeMirror-lint-markers');
-    }
+    if (options.gutters && !hideGutters) {
+      if (options.lint) {
+        options.gutters.push('CodeMirror-lint-markers');
+      }
 
-    if (!hideGutters && options.lineNumbers) {
-      options.gutters?.push('CodeMirror-linenumbers');
+      if (options.lineNumbers) {
+        options.gutters.push('CodeMirror-linenumbers');
+      }
     }
 
     if (!hideGutters && options.foldGutter) {
@@ -825,8 +830,7 @@ class CodeEditor extends Component<Props, State> {
             }
 
             for (const option of firstArg.options || []) {
-              // @ts-expect-error -- TSCONVERSION option.name doesn't exist
-              const optionName = misc.fnOrString(option.displayName, tagDef.args) || option.name;
+              const optionName = misc.fnOrString(option.displayName, tagDef.args);
               const newDef = clone(tagDef);
               newDef.displayName = `${tagDef.displayName} ⇒ ${optionName}`;
               newDef.args[0].defaultValue = option.value;
@@ -869,10 +873,8 @@ class CodeEditor extends Component<Props, State> {
     if (key === 'jump' || key === 'info' || key === 'lint' || key === 'hintOptions') {
       // Use stringify here because these could be infinitely recursive due to GraphQL
       // schemas
-      // @ts-expect-error -- TSCONVERSION
-      shouldSetOption = JSON.stringify(value) !== JSON.stringify(cm.options[key]);
-      // @ts-expect-error -- TSCONVERSION
-    } else if (!deepEqual(value, cm.options[key])) {
+      shouldSetOption = JSON.stringify(value) !== JSON.stringify(cm?.getOption(key));
+    } else if (!deepEqual(value, cm?.getOption(key))) {
       // Don't set the option if it hasn't changed
       shouldSetOption = true;
     }
@@ -1013,7 +1015,7 @@ class CodeEditor extends Component<Props, State> {
     }
 
     // Don't allow non-breaking spaces because they break the GraphQL syntax
-    if (doc.getOption('mode') === 'graphql') {
+    if (doc.getOption('mode') === 'graphql' && change.text.length > 0) {
       const text = change.text.map(normalizeIrregularWhitespace);
 
       change.update?.(change.from, change.to, text);
@@ -1055,8 +1057,8 @@ class CodeEditor extends Component<Props, State> {
     // Disable linting if the document reaches a maximum size or is empty
     const isOverMaxSize = value.length > MAX_SIZE_FOR_LINTING;
     const shouldLint = isOverMaxSize || value.length === 0 ? false : !this.props.noLint;
-    // @ts-expect-error TSCONVERSION
-    const existingLint = this.codeMirror?.options.lint || false;
+
+    const existingLint = this.codeMirror?.getOption('lint') || false;
 
     if (shouldLint !== existingLint) {
       const { lintOptions } = this.props;

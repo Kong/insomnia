@@ -17,7 +17,7 @@ interface Props {
   id?: string;
   type?: string;
   mode?: string;
-  onBlur?: () => void;
+  onBlur?: (e: FocusEvent) => void;
   onKeyDown?: (e: KeyboardEvent, value?: any) => void;
   onFocus?: (e: FocusEvent) => void;
   onChange?: CodeEditorOnChange;
@@ -25,12 +25,13 @@ interface Props {
   render?: HandleRender;
   getRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
-  getAutocompleteConstants?: () => string[];
+  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   placeholder?: string;
   className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
   isVariableUncovered?: boolean;
+  readOnly?: boolean;
   // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
   disabled?: boolean;
 }
@@ -219,14 +220,14 @@ class OneLineEditor extends PureComponent<Props, State> {
     }
   }
 
-  _handleInputBlur() {
+  _handleInputBlur(e: FocusEvent) {
     // Set focused state
     this._input?.removeAttribute('data-focused');
 
-    this.props.onBlur?.();
+    this.props.onBlur?.(e);
   }
 
-  _handleEditorBlur() {
+  _handleEditorBlur(e: FocusEvent) {
     // Editor was already removed from the DOM, so do nothing
     if (!this._editor) {
       return;
@@ -245,9 +246,10 @@ class OneLineEditor extends PureComponent<Props, State> {
       }, 2000);
     }
 
-    this.props.onBlur?.();
+    this.props.onBlur?.(e);
   }
 
+  // @TODO Refactor this event handler. The way we search for a parent form node is not stable.
   _handleKeyDown(e) {
     // submit form if needed
     if (e.keyCode === 13) {
