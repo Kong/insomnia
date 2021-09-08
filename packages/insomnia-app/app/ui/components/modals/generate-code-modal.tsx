@@ -1,9 +1,10 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import HTTPSnippet, { availableTargets } from 'httpsnippet';
+import HTTPSnippet, { HTTPSnippetClient, HTTPSnippetTarget } from 'httpsnippet';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { exportHarRequest } from '../../../common/har';
+import { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
 import Link from '../base/link';
@@ -13,8 +14,8 @@ import ModalFooter from '../base/modal-footer';
 import ModalHeader from '../base/modal-header';
 import CodeEditor from '../codemirror/code-editor';
 
-const DEFAULT_TARGET = availableTargets().find(t => t.key === 'shell');
-const DEFAULT_CLIENT = DEFAULT_TARGET.clients.find(t => t.key === 'curl');
+const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
+const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
 const MODE_MAP = {
   c: 'clike',
   java: 'clike',
@@ -36,32 +37,30 @@ interface Props {
 
 interface State {
   cmd: string;
-  request: null;
-  target: string;
-  client: string;
+  request?: Request;
+  target: HTTPSnippetTarget;
+  client: HTTPSnippetClient;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GenerateCodeModal extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
-    let client;
-    let target;
+    let target: HTTPSnippetTarget | undefined;
+    let client: HTTPSnippetClient | undefined;
 
     // Load preferences from localStorage
     try {
-      // @ts-expect-error -- TSCONVERSION
-      target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target'));
+      target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
     } catch (e) {}
 
     try {
-      // @ts-expect-error -- TSCONVERSION
-      client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client'));
+      client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
     } catch (e) {}
 
     this.state = {
       cmd: '',
-      request: null,
+      request: undefined,
       target: target || DEFAULT_TARGET,
       client: client || DEFAULT_CLIENT,
     };
@@ -85,13 +84,15 @@ class GenerateCodeModal extends PureComponent<Props, State> {
   _handleClientChange(client) {
     const { target, request } = this.state;
 
+    if (!request) {
+      return;
+    }
     this._generateCode(request, target, client);
   }
 
   _handleTargetChange(target) {
-    const { target: currentTarget } = this.state;
+    const { target: currentTarget, request } = this.state;
 
-    // @ts-expect-error -- TSCONVERSION
     if (currentTarget.key === target.key) {
       // No change
       return;
@@ -99,16 +100,21 @@ class GenerateCodeModal extends PureComponent<Props, State> {
 
     const client = target.clients.find(c => c.key === target.default);
 
-    this._generateCode(this.state.request, target, client);
+    if (!request) {
+      return;
+    }
+    this._generateCode(request, target, client);
   }
 
-  async _generateCode(request, target, client) {
+  async _generateCode(request: Request, target: HTTPSnippetTarget, client: HTTPSnippetClient) {
     // Some clients need a content-length for the request to succeed
     const addContentLength = (TO_ADD_CONTENT_LENGTH[target.key] || []).find(c => c === client.key);
     const { environmentId } = this.props;
     const har = await exportHarRequest(request._id, environmentId, addContentLength);
+    // @TODO Should we throw instead?
+    if (!har) return;
     const snippet = new HTTPSnippet(har);
-    const cmd = snippet.convert(target.key, client.key);
+    const cmd = snippet.convert(target.key, client.key) || '';
     this.setState({
       request,
       cmd,
@@ -120,7 +126,7 @@ class GenerateCodeModal extends PureComponent<Props, State> {
     window.localStorage.setItem('insomnia::generateCode::target', JSON.stringify(target));
   }
 
-  show(request) {
+  show(request: Request) {
     const { client, target } = this.state;
 
     this._generateCode(request, target, client);
@@ -131,13 +137,11 @@ class GenerateCodeModal extends PureComponent<Props, State> {
   render() {
     const { cmd, target, client } = this.state;
     const { editorFontSize, editorIndentSize, editorKeyMap } = this.props;
-    const targets = availableTargets();
+    const targets = HTTPSnippet.availableTargets();
     // NOTE: Just some extra precautions in case the target is messed up
-    let clients = [];
+    let clients: HTTPSnippetClient[] = [];
 
-    // @ts-expect-error -- TSCONVERSION
     if (target && Array.isArray(target.clients)) {
-      // @ts-expect-error -- TSCONVERSION
       clients = target.clients;
     }
 
@@ -156,7 +160,6 @@ class GenerateCodeModal extends PureComponent<Props, State> {
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
                 {
-                  // @ts-expect-error -- TSCONVERSION
                   target ? target.title : 'n/a'
                 }
                 <i className="fa fa-caret-down" />
@@ -170,24 +173,16 @@ class GenerateCodeModal extends PureComponent<Props, State> {
             &nbsp;&nbsp;
             <Dropdown outline>
               <DropdownButton className="btn btn--clicky">
-                {
-
-                  // @ts-expect-error -- TSCONVERSION
-                  client ? client.title : 'n/a'
-                }
+                {client ? client.title : 'n/a'}
                 <i className="fa fa-caret-down" />
               </DropdownButton>
               {clients.map(client => (
                 <DropdownItem
-                  // @ts-expect-error -- TSCONVERSION
                   key={client.key}
                   onClick={this._handleClientChange}
                   value={client}
                 >
-                  {
-                    // @ts-expect-error -- TSCONVERSION
-                    client.title
-                  }
+                  {client.title}
                 </DropdownItem>
               ))}
             </Dropdown>
@@ -199,7 +194,6 @@ class GenerateCodeModal extends PureComponent<Props, State> {
             placeholder="Generating code snippet..."
             className="border-top"
             key={Date.now()}
-            // @ts-expect-error -- TSCONVERSION
             mode={MODE_MAP[target.key] || target.key}
             ref={this._setEditorRef}
             fontSize={editorFontSize}
