@@ -173,7 +173,9 @@ class ResponsePane extends PureComponent<Props> {
     }
 
     const bodyBuffer = models.response.getBodyBuffer(this.props.response);
-    clipboard.writeText(bodyBuffer.toString('utf8'));
+    if (bodyBuffer) {
+      clipboard.writeText(bodyBuffer.toString('utf8'));
+    }
   }
 
   _handleTabSelect(index: number, lastIndex: number) {
