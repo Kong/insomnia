@@ -200,6 +200,15 @@
   & > *:last-child {
     margin-right: 0;
   }
+
+  &--start {
+    align-items: start;
+
+    & > * {
+      width: unset;
+    }
+
+  }
 }
 
 .icon {
@@ -370,7 +379,6 @@ label {
       left: var(--padding-xxs);
       right: var(--padding-xxs);
       border-radius: var(--radius-sm);
-      background-color: var(--hl-sm);
     }
   }
 }
