@@ -14,8 +14,8 @@ import ModalFooter from '../base/modal-footer';
 import ModalHeader from '../base/modal-header';
 import CodeEditor from '../codemirror/code-editor';
 
-const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell');
-const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl');
+const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
+const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
 const MODE_MAP = {
   c: 'clike',
   java: 'clike',
@@ -46,16 +46,16 @@ interface State {
 class GenerateCodeModal extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
-    let client;
-    let target;
+    let target: HTTPSnippetTarget | undefined;
+    let client: HTTPSnippetClient | undefined;
 
     // Load preferences from localStorage
     try {
-      target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget | '';
+      target = JSON.parse(window.localStorage.getItem('insomnia::generateCode::target') || '') as HTTPSnippetTarget;
     } catch (e) {}
 
     try {
-      client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient | '';
+      client = JSON.parse(window.localStorage.getItem('insomnia::generateCode::client') || '') as HTTPSnippetClient;
     } catch (e) {}
 
     this.state = {
