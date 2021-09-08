@@ -11,6 +11,7 @@ import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import jq from 'jsonpath';
 import React, { Component, CSSProperties, ReactNode } from 'react';
+import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
 import zprint from 'zprint-clj';
 
@@ -165,7 +166,6 @@ class CodeEditor extends Component<Props, State> {
   codeMirror?: CodeMirror.EditorFromTextArea;
   private _filterInput: HTMLInputElement;
   private _autocompleteDebounce: NodeJS.Timeout | null = null;
-  private _ignoreNextChange: boolean;
   private _filterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -644,12 +644,14 @@ class CodeEditor extends Component<Props, State> {
       : new Array((this.codeMirror?.getOption?.('indentUnit') || 0) + 1).join(' ');
   }
 
-  _handleBeautify() {
-    this._prettify(this.codeMirror?.getValue());
-  }
+  _prettify() {
+    const canPrettify = this._canPrettify();
+    if (!canPrettify) {
+      return;
+    }
 
-  _prettify(code?: string) {
-    this._codemirrorSetValue(code, true);
+    const code = this.codeMirror?.getValue();
+    this._codemirrorSetValue(code, canPrettify);
   }
 
   _prettifyJSON(code: string) {
@@ -702,7 +704,7 @@ class CodeEditor extends Component<Props, State> {
   }
 
   async _handleKeyDown(event: KeyboardEvent) {
-    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._handleBeautify);
+    executeHotKey(event, hotKeyRefs.BEAUTIFY_REQUEST_BODY, this._prettify);
   }
 
   /**
@@ -1054,9 +1056,7 @@ class CodeEditor extends Component<Props, State> {
    * Wrapper function to add extra behaviour to our onChange event
    */
   _codemirrorValueChanged() {
-    // Don't trigger change event if we're ignoring changes
-    if (this._ignoreNextChange || !this.props.onChange) {
-      this._ignoreNextChange = false;
+    if (!this.props.onChange) {
       return;
     }
 
@@ -1081,33 +1081,34 @@ class CodeEditor extends Component<Props, State> {
    * @param code the code to set in the editor
    * @param forcePrettify
    */
-  _codemirrorSetValue(code = '', forcePrettify = false) {
+  _codemirrorSetValue(code?: string, forcePrettify?: boolean) {
     if (typeof code !== 'string') {
       console.warn('Code editor was passed non-string value', code);
       return;
     }
-
+    const { autoPrettify, mode } = this.props;
     this._originalCode = code;
-
-    // If we're setting initial value, don't trigger onChange because the
-    // user hasn't done anything yet
-    if (!forcePrettify) {
-      this._ignoreNextChange = true;
-    }
-
-    const shouldPrettify = forcePrettify || this.props.autoPrettify;
+    const shouldPrettify = forcePrettify || autoPrettify;
 
     if (shouldPrettify && this._canPrettify()) {
-      if (CodeEditor._isXML(this.props.mode)) {
+      if (CodeEditor._isXML(mode)) {
         code = this._prettifyXML(code);
-      } else if (CodeEditor._isEDN(this.props.mode)) {
+      } else if (CodeEditor._isEDN(mode)) {
         code = CodeEditor._prettifyEDN(code);
-      } else {
+      } else if (CodeEditor._isJSON(mode)) {
         code = this._prettifyJSON(code);
+      } else {
+        unreachable('attempted to prettify in a mode that should not support prettifying');
       }
     }
 
-    this.codeMirror?.setValue(code);
+    // this prevents codeMirror from needlessly setting the same thing repeatedly (which has the effect of moving the user's cursor and resetting the viewport scroll: a bad user experience)
+    const currentCode = this.codeMirror?.getValue();
+    if (currentCode === code) {
+      return;
+    }
+
+    this.codeMirror?.setValue(code || '');
   }
 
   _handleFilterHistorySelect(filter = '') {
@@ -1226,7 +1227,7 @@ class CodeEditor extends Component<Props, State> {
           key="prettify"
           className="btn btn--compact"
           title="Auto-format request body whitespace"
-          onClick={this._handleBeautify}
+          onClick={this._prettify}
         >
           Beautify {contentTypeName}
         </button>,
@@ -1267,8 +1268,7 @@ class CodeEditor extends Component<Props, State> {
             }}
             readOnly={readOnly}
             autoComplete="off"
-            // NOTE: When setting this to empty string, it breaks the _ignoreNextChange logic on initial component mount
-            defaultValue=" "
+            defaultValue=""
           />
         </div>
         {toolbar}
