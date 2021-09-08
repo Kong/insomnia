@@ -50,8 +50,6 @@
     "execa": "^5.0.0",
     "get-bin-path": "^5.1.0",
     "node-loader": "1.0.2",
-    "ramda": "^0.27.1",
-    "ramda-adjunct": "^2.33.0",
     "rimraf": "^3.0.2",
     "ts-loader": "^8.2.0",
     "webpack": "4.44.1",
