@@ -1,24 +1,33 @@
 import { DEFAULT_PROJECT_ID, Project, sortProjects } from '../project';
 
+const defaultProject = { name: 'a', remoteId: null, id: DEFAULT_PROJECT_ID };
+
+const localA = { name: 'a', remoteId: null };
+const localB = { name: 'b', remoteId: null };
+
+const remoteA = { name: 'a', remoteId: 'notNull' };
+const remoteB = { name: 'b', remoteId: 'notNull' };
+const remote0 = { name: '0', remoteId: 'notNull' };
+
 describe('sortProjects', () => {
   it('sorts projects by default > local > remote > name', () => {
     const unSortedProjects = [
-      { type: 'remote', name: 'a', remoteId: 'notNull' },
-      { type: 'local', name: 'b', remoteId: null },
-      { type: 'default', name: 'a', remoteId: null, id: DEFAULT_PROJECT_ID },
-      { type: 'remote', name: 'b', remoteId: 'notNull' },
-      { type: 'local', name: 'a', remoteId: null },
-      { type: 'remote', name: '0', remoteId: 'notNull' },
+      remoteA,
+      localB,
+      defaultProject,
+      remoteB,
+      localA,
+      remote0,
     ] as Project[];
     const result = sortProjects(unSortedProjects);
 
     const sortedProjects = [
-      { type: 'default', name: 'a', remoteId: null, id: DEFAULT_PROJECT_ID },
-      { type: 'local', name: 'a', remoteId: null },
-      { type: 'local', name: 'b', remoteId: null },
-      { type: 'remote', name: '0', remoteId: 'notNull' },
-      { type: 'remote', name: 'a', remoteId: 'notNull' },
-      { type: 'remote', name: 'b', remoteId: 'notNull' },
+      defaultProject,
+      localA,
+      localB,
+      remote0,
+      remoteA,
+      remoteB,
     ] as Project[];
     expect(result).toEqual(sortedProjects);
   });
