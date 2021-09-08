@@ -84,7 +84,10 @@ class GenerateCodeModal extends PureComponent<Props, State> {
   _handleClientChange(client) {
     const { target, request } = this.state;
 
-    request && this._generateCode(request, target, client);
+    if (!request) {
+      return;
+    }
+    this._generateCode(request, target, client);
   }
 
   _handleTargetChange(target) {
@@ -97,7 +100,10 @@ class GenerateCodeModal extends PureComponent<Props, State> {
 
     const client = target.clients.find(c => c.key === target.default);
 
-    request && this._generateCode(request, target, client);
+    if (!request) {
+      return;
+    }
+    this._generateCode(request, target, client);
   }
 
   async _generateCode(request: Request, target: HTTPSnippetTarget, client: HTTPSnippetClient) {
