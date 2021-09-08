@@ -16,8 +16,8 @@ interface Props {
   indentSize: number;
   keyMap: string;
   lineWrapping: boolean;
-  handleRender: HandleRender;
-  handleGetRenderContext: HandleGetRenderContext;
+  handleRender?: HandleRender;
+  handleGetRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode: boolean;
   isVariableUncovered: boolean;
   placeholder?: string;

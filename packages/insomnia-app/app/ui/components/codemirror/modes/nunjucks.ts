@@ -1,4 +1,11 @@
 import CodeMirror from 'codemirror';
+
+export function isNunjucksMode(
+  mode: CodeMirror.ModeSpec<unknown>
+): mode is CodeMirror.ModeSpec<{ baseMode: 'string' }> {
+  return 'baseMode' in mode;
+}
+
 CodeMirror.defineMode('nunjucks', (config, parserConfig) => {
   const baseMode = CodeMirror.getMode(config, parserConfig.baseMode || 'text/plain');
 
