@@ -1,7 +1,7 @@
 import { DEFAULT_PROJECT_ID, Project, sortProjects } from '../project';
 
 describe('sortProjects', () => {
-  it('returns the correct sort order', () => {
+  it('sorts projects by default > local > remote > name', () => {
     const unSortedProjects = [
       { type: 'remote', name: 'a', remoteId: 'notNull' },
       { type: 'local', name: 'b', remoteId: null },
