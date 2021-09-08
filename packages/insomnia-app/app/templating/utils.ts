@@ -246,8 +246,12 @@ export function getDefaultFill(name: string, args: NunjucksParsedTagArg[]) {
   return `${name} ${stringArgs.join(', ')}`;
 }
 
-export function encodeEncoding(value: string, encoding: 'base64') {
+export function encodeEncoding<T>(value: T, encoding?: 'base64') {
   if (typeof value !== 'string') {
+    return value;
+  }
+
+  if (value.length === 0) {
     return value;
   }
 
@@ -259,7 +263,7 @@ export function encodeEncoding(value: string, encoding: 'base64') {
   return value;
 }
 
-export function decodeEncoding(value: string) {
+export function decodeEncoding<T>(value: T) {
   if (typeof value !== 'string') {
     return value;
   }
