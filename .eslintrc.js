@@ -141,6 +141,7 @@ module.exports = {
     '@typescript-eslint/keyword-spacing': ERROR,
     '@typescript-eslint/member-delimiter-style': ERROR,
     '@typescript-eslint/no-empty-function': OFF(UNKNOWN),
+    '@typescript-eslint/no-empty-interface': [ERROR, { 'allowSingleExtends': true }],
     '@typescript-eslint/no-namespace': [ERROR, { allowDeclarations: true }],
     '@typescript-eslint/no-redeclare': ERROR,
     '@typescript-eslint/no-unused-vars': [ERROR, { ignoreRestSiblings: true }],
