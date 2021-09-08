@@ -14,6 +14,11 @@ module.exports = {
       surprise: '#6030BF',
     },
     styles: {
+      appHeader: {
+        background: {
+          default: '#f7fafc',
+        },
+      },
       link: {
         foreground: {
           default: '#68a9a2',

@@ -1,7 +1,8 @@
+// TODO(TSCONVERSION) not entirely sure if this can be in TypeScript or not.  If so, need to convert.
 const fs = require('fs');
 const path = require('path');
 const electronNotarize = require('electron-notarize');
-const appConfig = require('../config').appConfig();
+const appConfig = require('../config/config.json');
 
 // See: https://medium.com/@TwitterArchiveEraser/notarize-electron-apps-7a5f988406db
 module.exports = async function(params) {
@@ -19,13 +20,6 @@ module.exports = async function(params) {
     throw new Error(`Cannot find application at: ${appName}`);
   }
 
-  const args = {
-    appBundleId: appId,
-    appPath: appPath,
-    appleId: process.env.APPLE_ID,
-    appleIdPassword: process.env.APPLE_ID_PASSWORD,
-  };
-
   if (!process.env.APPLE_ID) {
     console.log('[aftersign] APPLE_ID env variable not set. Skipping notarization');
     return;
@@ -35,6 +29,13 @@ module.exports = async function(params) {
     console.log('[aftersign] APPLE_ID env variable not set. Skipping notarization');
     return;
   }
+
+  const args = {
+    appBundleId: appId,
+    appPath: appPath,
+    appleId: process.env.APPLE_ID,
+    appleIdPassword: process.env.APPLE_ID_PASSWORD,
+  };
 
   console.log(`[afterSign] Notarizing ${appName} (${appId})`);
 
