@@ -99,11 +99,11 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
     />
   ), [setActive, activeProject._id]);
 
-  const [defaultProject, userProjects] = partition(isDefaultProject, projects);
+  const [defaultProjects, userProjects] = partition(isDefaultProject, projects);
 
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      {defaultProject.map(renderProject)}
+      {defaultProjects.map(renderProject)}
       <DropdownDivider>All {strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
       {userProjects.map(renderProject)}
       {projectHasSettings(activeProject) && <>
