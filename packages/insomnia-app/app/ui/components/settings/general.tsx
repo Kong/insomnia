@@ -193,8 +193,9 @@ class General extends PureComponent<Props, State> {
               setting="useBulkHeaderEditor"
             />
             <BooleanSetting
-              label="Vertical request/response layout"
+              label="Use vertical layout"
               setting="forceVerticalLayout"
+              help="Stack application panels (e.g. request / response) vertically instead of horizontally."
             />
           </div>
           <div>
