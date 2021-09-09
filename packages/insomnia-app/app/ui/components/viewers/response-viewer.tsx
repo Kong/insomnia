@@ -257,7 +257,8 @@ class ResponseViewer extends Component<Props, State> {
       updateFilter,
       url,
     } = this.props;
-    let contentType = this.props.contentType;
+    // WARNING: props should never be overwritten!
+    let { contentType } = this.props;
     const { bodyBuffer, error: parseError } = this.state;
     const error = responseError || parseError;
 
