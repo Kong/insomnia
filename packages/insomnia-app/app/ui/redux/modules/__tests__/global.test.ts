@@ -87,7 +87,6 @@ describe('global', () => {
         hasPromptedToMigrateFromDesigner: false,
         hasPromptedOnboarding: false,
       });
-      setActiveActivity(ACTIVITY_ONBOARDING);
 
       async function onDatabaseChange() {
         const settings = await models.settings.getOrCreate();
@@ -99,6 +98,8 @@ describe('global', () => {
       }
 
       database.onChange(onDatabaseChange);
+
+      setActiveActivity(ACTIVITY_ONBOARDING);
     });
 
     it('should update flag for migration prompted', async done => {
@@ -106,7 +107,6 @@ describe('global', () => {
         hasPromptedToMigrateFromDesigner: false,
         hasPromptedOnboarding: false,
       });
-      setActiveActivity(ACTIVITY_MIGRATION);
 
       async function onDatabaseChange() {
         const settings = await models.settings.getOrCreate();
@@ -117,6 +117,8 @@ describe('global', () => {
       }
 
       database.onChange(onDatabaseChange);
+
+      setActiveActivity(ACTIVITY_MIGRATION);
     });
   });
 
