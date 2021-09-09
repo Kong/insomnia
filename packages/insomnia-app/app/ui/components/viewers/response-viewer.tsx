@@ -47,6 +47,8 @@ interface State {
   blockingBecauseTooLarge: boolean;
   bodyBuffer: Buffer | null;
   error: string;
+  hugeResponse: boolean;
+  largeResponse: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -57,6 +59,8 @@ class ResponseViewer extends Component<Props, State> {
     blockingBecauseTooLarge: false,
     bodyBuffer: null,
     error: '',
+    hugeResponse: false,
+    largeResponse: false,
   };
 
   refresh() {
@@ -91,13 +95,15 @@ class ResponseViewer extends Component<Props, State> {
   }
 
   _maybeLoadResponseBody(props: Props, forceShow?: boolean) {
-    // Block the response if it's too large
-    const responseIsTooLarge = props.bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+    const { bytes } = props;
+    const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
+    const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
 
-    if (!forceShow && !alwaysShowLargeResponses && responseIsTooLarge) {
-      this.setState({
-        blockingBecauseTooLarge: true,
-      });
+    this.setState({ largeResponse, hugeResponse });
+
+    // Block the response if it's too large
+    if (!forceShow && !alwaysShowLargeResponses && largeResponse) {
+      this.setState({ blockingBecauseTooLarge: true });
     } else {
       try {
         const bodyBuffer = props.getBody();
@@ -193,13 +199,14 @@ class ResponseViewer extends Component<Props, State> {
 
       this._selectableView?.focus();
 
-      this._selectableView?.selectAll();
+      if (!this.state.largeResponse) {
+        this._selectableView?.selectAll();
+      }
     });
   }
 
   _renderView() {
     const {
-      bytes,
       disableHtmlPreviewJs,
       disablePreviewLinks,
       download,
@@ -227,13 +234,12 @@ class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    const wayTooLarge = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
-    const { blockingBecauseTooLarge } = this.state;
+    const { blockingBecauseTooLarge, hugeResponse } = this.state;
 
     if (blockingBecauseTooLarge) {
       return (
         <div className="response-pane__notify">
-          {wayTooLarge ? (
+          {hugeResponse ? (
             <Fragment>
               <p className="pad faint">Responses over {HUGE_RESPONSE_MB}MB cannot be shown</p>
               <button onClick={download} className="inline-block btn btn--clicky">
@@ -251,7 +257,7 @@ class ResponseViewer extends Component<Props, State> {
                 </button>
                 <button
                   onClick={this._handleDismissBlocker}
-                  disabled={wayTooLarge}
+                  disabled={hugeResponse}
                   className=" inline-block btn btn--clicky margin-xs"
                 >
                   Show Anyway
