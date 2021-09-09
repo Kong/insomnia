@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@stoplight/spectral": "^5.9.0",
+    "@types/ramda": "^0.27.44",
     "commander": "^5.1.0",
     "consola": "^2.15.0",
     "cosmiconfig": "^6.0.0",
