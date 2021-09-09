@@ -195,7 +195,7 @@ class General extends PureComponent<Props, State> {
             <BooleanSetting
               label="Use vertical layout"
               setting="forceVerticalLayout"
-              help="Stack application panels vertically instead of horizontally"
+              help="Stack application panels (e.g. request / response) vertically instead of horizontally."
             />
           </div>
           <div>
