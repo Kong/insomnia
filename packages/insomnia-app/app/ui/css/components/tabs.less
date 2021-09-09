@@ -6,6 +6,55 @@
   grid-template-columns: 100%;
   align-content: stretch;
 
+  &.react-tabs--nested {
+    border: none;
+    .react-tabs__tab-list {
+      .react-tabs__tab {
+        border-width: 0;
+        height: var(--line-height-md);
+      }
+      .react-tabs__tab--selected {
+        border-bottom: 2px solid var(--hl-xl);
+      }
+      &::after {
+        width: 100%;
+        height: var(--line-height-sm);
+        content: '';
+        border-bottom: none;
+      }
+    }
+  }
+  
+  .tab-action-wrapper {
+    border-bottom: 1px solid var(--hl-md);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    align-items: center;
+
+    &>div:nth-of-type(1) {
+      order: 0;
+      flex: 1;
+      overflow: auto;
+      .react-tabs__tab-list {
+        &::-webkit-scrollbar {
+          display: none !important;
+          height: 0px !important;
+        }
+      }
+    }
+
+    &>div:nth-of-type(2) {
+      order: 0;
+      flex: 0 0 auto;
+      align-self: auto;
+    }
+  }
+  .tab-action-tabs {
+    border: none; 
+  }
   .react-tabs__tab-list {
     display: flex;
     flex-direction: row;
@@ -13,7 +62,6 @@
     height: 100%;
     box-sizing: border-box;
     background-color: var(--color-bg);
-    overflow: auto;
 
     &::-webkit-scrollbar {
       height: var(--padding-sm);

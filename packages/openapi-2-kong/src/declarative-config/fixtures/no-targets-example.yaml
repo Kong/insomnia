@@ -1,0 +1,32 @@
+openapi: '3.0.0'
+info:
+  title: Simple API overview
+  version: v2
+servers:
+  - url: /path
+paths:
+  /:
+    x-kong-name: x-kong-name-override-at-path-item
+    get:
+      x-kong-name: x-kong-name-override-at-method
+      operationId: listVersionsv2
+      summary: List API versions
+      responses:
+        '200':
+          description: |-
+            200 response
+        '300':
+          description: |-
+            300 response
+  /v2:
+    x-kong-name: x-kong-name-override-at-path-item
+    get:
+      operationId: getVersionDetailsv2
+      summary: Show API version details
+      responses:
+        '200':
+          description: |-
+            200 response
+        '203':
+          description: |-
+            203 response

@@ -109,19 +109,38 @@
     }
   }
 
-  &.env-modal__sidebar-item--dragging > button,
-  &.env-modal__sidebar-item--active > button {
+  .env-status {
+    padding: 0 var(--padding-sm) 0 var(--padding-sm);
+    align-self: center;
+
+    .active {
+      color: var(--hl-xl);
+    }
+
+    .inactive {
+      color: var(--hl-xl);
+      opacity: 0;
+    }
+  }
+
+  &.env-modal__sidebar-item--dragging ,
+  &.env-modal__sidebar-item--active {
     color: var(--color-font);
     background-color: var(--hl-xs);
   }
 
-  &:hover > button {
+  &:hover {
     background-color: var(--hl-xs);
   }
 
   &.env-modal__sidebar-item--dragging .drag-handle,
-  &:hover .drag-handle {
+  &:hover .drag-handle,
+  &:hover .inactive {
     opacity: 1;
+  }
+
+  &:hover .inactive:hover {
+    color: var(--color-font);
   }
 }
 

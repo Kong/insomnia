@@ -8,11 +8,10 @@ screenshots/
 **/.cache/
 **/coverage/
 **/node_modules/
-**/webpack/
 **/bin/
 **/__fixtures__/
+**/fixtures
 **/__snapshots__/
-**/flow-typed/
 **/dist/
 **/.cache/
 **/svgr/

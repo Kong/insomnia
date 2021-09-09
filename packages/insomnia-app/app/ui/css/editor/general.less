@@ -167,9 +167,13 @@
   We need to restyle CodeMirrow for raw editor
 */
 .raw-editor {
+  .CodeMirror-lines {
+    padding: var(--padding-md);
+  }
+  
   .CodeMirror-wrap pre.CodeMirror-line, .CodeMirror-wrap pre.CodeMirror-line-like {
     word-break: break-all;
     line-height: normal;
-    padding: var(--padding-md);
+    padding: 1px 0px;
   }
 }

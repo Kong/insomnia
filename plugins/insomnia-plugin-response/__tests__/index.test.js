@@ -540,12 +540,10 @@ describe('Response tag', () => {
       expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe('Response res_existing');
     });
 
-    it('does not resend recursive', async () => {
+    it('does not resend if request has already sent in recursive chain', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
-
       const responses = [];
-
-      const context = _genTestContext(requests, responses, { fromResponseTag: true });
+      const context = _genTestContext(requests, responses, { requestChain: ['req_1']});
 
       try {
         await tag.run(context, 'raw', 'req_1', '', 'always');
@@ -555,8 +553,18 @@ describe('Response tag', () => {
       }
 
       throw new Error('Running tag should have thrown exception');
-    });
   });
+
+  it('does send if request has not been sent in recursive chain', async () => {
+    const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+    const responses = [];
+
+    const context = _genTestContext(requests, responses, { requestChain: ['req_2']});
+
+    const response = await tag.run(context, 'raw', 'req_1', '', 'always');
+      expect(response).toBe('Response res_1')
+  });
+});
 
   describe('Max Age', () => {
     const maxAgeArg = tag.args[4];

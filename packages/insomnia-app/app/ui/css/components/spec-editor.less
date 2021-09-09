@@ -1,89 +1,6 @@
-.spec-editor {
-  display: grid;
-  width: 100%;
-  height: 100%;
-
-  grid-template-areas: 'appheader appheader' 'body-left body-right';
-  grid-template-rows: auto 1fr;
-  grid-template-columns: 1fr 1fr;
-
-  border-left: 1px solid var(--hl-md);
-
-  &.preview-hidden {
-    grid-template-columns: 1fr 0;
-  }
-
-  &.vertical {
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr;
-
-    .spec-editor__body {
-      grid-column-start: 1;
-      grid-column-end: span 3;
-      grid-row-start: 1;
-      grid-row-end: span 1;
-    }
-
-    #swagger-ui-wrapper {
-      border-top: 1px solid var(--hl-sm);
-      border-left: none;
-
-      grid-column-start: 1;
-      grid-column-end: span 3;
-      grid-row-start: 2;
-      grid-row-end: span 1;
-    }
-
-    &.preview-hidden {
-      grid-template-rows: 1fr 0;
-    }
-  }
-
-  &__header {
-    grid-area: header;
-    background: var(--color-bg);
-    color: var(--color-font);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    border-bottom: 1px solid var(--hl-md);
-
-    &__buttons {
-      margin-left: auto;
-
-      & > button {
-        align-self: stretch;
-        height: 100%;
-        background: none;
-        border: none !important;
-      }
-    }
-
-    h1 {
-      padding: 0 var(--padding-md);
-      margin: 0;
-    }
-  }
-
-  &__body {
-    grid-area: body-left;
-    background: var(--color-bg);
-    color: var(--color-font);
-    display: grid;
-    grid-template-columns: 100%;
-    grid-template-rows: 1fr auto;
-  }
-}
-
-.spec-editor-sidebar {
-  overflow: hidden;
-  overflow-y: auto;
-}
-
 #swagger-ui-wrapper {
-  border-left: 1px solid var(--hl-sm);
+  height: 100%;
   overflow-y: scroll;
-  grid-area: body-right;
 
   .nostyle,
   .renderedMarkdown,
@@ -92,6 +9,9 @@
   h4,
   p,
   li,
+  small,
+  label,
+  .btn,
   .model-box,
   .model-title,
   .opblock-summary-description,
@@ -113,6 +33,41 @@
     user-select: all;
   }
 
+  .btn {
+    border-width: 2px;
+  }
+
+  .modal-ux,
+  .dialog-ux {
+    background: var(--color-bg);
+  }
+
+  textarea,
+  input {
+    // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L111
+    height: var(--line-height-xs);
+
+    // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L315-L325
+    transition: all 130ms ease-out;
+    box-sizing: border-box;
+    text-align: left;
+    font-size: inherit;
+    text-decoration: inherit;
+    color: inherit;
+
+    // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L95-L98
+    border: 1px solid var(--hl-md);
+    border-radius: var(--radius-md);
+    background-color: var(--hl-xxs);
+  }
+
+  // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L119-L120
+  textarea:focus,
+  input:focus {
+    background-color: transparent;
+    border-color: var(--hl-lg);
+  }
+
   .model {
     & .model {
       color: var(--color-font);
@@ -124,9 +79,8 @@
   }
 
   code {
-    color: var(--color-font);
+    color: var(--color-warning);
     background-color: var(--hl-md);
-
   }
 
   .scheme-container {
@@ -135,7 +89,6 @@
 
   section.schemes {
     div:first-child {
-
       &:not('.modal-ux-header') {
         float: left;
       }
@@ -166,7 +119,8 @@
     fill: var(--color-font);
   }
 
-  .opblock-section-header, .opblock {
+  .opblock-section-header,
+  .opblock {
     background-color: var(--hl-xs);
   }
 

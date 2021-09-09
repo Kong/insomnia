@@ -1,0 +1,46 @@
+name: Publish release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to publish
+        required: true
+
+jobs:
+  extract_channel:
+    name: Extract the release channel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract release channel from tag
+        id: extract
+        run: |
+          if [[ ${{ github.event.inputs.tag }} =~ ^core@[0-9]{4}\.[0-9]+\.[0-9]+$ ]]; then
+            echo ::set-output name=channel::stable
+          fi
+    outputs:
+      channel: ${{ steps.extract.outputs.channel }}
+
+  apt_repository:
+    name: Publish to apt repository
+    runs-on: ubuntu-latest
+    needs: extract_channel
+    if: needs.extract_channel.outputs.channel == 'stable'
+
+    steps:
+    - name: Download .deb from GitHub release
+      uses: MrOctopus/download-asset-action@5b7c3c9bcb75047bb7aaad45718403b413cc0290
+      id: download
+      with:
+        tag: "${{ github.event.inputs.tag }}"
+        asset: ".deb"
+
+    - name: Upload .deb to Pulp
+      uses: docker://kong/release-script:latest
+      env:
+        PULP_USERNAME: ${{ secrets.PULP_USERNAME }}
+        PULP_PASSWORD: ${{ secrets.PULP_PASSWORD }}
+        PULP_HOST: ${{ secrets.PULP_HOST }}
+      with:
+        entrypoint: python3
+        args: '/usr/src/code/main.py release --file ${{ steps.download.outputs.name }} --dist-name ubuntu --dist-version focal --package-type insomnia --publish'

@@ -1,0 +1,95 @@
+openapi: 3.0.0
+
+info:
+  title: Security Example
+  version: 1.0.0
+
+servers:
+  - url: http://backend.com/path
+
+paths:
+  /only/basic:
+    get:
+      security:
+        - really_basic: []
+      responses:
+        '200':
+          description: Saying hello
+
+  /only/key:
+    get:
+      security:
+        - my_api_key: []
+      responses:
+        '200':
+          description: Saying hello
+
+  /only/oath2:
+    get:
+      security:
+        - petstore_oauth2:
+            - read:pets
+      responses:
+        '200':
+          description: Saying hello
+
+  /only/oidc:
+    get:
+      security:
+        - petstore_openid:
+            - write:pets
+      responses:
+        '200':
+          description: Saying hello
+
+  /and/based/auth:
+    get:
+      security:
+        - petstore_oauth2:
+            - read:pets
+          #my_api_key: []
+      responses:
+        '200':
+          description: Saying hello
+
+  /or/based/auth:
+    get:
+      security:
+        - my_api_key: []
+      #- really_basic: []
+      responses:
+        '200':
+          description: Saying hello
+
+components:
+  securitySchemes:
+    really_basic:
+      type: http
+      scheme: basic
+      x-kong-security-basic-auth:
+        tags:
+          - should match
+        config:
+          hide_credentials: true
+    my_api_key:
+      type: apiKey
+      name: api_key_by_me
+      in: header
+      x-kong-security-basic-auth:
+        tags:
+          - should not match
+    your_api_key:
+      type: apiKey
+      name: api_key_by_you
+      in: header
+    petstore_oauth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: http://example.org/api/oauth/dialog
+          scopes:
+            write:pets: modify pets in your account
+            read:pets: read your pets
+    petstore_openid:
+      type: openIdConnect
+      openIdConnectUrl: http://example.org/oid-discovery
