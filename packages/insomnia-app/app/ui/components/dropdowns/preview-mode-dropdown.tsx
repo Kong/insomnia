@@ -7,6 +7,7 @@ import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base
 interface Props {
   download: (pretty: boolean) => any;
   fullDownload: (pretty: boolean) => any;
+  copyToClipboard: () => any;
   updatePreviewMode: Function;
   previewMode: string;
   showPrettifyOption?: boolean;
@@ -27,6 +28,11 @@ class PreviewModeDropdown extends PureComponent<Props> {
   async _handleDownloadNormal() {
     const { download } = this.props;
     download(false);
+  }
+
+  async _handleCopyRawResponse() {
+    const { copyToClipboard } = this.props;
+    copyToClipboard();
   }
 
   renderPreviewMode(mode: string) {
@@ -50,6 +56,10 @@ class PreviewModeDropdown extends PureComponent<Props> {
         <DropdownDivider>Preview Mode</DropdownDivider>
         {PREVIEW_MODES.map(this.renderPreviewMode)}
         <DropdownDivider>Actions</DropdownDivider>
+        <DropdownItem onClick={this._handleCopyRawResponse}>
+          <i className="fa fa-copy" />
+          Copy raw response
+        </DropdownItem>
         <DropdownItem onClick={this._handleDownloadNormal}>
           <i className="fa fa-save" />
           Save Raw Response
