@@ -1,4 +1,5 @@
-import { DEFAULT_PROJECT_ID, sortProjects } from '../project';
+import { DEFAULT_PROJECT_ID } from '../../project';
+import { sortProjects } from '../project';
 
 const defaultProject = { name: 'a', remoteId: null, _id: DEFAULT_PROJECT_ID };
 
