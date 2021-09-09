@@ -1,13 +1,13 @@
-import { DEFAULT_PROJECT_ID, Project, sortProjects } from '../project';
+import { DEFAULT_PROJECT_ID, sortProjects } from '../project';
 
-const defaultProject = { name: 'a', remoteId: null, id: DEFAULT_PROJECT_ID };
+const defaultProject = { name: 'a', remoteId: null, _id: DEFAULT_PROJECT_ID };
 
-const localA = { name: 'a', remoteId: null };
-const localB = { name: 'b', remoteId: null };
+const localA = { name: 'a', remoteId: null, _id: 'localA' };
+const localB = { name: 'b', remoteId: null, _id: 'localB' };
 
-const remoteA = { name: 'a', remoteId: 'notNull' };
-const remoteB = { name: 'b', remoteId: 'notNull' };
-const remote0 = { name: '0', remoteId: 'notNull' };
+const remoteA = { name: 'a', remoteId: 'notNull', _id: 'remoteA' };
+const remoteB = { name: 'b', remoteId: 'notNull', _id: 'remoteB' };
+const remote0 = { name: '0', remoteId: 'notNull', _id: 'remote0' };
 
 describe('sortProjects', () => {
   it('sorts projects by default > local > remote > name', () => {
@@ -18,7 +18,7 @@ describe('sortProjects', () => {
       remoteB,
       localA,
       remote0,
-    ] as Project[];
+    ];
     const result = sortProjects(unSortedProjects);
 
     const sortedProjects = [
@@ -28,7 +28,7 @@ describe('sortProjects', () => {
       remote0,
       remoteA,
       remoteB,
-    ] as Project[];
+    ];
     expect(result).toEqual(sortedProjects);
   });
 });
