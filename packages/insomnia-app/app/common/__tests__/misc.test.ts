@@ -6,6 +6,7 @@ import {
   isNotNullOrUndefined,
   pluralize,
   snapNumberToLimits,
+  xmlDecode,
 } from '../misc';
 
 describe('hasAuthHeader()', () => {
@@ -395,5 +396,13 @@ describe('isNotNullOrUndefined', () => {
     expect(isNotNullOrUndefined(false)).toBe(true);
     expect(isNotNullOrUndefined(null)).toBe(false);
     expect(isNotNullOrUndefined(undefined)).toBe(false);
+  });
+});
+
+describe('xmlDecode()', () => {
+  it('unescape characters', () => {
+    const input = '&lt;a href=&quot;http://example.com?query1=value1&amp;query2=value2&quot;&gt;a link&lt;/a&gt;';
+    const output = '<a href="http://example.com?query1=value1&query2=value2">a link</a>';
+    expect(xmlDecode(input)).toEqual(output);
   });
 });

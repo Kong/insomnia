@@ -12,6 +12,7 @@ import {
 import { clickLink } from '../../../common/electron-helpers';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
+import { xmlDecode } from '../../../common/misc';
 import CodeEditor from '../codemirror/code-editor';
 import KeydownBinder from '../keydown-binder';
 import CSVViewer from './response-csv-viewer';
@@ -68,15 +69,6 @@ class ResponseViewer extends Component<Props, State> {
     if (this._selectableView != null && typeof this._selectableView.refresh === 'function') {
       // @ts-expect-error -- TSCONVERSION refresh only exists on a code-editor, not response-raw
       this._selectableView.refresh();
-    }
-  }
-
-  _decodeIconv(bodyBuffer: Buffer, charset: string) {
-    try {
-      return iconv.decode(bodyBuffer, charset);
-    } catch (err) {
-      console.warn('[response] Failed to decode body', err);
-      return bodyBuffer.toString();
     }
   }
 
@@ -205,6 +197,49 @@ class ResponseViewer extends Component<Props, State> {
     });
   }
 
+  _getBody() {
+    const { bodyBuffer } = this.state;
+    const { contentType } = this.props;
+
+    if (!bodyBuffer) {
+      return '';
+    }
+
+    // Show everything else as "source"
+    const match = contentType.match(/charset=([\w-]+)/);
+    const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+
+    try {
+      return iconv.decode(bodyBuffer, charset);
+    } catch (err) {
+      console.warn('[response] Failed to decode body', err);
+      // Sometimes iconv conversion fails so fallback to regular buffer
+      return bodyBuffer.toString();
+    }
+  }
+
+  /** Try to detect content-types if there isn't one */
+  _getMode() {
+    const { contentType } = this.props;
+    const body = this._getBody();
+    if (body?.match(/^\s*<\?xml [^?]*\?>/)) {
+      return 'application/xml';
+    } else {
+      return contentType;
+    }
+  }
+
+  _handleClickLink(url: string) {
+    const mode = this._getMode();
+
+    if (mode === 'application/xml') {
+      clickLink(xmlDecode(url));
+      return;
+    }
+
+    clickLink(url);
+  }
+
   _renderView() {
     const {
       disableHtmlPreviewJs,
@@ -331,31 +366,37 @@ class ResponseViewer extends Component<Props, State> {
           </div>
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
-      const match = contentType.match(/charset=([\w-]+)/);
-      const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
       return (
         <ResponseWebView
-          body={this._decodeIconv(bodyBuffer, charset)}
+          body={this._getBody()}
           contentType={contentType}
           key={disableHtmlPreviewJs ? 'no-js' : 'yes-js'}
           url={url}
           webpreferences={disableHtmlPreviewJs ? 'javascript=no' : 'javascript=yes'}
         />
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
           <PDFViewer body={bodyBuffer} uniqueKey={responseId} />
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
           <CSVViewer body={bodyBuffer} key={responseId} />
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
       return (
         <MultipartViewer
           bodyBuffer={bodyBuffer}
@@ -374,7 +415,9 @@ class ResponseViewer extends Component<Props, State> {
           url={url}
         />
       );
-    } else if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
+    }
+
+    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
@@ -384,57 +427,42 @@ class ResponseViewer extends Component<Props, State> {
           </audio>
         </div>
       );
-    } else if (previewMode === PREVIEW_MODE_RAW) {
-      const match = contentType.match(/charset=([\w-]+)/);
-      const charset = match && match.length >= 2 ? match[1] : 'utf-8';
+    }
+
+    if (previewMode === PREVIEW_MODE_RAW) {
       return (
         <ResponseRaw
           key={responseId}
           responseId={responseId}
           ref={this._setSelectableViewRef}
-          value={this._decodeIconv(bodyBuffer, charset)}
+          value={this._getBody()}
           fontSize={editorFontSize}
-        />
-      );
-    } else {
-      // Show everything else as "source"
-      const match = contentType.match(/charset=([\w-]+)/);
-      const charset = match && match.length >= 2 ? match[1] : 'utf-8';
-
-      // Sometimes iconv conversion fails so fallback to regular buffer
-      const body = this._decodeIconv(bodyBuffer, charset);
-
-      // Try to detect content-types if there isn't one
-      let mode;
-
-      if (!mode && body.match(/^\s*<\?xml [^?]*\?>/)) {
-        mode = 'application/xml';
-      } else {
-        mode = contentType;
-      }
-
-      return (
-        <CodeEditor
-          key={disablePreviewLinks ? 'links-no' : 'links-yes'}
-          ref={this._setSelectableViewRef}
-          autoPrettify
-          defaultValue={body}
-          filter={filter}
-          filterHistory={filterHistory}
-          fontSize={editorFontSize}
-          indentSize={editorIndentSize}
-          keyMap={editorKeyMap}
-          lineWrapping={editorLineWrapping}
-          mode={mode}
-          noMatchBrackets
-          onClickLink={disablePreviewLinks ? undefined : clickLink}
-          placeholder="..."
-          readOnly
-          uniquenessKey={responseId}
-          updateFilter={updateFilter}
         />
       );
     }
+
+    // Show everything else as "source"
+    return (
+      <CodeEditor
+        key={disablePreviewLinks ? 'links-no' : 'links-yes'}
+        ref={this._setSelectableViewRef}
+        autoPrettify
+        defaultValue={this._getBody()}
+        filter={filter}
+        filterHistory={filterHistory}
+        fontSize={editorFontSize}
+        indentSize={editorIndentSize}
+        keyMap={editorKeyMap}
+        lineWrapping={editorLineWrapping}
+        mode={this._getMode()}
+        noMatchBrackets
+        onClickLink={disablePreviewLinks ? undefined : this._handleClickLink}
+        placeholder="..."
+        readOnly
+        uniquenessKey={responseId}
+        updateFilter={updateFilter}
+      />
+    );
   }
 
   render() {

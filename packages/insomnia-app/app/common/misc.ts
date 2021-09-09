@@ -200,6 +200,19 @@ export function preventDefault(e: Event) {
   e.preventDefault();
 }
 
+export function xmlDecode(input: string) {
+  const ESCAPED_CHARACTERS_MAP = {
+    '&amp;': '&',
+    '&quot;': '"',
+    '&lt;': '<',
+    '&gt;': '>',
+  };
+
+  return input.replace(/(&quot;|&lt;|&gt;|&amp;)/g, (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => (
+    ESCAPED_CHARACTERS_MAP[item])
+  );
+}
+
 export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
