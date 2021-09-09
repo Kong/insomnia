@@ -445,7 +445,7 @@ class ResponseViewer extends Component<Props, State> {
     // Show everything else as "source"
     return (
       <CodeEditor
-        key={disablePreviewLinks ? 'links-no' : 'links-yes'}
+        key={disablePreviewLinks ? 'links-disabled' : 'links-enabled'}
         ref={this._setSelectableViewRef}
         autoPrettify
         defaultValue={this._getBody()}
