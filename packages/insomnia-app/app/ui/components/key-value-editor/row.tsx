@@ -169,6 +169,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _handleTypeChange(def) {
     // Remove newlines if converting to text
+    // WARNING: props should never be overwritten!
     let value = this.props.pair.value || '';
 
     if (def.type === 'text' && !def.multiline && value.includes('\n')) {
