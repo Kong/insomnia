@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import type { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
-import Hotkey from '../hotkey';
+import { Hotkey } from '../hotkey';
 import { showSettingsModal } from '../modals/settings-modal';
 
 interface Props {

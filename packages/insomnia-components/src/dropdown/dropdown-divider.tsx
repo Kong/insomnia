@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, { FC, memo } from 'react';
 import styled, { css } from 'styled-components';
 
 const StyledDivider = styled.div<{ hasName: boolean }>`
@@ -25,13 +25,10 @@ const StyledLabel = styled.span`
   font-family: var(--font-default);
 `;
 
-export class DropdownDivider extends PureComponent {
-  render() {
-    const { children } = this.props;
-    return (
-      <StyledDivider hasName={!!children}>
-        {children && <StyledLabel>{children}</StyledLabel>}
-      </StyledDivider>
-    );
-  }
-}
+export const DropdownDivider: FC = memo(({ children }) => (
+  <StyledDivider hasName={!!children}>
+    {children && <StyledLabel>{children}</StyledLabel>}
+  </StyledDivider>
+));
+
+DropdownDivider.displayName = 'DropdownDivider';

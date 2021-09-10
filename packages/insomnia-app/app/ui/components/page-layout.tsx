@@ -1,11 +1,17 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../common/constants';
 import ErrorBoundary from './error-boundary';
 import Sidebar from './sidebar/sidebar';
 import type { WrapperProps } from './wrapper';
+
+const Pane: FC<{ position: string }> = ({ children, position }) => (
+  <section className={`pane-${position} theme--pane`}>
+    {children}
+  </section>
+);
 
 interface Props {
   wrapperProps: WrapperProps;
@@ -185,16 +191,3 @@ class PageLayout extends PureComponent<Props> {
 }
 
 export default PageLayout;
-
-class Pane extends PureComponent {
-  render() {
-    return (
-      <section
-        // @ts-expect-error -- TSCONVERSION
-        className={`pane-${this.props.position} theme--pane`}
-      >
-        {this.props.children}
-      </section>
-    );
-  }
-}

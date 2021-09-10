@@ -4,7 +4,7 @@ import type { GrpcRequest } from '../../../models/grpc-request';
 import type { Settings } from '../../../models/settings';
 import { useGrpcRequestState } from '../../context/grpc';
 import GrpcSpinner from '../grpc-spinner';
-import GrpcStatusTag from '../tags/grpc-status-tag';
+import { GrpcStatusTag } from '../tags/grpc-status-tag';
 import GrpcTabbedMessages from '../viewers/grpc-tabbed-messages';
 import { Pane, PaneBody, PaneHeader } from './pane';
 

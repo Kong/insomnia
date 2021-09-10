@@ -14,7 +14,9 @@ import {
   PREVIEW_MODE_FRIENDLY,
 } from '../../../common/constants';
 import type { ResponseHeader } from '../../../models/response';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals/index';
 import WrapperModal from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';

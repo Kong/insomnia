@@ -122,7 +122,7 @@ module.exports = {
     }],
     'react/jsx-max-props-per-line': [ERROR, { 'maximum': 1, 'when': 'multiline' }],
     'react/jsx-closing-bracket-location': [ERROR, 'line-aligned'],
-    'react/prefer-stateless-function': WARN(UNKNOWN), // TODO: fix this and change to error
+    'react/prefer-stateless-function': ERROR, // TODO: fix this and change to error
     'react/jsx-key': [ERROR, { 'checkFragmentShorthand': true }],
     'react/no-array-index-key': WARN(UNKNOWN),
     'react/self-closing-comp': ERROR,

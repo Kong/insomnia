@@ -8,9 +8,9 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
-import DropdownButton from './dropdown-button';
-import DropdownDivider from './dropdown-divider';
-import DropdownItem from './dropdown-item';
+import { DropdownButton } from './dropdown-button';
+import { DropdownDivider } from './dropdown-divider';
+import { DropdownItem } from './dropdown-item';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
 
 export interface DropdownProps {
@@ -37,7 +37,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Dropdown extends PureComponent<DropdownProps, State> {
+export class Dropdown extends PureComponent<DropdownProps, State> {
   private _node: HTMLDivElement | null = null;
   private _dropdownList: HTMLDivElement | null = null;
   private _filter: HTMLInputElement | null = null;
@@ -465,5 +465,3 @@ class Dropdown extends PureComponent<DropdownProps, State> {
     );
   }
 }
-
-export default Dropdown;

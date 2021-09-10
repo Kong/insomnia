@@ -20,8 +20,10 @@ import type {
   UpdateGitRepositoryCallback,
 } from '../../redux/modules/git';
 import * as gitActions from '../../redux/modules/git';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import Link from '../base/link';
 import HelpTooltip from '../help-tooltip';
 import { showAlert, showError, showModal } from '../modals';

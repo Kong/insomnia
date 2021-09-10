@@ -15,9 +15,9 @@ import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/g
 import parseGitPath from '../../../sync/git/parse-git-path';
 import IndeterminateCheckbox from '../base/indeterminate-checkbox';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalFooter from '../base/modal-footer';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import Tooltip from '../tooltip';
 

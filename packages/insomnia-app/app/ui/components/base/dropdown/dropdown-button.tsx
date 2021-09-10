@@ -1,4 +1,4 @@
-import React, { ButtonHTMLAttributes, PureComponent, ReactNode } from 'react';
+import React, { ButtonHTMLAttributes, FC, memo, ReactNode } from 'react';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -6,20 +6,16 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
 }
 
-class DropdownButton extends PureComponent<Props> {
-  render() {
-    const { children, noWrap, ...props } = this.props;
-
-    if (noWrap) {
-      return <>{children}</>;
-    }
-
-    return (
-      <button type="button" {...props}>
-        {children}
-      </button>
-    );
+export const DropdownButton: FC<Props> = memo(({ children, noWrap, ...props }) => {
+  if (noWrap) {
+    return <>{children}</>;
   }
-}
 
-export default DropdownButton;
+  return (
+    <button type="button" {...props}>
+      {children}
+    </button>
+  );
+});
+
+DropdownButton.displayName = 'DropdownButton';

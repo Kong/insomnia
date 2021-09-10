@@ -6,12 +6,14 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { exportHarRequest } from '../../../common/har';
 import { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import Link from '../base/link';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalFooter from '../base/modal-footer';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
 import CodeEditor, { UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
