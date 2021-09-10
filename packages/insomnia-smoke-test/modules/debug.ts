@@ -242,7 +242,7 @@ export const clickTimelineTab = async (app: Application) => {
 
   // Wait until some text shows
   const codeEditor = await getTimelineViewer(app);
-  await app.client.waitUntil(() => codeEditor.getText());
+  await app.client.waitUntil(async () => Boolean(codeEditor.getText()));
 };
 
 export const selectAll = async (app: Application) => {
