@@ -46,7 +46,7 @@ const CertificateField: FC<{
 
   let display: ReactNode = value;
   if (privateText) {
-    display = <PasswordViewer text={value} initiallyHidden />;
+    display = <PasswordViewer text={value} />;
   } else {
     display = <span className="monospace selectable">{value}</span>;
   }
