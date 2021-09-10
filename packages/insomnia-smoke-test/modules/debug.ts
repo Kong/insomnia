@@ -82,10 +82,10 @@ export const typeInUrlBar = async (app: Application, url) => {
 };
 
 export const clickSendRequest = async (app: Application) => {
-  await app.client
-    .react$('RequestUrlBar')
-    .then(e => e.$('.urlbar__send-btn'))
-    .then(e => e.click());
+  const urlEditor = await app.client.react$(COMPONENT_NAMES.requestUrlBar);
+  await urlEditor.waitForExist();
+  await urlEditor.$('.urlbar__send-btn');
+  await urlEditor.click();
 
   // Wait for spinner to show
   const spinner = await app.client.react$('ResponseTimer');
