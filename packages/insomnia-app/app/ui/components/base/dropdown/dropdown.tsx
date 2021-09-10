@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { any, equals } from 'ramda';
 import React, { CSSProperties, Fragment, PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -8,7 +9,6 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
-import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
@@ -35,6 +35,16 @@ interface State {
   forcedPosition?: {x: number; y: number} | null;
   uniquenessKey: number;
 }
+
+const isComponent = (match: string) => (child: ReactNode) => any(equals(match), [
+  // @ts-expect-error not sure
+  child.type.name,
+  // @ts-expect-error not sure
+  child.type.displayName,
+]);
+
+const isDropdownItem = isComponent(DropdownItem.name);
+const isDropdownDivider = isComponent(DropdownDivider.name);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class Dropdown extends PureComponent<DropdownProps, State> {
@@ -355,8 +365,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
-      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
-      if (child.type.name !== DropdownItem.name) {
+      if (!isDropdownItem(child)) {
         return true;
       }
 
@@ -368,10 +377,9 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       const child = allChildren[i];
 
       // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
-      if (child.type.name === DropdownButton.name) {
+      if (isDropdownButton(child)) {
         dropdownButtons.push(child);
-      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
-      } else if (child.type.name === DropdownItem.name) {
+      } else if (isDropdownItem(child)) {
         const active = i === filterActiveIndex;
         const hide = !visibleChildren.includes(child);
         dropdownItems.push(
@@ -386,14 +394,12 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
             {child}
           </li>,
         );
-      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
-      } else if (child.type.name === DropdownDivider.name) {
+      } else if (isDropdownDivider(child)) {
         const currentIndex = visibleChildren.indexOf(child);
         const nextChild = visibleChildren[currentIndex + 1];
 
         // Only show the divider if the next child is a DropdownItem
-        // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
-        if (nextChild && nextChild.type.name === DropdownItem.name) {
+        if (nextChild && isDropdownItem(nextChild)) {
           dropdownItems.push(<li key={i}>{child}</li>);
         }
       }

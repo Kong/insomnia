@@ -488,8 +488,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
-      // @ts-expect-error -- TSCONVERSION
-      if (child.type.name !== DropdownItem.name) {
+      if (!isDropdownItem(child)) {
         return true;
       }
 
