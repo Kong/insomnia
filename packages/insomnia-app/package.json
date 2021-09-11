@@ -142,6 +142,7 @@
     "openapi-2-kong": "2.3.2",
     "papaparse": "^5.2.0",
     "pdfjs-dist": "^2.5.207",
+    "prettier": "2.4.0",
     "ramda": "^0.27.1",
     "ramda-adjunct": "^2.33.0",
     "react": "^16.8.3",
