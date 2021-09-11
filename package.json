@@ -10,6 +10,10 @@
     "url": "https://github.com/kong/insomnia/issues"
   },
   "homepage": "https://github.com/kong/insomnia#readme",
+  "engines": {
+    "node": "12.18.3",
+    "npm": "^6.14.6"
+  },
   "scripts": {
     "build": "lerna run build --parallel",
     "lint": "lerna run lint --stream --no-bail",
@@ -28,7 +32,7 @@
     "app-release": "npm run release --prefix packages/insomnia-app",
     "storybook-start": "npm run storybook --prefix packages/insomnia-components",
     "storybook-legacy-start": "npm run storybook --prefix packages/insomnia-app",
-    "preinstall": "node ./scripts/check-version.js",
+    "preinstall": "npx --package check-node-version@latest -- check-node-version --package",
     "app-build:smoke": "cross-env SMOKE_TEST=true npm run app-build",
     "app-package:smoke": "cross-env SMOKE_TEST=true npm run app-package",
     "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test",
