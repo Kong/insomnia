@@ -178,12 +178,7 @@ class General extends PureComponent<Props, State> {
 
   renderPasswordSetting(label: string, name: string, help: string, props: Record<string, any>) {
     const { settings } = this.props;
-    const isHidden = this.state.fieldsHidden[name];
-
-    if (!settings.hasOwnProperty(name)) {
-      throw new Error(`Invalid number setting name ${name}`);
-    }
-
+    if (!settings.hasOwnProperty(name)) { throw new Error(`Invalid number setting name ${name}`); }
     return (
       <div>
         <label>
@@ -192,14 +187,14 @@ class General extends PureComponent<Props, State> {
         </label>
         <div className="form-control form-control--outlined form-control--btn-right">
           <input
-            type={isHidden ? 'password' : props.type}
+            type={this.state.fieldsHidden[name] ? 'password' : props.type}
             name={name}
             defaultValue={settings[name]}
             {...props}
             onChange={props.onChange || this._handleUpdateSetting}
           />
           <button className={'form-control__right'} onClick={this._handlePasswordVisibility(name)}>
-            {isHidden ? <i className="fa fa-eye" /> : <i className="fa fa-eye-slash" />}
+            {this.state.fieldsHidden[name] ? <i className="fa fa-eye" /> : <i className="fa fa-eye-slash" />}
           </button>
         </div>
       </div>
