@@ -4,8 +4,9 @@ import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
+import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import Input from '../base/debounced-input';
-import CodeEditor from './code-editor';
+import CodeEditor, { CodeEditorOnChange } from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -16,20 +17,21 @@ interface Props {
   id?: string;
   type?: string;
   mode?: string;
-  onBlur?: Function;
-  onKeyDown?: Function;
-  onFocus?: Function;
-  onChange?: Function;
-  onPaste?: Function;
-  render?: Function;
-  getRenderContext?: Function;
+  onBlur?: (e: FocusEvent) => void;
+  onKeyDown?: (e: KeyboardEvent, value?: any) => void;
+  onFocus?: (e: FocusEvent) => void;
+  onChange?: CodeEditorOnChange;
+  onPaste?: (e: ClipboardEvent) => void;
+  render?: HandleRender;
+  getRenderContext?: HandleGetRenderContext;
   nunjucksPowerUserMode?: boolean;
-  getAutocompleteConstants?: Function | null;
+  getAutocompleteConstants?: () => string[] | PromiseLike<string[]>;
   placeholder?: string;
   className?: string;
   forceEditor?: boolean;
   forceInput?: boolean;
   isVariableUncovered?: boolean;
+  readOnly?: boolean;
   // TODO(TSCONVERSION) figure out why so many components pass this in yet it isn't used anywhere in this
   disabled?: boolean;
 }
@@ -218,14 +220,14 @@ class OneLineEditor extends PureComponent<Props, State> {
     }
   }
 
-  _handleInputBlur() {
+  _handleInputBlur(e: FocusEvent) {
     // Set focused state
     this._input?.removeAttribute('data-focused');
 
-    this.props.onBlur?.();
+    this.props.onBlur?.(e);
   }
 
-  _handleEditorBlur() {
+  _handleEditorBlur(e: FocusEvent) {
     // Editor was already removed from the DOM, so do nothing
     if (!this._editor) {
       return;
@@ -244,9 +246,10 @@ class OneLineEditor extends PureComponent<Props, State> {
       }, 2000);
     }
 
-    this.props.onBlur?.();
+    this.props.onBlur?.(e);
   }
 
+  // @TODO Refactor this event handler. The way we search for a parent form node is not stable.
   _handleKeyDown(e) {
     // submit form if needed
     if (e.keyCode === 13) {
@@ -382,14 +385,10 @@ class OneLineEditor extends PureComponent<Props, State> {
             onKeyDown={this._handleKeyDown}
             onFocus={this._handleEditorFocus}
             onMouseLeave={this._handleEditorMouseLeave}
-            // @ts-expect-error -- TSCONVERSION
             onChange={onChange}
-            // @ts-expect-error -- TSCONVERSION
             render={render}
-            // @ts-expect-error -- TSCONVERSION
             getRenderContext={getRenderContext}
             nunjucksPowerUserMode={nunjucksPowerUserMode}
-            // @ts-expect-error -- TSCONVERSION
             getAutocompleteConstants={getAutocompleteConstants}
             className={classnames('editor--single-line', className)}
             defaultValue={defaultValue}

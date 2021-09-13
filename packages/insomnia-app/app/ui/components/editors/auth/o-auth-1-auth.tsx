@@ -193,7 +193,7 @@ class OAuth1Auth extends PureComponent<Props> {
     property: string,
     onChange: (...args: any[]) => any,
     help: string | null = null,
-    handleAutocomplete: ((...args: any[]) => any) | null = null,
+    handleAutocomplete?: ((...args: any[]) => any)
   ) {
     const {
       handleRender,

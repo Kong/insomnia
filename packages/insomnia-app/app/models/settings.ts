@@ -66,6 +66,7 @@ export interface BaseSettings {
   hasPromptedToMigrateFromDesigner: boolean;
   hasPromptedOnboarding: boolean;
   hasPromptedAnalytics: boolean;
+  isVariableUncovered?: boolean;
 }
 
 export type Settings = BaseModel & BaseSettings;

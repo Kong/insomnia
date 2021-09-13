@@ -1,4 +1,5 @@
-import { GraphQLArgument, GraphQLField, GraphQLType } from 'graphql';
+import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
+import { GraphQLField } from 'graphql';
 
 type GraphQLFieldAny = GraphQLField<any, any>;
 
@@ -11,8 +12,4 @@ export interface GraphQLFieldWithParentName extends GraphQLFieldWithOptionalArgs
   parentName?: string;
 }
 
-export interface ActiveReference {
-  type: GraphQLType | null;
-  argument: GraphQLArgument | null;
-  field: GraphQLFieldWithOptionalArgs | null;
-}
+export type ActiveReference = SchemaReference;

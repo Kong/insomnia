@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom';
 import { AUTOBIND_CFG, isMac } from '../../common/constants';
 
 interface Props {
-  children: ReactNode;
+  children?: ReactNode;
   onKeydown?: (...args: any[]) => any;
   onKeyup?: (...args: any[]) => any;
   disabled?: boolean;
@@ -74,7 +74,7 @@ class KeydownBinder extends PureComponent<Props> {
   }
 
   render() {
-    return this.props.children;
+    return this.props.children ?? null;
   }
 }
 

@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { remote } from 'electron';
+import { clipboard, remote } from 'electron';
 import fs from 'fs';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import mime from 'mime-types';
@@ -167,6 +167,17 @@ class ResponsePane extends PureComponent<Props> {
     }
   }
 
+  async _handleCopyResponseToClipboard() {
+    if (!this.props.response) {
+      return;
+    }
+
+    const bodyBuffer = models.response.getBodyBuffer(this.props.response);
+    if (bodyBuffer) {
+      clipboard.writeText(bodyBuffer.toString('utf8'));
+    }
+  }
+
   _handleTabSelect(index: number, lastIndex: number) {
     if (this._responseViewer != null && index === 0 && index !== lastIndex) {
       // Fix for CodeMirror editor not updating its content.
@@ -257,6 +268,7 @@ class ResponsePane extends PureComponent<Props> {
                 previewMode={previewMode}
                 updatePreviewMode={handleSetPreviewMode}
                 showPrettifyOption={response.contentType.includes('json')}
+                copyToClipboard={this._handleCopyResponseToClipboard}
               />
             </Tab>
             <Tab tabIndex="-1">
