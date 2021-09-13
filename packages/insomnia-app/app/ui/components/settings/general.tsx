@@ -57,6 +57,10 @@ interface State {
     family: string;
     monospace: boolean;
   }[] | null;
+  fieldsHidden: {
+    httpProxy: boolean;
+    httpsProxy: boolean;
+  };
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -64,6 +68,10 @@ class General extends PureComponent<Props, State> {
   state: State = {
     fonts: null,
     fontsMono: null,
+    fieldsHidden: {
+      httpProxy: true,
+      httpsProxy: true,
+    },
   };
 
   async componentDidMount() {
@@ -117,6 +125,21 @@ class General extends PureComponent<Props, State> {
   _handleStartMigration() {
     this.props.handleSetActiveActivity(ACTIVITY_MIGRATION);
     this.props.hideModal();
+  }
+
+  _handlePasswordVisibility(name: string): (e: React.MouseEvent) => void {
+    return e => {
+      e.preventDefault();
+      this.setState(prevState => {
+        return {
+          ...prevState,
+          fieldsHidden: {
+            ...prevState.fieldsHidden,
+            [`${name}`]: !prevState.fieldsHidden[name],
+          },
+        };
+      });
+    };
   }
 
   renderEnumSetting(
