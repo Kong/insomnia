@@ -6,7 +6,7 @@ const DELETE_KEY: keyof BaseModel = 'modified';
 
 type ResetModelKeys<T extends BaseModel> = {
   [K in keyof T]?: T[K] | null;
-}
+};
 
 // Keys for VCS to reset before computing changes
 //  We can't always delete keys

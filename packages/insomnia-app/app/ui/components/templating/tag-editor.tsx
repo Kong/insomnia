@@ -64,7 +64,7 @@ class TagEditor extends PureComponent<Props, State> {
     preview: '',
     error: '',
     variables: [],
-  }
+  };
 
   async load() {
     const activeTagData = templateUtils.tokenizeTag(this.props.defaultValue);
@@ -75,6 +75,13 @@ class TagEditor extends PureComponent<Props, State> {
     // Edit tags raw that we don't know about
     if (!activeTagDefinition) {
       activeTagData.rawValue = this.props.defaultValue;
+    }
+
+    // Fix strings: arg.value expects an escaped value (based on _updateArg logic)
+    for (const arg of activeTagData.args) {
+      if (typeof arg.value === 'string') {
+        arg.value = this._escapeStringArgs(arg.value);
+      }
     }
 
     await Promise.all([
@@ -178,7 +185,7 @@ class TagEditor extends PureComponent<Props, State> {
 
     // Fix strings
     if (typeof argValue === 'string') {
-      argValue = argValue.replace(/\\/g, '\\\\');
+      argValue = this._escapeStringArgs(argValue);
     }
 
     // Ensure all arguments exist
@@ -324,6 +331,14 @@ class TagEditor extends PureComponent<Props, State> {
     }, 100);
   }
 
+  _escapeStringArgs(value: string) {
+    return value.replace(/\\/g, '\\\\');
+  }
+
+  _unescapeStringArgs(value: string) {
+    return value.replace(/\\\\/g, '\\');
+  }
+
   static _getDefaultTagData(tagDefinition: NunjucksParsedTag): NunjucksParsedTag {
     const defaultFill: string = templateUtils.getDefaultFill(
       tagDefinition.name,
@@ -425,7 +440,7 @@ class TagEditor extends PureComponent<Props, State> {
     return (
       <input
         type="text"
-        defaultValue={value || ''}
+        defaultValue={this._unescapeStringArgs(value) || ''}
         placeholder={placeholder}
         onChange={this._handleChange}
         data-encoding={encoding || 'utf8'}
@@ -460,7 +475,7 @@ class TagEditor extends PureComponent<Props, State> {
         showFileName
         className="btn btn--clicky btn--super-compact"
         onChange={path => this._handleChangeFile(path, argIndex)}
-        path={value}
+        path={this._unescapeStringArgs(value)}
         itemtypes={itemTypes}
         extensions={extensions}
       />
@@ -732,7 +747,7 @@ class TagEditor extends PureComponent<Props, State> {
 
     let finalPreview = preview;
 
-    if (activeTagDefinition && activeTagDefinition.disablePreview) {
+    if (activeTagDefinition?.disablePreview) {
       finalPreview = activeTagDefinition.disablePreview(activeTagData.args)
         ? preview.replace(/./g, '*')
         : preview;
@@ -767,12 +782,13 @@ class TagEditor extends PureComponent<Props, State> {
             </select>
           </label>
         </div>
-        {activeTagDefinition &&
-          activeTagDefinition.args.map((argDefinition: NunjucksParsedTagArg, index) =>
-            this.renderArg(argDefinition, activeTagData.args, index),
-          )}
+        {activeTagDefinition?.args.map((argDefinition: NunjucksParsedTagArg, index) =>
+          this.renderArg(argDefinition, activeTagData.args, index),
+        )}
 
-        {activeTagDefinition?.actions?.length && this.renderActions(activeTagDefinition.actions)}
+        {activeTagDefinition?.actions && activeTagDefinition?.actions?.length > 0 ? (
+          this.renderActions(activeTagDefinition.actions)
+        ) : null}
 
         {!activeTagDefinition && (
           <div className="form-control form-control--outlined">

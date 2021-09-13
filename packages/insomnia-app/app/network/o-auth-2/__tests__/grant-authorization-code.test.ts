@@ -22,7 +22,7 @@ describe('authorization_code', () => {
   beforeEach(globalBeforeEach);
 
   it('gets token with JSON and basic auth', async () => {
-    createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    createBWRedirectMock({ redirectTo: `${REDIRECT_URI}?code=code_123&state=${STATE}` });
     const bodyPath = path.join(getTempDir(), 'foo.response');
     fs.writeFileSync(
       bodyPath,
@@ -130,7 +130,7 @@ describe('authorization_code', () => {
   });
 
   it('gets token with urlencoded and body auth', async () => {
-    createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    createBWRedirectMock({ redirectTo:  `${REDIRECT_URI}?code=code_123&state=${STATE}` });
     const bodyPath = path.join(getTempDir(), 'foo.response');
     fs.writeFileSync(
       bodyPath,
@@ -242,7 +242,7 @@ describe('authorization_code', () => {
   });
 
   it('uses PKCE', async () => {
-    createBWRedirectMock(`${REDIRECT_URI}?code=code_123&state=${STATE}`);
+    createBWRedirectMock({ redirectTo: `${REDIRECT_URI}?code=code_123&state=${STATE}` });
     const bodyPath = path.join(getTempDir(), 'foo.response');
     fs.writeFileSync(
       bodyPath,

@@ -127,19 +127,19 @@ import { AppHooks } from './app-hooks';
 export type AppProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 
 interface State {
-  showDragOverlay: boolean,
-  draggingSidebar: boolean,
-  draggingPaneHorizontal: boolean,
-  draggingPaneVertical: boolean,
-  sidebarWidth: number,
-  paneWidth: number,
-  paneHeight: number,
-  isVariableUncovered: boolean,
-  vcs: VCS | null,
-  gitVCS: GitVCS | null,
-  forceRefreshCounter: number,
-  forceRefreshHeaderCounter: number,
-  isMigratingChildren: boolean,
+  showDragOverlay: boolean;
+  draggingSidebar: boolean;
+  draggingPaneHorizontal: boolean;
+  draggingPaneVertical: boolean;
+  sidebarWidth: number;
+  paneWidth: number;
+  paneHeight: number;
+  isVariableUncovered: boolean;
+  vcs: VCS | null;
+  gitVCS: GitVCS | null;
+  forceRefreshCounter: number;
+  forceRefreshHeaderCounter: number;
+  isMigratingChildren: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -557,7 +557,11 @@ class App extends PureComponent<AppProps, State> {
     const har = await exportHarRequest(request._id, environmentId);
     const snippet = new HTTPSnippet(har);
     const cmd = snippet.convert('shell', 'curl');
-    clipboard.writeText(cmd);
+
+    // @TODO Should we throw otherwise? What should happen if we cannot find cmd?
+    if (cmd) {
+      clipboard.writeText(cmd);
+    }
   }
 
   static async _updateRequestGroupMetaByParentId(requestGroupId, patch) {

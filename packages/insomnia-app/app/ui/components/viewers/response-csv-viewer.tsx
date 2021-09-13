@@ -18,7 +18,7 @@ interface State {
 class ResponseCSVViewer extends PureComponent<Props, State> {
   state: State = {
     result: null,
-  }
+  };
 
   currentHash = '';
 

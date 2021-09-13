@@ -1,10 +1,11 @@
 import { Dropdown, DropdownDivider, DropdownItem, SvgIcon, SvgIconProps, Tooltip } from 'insomnia-components';
+import { partition } from 'ramda';
 import React, { FC, useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
 
 import { strings } from '../../../common/strings';
-import { isDefaultProject, isNotDefaultProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
+import { isDefaultProject, isRemoteProject, Project, projectHasSettings } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteProjects } from '../../hooks/project';
 import { setActiveProject } from '../../redux/modules/global';
@@ -32,7 +33,7 @@ const StyledTooltip = styled(Tooltip)({
   ...tooltipIconPlacementHack,
 });
 
-const TooltipIcon = ({ message, icon }: { message: string, icon: SvgIconProps['icon'] }) => (
+const TooltipIcon = ({ message, icon }: { message: string; icon: SvgIconProps['icon'] }) => (
   <StyledTooltip message={message}>
     <StyledSvgIcon icon={icon} />
   </StyledTooltip>
@@ -53,13 +54,13 @@ const ProjectDropdownItem: FC<{
   setActive: (projectId: string) => void;
 }> = ({ isActive, project, setActive }) => {
   const { _id, name } = project;
-  const isBase = isDefaultProject(project);
+  const isDefault = isDefaultProject(project);
   const isRemote = isRemoteProject(project);
 
   return (
     <DropdownItem
       key={_id}
-      icon={isBase ? home : isRemote ? remoteProject : localProject}
+      icon={isDefault ? home : isRemote ? remoteProject : localProject}
       right={isActive && <Checkmark icon="checkmark" />}
       value={_id}
       onClick={setActive}
@@ -98,11 +99,13 @@ export const ProjectDropdown: FC<Props> = ({ vcs }) => {
     />
   ), [setActive, activeProject._id]);
 
+  const [defaultProjects, userProjects] = partition(isDefaultProject, projects);
+
   return (
     <Dropdown renderButton={button} onOpen={refresh}>
-      {projects.filter(isDefaultProject).map(renderProject)}
+      {defaultProjects.map(renderProject)}
       <DropdownDivider>All {strings.project.plural.toLowerCase()}{' '}{loading && spinner}</DropdownDivider>
-      {projects.filter(isNotDefaultProject).map(renderProject)}
+      {userProjects.map(renderProject)}
       {projectHasSettings(activeProject) && <>
         <DropdownDivider />
         <DropdownItem icon={<StyledSvgIcon icon="gear" />} onClick={showSettings}>

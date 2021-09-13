@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, { PureComponent, ReactNode } from 'react';
 
 interface Props {
-  children?: ReactNode,
+  children?: ReactNode;
 }
 
 class DropdownDivider extends PureComponent<Props> {

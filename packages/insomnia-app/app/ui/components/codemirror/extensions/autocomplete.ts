@@ -1,10 +1,11 @@
 import 'codemirror/addon/mode/overlay';
 
-import CodeMirror from 'codemirror';
+import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } from 'codemirror';
 
-import { escapeHTML, escapeRegex } from '../../../../common/misc';
+import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
 import * as models from '../../../../models';
-import { getDefaultFill } from '../../../../templating/utils';
+import { getDefaultFill, NunjucksParsedTag } from '../../../../templating/utils';
+import { isNunjucksMode } from '../modes/nunjucks';
 
 const NAME_MATCH_FLEXIBLE = /[\w.\][\-/]+$/;
 const NAME_MATCH = /[\w.\][]+$/;
@@ -54,14 +55,14 @@ CodeMirror.defineExtension('closeHintDropdown', function() {
   this.state.completionActive?.close();
 });
 
-CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
+CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorFromTextArea, options: EnvironmentAutocompleteOptions) => {
   if (!options) {
     return;
   }
 
-  async function completeAfter(cm: CodeMirror.Editor, fn, showAllOnNoMatch = false) {
+  async function completeAfter(cm: CodeMirror.EditorFromTextArea, callback?: () => boolean, showAllOnNoMatch = false) {
     // Bail early if didn't match the callback test
-    if (fn && !fn()) {
+    if (callback && !callback()) {
       return;
     }
 
@@ -91,7 +92,6 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
     // Actually show the hint
     cm.showHint({
       // Insomnia-specific options
-      // @ts-expect-error -- TSCONVERSION needs investigation
       constants: constants || [],
       variables: variables || [],
       snippets: snippets || [],
@@ -108,42 +108,45 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
           widget.close();
           return CodeMirror.Pass;
         },
-      }, // Good for debugging
-      // ,closeOnUnfocus: false
+      },
+      // Good for debugging
+      // closeOnUnfocus: false,
     });
   }
 
-  function completeIfInVariableName(cm) {
+  function completeIfInVariableName(cm: CodeMirror.EditorFromTextArea) {
     completeAfter(cm, () => {
       const cur = cm.getCursor();
       const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
       const range = cm.getRange(pos, cur);
-      return range.match(COMPLETE_AFTER_WORD);
+
+      return COMPLETE_AFTER_WORD.test(range);
     });
     return CodeMirror.Pass;
   }
 
-  function completeIfAfterTagOrVarOpen(cm) {
+  function completeIfAfterTagOrVarOpen(cm: CodeMirror.EditorFromTextArea) {
     completeAfter(
       cm,
       () => {
         const cur = cm.getCursor();
         const pos = CodeMirror.Pos(cur.line, cur.ch - MAX_HINT_LOOK_BACK);
         const range = cm.getRange(pos, cur);
-        return range.match(COMPLETE_AFTER_CURLIES);
+
+        return COMPLETE_AFTER_CURLIES.test(range);
       },
       true,
     );
     return CodeMirror.Pass;
   }
 
-  function completeForce(cm) {
-    completeAfter(cm, null, true);
+  function completeForce(cm: CodeMirror.EditorFromTextArea) {
+    completeAfter(cm, undefined, true);
     return CodeMirror.Pass;
   }
 
-  let keydownDebounce: NodeJS.Timeout | null = null;
-  cm.on('keydown', async (cm, e) => {
+  let keydownTimeoutHandle: NodeJS.Timeout | null = null;
+  cm.on('keydown', async (cm: CodeMirror.EditorFromTextArea, e) => {
     // Close autocomplete on Escape if it's open
     if (cm.isHintDropdownActive() && e.key === 'Escape') {
       if (!cm.state.completionActive) {
@@ -161,21 +164,21 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
       return;
     }
 
-    if (keydownDebounce !== null) {
-      clearTimeout(keydownDebounce);
+    if (keydownTimeoutHandle !== null) {
+      clearTimeout(keydownTimeoutHandle);
     }
     const { autocompleteDelay } = await models.settings.getOrCreate();
 
     if (autocompleteDelay > 0) {
-      keydownDebounce = setTimeout(() => {
+      keydownTimeoutHandle = setTimeout(() => {
         completeIfInVariableName(cm);
       }, autocompleteDelay);
     }
   });
   // Clear timeout if we already closed the completion
   cm.on('endCompletion', () => {
-    if (keydownDebounce !== null) {
-      clearTimeout(keydownDebounce);
+    if (keydownTimeoutHandle !== null) {
+      clearTimeout(keydownTimeoutHandle);
     }
   });
   // Remove keymap if we're already added it
@@ -195,12 +198,12 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm, options) => {
  * @param options
  * @returns {Promise.<{list: Array, from, to}>}
  */
-function hint(cm, options) {
+function hint(cm: CodeMirror.EditorFromTextArea, options: ShowHintOptions) {
   // Add type to all things (except constants, which need to convert to an object)
-  const variablesToMatch = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
-  const snippetsToMatch = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
-  const tagsToMatch = (options.tags || []).map(v => ({ ...v, type: TYPE_TAG }));
-  const constantsToMatch = (options.constants || []).map(s => ({
+  const variablesToMatch: VariableCompletionItem[] = (options.variables || []).map(v => ({ ...v, type: TYPE_VARIABLE }));
+  const snippetsToMatch: SnippetCompletionItem[] = (options.snippets || []).map(v => ({ ...v, type: TYPE_SNIPPET }));
+  const tagsToMatch: TagCompletionItem[] = (options.tags || []).map(v => ({ ...v, type: TYPE_TAG }));
+  const constantsToMatch: ConstantCompletionItem[] = (options.constants || []).map(s => ({
     name: s,
     value: s,
     displayValue: '',
@@ -227,24 +230,27 @@ function hint(cm, options) {
   const nameSegmentLong = nameMatchLong ? nameMatchLong[0] : fallbackSegment;
   const nameSegmentFull = previousText;
   // Actually try to match the list of things
-  const lowPriorityMatches = [];
-  const highPriorityMatches = [];
-  let mode;
+  let lowPriorityMatches: Hint[] = [];
+  let highPriorityMatches: Hint[] = [];
 
-  try {
-    mode = cm.getOption('mode').baseMode;
-  } catch (e) {
-    mode = 'unknown';
+  const modeOption = cm.getOption('mode') ?? 'unknown';
+
+  let mode = 'unknown';
+
+  if (typeof modeOption === 'string') {
+    mode = modeOption;
+  } else if (isNunjucksMode(modeOption)) {
+    mode = modeOption.baseMode;
   }
 
   // Match variables
   if (allowMatchingVariables) {
-    matchSegments(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES).forEach(m =>
-      lowPriorityMatches.push(m),
-    );
-    matchSegments(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES).forEach(m =>
-      highPriorityMatches.push(m),
-    );
+    const sortVariableCompletionHints = getCompletionHints(variablesToMatch, nameSegment, TYPE_VARIABLE, MAX_VARIABLES);
+    lowPriorityMatches = [...lowPriorityMatches, ...sortVariableCompletionHints];
+
+    const longVariableCompletionHints = getCompletionHints(variablesToMatch, nameSegmentLong, TYPE_VARIABLE, MAX_VARIABLES);
+
+    highPriorityMatches = [...highPriorityMatches, ...longVariableCompletionHints];
   }
 
   // Match constants
@@ -261,48 +267,48 @@ function hint(cm, options) {
       // Remove trailing quotes and spaces
       if (token.type === 'variable') {
         // We're inside a JSON key
-        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
-          highPriorityMatches.push(m),
-        );
+        const constantCompletionHints = getCompletionHints(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS);
+        highPriorityMatches = [...highPriorityMatches, ...constantCompletionHints];
+
       } else if (
         token.type === 'invalidchar' ||
         token.type === 'ws' ||
         (token.type === 'punctuation' && token.string === '{')
       ) {
         // We're outside of a JSON key
-        matchSegments(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
-          // @ts-expect-error -- TSCONVERSION
-          highPriorityMatches.push({ ...m, text: '"' + m.text + '": ' }),
-        );
+        const constantCompletionHints = getCompletionHints(constantsToMatch, segment, TYPE_CONSTANT, MAX_CONSTANTS).map(hint => ({ ...hint, text: '"' + hint.text + '": ' }));
+
+        highPriorityMatches = [...highPriorityMatches, ...constantCompletionHints];
       }
     } else {
       // Otherwise match full segments
-      matchSegments(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS).forEach(m =>
-        highPriorityMatches.push(m),
-      );
+      const hints = getCompletionHints(constantsToMatch, nameSegmentFull, TYPE_CONSTANT, MAX_CONSTANTS);
+
+      highPriorityMatches = [...highPriorityMatches, ...hints];
     }
   }
 
   // Match tags
   if (allowMatchingTags) {
-    matchSegments(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS).forEach(m =>
-      lowPriorityMatches.push(m),
-    );
-    matchSegments(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS).forEach(m =>
-      highPriorityMatches.push(m),
-    );
+    const lowPriorityTagHints = getCompletionHints(tagsToMatch, nameSegment, TYPE_TAG, MAX_TAGS);
+
+    lowPriorityMatches = [...lowPriorityMatches, ...lowPriorityTagHints];
+
+    const highPriorityTagHints = getCompletionHints(tagsToMatch, nameSegmentLong, TYPE_TAG, MAX_TAGS);
+
+    highPriorityMatches = [...highPriorityMatches, ...highPriorityTagHints];
   }
 
-  matchSegments(snippetsToMatch, nameSegment, TYPE_SNIPPET, MAX_SNIPPETS).forEach(m =>
-    highPriorityMatches.push(m),
-  );
+  const snippetHints = getCompletionHints(snippetsToMatch, nameSegment, TYPE_SNIPPET, MAX_SNIPPETS);
+
+  highPriorityMatches = [...highPriorityMatches, ...snippetHints];
+
   const matches = [...highPriorityMatches, ...lowPriorityMatches];
   // Autocomplete from longest matched segment
   const segment = highPriorityMatches.length ? nameSegmentLong : nameSegment;
   const uniqueMatches = matches.reduce(
-    // @ts-expect-error -- TSCONVERSION
     (arr, v) => (arr.find(a => a.text === v.text) ? arr : [...arr, v]),
-    [], // Default value
+    [] as Hint[], // Default value
   );
   return {
     list: uniqueMatches,
@@ -312,13 +318,13 @@ function hint(cm, options) {
 }
 
 /**
- * Replace the text in the editor when a hint is selected.
+ * Replace the text in the EditorFromTextArea when a hint is selected.
  * This also makes sure there is whitespace surrounding it
  * @param cm
  * @param self
  * @param data
  */
-async function replaceHintMatch(cm, _self, data) {
+async function replaceHintMatch(cm: CodeMirror.EditorFromTextArea, _self, data) {
   if (typeof data.text === 'function') {
     data.text = await data.text();
   }
@@ -360,79 +366,92 @@ async function replaceHintMatch(cm, _self, data) {
   cm.replaceRange(`${prefix}${data.text}${suffix}`, from, to);
 }
 
-/**
- * Match against a list of things
- * @param listOfThings - Can be list of strings or list of {name, value}
- * @param segment - segment to match against
- * @param type
- * @param limit
- * @returns {Array}
- */
-function matchSegments(listOfThings, segment, type, limit = -1) {
-  if (!Array.isArray(listOfThings)) {
-    console.warn('Autocomplete received items in non-list form', listOfThings);
-    return [];
-  }
+// @TODO Simplify these types and make the interface stricter and move the transforms in the top level.
+interface CompletionItemKind {
+  name: string;
+  displayName?: string;
+  displayValue?: string;
+  value?: string | (() => PromiseLike<unknown>);
+  type: typeof TYPE_CONSTANT | typeof TYPE_SNIPPET | typeof TYPE_VARIABLE | typeof TYPE_TAG;
+}
 
-  const matches = [];
+interface ConstantCompletionItem extends CompletionItemKind {
+  type: typeof TYPE_CONSTANT;
+  value: string;
+}
 
-  for (const t of listOfThings) {
-    const name = typeof t === 'string' ? t : t.name;
-    const value = typeof t === 'string' ? '' : t.value;
-    const displayName = t.displayName || name;
-    // Generate the value we'll fill it with
-    let defaultFill;
+interface VariableCompletionItem extends CompletionItemKind {
+  type: typeof TYPE_VARIABLE;
+  value: string | (() => PromiseLike<unknown>);
+}
 
-    if (t.type === TYPE_CONSTANT) {
-      defaultFill = t.value;
-    } else if (t.type === TYPE_SNIPPET) {
-      defaultFill = t.value;
-    } else if (t.type === TYPE_VARIABLE) {
-      // Variables fill with variable name, not value (eg. {{ foo }})
-      // TODO: This is extremely confusing and does not make any sense so let's
-      //  refactor this to a single unified format for all types
-      defaultFill = t.name;
-    } else if (t.type === TYPE_TAG) {
-      defaultFill = getDefaultFill(t.name, t.args);
-    } else {
-      throw new Error('Unidentified autocomplete type: ' + t.type);
+interface SnippetCompletionItem extends CompletionItemKind {
+  type: typeof TYPE_SNIPPET;
+  value: string | (() => PromiseLike<unknown>);
+}
+
+interface TagCompletionItem extends NunjucksParsedTag, CompletionItemKind {
+  type: typeof TYPE_TAG;
+}
+
+type CompletionItem = ConstantCompletionItem | VariableCompletionItem | SnippetCompletionItem | TagCompletionItem;
+
+function isConstantCompletionItem(item: CompletionItem): item is ConstantCompletionItem {
+  return item.type === TYPE_CONSTANT;
+}
+
+function isVariableCompletionItem(item: CompletionItem): item is VariableCompletionItem {
+  return item.type === TYPE_VARIABLE;
+}
+
+function isSnippetCompletionItem(item: CompletionItem): item is SnippetCompletionItem {
+  return item.type === TYPE_SNIPPET;
+}
+
+function isTagCompletionItem(item: CompletionItem): item is TagCompletionItem {
+  return item.type === TYPE_TAG;
+}
+
+function getCompletionHints(completionItems: CompletionItem[], segment: string, type: CompletionItem['type'], limit = -1): Hint[] {
+  const matches: CodeMirror.Hint[] = [];
+
+  for (const item of completionItems) {
+    const name = typeof item === 'string' ? item : item.name;
+    const value = typeof item === 'string' ? '' : item.value ?? '';
+    const displayName = item.displayName || name;
+    let defaultFill = '';
+
+    if (isConstantCompletionItem(item)) {
+      defaultFill = item.value;
+    } else if (isVariableCompletionItem(item) || isSnippetCompletionItem(item)) {
+      defaultFill = item.name;
+    } else if (isTagCompletionItem(item)) {
+      defaultFill = getDefaultFill(item.name, item.args);
     }
 
     const matchSegment = segment.toLowerCase();
-    const matchName = displayName.toLowerCase();
+    const matchName = displayName.toLowerCase() || '';
 
     // Throw away things that don't match
     if (!matchName.includes(matchSegment)) {
       continue;
     }
 
-    let displayValue = t.displayValue;
+    let displayValue = item.displayValue || '';
 
-    if (typeof displayValue !== 'string' && typeof value !== 'function') {
+    if (typeof item.displayValue !== 'string' && typeof value !== 'function') {
       displayValue = JSON.stringify(value);
     }
 
     matches.push({
-      // Custom Insomnia keys
-      // @ts-expect-error -- TSCONVERSION
       type,
-      // @ts-expect-error -- TSCONVERSION
       segment,
-      // @ts-expect-error -- TSCONVERSION
-      displayValue,
-      // @ts-expect-error -- TSCONVERSION
-      comment: value,
-      // @ts-expect-error -- TSCONVERSION
+      displayValue: displayValue,
+      comment: value.toString(),
       score: name.length,
-      // In case we want to sort by this
-      // CodeMirror
-      // @ts-expect-error -- TSCONVERSION
       text: defaultFill,
-      // @ts-expect-error -- TSCONVERSION
-      displayText: displayName,
-      // @ts-expect-error -- TSCONVERSION
+      displayText: displayName || name,
       render: renderHintMatch,
-      // @ts-expect-error -- TSCONVERSION
       hint: replaceHintMatch,
     });
   }
@@ -446,13 +465,8 @@ function matchSegments(listOfThings, segment, type, limit = -1) {
 
 /**
  * Replace all occurrences of string
- * @param text
- * @param find
- * @param prefix
- * @param suffix
- * @returns string
  */
-function replaceWithSurround(text, find, prefix, suffix) {
+function replaceWithSurround(text: string, find: string, prefix: string, suffix: string) {
   const escapedString = escapeRegex(find);
   const re = new RegExp(escapedString, 'gi');
   return text.replace(re, matched => prefix + matched + suffix);
@@ -460,22 +474,27 @@ function replaceWithSurround(text, find, prefix, suffix) {
 
 /**
  * Render the autocomplete list entry
- * @param li
- * @param self
- * @param data
  */
-function renderHintMatch(li, _self, data) {
+function renderHintMatch(li: HTMLElement, _allHints: CodeMirror.Hints, hint: Hint) {
   // Bold the matched text
-  const { displayText, segment } = data;
-  const markedName = replaceWithSurround(displayText, segment, '<strong>', '</strong>');
-  const { char, title } = ICONS[data.type];
-  const safeValue = escapeHTML(data.displayValue);
-  li.className += ` fancy-hint type--${data.type}`;
+  const { displayText, segment, type, displayValue } = hint;
+  const markedName = replaceWithSurround(displayText || '', segment, '<strong>', '</strong>');
+  const { char, title } = ICONS[type];
+  let safeValue = '';
+
+  if (isNotNullOrUndefined<string>(displayValue)) {
+    const escaped = escapeHTML(displayValue);
+    safeValue = `
+      <div class="value" title=${escaped}>
+        ${escaped}
+      </div>
+    `;
+  }
+
+  li.className += ` fancy-hint type--${type}`;
   li.innerHTML = `
     <label class="label" title="${title}">${char}</label>
     <div class="name">${markedName}</div>
-    <div class="value" title=${safeValue}>
-      ${safeValue}
-    </div>
+    ${safeValue}
   `;
 }

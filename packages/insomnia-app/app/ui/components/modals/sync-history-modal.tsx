@@ -32,7 +32,7 @@ class SyncHistoryModal extends PureComponent<Props, State> {
   state: State = {
     branch: '',
     history: [],
-  }
+  };
 
   _setModalRef(m: Modal) {
     this.modal = m;

@@ -1,66 +1,60 @@
-import React, { Fragment, PureComponent } from 'react';
+import React, { FC, Fragment, useMemo } from 'react';
+import styled from 'styled-components';
 import { URL } from 'url';
 
 import type { ResponseHeader } from '../../../models/response';
-import CopyButton from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import Link from '../base/link';
 
 interface Props {
   headers: ResponseHeader[];
 }
 
-function validateURL(urlString) {
+const validateURL = ({ value }: ResponseHeader) => {
   try {
-    const parsedUrl = new URL(urlString);
-    if (!parsedUrl.hostname) return false;
-    return true;
-  } catch (error) {
+    const parsedUrl = new URL(value);
+    return Boolean(parsedUrl.hostname);
+  } catch {
     return false;
   }
-}
+};
 
-class ResponseHeadersViewer extends PureComponent<Props> {
-  render() {
-    const { headers } = this.props;
-    const headersString = headers.map(h => `${h.name}: ${h.value}`).join('\n');
-    return (
-      <Fragment>
-        <table className="table--fancy table--striped table--compact">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Value</th>
+const headerAsString = (header: ResponseHeader) => `${header.name}: ${header.value}`;
+
+const StyledTableDataCell = styled.td.attrs({
+  className: 'force-wrap',
+})({
+  width: '50%',
+});
+
+export const ResponseHeadersViewer: FC<Props> = ({ headers }) => {
+  const headersString = useMemo(() => headers.map(headerAsString).join('\n'), [headers]);
+
+  return (
+    <Fragment>
+      <table className="table--fancy table--striped table--compact">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {headers.map(header => (
+            <tr className="selectable" key={headerAsString(header)}>
+              <StyledTableDataCell>
+                {header.name}
+              </StyledTableDataCell>
+              <StyledTableDataCell>
+                {validateURL(header) ? <Link href={header.value}>{header.value}</Link> : header.value}
+              </StyledTableDataCell>
             </tr>
-          </thead>
-          <tbody>
-            {headers.map((h, i) => (
-              <tr className="selectable" key={i}>
-                <td
-                  style={{
-                    width: '50%',
-                  }}
-                  className="force-wrap"
-                >
-                  {h.name}
-                </td>
-                <td
-                  style={{
-                    width: '50%',
-                  }}
-                  className="force-wrap"
-                >
-                  {validateURL(h.value) ? <Link href={h.value}>{h.value}</Link> : h.value}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p key="copy" className="pad-top">
-          <CopyButton className="pull-right" content={headersString} />
-        </p>
-      </Fragment>
-    );
-  }
-}
-
-export default ResponseHeadersViewer;
+          ))}
+        </tbody>
+      </table>
+      <p key="copy" className="pad-top">
+        <CopyButton className="pull-right" content={headersString} />
+      </p>
+    </Fragment>
+  );
+};

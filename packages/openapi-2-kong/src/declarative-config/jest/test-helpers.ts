@@ -45,14 +45,14 @@ export type UserDCPlugin = DCPlugin | DummyPlugin;
  *
  * In the user's case they would, in practice, use module augmentation to extend K8sKongPlugin, however a simple union achieves the same goal, here.
  */
-export type UserK8sPlugin = K8sKongPlugin | K8sKongPluginBase<DummyPlugin>
+export type UserK8sPlugin = K8sKongPlugin | K8sKongPluginBase<DummyPlugin>;
 
 /**
  * This simulates what a user would do when creating a custom plugin.
  *
  * In the user's case they would, in practice, use module augmentation to extend K8sKongPlugin, however a simple union achieves the same goal, here.
  */
-export type UserXKongPlugin = XKongPlugin<Plugin> | XKongPlugin<DummyPlugin>
+export type UserXKongPlugin = XKongPlugin<Plugin> | XKongPlugin<DummyPlugin>;
 
 /** This function is written in such a way as to allow mutations in tests but without affecting other tests. */
 export const getSpec = (overrides: Partial<OpenApi3Spec> = {}): OpenApi3Spec =>

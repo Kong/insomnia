@@ -8,7 +8,7 @@ This is a plugin for [Insomnia](https://insomnia.rest) to add the ability to dep
 
 Install the `insomnia-plugin-kong-portal` plugin from Preferences > Plugins.
 
-![](./assets/plugins.png)
+![plugins](./assets/plugins.png)
 
 ## Usage
 
@@ -16,8 +16,8 @@ Once this plugin is installed, navigate to the homepage and click `...` to open 
 
 If installed correctly, an option titled `Deploy to Portal` will appear.
 
-![](./assets/dropdown.png)
+![dropdown](./assets/dropdown.png)
 
 Click on this button and enter your URL, workspace name and RBAC token in order to connect to Kong.
 
-![](assets/connect.png)
+![connect](assets/connect.png)

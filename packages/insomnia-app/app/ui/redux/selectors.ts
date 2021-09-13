@@ -5,6 +5,7 @@ import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
+import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
@@ -13,7 +14,7 @@ import { RootState } from './modules';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
-}
+};
 
 // ~~~~~~~~~ //
 // Selectors //
@@ -73,7 +74,7 @@ export const selectRequestMetas = createSelector(
 
 export const selectProjects = createSelector(
   selectEntitiesLists,
-  entities => entities.projects,
+  entities => sortProjects(entities.projects),
 );
 
 export const selectRemoteProjects = createSelector(

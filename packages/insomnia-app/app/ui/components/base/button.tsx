@@ -4,15 +4,15 @@ import React, { ButtonHTMLAttributes, CSSProperties, PureComponent, ReactNode } 
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 export interface ButtonProps<T> {
-  children: ReactNode,
-  value?: T,
-  className?: string,
-  onDisabledClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void),
-  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void),
-  disabled?: boolean,
-  tabIndex?: number,
-  type?: ButtonHTMLAttributes<HTMLButtonElement>['type'],
-  id?: string,
+  children: ReactNode;
+  value?: T;
+  className?: string;
+  onDisabledClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void);
+  onClick?: React.MouseEventHandler<HTMLButtonElement> | ((value: T | undefined, e: React.MouseEvent<HTMLButtonElement>) => void);
+  disabled?: boolean;
+  tabIndex?: number;
+  type?: ButtonHTMLAttributes<HTMLButtonElement>['type'];
+  id?: string;
   // TODO(TSCONVERSION) figure out why so many components pass this yet it isn't used
   title?: string;
   style?: CSSProperties;

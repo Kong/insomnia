@@ -37,7 +37,7 @@ interface Props extends ReduxProps, Partial<DropdownProps> {
   hotKeyRegistry: HotKeyRegistry;
   handleCreateRequest: (id: string) => any;
   handleDuplicateRequestGroup: (requestGroup: RequestGroup) => any;
-  handleShowSettings: (requestGroup: RequestGroup) => any,
+  handleShowSettings: (requestGroup: RequestGroup) => any;
   handleCreateRequestGroup: (requestGroup: string) => any;
 }
 

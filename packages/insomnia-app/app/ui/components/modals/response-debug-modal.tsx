@@ -26,7 +26,7 @@ class ResponseDebugModal extends PureComponent<Props, State> {
   state: State = {
     response: null,
     title: '',
-  }
+  };
 
   _setModalRef(n: Modal) {
     this.modal = n;

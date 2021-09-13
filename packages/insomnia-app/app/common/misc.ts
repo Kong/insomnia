@@ -200,6 +200,19 @@ export function preventDefault(e: Event) {
   e.preventDefault();
 }
 
+export function xmlDecode(input: string) {
+  const ESCAPED_CHARACTERS_MAP = {
+    '&amp;': '&',
+    '&quot;': '"',
+    '&lt;': '<',
+    '&gt;': '>',
+  };
+
+  return input.replace(/(&quot;|&lt;|&gt;|&amp;)/g, (_: string, item: keyof typeof ESCAPED_CHARACTERS_MAP) => (
+    ESCAPED_CHARACTERS_MAP[item])
+  );
+}
+
 export function fnOrString(v: string | ((...args: any[]) => any), ...args: any[]) {
   if (typeof v === 'string') {
     return v;
@@ -253,13 +266,15 @@ export function escapeRegex(str: string) {
   return str.replace(ESCAPE_REGEX_MATCH, '\\$&');
 }
 
+export interface FuzzyMatchOptions {
+  splitSpace?: boolean;
+  loose?: boolean;
+}
+
 export function fuzzyMatch(
   searchString: string,
   text: string,
-  options: {
-    splitSpace?: boolean;
-    loose?: boolean;
-  } = {},
+  options: FuzzyMatchOptions = {},
 ): null | {
   score: number;
   indexes: number[];
@@ -270,10 +285,7 @@ export function fuzzyMatch(
 export function fuzzyMatchAll(
   searchString: string,
   allText: string[],
-  options: {
-    splitSpace?: boolean;
-    loose?: boolean;
-  } = {},
+  options: FuzzyMatchOptions = {},
 ) {
   if (!searchString || !searchString.trim()) {
     return null;

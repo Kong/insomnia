@@ -22,7 +22,7 @@ import KeydownBinder from './keydown-binder';
 import { showPrompt } from './modals/index';
 
 interface Props {
-  handleAutocompleteUrls: Function;
+  handleAutocompleteUrls: () => Promise<string[]>;
   handleGenerateCode: Function;
   handleGetRenderContext: HandleGetRenderContext;
   handleImport: Function;
@@ -56,9 +56,9 @@ class RequestUrlBar extends PureComponent<Props, State> {
   state: State = {
     currentInterval: null,
     currentTimeout: null,
-  }
+  };
 
-  _lastPastedText: string | null = null;
+  _lastPastedText?: string;
 
   _setDropdownRef(n: Dropdown) {
     this._dropdown = n;
@@ -102,7 +102,7 @@ class RequestUrlBar extends PureComponent<Props, State> {
       }
 
       // Reset pasted text cache
-      this._lastPastedText = null;
+      this._lastPastedText = undefined;
       // Attempt to import the pasted text
       const importedRequest = await this.props.handleImport(pastedText);
 
@@ -113,9 +113,9 @@ class RequestUrlBar extends PureComponent<Props, State> {
     }, DEBOUNCE_MILLIS);
   }
 
-  _handleUrlPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+  _handleUrlPaste(e: ClipboardEvent) {
     // NOTE: We're not actually doing the import here to avoid races with onChange
-    this._lastPastedText = e.clipboardData.getData('text/plain');
+    this._lastPastedText = e.clipboardData?.getData('text/plain');
   }
 
   _handleGenerateCode() {

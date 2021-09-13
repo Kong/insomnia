@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import CopyButton from '../base/copy-button';
+import { CopyButton } from '../base/copy-button';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownDivider from '../base/dropdown/dropdown-divider';
@@ -42,9 +42,9 @@ interface State {
   placeholder: string;
   hint: string;
   mode: string;
-  hideMode: boolean,
-  enableRender: boolean,
-  showCopyButton: boolean,
+  hideMode: boolean;
+  enableRender: boolean;
+  showCopyButton: boolean;
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -59,7 +59,7 @@ class CodePromptModal extends PureComponent<Props, State> {
     hideMode: false,
     enableRender: false,
     showCopyButton: false,
-  }
+  };
 
   modal: Modal | null = null;
   _onModeChange: Function = () => {};
@@ -167,10 +167,8 @@ class CodePromptModal extends PureComponent<Props, State> {
                 defaultValue={defaultValue}
                 placeholder={placeholder}
                 onChange={this._handleChange}
-                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                handleGetRenderContext={enableRender ? handleGetRenderContext : null}
-                // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                handleRender={enableRender ? handleRender : null}
+                handleGetRenderContext={enableRender ? handleGetRenderContext : undefined}
+                handleRender={enableRender ? handleRender : undefined}
                 mode={mode}
                 keyMap={editorKeyMap}
                 indentSize={editorIndentSize}
@@ -192,10 +190,8 @@ class CodePromptModal extends PureComponent<Props, State> {
                   onChange={this._handleChange}
                   nunjucksPowerUserMode={nunjucksPowerUserMode}
                   isVariableUncovered={isVariableUncovered}
-                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                  getRenderContext={enableRender ? handleGetRenderContext : null}
-                  // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-                  render={enableRender ? handleRender : null}
+                  getRenderContext={handleGetRenderContext}
+                  render={handleRender}
                   mode={mode}
                   keyMap={editorKeyMap}
                   indentSize={editorIndentSize}

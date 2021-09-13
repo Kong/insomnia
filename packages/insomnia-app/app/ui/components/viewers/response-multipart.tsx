@@ -17,7 +17,7 @@ import type { ResponseHeader } from '../../../models/response';
 import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown/index';
 import { showModal } from '../modals/index';
 import WrapperModal from '../modals/wrapper-modal';
-import ResponseHeadersViewer from './response-headers-viewer';
+import { ResponseHeadersViewer } from './response-headers-viewer';
 import ResponseViewer from './response-viewer';
 
 interface Part {
@@ -56,7 +56,7 @@ class ResponseMultipart extends PureComponent<Props, State> {
     activePart: -1,
     parts: [],
     error: null,
-  }
+  };
 
   componentDidMount() {
     this._setParts();

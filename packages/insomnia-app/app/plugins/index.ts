@@ -16,15 +16,15 @@ import { showError } from '../ui/components/modals/index';
 import type { PluginTheme } from './misc';
 
 export interface Module {
-  templateTags?: PluginTemplateTag[],
-  requestHooks?: ((requstContext: any) => void)[],
-  responseHooks?: ((responseContext: any) => void)[],
-  themes?: PluginTheme[],
-  requestGroupActions?: OmitInternal<RequestGroupAction>[],
-  requestActions?: OmitInternal<RequestAction>[],
-  workspaceActions?: OmitInternal<WorkspaceAction>[],
-  documentActions?: OmitInternal<DocumentAction>[],
-  configGenerators?: OmitInternal<ConfigGenerator>[],
+  templateTags?: PluginTemplateTag[];
+  requestHooks?: ((requstContext: any) => void)[];
+  responseHooks?: ((responseContext: any) => void)[];
+  themes?: PluginTheme[];
+  requestGroupActions?: OmitInternal<RequestGroupAction>[];
+  requestActions?: OmitInternal<RequestAction>[];
+  workspaceActions?: OmitInternal<WorkspaceAction>[];
+  documentActions?: OmitInternal<DocumentAction>[];
+  configGenerators?: OmitInternal<ConfigGenerator>[];
 }
 
 export interface Plugin {

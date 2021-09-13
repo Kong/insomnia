@@ -10,21 +10,21 @@ import CodeEditor from './codemirror/code-editor';
 import MarkdownPreview from './markdown-preview';
 
 interface Props {
-  onChange: Function,
-  defaultValue: string,
-  fontSize: number,
-  indentSize: number,
-  keyMap: string,
-  lineWrapping: boolean,
-  handleRender: HandleRender,
-  handleGetRenderContext: HandleGetRenderContext,
-  nunjucksPowerUserMode: boolean,
-  isVariableUncovered: boolean,
-  placeholder?: string,
-  defaultPreviewMode?: boolean,
-  className?: string,
-  mode?: string,
-  tall?: boolean,
+  onChange: Function;
+  defaultValue: string;
+  fontSize: number;
+  indentSize: number;
+  keyMap: string;
+  lineWrapping: boolean;
+  handleRender?: HandleRender;
+  handleGetRenderContext?: HandleGetRenderContext;
+  nunjucksPowerUserMode: boolean;
+  isVariableUncovered: boolean;
+  placeholder?: string;
+  defaultPreviewMode?: boolean;
+  className?: string;
+  mode?: string;
+  tall?: boolean;
 }
 
 interface State {

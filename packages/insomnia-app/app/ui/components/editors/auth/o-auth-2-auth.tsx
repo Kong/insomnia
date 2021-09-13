@@ -63,7 +63,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     error: '',
     loading: false,
     showAdvanced, // Remember from last time
-  }
+  };
 
   _handleToggleAdvanced() {
     // Remember this for the entirety of the session
@@ -320,7 +320,7 @@ class OAuth2Auth extends PureComponent<Props, State> {
     property: string,
     onChange: (...args: any[]) => any,
     help: string | null = null,
-    handleAutocomplete: ((...args: any[]) => any) | null = null,
+    handleAutocomplete?: (...args: any[]) => any,
   ) {
     const {
       handleRender,

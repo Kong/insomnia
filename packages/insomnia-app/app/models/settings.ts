@@ -61,10 +61,12 @@ export interface BaseSettings {
   updateChannel: string;
   useBulkHeaderEditor: boolean;
   useBulkParametersEditor: boolean;
+  validateAuthSSL: boolean;
   validateSSL: boolean;
   hasPromptedToMigrateFromDesigner: boolean;
   hasPromptedOnboarding: boolean;
   hasPromptedAnalytics: boolean;
+  isVariableUncovered?: boolean;
 }
 
 export type Settings = BaseModel & BaseSettings;
@@ -125,6 +127,7 @@ export function init(): BaseSettings {
     updateChannel: UPDATE_CHANNEL_STABLE,
     useBulkHeaderEditor: false,
     useBulkParametersEditor: false,
+    validateAuthSSL: true,
     validateSSL: true,
     hasPromptedToMigrateFromDesigner: false,
     // Users should only see onboarding during first launch, and anybody updating from an

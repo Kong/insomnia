@@ -64,7 +64,7 @@ class General extends PureComponent<Props, State> {
   state: State = {
     fonts: null,
     fontsMono: null,
-  }
+  };
 
   async componentDidMount() {
     const allFonts = await fontScanner.getAvailableFonts();
@@ -193,8 +193,9 @@ class General extends PureComponent<Props, State> {
               setting="useBulkHeaderEditor"
             />
             <BooleanSetting
-              label="Vertical request/response layout"
+              label="Use vertical layout"
               setting="forceVerticalLayout"
+              help="Stack application panels (e.g. request / response) vertically instead of horizontally."
             />
           </div>
           <div>
@@ -368,6 +369,7 @@ class General extends PureComponent<Props, State> {
             <BooleanSetting
               label="Validate certificates"
               setting="validateSSL"
+              help="Indicates whether SSL certificates should be validated for API requests. This does not affect SSL certificate validation during authentication."
             />
             <BooleanSetting
               label="Follow redirects"
@@ -417,7 +419,7 @@ class General extends PureComponent<Props, State> {
               name: string;
               value: HttpVersion;
             }[],
-            'Preferred HTTP version to use for requests which will fall back if it cannot be' +
+            'Preferred HTTP version to use for requests which will fall back if it cannot be ' +
             'negotiated',
           )}
         </div>
@@ -468,6 +470,13 @@ class General extends PureComponent<Props, State> {
           >
             Clear OAuth 2 session
           </button>
+        </div>
+        <div className="form-row pad-top-sm">
+          <BooleanSetting
+            label="Validate certificates during authentication"
+            setting="validateAuthSSL"
+            help="Indicates whether SSL certificates should be validated during authentication flows"
+          />
         </div>
 
         <hr className="pad-top" />

@@ -6,10 +6,10 @@ import React, { PureComponent, ReactNode } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 
 interface Props extends ButtonProps {
-  content: string | Function,
-  children?: ReactNode,
-  title?: string,
-  confirmMessage?: string,
+  content: string | Function;
+  children?: ReactNode;
+  title?: string;
+  confirmMessage?: string;
 }
 
 interface State {
@@ -17,10 +17,10 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CopyButton extends PureComponent<Props, State> {
+export class CopyButton extends PureComponent<Props, State> {
   state: State = {
     showConfirmation: false,
-  }
+  };
 
   _triggerTimeout: NodeJS.Timeout | null = null;
 
@@ -74,5 +74,3 @@ class CopyButton extends PureComponent<Props, State> {
     );
   }
 }
-
-export default CopyButton;

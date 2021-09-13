@@ -29,7 +29,7 @@ class SpecEditorSidebar extends Component<Props, State> {
   state: State = {
     error: '',
     specContentJSON: false,
-  }
+  };
 
   _handleScrollEditor(pos: {
     start: {

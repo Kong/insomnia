@@ -1,10 +1,13 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { EditorFromTextArea, TextMarker } from 'codemirror';
+import { EditorFromTextArea, LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
+import { GraphQLInfoOptions } from 'codemirror-graphql/info';
+import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
-import type { GraphQLArgument, GraphQLField, GraphQLSchema, GraphQLType } from 'graphql';
+import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode } from 'graphql';
 import { parse, print, typeFromAST } from 'graphql';
+import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import React, { PureComponent } from 'react';
@@ -13,7 +16,7 @@ import ReactDOM from 'react-dom';
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
-import { jsonParseOr } from '../../../../common/misc';
+import { isNotNullOrUndefined, jsonParseOr } from '../../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import * as models from '../../../../models/index';
 import type { Request } from '../../../../models/request';
@@ -25,6 +28,7 @@ import * as network from '../../../../network/network';
 import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../../base/dropdown';
 import CodeEditor from '../../codemirror/code-editor';
 import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
+import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
 import HelpTooltip from '../../help-tooltip';
 import { showModal } from '../../modals';
 import ResponseDebugModal from '../../modals/response-debug-modal';
@@ -36,16 +40,14 @@ if (!explorerContainer) {
   throw new Error('Failed to find #graphql-explorer-container');
 }
 
+function isOperationDefinition(def: DefinitionNode): def is OperationDefinitionNode {
+  return def.kind === 'OperationDefinition';
+}
+
 interface GraphQLBody {
   query: string;
   variables?: Record<string, any>;
   operationName?: string;
-}
-
-interface ActiveReference {
-  type: GraphQLType | null;
-  argument: GraphQLArgument | null;
-  field: GraphQLField<any, any> | null;
 }
 
 interface Props {
@@ -81,7 +83,7 @@ interface State {
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
-  _documentAST: null | Record<string, any> = null;
+  _documentAST: null | DocumentNode = null;
   _isMounted = false;
   _queryEditor: null | EditorFromTextArea = null;
   _schemaFetchTimeout: NodeJS.Timeout | null = null;
@@ -91,13 +93,17 @@ class GraphQLEditor extends PureComponent<Props, State> {
 
     const body = GraphQLEditor._stringToGraphQL(props.content);
     this._setDocumentAST(body.query);
-    let automaticFetch;
+    let automaticFetch = true;
 
     try {
-      // @ts-expect-error -- TSCONVERSION don't parse if the read item is not defined
-      automaticFetch = JSON.parse(window.localStorage.getItem('graphql.automaticFetch'));
+      const automaticFetchStringified = window.localStorage.getItem('graphql.automaticFetch');
+      if (automaticFetchStringified) {
+        automaticFetch = JSON.parse(automaticFetchStringified);
+      }
     } catch (err) {
-      automaticFetch = true;
+      if (err instanceof Error) {
+        console.warn('Could not parse value of graphql.automaticFetch from localStorage:', err.message);
+      }
     }
 
     this.state = {
@@ -168,12 +174,16 @@ class GraphQLEditor extends PureComponent<Props, State> {
     });
   }
 
-  _handleClickReference(reference: ActiveReference, event: React.MouseEvent) {
+  _handleClickReference(reference: Maybe<ActiveReference>, event: MouseEvent) {
     event.preventDefault();
-    this.setState({
-      explorerVisible: true,
-      activeReference: reference,
-    });
+
+    if (reference) {
+      this.setState({
+        explorerVisible: true,
+        activeReference: reference,
+      });
+    }
+
   }
 
   _handleQueryFocus() {
@@ -194,22 +204,25 @@ class GraphQLEditor extends PureComponent<Props, State> {
     const { _documentAST, _queryEditor } = this;
 
     if (!_documentAST || !_queryEditor) {
-      return null;
+      return;
     }
-
-    const disabledDefinitions = _documentAST.definitions.filter(d => {
-      const name = d.name ? d.name.value : null;
-      return d.kind === 'OperationDefinition' && name !== operationName;
-    });
 
     // Remove current query highlighting
     for (const textMarker of this._disabledOperationMarkers) {
       textMarker.clear();
     }
 
+    const disabledDefinitionLocations = _documentAST.definitions
+      .filter(isOperationDefinition)
+      .filter(d => {
+        return d.name?.value !== operationName;
+      })
+      .map(definition => definition.loc)
+      .filter(isNotNullOrUndefined);
+
     // Add "Unhighlight" markers
-    this._disabledOperationMarkers = disabledDefinitions.map(definition => {
-      const { startToken, endToken } = definition.loc;
+    const disabledOperationMarkers = disabledDefinitionLocations.map(location => {
+      const { startToken, endToken } = location;
       const from = {
         line: startToken.line - 1,
         ch: startToken.column - 1,
@@ -218,13 +231,13 @@ class GraphQLEditor extends PureComponent<Props, State> {
         line: endToken.line,
         ch: endToken.column - 1,
       };
-      // @ts-expect-error - doc doesn't exist, use getDoc()
-      return _queryEditor.doc.markText(from, to, {
+
+      return _queryEditor.getDoc().markText(from, to, {
         className: 'cm-gql-disabled',
       });
     });
 
-    return null;
+    this._disabledOperationMarkers = disabledOperationMarkers;
   }
 
   _handleViewResponse() {
@@ -376,27 +389,26 @@ class GraphQLEditor extends PureComponent<Props, State> {
   }
 
   _buildVariableTypes(
-    schema: Record<string, any> | null,
-  ): Record<string, Record<string, any>> | null {
+    schema: GraphQLSchema | null,
+  ): Record<string, GraphQLNonNull<any>> | null {
     if (!schema) {
       return null;
     }
 
     const definitions = this._documentAST ? this._documentAST.definitions : [];
-    const variableToType = {};
+    const variableToType: Record<string, GraphQLNonNull<any>> = {};
 
-    for (const { kind, variableDefinitions } of definitions) {
-      if (kind !== 'OperationDefinition') {
+    for (const definition of definitions) {
+      if (!isOperationDefinition(definition)) {
         continue;
       }
 
-      if (!variableDefinitions) {
+      if (!definition.variableDefinitions) {
         continue;
       }
 
-      for (const { variable, type } of variableDefinitions) {
-        // @ts-expect-error -- TSCONVERSION
-        const inputType = typeFromAST(schema, type);
+      for (const { variable, type } of definition.variableDefinitions) {
+        const inputType = typeFromAST(schema, type as NonNullTypeNode);
 
         if (!inputType) {
           continue;
@@ -437,8 +449,8 @@ class GraphQLEditor extends PureComponent<Props, State> {
     this.setState({
       automaticFetch,
     });
-    // @ts-expect-error -- TSCONVERSION convert boolean to string when setting
-    window.localStorage.setItem('graphql.automaticFetch', automaticFetch);
+
+    window.localStorage.setItem('graphql.automaticFetch', automaticFetch.toString());
   }
 
   _handlePrettify() {
@@ -656,17 +668,48 @@ class GraphQLEditor extends PureComponent<Props, State> {
     const variableTypes = this._buildVariableTypes(schema);
 
     // Create portal for GraphQL Explorer
-    const graphQLExplorerPortal = ReactDOM.createPortal(
-      <GraphqlExplorer
-        schema={schema}
-        key={schemaLastFetchTime}
-        visible={explorerVisible}
-        reference={activeReference}
-        handleClose={this._handleCloseExplorer}
-      />,
-      // @ts-expect-error -- TSCONVERSION
-      explorerContainer,
-    );
+    let graphQLExplorerPortal: React.ReactPortal | null = null;
+    if (explorerContainer) {
+      graphQLExplorerPortal = ReactDOM.createPortal(
+        <GraphqlExplorer
+          schema={schema}
+          key={schemaLastFetchTime}
+          visible={explorerVisible}
+          reference={activeReference}
+          handleClose={this._handleCloseExplorer}
+        />,
+        explorerContainer
+      );
+    }
+
+    let graphqlOptions: {
+      hintOptions: ShowHintOptions;
+      infoOptions: GraphQLInfoOptions;
+      jumpOptions: ModifiedGraphQLJumpOptions;
+      lintOptions: LintOptions;
+    } | undefined;
+
+    if (schema) {
+      graphqlOptions = {
+        hintOptions: {
+          schema,
+          completeSingle: false,
+        },
+        infoOptions: {
+          schema,
+          renderDescription: GraphQLEditor.renderMarkdown,
+          onClick: this._handleClickReference,
+        },
+        jumpOptions: {
+          schema,
+          onClick: this._handleClickReference,
+        },
+        lintOptions: {
+          schema,
+        },
+      };
+    }
+
     return (
       <div className="graphql-editor">
         <Dropdown right className="graphql-editor__schema-dropdown margin-bottom-xs">
@@ -706,26 +749,6 @@ class GraphQLEditor extends PureComponent<Props, State> {
             dynamicHeight
             manualPrettify
             uniquenessKey={uniquenessKey ? uniquenessKey + '::query' : undefined}
-            hintOptions={{
-              schema: schema || null,
-              completeSingle: false,
-            }}
-            infoOptions={{
-              schema: schema || null,
-              renderDescription: GraphQLEditor.renderMarkdown,
-              onClick: this._handleClickReference,
-            }}
-            jumpOptions={{
-              schema: schema || null,
-              onClick: this._handleClickReference,
-            }}
-            lintOptions={
-              schema
-                ? {
-                  schema,
-                }
-                : undefined
-            }
             fontSize={settings.editorFontSize}
             indentSize={settings.editorIndentSize}
             keyMap={settings.editorKeyMap}
@@ -738,6 +761,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
             mode="graphql"
             lineWrapping={settings.editorLineWrapping}
             placeholder=""
+            {...graphqlOptions}
           />
         </div>
         <div className="graphql-editor__schema-error">
