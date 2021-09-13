@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import React, { PureComponent } from 'react';
+import React, { FC, PureComponent, ReactNode } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
+import styled from 'styled-components';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
@@ -19,7 +20,43 @@ import ModalHeader from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 import HelpTooltip from '../help-tooltip';
 import MarkdownEditor from '../markdown-editor';
+import { PasswordViewer } from '../viewers/password-viewer';
 import { showWorkspaceDuplicateModal } from './workspace-duplicate-modal';
+
+const CertificateFields = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+  margin: 'var(--padding-sm) 0',
+});
+
+const CertificateField: FC<{
+  title: string;
+  value: string | null;
+  privateText?: boolean;
+  optional?: boolean;
+}> = ({
+  title,
+  value,
+  privateText,
+  optional,
+}) => {
+  if (optional && value === null) {
+    return null;
+  }
+
+  let display: ReactNode = value;
+  if (privateText) {
+    display = <PasswordViewer text={value} />;
+  } else {
+    display = <span className="monospace selectable">{value}</span>;
+  }
+
+  return (
+    <span className="pad-right no-wrap">
+      <strong>{title}:</strong>{' '}{display}
+    </span>
+  );
+};
 
 interface Props {
   clientCertificates: ClientCertificate[];
@@ -214,55 +251,38 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
 
   renderCertificate(certificate: ClientCertificate) {
     return (
-      <div key={certificate._id}>
-        <div className="row-spaced">
-          <div>
-            <span className="pad-right no-wrap">
-              <strong>PFX:</strong>{' '}
-              {certificate.pfx ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap">
-              <strong>CRT:</strong>{' '}
-              {certificate.cert ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap">
-              <strong>Key:</strong>{' '}
-              {certificate.key ? <i className="fa fa-check" /> : <i className="fa fa-remove" />}
-            </span>
-            <span className="pad-right no-wrap" title={certificate.passphrase || undefined}>
-              <strong>Passphrase:</strong>{' '}
-              {certificate.passphrase ? (
-                <i className="fa fa-check" />
-              ) : (
-                <i className="fa fa-remove" />
-              )}
-            </span>
-            <span className="pad-right">
-              <strong>Host:</strong>{' '}
-              <span className="monospace selectable">{certificate.host}</span>
-            </span>
-          </div>
-          <div className="no-wrap">
-            <button
-              className="btn btn--super-compact width-auto"
-              title="Enable or disable certificate"
-              onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}
-            >
-              {certificate.disabled ? (
-                <i className="fa fa-square-o" />
-              ) : (
-                <i className="fa fa-check-square-o" />
-              )}
-            </button>
-            <PromptButton
-              className="btn btn--super-compact width-auto"
-              confirmMessage=""
-              addIcon
-              onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}
-            >
-              <i className="fa fa-trash-o" />
-            </PromptButton>
-          </div>
+      <div className="row-spaced" key={certificate._id}>
+        <CertificateFields>
+          <CertificateField title="Host" value={certificate.host} />
+          {certificate.pfx ? (
+            <CertificateField title="PFX" value={certificate.pfx} />
+          ) : (
+            <CertificateField title="CRT" value={certificate.cert} />
+          )}
+          <CertificateField title="Key" value={certificate.key} optional />
+          <CertificateField title="Passphrase" value={certificate.passphrase} privateText optional />
+        </CertificateFields>
+
+        <div className="no-wrap">
+          <button
+            className="btn btn--super-compact width-auto"
+            title="Enable or disable certificate"
+            onClick={() => WorkspaceSettingsModal._handleToggleCertificate(certificate)}
+          >
+            {certificate.disabled ? (
+              <i className="fa fa-square-o" />
+            ) : (
+              <i className="fa fa-check-square-o" />
+            )}
+          </button>
+          <PromptButton
+            className="btn btn--super-compact width-auto"
+            confirmMessage=""
+            addIcon
+            onClick={() => WorkspaceSettingsModal._handleDeleteCertificate(certificate)}
+          >
+            <i className="fa fa-trash-o" />
+          </PromptButton>
         </div>
       </div>
     );

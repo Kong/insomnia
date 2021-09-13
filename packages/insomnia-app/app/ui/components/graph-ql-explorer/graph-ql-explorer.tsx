@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { GraphQLSchema, GraphQLType } from 'graphql';
+import { SchemaReference } from 'codemirror-graphql/utils/SchemaReference';
+import { GraphQLField, GraphQLNamedType, GraphQLSchema, GraphQLType, isNamedType } from 'graphql';
 import { GraphQLEnumType } from 'graphql';
 import React, { PureComponent } from 'react';
 import { createRef } from 'react';
@@ -16,6 +17,46 @@ import GraphQLExplorerSearchResults from './graph-ql-explorer-search-results';
 import GraphQLExplorerType from './graph-ql-explorer-type';
 import { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
 
+function getReferenceInfo(reference: SchemaReference) {
+  let field: GraphQLField<any, any, { [key: string]: any }> | undefined;
+  if ('field' in reference) {
+    field = reference.field;
+  }
+
+  let type: GraphQLType | undefined;
+  if ('type' in reference) {
+    type = reference.type;
+  }
+
+  return { type, field };
+}
+
+function isSameFieldAndType(
+  currentType?: GraphQLType,
+  type?: GraphQLType,
+  currentField?: GraphQLFieldWithParentName,
+  field?: GraphQLField<any, any, { [key: string]: any }>
+) {
+  // @TODO Simplify this function since it's hard to follow along
+  const compare = <
+    T extends GraphQLNamedType | GraphQLFieldWithParentName,
+    U extends GraphQLNamedType | GraphQLFieldWithParentName
+  >(a?: T, b?: U) => (!a && !b) || (a && b && a.name === b.name);
+
+  if (!isNamedType(currentType)) {
+    currentType = undefined;
+  }
+
+  if (!isNamedType(type)) {
+    type = undefined;
+  }
+
+  const isSameType = compare(currentType, type);
+
+  const isSameField = compare(currentField, field);
+  return isSameType && isSameField;
+}
+
 interface Props {
   handleClose: () => void;
   schema: GraphQLSchema | null;
@@ -24,8 +65,8 @@ interface Props {
 }
 
 interface HistoryItem {
-  currentType: null | GraphQLType;
-  currentField: null | GraphQLFieldWithParentName;
+  currentType?: GraphQLType;
+  currentField?: GraphQLFieldWithParentName;
 }
 
 interface State extends HistoryItem {
@@ -39,8 +80,8 @@ const SEARCH_UPDATE_DELAY_IN_MS = 300;
 class GraphQLExplorer extends PureComponent<Props, State> {
   state: State = {
     history: [],
-    currentType: null,
-    currentField: null,
+    currentType: undefined,
+    currentField: undefined,
     filter: '',
   };
 
@@ -62,8 +103,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
 
   _navigateToSchema() {
     this.setState({
-      currentType: null,
-      currentField: null,
+      currentType: undefined,
+      currentField: undefined,
       history: this._addToHistory(),
     });
   }
@@ -71,7 +112,7 @@ class GraphQLExplorer extends PureComponent<Props, State> {
   _handleNavigateType(type: GraphQLType) {
     this.setState({
       currentType: type,
-      currentField: null,
+      currentField: undefined,
       history: this._addToHistory(),
     });
   }
@@ -89,8 +130,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
       const last = history[history.length - 1] || null;
       return {
         history: history.slice(0, history.length - 1),
-        currentType: last ? last.currentType : null,
-        currentField: last ? last.currentField : null,
+        currentType: last ? last.currentType : undefined,
+        currentField: last ? last.currentField : undefined,
       };
     });
   }
@@ -114,21 +155,16 @@ class GraphQLExplorer extends PureComponent<Props, State> {
 
   // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps: Props) {
-    if (!nextProps.reference) {
+    const { reference } = nextProps;
+
+    if (!reference) {
       return;
     }
 
-    const { type, field } = nextProps.reference;
-    const { currentType, currentField } = this.state;
+    const { currentField, currentType } = this.state;
+    const { type, field } = getReferenceInfo(reference);
 
-    const compare = <T extends { name: string } | null, U extends { name: string } | null>(a: T, b: U) => (!a && !b) || (a && b && a.name === b.name);
-
-    // @ts-expect-error -- needs generic for `name`
-    const sameType = compare(currentType, type);
-    const sameField = compare(currentField, field);
-    const nothingChanged = sameType && sameField;
-
-    if (nothingChanged) {
+    if (isSameFieldAndType(currentType, type, currentField, field)) {
       return;
     }
 
@@ -136,8 +172,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
 
     this.setState({
       history,
-      currentType: type || null,
-      currentField: field || null,
+      currentType: type,
+      currentField: field,
     });
   }
 
@@ -168,8 +204,11 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     if (lastField) {
       name = lastField.name || 'Unknown';
     } else if (lastType) {
-      // @ts-expect-error -- needs generic for `name`
-      name = lastType.name || 'Unknown';
+      if (isNamedType(lastType)) {
+        name = lastType.name;
+      } else {
+        name = 'Unknown';
+      }
     } else {
       return null;
     }
@@ -271,8 +310,8 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     }
 
     const fieldName = currentField ? currentField.name : null;
-    // @ts-expect-error -- needs generic for `name`
-    const typeName = currentType ? currentType.name : null;
+
+    const typeName = isNamedType(currentType) ? currentType.name : null;
     const schemaName = schema ? 'Schema' : null;
     return (
       <KeydownBinder onKeydown={this._handleKeydown}>

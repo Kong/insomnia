@@ -193,8 +193,9 @@ class General extends PureComponent<Props, State> {
               setting="useBulkHeaderEditor"
             />
             <BooleanSetting
-              label="Vertical request/response layout"
+              label="Use vertical layout"
               setting="forceVerticalLayout"
+              help="Stack application panels (e.g. request / response) vertically instead of horizontally."
             />
           </div>
           <div>
@@ -418,7 +419,7 @@ class General extends PureComponent<Props, State> {
               name: string;
               value: HttpVersion;
             }[],
-            'Preferred HTTP version to use for requests which will fall back if it cannot be' +
+            'Preferred HTTP version to use for requests which will fall back if it cannot be ' +
             'negotiated',
           )}
         </div>

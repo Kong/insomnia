@@ -169,6 +169,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
 
   _handleTypeChange(def) {
     // Remove newlines if converting to text
+    // WARNING: props should never be overwritten!
     let value = this.props.pair.value || '';
 
     if (def.type === 'text' && !def.multiline && value.includes('\n')) {
@@ -212,7 +213,7 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
     }
   }
 
-  _handleBlurDescription(e) {
+  _handleBlurDescription(e: FocusEvent) {
     if (this.props.onBlurDescription) {
       this.props.onBlurDescription(this.props.pair, e);
     }
@@ -289,7 +290,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       >
         <OneLineEditor
           ref={this._setDescriptionInputRef}
-          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
           readOnly={readOnly}
           forceInput={forceInput}
           placeholder={descriptionPlaceholder || 'Description'}
@@ -347,7 +347,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
       return (
         <OneLineEditor
           ref={ref => { this._valueInput = ref; }}
-          // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
           readOnly={readOnly}
           forceInput={forceInput}
           type={valueInputType || 'text'}
@@ -492,7 +491,6 @@ class KeyValueEditorRow extends PureComponent<Props, State> {
               isVariableUncovered={isVariableUncovered}
               getAutocompleteConstants={this._handleAutocompleteNames}
               forceInput={forceInput}
-              // @ts-expect-error -- TSCONVERSION very strange that one of the `OneLineEditor`s in this file _doesn't_ error with this...
               readOnly={readOnly}
               onBlur={this._handleBlurName}
               onChange={this._handleNameChange}

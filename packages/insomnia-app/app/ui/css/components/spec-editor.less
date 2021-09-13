@@ -9,6 +9,9 @@
   h4,
   p,
   li,
+  small,
+  label,
+  .btn,
   .model-box,
   .model-title,
   .opblock-summary-description,
@@ -28,6 +31,41 @@
 
   .microlight {
     user-select: all;
+  }
+
+  .btn {
+    border-width: 2px;
+  }
+
+  .modal-ux,
+  .dialog-ux {
+    background: var(--color-bg);
+  }
+
+  textarea,
+  input {
+    // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L111
+    height: var(--line-height-xs);
+
+    // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L315-L325
+    transition: all 130ms ease-out;
+    box-sizing: border-box;
+    text-align: left;
+    font-size: inherit;
+    text-decoration: inherit;
+    color: inherit;
+
+    // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L95-L98
+    border: 1px solid var(--hl-md);
+    border-radius: var(--radius-md);
+    background-color: var(--hl-xxs);
+  }
+
+  // Taken from https://github.com/Kong/insomnia/blob/c566650f41e8bd642a1727270472bb9d00b350c4/packages/insomnia-app/app/ui/css/components/forms.less#L119-L120
+  textarea:focus,
+  input:focus {
+    background-color: transparent;
+    border-color: var(--hl-lg);
   }
 
   .model {

@@ -112,8 +112,6 @@ class GenerateConfigModal extends PureComponent<Props, State> {
           lineWrapping={settings.editorLineWrapping}
           mode={config.mimeType}
           nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
-          // @ts-expect-error -- TSCONVERSION appears to be genuine
-          onChange={this._handleChange}
           readOnly
         />
       </TabPanel>
