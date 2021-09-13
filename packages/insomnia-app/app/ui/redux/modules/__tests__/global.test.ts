@@ -16,6 +16,7 @@ import {
   GlobalActivity,
   SORT_MODIFIED_DESC,
 } from '../../../../common/constants';
+import { database } from '../../../../common/database';
 import { getDesignerDataDir } from '../../../../common/electron-helpers';
 import * as models from '../../../../models';
 import { DEFAULT_PROJECT_ID } from '../../../../models/project';
@@ -81,32 +82,43 @@ describe('global', () => {
       );
     });
 
-    it('should update flag for onboarding prompted', async () => {
+    it('should update flag for onboarding prompted', async done => {
       await models.settings.patch({
         hasPromptedToMigrateFromDesigner: false,
         hasPromptedOnboarding: false,
       });
+
+      async function onDatabaseChange() {
+        const settings = await models.settings.getOrCreate();
+        expect(settings.hasPromptedToMigrateFromDesigner).toBe(false);
+        expect(settings.hasPromptedOnboarding).toBe(true);
+
+        database.offChange(onDatabaseChange);
+        done();
+      }
+
+      database.onChange(onDatabaseChange);
+
       setActiveActivity(ACTIVITY_ONBOARDING);
-      // We don't await the settings update in the action creator
-      // so wait for it to update before checking
-      await new Promise(resolve => setTimeout(resolve, 10));
-      const settings = await models.settings.getOrCreate();
-      expect(settings.hasPromptedToMigrateFromDesigner).toBe(false);
-      expect(settings.hasPromptedOnboarding).toBe(true);
     });
 
-    it('should update flag for migration prompted', async () => {
+    it('should update flag for migration prompted', async done => {
       await models.settings.patch({
         hasPromptedToMigrateFromDesigner: false,
         hasPromptedOnboarding: false,
       });
+
+      async function onDatabaseChange() {
+        const settings = await models.settings.getOrCreate();
+        expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
+        expect(settings.hasPromptedOnboarding).toBe(false);
+        database.offChange(onDatabaseChange);
+        done();
+      }
+
+      database.onChange(onDatabaseChange);
+
       setActiveActivity(ACTIVITY_MIGRATION);
-      // We don't await the settings update in the action creator
-      // so wait for it to update before checking
-      await new Promise(resolve => setTimeout(resolve, 10));
-      const settings = await models.settings.getOrCreate();
-      expect(settings.hasPromptedToMigrateFromDesigner).toBe(true);
-      expect(settings.hasPromptedOnboarding).toBe(false);
     });
   });
 
