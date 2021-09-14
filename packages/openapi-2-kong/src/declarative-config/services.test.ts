@@ -41,7 +41,7 @@ const getSpecResult = (): DCService =>
           name: 'My_API-birds_id-get',
           strip_path: false,
           methods: ['GET'],
-          paths: ['/birds/(?<id>[^\\/\\s]+)$'],
+          paths: ['/birds/(?<id>[^\\/]+)$'],
           tags,
         },
       ],
@@ -253,7 +253,7 @@ describe('services', () => {
           tags,
           name: 'My_API-birds_id-get',
           methods: ['GET'],
-          paths: ['/birds/(?<id>[^\\/\\s]+)$'],
+          paths: ['/birds/(?<id>[^\\/]+)$'],
           strip_path: false,
           plugins: [
             {
