@@ -1,4 +1,7 @@
 import { HttpVersions, Settings as BaseSettings } from 'insomnia-common';
+import { InsomniaConfig, validate } from 'insomnia-config';
+import { keys, mergeLeft, omit } from 'ramda';
+
 import {
   getAppDefaultDarkTheme,
   getAppDefaultLightTheme,
@@ -7,6 +10,7 @@ import {
 } from '../common/constants';
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
+import insomniaConfig from '../insomnia.config.json';
 import type { BaseModel } from './index';
 
 export type Settings = BaseModel & BaseSettings;
@@ -22,8 +26,25 @@ export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings =>
   model.type === type
 );
 
+/** gets settings from the `insomnia.config.json` */
+const getConfigSettings = ()  => {
+  const { valid } = validate(insomniaConfig as InsomniaConfig);
+  if (!valid) {
+    return {};
+  }
+  // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
+  return insomniaConfig.settings as Required<InsomniaConfig>['settings'] || {};
+};
+
+export const isConfigControlledSetting = (setting: keyof BaseSettings): setting is keyof BaseSettings => (
+  Object.prototype.hasOwnProperty.call(getConfigSettings(), setting)
+);
+
+const removeControlledSettings = omit(keys(getConfigSettings()));
+const overwriteControlledSettings = mergeLeft(getConfigSettings());
+
 export function init(): BaseSettings {
-  return {
+  return overwriteControlledSettings({
     autoHideMenuBar: false,
     autocompleteDelay: 1200,
     deviceId: null,
@@ -78,7 +99,7 @@ export function init(): BaseSettings {
     // So by default this flag is set to false, and is toggled to true during initialization
     // for new users
     hasPromptedAnalytics: false,
-  };
+  });
 }
 
 export function migrate(doc: Settings) {
@@ -90,23 +111,23 @@ export async function all() {
   const settings = await db.all<Settings>(type);
 
   if (settings?.length === 0) {
-    return [await getOrCreate()];
+    return [overwriteControlledSettings(await getOrCreate())];
   } else {
-    return settings;
+    return settings.map(overwriteControlledSettings);
   }
 }
 
 export async function create(patch: Partial<Settings> = {}) {
-  return db.docCreate<Settings>(type, patch);
+  return db.docCreate<Settings>(type, removeControlledSettings(patch));
 }
 
 export async function update(settings: Settings, patch: Partial<Settings>) {
-  return db.docUpdate<Settings>(settings, patch);
+  return db.docUpdate<Settings>(settings, removeControlledSettings(patch));
 }
 
 export async function patch(patch: Partial<Settings>) {
   const settings = await getOrCreate();
-  return db.docUpdate<Settings>(settings, patch);
+  return db.docUpdate<Settings>(settings, removeControlledSettings(patch));
 }
 
 export async function getOrCreate() {

@@ -1,0 +1,156 @@
+import { InsomniaConfig } from '.';
+import { ingest, validate } from './validate';
+
+describe('ingest', () => {
+  const config: InsomniaConfig = {
+    version: '1.0.0',
+    name: 'Insomnia Config',
+  };
+
+  it('returns arbitrary input without modification', () => {
+    const result = ingest(config);
+    expect(result).toStrictEqual(config);
+  });
+
+  it('parses a string insomnia config', () => {
+    const stringConfig = JSON.stringify(config, null, 2);
+    const result = ingest(stringConfig);
+    expect(result).toStrictEqual(config);
+  });
+
+  it('throws on bad inputs', () => {
+    const result = () => ingest('Lumpy Gravy');
+    expect(result).toThrowError('Unexpected token L in JSON at position 0');
+  });
+});
+
+describe('validate', () => {
+  it('passes with an empty config', () => {
+    const { valid, errors } = validate({
+      version: '1.0.0',
+      name: 'Insomnia Config',
+    });
+    expect(errors).toBe(null);
+    expect(valid).toBe(true);
+  });
+
+  it('passes with a simple valid config', () => {
+    const { valid, errors } = validate({
+      version: '1.0.0',
+      name: 'Insomnia Config',
+      settings: {
+        enableAnalytics: false,
+        disableUpdateNotification: true,
+      },
+    });
+    expect(errors).toBe(null);
+    expect(valid).toBe(true);
+  });
+
+  it('fails on incorrect version', () => {
+    const { valid, errors } = validate({
+      // @ts-expect-error intentionally invalid
+      version: 'v1.0.0',
+      name: 'Insomnia Config',
+    });
+    expect(errors).toMatchObject([
+      {
+        instancePath: '/version',
+        schemaPath: '#/properties/version/enum',
+        keyword: 'enum',
+        params: {
+          allowedValues: [
+            '1.0.0',
+          ],
+        },
+        message: 'must be equal to one of the allowed values',
+      },
+    ]);
+    expect(valid).toBe(false);
+  });
+
+  it('fails on incorrect name', () => {
+    const { valid, errors } = validate({
+      version: '1.0.0',
+      // @ts-expect-error intentionally invalid
+      name: 'Insomniac Config',
+    });
+    expect(errors).toMatchObject([
+      {
+        instancePath: '/name',
+        schemaPath: '#/properties/name/enum',
+        keyword: 'enum',
+        params: {
+          allowedValues: [
+            'Insomnia Config',
+          ],
+        },
+        message: 'must be equal to one of the allowed values',
+      },
+    ]);
+    expect(valid).toBe(false);
+  });
+
+  it('fails on missing properties', () => {
+    // @ts-expect-error intentionally invalid
+    const { valid, errors } = validate({
+      version: '1.0.0',
+    });
+    expect(errors).toMatchObject([
+      {
+        instancePath: '',
+        schemaPath: '#/required',
+        keyword: 'required',
+        params: { missingProperty: 'name' },
+        message: "must have required property 'name'",
+      },
+    ]);
+    expect(valid).toBe(false);
+  });
+
+  it('fails on additional top level properties', () => {
+    const { valid, errors } = validate({
+      version: '1.0.0',
+      name: 'Insomnia Config',
+      // @ts-expect-error intentional mispelling of `settings` (wrong casing)
+      Settings: {},
+    });
+
+    expect(errors).toMatchObject([
+      {
+        instancePath: '',
+        keyword: 'additionalProperties',
+        message: 'must NOT have additional properties',
+        params: {
+          additionalProperty: 'Settings',
+        },
+        schemaPath: '#/additionalProperties',
+      },
+    ]);
+    expect(valid).toBe(false);
+  });
+
+  it('fails on additional settings properties', () => {
+    const { valid, errors } = validate({
+      version: '1.0.0',
+      name: 'Insomnia Config',
+      settings: {
+        // @ts-expect-error intentional wrong flip of actual setting name, `enableAnalytics`
+        disableAnalytics: true,
+      },
+    });
+
+    expect(errors).toMatchObject([
+      {
+        instancePath: '/settings',
+        keyword: 'additionalProperties',
+        message: 'must NOT have additional properties',
+        params: {
+          additionalProperty: 'disableAnalytics',
+        },
+        schemaPath: '#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\">>/additionalProperties',
+      },
+    ]);
+    expect(valid).toBe(false);
+  });
+});

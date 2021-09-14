@@ -1,0 +1,42 @@
+{
+  "description": "Configuration for Insomnia.",
+  "title": "Insomnia Config",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "enum": [
+        "1.0.0"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "enum": [
+        "Insomnia Config"
+      ]
+    },
+    "settings": {
+      "$ref": "#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\">>"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version"
+  ],
+  "definitions": {
+    "Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\">>": {
+      "type": "object",
+      "properties": {
+        "enableAnalytics": {
+          "type": "boolean"
+        },
+        "disableUpdateNotification": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
