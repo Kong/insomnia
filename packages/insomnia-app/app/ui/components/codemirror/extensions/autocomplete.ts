@@ -146,7 +146,20 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     return CodeMirror.Pass;
   }
 
-  async function setupKeyMap(cm: CodeMirror.EditorFromTextArea, functionMap) {
+  async function setupKeyMap(
+    cm: CodeMirror.EditorFromTextArea,
+    {
+      completeIfAfterTagOrVarOpen,
+      completeForce,
+    } : {
+      completeIfAfterTagOrVarOpen: (
+        cm: CodeMirror.EditorFromTextArea
+      ) => void | typeof CodeMirror.Pass;
+      completeForce: (
+        cm: CodeMirror.EditorFromTextArea
+      ) => void | typeof CodeMirror.Pass;
+    }
+  ) {
     // Remove keymap if we're already added it
     cm.removeKeyMap('autocomplete-keymap');
 
@@ -154,21 +167,22 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     const keyBindings = settings.hotKeyRegistry[hotKeyRefs.SHOW_AUTOCOMPLETE.id];
     const keyCombs = getPlatformKeyCombinations(keyBindings);
 
-    const keymap = {
+    const keymap: CodeMirror.KeyMap = {
       name: 'autocomplete-keymap',
-      "' '": functionMap.completeIfAfterTagOrVarOpen,
+      "' '": completeIfAfterTagOrVarOpen,
     };
 
+    // Construct valid codemirror key names from KeyCombination items. The order (Shift-Cmd-Ctrl-Alt) of the modifier is important https://codemirror.net/doc/manual.html#keymaps
     for (const keyComb of keyCombs) {
       const alt = keyComb.alt ? 'Alt-' : '';
       const ctrl = keyComb.ctrl ? 'Ctrl-' : '';
+      // Cmd- is used to register the meta key of all platforms by CodeMirror
       const meta = keyComb.meta ? 'Cmd-' : '';
       const shift = keyComb.shift ? 'Shift-' : '';
-      // @ts-expect-error -- keynames is documented in codemirror but doesn't exist in type defs.
       const keyname = CodeMirror.keyNames[keyComb.keyCode];
 
       const key = `${shift}${meta}${ctrl}${alt}${keyname}`;
-      keymap[key] = functionMap.completeForce;
+      keymap[key] = completeForce;
     }
 
     cm.addKeyMap(keymap);

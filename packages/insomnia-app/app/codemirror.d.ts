@@ -93,4 +93,6 @@ declare module 'codemirror' {
     fold: (instance: Editor, from: Position) => void;
     unfold: (instance: Editor, from: Position) => void;
   }
+
+  const keyNames: Record<number, string>;
 }
