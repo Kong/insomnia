@@ -4,7 +4,6 @@ import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import { GraphQLSchema } from 'graphql';
 
-import { HotKeyRegistry } from './common/hotkeys';
 import { HandleGetRenderContext, HandleRender } from './common/render';
 import { Settings } from './models/settings';
 import { NunjucksParsedTag } from './templating/utils';
@@ -43,9 +42,7 @@ declare module 'codemirror' {
     value: string | (() => Promise<unknown>);
   }
 
-  interface EnvironmentAutocompleteOptions {
-    hotKeyRegistry: HotKeyRegistry;
-    autocompleteDelay: Settings['autocompleteDelay'];
+  interface EnvironmentAutocompleteOptions extends Pick<Settings, 'hotKeyRegistry' | 'autocompleteDelay'> {
     getConstants?: () => string[] | PromiseLike<string[]>;
     getVariables?: () => Variable[] | PromiseLike<Variable[]>;
     getSnippets?: () => Snippet[] | PromiseLike<Snippet[]>;
