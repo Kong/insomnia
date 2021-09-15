@@ -13,7 +13,7 @@ import { clickLink } from '../../../common/electron-helpers';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { xmlDecode } from '../../../common/misc';
-import CodeEditor from '../codemirror/code-editor';
+import CodeEditor, { UnconnectedCodeEditor } from '../codemirror/code-editor';
 import KeydownBinder from '../keydown-binder';
 import CSVViewer from './response-csv-viewer';
 import ResponseError from './response-error';
@@ -54,7 +54,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class ResponseViewer extends Component<Props, State> {
-  _selectableView: ResponseRaw | CodeEditor | null;
+  _selectableView: ResponseRaw | UnconnectedCodeEditor | null;
 
   state: State = {
     blockingBecauseTooLarge: false,
@@ -167,7 +167,7 @@ class ResponseViewer extends Component<Props, State> {
     return false;
   }
 
-  _setSelectableViewRef<T extends ResponseRaw | CodeEditor | null>(n: T) {
+  _setSelectableViewRef<T extends ResponseRaw | UnconnectedCodeEditor | null>(n: T) {
     this._selectableView = n;
   }
 

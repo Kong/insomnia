@@ -10,7 +10,7 @@ import { initializeSpectral, isLintError } from '../../common/spectral';
 import type { ApiSpec } from '../../models/api-spec';
 import * as models from '../../models/index';
 import previewIcon from '../images/icn-eye.svg';
-import CodeEditor from './codemirror/code-editor';
+import CodeEditor, { UnconnectedCodeEditor } from './codemirror/code-editor';
 import ErrorBoundary from './error-boundary';
 import PageLayout from './page-layout';
 import SpecEditorSidebar from './spec-editor/spec-editor-sidebar';
@@ -36,7 +36,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class WrapperDesign extends PureComponent<Props, State> {
-  editor: CodeEditor | null = null;
+  editor: UnconnectedCodeEditor | null = null;
   debounceTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -52,7 +52,7 @@ class WrapperDesign extends PureComponent<Props, State> {
     delay: 1000,
   };
 
-  _setEditorRef(n: CodeEditor) {
+  _setEditorRef(n: UnconnectedCodeEditor) {
     this.editor = n;
   }
 

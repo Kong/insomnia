@@ -11,6 +11,7 @@ import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
 import jq from 'jsonpath';
 import React, { Component, CSSProperties, ReactNode } from 'react';
+import { connect } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
 import vkBeautify from 'vkbeautify';
 import zprint from 'zprint-clj';
@@ -28,6 +29,8 @@ import * as misc from '../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { getTagDefinitions } from '../../../templating/index';
 import { NunjucksParsedTag } from '../../../templating/utils';
+import { RootState } from '../../redux/modules';
+import { selectSettings } from '../../redux/selectors';
 import Dropdown from '../base/dropdown/dropdown';
 import DropdownButton from '../base/dropdown/dropdown-button';
 import DropdownItem from '../base/dropdown/dropdown-item';
@@ -90,7 +93,17 @@ const BASE_CODEMIRROR_OPTIONS: CodeMirror.EditorConfiguration = {
 
 export type CodeEditorOnChange = (value: string) => void;
 
-interface Props {
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+const mapStateToProps = (state: RootState) => {
+  const { hotKeyRegistry } = selectSettings(state);
+
+  return {
+    hotKeyRegistry,
+  };
+};
+
+interface Props extends ReduxProps {
   indentWithTabs?: boolean;
   onChange?: CodeEditorOnChange;
   onCursorActivity?: (cm: CodeMirror.EditorFromTextArea) => void;
@@ -159,7 +172,7 @@ function isMarkerRange(mark?: CodeMirror.Position | CodeMirror.MarkerRange): mar
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CodeEditor extends Component<Props, State> {
+export class UnconnectedCodeEditor extends Component<Props, State> {
   private _uniquenessKey?: string;
   private _previousUniquenessKey?: string;
   private _originalCode: string;
@@ -1276,5 +1289,7 @@ class CodeEditor extends Component<Props, State> {
     );
   }
 }
+
+const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedCodeEditor);
 
 export default CodeEditor;
