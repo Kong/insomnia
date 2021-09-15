@@ -96,10 +96,11 @@ export type CodeEditorOnChange = (value: string) => void;
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 
 const mapStateToProps = (state: RootState) => {
-  const { hotKeyRegistry } = selectSettings(state);
+  const { hotKeyRegistry, autocompleteDelay } = selectSettings(state);
 
   return {
     hotKeyRegistry,
+    autocompleteDelay,
   };
 };
 
@@ -727,6 +728,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
     const {
       mode: rawMode,
       autoCloseBrackets,
+      autocompleteDelay,
       dynamicHeight,
       getAutocompleteConstants,
       getAutocompleteSnippets,
@@ -871,6 +873,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
         getConstants: getAutocompleteConstants,
         getSnippets: getAutocompleteSnippets,
         hotKeyRegistry,
+        autocompleteDelay,
       };
     }
 

@@ -4,7 +4,6 @@ import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } fro
 
 import { getPlatformKeyCombinations, hotKeyRefs } from '../../../../common/hotkeys';
 import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
-import * as models from '../../../../models';
 import { getDefaultFill, NunjucksParsedTag } from '../../../../templating/utils';
 import { isNunjucksMode } from '../modes/nunjucks';
 
@@ -188,7 +187,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
   }
 
   let keydownTimeoutHandle: NodeJS.Timeout | null = null;
-  cm.on('keydown', async (cm: CodeMirror.EditorFromTextArea, e) => {
+  cm.on('keydown', (cm: CodeMirror.EditorFromTextArea, e) => {
     // Close autocomplete on Escape if it's open
     if (cm.isHintDropdownActive() && e.key === 'Escape') {
       if (!cm.state.completionActive) {
@@ -209,14 +208,14 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     if (keydownTimeoutHandle !== null) {
       clearTimeout(keydownTimeoutHandle);
     }
-    const { autocompleteDelay } = await models.settings.getOrCreate();
 
-    if (autocompleteDelay > 0) {
+    if (options.autocompleteDelay > 0) {
       keydownTimeoutHandle = setTimeout(() => {
         completeIfInVariableName(cm);
-      }, autocompleteDelay);
+      }, options.autocompleteDelay);
     }
   });
+
   // Clear timeout if we already closed the completion
   cm.on('endCompletion', () => {
     if (keydownTimeoutHandle !== null) {
