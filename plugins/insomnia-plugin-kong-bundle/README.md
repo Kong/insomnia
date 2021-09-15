@@ -2,7 +2,9 @@
 
 [![Npm Version](https://img.shields.io/npm/v/insomnia-plugin-kong-bundle.svg)](https://www.npmjs.com/package/insomnia-plugin-kong-bundle)
 
-This is a plugin that bundles Kong-specific Insomnia plugins into a single plugin.
+This plugin bundles Kong-specific Insomnia plugins into a single plugin.
+
+**Note**: The functionality that this plugin offers is now bundled automatically with Insomnia. If you are on the latest version of Insomnia, you can delete this plugin entirely from Preferences > Plugins.
 
 ## Installation
 
