@@ -146,7 +146,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     return CodeMirror.Pass;
   }
 
-  async function setupKeyMap(
+  function setupKeyMap(
     cm: CodeMirror.EditorFromTextArea,
     {
       completeIfAfterTagOrVarOpen,
@@ -163,8 +163,7 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     // Remove keymap if we're already added it
     cm.removeKeyMap('autocomplete-keymap');
 
-    const settings = await models.settings.getOrCreate();
-    const keyBindings = settings.hotKeyRegistry[hotKeyRefs.SHOW_AUTOCOMPLETE.id];
+    const keyBindings = options.hotKeyRegistry[hotKeyRefs.SHOW_AUTOCOMPLETE.id];
     const keyCombs = getPlatformKeyCombinations(keyBindings);
 
     const keymap: CodeMirror.KeyMap = {

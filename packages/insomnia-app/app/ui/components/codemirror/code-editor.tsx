@@ -735,6 +735,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       hideLineNumbers,
       hideScrollbars,
       hintOptions,
+      hotKeyRegistry,
       indentSize,
       indentWithTabs,
       infoOptions,
@@ -869,6 +870,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
         getTags,
         getConstants: getAutocompleteConstants,
         getSnippets: getAutocompleteSnippets,
+        hotKeyRegistry,
       };
     }
 
