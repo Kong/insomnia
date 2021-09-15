@@ -3,9 +3,9 @@ import React, { FunctionComponent } from 'react';
 import styled from 'styled-components';
 
 import * as session from '../../../account/session';
-import Dropdown from '../base/dropdown/dropdown';
-import DropdownButton from '../base/dropdown/dropdown-button';
-import DropdownItem from '../base/dropdown/dropdown-item';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import Link from '../base/link';
 import PromptButton from '../base/prompt-button';
 import { showLoginModal } from '../modals/login-modal';

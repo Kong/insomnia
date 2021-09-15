@@ -9,14 +9,16 @@ import { decompressObject } from '../../../common/misc';
 import type { Environment } from '../../../models/environment';
 import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import PromptButton from '../base/prompt-button';
 import KeydownBinder from '../keydown-binder';
-import SizeTag from '../tags/size-tag';
-import StatusTag from '../tags/status-tag';
-import TimeTag from '../tags/time-tag';
-import URLTag from '../tags/url-tag';
+import { SizeTag } from '../tags/size-tag';
+import { StatusTag } from '../tags/status-tag';
+import { TimeTag } from '../tags/time-tag';
+import { URLTag } from '../tags/url-tag';
 import TimeFromNow from '../time-from-now';
 
 interface Props {

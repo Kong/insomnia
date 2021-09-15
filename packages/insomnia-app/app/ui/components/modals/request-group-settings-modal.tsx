@@ -9,8 +9,8 @@ import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
 import DebouncedInput from '../base/debounced-input';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
 import HelpTooltip from '../help-tooltip';
 import MarkdownEditor from '../markdown-editor';
 

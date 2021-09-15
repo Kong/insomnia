@@ -5,7 +5,7 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
 import { importFile } from '../../redux/modules/import';
 import { selectActiveWorkspace } from '../../redux/selectors';
-import Hotkey from '../hotkey';
+import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {

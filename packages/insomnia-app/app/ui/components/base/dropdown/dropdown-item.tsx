@@ -18,7 +18,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class DropdownItem extends PureComponent<Props> {
+export class DropdownItem extends PureComponent<Props> {
   _handleClick(e) {
     const { stayOpenAfterClick, onClick, disabled } = this.props;
 
@@ -70,5 +70,3 @@ class DropdownItem extends PureComponent<Props> {
     return createElement(buttonClass || 'button', buttonProps, inner);
   }
 }
-
-export default DropdownItem;

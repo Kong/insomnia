@@ -8,9 +8,9 @@ import type { GitRepository } from '../../../models/git-repository';
 import { GitVCS } from '../../../sync/git/git-vcs';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalFooter from '../base/modal-footer';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 
 interface Props {
