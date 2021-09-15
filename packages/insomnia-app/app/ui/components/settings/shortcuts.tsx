@@ -26,7 +26,7 @@ interface Props {
 const HOT_KEY_DEFS: HotKeyDefinition[] = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Shortcuts extends PureComponent<Props> {
+export class Shortcuts extends PureComponent<Props> {
   /**
    * Checks whether the given key combination already existed.
    * @param newKeyComb the key combination to be checked.
@@ -186,5 +186,3 @@ class Shortcuts extends PureComponent<Props> {
     );
   }
 }
-
-export default Shortcuts;

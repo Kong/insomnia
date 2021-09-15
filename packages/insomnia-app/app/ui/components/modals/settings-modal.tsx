@@ -16,7 +16,7 @@ import Account from '../settings/account';
 import General from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import Plugins from '../settings/plugins';
-import SettingsShortcuts from '../settings/shortcuts';
+import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
 import Tooltip from '../tooltip';
 import { showModal } from './index';
@@ -28,7 +28,6 @@ export const TAB_INDEX_PLUGINS = 5;
 
 interface Props {
   settings: Settings;
-  handleUpdateKeyBindings: () => void;
 }
 
 interface State {
@@ -54,11 +53,9 @@ class SettingsModal extends PureComponent<Props, State> {
   }
 
   async _handleUpdateKeyBindings(hotKeyRegistry: HotKeyRegistry) {
-    models.settings.update(this.props.settings, {
+    await models.settings.update(this.props.settings, {
       hotKeyRegistry,
     });
-
-    this.props.handleUpdateKeyBindings();
   }
 
   show(currentTabIndex = 0) {
@@ -130,7 +127,7 @@ class SettingsModal extends PureComponent<Props, State> {
               <ThemePanel />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <SettingsShortcuts
+              <Shortcuts
                 hotKeyRegistry={settings.hotKeyRegistry}
                 handleUpdateKeyBindings={this._handleUpdateKeyBindings}
               />

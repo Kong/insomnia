@@ -634,7 +634,6 @@ class Wrapper extends PureComponent<WrapperProps, State> {
 
             <SettingsModal
               ref={registerModal}
-              handleUpdateKeyBindings={this._forceRequestPaneRefreshAfterDelay}
               settings={settings}
             />
 
