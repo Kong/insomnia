@@ -156,10 +156,8 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   // Request updaters
   async _handleForceUpdateRequest(r: Request, patch: Partial<Request>) {
     const newRequest = await requestUpdate(r, patch);
-    // Give it a second for the app to render first. If we don't wait, it will refresh
-    // on the old request and won't catch the newest one.
-    // TODO: Move this refresh key into redux store so we don't need timeout
-    window.setTimeout(this._forceRequestPaneRefresh, 100);
+    this._forceRequestPaneRefreshAfterDelay();
+
     return newRequest;
   }
 
@@ -437,6 +435,13 @@ class Wrapper extends PureComponent<WrapperProps, State> {
   _handleChangeEnvironment(id: string | null) {
     const { handleSetActiveEnvironment } = this.props;
     handleSetActiveEnvironment(id);
+  }
+
+  _forceRequestPaneRefreshAfterDelay(): void {
+    // Give it a second for the app to render first. If we don't wait, it will refresh
+    // on the old request and won't catch the newest one.
+    // TODO: Move this refresh key into redux store so we don't need timeout
+    window.setTimeout(this._forceRequestPaneRefresh, 100);
   }
 
   _forceRequestPaneRefresh() {

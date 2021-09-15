@@ -2,8 +2,8 @@ import 'codemirror/addon/mode/overlay';
 
 import CodeMirror, { EnvironmentAutocompleteOptions, Hint, ShowHintOptions } from 'codemirror';
 
+import { getPlatformKeyCombinations, hotKeyRefs } from '../../../../common/hotkeys';
 import { escapeHTML, escapeRegex, isNotNullOrUndefined } from '../../../../common/misc';
-import * as models from '../../../../models';
 import { getDefaultFill, NunjucksParsedTag } from '../../../../templating/utils';
 import { isNunjucksMode } from '../modes/nunjucks';
 
@@ -145,8 +145,49 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     return CodeMirror.Pass;
   }
 
+  function setupKeyMap(
+    cm: CodeMirror.EditorFromTextArea,
+    {
+      completeIfAfterTagOrVarOpen,
+      completeForce,
+    } : {
+      completeIfAfterTagOrVarOpen: (
+        cm: CodeMirror.EditorFromTextArea
+      ) => void | typeof CodeMirror.Pass;
+      completeForce: (
+        cm: CodeMirror.EditorFromTextArea
+      ) => void | typeof CodeMirror.Pass;
+    }
+  ) {
+    // Remove keymap if we're already added it
+    cm.removeKeyMap('autocomplete-keymap');
+
+    const keyBindings = options.hotKeyRegistry[hotKeyRefs.SHOW_AUTOCOMPLETE.id];
+    const keyCombs = getPlatformKeyCombinations(keyBindings);
+
+    const keymap: CodeMirror.KeyMap = {
+      name: 'autocomplete-keymap',
+      "' '": completeIfAfterTagOrVarOpen,
+    };
+
+    // Construct valid codemirror key names from KeyCombination items. The order (Shift-Cmd-Ctrl-Alt) of the modifier is important https://codemirror.net/doc/manual.html#keymaps
+    for (const keyComb of keyCombs) {
+      const alt = keyComb.alt ? 'Alt-' : '';
+      const ctrl = keyComb.ctrl ? 'Ctrl-' : '';
+      // Cmd- is used to register the meta key of all platforms by CodeMirror
+      const meta = keyComb.meta ? 'Cmd-' : '';
+      const shift = keyComb.shift ? 'Shift-' : '';
+      const keyname = CodeMirror.keyNames[keyComb.keyCode];
+
+      const key = `${shift}${meta}${ctrl}${alt}${keyname}`;
+      keymap[key] = completeForce;
+    }
+
+    cm.addKeyMap(keymap);
+  }
+
   let keydownTimeoutHandle: NodeJS.Timeout | null = null;
-  cm.on('keydown', async (cm: CodeMirror.EditorFromTextArea, e) => {
+  cm.on('keydown', (cm: CodeMirror.EditorFromTextArea, e) => {
     // Close autocomplete on Escape if it's open
     if (cm.isHintDropdownActive() && e.key === 'Escape') {
       if (!cm.state.completionActive) {
@@ -167,29 +208,22 @@ CodeMirror.defineOption('environmentAutocomplete', null, (cm: CodeMirror.EditorF
     if (keydownTimeoutHandle !== null) {
       clearTimeout(keydownTimeoutHandle);
     }
-    const { autocompleteDelay } = await models.settings.getOrCreate();
 
-    if (autocompleteDelay > 0) {
+    if (options.autocompleteDelay > 0) {
       keydownTimeoutHandle = setTimeout(() => {
         completeIfInVariableName(cm);
-      }, autocompleteDelay);
+      }, options.autocompleteDelay);
     }
   });
+
   // Clear timeout if we already closed the completion
   cm.on('endCompletion', () => {
     if (keydownTimeoutHandle !== null) {
       clearTimeout(keydownTimeoutHandle);
     }
   });
-  // Remove keymap if we're already added it
-  cm.removeKeyMap('autocomplete-keymap');
-  // Add keymap
-  cm.addKeyMap({
-    name: 'autocomplete-keymap',
-    'Ctrl-Space': completeForce,
-    // Force autocomplete on hotkey
-    "' '": completeIfAfterTagOrVarOpen,
-  });
+
+  setupKeyMap(cm, { completeForce, completeIfAfterTagOrVarOpen });
 });
 
 /**
