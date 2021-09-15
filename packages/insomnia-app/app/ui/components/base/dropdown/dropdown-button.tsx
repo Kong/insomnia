@@ -1,4 +1,4 @@
-import React, { ButtonHTMLAttributes, FC, memo, ReactNode } from 'react';
+import React, { ButtonHTMLAttributes, PureComponent, ReactNode } from 'react';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -6,16 +6,19 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
 }
 
-export const DropdownButton: FC<Props> = memo(({ children, noWrap, ...props }) => {
-  if (noWrap) {
-    return <>{children}</>;
+// eslint-disable-next-line react/prefer-stateless-function -- Dropdown's implementation makes changing this to a function component tricky.
+export class DropdownButton extends PureComponent<Props> {
+  render() {
+    const { children, noWrap, ...props } = this.props;
+
+    if (noWrap) {
+      return <>{children}</>;
+    }
+
+    return (
+      <button type="button" {...props}>
+        {children}
+      </button>
+    );
   }
-
-  return (
-    <button type="button" {...props}>
-      {children}
-    </button>
-  );
-});
-
-DropdownButton.displayName = 'DropdownButton';
+}

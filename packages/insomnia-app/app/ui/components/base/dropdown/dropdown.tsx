@@ -1,7 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { any, equals } from 'ramda';
-import React, { CSSProperties, FC, Fragment, NamedExoticComponent, PureComponent, ReactNode } from 'react';
+import React, { CSSProperties, Fragment, PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -36,21 +35,6 @@ interface State {
   forcedPosition?: {x: number; y: number} | null;
   uniquenessKey: number;
 }
-
-const isComponent = (match: string) => (child: ReactNode) => any(equals(match), [
-  // @ts-expect-error not sure
-  child.type.name,
-  // @ts-expect-error not sure
-  child.type.displayName,
-]);
-
-/** taken from https://reactjs.org/docs/higher-order-components.html#convention-wrap-the-display-name-for-easy-debugging */
-const getComponentName = <T extends unknown>(component: NamedExoticComponent<T> | FC) => (
-  component.displayName || component.name || 'Component'
-);
-const isDropdownItem = isComponent(DropdownItem.name);
-const isDropdownDivider = isComponent(getComponentName(DropdownDivider));
-const isDropdownButton = isComponent(getComponentName(DropdownButton));
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class Dropdown extends PureComponent<DropdownProps, State> {
@@ -371,7 +355,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
-      if (!isDropdownItem(child)) {
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
+      if (child.type.name !== DropdownItem.name) {
         return true;
       }
 
@@ -382,10 +367,11 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];
 
-      if (isDropdownButton(child)) {
-        console.log({ name: DropdownButton.name, displayName: DropdownButton.displayName });
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
+      if (child.type.name === DropdownButton.name) {
         dropdownButtons.push(child);
-      } else if (isDropdownItem(child)) {
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
+      } else if (child.type.name === DropdownItem.name) {
         const active = i === filterActiveIndex;
         const hide = !visibleChildren.includes(child);
         dropdownItems.push(
@@ -400,12 +386,14 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
             {child}
           </li>,
         );
-      } else if (isDropdownDivider(child)) {
+      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
+      } else if (child.type.name === DropdownDivider.name) {
         const currentIndex = visibleChildren.indexOf(child);
         const nextChild = visibleChildren[currentIndex + 1];
 
         // Only show the divider if the next child is a DropdownItem
-        if (nextChild && isDropdownItem(nextChild)) {
+        // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
+        if (nextChild && nextChild.type.name === DropdownItem.name) {
           dropdownItems.push(<li key={i}>{child}</li>);
         }
       }
