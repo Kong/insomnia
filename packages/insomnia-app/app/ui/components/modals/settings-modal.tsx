@@ -5,6 +5,7 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
+import { HotKeyRegistry } from '../../../common/hotkeys';
 import * as models from '../../../models/index';
 import { Settings } from '../../../models/settings';
 import Button from '../base/button';
@@ -15,7 +16,7 @@ import Account from '../settings/account';
 import General from '../settings/general';
 import { ImportExport } from '../settings/import-export';
 import Plugins from '../settings/plugins';
-import SettingsShortcuts from '../settings/shortcuts';
+import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
 import Tooltip from '../tooltip';
 import { showModal } from './index';
@@ -51,8 +52,8 @@ class SettingsModal extends PureComponent<Props, State> {
     });
   }
 
-  async _handleUpdateKeyBindings(hotKeyRegistry) {
-    models.settings.update(this.props.settings, {
+  async _handleUpdateKeyBindings(hotKeyRegistry: HotKeyRegistry) {
+    await models.settings.update(this.props.settings, {
       hotKeyRegistry,
     });
   }
@@ -126,7 +127,7 @@ class SettingsModal extends PureComponent<Props, State> {
               <ThemePanel />
             </TabPanel>
             <TabPanel className="react-tabs__tab-panel pad scrollable">
-              <SettingsShortcuts
+              <Shortcuts
                 hotKeyRegistry={settings.hotKeyRegistry}
                 handleUpdateKeyBindings={this._handleUpdateKeyBindings}
               />
