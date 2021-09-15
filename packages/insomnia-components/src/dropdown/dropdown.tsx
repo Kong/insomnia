@@ -495,7 +495,7 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
       // It's visible if its index is in the filterItems
       return !filterItems || filterItems.includes(i);
     });
-    const dropdownItems = [];
+    const dropdownItems: ReactNode[] = [];
 
     for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];

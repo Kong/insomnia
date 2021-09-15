@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { any, equals } from 'ramda';
-import React, { CSSProperties, Fragment, PureComponent, ReactNode } from 'react';
+import React, { CSSProperties, FC, Fragment, NamedExoticComponent, PureComponent, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
@@ -9,6 +9,7 @@ import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
 import KeydownBinder from '../../keydown-binder';
+import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';
 const dropdownsContainer = document.querySelector('#dropdowns-container');
@@ -43,8 +44,13 @@ const isComponent = (match: string) => (child: ReactNode) => any(equals(match), 
   child.type.displayName,
 ]);
 
+/** taken from https://reactjs.org/docs/higher-order-components.html#convention-wrap-the-display-name-for-easy-debugging */
+const getComponentName = <T extends unknown>(component: NamedExoticComponent<T> | FC) => (
+  component.displayName || component.name || 'Component'
+);
 const isDropdownItem = isComponent(DropdownItem.name);
-const isDropdownDivider = isComponent(DropdownDivider.name);
+const isDropdownDivider = isComponent(getComponentName(DropdownDivider));
+const isDropdownButton = isComponent(getComponentName(DropdownButton));
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 export class Dropdown extends PureComponent<DropdownProps, State> {
@@ -376,8 +382,8 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];
 
-      // @ts-expect-error -- TSCONVERSION this should cater for all types that ReactNode can be
       if (isDropdownButton(child)) {
+        console.log({ name: DropdownButton.name, displayName: DropdownButton.displayName });
         dropdownButtons.push(child);
       } else if (isDropdownItem(child)) {
         const active = i === filterActiveIndex;
