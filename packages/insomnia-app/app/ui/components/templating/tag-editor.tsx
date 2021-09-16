@@ -23,7 +23,10 @@ import type {
   NunjucksParsedTagArg,
 } from '../../../templating/utils';
 import * as templateUtils from '../../../templating/utils';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown/index';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import FileInputButton from '../base/file-input-button';
 import HelpTooltip from '../help-tooltip';
 

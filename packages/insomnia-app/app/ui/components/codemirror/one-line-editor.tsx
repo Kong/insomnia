@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import Input from '../base/debounced-input';
-import CodeEditor, { CodeEditorOnChange } from './code-editor';
+import CodeEditor, { CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -42,7 +42,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class OneLineEditor extends PureComponent<Props, State> {
-  _editor: CodeEditor | null = null;
+  _editor: UnconnectedCodeEditor | null = null;
   _input: Input | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
@@ -324,7 +324,7 @@ class OneLineEditor extends PureComponent<Props, State> {
     });
   }
 
-  _setEditorRef(n: CodeEditor) {
+  _setEditorRef(n: UnconnectedCodeEditor) {
     this._editor = n;
   }
 

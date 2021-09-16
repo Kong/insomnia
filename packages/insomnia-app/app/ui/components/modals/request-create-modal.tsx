@@ -14,9 +14,9 @@ import {
 import * as models from '../../../models/index';
 import { Request } from '../../../models/request';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalFooter from '../base/modal-footer';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
 import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
 import MethodDropdown from '../dropdowns/method-dropdown';
 import { showModal } from './index';

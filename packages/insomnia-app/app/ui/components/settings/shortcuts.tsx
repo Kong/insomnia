@@ -12,21 +12,24 @@ import {
   newDefaultKeyBindings,
   newDefaultRegistry,
 } from '../../../common/hotkeys';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import PromptButton from '../base/prompt-button';
-import Hotkey from '../hotkey';
+import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
 import AddKeyCombinationModal from '../modals/add-key-combination-modal';
 
 interface Props {
   hotKeyRegistry: HotKeyRegistry;
-  handleUpdateKeyBindings: (...args: any[]) => any;
+  handleUpdateKeyBindings: (keyBindings: HotKeyRegistry) => void;
 }
 
 const HOT_KEY_DEFS: HotKeyDefinition[] = Object.keys(hotKeyRefs).map(k => hotKeyRefs[k]);
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Shortcuts extends PureComponent<Props> {
+export class Shortcuts extends PureComponent<Props> {
   /**
    * Checks whether the given key combination already existed.
    * @param newKeyComb the key combination to be checked.
@@ -186,5 +189,3 @@ class Shortcuts extends PureComponent<Props> {
     );
   }
 }
-
-export default Shortcuts;

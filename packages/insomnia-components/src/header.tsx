@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactNode } from 'react';
+import React, { FC, memo, ReactNode } from 'react';
 import styled from 'styled-components';
 
 export interface HeaderProps {
@@ -36,15 +36,12 @@ const StyledHeader = styled.div`
   }
 `;
 
-export class Header extends PureComponent<HeaderProps> {
-  render() {
-    const { className, gridLeft, gridCenter, gridRight } = this.props;
-    return (
-      <StyledHeader className={className}>
-        <div className="header_left">{gridLeft}</div>
-        <div className="header_center">{gridCenter}</div>
-        <div className="header_right">{gridRight}</div>
-      </StyledHeader>
-    );
-  }
-}
+export const Header: FC<HeaderProps> = memo(({ className, gridLeft, gridCenter, gridRight }) => (
+  <StyledHeader className={className}>
+    <div className="header_left">{gridLeft}</div>
+    <div className="header_center">{gridCenter}</div>
+    <div className="header_right">{gridRight}</div>
+  </StyledHeader>
+));
+
+Header.displayName = 'Header';

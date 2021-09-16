@@ -5,8 +5,8 @@ import { endTrial, getFirstName, logout } from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Link from '../base/link';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 let hidePaymentNotificationUntilNextLaunch = false;
 

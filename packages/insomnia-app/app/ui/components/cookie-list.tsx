@@ -7,7 +7,9 @@ import * as uuid from 'uuid';
 import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleRender } from '../../common/render';
 import type { Cookie } from '../../models/cookie-jar';
-import { Dropdown, DropdownButton, DropdownItem } from './base/dropdown/index';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownItem } from './base/dropdown/dropdown-item';
 import PromptButton from './base/prompt-button';
 import RenderedText from './rendered-text';
 
