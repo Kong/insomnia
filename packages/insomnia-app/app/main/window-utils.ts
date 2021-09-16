@@ -93,7 +93,6 @@ export function createWindow() {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
-      spellcheck: false,
       zoomFactor: zoomFactor,
       nodeIntegration: true,
       webviewTag: true,
