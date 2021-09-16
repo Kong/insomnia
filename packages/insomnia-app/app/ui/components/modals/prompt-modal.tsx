@@ -5,9 +5,9 @@ import React, { PureComponent, ReactNode } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import Button from '../base/button';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalFooter from '../base/modal-footer';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
 import PromptButton from '../base/prompt-button';
 
 interface State {

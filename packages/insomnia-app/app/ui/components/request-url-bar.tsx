@@ -8,13 +8,11 @@ import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
 import type { Request } from '../../models/request';
-import {
-  DropdownButton,
-  DropdownDivider,
-  DropdownHint,
-  DropdownItem,
-} from './base/dropdown';
-import Dropdown from './base/dropdown/dropdown';
+import { Dropdown } from './base/dropdown/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
+import { DropdownDivider } from './base/dropdown/dropdown-divider';
+import { DropdownHint } from './base/dropdown/dropdown-hint';
+import { DropdownItem } from './base/dropdown/dropdown-item';
 import PromptButton from './base/prompt-button';
 import OneLineEditor from './codemirror/one-line-editor';
 import MethodDropdown from './dropdowns/method-dropdown';

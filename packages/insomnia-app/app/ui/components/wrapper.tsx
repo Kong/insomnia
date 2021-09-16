@@ -37,7 +37,7 @@ import { VCS } from '../../sync/vcs/vcs';
 import CookieModifyModal from '../components/modals/cookie-modify-modal';
 import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
-import { DropdownButton } from './base/dropdown';
+import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
 import ErrorBoundary from './error-boundary';
 import AddKeyCombinationModal from './modals/add-key-combination-modal';

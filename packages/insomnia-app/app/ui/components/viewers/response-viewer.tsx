@@ -16,7 +16,7 @@ import { xmlDecode } from '../../../common/misc';
 import CodeEditor, { UnconnectedCodeEditor } from '../codemirror/code-editor';
 import KeydownBinder from '../keydown-binder';
 import CSVViewer from './response-csv-viewer';
-import ResponseError from './response-error';
+import { ResponseError } from './response-error';
 import MultipartViewer from './response-multipart';
 import PDFViewer from './response-pdf-viewer';
 import ResponseRaw from './response-raw';

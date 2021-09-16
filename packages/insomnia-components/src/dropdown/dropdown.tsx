@@ -488,15 +488,14 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
     const allChildren = this._getFlattenedChildren(children);
 
     const visibleChildren = allChildren.filter((child, i) => {
-      // @ts-expect-error -- TSCONVERSION
-      if (child.type.name !== DropdownItem.name) {
+      if (!isDropdownItem(child)) {
         return true;
       }
 
       // It's visible if its index is in the filterItems
       return !filterItems || filterItems.includes(i);
     });
-    const dropdownItems = [];
+    const dropdownItems: ReactNode[] = [];
 
     for (let i = 0; i < allChildren.length; i++) {
       const child = allChildren[i];

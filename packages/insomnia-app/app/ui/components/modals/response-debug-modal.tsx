@@ -7,8 +7,8 @@ import type { Response } from '../../../models/response';
 import type { Settings } from '../../../models/settings';
 import ResponseTimelineViewer from '../../components/viewers/response-timeline-viewer';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
 
 interface Props {
   settings: Settings;
