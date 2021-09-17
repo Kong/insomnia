@@ -21,10 +21,10 @@ import { selectActiveRequest, selectActiveWorkspace, selectRequestMetas, selectW
 import Button from '../base/button';
 import Highlight from '../base/highlight';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
 import KeydownBinder from '../keydown-binder';
-import MethodTag from '../tags/method-tag';
+import { MethodTag } from '../tags/method-tag';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 

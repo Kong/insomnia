@@ -5,7 +5,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import type { Request } from '../../../models/request';
 import GrpcTag from '../tags/grpc-tag';
-import MethodTag from '../tags/method-tag';
+import { MethodTag } from '../tags/method-tag';
 
 interface Props {
   handleSetItemSelected: (...args: any[]) => any;

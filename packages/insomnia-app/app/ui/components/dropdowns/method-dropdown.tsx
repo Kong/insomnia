@@ -3,8 +3,10 @@ import React, { PureComponent } from 'react';
 
 import * as constants from '../../../common/constants';
 import { AUTOBIND_CFG, METHOD_GRPC } from '../../../common/constants';
-import { DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showPrompt } from '../modals/index';
 const LOCALSTORAGE_KEY = 'insomnia.httpMethods';
 const GRPC_LABEL = 'gRPC';

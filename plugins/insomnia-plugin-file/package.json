@@ -7,7 +7,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Kong/insomnia.git",
-    "directory": "plugins/insomnia-plugin-plugin-file"
+    "directory": "plugins/insomnia-plugin-file"
   },
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"

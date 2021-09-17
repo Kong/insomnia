@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { FC, memo } from 'react';
 
 import { isMac } from '../../common/constants';
 import type { KeyBindings, KeyCombination } from '../../common/hotkeys';
@@ -14,46 +14,43 @@ interface Props {
   useFallbackMessage?: boolean;
 }
 
-class Hotkey extends PureComponent<Props> {
-  render() {
-    const { keyCombination, keyBindings, className, useFallbackMessage } = this.props;
-
-    if (keyCombination == null && keyBindings == null) {
-      console.error('Hotkey needs one of keyCombination or keyBindings!');
-      return null;
-    }
-
-    let keyComb: KeyCombination | null = null;
-
-    if (keyCombination != null) {
-      keyComb = keyCombination;
-    } else if (keyBindings != null) {
-      const keyCombs = getPlatformKeyCombinations(keyBindings);
-
-      // Only take the first key combination if there is a mapping.
-      if (keyCombs.length > 0) {
-        keyComb = keyCombs[0];
-      }
-    }
-
-    let display = '';
-
-    if (keyComb != null) {
-      display = constructKeyCombinationDisplay(keyComb, false);
-    }
-
-    const isFallback = display.length === 0 && useFallbackMessage;
-
-    if (isFallback) {
-      display = 'Not defined';
-    }
-
-    const classes = {
-      'font-normal': isMac(),
-      italic: isFallback,
-    };
-    return <span className={classnames(className, classes)}>{display}</span>;
+export const Hotkey: FC<Props> = memo(({ keyCombination, keyBindings, className, useFallbackMessage }) => {
+  if (keyCombination == null && keyBindings == null) {
+    console.error('Hotkey needs one of keyCombination or keyBindings!');
+    return null;
   }
-}
 
-export default Hotkey;
+  let keyComb: KeyCombination | null = null;
+
+  if (keyCombination != null) {
+    keyComb = keyCombination;
+  } else if (keyBindings != null) {
+    const keyCombs = getPlatformKeyCombinations(keyBindings);
+
+    // Only take the first key combination if there is a mapping.
+    if (keyCombs.length > 0) {
+      keyComb = keyCombs[0];
+    }
+  }
+
+  let display = '';
+
+  if (keyComb != null) {
+    display = constructKeyCombinationDisplay(keyComb, false);
+  }
+
+  const isFallback = display.length === 0 && useFallbackMessage;
+
+  if (isFallback) {
+    display = 'Not defined';
+  }
+
+  const classes = {
+    'font-normal': isMac(),
+    italic: isFallback,
+  };
+
+  return <span className={classnames(className, classes)}>{display}</span>;
+});
+
+Hotkey.displayName = 'Hotkey';

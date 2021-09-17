@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as hotkeys from '../../../common/hotkeys';
-import Hotkey from '../hotkey';
+import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {

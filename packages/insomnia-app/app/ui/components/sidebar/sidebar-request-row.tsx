@@ -21,7 +21,7 @@ import GrpcSpinner from '../grpc-spinner';
 import { showModal } from '../modals/index';
 import RequestSettingsModal from '../modals/request-settings-modal';
 import GrpcTag from '../tags/grpc-tag';
-import MethodTag from '../tags/method-tag';
+import { MethodTag } from '../tags/method-tag';
 import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;

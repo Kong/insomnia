@@ -7,13 +7,11 @@ import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
-import {
-  DropdownButton,
-  DropdownDivider,
-  DropdownHint,
-  DropdownItem,
-} from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import KeydownBinder from '../keydown-binder';
 import { showModal } from '../modals/index';
 import EnvironmentsModal from '../modals/workspace-environments-edit-modal';

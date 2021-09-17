@@ -6,7 +6,8 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
 }
 
-class DropdownButton extends PureComponent<Props> {
+// eslint-disable-next-line react/prefer-stateless-function -- Dropdown's implementation makes changing this to a function component tricky.
+export class DropdownButton extends PureComponent<Props> {
   render() {
     const { children, noWrap, ...props } = this.props;
 
@@ -21,5 +22,3 @@ class DropdownButton extends PureComponent<Props> {
     );
   }
 }
-
-export default DropdownButton;
