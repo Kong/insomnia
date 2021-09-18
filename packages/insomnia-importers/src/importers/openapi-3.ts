@@ -134,13 +134,24 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
         return [];
       }
 
-      return Object.keys(schemasPerMethod)
-        .filter(method => method !== 'parameters' && method.indexOf('x-') !== 0)
-        .map(method => ({
-          ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
-          path,
-          method,
-        }));
+      const isSpecExtension = (method: string): boolean => {
+        return method.indexOf('x-') === 0;
+      };
+
+      const isPlainObject = (input: object): boolean => {
+        return input && !Array.isArray(input) && typeof input === 'object';
+      };
+
+      const methods = Object.entries(schemasPerMethod)
+        // We are filtering out anything that is not a plain object
+        // and custom open-api extensions
+        .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
+
+      return methods.map(([method]) => ({
+        ...((schemasPerMethod as Record<string, OpenAPIV3.SchemaObject>)[method]),
+        path,
+        method,
+      }));
     })
     .flat();
 
