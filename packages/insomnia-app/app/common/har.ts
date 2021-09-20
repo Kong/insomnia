@@ -14,6 +14,7 @@ import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
 import { RenderError } from '../templating/index';
 import { getAppVersion } from './constants';
+import { database } from './database';
 import { filterHeaders, getSetCookieHeaders, hasAuthHeader } from './misc';
 import type { RenderedRequest } from './render';
 import { getRenderedRequestAndContext } from './render';
@@ -172,6 +173,33 @@ export interface Har {
 export interface ExportRequest {
   requestId: string;
   environmentId: string | null;
+  responseId?: string;
+}
+
+export async function exportHarCurrentRequest(request: Request, response: Response): Promise<Har> {
+  const ancestors = await database.withAncestors(request, [
+    models.workspace.type,
+    models.requestGroup.type,
+  ]);
+  const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
+  if (workspace === null) {
+    throw new TypeError('no workspace found for request');
+  }
+
+  const workspaceMeta = await models.workspaceMeta.getByParentId(workspace._id);
+  let environmentId = workspaceMeta ? workspaceMeta.activeEnvironmentId : null;
+  const environment = await models.environment.getById(environmentId || 'n/a');
+  if (!environment || environment.isPrivate) {
+    environmentId = 'n/a';
+  }
+
+  return exportHar([
+    {
+      requestId: request._id,
+      environmentId: environmentId,
+      responseId: response._id,
+    },
+  ]);
 }
 
 export async function exportHar(exportRequests: ExportRequest[]) {
@@ -192,10 +220,16 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    const response: ResponseModel | null = await models.response.getLatestForRequest(
-      exportRequest.requestId,
-      exportRequest.environmentId || null,
-    );
+    let response: ResponseModel | null;
+    if (exportRequest.responseId) {
+      response = await models.response.getById(exportRequest.responseId);
+    } else {
+      response = await models.response.getLatestForRequest(
+        exportRequest.requestId,
+        exportRequest.environmentId || null,
+      );
+    }
+
     const harResponse = await exportHarResponse(response);
 
     if (!harResponse) {

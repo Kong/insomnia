@@ -8,6 +8,7 @@ import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
+import { exportHarCurrentRequest } from '../../../common/har';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
@@ -178,6 +179,37 @@ class ResponsePane extends PureComponent<Props> {
     }
   }
 
+  async _handleExportAsHAR() {
+    const { response, request } = this.props;
+
+    if (!response || !request) {
+      // Should never happen
+      console.warn('No response to download');
+      return;
+    }
+
+    const data = await exportHarCurrentRequest(request, response);
+    const har = JSON.stringify(data, null, '\t');
+
+    const options = {
+      title: 'Export As HAR',
+      buttonLabel: 'Save',
+      defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
+    };
+
+    remote.dialog.showSaveDialog(options, filename => {
+      if (!filename) {
+        return;
+      }
+
+      const to = fs.createWriteStream(filename);
+      to.on('error', err => {
+        console.warn('Failed to export har', err);
+      });
+      to.end(har);
+    });
+  }
+
   _handleTabSelect(index: number, lastIndex: number) {
     if (this._responseViewer != null && index === 0 && index !== lastIndex) {
       // Fix for CodeMirror editor not updating its content.
@@ -265,6 +297,7 @@ class ResponsePane extends PureComponent<Props> {
               <PreviewModeDropdown
                 download={this._handleDownloadResponseBody}
                 fullDownload={this._handleDownloadFullResponseBody}
+                exportAsHAR={this._handleExportAsHAR}
                 previewMode={previewMode}
                 updatePreviewMode={handleSetPreviewMode}
                 showPrettifyOption={response.contentType.includes('json')}

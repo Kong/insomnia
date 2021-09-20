@@ -10,6 +10,7 @@ import { DropdownItem } from '../base/dropdown/dropdown-item';
 interface Props {
   download: (pretty: boolean) => any;
   fullDownload: (pretty: boolean) => any;
+  exportAsHAR: () => void;
   copyToClipboard: () => any;
   updatePreviewMode: Function;
   previewMode: string;
@@ -49,7 +50,7 @@ class PreviewModeDropdown extends PureComponent<Props> {
   }
 
   render() {
-    const { fullDownload, previewMode, showPrettifyOption } = this.props;
+    const { fullDownload, previewMode, showPrettifyOption, exportAsHAR } = this.props;
     return (
       <Dropdown beside>
         <DropdownButton className="tall">
@@ -76,6 +77,10 @@ class PreviewModeDropdown extends PureComponent<Props> {
         <DropdownItem onClick={fullDownload}>
           <i className="fa fa-bug" />
           Save HTTP Debug
+        </DropdownItem>
+        <DropdownItem onClick={exportAsHAR}>
+          <i className="fa fa-save" />
+          Export As HAR
         </DropdownItem>
       </Dropdown>
     );
