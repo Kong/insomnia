@@ -66,21 +66,21 @@ class PreviewModeDropdown extends PureComponent<Props> {
         </DropdownItem>
         <DropdownItem onClick={this._handleDownloadNormal}>
           <i className="fa fa-save" />
-          Save Raw Response
+          Export raw response
         </DropdownItem>
         {showPrettifyOption && (
           <DropdownItem onClick={this._handleDownloadPrettify}>
             <i className="fa fa-save" />
-            Save Prettified Response
+            Export prettified response
           </DropdownItem>
         )}
         <DropdownItem onClick={fullDownload}>
           <i className="fa fa-bug" />
-          Save HTTP Debug
+          Export HTTP debug
         </DropdownItem>
         <DropdownItem onClick={exportAsHAR}>
           <i className="fa fa-save" />
-          Export As HAR
+          Export as HAR
         </DropdownItem>
       </Dropdown>
     );
