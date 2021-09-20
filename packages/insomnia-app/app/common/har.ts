@@ -8,7 +8,7 @@ import * as models from '../models';
 import type { Cookie } from '../models/cookie-jar';
 import type { Request } from '../models/request';
 import { newBodyRaw } from '../models/request';
-import type { Response as ResponseModel } from '../models/response';
+import type { Response, Response as ResponseModel } from '../models/response';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
 import * as pluginContexts from '../plugins/context/index';
@@ -182,7 +182,7 @@ export async function exportHarCurrentRequest(request: Request, response: Respon
     models.requestGroup.type,
   ]);
   const workspace = ancestors.find(ancestor => ancestor.type === models.workspace.type);
-  if (workspace === null) {
+  if (workspace === null || workspace === undefined) {
     throw new TypeError('no workspace found for request');
   }
 
@@ -220,7 +220,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    let response: ResponseModel | null;
+    let response: ResponseModel | null = null;
     if (exportRequest.responseId) {
       response = await models.response.getById(exportRequest.responseId);
     } else {

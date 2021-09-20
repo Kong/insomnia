@@ -89,12 +89,11 @@ class ResponsePane extends PureComponent<Props> {
 
     const { contentType } = response;
     const extension = mime.extension(contentType) || 'unknown';
-    const options = {
+    const { canceled, filePath: outputPath } = await remote.dialog.showSaveDialog({
       title: 'Save Response Body',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.${extension}`,
-    };
-    const { canceled, filePath: outputPath } = await remote.dialog.showSaveDialog(options);
+    });
 
     if (canceled) {
       return;
@@ -144,12 +143,12 @@ class ResponsePane extends PureComponent<Props> {
       .filter(v => v.name === 'HEADER_IN')
       .map(v => v.value)
       .join('');
-    const options = {
+
+    const { canceled, filePath } = await remote.dialog.showSaveDialog({
       title: 'Save Full Response',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.txt`,
-    };
-    const { canceled, filePath } = await remote.dialog.showSaveDialog(options);
+    });
 
     if (canceled) {
       return;
@@ -182,32 +181,36 @@ class ResponsePane extends PureComponent<Props> {
   async _handleExportAsHAR() {
     const { response, request } = this.props;
 
-    if (!response || !request) {
+    if (!response) {
       // Should never happen
       console.warn('No response to download');
+      return;
+    }
+
+    if (!request) {
+      // Should never happen
+      console.warn('No request to download');
       return;
     }
 
     const data = await exportHarCurrentRequest(request, response);
     const har = JSON.stringify(data, null, '\t');
 
-    const options = {
+    const { filePath } = await remote.dialog.showSaveDialog({
       title: 'Export As HAR',
       buttonLabel: 'Save',
       defaultPath: `${request.name.replace(/ +/g, '_')}-${Date.now()}.har`,
-    };
-
-    remote.dialog.showSaveDialog(options, filename => {
-      if (!filename) {
-        return;
-      }
-
-      const to = fs.createWriteStream(filename);
-      to.on('error', err => {
-        console.warn('Failed to export har', err);
-      });
-      to.end(har);
     });
+
+    if (!filePath) {
+      return;
+    }
+
+    const to = fs.createWriteStream(filePath);
+    to.on('error', err => {
+      console.warn('Failed to export har', err);
+    });
+    to.end(har);
   }
 
   _handleTabSelect(index: number, lastIndex: number) {
