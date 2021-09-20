@@ -5,7 +5,8 @@ interface Props {
   children?: ReactNode;
 }
 
-class DropdownDivider extends PureComponent<Props> {
+// eslint-disable-next-line react/prefer-stateless-function -- Dropdown's implementation makes changing this to a function component tricky.
+export class DropdownDivider extends PureComponent<Props> {
   render() {
     const { children } = this.props;
     const classes = classnames('dropdown__divider', {
@@ -18,5 +19,3 @@ class DropdownDivider extends PureComponent<Props> {
     );
   }
 }
-
-export default DropdownDivider;

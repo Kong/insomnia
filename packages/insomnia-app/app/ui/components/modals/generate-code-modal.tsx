@@ -6,13 +6,15 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { exportHarRequest } from '../../../common/har';
 import { Request } from '../../../models/request';
 import { CopyButton } from '../base/copy-button';
-import { Dropdown, DropdownButton, DropdownItem } from '../base/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import Link from '../base/link';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalFooter from '../base/modal-footer';
-import ModalHeader from '../base/modal-header';
-import CodeEditor from '../codemirror/code-editor';
+import { ModalBody } from '../base/modal-body';
+import { ModalFooter } from '../base/modal-footer';
+import { ModalHeader } from '../base/modal-header';
+import CodeEditor, { UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
 const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
@@ -67,13 +69,13 @@ class GenerateCodeModal extends PureComponent<Props, State> {
   }
 
   modal: Modal | null = null;
-  _editor: CodeEditor | null = null;
+  _editor: UnconnectedCodeEditor | null = null;
 
   _setModalRef(n: Modal) {
     this.modal = n;
   }
 
-  _setEditorRef(n: CodeEditor) {
+  _setEditorRef(n: UnconnectedCodeEditor) {
     this._editor = n;
   }
 

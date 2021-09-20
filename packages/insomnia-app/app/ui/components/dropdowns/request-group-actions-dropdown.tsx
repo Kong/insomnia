@@ -14,13 +14,11 @@ import { getRequestGroupActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context/index';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
-import {
-  DropdownButton,
-  DropdownDivider,
-  DropdownHint,
-  DropdownItem,
-} from '../base/dropdown';
-import Dropdown, { DropdownProps } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import PromptButton from '../base/prompt-button';
 import { showError, showModal } from '../modals';
 import EnvironmentEditModal from '../modals/environment-edit-modal';

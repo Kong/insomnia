@@ -5,8 +5,10 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RequestGroup } from '../../../models/request-group';
-import { DropdownButton, DropdownHint, DropdownItem } from '../base/dropdown';
-import Dropdown from '../base/dropdown/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownHint } from '../base/dropdown/dropdown-hint';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 
 interface Props {
   handleCreateRequest: (id: string) => any;

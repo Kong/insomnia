@@ -8,8 +8,8 @@ import type { Workspace } from '../../../models/workspace';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
 import Modal from '../base/modal';
-import ModalBody from '../base/modal-body';
-import ModalHeader from '../base/modal-header';
+import { ModalBody } from '../base/modal-body';
+import { ModalHeader } from '../base/modal-header';
 
 interface Props {
   workspace: Workspace;

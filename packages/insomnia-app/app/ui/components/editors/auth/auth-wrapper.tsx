@@ -24,7 +24,7 @@ import BasicAuth from './basic-auth';
 import BearerAuth from './bearer-auth';
 import DigestAuth from './digest-auth';
 import HawkAuth from './hawk-auth';
-import NetrcAuth from './netrc-auth';
+import { NetrcAuth } from './netrc-auth';
 import NTLMAuth from './ntlm-auth';
 import OAuth1Auth from './o-auth-1-auth';
 import OAuth2Auth from './o-auth-2-auth';

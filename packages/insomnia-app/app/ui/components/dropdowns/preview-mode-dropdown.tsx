@@ -2,7 +2,10 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG, getPreviewModeName, PREVIEW_MODES } from '../../../common/constants';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
+import { Dropdown } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 
 interface Props {
   download: (pretty: boolean) => any;

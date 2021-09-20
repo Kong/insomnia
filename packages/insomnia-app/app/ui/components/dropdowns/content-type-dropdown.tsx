@@ -17,8 +17,10 @@ import {
   getContentTypeName,
 } from '../../../common/constants';
 import type { Request, RequestBody } from '../../../models/request';
-import { Dropdown, DropdownButton, DropdownDivider, DropdownItem } from '../base/dropdown';
-import { DropdownProps } from '../base/dropdown/dropdown';
+import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
+import { DropdownButton } from '../base/dropdown/dropdown-button';
+import { DropdownDivider } from '../base/dropdown/dropdown-divider';
+import { DropdownItem } from '../base/dropdown/dropdown-item';
 import AlertModal from '../modals/alert-modal';
 import { showModal } from '../modals/index';
 

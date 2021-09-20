@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG, JSON_ORDER_PREFIX, JSON_ORDER_SEPARATOR } from '../../../common/constants';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../../templating';
-import CodeEditor from '../codemirror/code-editor';
+import CodeEditor, { UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 // NeDB field names cannot begin with '$' or contain a period '.'
 // Docs: https://github.com/DeNA/nedb#inserting-documents
@@ -77,7 +77,7 @@ interface State {
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
 class EnvironmentEditor extends PureComponent<Props, State> {
-  _editor: CodeEditor | null = null;
+  _editor: UnconnectedCodeEditor | null = null;
 
   state: State = {
     error: null,
@@ -118,7 +118,7 @@ class EnvironmentEditor extends PureComponent<Props, State> {
     }
   }
 
-  _setEditorRef(n: CodeEditor) {
+  _setEditorRef(n: UnconnectedCodeEditor) {
     this._editor = n;
   }
 
