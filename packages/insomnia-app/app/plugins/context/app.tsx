@@ -2,7 +2,10 @@ import * as electron from 'electron';
 import React from 'react';
 
 import * as analytics from '../../../app/common/analytics';
-import { axiosRequest as axios } from '../../../app/network/axios-request';
+import {
+  axiosRequest as axios,
+  axiosRequest,
+} from '../../../app/network/axios-request';
 import { getAppPlatform, getAppVersion } from '../../common/constants';
 import type { RenderPurpose } from '../../common/render';
 import {
@@ -14,11 +17,71 @@ import HtmlElementWrapper from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import WrapperModal from '../../ui/components/modals/wrapper-modal';
 
+interface DialogOptions {
+  onHide?: () => void;
+  tall?: boolean;
+  skinny?: boolean;
+  wide?: boolean;
+}
+
+interface PromptOptions {
+  label?: string;
+  defaultValue?: string;
+  submitName?: string;
+  cancelable?: boolean;
+}
+
+interface AppInfo {
+  version: string;
+  platform: NodeJS.Platform;
+}
+
+interface ShowDialogOptions {
+  defaultPath?: string;
+}
+
+interface AppClipboard {
+  readText(): string;
+  writeText(text: string): void;
+  clear(): void;
+}
+
+interface ShowGenericModalDialogOptions {
+  html?: string;
+}
+
+export interface AppContext {
+  alert: (
+    title: string,
+    message?: string
+  ) => Promise<undefined> | ReturnType<typeof showAlert>;
+  dialog: (title: string, body: HTMLElement, options: DialogOptions) => void;
+  prompt: (title: string, options: PromptOptions) => Promise<string>;
+  getPath: (name: string) => string;
+  getInfo: () => AppInfo;
+  showSaveDialog: (options: ShowDialogOptions) => Promise<string | null>;
+  clipboard: AppClipboard;
+  /**
+   * @deprecated as it was never officially supported
+   */
+  showGenericModalDialog: (
+    title: string,
+    options: ShowGenericModalDialogOptions
+  ) => void;
+}
+
+export interface PrivateProperties {
+  axios: typeof axiosRequest;
+  analytics: typeof analytics;
+}
+
 export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
-  app: Record<string, any>;
+  app: AppContext;
+  __private: PrivateProperties;
 } {
   const canShowDialogs =
-    renderPurpose === RENDER_PURPOSE_SEND || renderPurpose === RENDER_PURPOSE_NO_RENDER;
+    renderPurpose === RENDER_PURPOSE_SEND ||
+    renderPurpose === RENDER_PURPOSE_NO_RENDER;
   return {
     app: {
       alert(title: string, message?: string) {
@@ -40,9 +103,12 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
           tall?: boolean;
           skinny?: boolean;
           wide?: boolean;
-        } = {},
+        } = {}
       ) {
-        if (renderPurpose !== RENDER_PURPOSE_SEND && renderPurpose !== RENDER_PURPOSE_NO_RENDER) {
+        if (
+          renderPurpose !== RENDER_PURPOSE_SEND &&
+          renderPurpose !== RENDER_PURPOSE_NO_RENDER
+        ) {
           return;
         }
 
@@ -62,7 +128,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
           defaultValue?: string;
           submitName?: string;
           cancelable?: boolean;
-        },
+        }
       ) {
         options = options || {};
 
@@ -118,7 +184,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
       async showSaveDialog(
         options: {
           defaultPath?: string;
-        } = {},
+        } = {}
       ): Promise<string | null> {
         if (!canShowDialogs) {
           return Promise.resolve(null);
@@ -129,7 +195,9 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
           buttonLabel: 'Save',
           defaultPath: options.defaultPath,
         };
-        const { filePath } = await electron.remote.dialog.showSaveDialog(saveOptions);
+        const { filePath } = await electron.remote.dialog.showSaveDialog(
+          saveOptions
+        );
         return filePath || null;
       },
 
@@ -156,17 +224,21 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
         title: string,
         options: {
           html?: string;
-        } = {},
+        } = {}
       ) {
-        console.warn('app.showGenericModalDialog() is deprecated. Use app.dialog() instead.');
+        console.warn(
+          'app.showGenericModalDialog() is deprecated. Use app.dialog() instead.'
+        );
         // Create DOM node so we can adapt to the new dialog() method
         const body = document.createElement('div');
-        // @ts-expect-error -- TSCONVERSION
-        body.innerHTML = options.html;
+
+        if (options.html) {
+          body.innerHTML = options.html;
+        }
+
         return this.dialog(title, body);
       },
     },
-    // @ts-expect-error -- TSCONVERSION
     __private: {
       axios,
       analytics,
