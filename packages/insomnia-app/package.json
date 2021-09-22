@@ -101,6 +101,7 @@
     "httpsnippet": "^1.23.0",
     "iconv-lite": "^0.4.15",
     "insomnia-components": "2.3.2",
+    "insomnia-common": "*",
     "insomnia-cookies": "2.3.2",
     "insomnia-importers": "2.3.2",
     "insomnia-plugin-base64": "2.3.2",

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { HttpVersions } from 'insomnia-common';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
@@ -10,7 +11,6 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-  HttpVersions,
 } from '../../common/constants';
 import { filterHeaders } from '../../common/misc';
 import { getRenderedRequestAndContext } from '../../common/render';

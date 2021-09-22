@@ -1,10 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as fontScanner from 'font-scanner';
+import { HttpVersion, HttpVersions } from 'insomnia-common';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import type { GlobalActivity, HttpVersion } from '../../../common/constants';
+import type { GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
@@ -12,7 +13,6 @@ import {
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
-  HttpVersions,
   isDevelopment,
   isMac,
   MAX_EDITOR_FONT_SIZE,
