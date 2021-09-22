@@ -404,7 +404,7 @@ export function getChar(keyCode: number) {
 
 function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
   if (!mustUsePlus && isMac()) {
-    return keys.join('');
+    return keys.join(' ');
   }
 
   return keys.join(' + ');
