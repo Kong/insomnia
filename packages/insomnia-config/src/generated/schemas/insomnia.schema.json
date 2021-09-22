@@ -16,7 +16,7 @@
       ]
     },
     "settings": {
-      "$ref": "#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\">>"
+      "$ref": "#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\">>"
     }
   },
   "additionalProperties": false,
@@ -25,13 +25,16 @@
     "version"
   ],
   "definitions": {
-    "Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\">>": {
+    "Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\">>": {
       "type": "object",
       "properties": {
         "enableAnalytics": {
           "type": "boolean"
         },
         "disableUpdateNotification": {
+          "type": "boolean"
+        },
+        "disableUpsells": {
           "type": "boolean"
         }
       },

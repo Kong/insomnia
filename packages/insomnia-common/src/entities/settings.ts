@@ -14,6 +14,7 @@ export interface Settings {
   disableHtmlPreviewJs: boolean;
   disableResponsePreviewLinks: boolean;
   disableUpdateNotification: boolean;
+  disableUpsells: boolean;
   editorFontSize: number;
   editorIndentSize: number;
   editorIndentWithTabs: boolean;

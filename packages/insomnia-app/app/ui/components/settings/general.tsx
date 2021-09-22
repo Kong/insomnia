@@ -553,16 +553,19 @@ class General extends PureComponent<Props, State> {
           </Fragment>
         )}
 
+        <hr className="pad-top" />
+        <h2>Notifications</h2>
         {!updatesSupported() && (
-          <Fragment>
-            <hr className="pad-top" />
-            <h2>Software Updates</h2>
-            <BooleanSetting
-              label="Do not notify of new releases"
-              setting="disableUpdateNotification"
-            />
-          </Fragment>
+          <BooleanSetting
+            label="Do not notify of new releases"
+            setting="disableUpdateNotification"
+          />
         )}
+        <BooleanSetting
+          label="Disable upsells"
+          setting="disableUpsells"
+          help="Disable any elements in the app that invite you to purchase... anything. ✌️"
+        />
 
         <hr className="pad-top" />
         <h2>Plugins</h2>
@@ -575,8 +578,6 @@ class General extends PureComponent<Props, State> {
             placeholder: '~/.insomnia:/other/path',
           },
         )}
-
-        <br />
 
         <hr className="pad-top" />
         <h2>Data Sharing</h2>

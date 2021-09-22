@@ -1,8 +1,9 @@
 import { Settings as CommonSettings } from 'insomnia-common';
 
 type AllowedSettings = Partial<Pick<CommonSettings,
-| 'enableAnalytics'
-| 'disableUpdateNotification'
+  | 'enableAnalytics'
+  | 'disableUpdateNotification'
+  | 'disableUpsells'
 >>;
 
 /**

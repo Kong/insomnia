@@ -28,8 +28,9 @@ export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings =>
 
 /** gets settings from the `insomnia.config.json` */
 const getConfigSettings = ()  => {
-  const { valid } = validate(insomniaConfig as InsomniaConfig);
+  const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
   if (!valid) {
+    console.error('invalid insomnia config', errors);
     return {};
   }
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
@@ -51,6 +52,7 @@ export function init(): BaseSettings {
     disableHtmlPreviewJs: false,
     disableResponsePreviewLinks: false,
     disableUpdateNotification: false,
+    disableUpsells: false,
     editorFontSize: 11,
     editorIndentSize: 2,
     editorIndentWithTabs: true,
