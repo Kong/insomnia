@@ -114,7 +114,18 @@ export class Toast extends PureComponent<{}, State> {
     }
 
     const stats = await models.stats.get();
-    const settings = await models.settings.getOrCreate();
+    const {
+      updateAutomatically,
+      radioSilentMode,
+      disableUpdateNotification,
+      disableUpsells,
+      updateChannel,
+    } = await models.settings.getOrCreate();
+
+    if (radioSilentMode) {
+      return;
+    }
+
     let notification: ToastNotification | null = null;
 
     // Try fetching user notification
@@ -128,10 +139,10 @@ export class Toast extends PureComponent<{}, State> {
         app: getAppId(),
         version: getAppVersion(),
         updatesNotSupported: !updatesSupported(),
-        autoUpdatesDisabled: !settings.updateAutomatically,
-        disableUpdateNotification: settings.disableUpdateNotification,
-        disableUpsells: settings.disableUpsells,
-        updateChannel: settings.updateChannel,
+        autoUpdatesDisabled: !updateAutomatically,
+        disableUpdateNotification,
+        disableUpsells,
+        updateChannel,
       };
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
     } catch (err) {

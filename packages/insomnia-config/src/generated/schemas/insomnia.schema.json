@@ -5,27 +5,20 @@
   "properties": {
     "version": {
       "type": "string",
-      "enum": [
-        "1.0.0"
-      ]
+      "enum": ["1.0.0"]
     },
     "name": {
       "type": "string",
-      "enum": [
-        "Insomnia Config"
-      ]
+      "enum": ["Insomnia Config"]
     },
     "settings": {
-      "$ref": "#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\">>"
+      "$ref": "#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\"|\"radioSilentMode\">>"
     }
   },
   "additionalProperties": false,
-  "required": [
-    "name",
-    "version"
-  ],
+  "required": ["name", "version"],
   "definitions": {
-    "Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\">>": {
+    "Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\"|\"radioSilentMode\">>": {
       "type": "object",
       "properties": {
         "enableAnalytics": {
@@ -35,6 +28,10 @@
           "type": "boolean"
         },
         "disableUpsells": {
+          "type": "boolean"
+        },
+        "radioSilentMode": {
+          "description": "Insomnia will not make any network requests other than the requests you ask it to send.",
           "type": "boolean"
         }
       },

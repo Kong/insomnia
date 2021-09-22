@@ -91,6 +91,7 @@ export function init(): BaseSettings {
     pluginPath: '',
     preferredHttpVersion: HttpVersions.default,
     proxyEnabled: false,
+    radioSilentMode: false,
     showPasswords: false,
     theme: getAppDefaultTheme(),
     timeout: 0,

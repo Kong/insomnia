@@ -595,6 +595,12 @@ class General extends PureComponent<Props, State> {
             Please note that this will not include personal data or any sensitive information, such
             as request data, names, etc.
           </p>
+
+          <BooleanSetting
+            label="Radio silent mode"
+            setting="radioSilentMode"
+            help="Insomnia will not make any network requests other than the requests you ask it to send."
+          />
         </div>
 
         <hr className="pad-top" />

@@ -50,6 +50,9 @@ export interface Settings {
   pluginPath: string;
   preferredHttpVersion: HttpVersion;
   proxyEnabled: boolean;
+
+  /** Insomnia will not make any network requests other than the requests you ask it to send. */
+  radioSilentMode: boolean;
   showPasswords: boolean;
   theme: string;
   timeout: number;

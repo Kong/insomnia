@@ -4,6 +4,7 @@ type AllowedSettings = Partial<Pick<CommonSettings,
   | 'enableAnalytics'
   | 'disableUpdateNotification'
   | 'disableUpsells'
+  | 'radioSilentMode'
 >>;
 
 /**
