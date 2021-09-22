@@ -101,10 +101,22 @@ export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) =
       return mac ? '⇧' : 'Shift';
 
     case 'meta':
-      return mac ? '⌘' : 'Super';
+      if (mac) {
+        return '⌘';
+      }
+
+      if (isWindows()) {
+        // Note: Although this unicode character for the Windows doesn't exist, the the Unicode character U+229E ⊞ SQUARED PLUS is very commonly used for this purpose. For example, Wikipedia uses it as a simulation of the windows logo.  Though, Windows itself uses `Windows` or `Win`, so we'll go with `Win` here.
+        // see: https://en.wikipedia.org/wiki/Windows_key
+        return 'Win';
+      }
+
+      // Note: To avoid using a Microsoft trademark, much Linux documentation refers to the key as "Super". This can confuse some users who still consider it a "Windows key". In KDE Plasma documentation it is called the Meta key even though the X11 "Super" shift bit is used.
+      // see: https://en.wikipedia.org/wiki/Super_key_(keyboard_button)
+      return 'Super';
 
     default:
-      unreachableCase(key, 'unrecognized key');
+      return unreachableCase(key, 'unrecognized key');
   }
 };
 
