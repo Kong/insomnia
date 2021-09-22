@@ -406,7 +406,7 @@ function joinHotKeys(mustUsePlus: boolean, keys: string[]) {
     return keys.join('');
   }
 
-  return keys.join('+');
+  return keys.join(' + ');
 }
 
 /**
@@ -430,10 +430,10 @@ export function isModifierKeyCode(keyCode: number) {
  * For example, the display of alt in Windows or Linux would be "Alt";
  * while in Mac would be "⌥".
  * @param keyComb
- * @param mustUsePlus if true will join the characters with "+" for all platforms;
+ * @param mustUsePlus if true will join the characters with " + " for all platforms;
  * otherwise if the platform is Mac, the characters will be next to each other.
- * @returns the constructed string, if keyCode is null and the characters are joint with "+",
- * it will have a dangling "+" as the last character, e.g., "Alt+Ctrl+".
+ * @returns the constructed string, if keyCode is null and the characters are joined with " + ",
+ * it will have a dangling "+" as the last character, e.g., "Alt + Ctrl +".
  */
 export function constructKeyCombinationDisplay(
   keyComb: KeyCombination,
@@ -453,7 +453,7 @@ export function constructKeyCombinationDisplay(
   let joint = joinHotKeys(mustUsePlus, chars);
 
   if (mustUsePlus && isModifierKeyCode(keyCode)) {
-    joint += '+';
+    joint += ' +';
   }
 
   return joint;
