@@ -8,7 +8,7 @@ import * as models from '../models';
 import type { Cookie } from '../models/cookie-jar';
 import type { Request } from '../models/request';
 import { newBodyRaw } from '../models/request';
-import type { Response, Response as ResponseModel } from '../models/response';
+import type { Response } from '../models/response';
 import { isWorkspace } from '../models/workspace';
 import { getAuthHeader } from '../network/authentication';
 import * as plugins from '../plugins';
@@ -221,7 +221,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
       continue;
     }
 
-    let response: ResponseModel | null = null;
+    let response: Response | null = null;
     if (exportRequest.responseId) {
       response = await models.response.getById(exportRequest.responseId);
     } else {
@@ -270,7 +270,7 @@ export async function exportHar(exportRequests: ExportRequest[]) {
   return har;
 }
 
-export async function exportHarResponse(response: ResponseModel | null) {
+export async function exportHarResponse(response: Response | null) {
   if (!response) {
     return {
       status: 0,
@@ -416,7 +416,7 @@ function getRequestCookies(renderedRequest: RenderedRequest) {
   return harCookies;
 }
 
-function getResponseCookies(response: ResponseModel) {
+function getResponseCookies(response: Response) {
   const headers = response.headers.filter(Boolean) as HarCookie[];
   const responseCookies = getSetCookieHeaders(headers)
     .reduce((accumulator, harCookie) => {
@@ -480,7 +480,7 @@ function mapCookie(cookie: Cookie) {
   return harCookie;
 }
 
-function getResponseContent(response: ResponseModel) {
+function getResponseContent(response: Response) {
   let body = models.response.getBodyBuffer(response);
 
   if (body === null) {
@@ -495,7 +495,7 @@ function getResponseContent(response: ResponseModel) {
   return harContent;
 }
 
-function getResponseHeaders(response: ResponseModel) {
+function getResponseHeaders(response: Response) {
   return response.headers
     .filter(header => header.name)
     .map<HarHeader>(header => ({
