@@ -1,7 +1,10 @@
 import path from 'path';
+import { unreachableCase } from 'ts-assert-unreachable';
+import { ValueOf } from 'type-fest';
 
 import appConfig from '../../config/config.json';
 import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
+import { KeyCombination } from './hotkeys';
 
 // App Stuff
 export const getAppVersion = () => appConfig.version;
@@ -84,10 +87,26 @@ export const EDITOR_KEY_MAP_VIM = 'vim';
 // Hotkey
 // For an explanation of mnemonics on linux and windows see https://github.com/Kong/insomnia/pull/1221#issuecomment-443543435 & https://docs.microsoft.com/en-us/cpp/windows/defining-mnemonics-access-keys?view=msvc-160#mnemonics-access-keys
 export const MNEMONIC_SYM = isMac() ? '' : '&';
-export const CTRL_SYM = isMac() ? '⌃' : 'Ctrl';
-export const ALT_SYM = isMac() ? '⌥' : 'Alt';
-export const SHIFT_SYM = isMac() ? '⇧' : 'Shift';
-export const META_SYM = isMac() ? '⌘' : 'Super';
+
+export const displayModifierKey = (key: keyof Omit<KeyCombination, 'keyCode'>) => {
+  const mac = isMac();
+  switch (key) {
+    case 'ctrl':
+      return mac ? '⌃' : 'Ctrl';
+
+    case 'alt':
+      return mac ? '⌥' : 'Alt';
+
+    case 'shift':
+      return mac ? '⇧' : 'Shift';
+
+    case 'meta':
+      return mac ? '⌘' : 'Super';
+
+    default:
+      unreachableCase(key, 'unrecognized key');
+  }
+};
 
 // Update
 export const UPDATE_CHANNEL_STABLE = 'stable';
