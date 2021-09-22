@@ -111,6 +111,22 @@ const parseDocument = (rawData: string): OpenAPIV3.Document | null => {
 };
 
 /**
+ * Checks if the given property name is an open-api extension
+ * @param property The property name
+ */
+const isSpecExtension = (property: string): boolean => {
+  return property.indexOf('x-') === 0;
+};
+
+/**
+ * Checks if the given value is a plain object
+ * @param value The value to test
+ */
+const isPlainObject = (value: object): boolean => {
+  return value && !Array.isArray(value) && typeof value === 'object';
+};
+
+/**
  * Create request definitions based on openapi document.
  */
 const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
@@ -134,17 +150,8 @@ const parseEndpoints = (document?: OpenAPIV3.Document | null) => {
         return [];
       }
 
-      const isSpecExtension = (method: string): boolean => {
-        return method.indexOf('x-') === 0;
-      };
-
-      const isPlainObject = (input: object): boolean => {
-        return input && !Array.isArray(input) && typeof input === 'object';
-      };
-
       const methods = Object.entries(schemasPerMethod)
-        // We are filtering out anything that is not a plain object
-        // and custom open-api extensions
+        // Only keep entries that are plain objects and not spec extensions
         .filter(([key, value]) => isPlainObject(value) && !isSpecExtension(key));
 
       return methods.map(([method]) => ({
