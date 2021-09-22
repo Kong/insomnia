@@ -2,9 +2,12 @@ import path from 'path';
 
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models';
+import { Cookie } from '../../models/cookie-jar';
+import { Request } from '../../models/request';
+import { Response } from '../../models/response';
 import { AUTH_BASIC } from '../constants';
-import * as harUtils from '../har';
-import * as render from '../render';
+import { exportHar, exportHarResponse, exportHarWithRequest } from '../har';
+import { getRenderedRequestAndContext } from '../render';
 
 describe('export', () => {
   beforeEach(async () => {
@@ -66,7 +69,7 @@ describe('export', () => {
           environmentId: 'n/a',
         },
       ];
-      const harExport = await harUtils.exportHar(exportRequests);
+      const harExport = await exportHar(exportRequests);
       expect(harExport).toMatchObject({
         log: {
           version: '1.2',
@@ -234,7 +237,7 @@ describe('export', () => {
           environmentId: envPrivate._id,
         },
       ];
-      const harExport = await harUtils.exportHar(exportRequests);
+      const harExport = await exportHar(exportRequests);
       expect(harExport).toMatchObject({
         log: {
           version: '1.2',
@@ -305,7 +308,7 @@ describe('export', () => {
   describe('exportHarResponse()', () => {
     it('exports a default har response for an empty response', async () => {
       const notFoundResponse = null;
-      const harResponse = await harUtils.exportHarResponse(notFoundResponse);
+      const harResponse = await exportHarResponse(notFoundResponse);
       expect(harResponse).toMatchObject({
         status: 0,
         statusText: '',
@@ -318,8 +321,11 @@ describe('export', () => {
     });
 
     it('exports a valid har response for a non empty response', async () => {
-      const response = Object.assign(models.response.init(), {
+      const response: Response = {
+        ...models.response.init(),
         _id: 'res_123',
+        isPrivate: false,
+        name: '',
         type: models.response.type,
         parentId: 'req_123',
         modified: 0,
@@ -342,8 +348,8 @@ describe('export', () => {
         ],
         contentType: 'application/json',
         bodyPath: path.join(__dirname, '../__fixtures__/har/test-response.json'),
-      });
-      const harResponse = await harUtils.exportHarResponse(response);
+      };
+      const harResponse = await exportHarResponse(response);
       expect(harResponse).toMatchObject({
         status: 200,
         statusText: 'OK',
@@ -385,8 +391,11 @@ describe('export', () => {
   describe('exportHarWithRequest()', () => {
     it('renders does it correctly', async () => {
       const workspace = await models.workspace.create();
-      const cookies = [
+      const cookies: Cookie[] = [
         {
+          id: '',
+          secure: false,
+          httpOnly: false,
           creation: new Date('2016-10-05T04:40:49.505Z'),
           key: 'foo',
           value: 'barrrrr',
@@ -402,9 +411,13 @@ describe('export', () => {
         parentId: workspace._id,
         cookies,
       });
-      const request = Object.assign(models.request.init(), {
+      const request: Request = {
+        ...models.request.init(),
         _id: 'req_123',
+        modified: 123,
+        created: 123,
         parentId: workspace._id,
+        type: models.response.type,
         headers: [
           {
             name: 'Content-Type',
@@ -427,9 +440,9 @@ describe('export', () => {
           username: 'user',
           password: 'pass',
         },
-      });
-      const { request: renderedRequest } = await render.getRenderedRequestAndContext({ request });
-      const har = await harUtils.exportHarWithRequest(renderedRequest);
+      };
+      const { request: renderedRequest } = await getRenderedRequestAndContext({ request });
+      const har = await exportHarWithRequest(renderedRequest);
       expect(har.cookies.length).toBe(1);
       expect(har).toEqual({
         bodySize: -1,
@@ -473,8 +486,12 @@ describe('export', () => {
 
     it('export multipart request with file', async () => {
       const workspace = await models.workspace.create();
-      const request = Object.assign(models.request.init(), {
+      const request: Request = {
+        ...models.request.init(),
         _id: 'req_123',
+        type: models.response.type,
+        modified: 123,
+        created: 123,
         parentId: workspace._id,
         headers: [
           {
@@ -507,9 +524,9 @@ describe('export', () => {
         },
         url: 'http://example.com/post',
         authentication: {},
-      });
-      const { request: renderedRequest } = await render.getRenderedRequestAndContext({ request });
-      const har = await harUtils.exportHarWithRequest(renderedRequest);
+      };
+      const { request: renderedRequest } = await getRenderedRequestAndContext({ request });
+      const har = await exportHarWithRequest(renderedRequest);
       expect(har).toEqual({
         bodySize: -1,
         cookies: [],
