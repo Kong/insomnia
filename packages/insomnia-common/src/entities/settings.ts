@@ -8,8 +8,11 @@ export interface PluginConfig {
 export type PluginConfigMap = Record<string, PluginConfig>;
 
 export interface Settings {
+  autoDetectColorScheme: boolean;
   autoHideMenuBar: boolean;
   autocompleteDelay: number;
+  clearOAuth2SessionOnRestart: boolean;
+  darkTheme: string;
   deviceId: string | null;
   disableHtmlPreviewJs: boolean;
   disableResponsePreviewLinks: boolean;
@@ -24,15 +27,19 @@ export interface Settings {
   environmentHighlightColorStyle: string;
   filterResponsesByEnv: boolean;
   followRedirects: boolean;
-  clearOAuth2SessionOnRestart: boolean;
   fontInterface: string | null;
   fontMonospace: string | null;
   fontSize: number;
   fontVariantLigatures: boolean;
   forceVerticalLayout: boolean;
+  hasPromptedAnalytics: boolean;
+  hasPromptedOnboarding: boolean;
+  hasPromptedToMigrateFromDesigner: boolean;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;
+  isVariableUncovered?: boolean;
+  lightTheme: string;
   lineWrapping?: boolean;
   maxHistoryResponses: number;
   maxRedirects: number;
@@ -45,9 +52,6 @@ export interface Settings {
   proxyEnabled: boolean;
   showPasswords: boolean;
   theme: string;
-  autoDetectColorScheme: boolean;
-  lightTheme: string;
-  darkTheme: string;
   timeout: number;
   updateAutomatically: boolean;
   updateChannel: string;
@@ -55,8 +59,4 @@ export interface Settings {
   useBulkParametersEditor: boolean;
   validateAuthSSL: boolean;
   validateSSL: boolean;
-  hasPromptedToMigrateFromDesigner: boolean;
-  hasPromptedOnboarding: boolean;
-  hasPromptedAnalytics: boolean;
-  isVariableUncovered?: boolean;
 }

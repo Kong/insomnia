@@ -46,8 +46,11 @@ const overwriteControlledSettings = mergeLeft(getConfigSettings());
 
 export function init(): BaseSettings {
   return overwriteControlledSettings({
+    autoDetectColorScheme: false,
     autoHideMenuBar: false,
     autocompleteDelay: 1200,
+    clearOAuth2SessionOnRestart: true,
+    darkTheme: getAppDefaultDarkTheme(),
     deviceId: null,
     disableHtmlPreviewJs: false,
     disableResponsePreviewLinks: false,
@@ -62,15 +65,23 @@ export function init(): BaseSettings {
     environmentHighlightColorStyle: 'sidebar-indicator',
     filterResponsesByEnv: false,
     followRedirects: true,
-    clearOAuth2SessionOnRestart: true,
     fontInterface: null,
     fontMonospace: null,
     fontSize: 13,
     fontVariantLigatures: false,
     forceVerticalLayout: false,
+
+    // Only existing users updating from an older version should see the analytics prompt.
+    // So by default this flag is set to false, and is toggled to true during initialization for new users.
+    hasPromptedAnalytics: false,
+
+    // Users should only see onboarding during first launch, and anybody updating from an older version should not see it, so by default this flag is set to true, and is toggled to false during initialization
+    hasPromptedOnboarding: true,
+    hasPromptedToMigrateFromDesigner: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
+    lightTheme: getAppDefaultLightTheme(),
     maxHistoryResponses: 20,
     maxRedirects: -1,
     maxTimelineDataSizeKB: 10,
@@ -82,9 +93,6 @@ export function init(): BaseSettings {
     proxyEnabled: false,
     showPasswords: false,
     theme: getAppDefaultTheme(),
-    autoDetectColorScheme: false,
-    lightTheme: getAppDefaultLightTheme(),
-    darkTheme: getAppDefaultDarkTheme(),
     timeout: 0,
     updateAutomatically: true,
     updateChannel: UPDATE_CHANNEL_STABLE,
@@ -92,15 +100,6 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateAuthSSL: true,
     validateSSL: true,
-    hasPromptedToMigrateFromDesigner: false,
-    // Users should only see onboarding during first launch, and anybody updating from an
-    // older version should not see it, so by default this flag is set to true, and is toggled
-    // to false during initialization
-    hasPromptedOnboarding: true,
-    // Only existing users updating from an older version should see the analytics prompt
-    // So by default this flag is set to false, and is toggled to true during initialization
-    // for new users
-    hasPromptedAnalytics: false,
   });
 }
 
