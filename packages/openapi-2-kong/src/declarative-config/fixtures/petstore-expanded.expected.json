@@ -27,14 +27,14 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
           "name": "Swagger_Petstore-find_pet_by_id",
-          "paths": ["/pets/(?<id>[^\\/\\s]+)$"]
+          "paths": ["/pets/(?<id>[^\\/]+)$"]
         },
         {
           "methods": ["DELETE"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
           "name": "Swagger_Petstore-deletePet",
-          "paths": ["/pets/(?<id>[^\\/\\s]+)$"]
+          "paths": ["/pets/(?<id>[^\\/]+)$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"]

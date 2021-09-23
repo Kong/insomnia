@@ -68,7 +68,7 @@ const pathVariableSearchValue = /{([^}]+)}(?!:\/\/)/g;
 
 export function pathVariablesToRegex(p: string) {
   // match anything except whitespace and '/'
-  const result = p.replace(pathVariableSearchValue, '(?<$1>[^\\/\\s]+)');
+  const result = p.replace(pathVariableSearchValue, '(?<$1>[^\\/]+)');
   // add a line ending because it is a regex
   return result + '$';
 }
