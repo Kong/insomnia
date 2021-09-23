@@ -1,6 +1,5 @@
 import path from 'path';
 import { unreachableCase } from 'ts-assert-unreachable';
-import { ValueOf } from 'type-fest';
 
 import appConfig from '../../config/config.json';
 import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
