@@ -10,7 +10,7 @@ import { parse, typeFromAST } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
-import * as prettier from 'prettier';
+import prettier from 'prettier';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -463,7 +463,7 @@ export class GraphQLEditor extends PureComponent<Props, State> {
     const prettyQuery = prettier.format(query, {
       parser: 'graphql',
       useTabs: this.props.settings.editorIndentWithTabs,
-      tabWidth: this.props.settings.editorIndentSize
+      tabWidth: this.props.settings.editorIndentSize,
     });
     const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
