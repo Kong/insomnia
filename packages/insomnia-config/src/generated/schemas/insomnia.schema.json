@@ -5,29 +5,36 @@
   "properties": {
     "version": {
       "type": "string",
-      "enum": ["1.0.0"]
+      "enum": [
+        "1.0.0"
+      ]
     },
     "name": {
       "type": "string",
-      "enum": ["Insomnia Config"]
+      "enum": [
+        "Insomnia Config"
+      ]
     },
     "settings": {
-      "$ref": "#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\"|\"radioSilentMode\">>"
+      "$ref": "#/definitions/Partial<Pick<Settings,\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"radioSilentMode\">>"
     }
   },
   "additionalProperties": false,
-  "required": ["name", "version"],
+  "required": [
+    "name",
+    "version"
+  ],
   "definitions": {
-    "Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\"|\"disableUpsells\"|\"radioSilentMode\">>": {
+    "Partial<Pick<Settings,\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"radioSilentMode\">>": {
       "type": "object",
       "properties": {
-        "enableAnalytics": {
-          "type": "boolean"
-        },
         "disableUpdateNotification": {
           "type": "boolean"
         },
-        "disableUpsells": {
+        "enableAnalytics": {
+          "type": "boolean"
+        },
+        "hideUpsells": {
           "type": "boolean"
         },
         "radioSilentMode": {

@@ -115,10 +115,10 @@ export class Toast extends PureComponent<{}, State> {
 
     const stats = await models.stats.get();
     const {
-      updateAutomatically,
-      radioSilentMode,
       disableUpdateNotification,
-      disableUpsells,
+      hideUpsells,
+      radioSilentMode,
+      updateAutomatically,
       updateChannel,
     } = await models.settings.getOrCreate();
 
@@ -131,18 +131,16 @@ export class Toast extends PureComponent<{}, State> {
     // Try fetching user notification
     try {
       const data = {
-        firstLaunch: stats.created,
-        // Used for account verification notifications
-        launches: stats.launches,
-        // Used for CTAs / Informational notifications
-        platform: getAppPlatform(),
         app: getAppId(),
-        version: getAppVersion(),
-        updatesNotSupported: !updatesSupported(),
         autoUpdatesDisabled: !updateAutomatically,
         disableUpdateNotification,
-        disableUpsells,
+        firstLaunch: stats.created,
+        hideUpsells,
+        launches: stats.launches, // Used for account verification notifications
+        platform: getAppPlatform(), // Used for CTAs / Informational notifications
         updateChannel,
+        updatesNotSupported: !updatesSupported(),
+        version: getAppVersion(),
       };
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
     } catch (err) {

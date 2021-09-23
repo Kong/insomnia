@@ -55,7 +55,6 @@ export function init(): BaseSettings {
     disableHtmlPreviewJs: false,
     disableResponsePreviewLinks: false,
     disableUpdateNotification: false,
-    disableUpsells: false,
     editorFontSize: 11,
     editorIndentSize: 2,
     editorIndentWithTabs: true,
@@ -78,6 +77,7 @@ export function init(): BaseSettings {
     // Users should only see onboarding during first launch, and anybody updating from an older version should not see it, so by default this flag is set to true, and is toggled to false during initialization
     hasPromptedOnboarding: true,
     hasPromptedToMigrateFromDesigner: false,
+    hideUpsells: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',

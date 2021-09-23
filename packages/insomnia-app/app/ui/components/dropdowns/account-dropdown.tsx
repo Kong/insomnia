@@ -27,7 +27,7 @@ const StyledIconContainer = styled.div`
 `;
 
 export const AccountDropdown: FunctionComponent<Props> = ({ className }) => {
-  const { disableUpsells } = useSelector(selectSettings);
+  const { hideUpsells } = useSelector(selectSettings);
   return (
     <div className={className}>
       <Dropdown>
@@ -58,7 +58,7 @@ export const AccountDropdown: FunctionComponent<Props> = ({ className }) => {
               </StyledIconContainer>
               Log In
             </DropdownItem>
-            {!disableUpsells && (
+            {!hideUpsells && (
               <DropdownItem
                 key="invite"
                 buttonClass={Link}

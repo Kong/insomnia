@@ -562,8 +562,8 @@ class General extends PureComponent<Props, State> {
           />
         )}
         <BooleanSetting
-          label="Disable upsells"
-          setting="disableUpsells"
+          label="Hide upsells"
+          setting="hideUpsells"
           help="Disable any elements in the app that invite you to purchase... anything. ✌️"
         />
 
