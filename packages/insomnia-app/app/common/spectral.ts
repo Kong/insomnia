@@ -1,12 +1,5 @@
-import { IRuleResult, isOpenApiv2, isOpenApiv3, Spectral } from '@stoplight/spectral';
+import { IRuleResult, Spectral } from '@stoplight/spectral-core';
 
-export const initializeSpectral = () => {
-  const spectral = new Spectral();
-  spectral.registerFormat('oas2', isOpenApiv2);
-  spectral.registerFormat('oas3', isOpenApiv3);
-  spectral.loadRuleset('spectral:oas');
-
-  return spectral;
-};
+export const initializeSpectral = () => new Spectral();
 
 export const isLintError = (result: IRuleResult) => result.severity === 0;

@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/send-request/index.d.ts",
   "dependencies": {
-    "@stoplight/spectral": "^5.9.0",
+    "@stoplight/spectral-core": "^1.5.1",
     "analytics-node": "^4.0.1",
     "aws4": "^1.10.0",
     "axios": "^0.21.1",
