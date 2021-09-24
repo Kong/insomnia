@@ -29,14 +29,14 @@ import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../../base/dropdown/dropdown-item';
-import CodeEditor from '../../codemirror/code-editor';
-import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
+import { CodeEditor } from '../../codemirror/code-editor';
+import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
-import HelpTooltip from '../../help-tooltip';
+import { HelpTooltip } from '../../help-tooltip';
 import { showModal } from '../../modals';
-import ResponseDebugModal from '../../modals/response-debug-modal';
-import TimeFromNow from '../../time-from-now';
-import Tooltip from '../../tooltip';
+import { ResponseDebugModal } from '../../modals/response-debug-modal';
+import { TimeFromNow } from '../../time-from-now';
+import { Tooltip } from '../../tooltip';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
@@ -84,7 +84,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLEditor extends PureComponent<Props, State> {
+export class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | DocumentNode = null;
   _isMounted = false;
@@ -674,7 +674,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     let graphQLExplorerPortal: React.ReactPortal | null = null;
     if (explorerContainer) {
       graphQLExplorerPortal = ReactDOM.createPortal(
-        <GraphqlExplorer
+        <GraphQLExplorer
           schema={schema}
           key={schemaLastFetchTime}
           visible={explorerVisible}
@@ -836,5 +836,3 @@ class GraphQLEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GraphQLEditor;

@@ -17,7 +17,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Link extends PureComponent<Props> {
+export class Link extends PureComponent<Props> {
   _handleClick(e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) {
     e?.preventDefault();
     const { href, onClick } = this.props;
@@ -58,5 +58,3 @@ class Link extends PureComponent<Props> {
     );
   }
 }
-
-export default Link;

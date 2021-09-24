@@ -16,7 +16,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CheckForUpdatesButton extends PureComponent<Props, State> {
+export class CheckForUpdatesButton extends PureComponent<Props, State> {
   state: State = {
     status: '',
     checking: false,
@@ -67,5 +67,3 @@ class CheckForUpdatesButton extends PureComponent<Props, State> {
     );
   }
 }
-
-export default CheckForUpdatesButton;

@@ -16,7 +16,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class TimeFromNow extends PureComponent<Props, State> {
+export class TimeFromNow extends PureComponent<Props, State> {
   _interval: NodeJS.Timeout | null = null;
 
   state: State = {
@@ -67,5 +67,3 @@ class TimeFromNow extends PureComponent<Props, State> {
     );
   }
 }
-
-export default TimeFromNow;

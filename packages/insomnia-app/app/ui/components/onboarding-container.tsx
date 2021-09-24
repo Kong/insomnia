@@ -1,7 +1,7 @@
 import React, { FunctionComponent } from 'react';
 
 import coreLogo from '../images/insomnia-core-logo.png';
-import PageLayout from './page-layout';
+import { PageLayout } from './page-layout';
 import type { WrapperProps } from './wrapper';
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
   subHeader: string;
 }
 
-const OnboardingContainer: FunctionComponent<Props> = ({ wrapperProps, children, header, subHeader }) => (
+export const OnboardingContainer: FunctionComponent<Props> = ({ wrapperProps, children, header, subHeader }) => (
   <PageLayout
     wrapperProps={wrapperProps}
     renderPageBody={() => (
@@ -30,5 +30,3 @@ const OnboardingContainer: FunctionComponent<Props> = ({ wrapperProps, children,
     )}
   />
 );
-
-export default OnboardingContainer;

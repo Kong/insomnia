@@ -31,9 +31,9 @@ import type { Settings } from '../../../models/settings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { setFont } from '../../../plugins/misc';
 import * as globalActions from '../../redux/modules/global';
-import Link from '../base/link';
-import CheckForUpdatesButton from '../check-for-updates-button';
-import HelpTooltip from '../help-tooltip';
+import { Link } from '../base/link';
+import { CheckForUpdatesButton } from '../check-for-updates-button';
+import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
 
 // Font family regex to match certain monospace fonts that don't get

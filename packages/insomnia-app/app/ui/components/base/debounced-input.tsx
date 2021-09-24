@@ -15,7 +15,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class DebouncedInput extends PureComponent<Props> {
+export class DebouncedInput extends PureComponent<Props> {
   _hasFocus = false;
   _input: HTMLTextAreaElement | HTMLInputElement | null = null;
   _handleValueChange: Props['onChange'] | null = null;
@@ -164,5 +164,3 @@ class DebouncedInput extends PureComponent<Props> {
     }
   }
 }
-
-export default DebouncedInput;

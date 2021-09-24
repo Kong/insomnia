@@ -13,13 +13,13 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import PromptButton from '../base/prompt-button';
-import KeydownBinder from '../keydown-binder';
+import { PromptButton } from '../base/prompt-button';
+import { KeydownBinder } from '../keydown-binder';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
 import { URLTag } from '../tags/url-tag';
-import TimeFromNow from '../time-from-now';
+import { TimeFromNow } from '../time-from-now';
 
 interface Props {
   handleSetActiveResponse: Function;
@@ -34,7 +34,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseHistoryDropdown extends PureComponent<Props> {
+export class ResponseHistoryDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _handleDeleteResponses() {
@@ -194,5 +194,3 @@ class ResponseHistoryDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default ResponseHistoryDropdown;

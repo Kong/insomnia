@@ -3,15 +3,15 @@ import React, { PureComponent } from 'react';
 
 import { endTrial, getFirstName, logout } from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Link from '../base/link';
-import Modal from '../base/modal';
+import { Link } from '../base/link';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 let hidePaymentNotificationUntilNextLaunch = false;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PaymentNotificationModal extends PureComponent {
+export class PaymentNotificationModal extends PureComponent {
   async _handleCancel() {
     try {
       await endTrial();
@@ -79,5 +79,3 @@ class PaymentNotificationModal extends PureComponent {
     );
   }
 }
-
-export default PaymentNotificationModal;

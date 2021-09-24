@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -16,7 +16,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperModal extends PureComponent<{}, State> {
+export class WrapperModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -68,5 +68,3 @@ class WrapperModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default WrapperModal;

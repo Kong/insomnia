@@ -2,12 +2,12 @@ import type { GraphQLType } from 'graphql';
 import { SvgIcon } from 'insomnia-components';
 import React, { FC } from 'react';
 
-import Tooltip from '../../components/tooltip';
-import MarkdownPreview from '../markdown-preview';
+import { Tooltip } from '../../components/tooltip';
+import { MarkdownPreview } from '../markdown-preview';
 import { GraphQLDefaultValue } from './graph-ql-default-value';
 import { GraphQLExplorerArgLinks } from './graph-ql-explorer-arg-links';
-import GraphQLExplorerFieldLink from './graph-ql-explorer-field-link';
-import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import { GraphQLExplorerFieldLink } from './graph-ql-explorer-field-link';
+import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
 import { GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {

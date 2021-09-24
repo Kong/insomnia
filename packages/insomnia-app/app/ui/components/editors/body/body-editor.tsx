@@ -27,13 +27,13 @@ import {
 } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
 import type { Workspace } from '../../../../models/workspace';
-import AskModal from '../../modals/ask-modal';
+import { AskModal } from '../../modals/ask-modal';
 import { showModal } from '../../modals/index';
-import FileEditor from './file-editor';
-import FormEditor from './form-editor';
-import GraphQLEditor from './graph-ql-editor';
-import RawEditor from './raw-editor';
-import UrlEncodedEditor from './url-encoded-editor';
+import { FileEditor } from './file-editor';
+import { FormEditor } from './form-editor';
+import { GraphQLEditor } from './graph-ql-editor';
+import { RawEditor } from './raw-editor';
+import { UrlEncodedEditor } from './url-encoded-editor';
 
 interface Props {
   onChange: (r: Request, body: RequestBody) => Promise<Request>;
@@ -49,7 +49,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class BodyEditor extends PureComponent<Props> {
+export class BodyEditor extends PureComponent<Props> {
   _handleRawChange(rawValue: string) {
     const { onChange, request } = this.props;
     const oldContentType = request.body.mimeType || '';
@@ -212,5 +212,3 @@ class BodyEditor extends PureComponent<Props> {
     }
   }
 }
-
-export default BodyEditor;

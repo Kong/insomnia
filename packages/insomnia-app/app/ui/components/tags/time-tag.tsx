@@ -1,7 +1,7 @@
 import classnames from 'classnames';
 import React, { FC, memo } from 'react';
 
-import Tooltip from '../tooltip';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   milliseconds: number;

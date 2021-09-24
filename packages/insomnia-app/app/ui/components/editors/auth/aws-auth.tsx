@@ -6,9 +6,9 @@ import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-import Button from '../../base/button';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
+import { Button } from '../../base/button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { HelpTooltip } from '../../help-tooltip';
 
 interface Props {
   request: Request;
@@ -22,7 +22,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AWSAuth extends PureComponent<Props> {
+export class AWSAuth extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
@@ -150,5 +150,3 @@ class AWSAuth extends PureComponent<Props> {
     );
   }
 }
-
-export default AWSAuth;

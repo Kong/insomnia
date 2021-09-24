@@ -7,7 +7,7 @@ import { strings } from '../../../common/strings';
 import type { Workspace } from '../../../models/workspace';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -27,7 +27,7 @@ const INITIAL_STATE: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncDeleteModal extends PureComponent<Props, State> {
+export class SyncDeleteModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   input: HTMLInputElement | null = null;
 
@@ -128,5 +128,3 @@ class SyncDeleteModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default SyncDeleteModal;

@@ -10,7 +10,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerFieldLink extends PureComponent<Props> {
+export class GraphQLExplorerFieldLink extends PureComponent<Props> {
   _handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
     const { onNavigate, field } = this.props;
@@ -29,5 +29,3 @@ class GraphQLExplorerFieldLink extends PureComponent<Props> {
     );
   }
 }
-
-export default GraphQLExplorerFieldLink;

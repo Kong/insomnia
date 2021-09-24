@@ -9,7 +9,7 @@ interface Props {
   handleSort: (sortOrder: SortOrder) => void;
 }
 
-const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) => (
+export const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) => (
   <Dropdown>
     <DropdownButton className="btn btn--compact">
       <i className="fa fa-sort" />
@@ -21,5 +21,3 @@ const SidebarSortDropdown: FunctionComponent<Props> = ({ handleSort }) => (
     ))}
   </Dropdown>
 );
-
-export default SidebarSortDropdown;

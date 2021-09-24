@@ -5,7 +5,7 @@ import React, { CSSProperties, PureComponent, ReactNode } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { pressedHotKey } from '../../../common/hotkeys-listener';
-import KeydownBinder from '../keydown-binder';
+import { KeydownBinder } from '../keydown-binder';
 // Keep global z-index reference so that every modal will
 // appear over top of an existing one.
 let globalZIndex = 1000;
@@ -33,7 +33,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Modal extends PureComponent<ModalProps, State> {
+export class Modal extends PureComponent<ModalProps, State> {
   onHide: Function | null = null;
   _node: HTMLDivElement | null = null;
 
@@ -191,5 +191,3 @@ class Modal extends PureComponent<ModalProps, State> {
     );
   }
 }
-
-export default Modal;

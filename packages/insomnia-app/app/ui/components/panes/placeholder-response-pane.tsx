@@ -9,7 +9,7 @@ interface Props {
   hotKeyRegistry: hotkeys.HotKeyRegistry;
 }
 
-const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
+export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
   <Pane type="response">
     <PaneHeader />
     <PaneBody placeholder>
@@ -67,5 +67,3 @@ const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, chi
     {children}
   </Pane>
 );
-
-export default PlaceholderResponsePane;

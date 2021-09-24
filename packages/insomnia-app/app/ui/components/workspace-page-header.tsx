@@ -5,10 +5,10 @@ import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
 import { strings } from '../../common/strings';
 import { isCollection, isDesign } from '../../models/workspace';
 import coreLogo from '../images/insomnia-core-logo.png';
-import ActivityToggle from './activity-toggle';
+import { ActivityToggle } from './activity-toggle';
 import SettingsButton from './buttons/settings-button';
-import AccountDropdown from './dropdowns/account-dropdown';
-import WorkspaceDropdown from './dropdowns/workspace-dropdown';
+import { AccountDropdown } from './dropdowns/account-dropdown';
+import { WorkspaceDropdown } from './dropdowns/workspace-dropdown';
 import type { WrapperProps } from './wrapper';
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
   gridRight: ReactNode;
 }
 
-const WorkspacePageHeader: FunctionComponent<Props> = ({
+export const WorkspacePageHeader: FunctionComponent<Props> = ({
   gridRight,
   handleActivityChange,
   wrapperProps: {
@@ -87,5 +87,3 @@ const WorkspacePageHeader: FunctionComponent<Props> = ({
     />
   );
 };
-
-export default WorkspacePageHeader;

@@ -38,13 +38,14 @@ import { reloadPlugins } from '../../../plugins';
 import { createPlugin } from '../../../plugins/create';
 import install from '../../../plugins/install';
 import { setTheme } from '../../../plugins/misc';
-import AskModal from '../../../ui/components/modals/ask-modal';
-import AlertModal from '../../components/modals/alert-modal';
+import { AskModal } from '../../../ui/components/modals/ask-modal';
+import { AlertModal } from '../../components/modals/alert-modal';
 import { showAlert, showError, showModal } from '../../components/modals/index';
-import LoginModal from '../../components/modals/login-modal';
-import PaymentNotificationModal from '../../components/modals/payment-notification-modal';
+import { LoginModal } from '../../components/modals/login-modal';
+import { PaymentNotificationModal } from '../../components/modals/payment-notification-modal';
 import { SelectModal } from '../../components/modals/select-modal';
-import SettingsModal, {
+import {
+  SettingsModal,
   TAB_INDEX_PLUGINS,
   TAB_INDEX_THEMES,
 } from '../../components/modals/settings-modal';

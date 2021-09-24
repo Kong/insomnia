@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -24,7 +24,7 @@ interface AskModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AskModal extends PureComponent<{}, State> {
+export class AskModal extends PureComponent<{}, State> {
   state: State = {
     title: '',
     message: '',
@@ -116,5 +116,3 @@ class AskModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default AskModal;

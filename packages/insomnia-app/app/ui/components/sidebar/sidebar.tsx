@@ -26,7 +26,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Sidebar extends PureComponent<Props> {
+export class Sidebar extends PureComponent<Props> {
   render() {
     const {
       activeEnvironment,
@@ -56,5 +56,3 @@ class Sidebar extends PureComponent<Props> {
     );
   }
 }
-
-export default Sidebar;

@@ -12,9 +12,9 @@ import { strings } from '../../common/strings';
 import { ApiSpec } from '../../models/api-spec';
 import { Project } from '../../models/project';
 import { isDesign, Workspace } from '../../models/workspace';
-import Highlight from './base/highlight';
+import { Highlight } from './base/highlight';
 import { WorkspaceCardDropdown } from './dropdowns/workspace-card-dropdown';
-import TimeFromNow from './time-from-now';
+import { TimeFromNow } from './time-from-now';
 
 export interface WorkspaceCardProps {
   apiSpec: ApiSpec;
@@ -33,7 +33,7 @@ export interface WorkspaceCardProps {
   onSelect: (workspaceId: string, activity: GlobalActivity) => void;
 }
 
-const WorkspaceCard: FC<WorkspaceCardProps> = ({
+export const WorkspaceCard: FC<WorkspaceCardProps> = ({
   apiSpec,
   filter,
   lastActiveBranch,
@@ -142,5 +142,3 @@ const WorkspaceCard: FC<WorkspaceCardProps> = ({
     />
   );
 };
-
-export default WorkspaceCard;

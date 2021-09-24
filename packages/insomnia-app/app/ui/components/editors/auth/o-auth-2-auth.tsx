@@ -24,14 +24,14 @@ import {
 } from '../../../../network/o-auth-2/constants';
 import getAccessToken from '../../../../network/o-auth-2/get-token';
 import { initNewOAuthSession } from '../../../../network/o-auth-2/misc';
-import Button from '../../base/button';
-import Link from '../../base/link';
-import PromptButton from '../../base/prompt-button';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
+import { Button } from '../../base/button';
+import { Link } from '../../base/link';
+import { PromptButton } from '../../base/prompt-button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { HelpTooltip } from '../../help-tooltip';
 import { showModal } from '../../modals';
-import ResponseDebugModal from '../../modals/response-debug-modal';
-import TimeFromNow from '../../time-from-now';
+import { ResponseDebugModal } from '../../modals/response-debug-modal';
+import { TimeFromNow } from '../../time-from-now';
 
 interface Props {
   handleRender: HandleRender;
@@ -58,7 +58,7 @@ const getAccessTokenUrls = () => accessTokenUrls;
 let showAdvanced = false;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class OAuth2Auth extends PureComponent<Props, State> {
+export class OAuth2Auth extends PureComponent<Props, State> {
   state: State = {
     error: '',
     loading: false,
@@ -756,5 +756,3 @@ class OAuth2Auth extends PureComponent<Props, State> {
     );
   }
 }
-
-export default OAuth2Auth;

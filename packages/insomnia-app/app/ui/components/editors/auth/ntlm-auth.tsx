@@ -6,9 +6,9 @@ import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-import Button from '../../base/button';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import PasswordEditor from '../password-editor';
+import { Button } from '../../base/button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { PasswordEditor } from '../password-editor';
 
 interface Props {
   handleRender: HandleRender;
@@ -22,7 +22,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class NTLMAuth extends PureComponent<Props> {
+export class NTLMAuth extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
@@ -127,5 +127,3 @@ class NTLMAuth extends PureComponent<Props> {
     );
   }
 }
-
-export default NTLMAuth;

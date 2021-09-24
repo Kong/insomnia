@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { fuzzyMatch, fuzzyMatchAll } from '../../../common/misc';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
-import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
 import { GraphQLFieldWithOptionalArgs, GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
@@ -22,7 +22,7 @@ interface State {
 
 const BATCH_SIZE = 100;
 
-class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
+export class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
   // this ref is used to check if the component is still mounted while updating the search results
   ref: React.RefObject<HTMLDivElement> = React.createRef();
 
@@ -160,5 +160,3 @@ class GraphQLExplorerSearchResults extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GraphQLExplorerSearchResults;

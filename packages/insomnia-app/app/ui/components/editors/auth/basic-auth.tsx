@@ -6,10 +6,10 @@ import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-import Button from '../../base/button';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
-import PasswordEditor from '../password-editor';
+import { Button } from '../../base/button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { HelpTooltip } from '../../help-tooltip';
+import { PasswordEditor } from '../password-editor';
 
 interface Props {
   handleRender: HandleRender;
@@ -23,7 +23,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class BasicAuth extends PureComponent<Props> {
+export class BasicAuth extends PureComponent<Props> {
   _handleUseISO88591() {
     const { request, onChange } = this.props;
     onChange(request, {
@@ -163,5 +163,3 @@ class BasicAuth extends PureComponent<Props> {
     );
   }
 }
-
-export default BasicAuth;
