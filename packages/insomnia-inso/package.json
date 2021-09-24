@@ -31,7 +31,14 @@
     "build": "webpack --config webpack/webpack.config.development.js",
     "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
     "start": "npm run build -- --watch",
-    "prepare": "npm run build:production"
+    "prepare": "npm run build:production",
+    "package": "rimraf binaries && npm run build:production && pkg ."
+  },
+  "pkg": {
+    "targets": [
+      "node12"
+    ],
+    "outputPath": "binaries"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
@@ -50,6 +57,7 @@
     "execa": "^5.0.0",
     "get-bin-path": "^5.1.0",
     "node-loader": "1.0.2",
+    "pkg": "^5.3.2",
     "rimraf": "^3.0.2",
     "ts-loader": "^8.2.0",
     "webpack": "4.44.1",
