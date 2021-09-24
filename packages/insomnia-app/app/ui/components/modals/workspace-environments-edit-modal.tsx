@@ -364,7 +364,7 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
 
     Promise.all(newSubEnvironments.map((environment, idx) => this._updateEnvironment(
       environment,
-      { metaSortKey: idx + 1},
+      { metaSortKey: idx + 1 },
       false,
     ))).then(() => {
       db.flushChanges();

@@ -76,7 +76,7 @@ export async function getOrCreateForParentId(parentId: string) {
       // Deterministic base env ID. It helps reduce sync complexity since we won't have to
       // de-duplicate environments.
       _id: `${prefix}_${crypto.createHash('sha1').update(parentId).digest('hex')}`,
-      metaSortKey: 0
+      metaSortKey: 0,
     });
   }
 
