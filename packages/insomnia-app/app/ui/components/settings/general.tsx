@@ -35,6 +35,7 @@ import Link from '../base/link';
 import CheckForUpdatesButton from '../check-for-updates-button';
 import HelpTooltip from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
+import { MaskedSetting } from './masked-setting';
 
 // Font family regex to match certain monospace fonts that don't get
 // recognized as monospace
@@ -57,10 +58,6 @@ interface State {
     family: string;
     monospace: boolean;
   }[] | null;
-  fieldsHidden: {
-    httpProxy: boolean;
-    httpsProxy: boolean;
-  };
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
@@ -68,10 +65,6 @@ class General extends PureComponent<Props, State> {
   state: State = {
     fonts: null,
     fontsMono: null,
-    fieldsHidden: {
-      httpProxy: true,
-      httpsProxy: true,
-    },
   };
 
   async componentDidMount() {
@@ -127,21 +120,6 @@ class General extends PureComponent<Props, State> {
     this.props.hideModal();
   }
 
-  _handlePasswordVisibility(name: string): (e: React.MouseEvent) => void {
-    return e => {
-      e.preventDefault();
-      this.setState(prevState => {
-        return {
-          ...prevState,
-          fieldsHidden: {
-            ...prevState.fieldsHidden,
-            [`${name}`]: !prevState.fieldsHidden[name],
-          },
-        };
-      });
-    };
-  }
-
   renderEnumSetting(
     label: string,
     name: string,
@@ -172,31 +150,6 @@ class General extends PureComponent<Props, State> {
             ))}
           </select>
         </label>
-      </div>
-    );
-  }
-
-  renderPasswordSetting(label: string, name: string, help: string, props: Record<string, any>) {
-    const { settings } = this.props;
-    if (!settings.hasOwnProperty(name)) { throw new Error(`Invalid number setting name ${name}`); }
-    return (
-      <div>
-        <label>
-          {label}
-          {help && <HelpTooltip className="space-left">{help}</HelpTooltip>}
-        </label>
-        <div className="form-control form-control--outlined form-control--btn-right">
-          <input
-            type={this.state.fieldsHidden[name] ? 'password' : props.type}
-            name={name}
-            defaultValue={settings[name]}
-            {...props}
-            onChange={props.onChange || this._handleUpdateSetting}
-          />
-          <button className={'form-control__right'} onClick={this._handlePasswordVisibility(name)}>
-            {this.state.fieldsHidden[name] ? <i className="fa fa-eye" /> : <i className="fa fa-eye-slash" />}
-          </button>
-        </div>
       </div>
     );
   }
@@ -549,14 +502,26 @@ class General extends PureComponent<Props, State> {
         />
 
         <div className="form-row pad-top-sm">
-          {this.renderPasswordSetting('HTTP Proxy', 'httpProxy', '', {
-            placeholder: 'localhost:8005',
-            disabled: !settings.proxyEnabled,
-          })}
-          {this.renderPasswordSetting('HTTPS Proxy', 'httpsProxy', '', {
-            placeholder: 'localhost:8005',
-            disabled: !settings.proxyEnabled,
-          })}
+          <MaskedSetting
+            label='HTTP Proxy'
+            setting='httpProxy'
+            type='text'
+            showPasswords={settings.showPasswords}
+            props={{
+              placeholder: 'localhost:8005',
+              disabled: !settings.proxyEnabled,
+            }}
+          />
+          <MaskedSetting
+            label='HTTPS Proxy'
+            setting='httpsProxy'
+            type='text'
+            showPasswords={settings.showPasswords}
+            props={{
+              placeholder: 'localhost:8005',
+              disabled: !settings.proxyEnabled,
+            }}
+          />
           {this.renderTextSetting(
             'No Proxy',
             'noProxy',
