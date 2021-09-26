@@ -20,14 +20,14 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
           "name": "USPTO_Data_Set_API-list_searchable_fields",
-          "paths": ["/(?<dataset>[^\\/\\s]+)/(?<version>[^\\/\\s]+)/fields$"]
+          "paths": ["/(?<dataset>[^\\/]+)/(?<version>[^\\/]+)/fields$"]
         },
         {
           "methods": ["POST"],
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
           "name": "USPTO_Data_Set_API-perform_search",
-          "paths": ["/(?<dataset>[^\\/\\s]+)/(?<version>[^\\/\\s]+)/records$"]
+          "paths": ["/(?<dataset>[^\\/]+)/(?<version>[^\\/]+)/records$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_uspto.yaml"]

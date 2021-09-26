@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "*.db": "ndjson",
+    "*.jsonl": "ndjson",
+    "*.njson": "ndjson"
+  },
+}

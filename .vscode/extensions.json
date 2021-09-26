@@ -7,6 +7,7 @@
     "yzhang.markdown-all-in-one",
     "DavidAnson.vscode-markdownlint",
     "dbaeumer.vscode-eslint",
+    "adrieankhisbe.vscode-ndjson",
   ],
   // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
   "unwantedRecommendations": [

@@ -27,7 +27,7 @@
           "strip_path": false,
           "tags": ["OAS3_import", "OAS3file_petstore.yaml"],
           "name": "Swagger_Petstore-showPetById",
-          "paths": ["/pets/(?<petId>[^\\/\\s]+)$"]
+          "paths": ["/pets/(?<petId>[^\\/]+)$"]
         }
       ],
       "tags": ["OAS3_import", "OAS3file_petstore.yaml"]
