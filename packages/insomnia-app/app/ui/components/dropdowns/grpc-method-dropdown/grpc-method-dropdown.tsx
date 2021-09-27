@@ -9,8 +9,8 @@ import {
   NO_PACKAGE_KEY,
 } from '../../../../common/grpc-paths';
 import type { GrpcMethodDefinition } from '../../../../network/grpc/method';
-import GrpcMethodTag from '../../tags/grpc-method-tag';
-import GrpcMethodDropdownButton from './grpc-method-dropdown-button';
+import { GrpcMethodTag } from '../../tags/grpc-method-tag';
+import { GrpcMethodDropdownButton } from './grpc-method-dropdown-button';
 
 interface Props {
   disabled?: boolean;
@@ -24,7 +24,7 @@ const NormalCase = styled.span`
   text-transform: initial;
 `;
 
-const GrpcMethodDropdown: FunctionComponent<Props> = ({
+export const GrpcMethodDropdown: FunctionComponent<Props> = ({
   disabled,
   methods,
   selectedMethod,
@@ -73,5 +73,3 @@ const GrpcMethodDropdown: FunctionComponent<Props> = ({
     </Dropdown>
   );
 };
-
-export default GrpcMethodDropdown;

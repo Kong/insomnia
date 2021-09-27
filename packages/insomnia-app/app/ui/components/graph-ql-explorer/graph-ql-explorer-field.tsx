@@ -1,9 +1,9 @@
 import { GraphQLType } from 'graphql';
 import React, { Fragment, PureComponent } from 'react';
 
-import MarkdownPreview from '../markdown-preview';
+import { MarkdownPreview } from '../markdown-preview';
 import { GraphQLDefaultValue } from './graph-ql-default-value';
-import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
 import { GraphQLFieldWithParentName } from './graph-ql-types';
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
   field: GraphQLFieldWithParentName;
 }
 
-class GraphQLExplorerField extends PureComponent<Props> {
+export class GraphQLExplorerField extends PureComponent<Props> {
   renderDescription() {
     const { field } = this.props;
     return <MarkdownPreview markdown={field.description || '*no description*'} />;
@@ -66,5 +66,3 @@ class GraphQLExplorerField extends PureComponent<Props> {
     );
   }
 }
-
-export default GraphQLExplorerField;

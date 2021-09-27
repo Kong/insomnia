@@ -12,14 +12,14 @@ import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
-import DebouncedInput from '../base/debounced-input';
-import FileInputButton from '../base/file-input-button';
-import Modal from '../base/modal';
+import { DebouncedInput } from '../base/debounced-input';
+import { FileInputButton } from '../base/file-input-button';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
-import MarkdownEditor from '../markdown-editor';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
+import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
 import { showWorkspaceDuplicateModal } from './workspace-duplicate-modal';
 
@@ -87,7 +87,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceSettingsModal extends PureComponent<Props, State> {
+export class WorkspaceSettingsModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -539,5 +539,3 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default WorkspaceSettingsModal;

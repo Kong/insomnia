@@ -3,7 +3,7 @@ import React, { FunctionComponent, useCallback } from 'react';
 
 import type { ProtoDirectory } from '../../../models/proto-directory';
 import type { DeleteProtoDirectoryHandler } from './proto-file-list';
-import ProtoListItem from './proto-list-item';
+import { ProtoListItem } from './proto-list-item';
 
 interface Props {
   dir: ProtoDirectory;
@@ -11,7 +11,7 @@ interface Props {
   handleDeleteDirectory: DeleteProtoDirectoryHandler;
 }
 
-const ProtoDirectoryListItem: FunctionComponent<Props> = ({ dir, indentLevel, handleDeleteDirectory }) => {
+export const ProtoDirectoryListItem: FunctionComponent<Props> = ({ dir, indentLevel, handleDeleteDirectory }) => {
   const handleDeleteCallback = useCallback(
     async (e: React.SyntheticEvent<HTMLButtonElement>) => {
       e.stopPropagation();
@@ -40,5 +40,3 @@ const ProtoDirectoryListItem: FunctionComponent<Props> = ({ dir, indentLevel, ha
     </ProtoListItem>
   );
 };
-
-export default ProtoDirectoryListItem;

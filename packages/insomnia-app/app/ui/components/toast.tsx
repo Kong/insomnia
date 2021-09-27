@@ -16,7 +16,7 @@ import {
 } from '../../common/constants';
 import * as models from '../../models/index';
 import imgSrcCore from '../images/insomnia-core-logo.png';
-import Link from './base/link';
+import { Link } from './base/link';
 const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
 
 export interface ToastNotification {
@@ -58,7 +58,7 @@ const StyledFooter = styled.footer`
 `;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Toast extends PureComponent<{}, State> {
+export class Toast extends PureComponent<{}, State> {
   _interval: NodeJS.Timeout | null = null;
 
   state: State = {
@@ -246,5 +246,3 @@ class Toast extends PureComponent<{}, State> {
     );
   }
 }
-
-export default Toast;

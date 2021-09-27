@@ -1,15 +1,15 @@
 import React, { FC, memo } from 'react';
 
-import Link from '../base/link';
+import { Link } from '../base/link';
 import { showModal } from '../modals/index';
-import SettingsModal from '../modals/settings-modal';
+import { SettingsModal } from '../modals/settings-modal';
 
 interface Props {
   error: string;
   url: string;
   fontSize: number;
 }
-export const ResponseError: FC<Props> = memo(({ error, fontSize }) => {
+export const ResponseErrorViewer: FC<Props> = memo(({ error, fontSize }) => {
   let msg: React.ReactNode = null;
 
   if (error?.toLowerCase().indexOf('certificate') !== -1) {
@@ -59,4 +59,4 @@ export const ResponseError: FC<Props> = memo(({ error, fontSize }) => {
   );
 });
 
-ResponseError.displayName = 'ResponseError';
+ResponseErrorViewer.displayName = 'ResponseError';

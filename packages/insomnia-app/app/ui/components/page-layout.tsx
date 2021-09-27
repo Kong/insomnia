@@ -3,8 +3,8 @@ import classnames from 'classnames';
 import React, { FC, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../common/constants';
-import ErrorBoundary from './error-boundary';
-import Sidebar from './sidebar/sidebar';
+import { ErrorBoundary } from './error-boundary';
+import { Sidebar } from './sidebar/sidebar';
 import type { WrapperProps } from './wrapper';
 
 const Pane: FC<{ position: string }> = ({ children, position }) => (
@@ -23,7 +23,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PageLayout extends PureComponent<Props> {
+export class PageLayout extends PureComponent<Props> {
   // Special request updaters
   _handleStartDragSidebar(e: React.MouseEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -189,5 +189,3 @@ class PageLayout extends PureComponent<Props> {
     );
   }
 }
-
-export default PageLayout;

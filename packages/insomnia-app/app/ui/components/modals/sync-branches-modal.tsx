@@ -9,11 +9,11 @@ import type { Workspace } from '../../../models/workspace';
 import type { StatusCandidate } from '../../../sync/types';
 import { interceptAccessError } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
-import SyncPullButton from '../sync-pull-button';
+import { PromptButton } from '../base/prompt-button';
+import { SyncPullButton } from '../sync-pull-button';
 
 interface Props {
   workspace: Workspace;
@@ -31,7 +31,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncBranchesModal extends PureComponent<Props, State> {
+export class SyncBranchesModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -320,5 +320,3 @@ class SyncBranchesModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default SyncBranchesModal;

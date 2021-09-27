@@ -3,7 +3,7 @@ import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
 
 import { grpcMethodDefinitionSchema } from '../../../../context/grpc/__schemas__';
-import GrpcMethodDropdown from '../grpc-method-dropdown';
+import { GrpcMethodDropdown } from '../grpc-method-dropdown';
 
 const builder = createBuilder(grpcMethodDefinitionSchema);
 

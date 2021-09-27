@@ -8,7 +8,7 @@ import { isRemoteProject } from '../../../models/project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { useRemoteWorkspaces } from '../../hooks/workspace';
 import { selectActiveProject } from '../../redux/selectors';
-import HelpTooltip from '../help-tooltip';
+import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
   className?: string;

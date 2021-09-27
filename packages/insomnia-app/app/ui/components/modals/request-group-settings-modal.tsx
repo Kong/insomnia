@@ -7,12 +7,12 @@ import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Workspace } from '../../../models/workspace';
-import DebouncedInput from '../base/debounced-input';
-import Modal from '../base/modal';
+import { DebouncedInput } from '../base/debounced-input';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import HelpTooltip from '../help-tooltip';
-import MarkdownEditor from '../markdown-editor';
+import { HelpTooltip } from '../help-tooltip';
+import { MarkdownEditor } from '../markdown-editor';
 
 interface Props {
   editorFontSize: number;
@@ -43,7 +43,7 @@ interface RequestGroupSettingsModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
+export class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
   modal: Modal | null = null;
   _editor: MarkdownEditor | null = null;
 
@@ -351,5 +351,3 @@ class RequestGroupSettingsModal extends React.PureComponent<Props, State> {
     );
   }
 }
-
-export default RequestGroupSettingsModal;

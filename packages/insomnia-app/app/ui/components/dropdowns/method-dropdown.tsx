@@ -20,7 +20,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MethodDropdown extends PureComponent<Props> {
+export class MethodDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _setDropdownRef(n: Dropdown) {
@@ -128,5 +128,3 @@ class MethodDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default MethodDropdown;

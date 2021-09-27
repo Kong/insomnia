@@ -20,7 +20,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class VariableEditor extends PureComponent<Props, State> {
+export class VariableEditor extends PureComponent<Props, State> {
   textAreaRef = createRef<HTMLTextAreaElement>();
   _select: HTMLSelectElement | null = null;
 
@@ -145,5 +145,3 @@ class VariableEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default VariableEditor;

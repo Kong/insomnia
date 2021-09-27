@@ -6,10 +6,10 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 import type { GrpcRequest } from '../../../../models/grpc-request';
 import type { Settings } from '../../../../models/settings';
 import { useGrpc } from '../../../context/grpc';
-import GrpcSendButton from '../../buttons/grpc-send-button';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown';
-import GrpcTabbedMessages from '../../viewers/grpc-tabbed-messages';
+import { GrpcSendButton } from '../../buttons/grpc-send-button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { GrpcMethodDropdown } from '../../dropdowns/grpc-method-dropdown/grpc-method-dropdown';
+import { GrpcTabbedMessages } from '../../viewers/grpc-tabbed-messages';
 import { Pane, PaneBody, PaneHeader } from '../pane';
 import useActionHandlers from './use-action-handlers';
 import useChangeHandlers from './use-change-handlers';
@@ -47,7 +47,7 @@ const StyledDropdown = styled.div`
   flex: 1 0 auto;
 `;
 
-const GrpcRequestPane: FunctionComponent<Props> = ({
+export const GrpcRequestPane: FunctionComponent<Props> = ({
   activeRequest,
   environmentId,
   workspaceId,
@@ -159,5 +159,3 @@ const GrpcRequestPane: FunctionComponent<Props> = ({
     </Pane>
   );
 };
-
-export default GrpcRequestPane;

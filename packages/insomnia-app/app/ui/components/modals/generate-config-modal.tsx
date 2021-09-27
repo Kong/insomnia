@@ -9,12 +9,12 @@ import type { Settings } from '../../../models/settings';
 import type { ConfigGenerator } from '../../../plugins';
 import * as plugins from '../../../plugins';
 import { CopyButton } from '../base/copy-button';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import CodeEditor from '../codemirror/code-editor';
-import Notice from '../notice';
+import { CodeEditor } from '../codemirror/code-editor';
+import { Notice } from '../notice';
 import { showModal } from './index';
 
 interface Props {
@@ -39,7 +39,7 @@ interface ShowOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GenerateConfigModal extends PureComponent<Props, State> {
+export class GenerateConfigModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -157,4 +157,3 @@ class GenerateConfigModal extends PureComponent<Props, State> {
 }
 
 export const showGenerateConfigModal = (opts: ShowOptions) => showModal(GenerateConfigModal, opts);
-export default GenerateConfigModal;

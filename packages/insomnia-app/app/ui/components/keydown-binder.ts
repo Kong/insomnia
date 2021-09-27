@@ -14,7 +14,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class KeydownBinder extends PureComponent<Props> {
+export class KeydownBinder extends PureComponent<Props> {
   _handleKeydown(e: KeyboardEvent) {
     const { stopMetaPropagation, onKeydown, disabled } = this.props;
 
@@ -77,5 +77,3 @@ class KeydownBinder extends PureComponent<Props> {
     return this.props.children ?? null;
   }
 }
-
-export default KeydownBinder;

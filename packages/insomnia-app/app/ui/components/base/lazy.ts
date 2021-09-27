@@ -12,7 +12,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Lazy extends PureComponent<Props> {
+export class Lazy extends PureComponent<Props> {
   state: State = {
     show: false,
   };
@@ -38,5 +38,3 @@ class Lazy extends PureComponent<Props> {
     return this.state.show ? this.props.children : null;
   }
 }
-
-export default Lazy;

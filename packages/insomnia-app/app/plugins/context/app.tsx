@@ -10,10 +10,10 @@ import {
   RENDER_PURPOSE_NO_RENDER,
   RENDER_PURPOSE_SEND,
 } from '../../common/render';
-import HtmlElementWrapper from '../../ui/components/html-element-wrapper';
+import { HtmlElementWrapper } from '../../ui/components/html-element-wrapper';
 import { showAlert, showModal, showPrompt } from '../../ui/components/modals';
 import { PromptModalOptions } from '../../ui/components/modals/prompt-modal';
-import WrapperModal from '../../ui/components/modals/wrapper-modal';
+import { WrapperModal } from '../../ui/components/modals/wrapper-modal';
 
 interface DialogOptions {
   onHide?: () => void;

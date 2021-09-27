@@ -11,11 +11,11 @@ import {
   SIGNATURE_METHOD_PLAINTEXT,
   SIGNATURE_METHOD_RSA_SHA1,
 } from '../../../../network/o-auth-1/constants';
-import Button from '../../base/button';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
+import { Button } from '../../base/button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { HelpTooltip } from '../../help-tooltip';
 import { showModal } from '../../modals';
-import CodePromptModal from '../../modals/code-prompt-modal';
+import { CodePromptModal } from '../../modals/code-prompt-modal';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -41,7 +41,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class OAuth1Auth extends PureComponent<Props> {
+export class OAuth1Auth extends PureComponent<Props> {
   _handleEditPrivateKey() {
     const { handleRender, handleGetRenderContext, request } = this.props;
     const { privateKey } = request.authentication;
@@ -418,5 +418,3 @@ class OAuth1Auth extends PureComponent<Props> {
     );
   }
 }
-
-export default OAuth1Auth;

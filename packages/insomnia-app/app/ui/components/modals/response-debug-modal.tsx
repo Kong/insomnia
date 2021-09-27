@@ -5,8 +5,8 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import * as models from '../../../models/index';
 import type { Response } from '../../../models/response';
 import type { Settings } from '../../../models/settings';
-import ResponseTimelineViewer from '../../components/viewers/response-timeline-viewer';
-import Modal from '../base/modal';
+import { ResponseTimelineViewer } from '../../components/viewers/response-timeline-viewer';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -20,7 +20,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseDebugModal extends PureComponent<Props, State> {
+export class ResponseDebugModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -76,5 +76,3 @@ class ResponseDebugModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default ResponseDebugModal;

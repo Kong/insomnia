@@ -3,8 +3,8 @@ import React, { PureComponent } from 'react';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Link from '../base/link';
-import Modal from '../base/modal';
+import { Link } from '../base/link';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -18,7 +18,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class LoginModal extends PureComponent<{}, State> {
+export class LoginModal extends PureComponent<{}, State> {
   state: State = {
     loading: false,
     error: '',
@@ -130,4 +130,3 @@ class LoginModal extends PureComponent<{}, State> {
 }
 
 export const showLoginModal = () => showModal(LoginModal);
-export default LoginModal;

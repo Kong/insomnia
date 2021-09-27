@@ -2,7 +2,7 @@ import { strings } from '../../../common/strings';
 import { Project } from '../../../models/project';
 import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
-import AskModal from '../../components/modals/ask-modal';
+import { AskModal } from '../../components/modals/ask-modal';
 import { showSelectModal } from '../../components/modals/select-modal';
 
 export enum ForceToWorkspace {

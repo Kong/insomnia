@@ -8,12 +8,12 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import CodeEditor from '../codemirror/code-editor';
-import MarkdownEditor from '../markdown-editor';
+import { CodeEditor } from '../codemirror/code-editor';
+import { MarkdownEditor } from '../markdown-editor';
 
 const MODES = {
   'text/plain': 'Plain Text',
@@ -48,7 +48,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CodePromptModal extends PureComponent<Props, State> {
+export class CodePromptModal extends PureComponent<Props, State> {
   state: State = {
     title: 'Not Set',
     defaultValue: '',
@@ -227,5 +227,3 @@ class CodePromptModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default CodePromptModal;

@@ -13,10 +13,10 @@ import { HandleRender } from '../../../common/render';
 import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveRequest } from '../../redux/selectors';
-import Highlight from '../base/highlight';
+import { Highlight } from '../base/highlight';
 import { RequestGroupActionsDropdown, UnconnectedRequestGroupActionsDropdown } from '../dropdowns/request-group-actions-dropdown';
 import { showModal } from '../modals';
-import RequestGroupSettingsModal from '../modals/request-group-settings-modal';
+import { RequestGroupSettingsModal } from '../modals/request-group-settings-modal';
 import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 import { SidebarRequestRow } from './sidebar-request-row';
 
@@ -236,6 +236,4 @@ const dragTarget: DropTargetSpec<Props> = {
 
 const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestGroupRow);
 const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
-const connected = connect(mapStateToProps)(target);
-
-export const SidebarRequestGroupRow = connected;
+export const SidebarRequestGroupRow = connect(mapStateToProps)(target);

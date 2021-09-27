@@ -14,13 +14,13 @@ import { Request } from '../../../models/request';
 import { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { selectActiveEnvironment, selectActiveProject } from '../../redux/selectors';
-import Editable from '../base/editable';
-import Highlight from '../base/highlight';
-import RequestActionsDropdown from '../dropdowns/request-actions-dropdown';
-import GrpcSpinner from '../grpc-spinner';
+import { Editable } from '../base/editable';
+import { Highlight } from '../base/highlight';
+import { RequestActionsDropdown } from '../dropdowns/request-actions-dropdown';
+import { GrpcSpinner } from '../grpc-spinner';
 import { showModal } from '../modals/index';
-import RequestSettingsModal from '../modals/request-settings-modal';
-import GrpcTag from '../tags/grpc-tag';
+import { RequestSettingsModal } from '../modals/request-settings-modal';
+import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 import { DnDDragProps, DnDDropProps, DnDProps, DragObject, dropHandleCreator, hoverHandleCreator, sourceCollect, targetCollect } from './dnd';
 
@@ -334,6 +334,4 @@ const mapStateToProps = (state: RootState) => ({
 
 const source = DragSource<Props, DnDDragProps, DragObject>('SIDEBAR_REQUEST_ROW', dragSource, sourceCollect)(UnconnectedSidebarRequestRow);
 const target = DropTarget<Props, DnDDropProps>('SIDEBAR_REQUEST_ROW', dragTarget, targetCollect)(source);
-const connected = connect(mapStateToProps)(target);
-
-export const SidebarRequestRow = connected;
+export const SidebarRequestRow = connect(mapStateToProps)(target);

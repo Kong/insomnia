@@ -6,8 +6,8 @@ import * as session from '../../../account/session';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import Link from '../base/link';
-import PromptButton from '../base/prompt-button';
+import { Link } from '../base/link';
+import { PromptButton } from '../base/prompt-button';
 import { showLoginModal } from '../modals/login-modal';
 
 interface Props {
@@ -24,7 +24,7 @@ const StyledIconContainer = styled.div`
   }
 `;
 
-const AccountDropdown: FunctionComponent<Props> = ({ className }) => (
+export const AccountDropdown: FunctionComponent<Props> = ({ className }) => (
   <div className={className}>
     <Dropdown>
       <DropdownButton noWrap>
@@ -72,5 +72,3 @@ const AccountDropdown: FunctionComponent<Props> = ({ className }) => (
     </Dropdown>
   </div>
 );
-
-export default AccountDropdown;
