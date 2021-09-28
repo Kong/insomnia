@@ -241,8 +241,11 @@ export async function render<T>(
       // Do nothing to these types
     } else if (typeof x === 'string') {
       try {
+        console.log('render string', { x, context, path });
+
         // @ts-expect-error -- TSCONVERSION
         x = await templating.render(x, { context, path });
+        console.log('5');
 
         // If the variable outputs a tag, render it again. This is a common use
         // case for environment variables:
@@ -284,6 +287,7 @@ export async function render<T>(
     return x;
   }
 
+  console.log('start next');
   return next<T>(newObj, name, true);
 }
 
@@ -453,11 +457,19 @@ export async function getRenderedRequestAndContext(
     purpose,
   }: RenderRequestOptions,
 ) {
+  console.log('get rendered request and context');
   const ancestors = await getRenderContextAncestors(request);
   const workspace = ancestors.find(isWorkspace);
   const parentId = workspace ? workspace._id : 'n/a';
   const cookieJar = await models.cookieJar.getOrCreateForParentId(parentId);
+  console.log('fetched cookie jar');
+
   const renderContext = await getRenderContext({ request, environmentId, ancestors, purpose, extraInfo });
+
+  // return {
+  //   context: renderContext,
+  //   request,
+  // };
 
   // HACK: Switch '#}' to '# }' to prevent Nunjucks from barfing
   // https://github.com/kong/insomnia/issues/895
@@ -470,20 +482,24 @@ export async function getRenderedRequestAndContext(
   } catch (err) { }
 
   // Render description separately because it's lower priority
-  const description = request.description;
+  // const description = request.description;
   request.description = '';
   // Render all request properties
-  const renderResult = await render(
-    {
-      _request: request,
-      _cookieJar: cookieJar,
-    },
-    renderContext,
-    request.settingDisableRenderRequestBody ? /^body.*/ : null,
-  );
-  const renderedRequest = renderResult._request;
-  const renderedCookieJar = renderResult._cookieJar;
-  renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
+  console.log('render');
+
+  // const renderResult = await render(
+  //   {
+  //     _request: request,
+  //     _cookieJar: cookieJar,
+  //   },
+  //   renderContext,
+  //   request.settingDisableRenderRequestBody ? /^body.*/ : null,
+  // );
+  const renderedRequest = request;
+  const renderedCookieJar = cookieJar;
+  console.log('description');
+
+  // renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
   // Remove disabled headers
@@ -500,6 +516,8 @@ export async function getRenderedRequestAndContext(
   }
 
   // Default the proto if it doesn't exist
+  console.log('set default protocol');
+
   renderedRequest.url = setDefaultProtocol(renderedRequest.url);
   return {
     context: renderContext,
