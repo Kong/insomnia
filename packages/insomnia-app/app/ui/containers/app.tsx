@@ -1018,7 +1018,7 @@ class App extends PureComponent<AppProps, State> {
         });
       }
 
-      const sidebar = this._sidebarRef.current
+      const sidebar = this._sidebarRef.current;
 
       if (sidebar) {
         const currentPixelWidth = sidebar.offsetWidth;
