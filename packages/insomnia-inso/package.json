@@ -32,10 +32,14 @@
     "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
     "start": "npm run build -- --watch",
     "prepare": "npm run build:production",
-    "package": "rimraf binaries && npm run build && pkg ."
+    "package": "rimraf binaries && npm run build && pkg .",
+    "package:verify": "ts-node src/scripts/verify-pkg.ts"
   },
   "pkg": {
     "targets": [
+      "node12-alpine-x64",
+      "node12-linux-x64",
+      "node12-win-x64",
       "node12-mac-x64"
     ],
     "assets": [
