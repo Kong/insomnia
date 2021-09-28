@@ -121,7 +121,9 @@ export interface Theme extends InternalProperties {
 
 export type ColorScheme = 'default' | 'light' | 'dark';
 
-let plugins: Plugin[] | null | undefined = null;
+// TODO: Loading plugins from the single executable fails on the insomnia-plugin-response, this just forces "no plugins" for now, to get things working.
+// THIS IS NOT THE RIGHT SOLUTION, it's just an interim
+let plugins: Plugin[] | null | undefined = [];
 
 let ignorePlugins: string[] = [];
 

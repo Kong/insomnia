@@ -157,8 +157,6 @@ export async function _actuallySend(
       addTimeline('TEXT', value);
     }
 
-    console.log('[network] init curl');
-
     // Initialize the curl handle
     const curl = new Curl();
 
@@ -853,7 +851,6 @@ export async function _actuallySend(
           true,
         );
       });
-      console.log('[network] curl.perform');
       curl.perform();
     } catch (err) {
       console.log('[network] Error', err);
@@ -932,8 +929,6 @@ export async function send(
   const timeSinceLastInteraction = Date.now() - lastUserInteraction;
   const delayMillis = Math.max(0, MAX_DELAY_TIME - timeSinceLastInteraction);
 
-  console.log(`delay millis: ${delayMillis}`);
-
   if (delayMillis > 0) {
     await delay(delayMillis);
   }
@@ -942,25 +937,18 @@ export async function send(
 
   // Fetch some things
   const request = await models.request.getById(requestId);
-  console.log('fetched requests');
-
   const settings = await models.settings.getOrCreate();
-  console.log('fetched settings');
-
   const ancestors = await db.withAncestors(request, [
     models.request.type,
     models.requestGroup.type,
     models.workspace.type,
   ]);
-  console.log('fetched ancestors');
 
   if (!request) {
     throw new Error(`Failed to find request to send for ${requestId}`);
   }
 
   const environment: Environment | null = await models.environment.getById(environmentId || 'n/a');
-  console.log('fetched environment');
-
   const renderResult = await getRenderedRequestAndContext(
     {
       request,
@@ -969,20 +957,16 @@ export async function send(
       extraInfo,
     },
   );
-  console.log('fetched get rendered request');
-
   const renderedRequestBeforePlugins = renderResult.request;
   const renderedContextBeforePlugins = renderResult.context;
   const workspaceDoc = ancestors.find(isWorkspace);
   const workspace = await models.workspace.getById(workspaceDoc ? workspaceDoc._id : 'n/a');
-  console.log('fetched workspace');
 
   if (!workspace) {
     throw new Error(`Failed to find workspace for request: ${requestId}`);
   }
 
   let renderedRequest: RenderedRequest;
-  console.log('applying plugin hooks');
 
   try {
     renderedRequest = await _applyRequestPluginHooks(
@@ -1002,7 +986,6 @@ export async function send(
     } as ResponsePatch;
   }
 
-  console.log('[network] actually sending');
   const response = await _actuallySend(
     renderedRequest,
     renderedContextBeforePlugins,
