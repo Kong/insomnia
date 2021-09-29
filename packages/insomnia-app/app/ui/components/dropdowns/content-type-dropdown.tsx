@@ -21,7 +21,7 @@ import { Dropdown, DropdownProps } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import AlertModal from '../modals/alert-modal';
+import { AlertModal } from '../modals/alert-modal';
 import { showModal } from '../modals/index';
 
 interface Props extends DropdownProps {
@@ -33,7 +33,7 @@ interface Props extends DropdownProps {
 const EMPTY_MIME_TYPE = null;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ContentTypeDropdown extends PureComponent<Props> {
+export class ContentTypeDropdown extends PureComponent<Props> {
   async _checkMimeTypeChange(body: RequestBody, mimeType: string | null) {
     // Nothing to do
     if (body.mimeType === mimeType) {
@@ -122,5 +122,3 @@ class ContentTypeDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default ContentTypeDropdown;

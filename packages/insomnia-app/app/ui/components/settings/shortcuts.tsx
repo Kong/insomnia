@@ -16,10 +16,10 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
-import AddKeyCombinationModal from '../modals/add-key-combination-modal';
+import { AddKeyCombinationModal } from '../modals/add-key-combination-modal';
 
 interface Props {
   hotKeyRegistry: HotKeyRegistry;

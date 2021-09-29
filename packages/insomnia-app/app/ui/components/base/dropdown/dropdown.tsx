@@ -7,7 +7,7 @@ import { AUTOBIND_CFG } from '../../../../common/constants';
 import { hotKeyRefs } from '../../../../common/hotkeys';
 import { executeHotKey } from '../../../../common/hotkeys-listener';
 import { fuzzyMatch } from '../../../../common/misc';
-import KeydownBinder from '../../keydown-binder';
+import { KeydownBinder } from '../../keydown-binder';
 import { DropdownButton } from './dropdown-button';
 import { DropdownDivider } from './dropdown-divider';
 import { DropdownItem } from './dropdown-item';

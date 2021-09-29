@@ -5,12 +5,12 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { docsGitAccessToken, docsGitSync } from '../../../common/documentation';
 import type { GitRepository } from '../../../models/git-repository';
 import { deleteGitRepository } from '../../../models/helpers/git-repository-operations';
-import Link from '../base/link';
-import Modal from '../base/modal';
+import { Link } from '../base/link';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import HelpTooltip from '../help-tooltip';
+import { HelpTooltip } from '../help-tooltip';
 
 interface State {
   gitRepository: GitRepository | null;
@@ -24,7 +24,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitRepositorySettingsModal extends PureComponent<{}, State> {
+export class GitRepositorySettingsModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   input: HTMLInputElement | null = null;
   _onSubmitEdits?: ((arg0: GitRepository) => any) | null;
@@ -245,5 +245,3 @@ class GitRepositorySettingsModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default GitRepositorySettingsModal;

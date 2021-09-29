@@ -6,13 +6,13 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
 import type { Snapshot } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
-import TimeFromNow from '../time-from-now';
-import Tooltip from '../tooltip';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
+import { TimeFromNow } from '../time-from-now';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   workspace: Workspace;
@@ -25,7 +25,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncHistoryModal extends PureComponent<Props, State> {
+export class SyncHistoryModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   handleRollback: (arg0: Snapshot) => Promise<void>;
 
@@ -153,5 +153,3 @@ class SyncHistoryModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default SyncHistoryModal;

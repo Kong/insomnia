@@ -23,7 +23,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 import { showError } from '../modals';
 
 interface Props extends Partial<DropdownProps> {
@@ -47,7 +47,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestActionsDropdown extends PureComponent<Props, State> {
+export class RequestActionsDropdown extends PureComponent<Props, State> {
   _dropdown: Dropdown | null = null;
 
   state: State = {
@@ -200,5 +200,3 @@ class RequestActionsDropdown extends PureComponent<Props, State> {
     );
   }
 }
-
-export default RequestActionsDropdown;

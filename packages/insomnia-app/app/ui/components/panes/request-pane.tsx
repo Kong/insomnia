@@ -18,20 +18,20 @@ import type {
 } from '../../../models/request';
 import type { Settings } from '../../../models/settings';
 import type { Workspace } from '../../../models/workspace';
-import AuthDropdown from '../dropdowns/auth-dropdown';
-import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
-import AuthWrapper from '../editors/auth/auth-wrapper';
-import BodyEditor from '../editors/body/body-editor';
-import RequestHeadersEditor from '../editors/request-headers-editor';
-import RequestParametersEditor from '../editors/request-parameters-editor';
-import ErrorBoundary from '../error-boundary';
-import MarkdownPreview from '../markdown-preview';
+import { AuthDropdown } from '../dropdowns/auth-dropdown';
+import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
+import { AuthWrapper } from '../editors/auth/auth-wrapper';
+import { BodyEditor } from '../editors/body/body-editor';
+import { RequestHeadersEditor } from '../editors/request-headers-editor';
+import { RequestParametersEditor } from '../editors/request-parameters-editor';
+import { ErrorBoundary } from '../error-boundary';
+import { MarkdownPreview } from '../markdown-preview';
 import { showModal } from '../modals';
-import RequestSettingsModal from '../modals/request-settings-modal';
+import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { RenderedQueryString } from '../rendered-query-string';
-import RequestUrlBar from '../request-url-bar';
+import { RequestUrlBar } from '../request-url-bar';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
-import PlaceholderRequestPane from './placeholder-request-pane';
+import { PlaceholderRequestPane } from './placeholder-request-pane';
 
 interface Props {
   // Functions
@@ -67,7 +67,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestPane extends PureComponent<Props> {
+export class RequestPane extends PureComponent<Props> {
   _handleEditDescriptionAdd() {
     this._handleEditDescription(true);
   }
@@ -402,5 +402,3 @@ class RequestPane extends PureComponent<Props> {
     );
   }
 }
-
-export default RequestPane;

@@ -16,7 +16,7 @@ import { GIT_CLONE_DIR, GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME } from '../../..
 import { shallowClone } from '../../../sync/git/shallow-clone';
 import { addDotGit, translateSSHtoHTTP } from '../../../sync/git/utils';
 import { showAlert, showError, showModal } from '../../components/modals';
-import GitRepositorySettingsModal from '../../components/modals/git-repository-settings-modal';
+import { GitRepositorySettingsModal } from '../../components/modals/git-repository-settings-modal';
 import { selectActiveProject } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';

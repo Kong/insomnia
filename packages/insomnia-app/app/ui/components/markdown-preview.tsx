@@ -23,7 +23,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MarkdownPreview extends PureComponent<Props, State> {
+export class MarkdownPreview extends PureComponent<Props, State> {
   state: State = {
     compiled: '',
     renderError: '',
@@ -128,5 +128,3 @@ class MarkdownPreview extends PureComponent<Props, State> {
     );
   }
 }
-
-export default MarkdownPreview;

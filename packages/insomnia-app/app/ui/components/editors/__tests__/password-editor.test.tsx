@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/react';
 import React from 'react';
 
-import PasswordEditor from '../password-editor';
+import { PasswordEditor } from '../password-editor';
 const props = {
   password: 'password',
   disabled: false,

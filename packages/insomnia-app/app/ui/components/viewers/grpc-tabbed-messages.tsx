@@ -4,8 +4,8 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Settings } from '../../../models/settings';
-import Button from '../base/button';
-import GRPCEditor from '../editors/grpc-editor';
+import { Button } from '../base/button';
+import { GRPCEditor } from '../editors/grpc-editor';
 
 interface Message {
   id: string;
@@ -28,7 +28,7 @@ interface Props {
   handleGetRenderContext?: HandleGetRenderContext;
 }
 
-const GrpcTabbedMessages: FunctionComponent<Props> = ({
+export const GrpcTabbedMessages: FunctionComponent<Props> = ({
   settings,
   showActions,
   bodyText,
@@ -104,5 +104,3 @@ const GrpcTabbedMessages: FunctionComponent<Props> = ({
     </Tabs>
   );
 };
-
-export default GrpcTabbedMessages;

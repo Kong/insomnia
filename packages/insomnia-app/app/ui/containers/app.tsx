@@ -4,8 +4,7 @@ import fs from 'fs';
 import HTTPSnippet from 'httpsnippet';
 import * as mime from 'mime-types';
 import * as path from 'path';
-import React, { PureComponent, RefObject } from 'react';
-import ReactDOM from 'react-dom';
+import React, { createRef, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
@@ -67,23 +66,23 @@ import { VCS } from '../../sync/vcs/vcs';
 import * as templating from '../../templating/index';
 import { NUNJUCKS_TEMPLATE_GLOBAL_PROPERTY_NAME } from '../../templating/index';
 import { getKeys } from '../../templating/utils';
-import ErrorBoundary from '../components/error-boundary';
-import KeydownBinder from '../components/keydown-binder';
-import AskModal from '../components/modals/ask-modal';
-import CookiesModal from '../components/modals/cookies-modal';
-import GenerateCodeModal from '../components/modals/generate-code-modal';
+import { ErrorBoundary } from '../components/error-boundary';
+import { KeydownBinder } from '../components/keydown-binder';
+import { AskModal } from '../components/modals/ask-modal';
+import { CookiesModal } from '../components/modals/cookies-modal';
+import { GenerateCodeModal } from '../components/modals/generate-code-modal';
 import { showAlert, showModal, showPrompt } from '../components/modals/index';
-import RequestCreateModal from '../components/modals/request-create-modal';
-import RequestRenderErrorModal from '../components/modals/request-render-error-modal';
-import RequestSettingsModal from '../components/modals/request-settings-modal';
+import { RequestCreateModal } from '../components/modals/request-create-modal';
+import { RequestRenderErrorModal } from '../components/modals/request-render-error-modal';
+import { RequestSettingsModal } from '../components/modals/request-settings-modal';
 import RequestSwitcherModal from '../components/modals/request-switcher-modal';
 import { showSelectModal } from '../components/modals/select-modal';
-import SettingsModal, { TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
-import SyncMergeModal from '../components/modals/sync-merge-modal';
-import WorkspaceEnvironmentsEditModal from '../components/modals/workspace-environments-edit-modal';
-import WorkspaceSettingsModal from '../components/modals/workspace-settings-modal';
-import Toast from '../components/toast';
-import Wrapper from '../components/wrapper';
+import { SettingsModal, TAB_INDEX_SHORTCUTS } from '../components/modals/settings-modal';
+import { SyncMergeModal } from '../components/modals/sync-merge-modal';
+import { WorkspaceEnvironmentsEditModal } from '../components/modals/workspace-environments-edit-modal';
+import { WorkspaceSettingsModal } from '../components/modals/workspace-settings-modal';
+import { Toast } from '../components/toast';
+import { Wrapper } from '../components/wrapper';
 import withDragDropContext from '../context/app/drag-drop-context';
 import { GrpcProvider } from '../context/grpc';
 import { RootState } from '../redux/modules';
@@ -150,9 +149,9 @@ class App extends PureComponent<AppProps, State> {
   private _saveSidebarWidth: (paneWidth: number) => void;
   private _globalKeyMap: any;
   private _updateVCSLock: any;
-  private _requestPane: RefObject<any>;
-  private _responsePane: RefObject<any>;
-  private _sidebar: RefObject<any>;
+  private _requestPaneRef = createRef<HTMLElement>();
+  private _responsePaneRef = createRef<HTMLElement>();
+  private _sidebarRef = createRef<HTMLElement>();
   private _wrapper: Wrapper | null = null;
   private _responseFilterHistorySaveTimeout: NodeJS.Timeout | null = null;
 
@@ -378,18 +377,6 @@ class App extends PureComponent<AppProps, State> {
       activeRequest ? activeRequest._id : 'n/a',
       activeEnvironment ? activeEnvironment._id : 'n/a',
     );
-  }
-
-  _setRequestPaneRef(n: RefObject<any>) {
-    this._requestPane = n;
-  }
-
-  _setResponsePaneRef(n: RefObject<any>) {
-    this._responsePane = n;
-  }
-
-  _setSidebarRef(n: RefObject<any>) {
-    this._sidebar = n;
   }
 
   _requestGroupCreate(parentId: string) {
@@ -978,20 +965,19 @@ class App extends PureComponent<AppProps, State> {
         });
       }
 
-      // @ts-expect-error -- TSCONVERSION
-      const requestPane = ReactDOM.findDOMNode(this._requestPane);
-      // @ts-expect-error -- TSCONVERSION
-      const responsePane = ReactDOM.findDOMNode(this._responsePane);
-      // @ts-expect-error -- TSCONVERSION
-      const requestPaneWidth = requestPane.offsetWidth;
-      // @ts-expect-error -- TSCONVERSION
-      const responsePaneWidth = responsePane.offsetWidth;
-      // @ts-expect-error -- TSCONVERSION
-      const pixelOffset = e.clientX - requestPane.offsetLeft;
-      let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
-      paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
+      const requestPane = this._requestPaneRef.current;
+      const responsePane = this._responsePaneRef.current;
 
-      this._handleSetPaneWidth(paneWidth);
+      if (requestPane && responsePane) {
+        const requestPaneWidth = requestPane.offsetWidth;
+        const responsePaneWidth = responsePane.offsetWidth;
+
+        const pixelOffset = e.clientX - requestPane.offsetLeft;
+        let paneWidth = pixelOffset / (requestPaneWidth + responsePaneWidth);
+        paneWidth = Math.min(Math.max(paneWidth, MIN_PANE_WIDTH), MAX_PANE_WIDTH);
+
+        this._handleSetPaneWidth(paneWidth);
+      }
     } else if (this.state.draggingPaneVertical) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
       const distance = this.props.paneHeight - this.state.paneHeight;
@@ -1006,20 +992,18 @@ class App extends PureComponent<AppProps, State> {
         });
       }
 
-      // @ts-expect-error -- TSCONVERSION
-      const requestPane = ReactDOM.findDOMNode(this._requestPane);
-      // @ts-expect-error -- TSCONVERSION
-      const responsePane = ReactDOM.findDOMNode(this._responsePane);
-      // @ts-expect-error -- TSCONVERSION
-      const requestPaneHeight = requestPane.offsetHeight;
-      // @ts-expect-error -- TSCONVERSION
-      const responsePaneHeight = responsePane.offsetHeight;
-      // @ts-expect-error -- TSCONVERSION
-      const pixelOffset = e.clientY - requestPane.offsetTop;
-      let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
-      paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
+      const requestPane = this._requestPaneRef.current;
+      const responsePane = this._responsePaneRef.current;
 
-      this._handleSetPaneHeight(paneHeight);
+      if (requestPane && responsePane) {
+        const requestPaneHeight = requestPane.offsetHeight;
+        const responsePaneHeight = responsePane.offsetHeight;
+        const pixelOffset = e.clientY - requestPane.offsetTop;
+        let paneHeight = pixelOffset / (requestPaneHeight + responsePaneHeight);
+        paneHeight = Math.min(Math.max(paneHeight, MIN_PANE_HEIGHT), MAX_PANE_HEIGHT);
+
+        this._handleSetPaneHeight(paneHeight);
+      }
     } else if (this.state.draggingSidebar) {
       // Only pop the overlay after we've moved it a bit (so we don't block doubleclick);
       const distance = this.props.sidebarWidth - this.state.sidebarWidth;
@@ -1034,20 +1018,21 @@ class App extends PureComponent<AppProps, State> {
         });
       }
 
-      // @ts-expect-error -- TSCONVERSION
-      const sidebar = ReactDOM.findDOMNode(this._sidebar);
-      // @ts-expect-error -- TSCONVERSION
-      const currentPixelWidth = sidebar.offsetWidth;
-      // @ts-expect-error -- TSCONVERSION
-      const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
-      const width = this.state.sidebarWidth * ratio;
-      let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
+      const sidebar = this._sidebarRef.current;
 
-      if (sidebarWidth < COLLAPSE_SIDEBAR_REMS) {
-        sidebarWidth = MIN_SIDEBAR_REMS;
+      if (sidebar) {
+        const currentPixelWidth = sidebar.offsetWidth;
+
+        const ratio = (e.clientX - sidebar.offsetLeft) / currentPixelWidth;
+        const width = this.state.sidebarWidth * ratio;
+        let sidebarWidth = Math.min(width, MAX_SIDEBAR_REMS);
+
+        if (sidebarWidth < COLLAPSE_SIDEBAR_REMS) {
+          sidebarWidth = MIN_SIDEBAR_REMS;
+        }
+
+        this._handleSetSidebarWidth(sidebarWidth);
       }
-
-      this._handleSetSidebarWidth(sidebarWidth);
     }
   }
 
@@ -1532,9 +1517,9 @@ class App extends PureComponent<AppProps, State> {
                 handleSetRequestPinned={this._handleSetRequestPinned}
                 handleSetRequestGroupCollapsed={this._handleSetRequestGroupCollapsed}
                 handleActivateRequest={this._handleSetActiveRequest}
-                handleSetRequestPaneRef={this._setRequestPaneRef}
-                handleSetResponsePaneRef={this._setResponsePaneRef}
-                handleSetSidebarRef={this._setSidebarRef}
+                requestPaneRef={this._requestPaneRef}
+                responsePaneRef={this._responsePaneRef}
+                sidebarRef={this._sidebarRef}
                 handleStartDragSidebar={this._startDragSidebar}
                 handleResetDragSidebar={this._resetDragSidebar}
                 handleStartDragPaneHorizontal={this._startDragPaneHorizontal}

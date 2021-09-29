@@ -5,9 +5,9 @@ import React, { Fragment, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { ascendingNameSort } from '../../../common/sorting';
-import MarkdownPreview from '../markdown-preview';
+import { MarkdownPreview } from '../markdown-preview';
 import { GraphQLExplorerFieldsList } from './graph-ql-explorer-fields-list';
-import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
 
 interface Props {
   onNavigateType: (type: Record<string, any>) => void;
@@ -17,7 +17,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorerType extends PureComponent<Props> {
+export class GraphQLExplorerType extends PureComponent<Props> {
   _handleNavigateType(type: Record<string, any>) {
     const { onNavigateType } = this.props;
     onNavigateType(type);
@@ -106,5 +106,3 @@ class GraphQLExplorerType extends PureComponent<Props> {
     );
   }
 }
-
-export default GraphQLExplorerType;

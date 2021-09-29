@@ -39,15 +39,15 @@ import { importClipBoard, importFile, importUri } from '../redux/modules/import'
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
 import { selectDashboardSortOrder } from '../redux/selectors';
 import SettingsButton from './buttons/settings-button';
-import AccountDropdown from './dropdowns/account-dropdown';
+import { AccountDropdown } from './dropdowns/account-dropdown';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
-import KeydownBinder from './keydown-binder';
+import { KeydownBinder } from './keydown-binder';
 import { showPrompt } from './modals';
-import Notice from './notice';
-import PageLayout from './page-layout';
-import WorkspaceCard, { WorkspaceCardProps } from './workspace-card';
+import { Notice } from './notice';
+import { PageLayout } from './page-layout';
+import { WorkspaceCard, WorkspaceCardProps } from './workspace-card';
 import type { WrapperProps } from './wrapper';
 
 interface Props

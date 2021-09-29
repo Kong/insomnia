@@ -12,7 +12,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Highlight extends PureComponent<Props> {
+export class Highlight extends PureComponent<Props> {
   render() {
     const { search, text, blankValue, ...otherProps } = this.props;
     // Match loose here to make sure our highlighting always works
@@ -41,5 +41,3 @@ class Highlight extends PureComponent<Props> {
     );
   }
 }
-
-export default Highlight;

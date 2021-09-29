@@ -8,13 +8,13 @@ import { createRef } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import DebouncedInput from '../base/debounced-input';
-import KeydownBinder from '../keydown-binder';
-import GraphQLExplorerEnum from './graph-ql-explorer-enum';
-import GraphQLExplorerField from './graph-ql-explorer-field';
-import GraphQLExplorerSchema from './graph-ql-explorer-schema';
-import GraphQLExplorerSearchResults from './graph-ql-explorer-search-results';
-import GraphQLExplorerType from './graph-ql-explorer-type';
+import { DebouncedInput } from '../base/debounced-input';
+import { KeydownBinder } from '../keydown-binder';
+import { GraphQLExplorerEnum } from './graph-ql-explorer-enum';
+import { GraphQLExplorerField } from './graph-ql-explorer-field';
+import { GraphQLExplorerSchema } from './graph-ql-explorer-schema';
+import { GraphQLExplorerSearchResults } from './graph-ql-explorer-search-results';
+import { GraphQLExplorerType } from './graph-ql-explorer-type';
 import { ActiveReference, GraphQLFieldWithParentName } from './graph-ql-types';
 
 function getReferenceInfo(reference: SchemaReference) {
@@ -77,7 +77,7 @@ interface State extends HistoryItem {
 const SEARCH_UPDATE_DELAY_IN_MS = 300;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLExplorer extends PureComponent<Props, State> {
+export class GraphQLExplorer extends PureComponent<Props, State> {
   state: State = {
     history: [],
     currentType: undefined,
@@ -332,5 +332,3 @@ class GraphQLExplorer extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GraphQLExplorer;

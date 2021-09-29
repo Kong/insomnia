@@ -24,12 +24,12 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import Link from '../base/link';
-import HelpTooltip from '../help-tooltip';
+import { Link } from '../base/link';
+import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showError, showModal } from '../modals';
-import GitBranchesModal from '../modals/git-branches-modal';
-import GitLogModal from '../modals/git-log-modal';
-import GitStagingModal from '../modals/git-staging-modal';
+import { GitBranchesModal } from '../modals/git-branches-modal';
+import { GitLogModal } from '../modals/git-log-modal';
+import { GitStagingModal } from '../modals/git-staging-modal';
 
 interface Props {
   handleInitializeEntities: typeof initializeEntities;

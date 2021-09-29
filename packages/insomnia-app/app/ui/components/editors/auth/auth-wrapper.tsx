@@ -18,16 +18,16 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 import type { OAuth2Token } from '../../../../models/o-auth-2-token';
 import type { Request, RequestAuthentication } from '../../../../models/request';
 import type { Settings } from '../../../../models/settings';
-import AsapAuth from './asap-auth';
-import AWSAuth from './aws-auth';
-import BasicAuth from './basic-auth';
-import BearerAuth from './bearer-auth';
-import DigestAuth from './digest-auth';
-import HawkAuth from './hawk-auth';
+import { AsapAuth } from './asap-auth';
+import { AWSAuth } from './aws-auth';
+import { BasicAuth } from './basic-auth';
+import { BearerAuth } from './bearer-auth';
+import { DigestAuth } from './digest-auth';
+import { HawkAuth } from './hawk-auth';
 import { NetrcAuth } from './netrc-auth';
-import NTLMAuth from './ntlm-auth';
-import OAuth1Auth from './o-auth-1-auth';
-import OAuth2Auth from './o-auth-2-auth';
+import { NTLMAuth } from './ntlm-auth';
+import { OAuth1Auth } from './o-auth-1-auth';
+import { OAuth2Auth } from './o-auth-2-auth';
 
 interface Props {
   handleRender: HandleRender;
@@ -42,7 +42,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AuthWrapper extends PureComponent<Props> {
+export class AuthWrapper extends PureComponent<Props> {
   renderEditor() {
     const {
       oAuth2Token,
@@ -194,5 +194,3 @@ class AuthWrapper extends PureComponent<Props> {
     return <div className="tall">{this.renderEditor()}</div>;
   }
 }
-
-export default AuthWrapper;

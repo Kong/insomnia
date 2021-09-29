@@ -2,14 +2,14 @@ import { AsyncButton, Button } from 'insomnia-components';
 import React, { FunctionComponent, useCallback } from 'react';
 
 import type { ProtoFile } from '../../../models/proto-file';
-import Editable from '../base/editable';
+import { Editable } from '../base/editable';
 import type {
   DeleteProtoFileHandler,
   RenameProtoFileHandler,
   SelectProtoFileHandler,
   UpdateProtoFileHandler,
 } from './proto-file-list';
-import ProtoListItem from './proto-list-item';
+import { ProtoListItem } from './proto-list-item';
 
 interface Props {
   protoFile: ProtoFile;
@@ -23,7 +23,7 @@ interface Props {
 
 const spinner = <i className="fa fa-spin fa-refresh" />;
 
-const ProtoFileListItem: FunctionComponent<Props> = ({
+export const ProtoFileListItem: FunctionComponent<Props> = ({
   protoFile,
   isSelected,
   handleSelect,
@@ -99,5 +99,3 @@ const ProtoFileListItem: FunctionComponent<Props> = ({
     </ProtoListItem>
   );
 };
-
-export default ProtoFileListItem;

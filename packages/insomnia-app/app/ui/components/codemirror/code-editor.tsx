@@ -34,8 +34,8 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import KeydownBinder from '../keydown-binder';
-import FilterHelpModal from '../modals/filter-help-modal';
+import { KeydownBinder } from '../keydown-binder';
+import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 
@@ -1295,6 +1295,4 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 }
 
-const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedCodeEditor);
-
-export default CodeEditor;
+export const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedCodeEditor);

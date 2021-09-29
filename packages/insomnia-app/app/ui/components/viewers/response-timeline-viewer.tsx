@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 import { clickLink } from '../../../common/electron-helpers';
 import * as models from '../../../models';
 import { Response } from '../../../models/response';
-import CodeEditor from '../codemirror/code-editor';
+import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
   response: Response;
@@ -17,7 +17,7 @@ interface State {
   timelineKey: string;
 }
 
-class ResponseTimelineViewer extends PureComponent<Props, State> {
+export class ResponseTimelineViewer extends PureComponent<Props, State> {
   state: State = {
     timeline: [],
     timelineKey: '',
@@ -119,5 +119,3 @@ class ResponseTimelineViewer extends PureComponent<Props, State> {
     );
   }
 }
-
-export default ResponseTimelineViewer;
