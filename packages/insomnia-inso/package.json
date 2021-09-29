@@ -33,6 +33,7 @@
     "start": "npm run build -- --watch",
     "prepare": "npm run build:production",
     "package": "rimraf binaries && npm run build:production && pkg .",
+    "package:targets": "npm run package -- -t",
     "package:verify": "ts-node src/scripts/verify-pkg.ts"
   },
   "pkg": {
