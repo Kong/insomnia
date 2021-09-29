@@ -1,9 +1,6 @@
-import { JSONPath } from 'jsonpath-plus';
+const { JSONPath } = require('jsonpath-plus');
 
-// The context type should come from a standalone package which publishes plugin type definitions
-type Context = unknown;
-
-export const templateTags = [
+module.exports.templateTags = [
   {
     displayName: 'JSONPath',
     name: 'jsonpath',
@@ -19,24 +16,17 @@ export const templateTags = [
         type: 'string',
       },
     ],
-    run(_: Context, jsonString: string, filter: string) {
+    run(context, jsonString, filter) {
       let body;
       try {
         body = JSON.parse(jsonString);
       } catch (err) {
-        if (err instanceof Error) {
-          throw new Error(`Invalid JSON: ${err.message}`);
-        } else {
-          throw err;
-        }
+        throw new Error(`Invalid JSON: ${err.message}`);
       }
 
       let results;
       try {
-        results = JSONPath({
-          json: body,
-          path: filter,
-        });
+        results = JSONPath({ json: body, path: filter });
       } catch (err) {
         throw new Error(`Invalid JSONPath query: ${filter}`);
       }
