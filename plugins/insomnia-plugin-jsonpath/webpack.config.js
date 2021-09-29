@@ -13,9 +13,7 @@ module.exports = {
     library: 'insomniapluginjsonpath',
     libraryTarget: 'commonjs2',
   },
-  externals: [nodeExternals({
-    whitelist: [/^(?:(?!jsonpath).)*$/],
-  })],
+  externals: [nodeExternals()],
   module: {
     rules: [
       {

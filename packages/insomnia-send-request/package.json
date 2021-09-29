@@ -23,7 +23,7 @@
     "isomorphic-git": "^1.5.0",
     "jshint": "^2.11.1",
     "jsonlint": "^1.6.3",
-    "jsonpath": "^1.0.2",
+    "jsonpath-plus": "^6.0.1",
     "marked": "^1.1.0",
     "mime-types": "^2.1.27",
     "mkdirp": "^1.0.4",

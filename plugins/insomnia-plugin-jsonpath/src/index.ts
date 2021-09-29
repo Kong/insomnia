@@ -1,4 +1,4 @@
-import jq from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 
 // The context type should come from a standalone package which publishes plugin type definitions
 type Context = unknown;
@@ -33,7 +33,10 @@ export const templateTags = [
 
       let results;
       try {
-        results = jq.query(body, filter);
+        results = JSONPath({
+          json: body,
+          path: filter,
+        });
       } catch (err) {
         throw new Error(`Invalid JSONPath query: ${filter}`);
       }
