@@ -933,8 +933,6 @@ export async function send(
     await delay(delayMillis);
   }
 
-  console.log('fetching stuff');
-
   // Fetch some things
   const request = await models.request.getById(requestId);
   const settings = await models.settings.getOrCreate();

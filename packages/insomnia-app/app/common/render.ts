@@ -473,7 +473,6 @@ export async function getRenderedRequestAndContext(
   const description = request.description;
   request.description = '';
   // Render all request properties
-
   const renderResult = await render(
     {
       _request: request,
@@ -484,8 +483,6 @@ export async function getRenderedRequestAndContext(
   );
   const renderedRequest = renderResult._request;
   const renderedCookieJar = renderResult._cookieJar;
-  console.log('description');
-
   renderedRequest.description = await render(description, renderContext, null, KEEP_ON_ERROR);
   // Remove disabled params
   renderedRequest.parameters = renderedRequest.parameters.filter(p => !p.disabled);
