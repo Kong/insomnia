@@ -30,9 +30,11 @@
     "watch": "npm run build -- --watch",
     "prepublish": "npm run build"
   },
+  "dependencies": {
+    "jsonpath-plus": "^6.0.1"
+  },
   "devDependencies": {
     "@types/webpack": "^4.41.26",
-    "jsonpath-plus": "^6.0.1",
     "ts-loader": "^8.2.0",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
