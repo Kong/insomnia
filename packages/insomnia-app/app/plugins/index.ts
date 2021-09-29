@@ -121,9 +121,7 @@ export interface Theme extends InternalProperties {
 
 export type ColorScheme = 'default' | 'light' | 'dark';
 
-// TODO: Loading plugins from the single executable fails on the insomnia-plugin-response, this just forces "no plugins" for now, to get things working.
-// THIS IS NOT THE RIGHT SOLUTION, it's just an interim
-let plugins: Plugin[] | null | undefined = [];
+let plugins: Plugin[] | null | undefined = null;
 
 let ignorePlugins: string[] = [];
 
@@ -234,15 +232,19 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
         continue;
       }
 
-      const pluginJson = global.require(`${p}/package.json`);
+      try {
+        const pluginJson = global.require(`${p}/package.json`);
 
-      if (ignorePlugins.includes(pluginJson.name)) {
-        continue;
+        if (ignorePlugins.includes(pluginJson.name)) {
+          continue;
+        }
+
+        const pluginModule = global.require(p);
+
+        pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
+      } catch (err) {
+        console.error(`[plugin] Failed to load plugin: ${p}`, err);
       }
-
-      const pluginModule = global.require(p);
-
-      pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
     }
 
     await _traversePluginPath(pluginMap, allPaths, allConfigs);
