@@ -4,13 +4,16 @@ import { ValueOf } from 'type-fest';
 import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { ApiSpec } from '../../models/api-spec';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { UnitTestResult } from '../../models/unit-test-result';
+import { isCollection } from '../../models/workspace';
 import { RootState } from './modules';
+import { activateWorkspace } from './modules/workspace';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
@@ -100,11 +103,6 @@ export const selectAllWorkspaces = createSelector(
   entities => entities.workspaces,
 );
 
-export const selectAllApiSpecs = createSelector(
-  selectEntitiesLists,
-  entities => entities.apiSpecs,
-);
-
 export const selectWorkspacesForActiveProject = createSelector(
   selectAllWorkspaces,
   selectActiveProject,
@@ -133,6 +131,30 @@ export const selectActiveWorkspaceMeta = createSelector(
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
     return entities.workspaceMetas.find(m => m.parentId === id);
   },
+);
+
+export const selectAllApiSpecs = createSelector(
+  selectEntitiesLists,
+  entities => entities.apiSpecs,
+);
+
+export const selectActiveApiSpec = createSelector(
+  selectAllApiSpecs,
+  selectActiveWorkspace,
+  (apiSpecs, activeWorkspace) => apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace?._id) as ApiSpec
+);
+
+export const selectActiveWorkspaceName = createSelector(
+  selectActiveWorkspace,
+  selectActiveApiSpec,
+  (activeWorkspace, activeApiSpec) => {
+    if (!activeWorkspace) {
+      // see above, but since the selectActiveWorkspace selector really can return undefined, we need to handle it here.
+      return undefined;
+    }
+
+    return isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
+  }
 );
 
 export const selectActiveEnvironment = createSelector(
