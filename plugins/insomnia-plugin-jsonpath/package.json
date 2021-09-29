@@ -12,15 +12,32 @@
   "bugs": {
     "url": "https://github.com/Kong/insomnia/issues"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "insomnia": {
     "name": "json-path",
     "description": "Template tag to pull data out of JSON strings",
     "core": true,
     "unlisted": true
   },
-  "dependencies": {
-    "jsonpath": "^1.0.2"
+  "scripts": {
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
+    "build": "webpack --config webpack.config.js --display errors-only",
+    "watch": "npm run build -- --watch",
+    "prepublish": "npm run build"
+  },
+  "devDependencies": {
+    "@types/jsonpath": "^0.2.0",
+    "@types/webpack": "^4.41.26",
+    "jsonpath": "^1.0.2",
+    "ts-loader": "^8.2.0",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11",
+    "webpack-node-externals": "^1.7.2"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }
