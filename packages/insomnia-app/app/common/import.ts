@@ -77,8 +77,7 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   if (error) {
     showError({
       title: 'Failed to import',
-      // @ts-expect-error -- TSCONVERSION appears to be a genuine error
-      error: error.message,
+      error: error,
       message: 'Import failed',
     });
     return result;
@@ -169,6 +168,15 @@ export async function importRaw(
 
   for (const model of models.all()) {
     importedDocs[model.type] = [];
+  }
+
+  // Add a workspace to the resources if it doesn't exist
+  if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
+    data.resources.push({
+      ...models.workspace.init(),
+      _id: '__WORKSPACE_ID__',
+      _type: 'workspace',
+    });
   }
 
   for (const resource of data.resources) {
