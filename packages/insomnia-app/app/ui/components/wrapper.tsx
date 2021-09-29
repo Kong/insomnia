@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
-import React, { Fragment, PureComponent } from 'react';
+import React, { Fragment, PureComponent, Ref } from 'react';
 
 import { trackPageView } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
@@ -102,14 +102,14 @@ export type WrapperProps = AppProps & {
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleCreateRequestForWorkspace: () => void;
-  handleSetRequestPaneRef: Function;
-  handleSetResponsePaneRef: Function;
+  requestPaneRef: Ref<HTMLElement>;
+  responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
-  handleSetSidebarRef: Function;
+  sidebarRef: Ref<HTMLElement>;
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleStartDragSidebar: React.MouseEventHandler;
   handleResetDragSidebar: React.MouseEventHandler;
