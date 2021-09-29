@@ -1,43 +1,43 @@
-import { isNonGlibcLinux } from 'detect-libc';
+// import { isNonGlibcLinux } from 'detect-libc';
 import execa from 'execa';
 import { getBinPathSync } from 'get-bin-path';
-import { platform } from 'os';
+// import { platform } from 'os';
 import { resolve } from 'path';
 
-const isAlpineLinux = () => {
-  const nodePlatform = platform();
-  if (nodePlatform !== 'linux') {
-    return false;
-  }
+// const isAlpineLinux = () => {
+//   const nodePlatform = platform();
+//   if (nodePlatform !== 'linux') {
+//     return false;
+//   }
 
-  return isNonGlibcLinux;
-};
+//   return isNonGlibcLinux;
+// };
 
-/** the `pkg` npm has its own platforms that it appends on the end of binaries which are similar but different to NodeJS */
-const getPkgPlatform = () => {
-  const nodePlatform = platform();
+// /** the `pkg` npm has its own platforms that it appends on the end of binaries which are similar but different to NodeJS */
+// const getPkgPlatform = () => {
+//   const nodePlatform = platform();
 
-  switch (nodePlatform) {
-    case 'darwin':
-      return 'macos';
+//   switch (nodePlatform) {
+//     case 'darwin':
+//       return 'macos';
 
-    case 'win32':
-      return 'win';
+//     case 'win32':
+//       return 'win';
 
-    case 'linux':
-      if (isAlpineLinux()) {
-        return 'alpine';
-      }
-      return 'linux';
+//     case 'linux':
+//       if (isAlpineLinux()) {
+//         return 'alpine';
+//       }
+//       return 'linux';
 
-    default:
-      throw new Error(`you are running smoke tests on an unsupported platform: ${nodePlatform}`);
-  }
-};
+//     default:
+//       throw new Error(`you are running smoke tests on an unsupported platform: ${nodePlatform}`);
+//   }
+// };
 
 describe('run test', () => {
   const npmPackage = getBinPathSync({ cwd: '../insomnia-inso' });
-  const singleExecutable = resolve(`../insomnia-inso/binaries/insomnia-inso-${getPkgPlatform()}`);
+  const singleExecutable = resolve('../insomnia-inso/binaries/insomnia-inso');
 
   it.each([
     npmPackage,
@@ -49,8 +49,8 @@ describe('run test', () => {
 
     const { failed } = execa.sync(binPath, [
       'run',
-      '--src', 'fixtures/inso-nedb',
       'test',
+      '--src', 'fixtures/inso-nedb',
       '--env', 'Dev',
       'TestSuite',
     ]);
