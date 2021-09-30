@@ -23,23 +23,20 @@
     "lint": "eslint . --ext .js,.ts,.tsx",
     "lint:fix": "npm run lint -- --fix",
     "clean": "tsc --build tsconfig.build.json --clean",
-    "postclean": "rimraf dist",
+    "postclean": "rimraf dist && rimraf binaries",
     "test": "jest --runInBand",
     "test:watch": "npm run test -- --watch",
     "test:snapshots": "npm run build && npm run test -- -u",
     "prebuild": "npm run clean",
     "build": "webpack --config webpack/webpack.config.development.js",
+    "prebuild:production": "npm run clean",
     "build:production": "webpack --config webpack/webpack.config.production.js --display errors-only",
     "start": "npm run build -- --watch",
     "prepare": "npm run build:production",
-    "package": "rimraf binaries && npm run build:production && pkg .",
-    "package:verify": "ts-node src/scripts/verify-pkg.ts"
-  },
-  "pkg": {
-    "targets": [
-      "node12-x64"
-    ],
-    "outputPath": "binaries"
+    "prepackage": "npm run build:production",
+    "package": "ts-node src/scripts/pkg.ts",
+    "pkg": "pkg .",
+    "postpackage": "ts-node src/scripts/verify-pkg.ts"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
