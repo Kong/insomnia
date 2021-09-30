@@ -1,6 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -18,6 +19,8 @@ import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
+import { RootState } from '../../redux/modules';
+import { selectActiveWorkspaceName } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -29,8 +32,9 @@ import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
-interface Props {
-  displayName: string;
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
   activeApiSpec: ApiSpec;
@@ -47,7 +51,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class WorkspaceDropdown extends PureComponent<Props, State> {
+export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
   _dropdown: Dropdown | null = null;
   state: State = {
     actionPlugins: [],
@@ -131,7 +135,7 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
 
   render() {
     const {
-      displayName,
+      activeWorkspaceName,
       className,
       activeWorkspace,
       isLoading,
@@ -157,9 +161,9 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
               style={{
                 maxWidth: '400px',
               }}
-              title={displayName}
+              title={activeWorkspaceName}
             >
-              {displayName}
+              {activeWorkspaceName}
             </div>
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}
@@ -213,3 +217,9 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
     );
   }
 }
+
+const mapStateToProps = (state: RootState) => ({
+  activeWorkspaceName: selectActiveWorkspaceName(state),
+});
+
+export const WorkspaceDropdown = connect(mapStateToProps)(UnconnectedWorkspaceDropdown);

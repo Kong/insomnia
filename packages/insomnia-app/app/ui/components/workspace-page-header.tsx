@@ -1,12 +1,10 @@
 import { Breadcrumb, Header } from 'insomnia-components';
 import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 
 import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
 import { strings } from '../../common/strings';
-import { isCollection, isDesign } from '../../models/workspace';
+import { isDesign } from '../../models/workspace';
 import coreLogo from '../images/insomnia-core-logo.png';
-import { selectActiveWorkspaceName } from '../redux/selectors';
 import { ActivityToggle } from './activity-toggle';
 import SettingsButton from './buttons/settings-button';
 import { AccountDropdown } from './dropdowns/account-dropdown';
@@ -37,15 +35,12 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
     [activeWorkspace, handleActivityChange],
   );
 
-  const workspaceName = useSelector(selectActiveWorkspaceName) || '';
-
   if (!activeWorkspace || !activeApiSpec || !activity) {
     return null;
   }
 
   const workspace = (
     <WorkspaceDropdown
-      displayName={workspaceName}
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
       activeApiSpec={activeApiSpec}

@@ -13,7 +13,6 @@ import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { UnitTestResult } from '../../models/unit-test-result';
 import { isCollection } from '../../models/workspace';
 import { RootState } from './modules';
-import { activateWorkspace } from './modules/workspace';
 
 type EntitiesLists = {
   [K in keyof RootState['entities']]: ValueOf<RootState['entities'][K]>[];
