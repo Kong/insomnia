@@ -40,9 +40,7 @@ jobs:
         run: npm run inso-package
       - name: Tar Inso CLI binaries
         if: success()
-        run: |
-          cd packages/insomnia-inso/binaries
-          tar -zcvf ${{ matrix.os }}-inso-${{ github.run_number }}.tar .
+        run: tar -zcvf ${{ matrix.os }}-inso-${{ github.run_number }}.tar -C packages/insomnia-inso/binaries .
       - name: Upload Inso CLI tar
         uses: actions/upload-artifact@v2
         if: success()
