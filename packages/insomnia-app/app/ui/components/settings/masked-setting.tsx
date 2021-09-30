@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, useCallback, useState } from 'react';
+import React, { ChangeEvent, FC, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import * as models from '../../../models';
@@ -30,11 +30,15 @@ export const MaskedSetting: FC<{
     throw new Error(`Invalid masked setting name ${setting}`);
   }
 
-  const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+  const [input, setInput] = useState(settings[setting] + '');
+
+  const onInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const value = event.currentTarget.value;
     await models.settings.patch({
-      [setting]: event.currentTarget.value,
+      [setting]: value,
     });
-  }, [setting]);
+    setInput(value);
+  };
 
   return (
     <div>
@@ -44,10 +48,10 @@ export const MaskedSetting: FC<{
       </label>
       <div className="form-control form-control--outlined form-control--btn-right">
         <input
-          value={settings[setting] + ''}
+          value={input}
           type={!showPasswords && isHidden ? 'password' : type}
           name={setting}
-          onChange={onChange}
+          onChange={onInputChange}
           {...props}
         />
         {!showPasswords && (
