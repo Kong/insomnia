@@ -20,13 +20,12 @@ describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath
 
   describe('run test', () => {
     it('should not fail running tests', () => {
-
       const { failed } = inso(
         'run',
         'test',
         ['--src', 'fixtures/inso-nedb'],
         ['--env', 'Dev'],
-        'TestSuite',
+        'Echo Test Suite',
       );
 
       expect(failed).toBe(false);
