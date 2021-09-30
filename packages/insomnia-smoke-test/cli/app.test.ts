@@ -1,60 +1,35 @@
-// import { isNonGlibcLinux } from 'detect-libc';
 import execa from 'execa';
+import fs from 'fs';
 import { getBinPathSync } from 'get-bin-path';
-// import { platform } from 'os';
-import { resolve } from 'path';
+import path from 'path';
+import { flatten } from 'ramda';
+import { compact } from 'ramda-adjunct';
 
-// const isAlpineLinux = () => {
-//   const nodePlatform = platform();
-//   if (nodePlatform !== 'linux') {
-//     return false;
-//   }
+const binariesDirectory = '../insomnia-inso/binaries';
+const npmPackageBinPath = getBinPathSync({ cwd: '../insomnia-inso' });
+const binaries = fs.readdirSync(binariesDirectory).map(binary => path.join(binariesDirectory, binary));
 
-//   return isNonGlibcLinux;
-// };
+type NestedArray<T> = (T | T[])[];
 
-// /** the `pkg` npm has its own platforms that it appends on the end of binaries which are similar but different to NodeJS */
-// const getPkgPlatform = () => {
-//   const nodePlatform = platform();
+describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath => {
+  if (!binPath) {
+    fail('The inso executable was not found.  Check if it has moved.');
+  }
 
-//   switch (nodePlatform) {
-//     case 'darwin':
-//       return 'macos';
+  const inso = (...args: NestedArray<string>) => execa.sync(binPath, flatten(args));
 
-//     case 'win32':
-//       return 'win';
+  describe('run test', () => {
+    it('should not fail running tests', () => {
 
-//     case 'linux':
-//       if (isAlpineLinux()) {
-//         return 'alpine';
-//       }
-//       return 'linux';
+      const { failed } = inso(
+        'run',
+        'test',
+        ['--src', 'fixtures/inso-nedb'],
+        ['--env', 'Dev'],
+        'TestSuite',
+      );
 
-//     default:
-//       throw new Error(`you are running smoke tests on an unsupported platform: ${nodePlatform}`);
-//   }
-// };
-
-describe('run test', () => {
-  const npmPackage = getBinPathSync({ cwd: '../insomnia-inso' });
-  const singleExecutable = resolve('../insomnia-inso/binaries/insomnia-inso');
-
-  it.each([
-    npmPackage,
-    singleExecutable,
-  ])('can run unit test with %s', binPath => {
-    if (!binPath) {
-      fail('The inso executable was not found.  Check if it has moved.');
-    }
-
-    const { failed } = execa.sync(binPath, [
-      'run',
-      'test',
-      '--src', 'fixtures/inso-nedb',
-      '--env', 'Dev',
-      'TestSuite',
-    ]);
-
-    expect(failed).toBe(false);
+      expect(failed).toBe(false);
+    });
   });
 });
