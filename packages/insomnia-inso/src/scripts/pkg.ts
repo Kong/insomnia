@@ -8,17 +8,18 @@ const isMac = () => platform === 'darwin';
 const isLinux = () => platform === 'linux';
 const isWindows = () => platform === 'win32';
 
+/** see: https://github.com/vercel/pkg#targets */
 const getTargets = () => {
   if (isMac()) {
-    return ['node12-macos-x64'];
+    return 'node12-macos-x64';
   }
 
   if (isLinux()) {
-    return ['node12-linux-x64'];
+    return 'node12-linux-x64';
   }
 
   if (isWindows()) {
-    return ['node12-win-x64'];
+    return 'node12-win-x64';
   }
 
   throw new Error(prefixPkgInso(`Unsupported OS: ${platform}`));
@@ -26,9 +27,7 @@ const getTargets = () => {
 
 const pkg = async () => {
   return new Promise<void>(resolve => {
-    const targets = getTargets();
-
-    const rootDir = path.join(__dirname, '../..');
+    const cwd = path.join(__dirname, '../..');
 
     const process = spawn('npm',
       [
@@ -36,11 +35,11 @@ const pkg = async () => {
         'pkg',
         '--',
         '--targets',
-        targets.join(','),
+        getTargets(),
         '--output',
         'binaries/inso',
       ], {
-        cwd: rootDir,
+        cwd,
         shell: true,
       });
 
