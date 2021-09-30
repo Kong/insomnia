@@ -3,7 +3,7 @@ import React, { FC } from 'react';
 import styled from 'styled-components';
 
 import { isConfigControlledSetting } from '../../../models/settings';
-import HelpTooltip from '../help-tooltip';
+import { HelpTooltip } from '../help-tooltip';
 
 const Wrapper = styled.div({
   position: 'relative',
