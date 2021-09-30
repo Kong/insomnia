@@ -3,10 +3,10 @@ import path from 'path';
 
 const prefixPkgInso = (msg: string) => `[pkg-inso] ${msg}`;
 
-const getPlatform = () => process.platform;
-const isMac = () => getPlatform() === 'darwin';
-const isLinux = () => getPlatform() === 'linux';
-const isWindows = () => getPlatform() === 'win32';
+const { platform } = process;
+const isMac = () => platform === 'darwin';
+const isLinux = () => platform === 'linux';
+const isWindows = () => platform === 'win32';
 
 const getTargets = () => {
   if (isMac()) {
@@ -21,7 +21,7 @@ const getTargets = () => {
     return ['node12-win-x64'];
   }
 
-  throw new Error(prefixPkgInso(`Unsupported OS: ${getPlatform()}`));
+  throw new Error(prefixPkgInso(`Unsupported OS: ${platform}`));
 };
 
 const pkg = async () => {
