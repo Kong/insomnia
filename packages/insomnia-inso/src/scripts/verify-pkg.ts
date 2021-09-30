@@ -25,7 +25,7 @@ const verifyPkg = async () => {
 
   const files = await readdir(basePath);
   if (files.length === 0) {
-    throw new Error(prefixPkgVerify('no executable binaries found'));
+    throw new Error(prefixPkgVerify('no executable binary found'));
   }
 
   return Promise.all(files.map(verifyFile(basePath)));
