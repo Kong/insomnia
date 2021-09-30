@@ -36,8 +36,18 @@ jobs:
         run: npm test
       - name: Build for smoke tests
         run: npm run app-build:smoke
-      - name: Package CLI
+      - name: Package Inso CLI
         run: npm run inso-package
+      - name: Tar Inso CLI binaries
+        if: success()
+        run: tar -zcvf ${{ matrix.os }}-inso-${{ github.run_number }}.tar packages/insomnia-inso/binaries
+      - name: Upload Inso CLI tar
+        uses: actions/upload-artifact@v2
+        if: success()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-inso-${{ github.run_number }}
+          path: ${{ matrix.os }}-inso-${{ github.run_number }}.tar
       - name: Run smoke tests
         timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
         run: npm run test:smoke:build
@@ -48,12 +58,5 @@ jobs:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
           path: packages/insomnia-smoke-test/screenshots
-      - name: Upload Inso binaries
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          if-no-files-found: ignore
-          name: insomnia-inso-${{ matrix.os }}-${{ github.run_number }}
-          path: packages/insomnia-inso/binaries
       - name: Run CLI smoke tests
         run: npm run test:smoke:cli
