@@ -65,4 +65,17 @@ describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath
       expect(failed).toBe(false);
     });
   });
+
+  describe('export spec', () => {
+    it('should not fail linting spec', () => {
+      const { failed } = inso(
+        'export',
+        'spec',
+        srcInsoNedb,
+        'Smoke Test API server 1.0.0',
+      );
+
+      expect(failed).toBe(false);
+    });
+  });
 });
