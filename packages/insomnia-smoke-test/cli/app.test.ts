@@ -11,11 +11,19 @@ const binaries = fs.readdirSync(binariesDirectory).map(binary => path.join(binar
 
 type NestedArray<T> = (T | T[])[];
 
-describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath => {
-  if (!binPath) {
-    fail('The inso executable was not found.  Check if it has moved.');
-  }
+describe('should find binaries', () => {
+  it('should find the npm package bin', () => {
+    expect(npmPackageBinPath).not.toBeUndefined();
+  });
 
+  it('should find at least one single app binary', () => {
+    expect(binaries.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+const srcInsoNedb = ['--src', 'fixtures/inso-nedb'];
+
+describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath => {
   const inso = (...args: NestedArray<string>) => execa.sync(binPath, flatten(args));
 
   describe('run test', () => {
@@ -23,9 +31,35 @@ describe.each(compact([npmPackageBinPath, ...binaries]))('inso with %s', binPath
       const { failed } = inso(
         'run',
         'test',
-        ['--src', 'fixtures/inso-nedb'],
+        srcInsoNedb,
         ['--env', 'Dev'],
         'Echo Test Suite',
+      );
+
+      expect(failed).toBe(false);
+    });
+  });
+
+  describe('generate config', () => {
+    it('should not fail generating config', () => {
+      const { failed } = inso(
+        'generate',
+        'config',
+        srcInsoNedb,
+        'Smoke Test API server 1.0.0',
+      );
+
+      expect(failed).toBe(false);
+    });
+  });
+
+  describe('lint spec', () => {
+    it('should not fail linting spec', () => {
+      const { failed } = inso(
+        'lint',
+        'spec',
+        srcInsoNedb,
+        'Smoke Test API server 1.0.0',
       );
 
       expect(failed).toBe(false);
