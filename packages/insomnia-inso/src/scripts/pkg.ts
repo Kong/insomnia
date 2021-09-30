@@ -11,22 +11,22 @@ const isWindows = () => getPlatform() === 'win32';
 const getTargets = () => {
   if (isMac()) {
     return ['node12-macos-x64'];
-  } else if (isLinux()) {
-    return ['node12-linux-x64'];
-  } else if (isWindows()) {
-    return ['node12-win-x64'];
-  } else {
-    return [];
   }
+
+  if (isLinux()) {
+    return ['node12-linux-x64'];
+  }
+
+  if (isWindows()) {
+    return ['node12-win-x64'];
+  }
+
+  throw new Error(prefixPkgInso(`Unsupported OS: ${getPlatform()}`));
 };
 
 const pkg = async () => {
-  return new Promise<void>((resolve, reject) => {
+  return new Promise<void>(resolve => {
     const targets = getTargets();
-
-    if (targets.length === 0) {
-      reject(new Error(prefixPkgInso(`Unsupported OS ${getPlatform()}`)));
-    }
 
     const rootDir = path.join(__dirname, '../..');
 
@@ -53,12 +53,12 @@ const pkg = async () => {
     });
 
     process.on('exit', code => {
-      if (code === 0) {
-        resolve();
-      } else {
+      if (code !== 0) {
         console.log(prefixPkgInso(`exited with code ${code}`));
-        reject(new Error(prefixPkgInso('failed to package')));
+        throw new Error(prefixPkgInso('failed to package'));
       }
+
+      resolve();
     });
   });
 
