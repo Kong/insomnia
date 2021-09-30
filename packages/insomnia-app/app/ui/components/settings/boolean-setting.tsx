@@ -7,18 +7,27 @@ import { isConfigControlledSetting } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
-import { ControlledByConfig } from './controlled-by-config';
+import { ControlledSetting } from './controlled-setting';
+
+// would be nice to use RequireAllOrNone from type-fest when we can update to type-fest 2.0
+interface Overridden {
+  overrideSetting?: keyof Settings;
+  overrideValue?: boolean;
+}
 
 export const BooleanSetting: FC<{
+  forceRestart?: boolean;
+  help?: string;
   label: string;
   setting: keyof Settings;
-  help?: string;
-  forceRestart?: boolean;
-}> = ({
-  label,
-  setting,
-  help,
+} & Overridden> = ({
+  children,
   forceRestart,
+  help,
+  label,
+  overrideSetting,
+  overrideValue,
+  setting,
 }) => {
   const settings = useSelector(selectSettings);
 
@@ -26,7 +35,11 @@ export const BooleanSetting: FC<{
     throw new Error(`Invalid boolean setting name ${setting}`);
   }
 
-  const isControlled = isConfigControlledSetting(setting);
+  if (overrideSetting && !settings.hasOwnProperty(overrideSetting)) {
+    throw new Error(`Invalid boolean setting override name ${overrideSetting}`);
+  }
+
+  const [isControlled] = isConfigControlledSetting(setting, settings);
 
   const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
@@ -36,7 +49,7 @@ export const BooleanSetting: FC<{
   }, [setting]);
 
   return (
-    <ControlledByConfig setting={setting}>
+    <ControlledSetting setting={setting}>
       <div className="form-control form-control--thin">
         <label className="inline-block">
           {label}
@@ -47,7 +60,7 @@ export const BooleanSetting: FC<{
             </Tooltip>
           )}
           <input
-            checked={Boolean(settings[setting])}
+            checked={overrideValue !== undefined ? overrideValue : Boolean(settings[setting])}
             name={setting}
             onChange={onChange}
             type="checkbox"
@@ -55,6 +68,7 @@ export const BooleanSetting: FC<{
           />
         </label>
       </div>
-    </ControlledByConfig>
+      {children}
+    </ControlledSetting>
   );
 };

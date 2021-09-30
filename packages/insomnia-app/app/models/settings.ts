@@ -37,9 +37,21 @@ const getConfigSettings = ()  => {
   return insomniaConfig.settings as Required<InsomniaConfig>['settings'] || {};
 };
 
-export const isConfigControlledSetting = (setting: keyof BaseSettings): setting is keyof BaseSettings => (
-  Object.prototype.hasOwnProperty.call(getConfigSettings(), setting)
-);
+export const isConfigControlledSetting = (setting: keyof BaseSettings, settings: BaseSettings) => {
+  const configSettings = getConfigSettings();
+
+  switch (setting) {
+    case 'enableAnalytics':
+      if (settings.radioSilentMode) {
+        return [true, 'radioSilentMode'] as const;
+      }
+      // otherwise, intentionally fallthrough
+
+    default:
+      const isControlled = Object.prototype.hasOwnProperty.call(configSettings, setting) as boolean;
+      return [isControlled, 'insomnia-config'] as const;
+  }
+};
 
 const removeControlledSettings = omit(keys(getConfigSettings()));
 const overwriteControlledSettings = mergeLeft(getConfigSettings());
