@@ -13,7 +13,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseCookiesViewer extends PureComponent<Props> {
+export class ResponseCookiesViewer extends PureComponent<Props> {
   renderRow(h, i) {
     let cookie: Cookie | undefined | null = null;
 
@@ -73,5 +73,3 @@ class ResponseCookiesViewer extends PureComponent<Props> {
     );
   }
 }
-
-export default ResponseCookiesViewer;

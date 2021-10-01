@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import KeydownBinder from '../keydown-binder';
+import { KeydownBinder } from '../keydown-binder';
 
 export const shouldSave = (oldValue, newValue, preventBlank = false) => {
   // Should not save if length = 0 and we want to prevent blank
@@ -36,7 +36,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Editable extends PureComponent<Props, State> {
+export class Editable extends PureComponent<Props, State> {
   state: State = {
     editing: false,
   };
@@ -154,5 +154,3 @@ class Editable extends PureComponent<Props, State> {
     }
   }
 }
-
-export default Editable;

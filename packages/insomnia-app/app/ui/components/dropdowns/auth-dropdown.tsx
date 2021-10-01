@@ -23,7 +23,7 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals';
-import AlertModal from '../modals/alert-modal';
+import { AlertModal } from '../modals/alert-modal';
 
 interface Props {
   onChange: (r: Request, arg1: RequestAuthentication) => Promise<Request>;
@@ -33,7 +33,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AuthDropdown extends PureComponent<Props> {
+export class AuthDropdown extends PureComponent<Props> {
   async _handleTypeChange(type: string) {
     const { request, onChange } = this.props;
     const { authentication } = request;
@@ -106,5 +106,3 @@ class AuthDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default AuthDropdown;

@@ -3,7 +3,7 @@ import React, { Fragment, PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
-import CodeEditor, { CodeEditorOnChange } from '../../codemirror/code-editor';
+import { CodeEditor,  CodeEditorOnChange } from '../../codemirror/code-editor';
 
 interface Props {
   onChange: CodeEditorOnChange;
@@ -23,7 +23,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RawEditor extends PureComponent<Props> {
+export class RawEditor extends PureComponent<Props> {
   render() {
     const {
       className,
@@ -65,5 +65,3 @@ class RawEditor extends PureComponent<Props> {
     );
   }
 }
-
-export default RawEditor;

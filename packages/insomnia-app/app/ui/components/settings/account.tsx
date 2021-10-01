@@ -3,11 +3,11 @@ import React, { Fragment, PureComponent } from 'react';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Link from '../base/link';
-import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
+import { Link } from '../base/link';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
 import { hideAllModals, showModal } from '../modals/index';
-import LoginModal from '../modals/login-modal';
+import { LoginModal } from '../modals/login-modal';
 
 interface State {
   code: string;
@@ -20,7 +20,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Account extends PureComponent<{}, State> {
+export class Account extends PureComponent<{}, State> {
   state: State = {
     code: '',
     password: '',
@@ -261,5 +261,3 @@ class Account extends PureComponent<{}, State> {
     return session.isLoggedIn() ? this.renderAccount() : Account.renderUpgrade();
   }
 }
-
-export default Account;

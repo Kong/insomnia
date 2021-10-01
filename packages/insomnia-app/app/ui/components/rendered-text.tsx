@@ -9,7 +9,7 @@ interface State {
   error: string;
 }
 
-class RenderedText extends PureComponent<Props, State> {
+export class RenderedText extends PureComponent<Props, State> {
   state: State = {
     renderedText: '',
     error: '',
@@ -61,5 +61,3 @@ class RenderedText extends PureComponent<Props, State> {
     }
   }
 }
-
-export default RenderedText;

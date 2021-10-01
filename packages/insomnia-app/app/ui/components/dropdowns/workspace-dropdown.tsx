@@ -23,11 +23,11 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import KeydownBinder from '../keydown-binder';
+import { KeydownBinder } from '../keydown-binder';
 import { showError, showModal } from '../modals';
 import { showGenerateConfigModal } from '../modals/generate-config-modal';
-import SettingsModal, { TAB_INDEX_EXPORT } from '../modals/settings-modal';
-import WorkspaceSettingsModal from '../modals/workspace-settings-modal';
+import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
+import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
 interface Props {
   displayName: string;
@@ -47,7 +47,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceDropdown extends PureComponent<Props, State> {
+export class WorkspaceDropdown extends PureComponent<Props, State> {
   _dropdown: Dropdown | null = null;
   state: State = {
     actionPlugins: [],
@@ -213,5 +213,3 @@ class WorkspaceDropdown extends PureComponent<Props, State> {
     );
   }
 }
-
-export default WorkspaceDropdown;

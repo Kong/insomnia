@@ -11,9 +11,9 @@ import type { BaseModel } from '../../models';
 import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importFile, importUri } from '../redux/modules/import';
-import Analytics from './analytics';
+import { Analytics } from './analytics';
 import { showPrompt } from './modals';
-import OnboardingContainer from './onboarding-container';
+import { OnboardingContainer } from './onboarding-container';
 import type { WrapperProps } from './wrapper';
 
 type ReduxProps = ReturnType<typeof mapDispatchToProps>;

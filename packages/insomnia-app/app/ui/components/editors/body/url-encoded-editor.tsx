@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
-import KeyValueEditor from '../../key-value-editor/editor';
+import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 
 interface Props {
   onChange: Function;
@@ -15,7 +15,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class UrlEncodedEditor extends PureComponent<Props> {
+export class UrlEncodedEditor extends PureComponent<Props> {
   render() {
     const {
       parameters,
@@ -46,5 +46,3 @@ class UrlEncodedEditor extends PureComponent<Props> {
     );
   }
 }
-
-export default UrlEncodedEditor;

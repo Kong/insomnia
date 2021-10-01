@@ -9,12 +9,12 @@ import { CopyButton } from '../base/copy-button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import Link from '../base/link';
-import Modal from '../base/modal';
+import { Link } from '../base/link';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import CodeEditor, { UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { CodeEditor,  UnconnectedCodeEditor } from '../codemirror/code-editor';
 
 const DEFAULT_TARGET = HTTPSnippet.availableTargets().find(t => t.key === 'shell') as HTTPSnippetTarget;
 const DEFAULT_CLIENT = DEFAULT_TARGET?.clients.find(t => t.key === 'curl') as HTTPSnippetClient;
@@ -45,7 +45,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GenerateCodeModal extends PureComponent<Props, State> {
+export class GenerateCodeModal extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     let target: HTTPSnippetTarget | undefined;
@@ -217,5 +217,3 @@ class GenerateCodeModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GenerateCodeModal;

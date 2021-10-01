@@ -7,8 +7,8 @@ import { getDataDirectory, getDesignerDataDir, restartApp } from '../../common/e
 import type { MigrationOptions } from '../../common/migrate-from-designer';
 import migrateFromDesigner, { existsAndIsDirectory } from '../../common/migrate-from-designer';
 import { goToNextActivity } from '../redux/modules/global';
-import HelpTooltip from './help-tooltip';
-import OnboardingContainer from './onboarding-container';
+import { HelpTooltip } from './help-tooltip';
+import { OnboardingContainer } from './onboarding-container';
 import type { WrapperProps } from './wrapper';
 
 type Step = 'options' | 'migrating' | 'results';
@@ -295,7 +295,7 @@ interface Props {
   wrapperProps: WrapperProps;
 }
 
-const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => (
+export const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => (
   <OnboardingContainer
     wrapperProps={wrapperProps}
     header="Migrate from Insomnia Designer"
@@ -304,5 +304,3 @@ const WrapperMigration: FunctionComponent<Props> = ({ wrapperProps }) => (
     <MigrationBody />
   </OnboardingContainer>
 );
-
-export default WrapperMigration;

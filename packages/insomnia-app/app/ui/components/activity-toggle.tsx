@@ -11,7 +11,7 @@ interface Props {
   workspace: Workspace;
 }
 
-const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChange, workspace }) => {
+export const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChange, workspace }) => {
   const choices = [
     {
       label: 'Design',
@@ -36,5 +36,3 @@ const ActivityToggle: FunctionComponent<Props> = ({ activity, handleActivityChan
     />
   );
 };
-
-export default ActivityToggle;

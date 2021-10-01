@@ -5,11 +5,11 @@ import React, { PureComponent, ReactElement } from 'react';
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
 import type { Request, RequestAuthentication } from '../../../../models/request';
-import Button from '../../base/button';
-import OneLineEditor from '../../codemirror/one-line-editor';
-import HelpTooltip from '../../help-tooltip';
+import { Button } from '../../base/button';
+import { OneLineEditor } from '../../codemirror/one-line-editor';
+import { HelpTooltip } from '../../help-tooltip';
 import { showModal } from '../../modals';
-import CodePromptModal from '../../modals/code-prompt-modal';
+import { CodePromptModal } from '../../modals/code-prompt-modal';
 
 const PRIVATE_KEY_PLACEHOLDER = `
 -----BEGIN RSA PRIVATE KEY-----
@@ -34,7 +34,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AsapAuth extends PureComponent<Props> {
+export class AsapAuth extends PureComponent<Props> {
   _handleDisable() {
     const { request, onChange } = this.props;
     onChange(request, { ...request.authentication, disabled: !request.authentication.disabled });
@@ -203,5 +203,3 @@ class AsapAuth extends PureComponent<Props> {
     );
   }
 }
-
-export default AsapAuth;

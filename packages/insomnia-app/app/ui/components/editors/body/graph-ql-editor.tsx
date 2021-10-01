@@ -6,10 +6,11 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode } from 'graphql';
-import { parse, print, typeFromAST } from 'graphql';
+import { parse, typeFromAST } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
+import prettier from 'prettier';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -29,14 +30,14 @@ import { Dropdown } from '../../base/dropdown/dropdown';
 import { DropdownButton } from '../../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../../base/dropdown/dropdown-item';
-import CodeEditor from '../../codemirror/code-editor';
-import GraphqlExplorer from '../../graph-ql-explorer/graph-ql-explorer';
+import { CodeEditor } from '../../codemirror/code-editor';
+import { GraphQLExplorer } from '../../graph-ql-explorer/graph-ql-explorer';
 import { ActiveReference } from '../../graph-ql-explorer/graph-ql-types';
-import HelpTooltip from '../../help-tooltip';
+import { HelpTooltip } from '../../help-tooltip';
 import { showModal } from '../../modals';
-import ResponseDebugModal from '../../modals/response-debug-modal';
-import TimeFromNow from '../../time-from-now';
-import Tooltip from '../../tooltip';
+import { ResponseDebugModal } from '../../modals/response-debug-modal';
+import { TimeFromNow } from '../../time-from-now';
+import { Tooltip } from '../../tooltip';
 const explorerContainer = document.querySelector('#graphql-explorer-container');
 
 if (!explorerContainer) {
@@ -84,7 +85,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GraphQLEditor extends PureComponent<Props, State> {
+export class GraphQLEditor extends PureComponent<Props, State> {
   _disabledOperationMarkers: TextMarker[] = [];
   _documentAST: null | DocumentNode = null;
   _isMounted = false;
@@ -459,7 +460,11 @@ class GraphQLEditor extends PureComponent<Props, State> {
   _handlePrettify() {
     const { body } = this.state;
     const { variables, query } = body;
-    const prettyQuery = query && print(parse(query));
+    const prettyQuery = prettier.format(query, {
+      parser: 'graphql',
+      useTabs: this.props.settings.editorIndentWithTabs,
+      tabWidth: this.props.settings.editorIndentSize,
+    });
     const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
@@ -674,7 +679,7 @@ class GraphQLEditor extends PureComponent<Props, State> {
     let graphQLExplorerPortal: React.ReactPortal | null = null;
     if (explorerContainer) {
       graphQLExplorerPortal = ReactDOM.createPortal(
-        <GraphqlExplorer
+        <GraphQLExplorer
           schema={schema}
           key={schemaLastFetchTime}
           visible={explorerVisible}
@@ -836,5 +841,3 @@ class GraphQLEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GraphQLEditor;

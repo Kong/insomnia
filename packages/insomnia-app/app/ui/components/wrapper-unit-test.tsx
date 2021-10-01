@@ -20,15 +20,15 @@ import { isRequest } from '../../models/request';
 import { isRequestGroup } from '../../models/request-group';
 import type { UnitTest } from '../../models/unit-test';
 import type { UnitTestSuite } from '../../models/unit-test-suite';
-import Editable from './base/editable';
-import CodeEditor from './codemirror/code-editor';
-import ErrorBoundary from './error-boundary';
+import { Editable } from './base/editable';
+import { CodeEditor } from './codemirror/code-editor';
+import { ErrorBoundary } from './error-boundary';
 import { showAlert, showModal, showPrompt } from './modals';
 import { SelectModal } from './modals/select-modal';
-import PageLayout from './page-layout';
+import { PageLayout } from './page-layout';
 import type { SidebarChildObjects } from './sidebar/sidebar-children';
-import UnitTestEditable from './unit-test-editable';
-import WorkspacePageHeader from './workspace-page-header';
+import { UnitTestEditable } from './unit-test-editable';
+import { WorkspacePageHeader } from './workspace-page-header';
 import type { WrapperProps } from './wrapper';
 
 interface Props {
@@ -44,7 +44,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperUnitTest extends PureComponent<Props, State> {
+export class WrapperUnitTest extends PureComponent<Props, State> {
   state: State = {
     testsRunning: null,
     resultsError: null,
@@ -556,5 +556,3 @@ class WrapperUnitTest extends PureComponent<Props, State> {
     );
   }
 }
-
-export default WrapperUnitTest;

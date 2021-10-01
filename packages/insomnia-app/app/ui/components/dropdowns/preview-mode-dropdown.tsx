@@ -18,7 +18,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PreviewModeDropdown extends PureComponent<Props> {
+export class PreviewModeDropdown extends PureComponent<Props> {
   async _handleClick(previewMode: string) {
     const { updatePreviewMode } = this.props;
     await updatePreviewMode(previewMode);
@@ -86,5 +86,3 @@ class PreviewModeDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default PreviewModeDropdown;

@@ -10,12 +10,12 @@ import { isRemoteProject, projectHasSettings } from '../../../models/project';
 import { RootState } from '../../redux/modules';
 import * as projectActions from '../../redux/modules/project';
 import { selectActiveProject } from '../../redux/selectors';
-import DebouncedInput from '../base/debounced-input';
-import Modal from '../base/modal';
+import { DebouncedInput } from '../base/debounced-input';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
 
 export type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;
 

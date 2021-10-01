@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GrpcTag = () => (
+export const GrpcTag = () => (
   <div
     style={{
       position: 'relative',
@@ -11,5 +11,3 @@ const GrpcTag = () => (
     </div>
   </div>
 );
-
-export default GrpcTag;

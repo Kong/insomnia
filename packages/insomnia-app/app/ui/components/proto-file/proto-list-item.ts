@@ -1,6 +1,7 @@
 import { ListGroupItem } from 'insomnia-components';
 import styled from 'styled-components';
-const ProtoListItem = styled(ListGroupItem).attrs(() => ({
+
+export const ProtoListItem = styled(ListGroupItem).attrs(() => ({
   className: 'row-spaced',
 }))`
   button i.fa {
@@ -9,4 +10,3 @@ const ProtoListItem = styled(ListGroupItem).attrs(() => ({
 
   height: var(--line-height-sm);
 `;
-export default ProtoListItem;

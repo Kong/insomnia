@@ -1,7 +1,7 @@
 import { GraphQLArgument, GraphQLType } from 'graphql';
 import React, { FC } from 'react';
 
-import GraphQLExplorerTypeLink from './graph-ql-explorer-type-link';
+import { GraphQLExplorerTypeLink } from './graph-ql-explorer-type-link';
 
 interface Props {
   args: GraphQLArgument[];

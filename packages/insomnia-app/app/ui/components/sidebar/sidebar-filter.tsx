@@ -5,9 +5,9 @@ import { AUTOBIND_CFG, DEBOUNCE_MILLIS, SortOrder } from '../../../common/consta
 import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
-import KeydownBinder from '../keydown-binder';
-import SidebarCreateDropdown from './sidebar-create-dropdown';
-import SidebarSortDropdown from './sidebar-sort-dropdown';
+import { KeydownBinder } from '../keydown-binder';
+import { SidebarCreateDropdown } from './sidebar-create-dropdown';
+import { SidebarSortDropdown } from './sidebar-sort-dropdown';
 
 interface Props {
   onChange: (value: string) => Promise<void>;
@@ -19,7 +19,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarFilter extends PureComponent<Props> {
+export class SidebarFilter extends PureComponent<Props> {
   _input: HTMLInputElement | null = null;
   _triggerTimeout: NodeJS.Timeout | null = null;
 
@@ -91,5 +91,3 @@ class SidebarFilter extends PureComponent<Props> {
     );
   }
 }
-
-export default SidebarFilter;

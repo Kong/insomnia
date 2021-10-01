@@ -2,7 +2,7 @@ import classnames from 'classnames';
 import React, { FC, memo } from 'react';
 
 import { RESPONSE_CODE_DESCRIPTIONS, RESPONSE_CODE_REASONS } from '../../../common/constants';
-import Tooltip from '../tooltip';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   statusCode: number;

@@ -5,8 +5,8 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import * as misc from '../../../../common/misc';
-import FileInputButton from '../../base/file-input-button';
-import PromptButton from '../../base/prompt-button';
+import { FileInputButton } from '../../base/file-input-button';
+import { PromptButton } from '../../base/prompt-button';
 
 interface Props {
   onChange: (path: string) => void;
@@ -14,7 +14,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FileEditor extends PureComponent<Props> {
+export class FileEditor extends PureComponent<Props> {
   _handleResetFile() {
     this.props.onChange('');
   }
@@ -71,5 +71,3 @@ class FileEditor extends PureComponent<Props> {
     );
   }
 }
-
-export default FileEditor;

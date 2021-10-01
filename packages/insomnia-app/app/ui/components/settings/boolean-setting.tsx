@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux';
 import * as models from '../../../models/index';
 import { BaseSettings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
-import HelpTooltip from '../help-tooltip';
-import Tooltip from '../tooltip';
+import { HelpTooltip } from '../help-tooltip';
+import { Tooltip } from '../tooltip';
 
 export const BooleanSetting: FC<{
   label: string;

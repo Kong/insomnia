@@ -4,11 +4,11 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { RequestGroup } from '../../../models/request-group';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import EnvironmentEditor from '../editors/environment-editor';
+import { EnvironmentEditor } from '../editors/environment-editor';
 
 interface Props {
   onChange: Function;
@@ -28,7 +28,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class EnvironmentEditModal extends PureComponent<Props, State> {
+export class EnvironmentEditModal extends PureComponent<Props, State> {
   state: State = {
     requestGroup: null,
     isValid: true,
@@ -135,5 +135,3 @@ class EnvironmentEditModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default EnvironmentEditModal;

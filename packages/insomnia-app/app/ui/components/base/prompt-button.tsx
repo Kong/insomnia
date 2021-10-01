@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Button from './button';
+import { Button } from './button';
 
 type States =
   | typeof STATE_DEFAULT
@@ -32,7 +32,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PromptButton extends PureComponent<Props> {
+export class PromptButton extends PureComponent<Props> {
   _doneTimeout: NodeJS.Timeout | null = null;
   _triggerTimeout: NodeJS.Timeout | null = null;
   state: State = {
@@ -150,5 +150,3 @@ class PromptButton extends PureComponent<Props> {
     );
   }
 }
-
-export default PromptButton;

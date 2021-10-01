@@ -9,12 +9,12 @@ import type { Workspace } from '../../../models/workspace';
 import type { DocumentKey, Stage, StageEntry, Status, StatusCandidate } from '../../../sync/types';
 import { describeChanges } from '../../../sync/vcs/util';
 import { VCS } from '../../../sync/vcs/vcs';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
-import Modal from '../base/modal';
+import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import Tooltip from '../tooltip';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   workspace: Workspace;
@@ -51,7 +51,7 @@ const _initialState: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncStagingModal extends PureComponent<Props, State> {
+export class SyncStagingModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _onSnapshot: (() => void) | null = null;
   _handlePush: (() => Promise<void>) | null = null;
@@ -398,5 +398,3 @@ class SyncStagingModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default SyncStagingModal;
