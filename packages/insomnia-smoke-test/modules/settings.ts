@@ -14,7 +14,7 @@ export const closeModal = async app => {
   await modal.close(app, 'SettingsModal');
 };
 
-export const goToPlugins = async app => {
+export const goToPluginsTab = async app => {
   // Click on the plugins tab
   await app.client.react$('SettingsModal').then(e => clickTabByText(e, 'Plugins'));
 
@@ -22,19 +22,19 @@ export const goToPlugins = async app => {
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
 };
 
-export const importFromClipboard = async (app, newWorkspace = false) => {
+export const goToDataTab = async app => {
+  await app.client.react$('SettingsModal').then(e => clickTabByText(e, 'Data'));
+
+  await app.client.react$('ImportExport').then(e => e.waitForDisplayed());
+};
+
+export const importFromClipboard = async app => {
   const importExport = await app.client.react$('ImportExport');
   await importExport.waitForDisplayed();
 
   await importExport.$('button*=Import Data').then(e => e.click());
 
   await dropdown.clickOpenDropdownItemByText(app, 'From Clipboard');
-
-  await modal.clickModalFooterByText(app, newWorkspace ? 'New Workspace' : 'Current');
-
-  if (newWorkspace) {
-    await modal.clickModalFooterByText(app, 'Request Collection');
-  }
 };
 
 export const installPlugin = async (app, pluginName) => {

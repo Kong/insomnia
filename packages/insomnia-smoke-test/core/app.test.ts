@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { Application } from 'spectron';
 
 import { basicAuthCreds } from '../fixtures/constants';
@@ -9,7 +8,6 @@ import * as dropdown from '../modules/dropdown';
 import * as home from '../modules/home';
 import * as modal from '../modules/modal';
 import * as onboarding from '../modules/onboarding';
-import * as settings from '../modules/settings';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -45,46 +43,6 @@ describe('Application launch', function() {
 
     await debug.expect200(app);
   });
-
-  it.each([true, false])(
-    'imports swagger 2 and sends request - new workspace=%s ',
-    async newWorkspace => {
-      await client.correctlyLaunched(app);
-      await onboarding.skipOnboardingFlow(app);
-
-      // Copy text to clipboard
-      const buffer = await fs.promises.readFile(`${__dirname}/../fixtures/swagger2.yaml`);
-      const swagger2Text = buffer.toString();
-      await app.electron.clipboard.writeText(swagger2Text);
-
-      // Click dropdown and open import modal
-      await home.documentListingShown(app);
-      await home.createNewCollection(app);
-      await debug.pageDisplayed(app);
-      const workspaceDropdown = await debug.clickWorkspaceDropdown(app);
-      await dropdown.clickDropdownItemByText(workspaceDropdown, 'Import/Export');
-
-      // Import from clipboard into new/current workspace
-      await settings.importFromClipboard(app, newWorkspace);
-
-      if (newWorkspace) {
-        // Go to dashboard
-        await debug.goToDashboard(app);
-        await home.expectTotalDocuments(app, 2);
-        await home.openDocumentWithTitle(app, 'E2E testing specification - swagger 2 1.0.0');
-      }
-
-      // Click imported folder and request
-      await debug.clickFolderByName(app, 'custom-tag');
-      await debug.clickRequestByName(app, 'get pet by id');
-
-      // Click send
-      await debug.clickSendRequest(app);
-
-      // Ensure 200
-      await debug.expect200(app);
-    },
-  );
 
   it('sends CSV request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.csv';
@@ -143,53 +101,6 @@ describe('Application launch', function() {
     // Ensure a modal opens, then close it - the rest is plugin behavior
     await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
     await modal.close(app);
-  });
-
-  it('should prompt and import swagger from clipboard from home', async () => {
-    await client.correctlyLaunched(app);
-    await onboarding.skipOnboardingFlow(app);
-
-    // Copy text to clipboard
-    const buffer = await fs.promises.readFile(`${__dirname}/../fixtures/swagger2.yaml`);
-    const swagger2Text = buffer.toString();
-    await app.electron.clipboard.writeText(swagger2Text);
-
-    // Expect one document at home
-    await home.documentListingShown(app);
-    const collectionName = await home.createNewCollection(app);
-    await debug.pageDisplayed(app);
-
-    await debug.goToDashboard(app);
-    await home.expectTotalDocuments(app, 1);
-    await home.expectDocumentWithTitle(app, collectionName);
-    const name = 'E2E testing specification - swagger 2 1.0.0';
-
-    // Import from clipboard as collection
-    await home.importFromClipboard(app);
-    await modal.waitUntilOpened(app, { title: 'Import As' });
-    await modal.clickModalFooterByText(app, 'Request Collection');
-    await home.expectTotalDocuments(app, 2);
-
-    // Ensure is collection
-    const collCard = await home.findCardWithTitle(app, name);
-    await home.cardHasBadge(collCard, 'Collection');
-
-    // Delete the collection
-    await home.openWorkspaceCardDropdown(collCard);
-    await dropdown.clickDropdownItemByText(collCard, 'Delete');
-    await modal.waitUntilOpened(app, { title: 'Delete Collection' });
-    await modal.clickModalFooterByText(app, 'Yes');
-    await home.expectTotalDocuments(app, 1);
-
-    // Import from clipboard as document
-    await home.importFromClipboard(app);
-    await modal.waitUntilOpened(app, { title: 'Import As' });
-    await modal.clickModalFooterByText(app, 'Design Document');
-    await home.expectTotalDocuments(app, 2);
-
-    // Ensure is document
-    const docCard = await home.findCardWithTitle(app, name);
-    await home.cardHasBadge(docCard, 'Document');
   });
 
   // This test will ensure that for an endpoint which expects basic auth:

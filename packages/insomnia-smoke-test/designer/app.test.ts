@@ -30,7 +30,7 @@ xdescribe('Application launch', function() {
 
     // Install plugin
     await settings.openWithKeyboardShortcut(app);
-    await settings.goToPlugins(app);
+    await settings.goToPluginsTab(app);
     await settings.installPlugin(app, 'insomnia-plugin-kong-bundle');
     await settings.closeModal(app);
 
