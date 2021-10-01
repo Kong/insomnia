@@ -7,6 +7,7 @@ import { docsImportExport } from '../../../common/documentation';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { exportAllToFile } from '../../redux/modules/global';
+import { ForceToWorkspace } from '../../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
 import { selectActiveProjectName, selectActiveWorkspace } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -26,10 +27,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const dispatch = useDispatch();
   const projectName = useSelector(selectActiveProjectName) ?? getAppName();
   const activeWorkspace = useSelector(selectActiveWorkspace);
+  const forceToWorkspace = activeWorkspace?._id ? ForceToWorkspace.current : ForceToWorkspace.existing;
 
   const handleImportUri = useCallback(() => {
     const lastUsedImportUri = window.localStorage.getItem('insomnia.lastUsedImportUri');
     const defaultValue = lastUsedImportUri ? { defaultValue: lastUsedImportUri } : {};
+
     showPrompt({
       title: 'Import Data from URL',
       submitName: 'Fetch and Import',
@@ -37,12 +40,12 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: (uri: string) => {
         window.localStorage.setItem('insomnia.lastUsedImportUri', uri);
-        dispatch(importUri(uri, { workspaceId: activeWorkspace?._id }));
+        dispatch(importUri(uri, { workspaceId: activeWorkspace?._id, forceToWorkspace }));
         hideSettingsModal();
       },
       ...defaultValue,
     });
-  }, [hideSettingsModal, activeWorkspace, dispatch]);
+  }, [dispatch, activeWorkspace?._id, forceToWorkspace, hideSettingsModal]);
 
   const showExportRequestsModal = useCallback(() => {
     showModal(ExportRequestsModal);
@@ -55,14 +58,14 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   }, [hideSettingsModal, dispatch]);
 
   const handleImportFile = useCallback(() => {
-    dispatch(importFile({ workspaceId: activeWorkspace?._id }));
+    dispatch(importFile({ workspaceId: activeWorkspace?._id, forceToWorkspace }));
     hideSettingsModal();
-  }, [hideSettingsModal, activeWorkspace, dispatch]);
+  }, [dispatch, activeWorkspace?._id, forceToWorkspace, hideSettingsModal]);
 
   const handleImportClipBoard = useCallback(() => {
-    dispatch(importClipBoard({ workspaceId: activeWorkspace?._id }));
+    dispatch(importClipBoard({ workspaceId: activeWorkspace?._id, forceToWorkspace }));
     hideSettingsModal();
-  }, [hideSettingsModal, activeWorkspace, dispatch]);
+  }, [dispatch, activeWorkspace?._id, forceToWorkspace, hideSettingsModal]);
 
   return (
     <div>

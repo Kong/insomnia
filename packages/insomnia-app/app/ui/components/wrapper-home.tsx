@@ -197,13 +197,13 @@ class WrapperHome extends PureComponent<Props, State> {
 
   _handleImportFile() {
     this.props.handleImportFile({
-      forceToWorkspace: ForceToWorkspace.new,
+      forceToWorkspace: ForceToWorkspace.existing,
     });
   }
 
   _handleImportClipBoard() {
     this.props.handleImportClipboard({
-      forceToWorkspace: ForceToWorkspace.new,
+      forceToWorkspace: ForceToWorkspace.existing,
     });
   }
 
@@ -215,7 +215,7 @@ class WrapperHome extends PureComponent<Props, State> {
       placeholder: 'https://website.com/insomnia-import.json',
       onComplete: uri => {
         this.props.handleImportUri(uri, {
-          forceToWorkspace: ForceToWorkspace.new,
+          forceToWorkspace: ForceToWorkspace.existing,
         });
       },
     });

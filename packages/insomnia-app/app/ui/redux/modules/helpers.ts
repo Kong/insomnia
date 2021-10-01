@@ -1,18 +1,68 @@
 import { strings } from '../../../common/strings';
 import { Project } from '../../../models/project';
-import { WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
+import { Workspace, WorkspaceScope, WorkspaceScopeKeys } from '../../../models/workspace';
 import { showModal } from '../../components/modals';
 import { AskModal } from '../../components/modals/ask-modal';
 import { showSelectModal } from '../../components/modals/select-modal';
 
 export enum ForceToWorkspace {
   new = 'new',
-  current = 'current'
+  current = 'current',
+  existing = 'existing'
 }
 
+export type SelectExistingWorkspacePrompt = Promise<string | null>;
+export function askToSelectExistingWorkspace(workspaces: Workspace[]): SelectExistingWorkspacePrompt {
+  return new Promise(resolve => {
+    const options = workspaces.map(workspace => ({ name: workspace.name, value: workspace._id }));
+
+    showSelectModal({
+      title: 'Import',
+      message: `Select a ${strings.workspace.singular.toLowerCase()} to import into`,
+      options,
+      value: options[0]?.value,
+      noEscape: true,
+      onDone: workspaceId => {
+        resolve(workspaceId || null);
+      },
+    });
+  });
+}
+
+// Returning null instead of a string will create a new workspace
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
-export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace }): ImportToWorkspacePrompt {
+export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; activeProjectWorkspaces: Workspace[] }): ImportToWorkspacePrompt {
   return function() {
+    if (forceToWorkspace === ForceToWorkspace.existing) {
+      // Return null if there are no available workspaces to chose from.
+      if (activeProjectWorkspaces.length === 0) {
+        return null;
+      }
+
+      function askToImportIntoNewWorkspace() {
+        return new Promise(resolve => {
+          showModal(AskModal, {
+            title: 'Import',
+            message: 'Do you want to import into an existing workspace or a new one?',
+            yesText: 'Existing',
+            noText: 'New Workspace',
+            onDone: (yes: boolean) => {
+              resolve(yes);
+            },
+          });
+        });
+      }
+
+      return new Promise(async resolve => {
+        const yes = await askToImportIntoNewWorkspace();
+        if (yes) {
+          const workspaceId = await askToSelectExistingWorkspace(activeProjectWorkspaces);
+          resolve(workspaceId);
+        } else {
+          resolve(null);
+        }
+      });
+    }
     if (!workspaceId) {
       return null;
     }
@@ -22,8 +72,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace }: { wo
         return null;
 
       case ForceToWorkspace.current:
-        return workspaceId;
-
+        return workspaceId ?? null;
       default:
         return new Promise(resolve => {
           showModal(AskModal, {
