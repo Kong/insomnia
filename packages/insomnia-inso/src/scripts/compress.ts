@@ -11,11 +11,10 @@ const isMac = () => platform === 'darwin';
 const isLinux = () => platform === 'linux';
 const isWindows = () => platform === 'win32';
 
-/** see: https://github.com/vercel/pkg#targets */
 const getTarArgs = () => {
   const version = getVersion();
   if (isMac()) {
-    return ['-zcf', `inso-macos-${version}.tar`];
+    return ['-czf', `inso-macos-${version}.tar`];
   }
 
   if (isLinux()) {
@@ -23,7 +22,7 @@ const getTarArgs = () => {
   }
 
   if (isWindows()) {
-    return ['-zcf', `inso-windows-${version}.zip`];
+    return ['-czf', `inso-windows-${version}.zip`];
   }
 
   throw new Error(prefixPkgCompress(`Unsupported OS: ${platform}`));
