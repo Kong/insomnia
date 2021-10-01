@@ -11,12 +11,11 @@ const Wrapper = styled.div({
   position: 'relative',
   marginBottom: 4,
   marginTop: 14,
+  borderLeft: '1px solid var(--color-surprise)',
 });
 
-const ControlledWrapper = styled.div({
-  border: '1px solid var(--color-surprise)',
-  borderRadius: 5,
-  padding: '6px 10px',
+const Setting = styled.div({
+  padding: '2px 10px',
   position: 'relative',
   '&:hover': {
     cursor: 'not-allowed',
@@ -32,13 +31,15 @@ const ControlledOverlay = styled.div({
   zIndex: 2,
 });
 
-const ControlledHelper = styled.div({
-  position: 'absolute',
-  top: -8,
-  right: 8,
-  background: 'var(--color-bg)',
-  zIndex: 3,
-  padding: '0 5px',
+const Helper = styled.div({
+  color: 'var(--color-surprise)',
+  padding: '2px 10px',
+  marginTop: -2,
+  opacity: 'var(--opacity-subtle)',
+});
+
+const HelperText = styled.span({
+  fontStyle: 'italic',
 });
 
 export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, setting }) => {
@@ -51,27 +52,30 @@ export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, s
 
   let helpText: string | undefined = undefined;
   let controllerName: string | null = null;
+
+  /** because, and only because, we are not ready to show an incognito mode checkbox to users, we are temporarily disabling this codepath */
+  if (controlledBy === 'incognitoMode') {
+    helpText = 'this value is controlled by Incognito Mode';
+    controllerName = 'incognito mode';
+  }
+
+  // the insomnia config has highest precidence, so it is checked last
   if (controlledBy === 'insomnia-config') {
     helpText = `this value is controlled by \`settings.${setting}\` in your Insomnia Config`;
     controllerName = 'insomnia config';
   }
 
-  // radio silent mode has highest precidence, so it is checked last
-  if (controlledBy === 'radioSilentMode') {
-    helpText = 'this value is controlled by Radio Silent Mode';
-    controllerName = 'radio silent mode';
-  }
-
   return (
-    <Wrapper className="wrapper">
-      <ControlledHelper>
-        <span>controlled by {controllerName}</span>{' '}
-        <HelpTooltip>{helpText}</HelpTooltip>
-      </ControlledHelper>
-      <ControlledWrapper className="controlledWrapper">
+    <Wrapper>
+      <Setting>
         <ControlledOverlay title={helpText} />
         {children}
-      </ControlledWrapper>
+      </Setting>
+
+      <Helper>
+        <HelpTooltip info>{helpText}</HelpTooltip>{' '}
+        <HelperText>controlled by {controllerName}</HelperText>
+      </Helper>
     </Wrapper>
   );
 };

@@ -11,6 +11,7 @@ export interface Settings {
   autoDetectColorScheme: boolean;
   autoHideMenuBar: boolean;
   autocompleteDelay: number;
+  allowNotificationRequests: boolean;
   clearOAuth2SessionOnRestart: boolean;
   darkTheme: string;
   deviceId: string | null;
@@ -52,7 +53,7 @@ export interface Settings {
   proxyEnabled: boolean;
 
   /** Insomnia will not make any network requests other than the requests you ask it to send. */
-  radioSilentMode: boolean;
+  incognitoMode: boolean;
   showPasswords: boolean;
   theme: string;
   timeout: number;

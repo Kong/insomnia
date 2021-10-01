@@ -564,9 +564,9 @@ class General extends PureComponent<Props, State> {
           />
         )}
         <BooleanSetting
-          label="Hide upsells"
+          label="Do not show upsells"
           setting="hideUpsells"
-          help="Disable any elements in the app that invite you to purchase... anything. ✌️"
+          help="Disable any elements that invite you to purchase... anything. ✌️"
         />
 
         <hr className="pad-top" />
@@ -582,28 +582,34 @@ class General extends PureComponent<Props, State> {
         )}
 
         <hr className="pad-top" />
-        <h2>Network ActivityToggle</h2>
-        <div className="form-control form-control--thin">
-          <BooleanSetting
-            label="Radio silent mode"
-            setting="radioSilentMode"
-            help="Insomnia will not make any network requests other than the requests you ask it to send."
-          />
+        <h2>Network Activity</h2>
+        <BooleanSetting
+          descriptions={[
+            'In incognito mode, Insomnia will not make any network requests other than the requests you ask it to send.  You\'ll still be able to log in and manually sync collections, but any background network requests that are not the direct result of your actions will be disabled.',
+            'Note that, similar to incognito mode in Chrome, Insomnia cannot control the network behavior of any plugins you have installed.',
+          ]}
+          label="Incognito Mode"
+          setting="incognitoMode"
+        />
 
-          <BooleanSetting
-            label="Send Usage Statistics"
-            setting="enableAnalytics"
-            overrideSetting="radioSilentMode"
-            overrideValue={settings.radioSilentMode || undefined}
-          >
-            <p className="txt-sm faint">
-              Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, {strings.collection.plural.toLowerCase()}, {strings.document.plural.toLowerCase()}, etc.
-            </p>
-            <p className="txt-sm faint">
-              Please note that this will not include personal data or any sensitive information, such as request data, names, etc.
-            </p>
-          </BooleanSetting>
-        </div>
+        <BooleanSetting
+          descriptions={[
+            `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
+            'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
+          ]}
+          label="Send Usage Statistics"
+          setting="enableAnalytics"
+          overrideSetting="incognitoMode"
+          overrideValue={settings.incognitoMode === false ? undefined : !settings.incognitoMode}
+        />
+
+        <BooleanSetting
+          descriptions={['Insomnia periodically makes background requests to api.insomnia.rest/notifications for things like email verification, out-of-date billing information, trial information.']}
+          label="Allow Notification Requests"
+          setting="allowNotificationRequests"
+          overrideSetting="incognitoMode"
+          overrideValue={settings.incognitoMode === false ? undefined : !settings.incognitoMode}
+        />
 
         <hr className="pad-top" />
 

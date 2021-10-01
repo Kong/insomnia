@@ -1,6 +1,7 @@
 import { Settings } from 'insomnia-common';
 import React, { ChangeEvent, FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
+import styled from 'styled-components';
 
 import * as models from '../../../models/index';
 import { isConfigControlledSetting } from '../../../models/settings';
@@ -9,6 +10,16 @@ import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
 import { ControlledSetting } from './controlled-setting';
 
+const Descriptions = styled.div({
+  fontSize: 'var(--font-size-sm)',
+  opacity: 'var(--opacity-subtle)',
+  paddingLeft: 18,
+  '& *': {
+    marginTop: 'var(--padding-xs)',
+    marginBottom: 'var(--padding-sm)',
+  },
+});
+
 // would be nice to use RequireAllOrNone from type-fest when we can update to type-fest 2.0
 interface Overridden {
   overrideSetting?: keyof Settings;
@@ -16,12 +27,14 @@ interface Overridden {
 }
 
 export const BooleanSetting: FC<{
+  /** each element of this array will appear as a paragraph below the setting describing it */
+  descriptions?: string[];
   forceRestart?: boolean;
   help?: string;
   label: string;
   setting: keyof Settings;
 } & Overridden> = ({
-  children,
+  descriptions,
   forceRestart,
   help,
   label,
@@ -48,6 +61,11 @@ export const BooleanSetting: FC<{
     });
   }, [setting]);
 
+  let checked = Boolean(settings[setting]);
+  if (overrideValue !== undefined) {
+    checked = overrideValue;
+  }
+
   return (
     <ControlledSetting setting={setting}>
       <div className="form-control form-control--thin">
@@ -60,7 +78,7 @@ export const BooleanSetting: FC<{
             </Tooltip>
           )}
           <input
-            checked={overrideValue !== undefined ? overrideValue : Boolean(settings[setting])}
+            checked={checked}
             name={setting}
             onChange={onChange}
             type="checkbox"
@@ -68,7 +86,14 @@ export const BooleanSetting: FC<{
           />
         </label>
       </div>
-      {children}
+
+      {descriptions && (
+        <Descriptions>
+          {descriptions.map(description => (
+            <div key={description}>{description}</div>
+          ))}
+        </Descriptions>
+      )}
     </ControlledSetting>
   );
 };

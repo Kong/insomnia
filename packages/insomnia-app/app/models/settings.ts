@@ -42,8 +42,9 @@ export const isConfigControlledSetting = (setting: keyof BaseSettings, settings:
 
   switch (setting) {
     case 'enableAnalytics':
-      if (settings.radioSilentMode) {
-        return [true, 'radioSilentMode'] as const;
+    case 'allowNotificationRequests':
+      if (settings.incognitoMode) {
+        return [true, 'incognitoMode'] as const;
       }
       // otherwise, intentionally fallthrough
 
@@ -57,10 +58,11 @@ const removeControlledSettings = omit(keys(getConfigSettings()));
 const overwriteControlledSettings = mergeLeft(getConfigSettings());
 
 export function init(): BaseSettings {
-  return overwriteControlledSettings({
+  return {
     autoDetectColorScheme: false,
     autoHideMenuBar: false,
     autocompleteDelay: 1200,
+    allowNotificationRequests: true,
     clearOAuth2SessionOnRestart: true,
     darkTheme: getAppDefaultDarkTheme(),
     deviceId: null,
@@ -93,6 +95,7 @@ export function init(): BaseSettings {
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',
+    incognitoMode: false,
     lightTheme: getAppDefaultLightTheme(),
     maxHistoryResponses: 20,
     maxRedirects: -1,
@@ -103,7 +106,6 @@ export function init(): BaseSettings {
     pluginPath: '',
     preferredHttpVersion: HttpVersions.default,
     proxyEnabled: false,
-    radioSilentMode: false,
     showPasswords: false,
     theme: getAppDefaultTheme(),
     timeout: 0,
@@ -113,7 +115,7 @@ export function init(): BaseSettings {
     useBulkParametersEditor: false,
     validateAuthSSL: true,
     validateSSL: true,
-  });
+  };
 }
 
 export function migrate(doc: Settings) {

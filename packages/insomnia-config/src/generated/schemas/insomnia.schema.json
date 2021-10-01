@@ -16,7 +16,7 @@
       ]
     },
     "settings": {
-      "$ref": "#/definitions/Partial<Pick<Settings,\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"radioSilentMode\">>"
+      "$ref": "#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>"
     }
   },
   "additionalProperties": false,
@@ -25,9 +25,12 @@
     "version"
   ],
   "definitions": {
-    "Partial<Pick<Settings,\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"radioSilentMode\">>": {
+    "Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>": {
       "type": "object",
       "properties": {
+        "allowNotificationRequests": {
+          "type": "boolean"
+        },
         "disableUpdateNotification": {
           "type": "boolean"
         },
@@ -37,7 +40,7 @@
         "hideUpsells": {
           "type": "boolean"
         },
-        "radioSilentMode": {
+        "incognitoMode": {
           "description": "Insomnia will not make any network requests other than the requests you ask it to send.",
           "type": "boolean"
         }
