@@ -19,7 +19,7 @@ const getTarArgs = () => {
   }
 
   if (isLinux()) {
-    return ['-zxf', `inso-linux-${version}.tar.xz`];
+    return ['-cJf', `inso-linux-${version}.tar.xz`];
   }
 
   if (isWindows()) {
