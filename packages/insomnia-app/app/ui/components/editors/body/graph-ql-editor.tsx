@@ -6,10 +6,11 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import electron, { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode } from 'graphql';
-import { parse, print, typeFromAST } from 'graphql';
+import { parse, typeFromAST } from 'graphql';
 import Maybe from 'graphql/tsutils/Maybe';
 import { buildClientSchema, getIntrospectionQuery } from 'graphql/utilities';
 import { json as jsonPrettify } from 'insomnia-prettify';
+import prettier from 'prettier';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -459,7 +460,11 @@ export class GraphQLEditor extends PureComponent<Props, State> {
   _handlePrettify() {
     const { body } = this.state;
     const { variables, query } = body;
-    const prettyQuery = query && print(parse(query));
+    const prettyQuery = prettier.format(query, {
+      parser: 'graphql',
+      useTabs: this.props.settings.editorIndentWithTabs,
+      tabWidth: this.props.settings.editorIndentSize,
+    });
     const prettyVariables = variables && JSON.parse(jsonPrettify(JSON.stringify(variables)));
 
     this._handleBodyChange(prettyQuery, prettyVariables, this.state.body.operationName);
