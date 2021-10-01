@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import * as models from '../../../models';
 import { BaseSettings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
-import HelpTooltip from '../help-tooltip';
+import { HelpTooltip } from '../help-tooltip';
 
 export const MaskedSetting: FC<{
   label: string;
