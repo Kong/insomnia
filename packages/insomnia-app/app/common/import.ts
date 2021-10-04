@@ -77,7 +77,7 @@ export async function importUri(uri: string, importConfig: ImportRawConfig) {
   if (error) {
     showError({
       title: 'Failed to import',
-      error: error,
+      error,
       message: 'Import failed',
     });
     return result;
