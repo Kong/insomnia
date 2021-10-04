@@ -64,7 +64,7 @@ jobs:
     outputs:
       version: ${{ steps.get-package-version.outputs.current-version }}
       tag-name: ${{ steps.get-tag.outputs.tag-name }}
-      should-create-release: ${{ steps.check-release.outputs.should-create-release }}
+      should-create-release: ${{ fromJSON(steps.check-release.outputs.should-create-release) }}
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
@@ -86,7 +86,7 @@ jobs:
           tag_name: ${{ steps.get-tag.outputs.tag-name }}
       - name: Check release exists
         id: check-release
-        run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
+        run: echo "::set-output name=should-create-release::${{ toJSON(steps.find-release.outcome == 'failure') }}"
   create_inso_release:
     needs: [ inso_release_info ]
     if: needs.inso_release_info.outputs.should-create-release == true
