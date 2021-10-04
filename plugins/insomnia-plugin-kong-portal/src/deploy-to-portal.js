@@ -152,7 +152,7 @@ class DeployToPortal extends React.Component<Props, State> {
         this.setState({ kongPortalDeployView: 'overwrite' });
         trackEvent('Portal', 'Upload Error', overwrite ? 'Replace' : 'Create');
       } else {
-        console.log('Failed to upload to portal', err.response);
+        console.log('Failed to upload to dev portal', err.response);
         if (err.response && err.response.data && err.response.data.message) {
           this.setState({ kongPortalDeployError: err.response.data.message });
         }
@@ -372,7 +372,7 @@ class DeployToPortal extends React.Component<Props, State> {
               type="submit"
               className="margin-right-sm"
               disabled={!uploadIsEnabled}>
-              {isLoading ? 'Uploading...' : 'Upload To Portal'}
+              {isLoading ? 'Uploading...' : 'Upload To Dev Portal'}
             </Button>
             <Button onClick={this._handleEditKongConnection} type="button">
               Go Back

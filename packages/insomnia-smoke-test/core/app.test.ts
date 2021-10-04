@@ -125,7 +125,7 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  it('shows deploy to portal for design documents', async () => {
+  it('shows deploy to dev portal for design documents', async () => {
     await client.correctlyLaunched(app);
     await onboarding.skipOnboardingFlow(app);
 
@@ -137,11 +137,11 @@ describe('Application launch', function() {
     const card = await home.findCardWithTitle(app, docName);
     await home.openWorkspaceCardDropdown(card);
 
-    // Click the "Deploy to Portal" button, installed from that plugin
-    await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Portal');
+    // Click the "Deploy to Dev Portal" button, installed from that plugin
+    await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Dev Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
-    await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
+    await modal.waitUntilOpened(app, { title: 'Deploy to Dev Portal' });
     await modal.close(app);
   });
 
