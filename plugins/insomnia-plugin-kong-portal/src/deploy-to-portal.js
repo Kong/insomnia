@@ -355,7 +355,7 @@ class DeployToPortal extends React.Component<Props, State> {
           )}
           <div className="form-control form-control--outlined margin-top">
             <label>
-              Specify a File Name
+              File Name
               <input
                 type="text"
                 placeholder="Eg. unique-file-name.yaml"
