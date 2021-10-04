@@ -59,7 +59,7 @@ jobs:
   #         NPM_TOKEN: ${{ secrets.NPM_TOKEN}
   inso_release_info:
     # needs: [ npm ]
-    name: Check if Inso release already exists
+    name: Does Inso release exist?
     runs-on: ubuntu-latest
     outputs:
       tag-name: ${{ steps.get-tag.outputs.tag-name }}
@@ -76,18 +76,20 @@ jobs:
         id: get-tag
         run: echo "::set-output name=tag-name::lib@${{ steps.get-package-version.outputs.current-version }}"
       - name: Find release by tag
+        continue-on-error: true
         id: find-release
         uses: kaliber5/action-get-release@v1
         with:
           token: ${{ github.token }}
           tag_name: ${{ steps.get-tag.outputs.tag-name }}
+      # Finding a release by a particular tag will throw an error and fail if a release doesn't exist
       - name: Check release exists
         id: check-release-exists
-        run: echo "::set-output name=release-exists::${{ steps.find-release.outputs.id != '' }}"
+        run: echo "::set-output name=release-exists::${{ steps.find-release.outcome == 'success' }}"
   create_inso_release:
     needs: [ inso_release_info ]
     if: ${{ needs.inso_release_info.outputs.release-exists == false }}
-    name: Create Release
+    name: Create Inso Release
     runs-on: ubuntu-latest
     steps:
       - name: Create GitHub Release
@@ -101,7 +103,7 @@ jobs:
           prerelease: true
   upload_inso:
     needs: [ inso_release_info, create_inso_release ]
-    name: CLI release
+    name: Package & release Inso
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
