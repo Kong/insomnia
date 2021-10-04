@@ -86,20 +86,20 @@ jobs:
       - name: Check release exists
         id: check-release-exists
         run: echo "::set-output name=release-exists::${{ steps.find-release.outcome == 'success' }}"
-  exists_positive:
+  positive_condition:
     needs: [ inso_release_info ]
     if: ${{ needs.inso_release_info.outputs.release-exists }}
-    name: exists positive
+    name: positive condition
     runs-on: ubuntu-latest
     steps:
-      - run: echo "::debug::exists positive - ${{ needs.inso_release_info.outputs.release-exists }}"
-  exists_negative:
+      - run: echo "::debug::positive condition - ${{ needs.inso_release_info.outputs.release-exists }}"
+  negative_condition:
     needs: [ inso_release_info ]
     if: ${{ !needs.inso_release_info.outputs.release-exists }}
-    name: exists negative
+    name: negative condition
     runs-on: ubuntu-latest
     steps:
-      - run: echo "::debug::exists negative - ${{ needs.inso_release_info.outputs.release-exists }}"
+      - run: echo "::debug::negative condition - ${{ needs.inso_release_info.outputs.release-exists }}"
   create_inso_release:
     needs: [ inso_release_info ]
     if: ${{ !(needs.inso_release_info.outputs.release-exists) }}
