@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - core@*
+  pull_request:
+    types:
+      - synchronize
 
 env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -14,74 +17,90 @@ env:
   NPM_CONFIG_RUNTIME: electron
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ macos-latest, windows-latest, ubuntu-latest ]
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Run tests
-        run: npm test
-  npm:
-    needs: [ test ]
-    name: npm
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Release NPM packages
-        run: |
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm run release
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN}
-  create_inso_release:
-    needs: [ npm ]
-    name: Create Release
+  # test:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: true
+  #     matrix:
+  #       os: [ macos-latest, windows-latest, ubuntu-latest ]
+  #   steps:
+  #     - name: Checkout branch
+  #       uses: actions/checkout@v1
+  #     - name: Read Node version from .nvmrc
+  #       run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+  #       id: nvm
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ steps.nvm.outputs.NVMRC }}
+  #     - name: Bootstrap packages
+  #       run: npm run bootstrap
+  #     - name: Run tests
+  #       run: npm test
+  # npm:
+  #   needs: [ test ]
+  #   name: npm
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout branch
+  #       uses: actions/checkout@v1
+  #     - name: Read Node version from .nvmrc
+  #       run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+  #       id: nvm
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ steps.nvm.outputs.NVMRC }}
+  #     - name: Bootstrap packages
+  #       run: npm run bootstrap
+  #     - name: Release NPM packages
+  #       run: |
+  #         npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
+  #         npm run release
+  #       env:
+  #         NPM_TOKEN: ${{ secrets.NPM_TOKEN}
+  inso_release_info:
+    # needs: [ npm ]
+    name: Check if Inso release already exists
     runs-on: ubuntu-latest
     outputs:
-      tag-name: ${{ steps.get-tag-name.outputs.tag-name }}
+      tag-name: ${{ steps.get-tag.outputs.tag-name }}
+      release-exists: ${{ steps.check-release-exists.outputs.release-exists }}
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
       - name: Get version
-        id: package-version
+        id: get-package-version
         uses: martinbeentjes/npm-get-version-action@master
         with:
           path: packages/insomnia-inso
-      - name: Get tag name for version
-        id: get-tag-name
-        run: echo "::set-output tag-name=lib@${{ steps.package-version.outputs.current-version }}"
+      - name: Get tag for version
+        id: get-tag
+        run: echo "::set-output tag-name=lib@${{ steps.get-package-version.outputs.current-version }}"
+      - name: Find release by tag
+        id: find-release
+        uses: kaliber5/action-get-release@v1
+        with:
+          token: ${{ github.token }}
+          tag_name: ${{ steps.get-tag.outputs.tag-name }}
+      - name: Check release exists
+        id: check-release-exists
+        run: echo "::set-output release-exists=${{ steps.find-release.outputs.id != '' }}"
+  create_inso_release:
+    needs: [ inso_release_info ]
+    if: ${{ needs.inso_release_info.outputs.release-exists == false }}
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.get-tag-name.outputs.tag-name }}
+          tag_name: ${{ needs.inso_release_info.outputs.tag-name }}
           # The following is all taken from packages/insomnia-app/scripts/release.ts
           name: Inso CLI ${{ steps.package-version.outputs.current-version }} 📦
           body: Full changelog ⇒ https://insomnia.rest/changelog
           draft: false
           prerelease: true
   upload_inso:
-    needs: [ create_inso_release ]
+    needs: [ inso_release_info, create_inso_release ]
     name: CLI release
     runs-on: ${{ matrix.os }}
     strategy:
@@ -104,71 +123,71 @@ jobs:
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          # How do I refer to the previously created release?
-          tag_name: ${{ needs.create_inso_release.outputs.tag-name }}
+          tag_name: ${{ needs.inso_release_info.outputs.tag-name }}
           files: packages/insomnia-inso/compressed/*
-  windows_app:
-    needs: [ npm ]
-    name: Windows
-    runs-on: windows-2016
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Release app
-        run: npm run app-release
-        env:
-          CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
-  mac_app:
-    needs: [ npm ]
-    name: Mac
-    runs-on: macos-latest
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Release app
-        run: npm run app-release
-        env:
-          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-          CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
-  linux_app:
-    needs: [ npm ]
-    name: Linux
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install Snapcraft
-        run: |
-          sudo snap install snapcraft --classic
-          echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
-      - name: Checkout branch
-        uses: actions/checkout@v1
-      - name: Read Node version from .nvmrc
-        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-        id: nvm
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ steps.nvm.outputs.NVMRC }}
-      - name: Bootstrap packages
-        run: npm run bootstrap
-      - name: Release app
-        run: npm run app-release
-        env:
-          BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
+          fail_on_unmatched_files: true
+  # windows_app:
+  #   needs: [ npm ]
+  #   name: Windows
+  #   runs-on: windows-2016
+  #   steps:
+  #     - name: Checkout branch
+  #       uses: actions/checkout@v1
+  #     - name: Read Node version from .nvmrc
+  #       run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+  #       id: nvm
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ steps.nvm.outputs.NVMRC }}
+  #     - name: Bootstrap packages
+  #       run: npm run bootstrap
+  #     - name: Release app
+  #       run: npm run app-release
+  #       env:
+  #         CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
+  #         CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
+  # mac_app:
+  #   needs: [ npm ]
+  #   name: Mac
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Checkout branch
+  #       uses: actions/checkout@v1
+  #     - name: Read Node version from .nvmrc
+  #       run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+  #       id: nvm
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ steps.nvm.outputs.NVMRC }}
+  #     - name: Bootstrap packages
+  #       run: npm run bootstrap
+  #     - name: Release app
+  #       run: npm run app-release
+  #       env:
+  #         APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+  #         APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+  #         CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+  #         CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+  # linux_app:
+  #   needs: [ npm ]
+  #   name: Linux
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install Snapcraft
+  #       run: |
+  #         sudo snap install snapcraft --classic
+  #         echo "${{ secrets.SNAPCRAFT_LOGIN_FILE }}" > snapcraft.txt && snapcraft login --with snapcraft.txt
+  #     - name: Checkout branch
+  #       uses: actions/checkout@v1
+  #     - name: Read Node version from .nvmrc
+  #       run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+  #       id: nvm
+  #     - uses: actions/setup-node@v1
+  #       with:
+  #         node-version: ${{ steps.nvm.outputs.NVMRC }}
+  #     - name: Bootstrap packages
+  #       run: npm run bootstrap
+  #     - name: Release app
+  #       run: npm run app-release
+  #       env:
+  #         BUILD_TARGETS: AppImage,deb,tar.gz,rpm,snap
