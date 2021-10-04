@@ -77,13 +77,13 @@ jobs:
         id: get-tag
         run: echo "::set-output name=tag-name::lib@${{ steps.get-package-version.outputs.current-version }}"
       - name: Find release by tag
+        # Finding a release by a particular tag will throw an error and fail if a release doesn't exist
         continue-on-error: true
         id: find-release
         uses: kaliber5/action-get-release@v1
         with:
           token: ${{ github.token }}
           tag_name: ${{ steps.get-tag.outputs.tag-name }}
-      # Finding a release by a particular tag will throw an error and fail if a release doesn't exist
       - name: Check release exists
         id: check-release
         run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
