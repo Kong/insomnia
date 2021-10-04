@@ -8,7 +8,7 @@ on:
   pull_request:
     types:
       - opened
-      # - synchronize
+      - synchronize
 
 jobs:
   OS:
