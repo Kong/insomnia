@@ -62,6 +62,7 @@ jobs:
     name: Does Inso release exist?
     runs-on: ubuntu-latest
     outputs:
+      version: ${{ steps.get-package-version.outputs.current-version }}
       tag-name: ${{ steps.get-tag.outputs.tag-name }}
       should-create-release: ${{ steps.check-release.outputs.should-create-release }}
     steps:
@@ -86,20 +87,6 @@ jobs:
       - name: Check release exists
         id: check-release
         run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
-  positive_condition:
-    needs: [ inso_release_info ]
-    if: ${{ needs.inso_release_info.outputs.should-create-release }}
-    name: positive condition
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "::debug::positive condition - ${{ needs.inso_release_info.outputs.should-create-release }}"
-  negative_condition:
-    needs: [ inso_release_info ]
-    if: ${{ !needs.inso_release_info.outputs.should-create-release }}
-    name: negative condition
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "::debug::negative condition - ${{ needs.inso_release_info.outputs.should-create-release }}"
   create_inso_release:
     needs: [ inso_release_info ]
     if: ${{ needs.inso_release_info.outputs.should-create-release }}
@@ -111,7 +98,7 @@ jobs:
         with:
           tag_name: ${{ needs.inso_release_info.outputs.tag-name }}
           # The following is all taken from packages/insomnia-app/scripts/release.ts
-          name: Inso CLI ${{ steps.package-version.outputs.current-version }} 📦
+          name: "[TESTING] Inso CLI ${{ needs.inso_release_info.outputs.version }} 📦"
           body: Full changelog ⇒ https://insomnia.rest/changelog
           draft: false
           prerelease: true
@@ -136,6 +123,8 @@ jobs:
         run: npm run bootstrap
       - name: Package Inso CLI
         run: npm run inso-package
+      - name: Run CLI smoke tests
+        run: npm run test:smoke:cli
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
