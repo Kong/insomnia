@@ -12,9 +12,6 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_REF: ${{ github.ref }}
   GITHUB_SHA: ${{ github.sha }}
-  NPM_CONFIG_TARGET: 11.2.3
-  NPM_CONFIG_DISTURL: https://electronjs.org/headers
-  NPM_CONFIG_RUNTIME: electron
 
 jobs:
   # test:
@@ -123,9 +120,8 @@ jobs:
         run: npm run bootstrap
       - name: Package Inso CLI
         run: npm run inso-package
-      # Tests fail for some reason, figure out why
-      # - name: Run CLI smoke tests
-      #   run: npm run test:smoke:cli
+      - name: Run CLI smoke tests
+        run: npm run test:smoke:cli
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
@@ -136,6 +132,10 @@ jobs:
   #   needs: [ npm ]
   #   name: Windows
   #   runs-on: windows-2016
+  #   env:
+  #     NPM_CONFIG_TARGET: 11.2.3
+  #     NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  #     NPM_CONFIG_RUNTIME: electron
   #   steps:
   #     - name: Checkout branch
   #       uses: actions/checkout@v1
@@ -156,6 +156,10 @@ jobs:
   #   needs: [ npm ]
   #   name: Mac
   #   runs-on: macos-latest
+  #   env:
+  #     NPM_CONFIG_TARGET: 11.2.3
+  #     NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  #     NPM_CONFIG_RUNTIME: electron
   #   steps:
   #     - name: Checkout branch
   #       uses: actions/checkout@v1
@@ -178,6 +182,10 @@ jobs:
   #   needs: [ npm ]
   #   name: Linux
   #   runs-on: ubuntu-latest
+  #   env:
+  #     NPM_CONFIG_TARGET: 11.2.3
+  #     NPM_CONFIG_DISTURL: https://electronjs.org/headers
+  #     NPM_CONFIG_RUNTIME: electron
   #   steps:
   #     - name: Install Snapcraft
   #       run: |
