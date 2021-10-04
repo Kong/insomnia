@@ -74,7 +74,7 @@ jobs:
           path: packages/insomnia-inso
       - name: Get tag for version
         id: get-tag
-        run: echo "::set-output tag-name=lib@${{ steps.get-package-version.outputs.current-version }}"
+        run: echo "::set-output name=tag-name::lib@${{ steps.get-package-version.outputs.current-version }}"
       - name: Find release by tag
         id: find-release
         uses: kaliber5/action-get-release@v1
@@ -83,7 +83,7 @@ jobs:
           tag_name: ${{ steps.get-tag.outputs.tag-name }}
       - name: Check release exists
         id: check-release-exists
-        run: echo "::set-output release-exists=${{ steps.find-release.outputs.id != '' }}"
+        run: echo "::set-output name=release-exists::${{ steps.find-release.outputs.id != '' }}"
   create_inso_release:
     needs: [ inso_release_info ]
     if: ${{ needs.inso_release_info.outputs.release-exists == false }}
