@@ -355,7 +355,7 @@ class DeployToPortal extends React.Component<Props, State> {
           )}
           <div className="form-control form-control--outlined margin-top">
             <label>
-              Specify a File Name
+              File Name
               <input
                 type="text"
                 placeholder="Eg. unique-file-name.yaml"
@@ -384,12 +384,8 @@ class DeployToPortal extends React.Component<Props, State> {
       return (
         <div className="pad">
           <p className="no-pad no-margin-top">
-            The latest changes are now available in the Developer Portal.
-            {kongPortalLegacyMode === false && (
-              <React.Fragment>
-                Would you like to <a href={kongPortalUrl}>view the developer portal</a>?
-              </React.Fragment>
-            )}
+            The Document is now available on
+            {kongPortalLegacyMode ? 'Dev Portal' : <a href={kongPortalUrl}>Dev Portal</a>}
           </p>
           <div>
             <Button data-close-modal="true">Close</Button>
