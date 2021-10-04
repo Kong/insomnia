@@ -37,16 +37,16 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   margin?: string;
 }
 
-const getColorVar = (bg?: ValueOf<typeof ButtonThemeEnum>) => {
-  if (bg === ButtonThemeEnum.Default) {
+const getColorVar = (theme?: ValueOf<typeof ButtonThemeEnum>) => {
+  if (!theme || theme === ButtonThemeEnum.Default) {
     return 'var(--color-font)';
   }
 
-  return `var(--color-${bg})`;
+  return `var(--color-${theme})`;
 };
 
 const getFontColorVar = (theme?: ValueOf<typeof ButtonThemeEnum>) => {
-  if (theme && theme === ButtonThemeEnum.Default) {
+  if (!theme || theme === ButtonThemeEnum.Default) {
     return 'var(--color-font)';
   }
 
