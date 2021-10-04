@@ -368,6 +368,12 @@ class App extends PureComponent<AppProps, State> {
           this._handleToggleSidebar();
         },
       ],
+      [
+        hotKeyRefs.TOGGLE_VERTICAL_LAYOUT,
+        () => {
+          this._handleToggleVerticalLayout();
+        },
+      ],
     ];
   }
 
@@ -1070,6 +1076,13 @@ class App extends PureComponent<AppProps, State> {
     await this._handleSetSidebarHidden(sidebarHidden);
   }
 
+  async _handleToggleVerticalLayout() {
+    const forceVerticalLayout = !this.props.settings.forceVerticalLayout;
+    await models.settings.patch({
+      forceVerticalLayout: forceVerticalLayout,
+    });
+  }
+
   static _handleShowSettingsModal(tabIndex?: number) {
     showModal(SettingsModal, tabIndex);
   }
@@ -1416,6 +1429,7 @@ class App extends PureComponent<AppProps, State> {
       false,
     );
     ipcRenderer.on('toggle-sidebar', this._handleToggleSidebar);
+    ipcRenderer.on('toggle-vertical-layout', this._handleToggleVerticalLayout)
 
     // Give it a bit before letting the backend know it's ready
     setTimeout(() => ipcRenderer.send('window-ready'), 500);

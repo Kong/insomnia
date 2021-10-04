@@ -118,6 +118,7 @@ export const hotKeyRefs: Record<string, HotKeyDefinition> = {
   ),
   SIDEBAR_FOCUS_FILTER: defineHotKey('sidebar_focusFilter', 'Filter Sidebar'),
   SIDEBAR_TOGGLE: defineHotKey('sidebar_toggle', 'Toggle Sidebar'),
+  TOGGLE_VERTICAL_LAYOUT: defineHotKey('toggle_vertical_layout', 'Toggle Vertical Layout'),
   RESPONSE_FOCUS: defineHotKey('response_focus', 'Focus Response'),
   SHOW_COOKIES_EDITOR: defineHotKey('showCookiesEditor', 'Edit Cookies'),
   REQUEST_SHOW_CREATE: defineHotKey('request_showCreate', 'Create Request'),
@@ -230,6 +231,10 @@ const defaultRegistry: HotKeyRegistry = {
   [hotKeyRefs.SIDEBAR_TOGGLE.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.backslash.keyCode),
     keyComb(true, false, false, false, keyboardKeys.backslash.keyCode),
+  ),
+  [hotKeyRefs.TOGGLE_VERTICAL_LAYOUT.id]: keyBinds(
+    keyComb(true, false, true, true, keyboardKeys.backslash.keyCode),
+    keyComb(true, false, true, false, keyboardKeys.backslash.keyCode),
   ),
   [hotKeyRefs.RESPONSE_FOCUS.id]: keyBinds(
     keyComb(false, false, false, true, keyboardKeys.singlequote.keyCode),

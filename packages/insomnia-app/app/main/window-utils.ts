@@ -295,6 +295,18 @@ export function createWindow() {
         },
       },
       {
+        label: 'Toggle Vertical Layout',
+        click: () => {
+          const w = BrowserWindow.getFocusedWindow();
+
+          if (!w || !w.webContents) {
+            return;
+          }
+
+          w.webContents.send('toggle-vertical-layout');
+        },
+      },
+      {
         label: `Toggle ${MNEMONIC_SYM}DevTools`,
         accelerator: 'Alt+CmdOrCtrl+I',
         // @ts-expect-error -- TSCONVERSION needs global module augmentation
