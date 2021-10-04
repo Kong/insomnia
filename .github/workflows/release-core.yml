@@ -89,7 +89,7 @@ jobs:
         run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
   create_inso_release:
     needs: [ inso_release_info ]
-    if: needs.inso_release_info.outputs.should-create-release
+    if: needs.inso_release_info.outputs.should-create-release == true
     name: Create Inso Release
     runs-on: ubuntu-latest
     steps:
