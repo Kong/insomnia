@@ -505,8 +505,6 @@ class General extends PureComponent<Props, State> {
           <MaskedSetting
             label='HTTP Proxy'
             setting='httpProxy'
-            type='text'
-            showPasswords={settings.showPasswords}
             props={{
               placeholder: 'localhost:8005',
               disabled: !settings.proxyEnabled,
@@ -515,8 +513,6 @@ class General extends PureComponent<Props, State> {
           <MaskedSetting
             label='HTTPS Proxy'
             setting='httpsProxy'
-            type='text'
-            showPasswords={settings.showPasswords}
             props={{
               placeholder: 'localhost:8005',
               disabled: !settings.proxyEnabled,

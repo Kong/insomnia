@@ -1,5 +1,6 @@
 import React, { ChangeEvent, FC, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useToggle } from 'react-use';
 
 import * as models from '../../../models';
 import { BaseSettings } from '../../../models/settings';
@@ -9,20 +10,16 @@ import { HelpTooltip } from '../help-tooltip';
 export const MaskedSetting: FC<{
   label: string;
   setting: keyof BaseSettings;
-  type: string;
-  showPasswords: boolean;
   help?: string;
-  props?: Record<string, any>;
+  props?: React.HTMLProps<HTMLInputElement>;
 }> = ({
   label,
   setting,
-  type,
-  showPasswords,
   help,
   props,
 }) => {
 
-  const [isHidden, setHidden] = useState(true);
+  const [isHidden, setHidden] = useToggle(true);
 
   const settings = useSelector(selectSettings);
 
@@ -30,14 +27,15 @@ export const MaskedSetting: FC<{
     throw new Error(`Invalid masked setting name ${setting}`);
   }
 
-  const [input, setInput] = useState(settings[setting] + '');
+  const [input, setInput] = useState(String(settings[setting]));
 
-  const onInputChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.currentTarget.value;
-    await models.settings.patch({
-      [setting]: value,
+  const onChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    // Update the input as soon as possible for lag-free experience
+    setInput(event.currentTarget.value);
+    // Meanwhile we wait the update
+    return models.settings.patch({
+      [setting]: event.currentTarget.value,
     });
-    setInput(value);
   };
 
   return (
@@ -49,14 +47,14 @@ export const MaskedSetting: FC<{
       <div className="form-control form-control--outlined form-control--btn-right">
         <input
           value={input}
-          type={!showPasswords && isHidden ? 'password' : type}
+          type={!settings.showPasswords && isHidden ? 'password' : 'text'}
           name={setting}
-          onChange={onInputChange}
+          onChange={onChange}
           {...props}
         />
-        {!showPasswords && (
-          <button className={'form-control__right'} onClick={() => setHidden(!isHidden)}>
-            {isHidden ? <i className="fa fa-eye" /> : <i className="fa fa-eye-slash" />}
+        {!settings.showPasswords && (
+          <button className={'form-control__right'} onClick={setHidden}>
+            {isHidden ? <i className="fa fa-eye-slash" /> : <i className="fa fa-eye" />}
           </button>
         )}
       </div>
