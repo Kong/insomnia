@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag-name: ${{ steps.get-tag.outputs.tag-name }}
-      release-exists: ${{ steps.check-release-exists.outputs.release-exists }}
+      should-create-release: ${{ steps.check-release.outputs.should-create-release }}
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
@@ -84,25 +84,25 @@ jobs:
           tag_name: ${{ steps.get-tag.outputs.tag-name }}
       # Finding a release by a particular tag will throw an error and fail if a release doesn't exist
       - name: Check release exists
-        id: check-release-exists
-        run: echo "::set-output name=release-exists::${{ steps.find-release.outcome == 'success' }}"
+        id: check-release
+        run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
   positive_condition:
     needs: [ inso_release_info ]
-    if: ${{ needs.inso_release_info.outputs.release-exists }}
+    if: ${{ needs.inso_release_info.outputs.should-create-release }}
     name: positive condition
     runs-on: ubuntu-latest
     steps:
-      - run: echo "::debug::positive condition - ${{ needs.inso_release_info.outputs.release-exists }}"
+      - run: echo "::debug::positive condition - ${{ needs.inso_release_info.outputs.should-create-release }}"
   negative_condition:
     needs: [ inso_release_info ]
-    if: ${{ !needs.inso_release_info.outputs.release-exists }}
+    if: ${{ !needs.inso_release_info.outputs.should-create-release }}
     name: negative condition
     runs-on: ubuntu-latest
     steps:
-      - run: echo "::debug::negative condition - ${{ needs.inso_release_info.outputs.release-exists }}"
+      - run: echo "::debug::negative condition - ${{ needs.inso_release_info.outputs.should-create-release }}"
   create_inso_release:
     needs: [ inso_release_info ]
-    if: ${{ !(needs.inso_release_info.outputs.release-exists) }}
+    if: ${{ needs.inso_release_info.outputs.should-create-release }}
     name: Create Inso Release
     runs-on: ubuntu-latest
     steps:
