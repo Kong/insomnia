@@ -4,7 +4,6 @@ import { ValueOf } from 'type-fest';
 import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
-import { ApiSpec } from '../../models/api-spec';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
@@ -105,7 +104,7 @@ export const selectAllWorkspaces = createSelector(
 export const selectWorkspacesForActiveProject = createSelector(
   selectAllWorkspaces,
   selectActiveProject,
-  (workspaces, activeProject) => workspaces.filter(w => w.parentId === activeProject._id),
+  (workspaces, activeProject) => workspaces.filter(workspace => workspace.parentId === activeProject._id),
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -113,9 +112,12 @@ export const selectActiveWorkspace = createSelector(
   (state: RootState) => state.global.activeWorkspaceId,
   (state: RootState) => state.global.activeActivity,
   (workspaces, activeWorkspaceId, activeActivity) => {
+    if (activeActivity && !isWorkspaceActivity(activeActivity)) {
+      throw JSON.stringify(activeActivity);
+    }
     // Only return an active workspace if we're in an activity
     if (activeActivity && isWorkspaceActivity(activeActivity)) {
-      const workspace = workspaces.find(w => w._id === activeWorkspaceId);
+      const workspace = workspaces.find(workspace => workspace._id === activeWorkspaceId);
       return workspace;
     }
 
@@ -140,7 +142,7 @@ export const selectAllApiSpecs = createSelector(
 export const selectActiveApiSpec = createSelector(
   selectAllApiSpecs,
   selectActiveWorkspace,
-  (apiSpecs, activeWorkspace) => apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace?._id) as ApiSpec
+  (apiSpecs, activeWorkspace) => apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace?._id)
 );
 
 export const selectActiveWorkspaceName = createSelector(
@@ -152,7 +154,7 @@ export const selectActiveWorkspaceName = createSelector(
       return undefined;
     }
 
-    return isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName;
+    return isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec?.fileName;
   }
 );
 

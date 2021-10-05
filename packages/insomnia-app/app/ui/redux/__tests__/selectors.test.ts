@@ -1,8 +1,10 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
+import { ACTIVITY_DEBUG } from '../../../common/constants';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
-import { selectActiveProject } from '../selectors';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { selectActiveProject, selectActiveWorkspaceName } from '../selectors';
 
 describe('selectors', () => {
   beforeEach(globalBeforeEach);
@@ -42,6 +44,47 @@ describe('selectors', () => {
 
       const project = selectActiveProject(state);
       expect(project).toStrictEqual(expect.objectContaining<Partial<Project>>({ _id: DEFAULT_PROJECT_ID }));
+    });
+  });
+
+  describe('selectActiveWorkspaceName', () => {
+    it('returns workspace name for collections', async () => {
+      const workspace = await models.workspace.create({
+        name: 'workspace.name',
+        scope: WorkspaceScopeKeys.collection,
+      });
+      // even though this shouldn't technically happen, we want to make sure the selector still makes the right decision (and ignores the api spec for collections)
+      await models.apiSpec.updateOrCreateForParentId(
+        workspace._id,
+        {
+          fileName: 'apiSpec.fileName',
+        },
+      );
+      const state = await reduxStateForTest({
+        activeActivity: ACTIVITY_DEBUG,
+        activeWorkspaceId: workspace._id,
+      });
+
+      expect(selectActiveWorkspaceName(state)).toBe('workspace.name');
+    });
+
+    it('returns api spec name for design documents', async () => {
+      const workspace = await models.workspace.create({
+        name: 'workspace.name',
+        scope: WorkspaceScopeKeys.design,
+      });
+      await models.apiSpec.updateOrCreateForParentId(
+        workspace._id,
+        {
+          fileName: 'apiSpec.fileName',
+        },
+      );
+      const state = await reduxStateForTest({
+        activeActivity: ACTIVITY_DEBUG,
+        activeWorkspaceId: workspace._id,
+      });
+
+      expect(selectActiveWorkspaceName(state)).toBe('apiSpec.fileName');
     });
   });
 });
