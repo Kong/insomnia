@@ -1,7 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import React, { PureComponent } from 'react';
-import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
@@ -19,8 +18,6 @@ import { isDesign, Workspace } from '../../../models/workspace';
 import type { WorkspaceAction } from '../../../plugins';
 import { ConfigGenerator, getConfigGenerators, getWorkspaceActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
-import { RootState } from '../../redux/modules';
-import { selectActiveWorkspaceName } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -32,11 +29,10 @@ import { showGenerateConfigModal } from '../modals/generate-config-modal';
 import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
-type ReduxProps = ReturnType<typeof mapStateToProps>;
-
-interface Props extends ReduxProps {
+interface Props {
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
+  activeWorkspaceName: string;
   activeApiSpec: ApiSpec;
   activeProject: Project;
   hotKeyRegistry: HotKeyRegistry;
@@ -51,7 +47,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
+export class WorkspaceDropdown extends PureComponent<Props, State> {
   _dropdown: Dropdown | null = null;
   state: State = {
     actionPlugins: [],
@@ -217,9 +213,3 @@ export class UnconnectedWorkspaceDropdown extends PureComponent<Props, State> {
     );
   }
 }
-
-const mapStateToProps = (state: RootState) => ({
-  activeWorkspaceName: selectActiveWorkspaceName(state),
-});
-
-export const WorkspaceDropdown = connect(mapStateToProps)(UnconnectedWorkspaceDropdown);

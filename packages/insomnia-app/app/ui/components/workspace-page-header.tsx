@@ -23,6 +23,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
   wrapperProps: {
     activeApiSpec,
     activeWorkspace,
+    activeWorkspaceName,
     activeProject,
     activeEnvironment,
     settings,
@@ -35,7 +36,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
     [activeWorkspace, handleActivityChange],
   );
 
-  if (!activeWorkspace || !activeApiSpec || !activity) {
+  if (!activeWorkspace || !activeWorkspaceName || !activeApiSpec || !activity) {
     return null;
   }
 
@@ -43,6 +44,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
     <WorkspaceDropdown
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
+      activeWorkspaceName={activeWorkspaceName}
       activeApiSpec={activeApiSpec}
       activeProject={activeProject}
       hotKeyRegistry={settings.hotKeyRegistry}
