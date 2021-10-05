@@ -124,7 +124,7 @@ export class Toast extends PureComponent<{}, State> {
     } = await models.settings.getOrCreate();
 
     if (incognitoMode) {
-      // the sending of this request is covered under incognito mode.
+      // if the user is running under incognito mode, then exit early
       return;
     }
 
