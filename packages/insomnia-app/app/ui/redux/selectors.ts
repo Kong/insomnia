@@ -112,9 +112,6 @@ export const selectActiveWorkspace = createSelector(
   (state: RootState) => state.global.activeWorkspaceId,
   (state: RootState) => state.global.activeActivity,
   (workspaces, activeWorkspaceId, activeActivity) => {
-    if (activeActivity && !isWorkspaceActivity(activeActivity)) {
-      throw JSON.stringify(activeActivity);
-    }
     // Only return an active workspace if we're in an activity
     if (activeActivity && isWorkspaceActivity(activeActivity)) {
       const workspace = workspaces.find(workspace => workspace._id === activeWorkspaceId);
@@ -142,7 +139,20 @@ export const selectAllApiSpecs = createSelector(
 export const selectActiveApiSpec = createSelector(
   selectAllApiSpecs,
   selectActiveWorkspace,
-  (apiSpecs, activeWorkspace) => apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace?._id)
+  (apiSpecs, activeWorkspace) => {
+    if (!activeWorkspace) {
+      // There should never be an active api spec without an active workspace
+      return undefined;
+    }
+    const activeSpec = apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace._id);
+
+    if (!activeSpec) {
+      // This case should never be reached; an api spec should always exist for a given workspace.
+      throw new Error(`an api spec not found for the workspace ${activeWorkspace._id} (${activeWorkspace.name})`);
+    }
+
+    return activeSpec;
+  }
 );
 
 export const selectActiveWorkspaceName = createSelector(
