@@ -125,7 +125,9 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  it('shows deploy to dev portal for design documents', async () => {
+  // NOTE: skipped because plugins are pulled from npm in CI rather than read from this repo
+  // TODO: unskip this test after ticket INS-502 corrects the above
+  it.skip('shows deploy to dev portal for design documents', async () => {
     await client.correctlyLaunched(app);
     await onboarding.skipOnboardingFlow(app);
 
