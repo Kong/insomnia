@@ -1,0 +1,8 @@
+_id: ut_6b214a8cd07046f2a8f43237ca913c73
+code: expect(insomnia.activeRequestId).to.equal('req_wrk_012d4860c7da418a85ffea7406e1292a21946b60')
+created: 1593668846292
+modified: 1593669592203
+name: Expect active request to be set
+parentId: uts_fe901c6565044f00aa620d3fe47f443f
+requestId: req_wrk_012d4860c7da418a85ffea7406e1292a21946b60
+type: UnitTest

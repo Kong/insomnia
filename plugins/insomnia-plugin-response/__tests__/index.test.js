@@ -470,6 +470,45 @@ describe('Response tag', () => {
       );
     });
 
+    it('sends when behavior=when-expired and no responses', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 60)).toBe('Response res_1');
+    });
+
+    it('sends when behavior=when-expired and response is old', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          created: Date.now() - 60000,
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 30)).toBe('Response res_2');
+    });
+
+    it('does not send when behavior=when-expired and response is new', async () => {
+      const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+      const responses = [
+        {
+          _id: 'res_existing',
+          parentId: 'req_1',
+          statusCode: 200,
+          contentType: 'text/plain',
+          _body: 'Response res_existing',
+          created: Date.now() - 60000,
+        },
+      ];
+      const context = _genTestContext(requests, responses);
+
+      expect(await tag.run(context, 'raw', 'req_1', '', 'when-expired', 90)).toBe(
+        'Response res_existing',
+      );
+    });
+
     it('does not send when behavior=never and no responses', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
       const responses = [];
@@ -501,12 +540,10 @@ describe('Response tag', () => {
       expect(await tag.run(context, 'raw', 'req_1', '', 'never')).toBe('Response res_existing');
     });
 
-    it('does not resend recursive', async () => {
+    it('does not resend if request has already sent in recursive chain', async () => {
       const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
-
       const responses = [];
-
-      const context = _genTestContext(requests, responses, { fromResponseTag: true });
+      const context = _genTestContext(requests, responses, { requestChain: ['req_1']});
 
       try {
         await tag.run(context, 'raw', 'req_1', '', 'always');
@@ -516,6 +553,55 @@ describe('Response tag', () => {
       }
 
       throw new Error('Running tag should have thrown exception');
+  });
+
+  it('does send if request has not been sent in recursive chain', async () => {
+    const requests = [{ _id: 'req_1', parentId: 'wrk_1' }];
+    const responses = [];
+
+    const context = _genTestContext(requests, responses, { requestChain: ['req_2']});
+
+    const response = await tag.run(context, 'raw', 'req_1', '', 'always');
+      expect(response).toBe('Response res_1')
+  });
+});
+
+  describe('Max Age', () => {
+    const maxAgeArg = tag.args[4];
+    const toValueObj = value => ({ value });
+
+    it('should ensure fourth argument is maxAge', () => {
+      expect(maxAgeArg.displayName).toBe('Max age (seconds)');
+    });
+
+    it('should hide when behavior and max age arguments are missing - backward compatibility', () => {
+      const args = ['raw', 'req_1', ''].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(true);
+    });
+
+    it('should hide when behavior=no-history and max age argument is missing - backward compatibility', () => {
+      const args = ['raw', 'req_1', '', 'no-history'].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(true);
+    });
+
+    it('should show when behavior=when-expired and max age argument is missing - backward compatibility', () => {
+      const args = ['raw', 'req_1', '', 'when-expired'].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(false);
+    });
+
+    it('should hide when behavior=always', () => {
+      const args = ['raw', 'req_1', '', 'always', 60].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(true);
+    });
+
+    it('should show when behavior=when-expired', () => {
+      const args = ['raw', 'req_1', '', 'when-expired', 60].map(toValueObj);
+      const hidden = maxAgeArg.hide(args);
+      expect(hidden).toBe(false);
     });
   });
 });
@@ -533,6 +619,9 @@ function _genTestContext(requests, responses, extraInfoRoot) {
   return {
     renderPurpose: 'send',
     context: {
+      getEnvironmentId() {
+        return null;
+      },
       getExtraInfo(key) {
         if (_extraInfo) {
           return _extraInfo[key] || null;
@@ -558,7 +647,7 @@ function _genTestContext(requests, responses, extraInfoRoot) {
       },
     },
     store: {
-      hasItem: key => store.hasOwnProperty(key),
+      hasItem: key => Object.prototype.hasOwnProperty.call(store, key),
       getItem: key => store[key],
       removeItem: key => {
         delete store[key];
@@ -575,7 +664,7 @@ function _genTestContext(requests, responses, extraInfoRoot) {
           },
         },
         response: {
-          getLatestForRequestId(requestId) {
+          getLatestForRequestId(requestId, environmentId) {
             return responses.find(r => r.parentId === requestId) || null;
           },
           getBodyBuffer(response) {

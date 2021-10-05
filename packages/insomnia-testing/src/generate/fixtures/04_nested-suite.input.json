@@ -1,0 +1,21 @@
+[
+  {
+    "name": "Parent Suite",
+    "suites": [
+      {
+        "name": "Nested Suite",
+        "tests": [
+          {
+            "name": "should return -1 when the value is not present",
+            "code": "expect([1, 2, 3].indexOf(4)).to.equal(-1);\nexpect(true).to.equal(true);"
+          },
+          {
+            "name": "is an empty test",
+            "code": ""
+          }
+        ]
+      }
+    ]
+  }
+]
+

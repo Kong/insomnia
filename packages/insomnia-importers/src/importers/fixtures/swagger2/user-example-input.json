@@ -1,0 +1,46 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "docs"
+  },
+  "paths": {
+    "/api/list": {
+      "get": {
+        "tags": ["Document"],
+        "summary": "Some list",
+        "operationId": "ApiId",
+        "consumes": [],
+        "produces": ["text/plain", "application/json", "text/json"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Dto.Document.DocumetnDto"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          {
+            "Bearer": ["Role"]
+          }
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "Dto.Document.DocumetnDto": {
+      "type": "number"
+    }
+  }
+}

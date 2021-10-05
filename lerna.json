@@ -1,5 +1,14 @@
 {
-  "tagVersionPrefix": "pkg-v",
-  "version": "2.1.5",
-  "packages": ["packages/*", "plugins/*"]
+  "tagVersionPrefix": "lib@",
+  "version": "2.3.2",
+  "includeMergedTags": true,
+  "command": {
+    "version": {
+      "message": "version packages %s"
+    }
+  },
+  "packages": [
+    "packages/*",
+    "plugins/*"
+  ]
 }

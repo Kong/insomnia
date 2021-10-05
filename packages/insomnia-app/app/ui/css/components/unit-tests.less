@@ -1,0 +1,92 @@
+.unit-tests {
+  height: 100%;
+  overflow-y: auto;
+
+  .editor {
+    overflow-y: hidden !important;
+    max-height: 25em;
+    margin: var(--padding-sm) 0 var(--padding-md) 0;
+  }
+
+  &__sidebar, &__results {
+    overflow-y: auto;
+    height:100%;
+  }
+
+  &__sidebar {
+    display: flex;
+    flex-direction: column;
+
+    li {
+      display: flex;
+      color: var(--hl);
+
+      &:first-child {
+        width: 100%;
+        align-items: center;
+      }
+
+      .unit-tests__sidebar__action {
+        display: none;
+        color: var(--hl);
+
+        &:hover {
+          color: var(--color-font);
+        }
+      }
+
+      &:hover .unit-tests__sidebar__action {
+        display: block;
+      }
+
+      &:hover {
+        background-color: var(--hl-sm);
+        color: var(--color-font);
+      }
+
+      &.active {
+        background-color: var(--hl-xs);
+        color: var(--color-font);
+      }
+
+      button {
+        padding: 0 var(--padding-sm);
+        height: var(--line-height-xs);
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+  }
+
+  &__top-header {
+    padding: 0 var(--padding-md);
+    height: var(--line-height-lg);
+    padding-right: 0;
+    border-bottom: 1px solid var(--hl-md);
+    display: flex;
+    position: sticky;
+    // Double that of CodeMirror's topmost element.
+    z-index: 20;
+    top: 0;
+    align-items: center;
+    background: var(--color-bg);
+
+    button {
+      flex: 0 0 auto;
+      align-self: center;
+      i {
+        font-size: var(--font-size-xs);
+        padding-left: var(--padding-xxs);
+      }
+    }
+
+    & > * {
+      margin-right: var(--padding-md);
+    }
+
+    h2 {
+      margin: 0 auto 0 0;
+      font-size: var(--font-size-xl);
+    }
+  }
+}

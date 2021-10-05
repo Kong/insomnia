@@ -1,0 +1,283 @@
+{
+  "__export_date": "2020-05-13T23:55:24.712Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_ID__",
+      "_type": "workspace",
+      "description": "",
+      "name": "Endpoint Security 1.2",
+      "parentId": null
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
+      "data": {
+        "anotherCookieName": "anotherCookieName",
+        "anotherKey": "anotherKey",
+        "base_path": "/v1",
+        "bearerToken": "bearerToken",
+        "cookieName": "cookieName",
+        "host": "api.server.test",
+        "httpPassword": "password",
+        "httpUsername": "username",
+        "oauth2ClientId": "clientId",
+        "oauth2ClientSecret": "clientSecret",
+        "oauth2Username": "username",
+        "oauth2Password": "password",
+        "key": "key",
+        "scheme": "https",
+        "xApiKey": "xApiKey",
+        "xAppVersion": "xAppVersion"
+      },
+      "name": "OpenAPI env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__05bfadcb",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/none",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/none"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__4112dc81",
+      "_type": "request",
+      "authentication": {
+        "password": "{{ httpPassword }}",
+        "type": "basic",
+        "username": "{{ httpUsername }}"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/none/basic",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/none/basic"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__4a563129",
+      "_type": "request",
+      "authentication": {
+        "password": "{{ httpPassword }}",
+        "type": "basic",
+        "username": "{{ httpUsername }}"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/basic",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/basic"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__6ecf1fc2",
+      "_type": "request",
+      "authentication": {
+        "prefix": "",
+        "token": "{{bearerToken}}",
+        "type": "bearer"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/bearer",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/bearer"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__48bba8a5",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [
+        {
+          "disabled": false,
+          "name": "x-api_key",
+          "value": "{{ xApiKey }}"
+        },
+        {
+          "disabled": false,
+          "name": "x-app-version",
+          "value": "{{ xAppVersion }}"
+        }
+      ],
+      "method": "GET",
+      "name": "/key/header",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/key/header"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__2ea006cf",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [
+        {
+          "disabled": false,
+          "name": "Cookie",
+          "value": "CookieName={{ cookieName }}; AnotherCookieName={{ anotherCookieName }}"
+        }
+      ],
+      "method": "GET",
+      "name": "/key/cookie",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/key/cookie"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__0a8d5285",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/key/query",
+      "parameters": [
+        {
+          "disabled": false,
+          "name": "key",
+          "value": "{{ key }}"
+        },
+        {
+          "disabled": false,
+          "name": "another_key",
+          "value": "{{ anotherKey }}"
+        }
+      ],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/key/query"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__028b5fb7",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "clientSecret": "{{ oauth2ClientSecret }}",
+          "accessTokenUrl": "https://api.server.test/v1/token",
+          "authorizationUrl": "https://api.server.test/v1/auth",
+          "grantType": "authorization_code",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/authorization-code",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/authorization-code"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__e5d224de",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "authorizationUrl": "https://api.server.test/v1/auth",
+          "grantType": "implicit",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/implicit",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/implicit"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__ef33c6a4",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "clientSecret": "{{ oauth2ClientSecret }}",
+          "accessTokenUrl": "https://api.server.test/v1/token",
+          "grantType": "client_credentials",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/client-credentials",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/client-credentials"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__06ba5946",
+      "_type": "request",
+      "authentication": {
+          "clientId": "{{ oauth2ClientId }}",
+          "clientSecret": "{{ oauth2ClientSecret }}",
+          "username": "{{ oauth2Username }}",
+          "password": "{{ oauth2Password }}",
+          "accessTokenUrl": "https://api.server.test/v1/token",
+          "grantType": "password",
+          "scope": "read:something write:something",
+          "type": "oauth2"
+      },
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/oauth2/password",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/oauth2/password"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__e285189c",
+      "_type": "request",
+      "authentication": {
+        "password": "{{ httpPassword }}",
+        "type": "basic",
+        "username": "{{ httpUsername }}"
+      },
+      "body": {},
+      "headers": [
+        {
+          "disabled": false,
+          "name": "x-api_key",
+          "value": "{{ xApiKey }}"
+        },
+        {
+          "disabled": false,
+          "name": "Cookie",
+          "value": "CookieName={{ cookieName }}"
+        }
+      ],
+      "method": "GET",
+      "name": "/all",
+      "parameters": [
+        {
+          "disabled": false,
+          "name": "key",
+          "value": "{{ key }}"
+        }
+      ],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/all"
+    }
+  ]
+}

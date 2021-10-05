@@ -1,0 +1,47 @@
+{
+  "__export_date": "2020-05-11T00:51:52.464Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_ID__",
+      "_type": "workspace",
+      "description": "This API is for administrating files and file storages.",
+      "name": "File and Storage API 0.1.0",
+      "parentId": null
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
+      "data": {
+        "base_path": "/filemanagement",
+        "host": "localhost:8080",
+        "scheme": "https"
+      },
+      "name": "OpenAPI env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__a6294159",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/files",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/files"
+    }
+  ]
+}

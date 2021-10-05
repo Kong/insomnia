@@ -1,12 +1,32 @@
 {
   "name": "insomnia-cookies",
-  "version": "2.1.4",
-  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "version": "2.3.2",
+  "author": "Kong <office@konghq.com>",
   "description": "Cookie utilities",
   "license": "MIT",
-  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-cookies"
+  },
+  "bugs": {
+    "url": "https://github.com/Kong/insomnia/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "package.json",
+    "READEM.md"
+  ],
   "scripts": {
-    "test": "jest --silent"
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "postclean": "rimraf dist",
+    "build": "tsc --build tsconfig.build.json",
+    "test": "jest"
   },
   "dependencies": {
     "tough-cookie": "^2.3.3"

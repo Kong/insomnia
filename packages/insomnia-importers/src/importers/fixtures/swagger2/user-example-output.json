@@ -1,0 +1,56 @@
+{
+  "__export_date": "2019-11-22T18:56:44.435Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_ID__",
+      "_type": "workspace",
+      "description": "",
+      "name": "docs v1",
+      "parentId": null
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
+      "data": {
+        "base_path": "",
+        "host": "",
+        "scheme": "http"
+      },
+      "name": "Swagger env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "_id": "fld___WORKSPACE_ID__e214b8a2",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "Document",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "ApiId",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "description": "",
+      "headers": [],
+      "method": "GET",
+      "name": "Some list",
+      "parameters": [],
+      "parentId": "fld___WORKSPACE_ID__e214b8a2",
+      "url": "{{ base_url }}/api/list"
+    }
+  ]
+}

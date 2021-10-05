@@ -1,29 +1,93 @@
 {
   "name": "insomnia-components",
-  "version": "2.1.5",
-  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "version": "2.3.2",
+  "author": "Kong <office@konghq.com>",
   "description": "Insomnia UI component library",
   "license": "MIT",
-  "main": "dist/index.js",
-  "scripts": {
-    "build": "parcel build ./*.js --bundle-node-modules --no-minify --target browser",
-    "storybook": "start-storybook --port 3223",
-    "bootstrap": "rimraf node_modules/fsevents"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-components"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run build"
-    }
+  "bugs": {
+    "url": "https://github.com/Kong/insomnia/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prebuild": "npm run convert-svg",
+    "build": "webpack --config webpack/webpack.prod.js --display errors-only",
+    "build-storybook": "build-storybook --quiet",
+    "clean": "rimraf dist storybook-static && npm run clean:svg",
+    "clean:svg": "rimraf src/assets/svgr",
+    "clean:svg:index": "rimraf src/assets/svgr/index.tsx",
+    "convert-svg": "npm run clean:svg && svgr --config-file svgr.config.js --out-dir src/assets/svgr src/assets && npm run clean:svg:index",
+    "jest:watch": "jest --watch",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
+    "prepare": "npm run build",
+    "storybook": "start-storybook --port 3223",
+    "test": "jest",
+    "watch": "webpack --config webpack/webpack.dev.js --watch"
   },
   "devDependencies": {
     "@babel/core": "^7.7.7",
-    "@storybook/addon-info": "^5.2.8",
-    "@storybook/react": "^5.2.8",
-    "parcel-bundler": "^1.12.4"
+    "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@babel/plugin-proposal-optional-chaining": "^7.12.7",
+    "@babel/plugin-transform-runtime": "^7.12.10",
+    "@storybook/addon-contexts": "^5.3.21",
+    "@storybook/addon-info": "^5.3.21",
+    "@storybook/addon-knobs": "^6.2.9",
+    "@storybook/react": "^6.2.9",
+    "@svgr/cli": "^5.5.0",
+    "@testing-library/dom": "^7.30.4",
+    "@testing-library/jest-dom": "^5.12.0",
+    "@testing-library/react": "^11.2.6",
+    "@testing-library/react-hooks": "^5.1.2",
+    "@types/babel__core": "^7.1.14",
+    "@types/babel__plugin-transform-runtime": "^7.9.1",
+    "@types/md5": "^2.3.0",
+    "@types/prop-types": "^15.7.3",
+    "@types/ramda": "^0.27.44",
+    "@types/react": "^16.14.5",
+    "@types/react-dom": "^16.9.12",
+    "@types/storybook__addon-info": "^5.2.3",
+    "@types/styled-components": "^4.4.3",
+    "@types/testing-library__jest-dom": "^5.9.5",
+    "@types/testing-library__react-hooks": "^4.0.0",
+    "@types/webpack": "^5.28.0",
+    "@types/webpack-merge": "^5.0.0",
+    "babel-plugin-inline-react-svg": "^1.1.1",
+    "jest": "^26.6.3",
+    "react": "^16.8.3",
+    "react-docgen-typescript": "^1.22.0",
+    "react-dom": "^16.8.3",
+    "react-use": "^17.2.4",
+    "storybook-addon-designs": "^5.4.1",
+    "styled-components": "^4.4.1",
+    "ts-loader": "^8.2.0",
+    "type-fest": "^1.0.2",
+    "typescript": "^4.2.3",
+    "typescript-plugin-styled-components": "^1.5.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.11",
+    "webpack-merge": "^5.0.7"
   },
   "dependencies": {
-    "classnames": "^2.2.6",
-    "styled-components": "^4.4.1"
+    "class-autobind-decorator": "^3.0.1",
+    "classnames": "^2.3.1",
+    "framer-motion": "^1.10.3",
+    "fuzzysort": "^1.1.4",
+    "md5": "^2.2.1",
+    "ramda": "^0.27.1",
+    "ramda-adjunct": "^2.33.0",
+    "react-switch": "^5.0.1"
   },
-  "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
+  "peerDependencies": {
+    "react": "^16.8.3",
+    "react-dom": "^16.8.3",
+    "react-use": "^17.2.4",
+    "styled-components": "^5.1.1"
+  },
+  "gitHead": "d91e6735a76295166545a42c170328da4ab70dd3"
 }

@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "*.db": "ndjson",
+    "*.jsonl": "ndjson",
+    "*.njson": "ndjson"
+  },
+  "files.insertFinalNewline": true,
+}

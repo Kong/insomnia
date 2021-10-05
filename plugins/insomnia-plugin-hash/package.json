@@ -1,17 +1,22 @@
 {
   "name": "insomnia-plugin-hash",
-  "version": "2.1.4",
-  "author": "Gregory Schier <greg.schier@konghq.com>",
+  "version": "2.3.2",
+  "author": "Kong <office@konghq.com>",
   "description": "Insomnia hash template tag",
   "license": "MIT",
-  "repository": "https://github.com/kong/insomnia/tree/master/plugins/insomnia-plugin-hash",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "plugins/insomnia-plugin-hash"
+  },
   "bugs": {
-    "url": "https://github.com/kong/insomnia"
+    "url": "https://github.com/Kong/insomnia/issues"
   },
   "main": "index.js",
   "insomnia": {
     "name": "hash",
-    "core": true
+    "core": true,
+    "unlisted": true
   },
   "scripts": {
     "test": "jest --silent"

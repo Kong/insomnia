@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+
+global.require = require;
+const insomniacli = require('../dist/index.js');
+insomniacli.go();

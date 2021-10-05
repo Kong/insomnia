@@ -1,0 +1,47 @@
+{
+  "__export_date": "2020-04-27T06:07:10.686Z",
+  "__export_format": 4,
+  "__export_source": "insomnia.importers:v0.1.0",
+  "_type": "export",
+  "resources": [
+    {
+      "_id": "__WORKSPACE_ID__",
+      "_type": "workspace",
+      "description": "Description",
+      "name": "API 1.0.0",
+      "parentId": null
+    },
+    {
+      "_id": "__BASE_ENVIRONMENT_ID__",
+      "_type": "environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "name": "Base environment",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "env___BASE_ENVIRONMENT_ID___sub",
+      "_type": "environment",
+      "data": {
+        "base_path": "",
+        "host": "api.insomnia.rest",
+        "scheme": "https"
+      },
+      "name": "OpenAPI env",
+      "parentId": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "_id": "req___WORKSPACE_ID__2cade550",
+      "_type": "request",
+      "authentication": {},
+      "body": {},
+      "headers": [],
+      "method": "GET",
+      "name": "/path",
+      "parameters": [],
+      "parentId": "__WORKSPACE_ID__",
+      "url": "{{ base_url }}/path"
+    }
+  ]
+}

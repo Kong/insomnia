@@ -24,12 +24,17 @@ module.exports = {
       xl: 'rgba(142, 149, 146, 0.8)',
     },
     styles: {
+      appHeader: {
+        background: {
+          default: '#002b36',
+        },
+      },
       sidebar: {
         background: {
-          default: '#073642',
+          default: '#002b36',
         },
         foreground: {
-          default: '#9cafb1',
+          default: '#839496',
         },
       },
     },

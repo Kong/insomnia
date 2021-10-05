@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Feature Request
+    url: https://github.com/Kong/insomnia/discussions/categories/ideas
+    about: Search and submit ideas for this project
+  - name: Question
+    url: https://chat.insomnia.rest/
+    about: Please ask and answer questions about Insomnia in our Slack Community

@@ -3,7 +3,7 @@ module.exports = {
   displayName: 'Solarized Dark',
   theme: {
     background: {
-      default: '#073642',
+      default: '#002b36',
       success: '#859900',
       notice: '#b58900',
       warning: '#cb4b16',
@@ -12,7 +12,7 @@ module.exports = {
       info: '#2aa198',
     },
     foreground: {
-      default: '#98aaac',
+      default: '#839496',
     },
     highlight: {
       default: 'rgb(142, 149, 146)',

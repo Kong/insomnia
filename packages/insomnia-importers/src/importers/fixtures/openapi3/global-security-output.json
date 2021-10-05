@@ -1,0 +1,81 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2020-02-19T03:46:03.524Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_type": "workspace",
+      "_id": "__WORKSPACE_ID__",
+      "parentId": null,
+      "name": "Global Security 1.2",
+      "description": ""
+    },
+    {
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Base environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "_type": "environment",
+      "_id": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "parentId": "__BASE_ENVIRONMENT_ID__",
+      "name": "OpenAPI env",
+      "data": {
+        "scheme": "https",
+        "apiKeyHere": "apiKeyHere",
+        "cookieName": "cookieName",
+        "base_path": "/v1",
+        "host": "api.server.test",
+        "httpUsername": "username",
+        "httpPassword": "password",
+        "bearerToken": "bearerToken",
+        "xApiKey": "xApiKey"
+      },
+      "_type": "environment",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub"
+    },
+    {
+      "parentId": "__WORKSPACE_ID__",
+      "name": "/global",
+      "url": "{{ base_url }}/global",
+      "body": {},
+      "method": "GET",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "x-api_key",
+          "disabled": false,
+          "value": "{{ xApiKey }}"
+        }
+      ],
+      "authentication": {
+        "type": "basic",
+        "username": "{{ httpUsername }}",
+        "password": "{{ httpPassword }}"
+      },
+      "_type": "request",
+      "_id": "req___WORKSPACE_ID__21946b60"
+    },
+    {
+      "parentId": "__WORKSPACE_ID__",
+      "name": "/override",
+      "url": "{{ base_url }}/override",
+      "body": {},
+      "method": "GET",
+      "parameters": [
+        {
+          "name": "apiKeyHere",
+          "disabled": false,
+          "value": "{{ apiKeyHere }}"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "req___WORKSPACE_ID__b410454b"
+    }
+  ]
+}

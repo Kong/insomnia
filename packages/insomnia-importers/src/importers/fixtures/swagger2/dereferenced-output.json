@@ -1,0 +1,467 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2018-01-09T23:32:46.908Z",
+  "__export_source": "insomnia.importers:v0.1.0",
+  "resources": [
+    {
+      "_type": "workspace",
+      "_id": "__WORKSPACE_ID__",
+      "parentId": null,
+      "name": "Swagger Petstore 1.0.0",
+      "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters."
+    },
+    {
+      "parentId": "__WORKSPACE_ID__",
+      "name": "Base environment",
+      "data": {
+        "base_url": "{{ scheme }}://{{ host }}{{ base_path }}"
+      },
+      "_type": "environment",
+      "_id": "__BASE_ENVIRONMENT_ID__"
+    },
+    {
+      "parentId": "__BASE_ENVIRONMENT_ID__",
+      "name": "Swagger env",
+      "data": {
+        "base_path": "/v2",
+        "scheme": "http",
+        "host": "petstore.swagger.io"
+      },
+      "_type": "environment",
+      "_id": "env___BASE_ENVIRONMENT_ID___sub"
+    },
+    {
+      "_id": "fld___WORKSPACE_ID__1b034c38",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "pet",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "fld___WORKSPACE_ID__3a21295d",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "store",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "_id": "fld___WORKSPACE_ID__12dea96f",
+      "_type": "request_group",
+      "description": "",
+      "environment": {},
+      "name": "user",
+      "parentId": "__WORKSPACE_ID__"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "Add a new pet to the store",
+      "description": "",
+      "url": "{{ base_url }}/pet",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
+      },
+      "method": "POST",
+      "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
+      "_type": "request",
+      "_id": "addPet"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "Update an existing pet",
+      "description": "",
+      "url": "{{ base_url }}/pet",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id\": 0,\n  \"category\": {\n    \"id\": 0,\n    \"name\": \"string\"\n  },\n  \"name\": \"doggie\",\n  \"photoUrls\": [\n    \"string\"\n  ],\n  \"tags\": [\n    {\n      \"id\": 0,\n      \"name\": \"string\"\n    }\n  ],\n  \"status\": \"string\"\n}"
+      },
+      "method": "PUT",
+      "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/json"
+        }
+      ],
+      "_type": "request",
+      "_id": "updatePet"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "Finds Pets by status",
+      "description": "Multiple status values can be provided with comma separated strings",
+      "url": "{{ base_url }}/pet/findByStatus",
+      "body": {},
+      "method": "GET",
+      "parameters": [
+        {
+          "name": "status",
+          "disabled": false,
+          "value": "available"
+        }
+      ],
+      "headers": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
+      "_type": "request",
+      "_id": "findPetsByStatus"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "Finds Pets by tags",
+      "description": "Muliple tags can be provided with comma separated strings. Use tag1, tag2, tag3 for testing.",
+      "url": "{{ base_url }}/pet/findByTags",
+      "body": {},
+      "method": "GET",
+      "parameters": [
+        {
+          "name": "tags",
+          "disabled": false,
+          "value": "string"
+        }
+      ],
+      "headers": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
+      "_type": "request",
+      "_id": "findPetsByTags"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "Find pet by ID",
+      "description": "Returns a single pet",
+      "url": "{{ base_url }}/pet/{{ petId }}",
+      "body": {},
+      "method": "GET",
+      "parameters": [],
+      "headers": [
+        {
+          "disabled": false,
+          "name": "api_key",
+          "value": "{{ api_key }}"
+        }
+      ],
+      "authentication": {},
+      "_type": "request",
+      "_id": "getPetById"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "Updates a pet in the store with form data",
+      "description": "",
+      "url": "{{ base_url }}/pet/{{ petId }}",
+      "body": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+          {
+            "disabled": true,
+            "name": "name",
+            "value": "string"
+          },
+          {
+            "disabled": true,
+            "name": "status",
+            "value": "string"
+          }
+        ]
+      },
+      "method": "POST",
+      "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "_type": "request",
+      "_id": "updatePetWithForm"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "Deletes a pet",
+      "description": "",
+      "url": "{{ base_url }}/pet/{{ petId }}",
+      "body": {},
+      "method": "DELETE",
+      "parameters": [],
+      "headers": [
+        {
+          "name": "api_key",
+          "disabled": true,
+          "value": "string"
+        }
+      ],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
+      "_type": "request",
+      "_id": "deletePet"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__1b034c38",
+      "name": "uploads an image",
+      "description": "",
+      "url": "{{ base_url }}/pet/{{ petId }}/uploadImage",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "disabled": true,
+            "name": "additionalMetadata",
+            "value": "string"
+          },
+          {
+            "disabled": true,
+            "name": "file",
+            "type": "file"
+          }
+        ]
+      },
+      "method": "POST",
+      "parameters": [],
+      "authentication": {
+        "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+        "clientId": "{{ client_id }}",
+        "disabled": false,
+        "grantType": "authorization_code",
+        "scope": "write:pets read:pets",
+        "type": "oauth2"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "disabled": false,
+          "value": "multipart/form-data"
+        }
+      ],
+      "_type": "request",
+      "_id": "uploadFile"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
+      "name": "Returns pet inventories by status",
+      "description": "Returns a map of status codes to quantities",
+      "url": "{{ base_url }}/store/inventory",
+      "body": {},
+      "method": "GET",
+      "parameters": [],
+      "headers": [
+        {
+          "disabled": false,
+          "name": "api_key",
+          "value": "{{ api_key }}"
+        }
+      ],
+      "authentication": {},
+      "_type": "request",
+      "_id": "getInventory"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
+      "name": "Place an order for a pet",
+      "description": "",
+      "url": "{{ base_url }}/store/order",
+      "body": {},
+      "method": "POST",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "placeOrder"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
+      "name": "Find purchase order by ID",
+      "description": "For valid response try integer IDs with value >= 1 and <= 10. Other values will generated exceptions",
+      "url": "{{ base_url }}/store/order/{{ orderId }}",
+      "body": {},
+      "method": "GET",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "getOrderById"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__3a21295d",
+      "name": "Delete purchase order by ID",
+      "description": "For valid response try integer IDs with positive integer value. Negative or non-integer values will generate API errors",
+      "url": "{{ base_url }}/store/order/{{ orderId }}",
+      "body": {},
+      "method": "DELETE",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "deleteOrder"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Create user",
+      "description": "This can only be done by the logged in user.",
+      "url": "{{ base_url }}/user",
+      "body": {},
+      "method": "POST",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "createUser"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Creates list of users with given input array",
+      "description": "",
+      "url": "{{ base_url }}/user/createWithArray",
+      "body": {},
+      "method": "POST",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "createUsersWithArrayInput"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Creates list of users with given input array",
+      "description": "",
+      "url": "{{ base_url }}/user/createWithList",
+      "body": {},
+      "method": "POST",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "createUsersWithListInput"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Logs user into the system",
+      "description": "",
+      "url": "{{ base_url }}/user/login",
+      "body": {},
+      "method": "GET",
+      "parameters": [
+        {
+          "name": "username",
+          "disabled": false,
+          "value": "string"
+        },
+        {
+          "name": "password",
+          "disabled": false,
+          "value": "string"
+        }
+      ],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "loginUser"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Logs out current logged in user session",
+      "description": "",
+      "url": "{{ base_url }}/user/logout",
+      "body": {},
+      "method": "GET",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "logoutUser"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Get user by user name",
+      "description": "",
+      "url": "{{ base_url }}/user/{{ username }}",
+      "body": {},
+      "method": "GET",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "getUserByName"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Updated user",
+      "description": "This can only be done by the logged in user.",
+      "url": "{{ base_url }}/user/{{ username }}",
+      "body": {},
+      "method": "PUT",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "updateUser"
+    },
+    {
+      "parentId": "fld___WORKSPACE_ID__12dea96f",
+      "name": "Delete user",
+      "description": "This can only be done by the logged in user.",
+      "url": "{{ base_url }}/user/{{ username }}",
+      "body": {},
+      "method": "DELETE",
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "_type": "request",
+      "_id": "deleteUser"
+    }
+  ]
+}

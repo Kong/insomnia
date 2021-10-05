@@ -8,7 +8,12 @@ screenshots/
 **/.cache/
 **/coverage/
 **/node_modules/
-**/webpack/
 **/bin/
 **/__fixtures__/
-**/flow-typed/
+**/fixtures
+**/__snapshots__/
+**/dist/
+**/.cache/
+**/svgr/
+**/storybook-static/
+*.md

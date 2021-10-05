@@ -46,15 +46,29 @@ module.exports.templateTags = [
             description: 'cookie value by name',
           },
           {
-            displayName: 'OAuth 2.0 Token',
+            displayName: 'OAuth 2.0 Access Token',
             value: 'oauth2',
-            description: 'access token',
+            /* 
+              This value is left as is and not renamed to 'oauth2-access' so as to not
+              break the current release's usage of `oauth2`.
+            */
+          },
+          {
+            displayName: 'OAuth 2.0 Identity Token',
+            value: 'oauth2-identity',
+          },
+          {
+            displayName: 'OAuth 2.0 Refresh Token',
+            value: 'oauth2-refresh',
           },
         ],
       },
       {
         type: 'string',
-        hide: args => ['url', 'oauth2', 'name', 'folder'].includes(args[0].value),
+        hide: args =>
+          ['url', 'oauth2', 'oauth2-identity', 'oauth2-refresh', 'name', 'folder'].includes(
+            args[0].value,
+          ),
         displayName: args => {
           switch (args[0].value) {
             case 'cookie':
@@ -113,7 +127,7 @@ module.exports.templateTags = [
           const parameterNames = [];
 
           if (request.parameters.length === 0) {
-            throw new Error(`No query parameters available`);
+            throw new Error('No query parameters available');
           }
 
           for (const queryParameter of request.parameters) {
@@ -136,7 +150,7 @@ module.exports.templateTags = [
           const headerNames = [];
 
           if (request.headers.length === 0) {
-            throw new Error(`No headers available`);
+            throw new Error('No headers available');
           }
 
           for (const header of request.headers) {
@@ -150,11 +164,23 @@ module.exports.templateTags = [
           const headerNamesStr = headerNames.map(n => `"${n}"`).join(',\n\t');
           throw new Error(`No header with name "${name}".\nChoices are [\n\t${headerNamesStr}\n]`);
         case 'oauth2':
-          const token = await context.util.models.oAuth2Token.getByRequestId(request._id);
-          if (!token) {
-            throw new Error('No OAuth 2.0 tokens found for request');
+          const access = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!access || !access.accessToken) {
+            throw new Error('No OAuth 2.0 access tokens found for request');
           }
-          return token.accessToken;
+          return access.accessToken;
+        case 'oauth2-identity':
+          const identity = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!identity || !identity.identityToken) {
+            throw new Error('No OAuth 2.0 identity tokens found for request');
+          }
+          return identity.identityToken;
+        case 'oauth2-refresh':
+          const refresh = await context.util.models.oAuth2Token.getByRequestId(request._id);
+          if (!refresh || !refresh.refreshToken) {
+            throw new Error('No OAuth 2.0 refresh tokens found for request');
+          }
+          return refresh.refreshToken;
         case 'name':
           return request.name;
         case 'folder':
