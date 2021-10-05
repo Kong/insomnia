@@ -50,7 +50,7 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
           npm run release
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
   inso_release_info:
     needs: [ npm ]
     name: Does Inso release exist?
