@@ -148,7 +148,7 @@ describe('validate', () => {
         params: {
           additionalProperty: 'disableAnalytics',
         },
-        schemaPath: '#/definitions/Partial<Pick<Settings,\"enableAnalytics\"|\"disableUpdateNotification\">>/additionalProperties',
+        schemaPath: '#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>/additionalProperties',
       },
     ]);
     expect(valid).toBe(false);
