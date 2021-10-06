@@ -30,15 +30,15 @@ mkdir -p usr/local/bin
 # Copy the binary into the staging area.
 cp binaries/inso usr/local/bin
 
-# Based on from https://developer.apple.com/forums/thread/128166
+# Based on https://developer.apple.com/forums/thread/128166
+# Based on https://developer.apple.com/forums/thread/669188
 # Sign the binary
 /usr/bin/codesign --force -s "$IDENTITY" usr/local/bin/inso
 
 # Based on https://developer.apple.com/forums/thread/128166
 # Build the package
-mkdir compressed
 # TODO: add version here
-pkgbuild --identifier $BUNDLE_ID --sign "$IDENTITY" --keychain $KEYCHAIN --timestamp --root ./tmp/usr/local --install-location /usr/local/ $PKG_NAME
+pkgbuild --identifier $BUNDLE_ID --sign "$IDENTITY" --keychain $KEYCHAIN --timestamp --root /usr/local/bin --install-location /usr/local/ $PKG_NAME
 
 # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
 # # Notarise
@@ -49,4 +49,5 @@ pkgbuild --identifier $BUNDLE_ID --sign "$IDENTITY" --keychain $KEYCHAIN --times
 # xcrun stapler staple compressed/$PKG_NAME
 
 # Copy back to compressed
+mkdir compressed
 cp usr/local/$PKG_NAME compressed
