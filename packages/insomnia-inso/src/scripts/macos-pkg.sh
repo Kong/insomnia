@@ -1,9 +1,5 @@
 # Based on https://localazy.com/blog/how-to-automatically-sign-macos-apps-using-github-actions and https://stackoverflow.com/a/60807932
 
-# Debug where we're running
-pwd
-ls
-
 # Create temporary keychain
 KEYCHAIN="inso.keychain"
 KEYCHAIN_PASSWORD="inso"
@@ -27,13 +23,9 @@ IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | head -1 | grep '
 # New requirement for MacOS 10.12+
 security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
-# Debug
-ls
-ls binaries
-
 # Based on from https://developer.apple.com/forums/thread/128166
 # Sign the app
-/usr/bin/codesign --force -v -s $IDENTITY binaries/inso
+/usr/bin/codesign --force -s $IDENTITY binaries/inso
 
 # Based on https://developer.apple.com/forums/thread/128166
 # Create and sign the package

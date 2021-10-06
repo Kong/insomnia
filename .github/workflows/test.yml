@@ -39,7 +39,7 @@ jobs:
       #   run: npm run app-build:smoke
       - name: Package Inso CLI
         run: npm run inso-package
-      - name: Build an Installer packages
+      - name: Build a macOS Installer package
         if: matrix.os == 'macos-latest'
         run: |
           chmod +x ./src/scripts/macos-pkg.sh
