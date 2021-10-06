@@ -4,7 +4,7 @@ import { ACTIVITY_DEBUG } from '../../../common/constants';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
-import { selectActiveProject, selectActiveWorkspaceName } from '../selectors';
+import { selectActiveApiSpec, selectActiveProject, selectActiveWorkspaceName } from '../selectors';
 
 describe('selectors', () => {
   beforeEach(globalBeforeEach);
@@ -47,6 +47,56 @@ describe('selectors', () => {
     });
   });
 
+  describe('selectActiveApiSpec', () => {
+    it('will return undefined when there is not an active workspace', async () => {
+      const state = await reduxStateForTest({
+        activeWorkspaceId: null,
+      });
+
+      expect(selectActiveApiSpec(state)).toBe(undefined);
+    });
+
+    it('will return throw when there is not an active apiSpec', async () => {
+      const workspace = await models.workspace.create({
+        name: 'workspace.name',
+        scope: WorkspaceScopeKeys.design,
+      });
+
+      const state = await reduxStateForTest({
+        activeActivity: ACTIVITY_DEBUG,
+        activeWorkspaceId: workspace._id,
+      });
+      state.entities.apiSpecs = {};
+
+      const execute = () => selectActiveApiSpec(state);
+      expect(execute).toThrowError(`an api spec not found for the workspace ${workspace._id} (workspace.name)`);
+    });
+
+    it('will return the apiSpec for a given workspace', async () => {
+      const workspace = await models.workspace.create({
+        name: 'workspace.name',
+        scope: WorkspaceScopeKeys.design,
+      });
+      await models.apiSpec.updateOrCreateForParentId(
+        workspace._id,
+        { fileName: 'apiSpec.fileName' },
+      );
+
+      const state = await reduxStateForTest({
+        activeActivity: ACTIVITY_DEBUG,
+        activeWorkspaceId: workspace._id,
+      });
+
+      expect(selectActiveApiSpec(state)).toMatchObject({
+        contentType: 'yaml',
+        contents: '',
+        fileName: 'apiSpec.fileName',
+        parentId: workspace._id,
+        type: 'ApiSpec',
+      });
+    });
+  });
+
   describe('selectActiveWorkspaceName', () => {
     it('returns workspace name for collections', async () => {
       const workspace = await models.workspace.create({
@@ -56,9 +106,7 @@ describe('selectors', () => {
       // even though this shouldn't technically happen, we want to make sure the selector still makes the right decision (and ignores the api spec for collections)
       await models.apiSpec.updateOrCreateForParentId(
         workspace._id,
-        {
-          fileName: 'apiSpec.fileName',
-        },
+        { fileName: 'apiSpec.fileName' },
       );
       const state = await reduxStateForTest({
         activeActivity: ACTIVITY_DEBUG,
@@ -75,9 +123,7 @@ describe('selectors', () => {
       });
       await models.apiSpec.updateOrCreateForParentId(
         workspace._id,
-        {
-          fileName: 'apiSpec.fileName',
-        },
+        { fileName: 'apiSpec.fileName' },
       );
       const state = await reduxStateForTest({
         activeActivity: ACTIVITY_DEBUG,
