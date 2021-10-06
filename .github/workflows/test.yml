@@ -36,7 +36,7 @@ jobs:
       #   run: npm test
       # - name: Build for smoke tests
       #   run: npm run app-build:smoke
-      - name: Package Inso CLI
+      - name: Package Inso CLIO
         run: npm run inso-package
       - name: Codesign
         if: matrix.os == 'macos-latest'
@@ -45,10 +45,6 @@ jobs:
           KEYCHAIN="inso.keychain"
           KEYCHAIN_PASSWORD="inso"
           security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
-
-          # Append keychain to the search list
-          security list-keychains -d user -s $KEYCHAIN $(security list-keychains -d user | sed s/\"//g)
-          security list-keychains
 
           # Unlock the keychain
           security set-keychain-settings $KEYCHAIN
@@ -69,7 +65,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
           # Sign
-          /usr/bin/codesign --force -v packages/insomnia-inso/binaries/inso
+          /usr/bin/codesign --force -v -s $IDENTITY packages/insomnia-inso/binaries/inso
         env:
           MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
