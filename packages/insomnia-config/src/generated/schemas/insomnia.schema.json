@@ -3,16 +3,10 @@
   "title": "Insomnia Config",
   "type": "object",
   "properties": {
-    "version": {
+    "insomniaConfig": {
       "type": "string",
       "enum": [
         "1.0.0"
-      ]
-    },
-    "name": {
-      "type": "string",
-      "enum": [
-        "Insomnia Config"
       ]
     },
     "settings": {
@@ -21,8 +15,7 @@
   },
   "additionalProperties": false,
   "required": [
-    "name",
-    "version"
+    "insomniaConfig"
   ],
   "definitions": {
     "Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>": {

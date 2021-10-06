@@ -1,5 +1,7 @@
 import { Settings as CommonSettings } from 'insomnia-common';
 
+type ConfigVersion = '1.0.0';
+
 type AllowedSettings = Partial<Pick<CommonSettings,
   | 'allowNotificationRequests'
   | 'disableUpdateNotification'
@@ -14,7 +16,6 @@ type AllowedSettings = Partial<Pick<CommonSettings,
  * @TJS-title Insomnia Config
  */
 export interface InsomniaConfig {
-  version: '1.0.0';
-  name: 'Insomnia Config';
+  insomniaConfig: ConfigVersion;
   settings?: AllowedSettings;
 }

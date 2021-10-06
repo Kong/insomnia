@@ -3,8 +3,7 @@ import { ingest, validate } from './validate';
 
 describe('ingest', () => {
   const config: InsomniaConfig = {
-    version: '1.0.0',
-    name: 'Insomnia Config',
+    insomniaConfig: '1.0.0',
   };
 
   it('returns arbitrary input without modification', () => {
@@ -27,8 +26,7 @@ describe('ingest', () => {
 describe('validate', () => {
   it('passes with an empty config', () => {
     const { valid, errors } = validate({
-      version: '1.0.0',
-      name: 'Insomnia Config',
+      insomniaConfig: '1.0.0',
     });
     expect(errors).toBe(null);
     expect(valid).toBe(true);
@@ -36,8 +34,7 @@ describe('validate', () => {
 
   it('passes with a simple valid config', () => {
     const { valid, errors } = validate({
-      version: '1.0.0',
-      name: 'Insomnia Config',
+      insomniaConfig: '1.0.0',
       settings: {
         enableAnalytics: false,
         disableUpdateNotification: true,
@@ -50,13 +47,12 @@ describe('validate', () => {
   it('fails on incorrect version', () => {
     const { valid, errors } = validate({
       // @ts-expect-error intentionally invalid
-      version: 'v1.0.0',
-      name: 'Insomnia Config',
+      insomniaConfig: 'v1.0.0',
     });
     expect(errors).toMatchObject([
       {
-        instancePath: '/version',
-        schemaPath: '#/properties/version/enum',
+        instancePath: '/insomniaConfig',
+        schemaPath: '#/properties/insomniaConfig/enum',
         keyword: 'enum',
         params: {
           allowedValues: [
@@ -69,40 +65,16 @@ describe('validate', () => {
     expect(valid).toBe(false);
   });
 
-  it('fails on incorrect name', () => {
-    const { valid, errors } = validate({
-      version: '1.0.0',
-      // @ts-expect-error intentionally invalid
-      name: 'Insomniac Config',
-    });
-    expect(errors).toMatchObject([
-      {
-        instancePath: '/name',
-        schemaPath: '#/properties/name/enum',
-        keyword: 'enum',
-        params: {
-          allowedValues: [
-            'Insomnia Config',
-          ],
-        },
-        message: 'must be equal to one of the allowed values',
-      },
-    ]);
-    expect(valid).toBe(false);
-  });
-
   it('fails on missing properties', () => {
     // @ts-expect-error intentionally invalid
-    const { valid, errors } = validate({
-      version: '1.0.0',
-    });
+    const { valid, errors } = validate({});
     expect(errors).toMatchObject([
       {
         instancePath: '',
         schemaPath: '#/required',
         keyword: 'required',
-        params: { missingProperty: 'name' },
-        message: "must have required property 'name'",
+        params: { missingProperty: 'insomniaConfig' },
+        message: "must have required property 'insomniaConfig'",
       },
     ]);
     expect(valid).toBe(false);
@@ -110,8 +82,7 @@ describe('validate', () => {
 
   it('fails on additional top level properties', () => {
     const { valid, errors } = validate({
-      version: '1.0.0',
-      name: 'Insomnia Config',
+      insomniaConfig: '1.0.0',
       // @ts-expect-error intentional mispelling of `settings` (wrong casing)
       Settings: {},
     });
@@ -132,8 +103,7 @@ describe('validate', () => {
 
   it('fails on additional settings properties', () => {
     const { valid, errors } = validate({
-      version: '1.0.0',
-      name: 'Insomnia Config',
+      insomniaConfig: '1.0.0',
       settings: {
         // @ts-expect-error intentional wrong flip of actual setting name, `enableAnalytics`
         disableAnalytics: true,
@@ -156,8 +126,7 @@ describe('validate', () => {
 
   it('fails on wrong property type', () => {
     const { valid, errors } = validate({
-      version: '1.0.0',
-      name: 'Insomnia Config',
+      insomniaConfig: '1.0.0',
       settings: {
         // @ts-expect-error intentionally invalid
         enableAnalytics: 'Ziltoid',

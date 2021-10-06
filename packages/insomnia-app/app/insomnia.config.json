@@ -1,6 +1,5 @@
 {
-  "version": "1.0.0",
-  "name": "Insomnia Config",
+  "insomniaConfig": "1.0.0",
   "settings": {
     "hideUpsells": true,
     "incognitoMode": true
