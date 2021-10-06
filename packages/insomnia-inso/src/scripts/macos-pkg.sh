@@ -30,7 +30,7 @@ security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: -s
 # Based on https://developer.apple.com/forums/thread/128166
 # Create and sign the package
 mkdir compressed
-productbuild --sign "$IDENTITY" --component binaries/inso /Applications compressed/$PKG_NAME
+productbuild --sign "$IDENTITY" --component binaries /Applications compressed/$PKG_NAME
 
 # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
 # # Notarise
