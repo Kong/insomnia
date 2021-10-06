@@ -22,6 +22,7 @@
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
     "inso-start": "npm start --prefix packages/insomnia-inso",
+    "inso-package": "npm run build:sr --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-inso",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
     "app-package": "npm run package --prefix packages/insomnia-app",
