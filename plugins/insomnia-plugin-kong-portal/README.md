@@ -14,7 +14,7 @@ Install the `insomnia-plugin-kong-portal` plugin from Preferences > Plugins.
 
 Once this plugin is installed, navigate to the homepage and click `...` to open the menu for a document.
 
-If installed correctly, an option titled `Deploy to Portal` will appear.
+If installed correctly, an option titled `Deploy to Dev Portal` will appear.
 
 ![dropdown](./assets/dropdown.png)
 
