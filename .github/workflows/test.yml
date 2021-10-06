@@ -28,25 +28,41 @@ jobs:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
-      - name: Lint
-        run: npm run lint
-      - name: Lint Markdown
-        run: npm run lint:markdown
-      - name: Run tests
-        run: npm test
-      - name: Build for smoke tests
-        run: npm run app-build:smoke
+      # - name: Lint
+      #   run: npm run lint
+      # - name: Lint Markdown
+      #   run: npm run lint:markdown
+      # - name: Run tests
+      #   run: npm test
+      # - name: Build for smoke tests
+      #   run: npm run app-build:smoke
+      - name: Setup Codesign Identity
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo $MACOS_CERTIFICATE | base64 -decode > certificate.p12
+          security create-keychain -p password build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p password build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
       - name: Package Inso CLI
         run: npm run inso-package
+      - name: Codesign
+        if: matrix.os == 'macos-latest'
+        run: /usr/bin/codesign --force -v packages/insomnia-inso/binaries/inso
+      - name: Compress Inso CLI binary
+        run: npm run inso-package:compress
       - name: Upload Inso CLI tar
         uses: actions/upload-artifact@v2
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-inso-${{ github.run_number }}
           path: packages/insomnia-inso/compressed
-      - name: Run smoke tests
-        timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
-        run: npm run test:smoke:build
+      # - name: Run smoke tests
+      #   timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
+      #   run: npm run test:smoke:build
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v2
         if: always()
