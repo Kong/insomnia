@@ -54,6 +54,7 @@ jobs:
         run: npm run inso-package:compress
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
+        if: always()
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-inso-${{ github.run_number }}

@@ -38,7 +38,9 @@ cp binaries/inso usr/local/bin
 # Based on https://developer.apple.com/forums/thread/128166
 # Build the package
 # TODO: add version here
-pkgbuild --identifier $BUNDLE_ID --sign "$IDENTITY" --keychain $KEYCHAIN --timestamp --root /usr/local/bin --install-location /usr/local/ $PKG_NAME
+# TODO: use installer signing identity (instead of application signing identity)
+mkdir compressed
+pkgbuild --identifier $BUNDLE_ID --sign "$IDENTITY" --keychain $KEYCHAIN --timestamp --root /usr/local/bin --install-location /usr/local/ compressed/$PKG_NAME
 
 # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
 # # Notarise
@@ -47,7 +49,3 @@ pkgbuild --identifier $BUNDLE_ID --sign "$IDENTITY" --keychain $KEYCHAIN --times
 # # Based on https://developer.apple.com/forums/thread/128166
 # # Staple
 # xcrun stapler staple compressed/$PKG_NAME
-
-# Copy back to compressed
-mkdir compressed
-cp usr/local/$PKG_NAME compressed
