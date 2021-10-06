@@ -24,4 +24,4 @@ IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | head -1 | grep '
 security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
 # Build and sign
-productbuild --sign $IDENTITY --component packages/insomnia-inso/binaries/inso /Applications packages/insomnia-inso/compressed
+productbuild --sign $IDENTITY --component packages/insomnia-inso/binaries/inso /Applications packages/insomnia-inso/compressed/inso-macos.pkg
