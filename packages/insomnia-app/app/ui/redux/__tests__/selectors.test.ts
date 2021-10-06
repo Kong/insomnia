@@ -132,5 +132,18 @@ describe('selectors', () => {
 
       expect(selectActiveWorkspaceName(state)).toBe('apiSpec.fileName');
     });
+
+    it('returns undefined when there is not an active workspace', async () => {
+      await models.workspace.create({
+        name: 'workspace.name',
+        scope: WorkspaceScopeKeys.collection,
+      });
+      const state = await reduxStateForTest({
+        activeActivity: ACTIVITY_DEBUG,
+        activeWorkspaceId: null,
+      });
+
+      expect(selectActiveWorkspaceName(state)).toBe(undefined);
+    });
   });
 });
