@@ -153,4 +153,28 @@ describe('validate', () => {
     ]);
     expect(valid).toBe(false);
   });
+
+  it('fails on wrong property type', () => {
+    const { valid, errors } = validate({
+      version: '1.0.0',
+      name: 'Insomnia Config',
+      settings: {
+        // @ts-expect-error intentionally invalid
+        enableAnalytics: 'Ziltoid',
+      },
+    });
+
+    expect(errors).toMatchObject([
+      {
+        instancePath: '/settings/enableAnalytics',
+        keyword: 'type',
+        message: 'must be boolean',
+        params: {
+          'type': 'boolean',
+        },
+        schemaPath: '#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>/properties/enableAnalytics/type',
+      },
+    ]);
+    expect(valid).toBe(false);
+  });
 });
