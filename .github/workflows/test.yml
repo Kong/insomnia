@@ -36,22 +36,42 @@ jobs:
       #   run: npm test
       # - name: Build for smoke tests
       #   run: npm run app-build:smoke
-      - name: Setup Codesign Identity
-        if: matrix.os == 'macos-latest'
-        run: |
-          echo $MACOS_CERTIFICATE | base64 -decode > certificate.p12
-          security create-keychain -p password build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p password build.keychain
-          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
-        env:
-          MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
-          MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
       - name: Package Inso CLI
         run: npm run inso-package
       - name: Codesign
         if: matrix.os == 'macos-latest'
-        run: /usr/bin/codesign --force -v packages/insomnia-inso/binaries/inso
+        run: |
+          # Create temporary keychain
+          KEYCHAIN="inso.keychain"
+          KEYCHAIN_PASSWORD="inso"
+          security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
+
+          # Append keychain to the search list
+          security list-keychains -d user -s $KEYCHAIN $(security list-keychains -d user | sed s/\"//g)
+          security list-keychains
+
+          # Unlock the keychain
+          security set-keychain-settings $KEYCHAIN
+          security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
+
+          # Unlock the keychain
+          security set-keychain-settings $KEYCHAIN
+          security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
+
+          # Import certificate
+          security import $MACOS_CERTIFICATE_LINK -k $KEYCHAIN -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+
+          # Detect the identity
+          IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//')
+
+          # New requirement for MacOS 10.12+
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
+
+          # Sign
+          /usr/bin/codesign --force -v packages/insomnia-inso/binaries/inso
+        env:
+          MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
       - name: Compress Inso CLI binary
         run: npm run inso-package:compress
       - name: Upload Inso CLI tar
