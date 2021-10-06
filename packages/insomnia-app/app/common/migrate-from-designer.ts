@@ -96,7 +96,6 @@ async function migratePlugins(designerDataDir: string, coreDataDir: string) {
   await copyDirs(designerPlugins, designerPluginDir, corePluginDir);
   // Remove plugin bundle from installed plugins because it's included with the app now
   const pluginsToDelete = [
-    'insomnia-plugin-kong-bundle',
     'insomnia-plugin-kong-declarative-config',
     'insomnia-plugin-kong-kubernetes-config',
     'insomnia-plugin-kong-portal',
