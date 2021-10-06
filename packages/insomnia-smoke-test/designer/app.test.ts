@@ -37,11 +37,11 @@ xdescribe('Application launch', function() {
     // Open card dropdown for any card
     const dd = await home.openWorkspaceCardDropdown(app);
 
-    // Click the "Deploy to Portal" button, installed from that plugin
-    await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');
+    // Click the "Deploy to Dev Portal" button, installed from that plugin
+    await dropdown.clickDropdownItemByText(dd, 'Deploy to Dev Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
-    await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
+    await modal.waitUntilOpened(app, { title: 'Deploy to Dev Portal' });
     await modal.close(app);
   });
 });
