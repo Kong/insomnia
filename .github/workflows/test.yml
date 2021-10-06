@@ -44,9 +44,10 @@ jobs:
       - name: Build an Installer packages
         if: matrix.os == 'macos-latest'
         run: |
-          chmod +x ./packages/insomnia-inso/src/scripts/macos-pkg.sh
-          ./packages/insomnia-inso/src/scripts/macos-pkg.sh
+          chmod +x ./src/scripts/macos-pkg.sh
+          ./src/scripts/macos-pkg.sh
         shell: bash
+        working-directory: packages/insomnia-inso
         env:
           MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}

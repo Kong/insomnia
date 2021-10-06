@@ -23,8 +23,19 @@ IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | head -1 | grep '
 # New requirement for MacOS 10.12+
 security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
+# Based on from https://developer.apple.com/forums/thread/128166
 # Sign the app
-/usr/bin/codesign --force -v -s $IDENTITY packages/insomnia-inso/binaries/inso
+/usr/bin/codesign --force -v -s $IDENTITY binaries/inso
 
+# Based on https://developer.apple.com/forums/thread/128166
 # Create and sign the package
-productbuild --sign $IDENTITY --component packages/insomnia-inso/binaries/inso /Applications packages/insomnia-inso/compressed/inso-macos.pkg
+mkdir compressed
+productbuild --sign $IDENTITY --component binaries/inso /Applications compressed/inso-macos.pkg
+
+# # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
+# # Notarise
+# xcrun notarytool submit compressed/inso-macos.pkg --apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --team-id TODO --wait
+
+# # Based on https://developer.apple.com/forums/thread/128166
+# # Staple
+# xcrun stapler staple compressed/inso-macos.pkg
