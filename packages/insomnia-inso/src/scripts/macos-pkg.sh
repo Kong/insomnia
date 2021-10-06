@@ -3,6 +3,7 @@
 # Create temporary keychain
 KEYCHAIN="inso.keychain"
 KEYCHAIN_PASSWORD="inso"
+BUNDLE_ID="com.insomnia.inso.app"
 security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
 security default-keychain -s $KEYCHAIN
 
@@ -23,14 +24,21 @@ IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | head -1 | grep '
 # New requirement for MacOS 10.12+
 security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
+# Create a staging area for the installer package.
+mkdir -p usr/local/bin
+
+# Copy the binary into the staging area.
+cp binaries/inso usr/local/bin
+
 # Based on from https://developer.apple.com/forums/thread/128166
-# Sign the app
-/usr/bin/codesign --force -s "$IDENTITY" binaries/inso
+# Sign the binary
+/usr/bin/codesign --force -s "$IDENTITY" usr/local/bin/inso
 
 # Based on https://developer.apple.com/forums/thread/128166
-# Create and sign the package
+# Build the package
 mkdir compressed
-productbuild --sign "$IDENTITY" --component binaries /Applications compressed/$PKG_NAME
+# TODO: add version here
+pkgbuild --identifier $BUNDLE_ID --sign "$IDENTITY" --keychain $KEYCHAIN --timestamp --root ./tmp/usr/local --install-location /usr/local/ $PKG_NAME
 
 # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
 # # Notarise
@@ -39,3 +47,6 @@ productbuild --sign "$IDENTITY" --component binaries /Applications compressed/$P
 # # Based on https://developer.apple.com/forums/thread/128166
 # # Staple
 # xcrun stapler staple compressed/$PKG_NAME
+
+# Copy back to compressed
+cp usr/local/$PKG_NAME compressed
