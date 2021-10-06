@@ -39,8 +39,6 @@ jobs:
       #   run: npm run app-build:smoke
       - name: Package Inso CLI
         run: npm run inso-package
-      - name: Compress Inso CLI binary
-        run: npm run inso-package:compress
       - name: Build an Installer packages
         if: matrix.os == 'macos-latest'
         run: |
@@ -51,6 +49,9 @@ jobs:
         env:
           MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+          PKG_NAME: ${{ matrix.os }}-inso-${{ github.run_number }}.pkg
+      - name: Compress Inso CLI binary
+        run: npm run inso-package:compress
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
         with:

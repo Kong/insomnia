@@ -1,5 +1,9 @@
 # Based on https://localazy.com/blog/how-to-automatically-sign-macos-apps-using-github-actions and https://stackoverflow.com/a/60807932
-          
+
+# Debug where we're running
+pwd
+ls
+
 # Create temporary keychain
 KEYCHAIN="inso.keychain"
 KEYCHAIN_PASSWORD="inso"
@@ -23,6 +27,10 @@ IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | head -1 | grep '
 # New requirement for MacOS 10.12+
 security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
+# Debug
+ls
+ls binaries
+
 # Based on from https://developer.apple.com/forums/thread/128166
 # Sign the app
 /usr/bin/codesign --force -v -s $IDENTITY binaries/inso
@@ -30,12 +38,12 @@ security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: -s
 # Based on https://developer.apple.com/forums/thread/128166
 # Create and sign the package
 mkdir compressed
-productbuild --sign $IDENTITY --component binaries/inso /Applications compressed/inso-macos.pkg
+productbuild --sign $IDENTITY --component binaries/inso /Applications compressed/$PKG_NAME
 
 # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
 # # Notarise
-# xcrun notarytool submit compressed/inso-macos.pkg --apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --team-id TODO --wait
+# xcrun notarytool submit compressed/$PKG_NAME --apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --team-id TODO --wait
 
 # # Based on https://developer.apple.com/forums/thread/128166
 # # Staple
-# xcrun stapler staple compressed/inso-macos.pkg
+# xcrun stapler staple compressed/$PKG_NAME
