@@ -59,7 +59,8 @@ jobs:
           security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
 
           # Import certificate
-          security import $MACOS_CERTIFICATE_LINK -k $KEYCHAIN -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          echo $MACOS_CERTIFICATE_LINK | base64 --decode > certificate.p12
+          security import certificate.p12 -k $KEYCHAIN -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
 
           # Detect the identity
           IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | head -1 | grep '"' | sed -e 's/[^"]*"//' -e 's/".*//')
