@@ -50,6 +50,8 @@ jobs:
         env:
           MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.DESIGNER_APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
           PKG_NAME: ${{ matrix.os }}-inso-${{ github.run_number }}.pkg
       - name: Compress Inso CLI binary
         run: npm run inso-package:compress
