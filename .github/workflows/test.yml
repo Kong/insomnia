@@ -59,6 +59,7 @@ jobs:
           product-path: packages/insomnia-inso/compressed/${{ matrix.os }}-inso-${{ github.run_number }}.pkg
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+          primary-bundle-id: com.insomnia.inso.app
 
       - name: "Staple Release Build"
         uses: devbotsxyz/xcode-staple@v1
