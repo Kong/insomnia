@@ -19,6 +19,9 @@ security import certificate.p12 -k $KEYCHAIN -P $MACOS_CERTIFICATE_PWD -T /usr/b
 APP_IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | grep 'Application' | sed -e 's/[^"]*"//' -e 's/".*//')
 INSTALL_IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | grep 'Installer' | sed -e 's/[^"]*"//' -e 's/".*//')
 
+echo "::debug::$APP_IDENTITY"
+echo "::debug::$INSTALL_IDENTITY"
+
 # New requirement for MacOS 10.12+
 security set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
