@@ -1,10 +1,8 @@
 import { Settings } from 'insomnia-common';
 import React, { FC, Fragment } from 'react';
-import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { isConfigControlledSetting } from '../../../models/settings';
-import { selectSettings } from '../../redux/selectors';
+import { isConfigControlledSetting } from '../../../models/helpers/settings';
 import { HelpTooltip } from '../help-tooltip';
 
 const Wrapper = styled.div({
@@ -43,10 +41,9 @@ const HelperText = styled.span({
 });
 
 export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, setting }) => {
-  const settings = useSelector(selectSettings);
-  const [isControlled, controlledBy] = isConfigControlledSetting(setting, settings);
+  const controlledBy = isConfigControlledSetting(setting);
 
-  if (!isControlled) {
+  if (controlledBy === false) {
     return <Fragment>{children}</Fragment>;
   }
 

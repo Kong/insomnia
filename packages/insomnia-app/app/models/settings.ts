@@ -1,6 +1,4 @@
 import { HttpVersions, Settings as BaseSettings } from 'insomnia-common';
-import { InsomniaConfig, validate } from 'insomnia-config';
-import { keys, mergeLeft, omit } from 'ramda';
 
 import {
   getAppDefaultDarkTheme,
@@ -10,7 +8,7 @@ import {
 } from '../common/constants';
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
-import insomniaConfig from '../insomnia.config.json';
+import { omitControlledSettings, overwriteControlledSettings } from './helpers/settings';
 import type { BaseModel } from './index';
 
 export type Settings = BaseModel & BaseSettings;
@@ -25,37 +23,6 @@ export type ThemeSettings = Pick<Settings, 'autoDetectColorScheme' | 'lightTheme
 export const isSettings = (model: Pick<BaseModel, 'type'>): model is Settings => (
   model.type === type
 );
-
-/** gets settings from the `insomnia.config.json` */
-const getConfigSettings = ()  => {
-  const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
-  if (!valid) {
-    console.error('invalid insomnia config', errors);
-    return {};
-  }
-  // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
-  return insomniaConfig.settings as Required<InsomniaConfig>['settings'] || {};
-};
-
-export const isConfigControlledSetting = (setting: keyof BaseSettings, settings: BaseSettings) => {
-  const configSettings = getConfigSettings();
-
-  switch (setting) {
-    case 'enableAnalytics':
-    case 'allowNotificationRequests':
-      if (settings.incognitoMode) {
-        return [true, 'incognitoMode'] as const;
-      }
-      // otherwise, intentionally fallthrough
-
-    default:
-      const isControlled = Object.prototype.hasOwnProperty.call(configSettings, setting) as boolean;
-      return [isControlled, 'insomnia-config'] as const;
-  }
-};
-
-const removeControlledSettings = omit(keys(getConfigSettings()));
-const overwriteControlledSettings = mergeLeft(getConfigSettings());
 
 export function init(): BaseSettings {
   return {
@@ -124,26 +91,28 @@ export function migrate(doc: Settings) {
 }
 
 export async function all() {
-  const settings = await db.all<Settings>(type);
+  let settingsList = await db.all<Settings>(type);
 
-  if (settings?.length === 0) {
-    return [overwriteControlledSettings(await getOrCreate())];
-  } else {
-    return settings.map(overwriteControlledSettings);
+  if (settingsList?.length === 0) {
+    settingsList = [await getOrCreate()];
   }
+
+  return settingsList.map(settings => overwriteControlledSettings(settings)(settings));
 }
 
-export async function create(patch: Partial<Settings> = {}) {
-  return db.docCreate<Settings>(type, removeControlledSettings(patch));
+async function create() {
+  const settings = await db.docCreate<Settings>(type);
+  return overwriteControlledSettings(settings)(settings);
 }
 
 export async function update(settings: Settings, patch: Partial<Settings>) {
-  return db.docUpdate<Settings>(settings, removeControlledSettings(patch));
+  return db.docUpdate<Settings>(settings, omitControlledSettings(settings)(patch));
 }
 
 export async function patch(patch: Partial<Settings>) {
   const settings = await getOrCreate();
-  return db.docUpdate<Settings>(settings, removeControlledSettings(patch));
+  const sanitized = omitControlledSettings(settings)(patch);
+  return db.docUpdate<Settings>(settings, sanitized);
 }
 
 export async function getOrCreate() {

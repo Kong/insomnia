@@ -3,8 +3,8 @@ import React, { ChangeEvent, FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import { isConfigControlledSetting } from '../../../models/helpers/settings';
 import * as models from '../../../models/index';
-import { isConfigControlledSetting } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 import { Tooltip } from '../tooltip';
@@ -52,7 +52,7 @@ export const BooleanSetting: FC<{
     throw new Error(`Invalid boolean setting override name ${overrideSetting}`);
   }
 
-  const [isControlled] = isConfigControlledSetting(setting, settings);
+  const isControlled = isConfigControlledSetting(setting);
 
   const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
