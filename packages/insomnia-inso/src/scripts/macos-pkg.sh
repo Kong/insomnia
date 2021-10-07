@@ -34,7 +34,7 @@ cp binaries/inso macos-installer/bin
 # Sign the binary
 ENTITLEMENTS_PATH="src/scripts/codesign.entitlements"
 plutil -lint $ENTITLEMENTS_PATH
-/usr/bin/codesign --force --options=runtime --entitlements $ENTITLEMENTS_PATH -s "$APP_IDENTITY" macos-installer/bin/inso
+/usr/bin/codesign --force --options=runtime --entitlements $ENTITLEMENTS_PATH --timestamp --sign "$APP_IDENTITY" macos-installer/bin/inso
 
 # Based on https://developer.apple.com/forums/thread/128166
 # Build the package
