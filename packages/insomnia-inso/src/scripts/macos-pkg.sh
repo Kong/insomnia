@@ -36,9 +36,8 @@ cp binaries/inso macos-installer/bin
 
 # Based on https://developer.apple.com/forums/thread/128166
 # Build the package
-# TODO: add version here
 mkdir compressed
-pkgbuild --identifier $BUNDLE_ID --sign "$INSTALL_IDENTITY" --keychain $KEYCHAIN --timestamp --root macos-installer/bin --install-location /usr/local/bin compressed/$PKG_NAME
+pkgbuild --identifier $BUNDLE_ID --version $VERSION --sign "$INSTALL_IDENTITY" --keychain $KEYCHAIN --timestamp --root macos-installer/bin --install-location /usr/local/bin compressed/$PKG_NAME
 
 # # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
 # # # Notarise
