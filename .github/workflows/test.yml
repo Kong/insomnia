@@ -46,6 +46,7 @@ jobs:
           ./src/scripts/macos-pkg.sh
         shell: bash
         working-directory: packages/insomnia-inso
+        continue-on-error: true
         env:
           MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
@@ -54,7 +55,6 @@ jobs:
         run: npm run inso-package:compress
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
-        if: always()
         with:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-inso-${{ github.run_number }}
