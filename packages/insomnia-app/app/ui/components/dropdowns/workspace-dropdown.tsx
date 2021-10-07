@@ -30,9 +30,9 @@ import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
 interface Props {
-  displayName: string;
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
+  activeWorkspaceName: string;
   activeApiSpec: ApiSpec;
   activeProject: Project;
   hotKeyRegistry: HotKeyRegistry;
@@ -131,7 +131,7 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
 
   render() {
     const {
-      displayName,
+      activeWorkspaceName,
       className,
       activeWorkspace,
       isLoading,
@@ -157,9 +157,9 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
               style={{
                 maxWidth: '400px',
               }}
-              title={displayName}
+              title={activeWorkspaceName}
             >
-              {displayName}
+              {activeWorkspaceName}
             </div>
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}

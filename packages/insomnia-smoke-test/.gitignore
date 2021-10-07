@@ -1,0 +1,21 @@
+# ignore the response/unit test result files from the nedb fixture used by inso
+fixtures/inso-nedb/insomnia.RequestVersion.db
+fixtures/inso-nedb/insomnia.Response.db
+fixtures/inso-nedb/insomnia.UnitTestResult.db
+
+# ignore the metadata files that are not used by inso
+fixtures/inso-nedb/insomnia.*Meta.db
+
+# ignore the stats db file
+fixtures/inso-nedb/insomnia.Stats.db
+
+# ignore the settings db file because inso shouldn't use it
+fixtures/inso-nedb/insomnia.Settings.db
+
+# ignore some db files for security reasons
+fixtures/inso-nedb/insomnia.ClientCertificate.db
+fixtures/inso-nedb/insomnia.CookieJar.db
+fixtures/inso-nedb/insomnia.GitRepository.db
+fixtures/inso-nedb/insomnia.OAuth2Token.db
+fixtures/inso-nedb/insomnia.PluginData.db
+

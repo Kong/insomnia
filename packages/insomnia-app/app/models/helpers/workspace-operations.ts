@@ -3,20 +3,23 @@ import type { ApiSpec } from '../api-spec';
 import * as models from '../index';
 import { isDesign, Workspace } from '../workspace';
 
-export async function rename(w: Workspace, s: ApiSpec, name: string) {
-  if (isDesign(w)) {
-    await models.apiSpec.update(s, {
+export async function rename(workspace: Workspace, apiSpec: ApiSpec, name: string) {
+  if (isDesign(workspace)) {
+    await models.apiSpec.update(apiSpec, {
       fileName: name,
     });
   } else {
-    await models.workspace.update(w, {
+    await models.workspace.update(workspace, {
       name,
     });
   }
 }
 
-export async function duplicate(w: Workspace, { name, parentId }: Pick<Workspace, 'name' | 'parentId'>) {
-  const newWorkspace = await db.duplicate(w, {
+export async function duplicate(
+  workspace: Workspace,
+  { name, parentId }: Pick<Workspace, 'name' | 'parentId'>,
+) {
+  const newWorkspace = await db.duplicate(workspace, {
     name,
     parentId,
   });
