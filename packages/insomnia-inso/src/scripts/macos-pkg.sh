@@ -20,9 +20,9 @@ ALL_IDENTITIES=$(security find-identity -v -p codesigning $KEYCHAIN | sed -e 's/
 APP_IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | grep 'Application' | sed -e 's/[^"]*"//' -e 's/".*//')
 INSTALL_IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | grep 'Installer' | sed -e 's/[^"]*"//' -e 's/".*//')
 
-echo "::debug::$ALL_IDENTITIES"
-echo "::debug::$APP_IDENTITY"
-echo "::debug::$INSTALL_IDENTITY"
+echo "::debug::all - $ALL_IDENTITIES"
+echo "::debug::app - $APP_IDENTITY"
+echo "::debug::install - $INSTALL_IDENTITY"
 
 # New requirement for MacOS 10.12+
 security set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
