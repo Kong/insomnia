@@ -39,10 +39,10 @@ cp binaries/inso macos-installer/bin
 mkdir compressed
 pkgbuild --identifier $BUNDLE_ID --sign "$INSTALL_IDENTITY" --keychain $KEYCHAIN --timestamp --root macos-installer/bin --install-location /usr/local/bin compressed/$PKG_NAME
 
-# # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
-# # Notarise
-xcrun notarytool submit compressed/$PKG_NAME --apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --wait
+# # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
+# # # Notarise
+# xcrun notarytool submit compressed/$PKG_NAME --apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --wait
 
-# # Based on https://developer.apple.com/forums/thread/128166
-# # Staple
-xcrun stapler staple compressed/$PKG_NAME
+# # # Based on https://developer.apple.com/forums/thread/128166
+# # # Staple
+# xcrun stapler staple compressed/$PKG_NAME
