@@ -564,9 +564,8 @@ class General extends PureComponent<Props, State> {
           />
         )}
         <BooleanSetting
-          label="Do not show upsells"
+          label="Do not tell me about premium features"
           setting="disablePaidFeatureAds"
-          help="Disable any elements that invite you to purchase... anything. ✌️"
         />
 
         <hr className="pad-top" />
