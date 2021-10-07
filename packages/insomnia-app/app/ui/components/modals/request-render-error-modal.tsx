@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import jq from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
@@ -47,7 +47,7 @@ export class RequestRenderErrorModal extends PureComponent<{}, State> {
 
   renderModalBody(request, error) {
     const fullPath = `Request.${error.path}`;
-    const result = jq.query(request, `$.${error.path}`);
+    const result = JSONPath({ json: request, path: `$.${error.path}` });
     const template = result && result.length ? result[0] : null;
     const locationLabel =
       template?.includes('\n') ? `line ${error.location.line} of` : null;

@@ -36,6 +36,14 @@ jobs:
         run: npm test
       - name: Build for smoke tests
         run: npm run app-build:smoke
+      - name: Package Inso CLI
+        run: npm run inso-package
+      - name: Upload Inso CLI tar
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-inso-${{ github.run_number }}
+          path: packages/insomnia-inso/compressed
       - name: Run smoke tests
         timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
         run: npm run test:smoke:build
