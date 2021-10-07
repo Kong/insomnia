@@ -6,7 +6,7 @@ type AllowedSettings = Partial<Pick<CommonSettings,
   | 'allowNotificationRequests'
   | 'disableUpdateNotification'
   | 'enableAnalytics'
-  | 'hideUpsells'
+  | 'disablePaidFeatureAds'
   | 'incognitoMode'
 >>;
 

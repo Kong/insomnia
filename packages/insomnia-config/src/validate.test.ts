@@ -118,7 +118,7 @@ describe('validate', () => {
         params: {
           additionalProperty: 'disableAnalytics',
         },
-        schemaPath: '#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>/additionalProperties',
+        schemaPath: '#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>/additionalProperties',
       },
     ]);
     expect(valid).toBe(false);
@@ -141,7 +141,7 @@ describe('validate', () => {
         params: {
           'type': 'boolean',
         },
-        schemaPath: '#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>/properties/enableAnalytics/type',
+        schemaPath: '#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>/properties/enableAnalytics/type',
       },
     ]);
     expect(valid).toBe(false);

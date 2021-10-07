@@ -51,10 +51,10 @@ describe('getControlledValue', () => {
 
 describe('omitControlledSettings', () => {
   it('omits config controlled settings', () => {
-    getConfigSettings.mockReturnValue({ hideUpsells: true });
+    getConfigSettings.mockReturnValue({ disablePaidFeatureAds: true });
     const settings = models.settings.init();
 
-    const result = omitControlledSettings(settings)({ hideUpsells: false });
+    const result = omitControlledSettings(settings)({ disablePaidFeatureAds: false });
 
     expect(result).toMatchObject({});
   });
@@ -63,9 +63,9 @@ describe('omitControlledSettings', () => {
     getConfigSettings.mockReturnValue({});
     const settings = models.settings.init();
 
-    const result = omitControlledSettings(settings)({ hideUpsells: true });
+    const result = omitControlledSettings(settings)({ disablePaidFeatureAds: true });
 
-    expect(result).toMatchObject({ hideUpsells: true });
+    expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 
   it('omits settings controlled by other settings', () => {
@@ -82,35 +82,35 @@ describe('omitControlledSettings', () => {
   it('does not omit settings not controlled by other settings', () => {
     getConfigSettings.mockReturnValue({});
     const settings = models.settings.init();
-    const result = omitControlledSettings(settings)({ hideUpsells: true });
+    const result = omitControlledSettings(settings)({ disablePaidFeatureAds: true });
 
-    expect(result).toMatchObject({ hideUpsells: true });
+    expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 });
 
 describe('overwriteControlledSettings', () => {
   it('overwrites config controlled settings', () => {
-    getConfigSettings.mockReturnValue({ hideUpsells: true });
+    getConfigSettings.mockReturnValue({ disablePaidFeatureAds: true });
     const settings = {
       ...models.settings.init(),
-      hideUpsells: false,
+      disablePaidFeatureAds: false,
     };
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({ hideUpsells: true });
+    expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 
   it('does not overwrite settings not controlled by the config', () => {
     getConfigSettings.mockReturnValue({});
     const settings = {
       ...models.settings.init(),
-      hideUpsells: true,
+      disablePaidFeatureAds: true,
     };
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({ hideUpsells: true });
+    expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 
   it('overwrites settings controlled by other settings', () => {
@@ -130,12 +130,12 @@ describe('overwriteControlledSettings', () => {
     getConfigSettings.mockReturnValue({});
     const settings = {
       ...models.settings.init(),
-      hideUpsells: true,
+      disablePaidFeatureAds: true,
     };
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({ hideUpsells: true });
+    expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 
   it.skip('config control trumps (non-config) settings control', () => {

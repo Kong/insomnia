@@ -27,7 +27,7 @@ const StyledIconContainer = styled.div`
 `;
 
 export const AccountDropdown: FunctionComponent<Props> = ({ className }) => {
-  const { hideUpsells } = useSelector(selectSettings);
+  const { disablePaidFeatureAds } = useSelector(selectSettings);
   return (
     <div className={className}>
       <Dropdown>
@@ -58,7 +58,7 @@ export const AccountDropdown: FunctionComponent<Props> = ({ className }) => {
               </StyledIconContainer>
               Log In
             </DropdownItem>
-            {!hideUpsells && (
+            {!disablePaidFeatureAds && (
               <DropdownItem
                 key="invite"
                 buttonClass={Link}

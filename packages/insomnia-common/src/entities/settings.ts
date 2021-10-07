@@ -8,14 +8,15 @@ export interface PluginConfig {
 export type PluginConfigMap = Record<string, PluginConfig>;
 
 export interface Settings {
+  allowNotificationRequests: boolean;
   autoDetectColorScheme: boolean;
   autoHideMenuBar: boolean;
   autocompleteDelay: number;
-  allowNotificationRequests: boolean;
   clearOAuth2SessionOnRestart: boolean;
   darkTheme: string;
   deviceId: string | null;
   disableHtmlPreviewJs: boolean;
+  disablePaidFeatureAds: boolean;
   disableResponsePreviewLinks: boolean;
   disableUpdateNotification: boolean;
   editorFontSize: number;
@@ -35,7 +36,6 @@ export interface Settings {
   hasPromptedAnalytics: boolean;
   hasPromptedOnboarding: boolean;
   hasPromptedToMigrateFromDesigner: boolean;
-  hideUpsells: boolean;
   hotKeyRegistry: HotKeyRegistry;
   httpProxy: string;
   httpsProxy: string;

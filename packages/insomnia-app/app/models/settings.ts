@@ -34,6 +34,7 @@ export function init(): BaseSettings {
     darkTheme: getAppDefaultDarkTheme(),
     deviceId: null,
     disableHtmlPreviewJs: false,
+    disablePaidFeatureAds: false,
     disableResponsePreviewLinks: false,
     disableUpdateNotification: false,
     editorFontSize: 11,
@@ -58,7 +59,6 @@ export function init(): BaseSettings {
     // Users should only see onboarding during first launch, and anybody updating from an older version should not see it, so by default this flag is set to true, and is toggled to false during initialization
     hasPromptedOnboarding: true,
     hasPromptedToMigrateFromDesigner: false,
-    hideUpsells: false,
     hotKeyRegistry: hotkeys.newDefaultRegistry(),
     httpProxy: '',
     httpsProxy: '',

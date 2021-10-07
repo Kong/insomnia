@@ -10,7 +10,7 @@
       ]
     },
     "settings": {
-      "$ref": "#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>"
+      "$ref": "#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>"
     }
   },
   "additionalProperties": false,
@@ -18,7 +18,7 @@
     "insomniaConfig"
   ],
   "definitions": {
-    "Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"hideUpsells\"|\"incognitoMode\">>": {
+    "Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>": {
       "type": "object",
       "properties": {
         "allowNotificationRequests": {
@@ -30,7 +30,7 @@
         "enableAnalytics": {
           "type": "boolean"
         },
-        "hideUpsells": {
+        "disablePaidFeatureAds": {
           "type": "boolean"
         },
         "incognitoMode": {

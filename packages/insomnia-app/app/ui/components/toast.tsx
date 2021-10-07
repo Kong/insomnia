@@ -115,12 +115,12 @@ export class Toast extends PureComponent<{}, State> {
 
     const stats = await models.stats.get();
     const {
+      allowNotificationRequests,
+      disablePaidFeatureAds,
       disableUpdateNotification,
-      hideUpsells,
       incognitoMode,
       updateAutomatically,
       updateChannel,
-      allowNotificationRequests,
     } = await models.settings.getOrCreate();
 
     if (incognitoMode) {
@@ -140,9 +140,9 @@ export class Toast extends PureComponent<{}, State> {
       const data = {
         app: getAppId(),
         autoUpdatesDisabled: !updateAutomatically,
+        disablePaidFeatureAds,
         disableUpdateNotification,
         firstLaunch: stats.created,
-        hideUpsells,
         launches: stats.launches, // Used for account verification notifications
         platform: getAppPlatform(), // Used for CTAs / Informational notifications
         updateChannel,
