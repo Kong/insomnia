@@ -8,7 +8,7 @@ import {
 } from '../common/constants';
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
-import { omitControlledSettings, overwriteControlledSettings } from './helpers/settings';
+import { getControlledSettings, omitControlledSettings } from './helpers/settings';
 import type { BaseModel } from './index';
 
 export type Settings = BaseModel & BaseSettings;
@@ -97,12 +97,12 @@ export async function all() {
     settingsList = [await getOrCreate()];
   }
 
-  return settingsList.map(settings => overwriteControlledSettings(settings)(settings));
+  return settingsList.map(settings => getControlledSettings(settings));
 }
 
 async function create() {
   const settings = await db.docCreate<Settings>(type);
-  return overwriteControlledSettings(settings)(settings);
+  return getControlledSettings(settings);
 }
 
 export async function update(settings: Settings, patch: Partial<Settings>) {

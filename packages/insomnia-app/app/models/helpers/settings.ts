@@ -1,21 +1,31 @@
+import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
 import { InsomniaConfig, validate } from 'insomnia-config';
+import { resolve } from 'path';
 import { mapObjIndexed, mergeRight, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
 import { ValueOf } from 'type-fest';
 
-import insomniaConfig from '../../insomnia.config.json';
+/**
+ * IMPORTANT: Due to a business rule that the config is never changed after startup, this should only be called by `getConfigSettings` below.  It is only exported
+ *
+ * @deprecated this is not actually deprecated, but the strikethrough is to warn not to use this function (ever) outside of tests.
+ */
+export const readConfigFile = (path: string) => () => {
+  const file = resolve(path);
+  const insomniaConfig = JSON.parse(String(readFileSync(file))) as InsomniaConfig;
 
-/** gets settings from the `insomnia.config.json` */
-export const getConfigSettings = once(() => {
-  const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
+  const { valid, errors } = validate(insomniaConfig);
   if (!valid) {
     console.error('invalid insomnia config', errors);
     return {};
   }
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return insomniaConfig.settings as Required<InsomniaConfig>['settings'] || {};
-});
+};
+
+/** gets settings from the `insomnia.config.json` */
+export const getConfigSettings = once(readConfigFile('../../packages/insomnia-app/app/insomnia.config.json'));
 
 interface Condition {
   when: boolean;
@@ -51,8 +61,7 @@ export const isControlledByAnotherSetting = (settings: Settings) => (setting: ke
   for (const [controller, controlledSettings] of settingControllers.entries()) {
     for (const { when, set } of controlledSettings) {
       if (Object.prototype.hasOwnProperty.call(set, setting)) {
-        const theControllerConditionIsMet = when === settings[controller];
-        if (theControllerConditionIsMet) {
+        if (when === settings[controller]) {
           return {
             controlledValue: set[setting],
             controller,
@@ -72,13 +81,16 @@ export const isControlledByAnotherSetting = (settings: Settings) => (setting: ke
  */
 export const getControlledValue = (settings: Settings) => (value: ValueOf<Settings>, setting: keyof Settings) => {
   const {
+    controller,
     controlledValue,
     isControlled: anotherSettingControls,
   } = isControlledByAnotherSetting(settings)(setting);
 
   if (isControlledByConfig(setting)) {
-    if (anotherSettingControls) {
-      return controlledValue;
+    if (anotherSettingControls && controller) {
+      if (!isControlledByConfig(controller)) {
+        return controlledValue;
+      }
     }
     // no other setting controls this, so we can grab it from the config itself
     return getConfigSettings()[setting];
@@ -105,9 +117,7 @@ export const omitControlledSettings =
   };
 
 /** for any given setting, whether controlled by the insomnia config or whether controlled by another value, return the calculated value */
-export const overwriteControlledSettings =
-  <T extends Settings>(settings: T) =>
-  <U extends Partial<Settings>>(patch: U) => {
-    const override = mapObjIndexed(getControlledValue(settings), patch) as U;
-    return mergeRight(settings, override) as T;
-  };
+export const getControlledSettings = <T extends Settings>(settings: T) => {
+  const override = mapObjIndexed(getControlledValue(settings), settings) as T;
+  return mergeRight(settings, override) as T;
+};
