@@ -31,7 +31,7 @@ cp binaries/inso macos-installer/bin
 # Based on https://developer.apple.com/forums/thread/128166
 # Based on https://developer.apple.com/forums/thread/669188
 # Sign the binary
-/usr/bin/codesign --force --options=runtime -s "$APP_IDENTITY" macos-installer/bin/inso
+/usr/bin/codesign --force --options=runtime --entitlements src/scripts/codesign-entitlements.xml -s "$APP_IDENTITY" macos-installer/bin/inso
 
 # Based on https://developer.apple.com/forums/thread/128166
 # Build the package
