@@ -14,7 +14,7 @@ const isWindows = () => platform === 'win32';
 const getTarArgs = () => {
   const version = getVersion();
   if (isMac()) {
-    return ['-czf', `inso-macos-${version}.tar`];
+    return ['-czf', `inso-macos-${version}.zip`];
   }
 
   if (isLinux()) {
