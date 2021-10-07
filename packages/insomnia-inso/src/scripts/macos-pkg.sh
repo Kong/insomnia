@@ -16,9 +16,11 @@ echo $MACOS_CERTIFICATE_LINK | base64 --decode > certificate.p12
 security import certificate.p12 -k $KEYCHAIN -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign -T /usr/bin/pkgbuild
 
 # Detect the identity
+ALL_IDENTITIES=$(security find-identity -v -p codesigning $KEYCHAIN | sed -e 's/[^"]*"//' -e 's/".*//')
 APP_IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | grep 'Application' | sed -e 's/[^"]*"//' -e 's/".*//')
 INSTALL_IDENTITY=$(security find-identity -v -p codesigning $KEYCHAIN | grep 'Installer' | sed -e 's/[^"]*"//' -e 's/".*//')
 
+echo "::debug::$ALL_IDENTITIES"
 echo "::debug::$APP_IDENTITY"
 echo "::debug::$INSTALL_IDENTITY"
 
