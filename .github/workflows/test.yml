@@ -40,12 +40,6 @@ jobs:
       - name: Package Inso CLI
         run: npm run inso-package
 
-      - name: Get Inso version
-        id: get-inso-version
-        uses: martinbeentjes/npm-get-version-action@master
-        with:
-          path: packages/insomnia-inso
-
       - name: Build a macOS Installer package
         if: matrix.os == 'macos-latest'
         run: |
@@ -58,8 +52,9 @@ jobs:
           MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
           PKG_NAME: ${{ matrix.os }}-inso-${{ github.run_number }}.pkg
-          # Should we suffix the run number to the version here? Maybe, but inso -v should also have the run number
-          VERSION: ${{ steps.get-inso-version.outputs.current-version }}
+          # TODO: Should we suffix the run number to the version here? Maybe, but inso -v should also have the run number
+          # TODO: get this from package.json
+          VERSION: "2.3.2"
 
       - name: Notarize Release Build
         if: matrix.os == 'macos-latest'
