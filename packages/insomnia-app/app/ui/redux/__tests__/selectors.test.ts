@@ -77,7 +77,7 @@ describe('selectors', () => {
         name: 'workspace.name',
         scope: WorkspaceScopeKeys.design,
       });
-      await models.apiSpec.updateOrCreateForParentId(
+      const spec = await models.apiSpec.updateOrCreateForParentId(
         workspace._id,
         { fileName: 'apiSpec.fileName' },
       );
@@ -87,13 +87,7 @@ describe('selectors', () => {
         activeWorkspaceId: workspace._id,
       });
 
-      expect(selectActiveApiSpec(state)).toMatchObject({
-        contentType: 'yaml',
-        contents: '',
-        fileName: 'apiSpec.fileName',
-        parentId: workspace._id,
-        type: 'ApiSpec',
-      });
+      expect(selectActiveApiSpec(state)).toEqual(spec);
     });
   });
 
