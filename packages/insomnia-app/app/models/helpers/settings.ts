@@ -80,22 +80,32 @@ export const isControlledByAnotherSetting = (settings: Settings) => (setting: ke
  * For any given setting, return what the value of that setting should be once you take the insomnia config and other potentially controlling settings into account
  */
 export const getControlledValue = (settings: Settings) => (value: ValueOf<Settings>, setting: keyof Settings) => {
+
+  if (isControlledByConfig(setting)) {
+    const configSettings = {
+      ...settings,
+      ...getConfigSettings(),
+    };
+
+    const {
+      controller,
+      controlledValue,
+      isControlled: anotherSettingControls,
+    } = isControlledByAnotherSetting(configSettings)(setting);
+
+    // TLDR; the config always wins
+    // It is a business rule that if a setting (e.g. `incognitoMode` specified in the config controlls another setting (e.g. `enableAnalytics`), that conflict should be resolved such that the config-specified controller should _always_ win, _even_ if the controlled setting (i.e. `enableAnalytics`) is _itself_ specified in the config with a conflicting value)
+    if (anotherSettingControls && controller && isControlledByConfig(controller)) {
+      return controlledValue;
+    }
+    // no other setting controls this, so we can grab it from the config itself
+    return configSettings[setting];
+  }
+
   const {
-    controller,
     controlledValue,
     isControlled: anotherSettingControls,
   } = isControlledByAnotherSetting(settings)(setting);
-
-  if (isControlledByConfig(setting)) {
-    if (anotherSettingControls && controller) {
-      if (!isControlledByConfig(controller)) {
-        return controlledValue;
-      }
-    }
-    // no other setting controls this, so we can grab it from the config itself
-    return getConfigSettings()[setting];
-  }
-
   if (anotherSettingControls) {
     return controlledValue;
   }

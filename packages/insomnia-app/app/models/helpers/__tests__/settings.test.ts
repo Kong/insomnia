@@ -1,3 +1,4 @@
+import { Settings } from 'insomnia-common';
 import { mocked } from 'ts-jest/utils';
 
 import * as models from '../../../models';
@@ -14,7 +15,7 @@ const getConfigSettings = mocked(_getConfigSettings);
 describe('getControlledValue', () => {
   it('resolve conflicting value', () => {
     getConfigSettings.mockReturnValue({});
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       incognitoMode: true,
       enableAnalytics: true, // this intionally conflicts with incognito mode
@@ -25,9 +26,9 @@ describe('getControlledValue', () => {
     expect(controlledValue).toBe(false);
   });
 
-  it.skip('config control trumps (non-config) settings control', () => {
+  it('config control gets priority over simple settings control', () => {
     getConfigSettings.mockReturnValue({ enableAnalytics: true });
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       incognitoMode: true,
       enableAnalytics: false,
@@ -36,6 +37,22 @@ describe('getControlledValue', () => {
     const result = getControlledSettings(settings);
 
     expect(result).toMatchObject({ enableAnalytics: true });
+  });
+
+  it('config _and_ settings control gets highest possible priority', () => {
+    getConfigSettings.mockReturnValue({
+      incognitoMode: true,
+      enableAnalytics: true, // this intentionally conflicts with incognitoMode, which should force it to false
+    });
+    const settings: Settings = {
+      ...models.settings.init(),
+      incognitoMode: false, // this intentionally conflicts with the config
+      enableAnalytics: false,
+    };
+
+    const result = getControlledSettings(settings);
+
+    expect(result).toMatchObject({ enableAnalytics: false });
   });
 
   it('only reads the config once on startup and then never again', async () => {
@@ -70,7 +87,7 @@ describe('omitControlledSettings', () => {
 
   it('omits settings controlled by other settings', () => {
     getConfigSettings.mockReturnValue({});
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       incognitoMode: true,
     };
@@ -91,7 +108,7 @@ describe('omitControlledSettings', () => {
 describe('overwriteControlledSettings', () => {
   it('overwrites config controlled settings', () => {
     getConfigSettings.mockReturnValue({ disablePaidFeatureAds: true });
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       disablePaidFeatureAds: false,
     };
@@ -103,7 +120,7 @@ describe('overwriteControlledSettings', () => {
 
   it('does not overwrite settings not controlled by the config', () => {
     getConfigSettings.mockReturnValue({});
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       disablePaidFeatureAds: true,
     };
@@ -115,7 +132,7 @@ describe('overwriteControlledSettings', () => {
 
   it('overwrites settings controlled by other settings', () => {
     getConfigSettings.mockReturnValue({});
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       incognitoMode: true,
       enableAnalytics: true,
@@ -128,7 +145,7 @@ describe('overwriteControlledSettings', () => {
 
   it('does not overwrite settings not controlled by other settings', () => {
     getConfigSettings.mockReturnValue({});
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       disablePaidFeatureAds: true,
     };
@@ -140,10 +157,10 @@ describe('overwriteControlledSettings', () => {
 
   it.skip('config control trumps (non-config) settings control', () => {
     getConfigSettings.mockReturnValue({ enableAnalytics: true });
-    const settings = {
+    const settings: Settings = {
       ...models.settings.init(),
       incognitoMode: true,
-      enableAnalytis: false,
+      enableAnalytics: false,
     };
 
     const result = getControlledSettings(settings);
