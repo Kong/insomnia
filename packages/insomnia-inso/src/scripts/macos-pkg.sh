@@ -21,7 +21,7 @@ APP_IDENTITY="Developer ID Application: Kong Inc. (FX44YY62GV)"
 INSTALL_IDENTITY="Developer ID Installer: Kong Inc. (FX44YY62GV)"
 
 # New requirement for MacOS 10.12+
-security set-key-partition-list -q -S apple-tool:,apple:,codesign:,pkgbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
+security set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
 
 # Create a staging area for the installer package.
 mkdir -p macos-installer/bin
