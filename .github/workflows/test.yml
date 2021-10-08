@@ -61,9 +61,9 @@ jobs:
         id: inso-variables
         shell: bash
         run: |
-          PKG_NAME="${{ matrix.os }}-inso-${{ github.run_number }}"
+          INSO_VERSION="${{ needs.get_version.outputs.inso-version }}-run.${{ github.run_number }}"
+          PKG_NAME="inso-${{ matrix.os }}-$INSO_VERSION"
           BUNDLE_ID="com.insomnia.inso.app"
-          INSO_VERSION=${{ needs.get_version.outputs.inso-version }}-run.${{ github.run_number }}
 
           echo ::set-output name=pkg-name::$PKG_NAME
           echo ::set-output name=bundle-id::$BUNDLE_ID
