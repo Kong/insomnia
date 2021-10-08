@@ -3,6 +3,7 @@
 # https://developer.apple.com/forums/thread/669188
 # https://localazy.com/blog/how-to-automatically-sign-macos-apps-using-github-actions
 # https://stackoverflow.com/a/60807932
+# https://stackoverflow.com/a/55074083
 
 # Environment variables to be set by caller
 # MACOS_CERTIFICATE (installer and application certificate combined and base64 enoded)
