@@ -11,7 +11,22 @@ on:
       - synchronize
 
 jobs:
+  get_version:
+    name: Get version
+    runs-on: ubuntu-latest
+    outputs:
+      inso-version: ${{ steps.get-package-version.outputs.current-version }}
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Get version
+        id: get-package-version
+        uses: martinbeentjes/npm-get-version-action@master
+        with:
+          path: packages/insomnia-inso
+    
   OS:
+    needs: [ get_version ]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -42,18 +57,22 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Package Inso CLI
-        run: npm run inso-package
-
       - name: Set Inso Variables
         id: inso-variables
         shell: bash
         run: |
           PKG_NAME="${{ matrix.os }}-inso-${{ github.run_number }}"
           BUNDLE_ID="com.insomnia.inso.app"
+          INSO_VERSION=${{ needs.get_version.outputs.inso-version }}-run.${{ github.run_number }}
 
           echo ::set-output name=pkg-name::$PKG_NAME
           echo ::set-output name=bundle-id::$BUNDLE_ID
+          echo ::set-output name=inso-version::$INSO_VERSION
+
+      - name: Package Inso CLI
+        run: npm run inso-package
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Create macOS installer package
         if: matrix.os == 'macos-latest'
@@ -69,8 +88,7 @@ jobs:
           PKG_NAME: ${{ steps.inso-variables.outputs.pkg-name }}
           BUNDLE_ID: ${{ steps.inso-variables.outputs.bundle-id }}
           ARTIFACT_LOCATION: compressed
-          # Hardcoded here, configured in https://github.com/Kong/insomnia/pull/4086
-          VERSION: "2.3.2"
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       # We don't need to notarize and staple on every commit
       # - name: Notarize installer package
