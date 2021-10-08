@@ -1,7 +1,7 @@
 import classnames from 'classnames';
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, memo, ReactNode } from 'react';
 
+import { HotKeyRegistry } from '../../../../../insomnia-common/dist/index';
 import {
   COLLAPSE_SIDEBAR_REMS,
   SIDEBAR_SKINNY_REMS,

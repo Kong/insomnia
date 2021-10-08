@@ -1,8 +1,8 @@
-import { Settings } from 'insomnia-common';
 import React, { FC, Fragment } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
+import { Settings } from '../../../../../insomnia-common/dist/index';
 import { getControlledStatus } from '../../../models/helpers/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';

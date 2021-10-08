@@ -1,9 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { HotKeyRegistry } from 'insomnia-common';
 import { Curl } from 'node-libcurl';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
+import { HotKeyRegistry } from '../../../../../insomnia-common/dist/index';
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import * as models from '../../../models/index';

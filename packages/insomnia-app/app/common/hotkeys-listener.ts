@@ -1,5 +1,4 @@
-import { KeyBindings, KeyCombination } from 'insomnia-common';
-
+import { KeyBindings, KeyCombination } from '../../../insomnia-common/dist/index';
 import * as models from '../models';
 import type { HotKeyDefinition } from './hotkeys';
 import { areSameKeyCombinations, getPlatformKeyCombinations } from './hotkeys';

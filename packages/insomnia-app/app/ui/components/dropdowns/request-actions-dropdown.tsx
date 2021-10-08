@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
+import { HotKeyRegistry } from '../../../../../insomnia-common/dist/index';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import * as misc from '../../../common/misc';

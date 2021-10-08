@@ -1,7 +1,7 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { HotKeyRegistry } from '../../../../../insomnia-common/dist/index';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { importFile } from '../../redux/modules/import';
 import { selectActiveWorkspace } from '../../redux/selectors';

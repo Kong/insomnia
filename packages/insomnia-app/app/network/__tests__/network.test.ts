@@ -1,7 +1,7 @@
 import fs from 'fs';
-import { HttpVersions } from 'insomnia-common';
 import { join as pathJoin, resolve as pathResolve } from 'path';
 
+import { HttpVersions } from '../../../../insomnia-common/dist/index';
 import { globalBeforeEach } from '../../__jest__/before-each';
 import {
   AUTH_AWS_IAM,

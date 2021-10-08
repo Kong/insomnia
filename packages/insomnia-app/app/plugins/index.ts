@@ -1,8 +1,8 @@
 import fs from 'fs';
-import type { PluginConfig, PluginConfigMap } from 'insomnia-common';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
+import type { PluginConfig, PluginConfigMap } from '../../../insomnia-common/dist/index';
 import appConfig from '../../config/config.json';
 import { PLUGIN_PATH } from '../common/constants';
 import { resolveHomePath } from '../common/misc';

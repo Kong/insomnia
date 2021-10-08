@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { OpenDialogOptions, remote } from 'electron';
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent, ReactNode } from 'react';
 
+import { HotKeyRegistry } from '../../../../insomnia-common/dist/index';
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';

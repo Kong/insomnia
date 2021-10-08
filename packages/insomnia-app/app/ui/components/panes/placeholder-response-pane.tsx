@@ -1,6 +1,6 @@
-import { HotKeyRegistry } from 'insomnia-common';
 import React, { FunctionComponent } from 'react';
 
+import { HotKeyRegistry } from '../../../../../insomnia-common/dist/index';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';

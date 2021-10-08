@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import { KeyCombination } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
+import { KeyCombination } from '../../../../../insomnia-common/dist/index';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
