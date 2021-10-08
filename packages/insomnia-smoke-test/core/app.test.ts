@@ -106,7 +106,7 @@ describe('Application launch', function() {
     await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
   });
 
-  it.only('sends dummy.xml request and shows raw response', async () => {
+  it('sends dummy.xml request and shows raw response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.xml';
 
     await client.correctlyLaunched(app);
