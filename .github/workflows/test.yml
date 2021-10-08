@@ -72,20 +72,22 @@ jobs:
           # TODO: get this from package.json
           VERSION: "2.3.2"
 
-      - name: Notarize installer package
-        if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-notarize@v1
-        with:
-          product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
-          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
-          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+      # We don't need to notarize and staple on every commit, but uncomment the following if/when necessary
 
-      - name: Staple installer package
-        if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-staple@v1
-        with:
-          product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      # - name: Notarize installer package
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-notarize@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
+      #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+      #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
+      # - name: Staple installer package
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-staple@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:compress
