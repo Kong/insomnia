@@ -1,7 +1,8 @@
+import packageJson from '../package.json';
 import { handleError } from './errors';
 
 export const getVersion = () => {
-  return process.env.VERSION;
+  return process.env.VERSION || packageJson.version;
 };
 
 export const logErrorExit1 = (err?: Error) => {

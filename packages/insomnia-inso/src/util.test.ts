@@ -1,3 +1,4 @@
+import * as packageJson from '../package.json';
 import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
@@ -121,6 +122,10 @@ describe('getDefaultAppName()', () => {
 });
 
 describe('getVersion()', () => {
+  it('should return version from packageJson', () => {
+    expect(getVersion()).toBe(packageJson.version);
+  });
+
   it('should get version from env variable', () => {
     const oldVersion = process.env.VERSION;
     process.env.VERSION = '2.3.3-canary.1234';
