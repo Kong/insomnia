@@ -1,8 +1,10 @@
 import { Settings } from 'insomnia-common';
 import React, { FC, Fragment } from 'react';
+import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { isConfigControlledSetting } from '../../../models/helpers/settings';
+import { isControlledSetting } from '../../../models/helpers/settings';
+import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 const Wrapper = styled.div({
@@ -41,25 +43,34 @@ const HelperText = styled.span({
 });
 
 export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, setting }) => {
-  const controlledBy = isConfigControlledSetting(setting);
+  const settings = useSelector(selectSettings);
+  const [isControlled, controlledBy] = isControlledSetting(settings)(setting);
 
-  if (controlledBy === false) {
+  // DEBUGGING --- REMOVE BEFORE MERGING
+  if (setting === 'enableAnalytics') {
+    console.log({ isControlled, controlledBy, settings, setting });
+  }
+
+  if (isControlled === false) {
     return <Fragment>{children}</Fragment>;
   }
 
   let helpText: string | undefined = undefined;
   let controllerName: string | null = null;
+  switch (controlledBy) {
+    case 'insomnia-config':
+      helpText = `this value is controlled by \`settings.${setting}\` in your Insomnia Config`;
+      controllerName = 'insomnia config';
+      break;
 
-  /** because, and only because, we are not ready to show an incognito mode checkbox to users, we are temporarily disabling this codepath */
-  if (controlledBy === 'incognitoMode') {
-    helpText = 'this value is controlled by Incognito Mode';
-    controllerName = 'incognito mode';
-  }
+    case 'incognitoMode':
+      helpText = 'this value is controlled by Incognito Mode';
+      controllerName = 'incognito mode';
+      break;
 
-  // the insomnia config has highest precidence, so it is checked last
-  if (controlledBy === 'insomnia-config') {
-    helpText = `this value is controlled by \`settings.${setting}\` in your Insomnia Config`;
-    controllerName = 'insomnia config';
+    default:
+      helpText = `this value is controlled by ${controlledBy}`;
+      controllerName = controlledBy || 'another setting';
   }
 
   return (

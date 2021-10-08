@@ -1,7 +1,7 @@
 {
   "insomniaConfig": "1.0.0",
   "settings": {
-    "disablePaidFeatureAds": true,
-    "incognitoMode": true
+    "incognitoMode": true,
+    "disablePaidFeatureAds": true
   }
 }

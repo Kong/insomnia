@@ -4,7 +4,6 @@ import { InsomniaConfig, validate } from 'insomnia-config';
 import { resolve } from 'path';
 import { mapObjIndexed, mergeRight, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
-import { ValueOf } from 'type-fest';
 
 /**
  * IMPORTANT: Due to a business rule that the config is never changed after startup, this should only be called by `getConfigSettings` below.  It is only exported
@@ -76,11 +75,37 @@ export const isControlledByAnotherSetting = (settings: Settings) => (setting: ke
   };
 };
 
+export const isControlledSetting = (settings: Settings) => (setting: keyof Settings) => {
+  if (isControlledByConfig(setting)) {
+    const {
+      isControlled,
+      controller,
+    } = isControlledByAnotherSetting({
+      ...settings,
+      ...getConfigSettings(),
+    })(setting);
+    if (isControlled && controller && isControlledByConfig(controller)) {
+      return [true, controller] as const;
+    }
+
+    return [true, 'insomnia-config'] as const;
+  }
+
+  const {
+    isControlled,
+    controller,
+  } = isControlledByAnotherSetting(settings)(setting);
+  if (isControlled) {
+    return [true, controller] as const;
+  }
+
+  return [false, null] as const;
+};
+
 /**
  * For any given setting, return what the value of that setting should be once you take the insomnia config and other potentially controlling settings into account
  */
-export const getControlledValue = (settings: Settings) => (value: ValueOf<Settings>, setting: keyof Settings) => {
-
+export const getControlledValue = (settings: Settings) => (_value, setting: keyof Settings) => {
   if (isControlledByConfig(setting)) {
     const configSettings = {
       ...settings,
@@ -111,7 +136,7 @@ export const getControlledValue = (settings: Settings) => (value: ValueOf<Settin
   }
 
   // return the object unchanged, as it exists in the settings
-  return value;
+  return settings[setting];
 };
 
 /** removes any setting in the given object which is controlled in any way (i.e. either by the insomnia config or by another setting) */

@@ -598,16 +598,12 @@ class General extends PureComponent<Props, State> {
           ]}
           label="Send Usage Statistics"
           setting="enableAnalytics"
-          overrideSetting="incognitoMode"
-          overrideValue={settings.incognitoMode === false ? undefined : !settings.incognitoMode}
         />
 
         <BooleanSetting
           descriptions={['Insomnia periodically makes background requests to api.insomnia.rest/notifications for things like email verification, out-of-date billing information, trial information.']}
           label="Allow Notification Requests"
           setting="allowNotificationRequests"
-          overrideSetting="incognitoMode"
-          overrideValue={settings.incognitoMode === false ? undefined : !settings.incognitoMode}
         />
 
         <hr className="pad-top" />
