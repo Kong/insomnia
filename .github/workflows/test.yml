@@ -16,8 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
-        # os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
@@ -34,14 +33,14 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
       
-      # - name: Lint
-      #   run: npm run lint
+      - name: Lint
+        run: npm run lint
       
-      # - name: Lint Markdown
-      #   run: npm run lint:markdown
+      - name: Lint Markdown
+        run: npm run lint:markdown
       
-      # - name: Run tests
-      #   run: npm test
+      - name: Run tests
+        run: npm test
 
       - name: Package Inso CLI
         run: npm run inso-package
@@ -101,17 +100,17 @@ jobs:
       - name: Run CLI smoke tests
         run: npm run test:smoke:cli
 
-      # - name: Build for smoke tests
-      #   run: npm run app-build:smoke
+      - name: Build for smoke tests
+        run: npm run app-build:smoke
 
-      # - name: Run smoke tests
-      #   timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
-      #   run: npm run test:smoke:build
+      - name: Run smoke tests
+        timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
+        run: npm run test:smoke:build
       
-      # - name: Upload smoke test screenshots
-      #   uses: actions/upload-artifact@v2
-      #   if: always()
-      #   with:
-      #     if-no-files-found: ignore
-      #     name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-      #     path: packages/insomnia-smoke-test/screenshots
+      - name: Upload smoke test screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/screenshots
