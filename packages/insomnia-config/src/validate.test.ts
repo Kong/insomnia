@@ -46,7 +46,6 @@ describe('validate', () => {
 
   it('fails on incorrect version', () => {
     const { valid, errors } = validate({
-      // @ts-expect-error intentionally invalid
       insomniaConfig: 'v1.0.0',
     });
     expect(errors).toMatchObject([
@@ -66,7 +65,6 @@ describe('validate', () => {
   });
 
   it('fails on missing properties', () => {
-    // @ts-expect-error intentionally invalid
     const { valid, errors } = validate({});
     expect(errors).toMatchObject([
       {
@@ -83,7 +81,6 @@ describe('validate', () => {
   it('fails on additional top level properties', () => {
     const { valid, errors } = validate({
       insomniaConfig: '1.0.0',
-      // @ts-expect-error intentional mispelling of `settings` (wrong casing)
       Settings: {},
     });
 
@@ -105,7 +102,6 @@ describe('validate', () => {
     const { valid, errors } = validate({
       insomniaConfig: '1.0.0',
       settings: {
-        // @ts-expect-error intentional wrong flip of actual setting name, `enableAnalytics`
         disableAnalytics: true,
       },
     });
@@ -128,7 +124,6 @@ describe('validate', () => {
     const { valid, errors } = validate({
       insomniaConfig: '1.0.0',
       settings: {
-        // @ts-expect-error intentionally invalid
         enableAnalytics: 'Ziltoid',
       },
     });

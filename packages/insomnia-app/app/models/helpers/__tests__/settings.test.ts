@@ -13,7 +13,7 @@ jest.mock('../settings');
 const getConfigSettings = mocked(_getConfigSettings);
 
 describe('getControlledStatus', () => {
-  it('resolve conflicting value', () => {
+  it('resolve conflicting value in the settings', () => {
     getConfigSettings.mockReturnValue({});
     const settings: Settings = {
       ...models.settings.init(),
@@ -21,48 +21,47 @@ describe('getControlledStatus', () => {
       enableAnalytics: true, // this intionally conflicts with incognito mode
     };
 
-    const { value } = getControlledStatus(settings)('enableAnalytics');
+    const controlledStatus = getControlledStatus(settings)('enableAnalytics');
 
-    expect(value).toBe(false);
-  });
-
-  it('config control gets priority over simple settings control', () => {
-    getConfigSettings.mockReturnValue({ enableAnalytics: true });
-    const settings: Settings = {
-      ...models.settings.init(),
-      incognitoMode: true,
-      enableAnalytics: false,
-    };
-
-    const result = getControlledSettings(settings);
-
-    expect(result).toMatchObject({ enableAnalytics: true });
-  });
-
-  it('config _and_ settings control gets highest possible priority', () => {
-    getConfigSettings.mockReturnValue({
-      incognitoMode: true,
-      enableAnalytics: true, // this intentionally conflicts with incognitoMode, which should force it to false
+    expect(controlledStatus).toStrictEqual({
+      isControlled: true,
+      controller: 'incognitoMode',
+      value: false,
     });
-    const settings: Settings = {
-      ...models.settings.init(),
-      incognitoMode: false, // this intentionally conflicts with the config
-      enableAnalytics: false,
-    };
-
-    const result = getControlledSettings(settings);
-
-    expect(result).toMatchObject({ enableAnalytics: false });
   });
 
-  it('only reads the config once on startup and then never again', async () => {
-    // const someKindOfSpy = ??
+  it('resolve conflicting value in the config', () => {
+    getConfigSettings.mockReturnValue({ enableAnalytics: false });
+    const settings: Settings = {
+      ...models.settings.init(),
+      incognitoMode: false, // ensures incognito mode isn't affecting this test
+      enableAnalytics: true, // this intionally conflicts with the config
+    };
 
-    getConfigSettings();
-    getConfigSettings();
+    const controlledStatus = getControlledStatus(settings)('enableAnalytics');
 
-    // TODO - no one on the team knows how we can test this, despite a few collective man-hours of trying every approach we can think of
-    // expect(someKindOfSpy).toHaveBeenCalled(1);
+    expect(controlledStatus).toStrictEqual({
+      isControlled: true,
+      controller: 'insomnia-config',
+      value: false,
+    });
+  });
+
+  it('resolve conflicting value in the config and a controlling setting', () => {
+    getConfigSettings.mockReturnValue({ enableAnalytics: true }); // intentionally conflicts with incognito mode
+    const settings: Settings = {
+      ...models.settings.init(),
+      incognitoMode: true, // this intionally conflicts with the config
+      enableAnalytics: false, // this intionally conflicts with the config
+    };
+
+    const controlledStatus = getControlledStatus(settings)('enableAnalytics');
+
+    expect(controlledStatus).toStrictEqual({
+      isControlled: true,
+      controller: 'insomnia-config',
+      value: true,
+    });
   });
 });
 
@@ -105,7 +104,7 @@ describe('omitControlledSettings', () => {
   });
 });
 
-describe('overwriteControlledSettings', () => {
+describe('getControlledSettings', () => {
   it('overwrites config controlled settings', () => {
     getConfigSettings.mockReturnValue({ disablePaidFeatureAds: true });
     const settings: Settings = {
@@ -166,5 +165,44 @@ describe('overwriteControlledSettings', () => {
     const result = getControlledSettings(settings);
 
     expect(result).toMatchObject({ enableAnalytics: true });
+  });
+
+  it('config control gets priority over simple settings control', () => {
+    getConfigSettings.mockReturnValue({ enableAnalytics: true });
+    const settings: Settings = {
+      ...models.settings.init(),
+      incognitoMode: true,
+      enableAnalytics: false,
+    };
+
+    const result = getControlledSettings(settings);
+
+    expect(result).toMatchObject({ enableAnalytics: true });
+  });
+
+  it('config _and_ settings control gets highest possible priority', () => {
+    getConfigSettings.mockReturnValue({
+      incognitoMode: true,
+      enableAnalytics: true, // this intentionally conflicts with incognitoMode, which should force it to false
+    });
+    const settings: Settings = {
+      ...models.settings.init(),
+      incognitoMode: false, // this intentionally conflicts with the config
+      enableAnalytics: false,
+    };
+
+    const result = getControlledSettings(settings);
+
+    expect(result).toMatchObject({ enableAnalytics: false });
+  });
+
+  it('only reads the config once on startup and then never again', async () => {
+    // const someKindOfSpy = ??
+
+    getConfigSettings();
+    getConfigSettings();
+
+    // TODO - no one on the team knows how we can test this, despite a few collective man-hours of trying every approach we can think of
+    // expect(someKindOfSpy).toHaveBeenCalled(1);
   });
 });

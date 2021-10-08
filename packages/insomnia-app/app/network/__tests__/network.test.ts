@@ -29,7 +29,7 @@ describe('actuallySend()', () => {
 
   it('sends a generic request', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -138,7 +138,7 @@ describe('actuallySend()', () => {
 
   it('sends a urlencoded', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -207,7 +207,7 @@ describe('actuallySend()', () => {
 
   it('skips sending and storing cookies with setting', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -307,7 +307,7 @@ describe('actuallySend()', () => {
 
   it('sends a file', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     await models.cookieJar.create({
       parentId: workspace._id,
     });
@@ -370,7 +370,7 @@ describe('actuallySend()', () => {
 
   it('sends multipart form data', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     await models.cookieJar.create({
       parentId: workspace._id,
     });
@@ -462,7 +462,7 @@ describe('actuallySend()', () => {
 
   it('uses unix socket', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -502,7 +502,7 @@ describe('actuallySend()', () => {
 
   it('uses works with HEAD', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -541,7 +541,7 @@ describe('actuallySend()', () => {
 
   it('uses works with "unix" host', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -580,7 +580,7 @@ describe('actuallySend()', () => {
 
   it('uses netrc', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -621,7 +621,7 @@ describe('actuallySend()', () => {
 
   it('disables ssl verification when configured to do so', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const cookies = [
       {
         creation: new Date('2016-10-05T04:40:49.505Z'),
@@ -734,7 +734,7 @@ describe('actuallySend()', () => {
 
   it('sets HTTP version', async () => {
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request = Object.assign(models.request.init(), {
       _id: 'req_123',
       parentId: workspace._id,
@@ -777,7 +777,7 @@ describe('actuallySend()', () => {
   it('requests can be cancelled by requestId', async () => {
     // GIVEN
     const workspace = await models.workspace.create();
-    const settings = await models.settings.create();
+    const settings = await models.settings.getOrCreate();
     const request1 = Object.assign(models.request.init(), {
       _id: 'req_15',
       parentId: workspace._id,
