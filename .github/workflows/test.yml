@@ -68,26 +68,24 @@ jobs:
           PKG_NAME: ${{ steps.inso-variables.outputs.pkg-name }}
           BUNDLE_ID: ${{ steps.inso-variables.outputs.bundle-id }}
           ARTIFACT_LOCATION: compressed
-          # TODO: Should we suffix the run number to the version here? Maybe, but inso -v should also have the same run number
-          # TODO: get this from package.json
+          # Hardcoded here, configured in https://github.com/Kong/insomnia/pull/4086
           VERSION: "2.3.2"
 
-      # We don't need to notarize and staple on every commit, but uncomment the following if/when necessary
+      # TODO: We don't need to notarize and staple on every commit, comment the following after initial QA
+      - name: Notarize installer package
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-notarize@v1
+        with:
+          product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
+          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
 
-      # - name: Notarize installer package
-      #   if: matrix.os == 'macos-latest'
-      #   uses: devbotsxyz/xcode-notarize@v1
-      #   with:
-      #     product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
-      #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
-      #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-      #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-
-      # - name: Staple installer package
-      #   if: matrix.os == 'macos-latest'
-      #   uses: devbotsxyz/xcode-staple@v1
-      #   with:
-      #     product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      - name: Staple installer package
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-staple@v1
+        with:
+          product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:compress
