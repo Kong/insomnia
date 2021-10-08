@@ -8,7 +8,7 @@ const ajv = new Ajv({
   verbose: true,
 });
 
-export const ingest = (input: string | InsomniaConfig) => {
+export const ingest = (input: string | InsomniaConfig | unknown) => {
   if (typeof input === 'string') {
     try {
       return JSON.parse(input) as InsomniaConfig;
@@ -32,7 +32,7 @@ export interface ErrorResult {
 
 export type ValidationResult = ValidResult | ErrorResult;
 
-export const validate = (input: string | InsomniaConfig): ValidationResult => {
+export const validate = (input: string | InsomniaConfig | unknown): ValidationResult => {
   const data = ingest(input);
   const validator = ajv.compile<InsomniaConfig>(schema);
   const valid = validator(data);

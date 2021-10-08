@@ -5,26 +5,70 @@ import { resolve } from 'path';
 import { mapObjIndexed, mergeRight, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
 
+import { isDevelopment } from '../../common/constants';
+import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
+
+/** takes an unresolved (or resolved will work fine too) filePath of the insomnia config and reads the insomniaConfig from disk */
+const readConfigFile = (filePath: string) => {
+  try {
+    const resolvedFilePath = resolve(filePath);
+    const fileContents = readFileSync(resolvedFilePath, 'utf-8');
+    return JSON.parse(fileContents) as unknown;
+  } catch (error: unknown) {
+    return undefined;
+  }
+};
+
+const getConfigFile = () => {
+  const processExecutable = getPortableExecutableDir() || '';
+  const insomniaDataDirectory = getDataDirectory();
+  const localDev = '../../packages/insomnia-app/app/insomnia.config.json';
+  const configPaths = [
+    processExecutable,
+    insomniaDataDirectory,
+    ...(isDevelopment() ? [localDev] : []),
+  ];
+
+  // note: this is written as to avoid unnecessary (synchronous) reads from disk.
+  // The paths above are in priority order such that if we already found what we're looking for, there's no reason to keep reading other files.
+  for (const configPath of configPaths) {
+    const insomniaConfig = readConfigFile(configPath);
+    if (insomniaConfig !== undefined) {
+      return {
+        insomniaConfig,
+        configPath,
+      };
+    }
+  }
+  return {
+    insomniaConfig: { insomniaConfig: '1.0.0' },
+    configPath: '<internal>',
+  };
+};
+
 /**
- * IMPORTANT: Due to a business rule that the config is never changed after startup, this should only be called by `getConfigSettings` below.  It is only exported
+ * IMPORTANT: Due to a business rule that the config is never changed after startup, this should only be called by `getConfigSettings` below.  It is only extracted and exported due to tests needing to have it as a separate function so that it can be mocked (or not mocked).  Otherwise it would be inlined.
  *
  * @deprecated this is not actually deprecated, but the strikethrough is to warn not to use this function (ever) outside of tests.
  */
-export const readConfigFile = (path: string) => () => {
-  const file = resolve(path);
-  const insomniaConfig = JSON.parse(String(readFileSync(file))) as InsomniaConfig;
+export const getValidConfigSettings = () => {
+  const { configPath, insomniaConfig } = getConfigFile();
 
-  const { valid, errors } = validate(insomniaConfig);
+  const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
   if (!valid) {
-    console.error('invalid insomnia config', errors);
+    console.error('invalid insomnia config', {
+      configPath,
+      insomniaConfig,
+      errors,
+    });
     return {};
   }
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
-  return insomniaConfig.settings as Required<InsomniaConfig>['settings'] || {};
+  return (insomniaConfig as InsomniaConfig).settings || {};
 };
 
 /** gets settings from the `insomnia.config.json` */
-export const getConfigSettings = once(readConfigFile('../../packages/insomnia-app/app/insomnia.config.json'));
+export const getConfigSettings = once(getValidConfigSettings);
 
 interface Condition {
   when: boolean;

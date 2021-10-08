@@ -1,7 +1,7 @@
 import path from 'path';
 
 import appConfig from '../../config/config.json';
-import { getDataDirectory } from './electron-helpers';
+import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
 
 // App Stuff
 export const getAppVersion = () => appConfig.version;
@@ -36,7 +36,7 @@ export function updatesSupported() {
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && process.env.PORTABLE_EXECUTABLE_DIR) {
+  if (isWindows() && getPortableExecutableDir()) {
     return false;
   }
 
