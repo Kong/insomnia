@@ -3,7 +3,7 @@ import React, { FC, Fragment } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { isControlledSetting } from '../../../models/helpers/settings';
+import { getControlledStatus } from '../../../models/helpers/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
@@ -44,11 +44,11 @@ const HelperText = styled.span({
 
 export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, setting }) => {
   const settings = useSelector(selectSettings);
-  const [isControlled, controlledBy] = isControlledSetting(settings)(setting);
+  const { isControlled, controller } = getControlledStatus(settings)(setting);
 
   // DEBUGGING --- REMOVE BEFORE MERGING
   if (setting === 'enableAnalytics') {
-    console.log({ isControlled, controlledBy, settings, setting });
+    console.log({ isControlled, controller, settings, setting });
   }
 
   if (isControlled === false) {
@@ -57,7 +57,7 @@ export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, s
 
   let helpText: string | undefined = undefined;
   let controllerName: string | null = null;
-  switch (controlledBy) {
+  switch (controller) {
     case 'insomnia-config':
       helpText = `this value is controlled by \`settings.${setting}\` in your Insomnia Config`;
       controllerName = 'insomnia config';
@@ -69,8 +69,8 @@ export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, s
       break;
 
     default:
-      helpText = `this value is controlled by ${controlledBy}`;
-      controllerName = controlledBy || 'another setting';
+      helpText = `this value is controlled by ${controller}`;
+      controllerName = controller || 'another setting';
   }
 
   return (

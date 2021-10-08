@@ -5,14 +5,14 @@ import * as models from '../../../models';
 import {
   getConfigSettings as _getConfigSettings,
   getControlledSettings,
-  getControlledValue,
+  getControlledStatus,
   omitControlledSettings,
 } from '../settings';
 
 jest.mock('../settings');
 const getConfigSettings = mocked(_getConfigSettings);
 
-describe('getControlledValue', () => {
+describe('getControlledStatus', () => {
   it('resolve conflicting value', () => {
     getConfigSettings.mockReturnValue({});
     const settings: Settings = {
@@ -21,9 +21,9 @@ describe('getControlledValue', () => {
       enableAnalytics: true, // this intionally conflicts with incognito mode
     };
 
-    const controlledValue = getControlledValue(settings)(true, 'enableAnalytics');
+    const { value } = getControlledStatus(settings)('enableAnalytics');
 
-    expect(controlledValue).toBe(false);
+    expect(value).toBe(false);
   });
 
   it('config control gets priority over simple settings control', () => {

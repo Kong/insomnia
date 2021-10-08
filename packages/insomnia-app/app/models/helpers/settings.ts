@@ -92,9 +92,32 @@ const settingControllers = new Map<keyof Settings, Condition[]>([
 ]);
 
 /** checks whether a given setting is literally specified in the insomnia config */
-export const isControlledByConfig = (setting: keyof Settings) => (
+export const isControlledByConfig = (setting?: keyof Settings | null): setting is keyof Settings => setting ? (
   Boolean(Object.prototype.hasOwnProperty.call(getConfigSettings(), setting))
-);
+) : false;
+
+export interface SettingControlledSetting<T extends keyof Settings> {
+  controlledValue: Settings[T];
+  controller: keyof Settings;
+  isControlled: true;
+}
+
+export interface ConfigControlledSetting<T extends keyof Settings> {
+  controlledValue: Settings[T];
+  controller: 'insomnia-config';
+  isControlled: true;
+}
+
+export interface UncontrolledSetting {
+  controller: null;
+  isControlled: false;
+}
+
+export type SettingsControl<T extends keyof Settings> =
+  | SettingControlledSetting<T>
+  | ConfigControlledSetting<T>
+  | UncontrolledSetting
+;
 
 /**
  * checks whether a given setting is controlled by another setting.
@@ -105,98 +128,86 @@ export const isControlledByAnotherSetting = (settings: Settings) => (setting: ke
     for (const { when, set } of controlledSettings) {
       if (Object.prototype.hasOwnProperty.call(set, setting)) {
         if (when === settings[controller]) {
-          return {
+          const output: SettingControlledSetting<typeof setting> = {
             controlledValue: set[setting],
             controller,
             isControlled: true,
           };
+          return output;
         }
       }
     }
   }
-  return {
+  const uncontrolledSetting: UncontrolledSetting = {
+    controller: null,
     isControlled: false,
   };
-};
-
-export const isControlledSetting = (settings: Settings) => (setting: keyof Settings) => {
-  if (isControlledByConfig(setting)) {
-    const {
-      isControlled,
-      controller,
-    } = isControlledByAnotherSetting({
-      ...settings,
-      ...getConfigSettings(),
-    })(setting);
-    if (isControlled && controller && isControlledByConfig(controller)) {
-      return [true, controller] as const;
-    }
-
-    return [true, 'insomnia-config'] as const;
-  }
-
-  const {
-    isControlled,
-    controller,
-  } = isControlledByAnotherSetting(settings)(setting);
-  if (isControlled) {
-    return [true, controller] as const;
-  }
-
-  return [false, null] as const;
+  return uncontrolledSetting;
 };
 
 /**
  * For any given setting, return what the value of that setting should be once you take the insomnia config and other potentially controlling settings into account
  */
-export const getControlledValue = (settings: Settings) => (_value, setting: keyof Settings) => {
+export const getControlledStatus = (settings: Settings) => (setting: keyof Settings) => {
   if (isControlledByConfig(setting)) {
     const configSettings = {
       ...settings,
       ...getConfigSettings(),
     };
 
-    const {
-      controller,
-      controlledValue,
-      isControlled: anotherSettingControls,
-    } = isControlledByAnotherSetting(configSettings)(setting);
+    // note that the raw config settings are being passed here (rathern than `settings` alone), because we must verify that the controller does not itself also have a specification in the config
+    const controllerSetting = isControlledByAnotherSetting(configSettings)(setting);
 
     // TLDR; the config always wins
     // It is a business rule that if a setting (e.g. `incognitoMode` specified in the config controlls another setting (e.g. `enableAnalytics`), that conflict should be resolved such that the config-specified controller should _always_ win, _even_ if the controlled setting (i.e. `enableAnalytics`) is _itself_ specified in the config with a conflicting value)
-    if (anotherSettingControls && controller && isControlledByConfig(controller)) {
-      return controlledValue;
+    if (controllerSetting.isControlled && isControlledByConfig(controllerSetting.controller)) {
+      // since this setting is also controlled by a controller, and that controller is controlled by the config, we use the controller's desired value for this setting.
+      return {
+        controller: controllerSetting.controller,
+        isControlled: true,
+        value: controllerSetting.controlledValue,
+      };
     }
-    // no other setting controls this, so we can grab it from the config itself
-    return configSettings[setting];
+
+    // no other setting controls this, so we can grab its value the config directly
+    return {
+      controller: 'insomnia-config',
+      isControlled: true,
+      value: configSettings[setting],
+    };
   }
 
-  const {
-    controlledValue,
-    isControlled: anotherSettingControls,
-  } = isControlledByAnotherSetting(settings)(setting);
-  if (anotherSettingControls) {
-    return controlledValue;
+  const thisSetting = isControlledByAnotherSetting(settings)(setting);
+  if (thisSetting.isControlled) {
+    // this setting is controlled by another setting.
+    return {
+      controller: thisSetting.controller,
+      isControlled: true,
+      value: thisSetting.controlledValue,
+    };
   }
 
   // return the object unchanged, as it exists in the settings
-  return settings[setting];
+  return {
+    controller: null,
+    isControlled: false,
+    value: settings[setting],
+  };
 };
 
-/** removes any setting in the given object which is controlled in any way (i.e. either by the insomnia config or by another setting) */
+/** removes any setting in the given patch object which is controlled in any way (i.e. either by the insomnia config or by another setting) */
 export const omitControlledSettings =
   <T extends Settings>(settings: T) =>
   <U extends Partial<Settings>>(patch: U) => {
-    return omitBy((_value, setting: keyof Settings) => {
-      return (
-        isControlledByConfig(setting)
-      || isControlledByAnotherSetting(settings)(setting).isControlled
-      );
-    }, patch);
+    return omitBy((_value, setting: keyof Settings) => (
+      getControlledStatus(settings)(setting).isControlled
+    ), patch);
   };
 
 /** for any given setting, whether controlled by the insomnia config or whether controlled by another value, return the calculated value */
 export const getControlledSettings = <T extends Settings>(settings: T) => {
-  const override = mapObjIndexed(getControlledValue(settings), settings) as T;
+  const override = mapObjIndexed((_value, setting: keyof Settings) => (
+    getControlledStatus(settings)(setting).value
+  ), settings) as T;
   return mergeRight(settings, override) as T;
 };

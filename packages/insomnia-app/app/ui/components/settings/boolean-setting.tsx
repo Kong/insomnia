@@ -3,7 +3,7 @@ import React, { ChangeEvent, FC, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 
-import { isControlledSetting } from '../../../models/helpers/settings';
+import { getControlledStatus } from '../../../models/helpers/settings';
 import * as models from '../../../models/index';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
@@ -45,7 +45,7 @@ export const BooleanSetting: FC<{
     throw new Error(`Invalid boolean setting name ${setting}`);
   }
 
-  const [isControlled] = isControlledSetting(settings)(setting);
+  const { isControlled } = getControlledStatus(settings)(setting);
 
   const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
