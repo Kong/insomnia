@@ -47,8 +47,9 @@ jobs:
 
       - name: Set Inso Variables
         id: inso-variables
+        shell: bash
         run: |
-          PKG_NAME=${{ matrix.os }}-inso-${{ github.run_number }}
+          PKG_NAME="${{ matrix.os }}-inso-${{ github.run_number }}"
           BUNDLE_ID="com.insomnia.inso.app"
 
           echo ::set-output name=pkg-name::$PKG_NAME
