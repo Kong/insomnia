@@ -1,7 +1,6 @@
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const base = require('./webpack.config.base');
-const packageJson = require('../package.json');
 
 /** @type { import('webpack').Configuration } */
 module.exports = merge(base, {
@@ -12,7 +11,7 @@ module.exports = merge(base, {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.DEFAULT_APP_NAME': JSON.stringify('Insomnia'),
-      'process.env.VERSION': JSON.stringify(process.env.VERSION || packageJson.version),
+      'process.env.VERSION': JSON.stringify(process.env.VERSION),
     }),
   ],
 });
