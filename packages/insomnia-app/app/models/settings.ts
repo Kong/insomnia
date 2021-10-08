@@ -1,4 +1,5 @@
-import { HttpVersions, Settings as BaseSettings } from '../../../insomnia-common/dist/index';
+import { HttpVersions, Settings as BaseSettings } from 'insomnia-common';
+
 import {
   getAppDefaultDarkTheme,
   getAppDefaultLightTheme,

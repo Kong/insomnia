@@ -2,6 +2,7 @@ import aws4 from 'aws4';
 import clone from 'clone';
 import crypto from 'crypto';
 import fs from 'fs';
+import { HttpVersions } from 'insomnia-common';
 import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import {
   buildQueryStringFromParams,
@@ -23,7 +24,6 @@ import { join as pathJoin } from 'path';
 import { parse as urlParse, resolve as urlResolve } from 'url';
 import * as uuid from 'uuid';
 
-import { HttpVersions } from '../../../insomnia-common/dist/index';
 import {
   AUTH_AWS_IAM,
   AUTH_DIGEST,

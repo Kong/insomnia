@@ -1,6 +1,6 @@
+import { Settings } from 'insomnia-common';
 import { mocked } from 'ts-jest/utils';
 
-import { Settings } from '../../../../../insomnia-common/dist/index';
 import * as models from '../../../models';
 import {
   getConfigSettings as _getConfigSettings,

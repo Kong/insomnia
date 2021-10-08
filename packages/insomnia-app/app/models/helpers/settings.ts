@@ -1,10 +1,10 @@
 import { readFileSync } from 'fs';
+import { Settings } from 'insomnia-common';
+import { InsomniaConfig, validate } from 'insomnia-config';
 import { resolve } from 'path';
 import { mapObjIndexed, mergeRight, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
 
-import { Settings } from '../../../../insomnia-common/dist/index';
-import { InsomniaConfig, validate } from '../../../../insomnia-config/dist/index';
 import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
 

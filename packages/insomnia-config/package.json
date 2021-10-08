@@ -26,6 +26,9 @@
     "prebuild": "npm run clean",
     "build": "tsc --build tsconfig.build.json"
   },
+  "dependencies": {
+    "insomnia-common": "2.3.2"
+  },
   "devDependencies": {
     "ajv": "^8.6.2",
     "ajv-errors": "^3.0.0",

@@ -1,10 +1,10 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as fontScanner from 'font-scanner';
+import { HttpVersion, HttpVersions } from 'insomnia-common';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import { HttpVersion, HttpVersions } from '../../../../../insomnia-common/dist/index';
 import type { GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_MIGRATION,

@@ -1,4 +1,5 @@
-import { HotKeyRegistry, KeyBindings, KeyCombination } from '../../../insomnia-common/dist/index';
+import { HotKeyRegistry, KeyBindings, KeyCombination } from 'insomnia-common';
+
 import { ALT_SYM, CTRL_SYM, isMac, META_SYM, SHIFT_SYM } from './constants';
 import { keyboardKeys } from './keyboard-keys';
 import { strings } from './strings';

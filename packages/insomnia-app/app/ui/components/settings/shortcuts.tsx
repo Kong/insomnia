@@ -1,7 +1,7 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HotKeyRegistry, KeyCombination } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
-import { HotKeyRegistry, KeyCombination } from '../../../../../insomnia-common/dist/index';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import {
   areKeyBindingsSameAsDefault,

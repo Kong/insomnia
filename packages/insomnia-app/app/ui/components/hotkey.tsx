@@ -1,7 +1,7 @@
 import classnames from 'classnames';
+import { KeyBindings, KeyCombination } from 'insomnia-common';
 import React, { FC, memo } from 'react';
 
-import { KeyBindings, KeyCombination } from '../../../../insomnia-common/dist/index';
 import { isMac } from '../../common/constants';
 import { constructKeyCombinationDisplay, getPlatformKeyCombinations } from '../../common/hotkeys';
 

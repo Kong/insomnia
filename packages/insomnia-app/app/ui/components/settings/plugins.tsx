@@ -1,10 +1,10 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
+import { PluginConfig } from 'insomnia-common';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
 import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
 
-import { PluginConfig } from '../../../../../insomnia-common/dist/index';
 import {
   AUTOBIND_CFG,
   NPM_PACKAGE_BASE,

@@ -1,4 +1,4 @@
-import { Settings as CommonSettings } from '../../insomnia-common/dist/index';
+import { Settings as CommonSettings } from 'insomnia-common';
 
 type ConfigVersion = '1.0.0';
 
