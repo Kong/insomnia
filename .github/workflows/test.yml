@@ -21,26 +21,41 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
+      
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
+      
       - name: Bootstrap packages
         run: npm run bootstrap
+      
       # - name: Lint
       #   run: npm run lint
+      
       # - name: Lint Markdown
       #   run: npm run lint:markdown
+      
       # - name: Run tests
       #   run: npm test
-      # - name: Build for smoke tests
-      #   run: npm run app-build:smoke
+
       - name: Package Inso CLI
         run: npm run inso-package
 
-      - name: Build a macOS Installer package
+      - name: Set Inso Variables
+        id: inso-variables
+        run: |
+          PKG_NAME=${{ matrix.os }}-inso-${{ github.run_number }}
+          BUNDLE_ID="com.insomnia.inso.app"
+
+          echo ::set-output name=pkg-name::$PKG_NAME
+          echo ::set-output name=bundle-id::$BUNDLE_ID
+
+      - name: Create macOS installer package
         if: matrix.os == 'macos-latest'
         run: |
           chmod +x ./src/scripts/macos-pkg.sh
@@ -49,40 +64,50 @@ jobs:
         working-directory: packages/insomnia-inso
         continue-on-error: true
         env:
-          MACOS_CERTIFICATE_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
-          PKG_NAME: ${{ matrix.os }}-inso-${{ github.run_number }}.pkg
-          # TODO: Should we suffix the run number to the version here? Maybe, but inso -v should also have the run number
+          PKG_NAME: ${{ steps.inso-variables.outputs.pkg-name }}
+          BUNDLE_ID: ${{ steps.inso-variables.outputs.bundle-id }}
+          ARTIFACT_LOCATION: compressed
+          # TODO: Should we suffix the run number to the version here? Maybe, but inso -v should also have the same run number
           # TODO: get this from package.json
           VERSION: "2.3.2"
 
-      - name: Notarize Release Build
+      - name: Notarize installer package
         if: matrix.os == 'macos-latest'
         uses: devbotsxyz/xcode-notarize@v1
         with:
-          product-path: packages/insomnia-inso/compressed/${{ matrix.os }}-inso-${{ github.run_number }}.pkg
+          product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-          primary-bundle-id: com.insomnia.inso.app
 
-      - name: "Staple Release Build"
+      - name: Staple installer package
         if: matrix.os == 'macos-latest'
         uses: devbotsxyz/xcode-staple@v1
         with:
-          product-path: packages/insomnia-inso/compressed/${{ matrix.os }}-inso-${{ github.run_number }}.pkg
+          product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
-      - name: Compress Inso CLI binary
+      - name: Create Inso CLI artifacts
         run: npm run inso-package:compress
 
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
         with:
           if-no-files-found: ignore
-          name: ${{ matrix.os }}-inso-${{ github.run_number }}
+          name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/compressed
+      
+      - name: Run CLI smoke tests
+        run: npm run test:smoke:cli
+
+      # - name: Build for smoke tests
+      #   run: npm run app-build:smoke
+
       # - name: Run smoke tests
       #   timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
       #   run: npm run test:smoke:build
+      
       # - name: Upload smoke test screenshots
       #   uses: actions/upload-artifact@v2
       #   if: always()
@@ -90,5 +115,3 @@ jobs:
       #     if-no-files-found: ignore
       #     name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
       #     path: packages/insomnia-smoke-test/screenshots
-      - name: Run CLI smoke tests
-        run: npm run test:smoke:cli

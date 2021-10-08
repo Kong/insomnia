@@ -1,50 +1,59 @@
-# Based on https://localazy.com/blog/how-to-automatically-sign-macos-apps-using-github-actions and https://stackoverflow.com/a/60807932
+# Useful resources for the creation of this script
+# https://developer.apple.com/forums/thread/128166
+# https://developer.apple.com/forums/thread/669188
+# https://localazy.com/blog/how-to-automatically-sign-macos-apps-using-github-actions
+# https://stackoverflow.com/a/60807932
 
-# Create temporary keychain
-KEYCHAIN="inso.keychain"
-KEYCHAIN_PASSWORD="inso"
-BUNDLE_ID="com.insomnia.inso.app"
-security create-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
-security default-keychain -s $KEYCHAIN
+# Environment variables to be set by caller
+# MACOS_CERTIFICATE (installer and application certificate combined and base64 enoded)
+# MACOS_CERTIFICATE_PWD
+# PKG_NAME
+# VERSION
+# BUNDLE_ID
+# ARTIFACT_LOCATION
 
-# Unlock the keychain
-security set-keychain-settings $KEYCHAIN
-security unlock-keychain -p $KEYCHAIN_PASSWORD $KEYCHAIN
+# Assumed current working directory is packages/insomnia-inso
 
-# Import certificate
-echo $MACOS_CERTIFICATE_LINK | base64 --decode > certificate.p12
-security import certificate.p12 -k $KEYCHAIN -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign -T /usr/bin/pkgbuild
-
-# Detect the identity
-# APP_IDENTITY=$(security find-identity -v $KEYCHAIN | grep 'Application' | sed -e 's/[^"]*"//' -e 's/".*//')
+# Some constants
 APP_IDENTITY="Developer ID Application: Kong Inc. (FX44YY62GV)"
 INSTALL_IDENTITY="Developer ID Installer: Kong Inc. (FX44YY62GV)"
 
+ENTITLEMENTS_PATH="src/scripts/codesign.entitlements"
+
+STAGING_AREA="macos-installer/bin"
+SOURCE_BINARY_DIR="binaries"
+SOURCE_BINARY_NAME="inso"
+INSTALL_LOCATION="/usr/local/bin"
+
+KEYCHAIN="inso.keychain"
+KEYCHAIN_PASSWORD="inso"
+
+# Create temporary keychain
+security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+security default-keychain -s "$KEYCHAIN"
+
+# Unlock the keychain
+security set-keychain-settings "$KEYCHAIN"
+security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+
+# Import certificate
+echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+security import certificate.p12 -k "$KEYCHAIN" -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign -T /usr/bin/pkgbuild
+
 # New requirement for MacOS 10.12+
-security set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k $KEYCHAIN_PASSWORD $KEYCHAIN
+security -q set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
 
 # Create a staging area for the installer package.
-mkdir -p macos-installer/bin
+mkdir -p "$STAGING_AREA"
 
 # Copy the binary into the staging area.
-cp binaries/inso macos-installer/bin
+cp "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME" "$STAGING_AREA"
 
-# Based on https://developer.apple.com/forums/thread/128166
-# Based on https://developer.apple.com/forums/thread/669188
 # Sign the binary
-ENTITLEMENTS_PATH="src/scripts/codesign.entitlements"
-plutil -lint $ENTITLEMENTS_PATH
-/usr/bin/codesign --force --options=runtime --entitlements $ENTITLEMENTS_PATH --timestamp --sign "$APP_IDENTITY" macos-installer/bin/inso
+plutil -lint "$ENTITLEMENTS_PATH"
+/usr/bin/codesign --force --options=runtime --entitlements "$ENTITLEMENTS_PATH" --timestamp --sign "$APP_IDENTITY" "$STAGING_AREA/$SOURCE_BINARY_NAME"
 
-# Based on https://developer.apple.com/forums/thread/128166
-# Build the package
-mkdir compressed
-pkgbuild --identifier $BUNDLE_ID --version $VERSION --sign "$INSTALL_IDENTITY" --keychain $KEYCHAIN --timestamp --root macos-installer/bin --install-location /usr/local/bin compressed/$PKG_NAME
+# Build and sign the package
+mkdir $ARTIFACT_LOCATION
+/usr/bin/pkgbuild --identifier "$BUNDLE_ID" --version "$VERSION" --sign "$INSTALL_IDENTITY" --keychain "$KEYCHAIN" --timestamp --root "$STAGING_AREA" --install-location "$INSTALL_LOCATION" "$ARTIFACT_LOCATION/$PKG_NAME.pkg"
 
-# # # Based on https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution/customizing_the_notarization_workflow
-# # # Notarise
-# xcrun notarytool submit compressed/$PKG_NAME --apple-id $APPLE_ID --password $APPLE_ID_PASSWORD --wait
-
-# # # Based on https://developer.apple.com/forums/thread/128166
-# # # Staple
-# xcrun stapler staple compressed/$PKG_NAME
