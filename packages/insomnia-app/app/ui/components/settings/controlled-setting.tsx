@@ -46,11 +46,6 @@ export const ControlledSetting: FC<{ setting: keyof Settings }> = ({ children, s
   const settings = useSelector(selectSettings);
   const { isControlled, controller } = getControlledStatus(settings)(setting);
 
-  // DEBUGGING --- REMOVE BEFORE MERGING
-  if (setting === 'enableAnalytics') {
-    console.log({ isControlled, controller, settings, setting });
-  }
-
   if (isControlled === false) {
     return <Fragment>{children}</Fragment>;
   }
