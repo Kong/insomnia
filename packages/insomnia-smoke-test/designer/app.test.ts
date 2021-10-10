@@ -31,7 +31,7 @@ xdescribe('Application launch', function() {
     // Install plugin
     await settings.openWithKeyboardShortcut(app);
     await settings.goToPlugins(app);
-    await settings.installPlugin(app, 'insomnia-plugin-kong-bundle');
+    await settings.installPlugin(app, 'insomnia-plugin-kong-portal');
     await settings.closeModal(app);
 
     // Open card dropdown for any card

@@ -43,6 +43,13 @@ export const query = (xml: string, query?: string) => {
           });
           break;
 
+        case 'Text':
+          output.push({
+            outer: (selectedValue as Text).toString().trim(),
+            inner: (selectedValue as Text).toString().trim(),
+          });
+          break;
+
         default:
           break;
       }
