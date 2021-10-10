@@ -11,6 +11,7 @@ env:
   GITHUB_SHA: ${{ github.sha }}
 
 jobs:
+  # Run unit tests (excl smoke tests)
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -23,13 +24,16 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
         run: npm test
+  
+  # Publish to NPM
   npm:
     needs: [ test ]
     name: npm
@@ -40,7 +44,8 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
@@ -51,6 +56,8 @@ jobs:
           npm run release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  
+  # Check if a GitHub Release for Inso already exists
   inso_release_info:
     needs: [ npm ]
     name: Does Inso release exist?
@@ -81,6 +88,8 @@ jobs:
       - name: Check release exists
         id: check-release
         run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
+  
+  # Create GitHub Release for Inso
   create_inso_release:
     needs: [ inso_release_info ]
     if: needs.inso_release_info.outputs.should-create-release == 'true'
@@ -96,6 +105,8 @@ jobs:
           body: Full changelog ⇒ https://insomnia.rest/changelog
           draft: false
           prerelease: true
+  
+  # Package and upload Inso release artifacts
   upload_inso:
     needs: [ inso_release_info, create_inso_release ]
     name: Package & release Inso
@@ -110,7 +121,8 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
@@ -125,6 +137,8 @@ jobs:
           tag_name: ${{ needs.inso_release_info.outputs.tag-name }}
           files: packages/insomnia-inso/compressed/*
           fail_on_unmatched_files: true
+  
+  # Package and upload Insomnia Windows release artifacts
   windows_app:
     needs: [ npm ]
     name: Windows
@@ -139,7 +153,8 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
@@ -149,6 +164,8 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
+  
+  # Package and upload Insomnia MacOS release artifacts
   mac_app:
     needs: [ npm ]
     name: Mac
@@ -163,7 +180,8 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
@@ -175,6 +193,8 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
           CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+  
+  # Package and upload Insomnia Linux release artifacts
   linux_app:
     needs: [ npm ]
     name: Linux
@@ -193,7 +213,8 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
