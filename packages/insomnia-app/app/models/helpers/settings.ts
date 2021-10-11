@@ -47,11 +47,11 @@ const getConfigFile = () => {
 };
 
 /**
- * IMPORTANT: Due to a business rule that the config is never changed after startup, this should only be called by `getConfigSettings` below.  It is only extracted and exported due to tests needing to have it as a separate function so that it can be mocked (or not mocked).  Otherwise it would be inlined.
+ * gets settings from the `insomnia.config.json`
  *
- * @deprecated this is not actually deprecated, but the strikethrough is to warn not to use this function (ever) outside of tests.
+ * note that it is a business rule that the config is never read again after startup, hence the `once` usage.
  */
-export const getValidConfigSettings = () => {
+export const getConfigSettings = once(() => {
   const { configPath, insomniaConfig } = getConfigFile();
 
   const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
@@ -65,10 +65,7 @@ export const getValidConfigSettings = () => {
   }
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return (insomniaConfig as InsomniaConfig).settings || {};
-};
-
-/** gets settings from the `insomnia.config.json` */
-export const getConfigSettings = once(getValidConfigSettings);
+});
 
 interface Condition {
   when: boolean;
