@@ -108,6 +108,8 @@ jobs:
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:compress
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
