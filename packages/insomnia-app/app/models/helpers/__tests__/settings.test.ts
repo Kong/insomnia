@@ -158,9 +158,13 @@ describe('omitControlledSettings', () => {
       ...models.settings.init(),
       incognitoMode: true,
     };
-    const result = omitControlledSettings(settings, { enableAnalytics: true });
+    const result = omitControlledSettings(settings, {
+      enableAnalytics: true,
+      allowNotificationRequests: true,
+    });
 
     expect(result).not.toHaveProperty('enableAnalytics');
+    expect(result).not.toHaveProperty('allowNotificationRequests');
   });
 
   it('does not omit settings not controlled by other settings', () => {
@@ -251,6 +255,24 @@ describe('getControlledSettings', () => {
     expect(result).toMatchObject({
       incognitoMode: true,
       enableAnalytics: false,
+    });
+  });
+
+  it('shows that enableAnalytics and allowNotificationRequests are false when incognitoMode is true', () => {
+    getConfigSettings.mockReturnValue({});
+    const settings: Settings = {
+      ...models.settings.init(),
+      incognitoMode: true,
+      enableAnalytics: true,
+      allowNotificationRequests: true,
+    };
+
+    const result = getControlledSettings(settings);
+
+    expect(result).toMatchObject({
+      incognitoMode: true,
+      enableAnalytics: false,
+      allowNotificationRequests: false,
     });
   });
 });
