@@ -106,12 +106,12 @@ async function create() {
 }
 
 export async function update(settings: Settings, patch: Partial<Settings>) {
-  return db.docUpdate<Settings>(settings, omitControlledSettings(settings)(patch));
+  return db.docUpdate<Settings>(settings, omitControlledSettings(settings, patch));
 }
 
 export async function patch(patch: Partial<Settings>) {
   const settings = await getOrCreate();
-  const sanitized = omitControlledSettings(settings)(patch);
+  const sanitized = omitControlledSettings(settings, patch);
   return db.docUpdate<Settings>(settings, sanitized);
 }
 

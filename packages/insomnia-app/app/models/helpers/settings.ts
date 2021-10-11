@@ -196,13 +196,14 @@ export const getControlledStatus = (userSettings: Settings) => (setting: keyof S
 };
 
 /** removes any setting in the given patch object which is controlled in any way (i.e. either by the insomnia config or by another setting) */
-export const omitControlledSettings =
-  <T extends Settings>(settings: T) =>
-  <U extends Partial<Settings>>(patch: U) => {
-    return omitBy((_value, setting: keyof Settings) => (
-      getControlledStatus(settings)(setting).isControlled
-    ), patch);
-  };
+export const omitControlledSettings = <
+  T extends Settings,
+  U extends Partial<Settings>
+>(settings: T, patch: U) => {
+  return omitBy((_value, setting: keyof Settings) => (
+    getControlledStatus(settings)(setting).isControlled
+  ), patch);
+};
 
 /** for any given setting, whether controlled by the insomnia config or whether controlled by another value, return the calculated value */
 export const getControlledSettings = <T extends Settings>(settings: T) => {

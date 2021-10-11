@@ -70,7 +70,7 @@ describe('omitControlledSettings', () => {
     getConfigSettings.mockReturnValue({ disablePaidFeatureAds: true });
     const settings = models.settings.init();
 
-    const result = omitControlledSettings(settings)({ disablePaidFeatureAds: false });
+    const result = omitControlledSettings(settings, { disablePaidFeatureAds: false });
 
     expect(result).toMatchObject({});
   });
@@ -79,7 +79,7 @@ describe('omitControlledSettings', () => {
     getConfigSettings.mockReturnValue({});
     const settings = models.settings.init();
 
-    const result = omitControlledSettings(settings)({ disablePaidFeatureAds: true });
+    const result = omitControlledSettings(settings, { disablePaidFeatureAds: true });
 
     expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
@@ -90,7 +90,7 @@ describe('omitControlledSettings', () => {
       ...models.settings.init(),
       incognitoMode: true,
     };
-    const result = omitControlledSettings(settings)({ enableAnalytics: true });
+    const result = omitControlledSettings(settings, { enableAnalytics: true });
 
     expect(result).toMatchObject({});
   });
@@ -98,7 +98,7 @@ describe('omitControlledSettings', () => {
   it('does not omit settings not controlled by other settings', () => {
     getConfigSettings.mockReturnValue({});
     const settings = models.settings.init();
-    const result = omitControlledSettings(settings)({ disablePaidFeatureAds: true });
+    const result = omitControlledSettings(settings, { disablePaidFeatureAds: true });
 
     expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
