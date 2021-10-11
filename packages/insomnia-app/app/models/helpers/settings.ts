@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
 import { InsomniaConfig, validate } from 'insomnia-config';
 import { resolve } from 'path';
-import { mapObjIndexed, mergeRight, once } from 'ramda';
+import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
 
 import { isDevelopment } from '../../common/constants';
@@ -209,5 +209,8 @@ export const getControlledSettings = <T extends Settings>(settings: T) => {
   const override = mapObjIndexed((_value, setting: keyof Settings) => (
     getControlledStatus(settings)(setting).value
   ), settings) as T;
-  return mergeRight(settings, override) as T;
+  return {
+    ...settings,
+    ...override,
+  };
 };
