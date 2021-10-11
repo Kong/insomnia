@@ -9,7 +9,7 @@ import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
 
 /** takes an unresolved (or resolved will work fine too) filePath of the insomnia config and reads the insomniaConfig from disk */
-const readConfigFile = (filePath?: string) => {
+export const readConfigFile = (filePath?: string) => {
   if (!filePath) {
     return undefined;
   }
@@ -24,14 +24,18 @@ const readConfigFile = (filePath?: string) => {
   }
 };
 
-const getConfigFile = () => {
-  const processExecutable = getPortableExecutableDir();
+export const getLocalDevConfigFilePath = () => (
+  isDevelopment() ? '../../packages/insomnia-app/app/insomnia.config.json' as string : undefined
+);
+
+export const getConfigFile = () => {
+  const portableExecutable = getPortableExecutableDir();
   const insomniaDataDirectory = getDataDirectory();
-  const localDev = '../../packages/insomnia-app/app/insomnia.config.json';
+  const localDev = getLocalDevConfigFilePath();
   const configPaths = [
-    processExecutable,
+    portableExecutable,
     insomniaDataDirectory,
-    ...(isDevelopment() ? [localDev] : []),
+    localDev,
   ];
 
   // note: this is written as to avoid unnecessary (synchronous) reads from disk.
