@@ -133,15 +133,13 @@ export type SettingsControl<T extends keyof Settings> =
 export const isControlledByAnotherSetting = (settings: Settings) => (setting: keyof Settings) => {
   for (const [controller, controlledSettings] of settingControllers.entries()) {
     for (const { when, set } of controlledSettings) {
-      if (Object.prototype.hasOwnProperty.call(set, setting)) {
-        if (when === settings[controller]) {
-          const output: SettingControlledSetting<typeof setting> = {
-            controlledValue: set[setting],
-            controller,
-            isControlled: true,
-          };
-          return output;
-        }
+      if (when === settings[controller] && Object.prototype.hasOwnProperty.call(set, setting)) {
+        const output: SettingControlledSetting<typeof setting> = {
+          controlledValue: set[setting],
+          controller,
+          isControlled: true,
+        };
+        return output;
       }
     }
   }
@@ -156,11 +154,12 @@ export const isControlledByAnotherSetting = (settings: Settings) => (setting: ke
  * For any given setting, return what the value of that setting should be once you take the insomnia config and other potentially controlling settings into account
  */
 export const getControlledStatus = (userSettings: Settings) => (setting: keyof Settings) => {
+  const configSettings = {
+    ...userSettings,
+    ...getConfigSettings(),
+  };
+
   if (isControlledByConfig(setting)) {
-    const configSettings = {
-      ...userSettings,
-      ...getConfigSettings(),
-    };
 
     // note that the raw config settings are being passed here (rathern than `settings` alone), because we must verify that the controller does not itself also have a specification in the config
     const controllerSetting = isControlledByAnotherSetting(configSettings)(setting);
@@ -184,7 +183,7 @@ export const getControlledStatus = (userSettings: Settings) => (setting: keyof S
     };
   }
 
-  const thisSetting = isControlledByAnotherSetting(userSettings)(setting);
+  const thisSetting = isControlledByAnotherSetting(configSettings)(setting);
   if (thisSetting.isControlled) {
     // this setting is controlled by another setting.
     return {

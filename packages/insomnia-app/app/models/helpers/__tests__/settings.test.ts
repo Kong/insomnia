@@ -258,7 +258,7 @@ describe('getControlledSettings', () => {
     });
   });
 
-  it('shows that enableAnalytics and allowNotificationRequests are false when incognitoMode is true', () => {
+  it('shows that enableAnalytics and allowNotificationRequests are false when incognitoMode is true in user settings', () => {
     getConfigSettings.mockReturnValue({});
     const settings: Settings = {
       ...models.settings.init(),
@@ -273,6 +273,46 @@ describe('getControlledSettings', () => {
       incognitoMode: true,
       enableAnalytics: false,
       allowNotificationRequests: false,
+    });
+  });
+
+  it('shows that enableAnalytics and allowNotificationRequests are false when incognitoMode is true in the config', () => {
+    getConfigSettings.mockReturnValue({
+      incognitoMode: true,
+    });
+    const settings: Settings = {
+      ...models.settings.init(),
+      incognitoMode: false,
+      enableAnalytics: true,
+      allowNotificationRequests: true,
+    };
+
+    const result = getControlledSettings(settings);
+
+    expect(result).toMatchObject({
+      incognitoMode: true,
+      enableAnalytics: false,
+      allowNotificationRequests: false,
+    });
+  });
+
+  /**
+   * This use-case test ensures that the likely config of a customer that has a security or privacy-centric configuration is preserved.
+   */
+  it('ensures a maximally privacy-centric use-case is preserved', () => {
+    getConfigSettings.mockReturnValue({
+      incognitoMode: true,
+      disablePaidFeatureAds: true,
+    });
+    const settings = models.settings.init();
+
+    const result = getControlledSettings(settings);
+
+    expect(result).toMatchObject({
+      incognitoMode: true,
+      enableAnalytics: false,
+      allowNotificationRequests: false,
+      disablePaidFeatureAds: true,
     });
   });
 });
