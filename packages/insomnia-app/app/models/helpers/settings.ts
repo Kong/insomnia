@@ -9,7 +9,11 @@ import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
 
 /** takes an unresolved (or resolved will work fine too) filePath of the insomnia config and reads the insomniaConfig from disk */
-const readConfigFile = (filePath: string) => {
+const readConfigFile = (filePath?: string) => {
+  if (!filePath) {
+    return undefined;
+  }
+
   try {
     const resolvedFilePath = resolve(filePath);
     const fileContents = readFileSync(resolvedFilePath, 'utf-8');
@@ -20,7 +24,7 @@ const readConfigFile = (filePath: string) => {
 };
 
 const getConfigFile = () => {
-  const processExecutable = getPortableExecutableDir() || '';
+  const processExecutable = getPortableExecutableDir();
   const insomniaDataDirectory = getDataDirectory();
   const localDev = '../../packages/insomnia-app/app/insomnia.config.json';
   const configPaths = [
