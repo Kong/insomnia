@@ -13,12 +13,12 @@ jest.mock('../settings');
 const getConfigSettings = mocked(_getConfigSettings);
 
 describe('getControlledStatus', () => {
-  it('resolve conflicting value in the settings', () => {
+  it('should override conflicting setting if controlled by another setting', () => {
     getConfigSettings.mockReturnValue({});
     const settings: Settings = {
       ...models.settings.init(),
       incognitoMode: true,
-      enableAnalytics: true, // this intionally conflicts with incognito mode
+      enableAnalytics: true, // this intentionally conflicts with incognito mode
     };
 
     const controlledStatus = getControlledStatus(settings)('enableAnalytics');
@@ -30,12 +30,12 @@ describe('getControlledStatus', () => {
     });
   });
 
-  it('resolve conflicting value in the config', () => {
+  it('should override setting with what is defined in the config file', () => {
     getConfigSettings.mockReturnValue({ enableAnalytics: false });
     const settings: Settings = {
       ...models.settings.init(),
       incognitoMode: false, // ensures incognito mode isn't affecting this test
-      enableAnalytics: true, // this intionally conflicts with the config
+      enableAnalytics: true, // this intentionally conflicts with the config
     };
 
     const controlledStatus = getControlledStatus(settings)('enableAnalytics');
@@ -47,12 +47,12 @@ describe('getControlledStatus', () => {
     });
   });
 
-  it('resolve conflicting value in the config and a controlling setting', () => {
+  it('should override setting controlled by another setting, with what is defined in the config file', () => {
     getConfigSettings.mockReturnValue({ enableAnalytics: true }); // intentionally conflicts with incognito mode
     const settings: Settings = {
       ...models.settings.init(),
-      incognitoMode: true, // this intionally conflicts with the config
-      enableAnalytics: false, // this intionally conflicts with the config
+      incognitoMode: true, // this intentionally conflicts with the config
+      enableAnalytics: false, // this intentionally conflicts with the config
     };
 
     const controlledStatus = getControlledStatus(settings)('enableAnalytics');
@@ -154,7 +154,7 @@ describe('getControlledSettings', () => {
     expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 
-  it.skip('config control trumps (non-config) settings control', () => {
+  it.skip('prioritizes config file settings above all else', () => {
     getConfigSettings.mockReturnValue({ enableAnalytics: true });
     const settings: Settings = {
       ...models.settings.init(),
@@ -167,7 +167,7 @@ describe('getControlledSettings', () => {
     expect(result).toMatchObject({ enableAnalytics: true });
   });
 
-  it('config control gets priority over simple settings control', () => {
+  it('prioritizes config control over simple settings control', () => {
     getConfigSettings.mockReturnValue({ enableAnalytics: true });
     const settings: Settings = {
       ...models.settings.init(),

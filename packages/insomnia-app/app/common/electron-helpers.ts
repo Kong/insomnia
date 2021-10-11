@@ -18,7 +18,7 @@ export function getDesignerDataDir() {
 }
 
 /**
- * This is added environment by electron-builder.
+ * This environment variable is added by electron-builder.
  * see: https://www.electron.build/configuration/nsis.html#portable\
  */
 export const getPortableExecutableDir = () => process.env.PORTABLE_EXECUTABLE_DIR;
