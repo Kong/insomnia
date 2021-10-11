@@ -19,6 +19,7 @@ const readConfigFile = (filePath?: string) => {
     const fileContents = readFileSync(resolvedFilePath, 'utf-8');
     return JSON.parse(fileContents) as unknown;
   } catch (error: unknown) {
+    console.error(error);
     return undefined;
   }
 };
