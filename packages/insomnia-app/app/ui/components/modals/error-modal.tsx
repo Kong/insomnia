@@ -7,9 +7,12 @@ import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
 
+interface HTTPError extends Error {
+  data?: {statusCode: number;statusMessage: string;response: string};
+}
 export interface ErrorModalOptions {
   title?: string;
-  error?: Error | null;
+  error?: HTTPError | null;
   addCancel?: boolean;
   message?: string;
 }
@@ -59,7 +62,12 @@ export class ErrorModal extends PureComponent<{}, ErrorModalOptions> {
 
   render() {
     const { error, title, addCancel } = this.state;
-    const message = this.state.message || error?.message;
+    let message = this.state.message || error?.message;
+    if (error?.data?.response) {
+      message = `HTTP Error: ${error?.data?.statusCode} ${error?.data?.statusMessage}
+${error?.data?.response}`;
+    }
+
     return (
       <Modal ref={this._setModalRef}>
         <ModalHeader>{title || 'Uh Oh!'}</ModalHeader>
