@@ -1,0 +1,33 @@
+{
+  "info": {
+    "_postman_id": "994955c9-397a-494e-820e-294cbd76c318",
+    "name": "AWS Signature Test",
+    "description": "A collection for testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "AWS Signature",
+      "request": {
+        "auth": {
+          "type": "awsv4",
+          "awsv4": {
+            "sessionToken": "aws-session-token",
+            "service": "aws-service-name",
+            "region": "aws-region",
+            "secretKey": "aws-secret-key",
+            "accessKey": "aws-access-key"
+          }
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": "https://insomnia.rest"
+      },
+      "response": []
+    }
+  ]
+}
