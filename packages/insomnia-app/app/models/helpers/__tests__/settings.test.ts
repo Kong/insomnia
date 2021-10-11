@@ -72,7 +72,7 @@ describe('omitControlledSettings', () => {
 
     const result = omitControlledSettings(settings, { disablePaidFeatureAds: false });
 
-    expect(result).toMatchObject({});
+    expect(result).not.toHaveProperty('disablePaidFeatureAds');
   });
 
   it('does not omit settings not controlled by the config', () => {
@@ -92,7 +92,7 @@ describe('omitControlledSettings', () => {
     };
     const result = omitControlledSettings(settings, { enableAnalytics: true });
 
-    expect(result).toMatchObject({});
+    expect(result).not.toHaveProperty('enableAnalytics');
   });
 
   it('does not omit settings not controlled by other settings', () => {
