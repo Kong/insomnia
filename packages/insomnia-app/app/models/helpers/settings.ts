@@ -148,10 +148,10 @@ export const isControlledByAnotherSetting = (settings: Settings) => (setting: ke
 /**
  * For any given setting, return what the value of that setting should be once you take the insomnia config and other potentially controlling settings into account
  */
-export const getControlledStatus = (settings: Settings) => (setting: keyof Settings) => {
+export const getControlledStatus = (userSettings: Settings) => (setting: keyof Settings) => {
   if (isControlledByConfig(setting)) {
     const configSettings = {
-      ...settings,
+      ...userSettings,
       ...getConfigSettings(),
     };
 
@@ -177,7 +177,7 @@ export const getControlledStatus = (settings: Settings) => (setting: keyof Setti
     };
   }
 
-  const thisSetting = isControlledByAnotherSetting(settings)(setting);
+  const thisSetting = isControlledByAnotherSetting(userSettings)(setting);
   if (thisSetting.isControlled) {
     // this setting is controlled by another setting.
     return {
@@ -191,7 +191,7 @@ export const getControlledStatus = (settings: Settings) => (setting: keyof Setti
   return {
     controller: null,
     isControlled: false,
-    value: settings[setting],
+    value: userSettings[setting],
   };
 };
 
