@@ -87,15 +87,14 @@ jobs:
           MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
           PKG_NAME: ${{ steps.inso-variables.outputs.pkg-name }}
           BUNDLE_ID: ${{ steps.inso-variables.outputs.bundle-id }}
-          ARTIFACT_LOCATION: compressed
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
-      # We don't need to notarize and staple on every commit
+      # # We don't need to notarize and staple on every commit
       # - name: Notarize installer package
       #   if: matrix.os == 'macos-latest'
       #   uses: devbotsxyz/xcode-notarize@v1
       #   with:
-      #     product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
       #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
       #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
       #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
@@ -104,19 +103,17 @@ jobs:
       #   if: matrix.os == 'macos-latest'
       #   uses: devbotsxyz/xcode-staple@v1
       #   with:
-      #     product-path: packages/insomnia-inso/compressed/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
       - name: Create Inso CLI artifacts
-        run: npm run inso-package:compress
-        env:
-          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+        run: npm run inso-package:artifacts
 
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
         with:
           if-no-files-found: ignore
           name: ${{ steps.inso-variables.outputs.pkg-name }}
-          path: packages/insomnia-inso/compressed
+          path: packages/insomnia-inso/artifacts
       
       - name: Run CLI smoke tests
         run: npm run test:smoke:cli
