@@ -179,6 +179,8 @@ jobs:
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:compress
+        env:
+          VERSION: ${{ needs.inso_release_info.outputs.inso-version }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
