@@ -154,19 +154,6 @@ describe('getControlledSettings', () => {
     expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 
-  it.skip('prioritizes config file settings above all else', () => {
-    getConfigSettings.mockReturnValue({ enableAnalytics: true });
-    const settings: Settings = {
-      ...models.settings.init(),
-      incognitoMode: true,
-      enableAnalytics: false,
-    };
-
-    const result = getControlledSettings(settings);
-
-    expect(result).toMatchObject({ enableAnalytics: true });
-  });
-
   it('prioritizes config control over simple settings control', () => {
     getConfigSettings.mockReturnValue({ enableAnalytics: true });
     const settings: Settings = {
