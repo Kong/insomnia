@@ -195,14 +195,4 @@ describe('getControlledSettings', () => {
 
     expect(result).toMatchObject({ enableAnalytics: false });
   });
-
-  it('only reads the config once on startup and then never again', async () => {
-    // const someKindOfSpy = ??
-
-    getConfigSettings();
-    getConfigSettings();
-
-    // TODO - no one on the team knows how we can test this, despite a few collective man-hours of trying every approach we can think of
-    // expect(someKindOfSpy).toHaveBeenCalled(1);
-  });
 });
