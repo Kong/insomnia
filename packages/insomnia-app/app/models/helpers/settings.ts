@@ -92,7 +92,7 @@ const settingControllers = new Map<keyof Settings, Condition[]>([
 ]);
 
 /** checks whether a given setting is literally specified in the insomnia config */
-export const isControlledByConfig = (setting: keyof Settings | null): setting is keyof Settings => setting ? (
+export const isControlledByConfig = (setting: keyof Settings | null) => setting ? (
   Boolean(Object.prototype.hasOwnProperty.call(getConfigSettings(), setting))
 ) : false;
 
