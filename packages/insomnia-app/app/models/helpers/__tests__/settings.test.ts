@@ -180,6 +180,9 @@ describe('getControlledSettings', () => {
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({ enableAnalytics: false });
+    expect(result).toMatchObject({
+      incognitoMode: true,
+      enableAnalytics: false,
+    });
   });
 });
