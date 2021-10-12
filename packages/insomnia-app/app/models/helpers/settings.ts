@@ -78,6 +78,7 @@ export const getConfigSettings = once(() => {
 });
 
 interface Condition {
+  /** note: conditions are only suitable for boolean settings at this time */
   when: boolean;
   set: Partial<Settings>;
 }
