@@ -3,7 +3,7 @@ import { identity } from 'ramda';
 import { mocked } from 'ts-jest/utils';
 
 import * as _constants from '../../../common/constants';
-import * as electronHelpers from '../../../common/electron-helpers';
+import * as _electronHelpers from '../../../common/electron-helpers';
 import * as models from '../../../models';
 import * as settingsHelpers from '../settings';
 import {
@@ -14,6 +14,12 @@ import {
   getLocalDevConfigFilePath,
   omitControlledSettings,
 } from '../settings';
+
+jest.mock('../../../common/electron-helpers');
+const {
+  getDataDirectory,
+  getPortableExecutableDir,
+} = mocked(_electronHelpers);
 
 jest.mock('../../../common/constants');
 const { isDevelopment } = mocked(_constants);
@@ -41,8 +47,8 @@ describe('getConfigFile', () => {
   afterAll(jest.resetAllMocks);
 
   it('prioritizes portable config location over all others', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue('portableExecutable');
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
+    getPortableExecutableDir.mockReturnValue('portableExecutable');
+    getDataDirectory.mockReturnValue('insomniaDataDirectory');
     jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
@@ -51,8 +57,8 @@ describe('getConfigFile', () => {
   });
 
   it('prioritizes insomnia data directory over local dev when portable config is not found', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue('insomniaDataDirectory');
+    getPortableExecutableDir.mockReturnValue(undefined);
+    getDataDirectory.mockReturnValue('insomniaDataDirectory');
     jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
@@ -61,9 +67,9 @@ describe('getConfigFile', () => {
   });
 
   it('returns the local dev config file if no others are found', () => {
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
+    getPortableExecutableDir.mockReturnValue(undefined);
     // @ts-expect-error intentionally invalid to simulate the file not being found
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
+    getDataDirectory.mockReturnValue(undefined);
     jest.spyOn(settingsHelpers, 'getLocalDevConfigFilePath').mockReturnValue('localDev');
 
     const result = getConfigFile();
@@ -73,9 +79,9 @@ describe('getConfigFile', () => {
 
   it('returns an internal fallback if no configs are found (in production mode)', () => {
     isDevelopment.mockReturnValue(false);
-    jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
+    getPortableExecutableDir.mockReturnValue(undefined);
     // @ts-expect-error intentionally invalid to simulate the file not being found
-    jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
+    getDataDirectory.mockReturnValue(undefined);
 
     const result = getConfigFile();
 
