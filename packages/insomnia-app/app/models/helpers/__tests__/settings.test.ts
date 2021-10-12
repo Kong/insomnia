@@ -2,7 +2,7 @@ import { Settings } from 'insomnia-common';
 import { identity } from 'ramda';
 import { mocked } from 'ts-jest/utils';
 
-import * as constants from '../../../common/constants';
+import * as _constants from '../../../common/constants';
 import * as electronHelpers from '../../../common/electron-helpers';
 import * as models from '../../../models';
 import * as settingsHelpers from '../settings';
@@ -15,17 +15,20 @@ import {
   omitControlledSettings,
 } from '../settings';
 
+jest.mock('../../../common/constants');
+const { isDevelopment } = mocked(_constants);
+
 jest.mock('../settings');
 const getConfigSettings = mocked(_getConfigSettings);
 
 describe('getLocalDevConfigFilePath', () => {
   it('will not return the local dev config path in production mode', () => {
-    jest.spyOn(constants, 'isDevelopment').mockReturnValue(false);
+    isDevelopment.mockReturnValue(false);
     expect(getLocalDevConfigFilePath()).toEqual(undefined);
   });
 
   it('will return the local dev config path in development mode', () => {
-    jest.spyOn(constants, 'isDevelopment').mockReturnValue(true);
+    isDevelopment.mockReturnValue(true);
     expect(getLocalDevConfigFilePath()).toContain('insomnia-app/app');
   });
 });
@@ -69,7 +72,7 @@ describe('getConfigFile', () => {
   });
 
   it('returns an internal fallback if no configs are found (in production mode)', () => {
-    jest.spyOn(constants, 'isDevelopment').mockReturnValue(false);
+    isDevelopment.mockReturnValue(false);
     jest.spyOn(electronHelpers, 'getPortableExecutableDir').mockReturnValue(undefined);
     // @ts-expect-error intentionally invalid to simulate the file not being found
     jest.spyOn(electronHelpers, 'getDataDirectory').mockReturnValue(undefined);
