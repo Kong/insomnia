@@ -186,7 +186,7 @@ describe('getControlledSettings', () => {
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({ ...settings, disablePaidFeatureAds: true });
+    expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
 
   it('does not overwrite settings not controlled by the config', () => {
@@ -208,11 +208,7 @@ describe('getControlledSettings', () => {
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({
-      ...settings,
-      enableAnalytics: false,
-      allowNotificationRequests: false,
-    });
+    expect(result).toMatchObject({ enableAnalytics: false });
   });
 
   it('does not overwrite settings not controlled by other settings', () => {
@@ -237,11 +233,7 @@ describe('getControlledSettings', () => {
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({
-      ...settings,
-      enableAnalytics: true,
-      allowNotificationRequests: false,
-    });
+    expect(result).toMatchObject({ enableAnalytics: true });
   });
 
   /** when the user settings say to do one thing [set enableAnalytics to false], but the config is saying something different [set enableAnalytics to true] but another value that is also in the config [incognitoMode] but which controls this setting [enableAnalytics] says to set it to a value [incognitoMode says to set enableAnalytics to false], then it's the controlling setting in the config that has final say on what the value is. Not the user settings, and not the literal value set in the config itself. */
@@ -259,10 +251,8 @@ describe('getControlledSettings', () => {
     const result = getControlledSettings(settings);
 
     expect(result).toMatchObject({
-      ...settings,
       incognitoMode: true,
       enableAnalytics: false,
-      allowNotificationRequests: false,
     });
   });
 
@@ -278,7 +268,6 @@ describe('getControlledSettings', () => {
     const result = getControlledSettings(settings);
 
     expect(result).toMatchObject({
-      ...settings,
       incognitoMode: true,
       enableAnalytics: false,
       allowNotificationRequests: false,
@@ -299,7 +288,6 @@ describe('getControlledSettings', () => {
     const result = getControlledSettings(settings);
 
     expect(result).toMatchObject({
-      ...settings,
       incognitoMode: true,
       enableAnalytics: false,
       allowNotificationRequests: false,
@@ -319,7 +307,6 @@ describe('getControlledSettings', () => {
     const result = getControlledSettings(settings);
 
     expect(result).toMatchObject({
-      ...settings,
       incognitoMode: true,
       enableAnalytics: false,
       allowNotificationRequests: false,
