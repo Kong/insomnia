@@ -6,6 +6,7 @@ import appConfig from '../config/config.json';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
+import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
@@ -39,11 +40,7 @@ if (!isDevelopment()) {
 global.window = global.window || undefined;
 // When the app is first launched
 app.on('ready', async () => {
-  // There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
-  // see: https://github.com/electron/electron/issues/22995
-  // On macOS the OS spellchecker is used and therefore we do not download any dictionary files.
-  // This API is a no-op on macOS.
-  session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
+  disableSpellcheckerDownload();
 
   if (isDevelopment()) {
     try {

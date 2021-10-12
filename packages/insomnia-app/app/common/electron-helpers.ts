@@ -72,3 +72,15 @@ export const setMenuBarVisibility = (visible: boolean) => {
       window.setAutoHideMenuBar(hide);
     });
 };
+
+/**
+ * There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
+ * see: https://github.com/electron/electron/issues/22995
+ * On macOS the OS spellchecker is used and therefore we do not download any dictionary files.
+ * This API is a no-op on macOS.
+ */
+export const disableSpellcheckerDownload = () => {
+  electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL(
+    'https://00.00/'
+  );
+};
