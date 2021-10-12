@@ -191,14 +191,11 @@ describe('getControlledSettings', () => {
 
   it('does not overwrite settings not controlled by the config', () => {
     getConfigSettings.mockReturnValue({});
-    const settings: Settings = {
-      ...models.settings.init(),
-      disablePaidFeatureAds: true,
-    };
+    const settings = models.settings.init();
 
     const result = getControlledSettings(settings);
 
-    expect(result).toMatchObject({ disablePaidFeatureAds: true });
+    expect(result).toMatchObject(settings);
   });
 
   it('overwrites settings controlled by other settings', () => {
