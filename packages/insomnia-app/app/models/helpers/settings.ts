@@ -14,18 +14,28 @@ export const readConfigFile = (filePath?: string) => {
     return undefined;
   }
 
+  let fileContents = '';
   try {
-    const resolvedFilePath = resolve(filePath);
-    const fileContents = readFileSync(resolvedFilePath, 'utf-8');
+    const resolvedFilePath = resolve(filePath, 'insomnia.config.json');
+    fileContents = readFileSync(resolvedFilePath, 'utf-8');
+  } catch (error: unknown) {
+    return undefined;
+  }
+
+  if (!fileContents) {
+    return undefined;
+  }
+
+  try {
     return JSON.parse(fileContents) as unknown;
   } catch (error: unknown) {
-    console.error(error);
+    console.error('failed to parse insomnia config', { filePath, fileContents }, error);
     return undefined;
   }
 };
 
 export const getLocalDevConfigFilePath = () => (
-  isDevelopment() ? '../../packages/insomnia-app/app/insomnia.config.json' as string : undefined
+  isDevelopment() ? '../../packages/insomnia-app/app' as string : undefined
 );
 
 export const getConfigFile = () => {
