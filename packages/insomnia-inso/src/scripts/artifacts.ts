@@ -4,7 +4,7 @@ import path from 'path';
 
 import { getVersion } from '../util';
 
-const prefixPkgCompress = (msg: string) => `[pkg-inso-compress] ${msg}`;
+const prefixPkgArtifacts = (msg: string) => `[pkg-inso-artifacts] ${msg}`;
 
 const { platform } = process;
 const isMac = () => platform === 'darwin';
@@ -25,12 +25,12 @@ const getTarArgs = () => {
     return ['-czf', `inso-windows-${version}.zip`];
   }
 
-  throw new Error(prefixPkgCompress(`Unsupported OS: ${platform}`));
+  throw new Error(prefixPkgArtifacts(`Unsupported OS: ${platform}`));
 };
 
-const compress = async () => {
+const artifacts = async () => {
   return new Promise<void>(resolve => {
-    const cwd = path.join(__dirname, '../../compressed');
+    const cwd = path.join(__dirname, '../../artifacts');
     mkdirp.sync(cwd);
 
     const tarName = isWindows() ? 'tar.exe' : 'tar';
@@ -55,8 +55,8 @@ const compress = async () => {
 
     process.on('exit', code => {
       if (code !== 0) {
-        console.log(prefixPkgCompress(`exited with code ${code}`));
-        throw new Error(prefixPkgCompress('failed to compress'));
+        console.log(prefixPkgArtifacts(`exited with code ${code}`));
+        throw new Error(prefixPkgArtifacts('failed to compress'));
       }
 
       resolve();
@@ -64,7 +64,7 @@ const compress = async () => {
   });
 };
 
-compress()
+artifacts()
   .then(() => {
     process.exit(0);
   })
