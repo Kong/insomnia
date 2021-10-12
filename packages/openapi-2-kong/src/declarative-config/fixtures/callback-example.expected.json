@@ -22,7 +22,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_callback-example.yaml"],
-      "name": "Callback_Example",
+      "name": "Callback_Example.upstream",
       "targets": [
         {
           "target": "backend.com:80",

@@ -43,7 +43,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
-      "name": "Swagger_Petstore",
+      "name": "Swagger_Petstore.upstream",
       "targets": [
         {
           "target": "petstore.swagger.io:80",

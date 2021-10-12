@@ -33,7 +33,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_api-with-examples.yaml"],
-      "name": "Simple_API_overview",
+      "name": "Simple_API_overview.upstream",
       "hash_on": "ip",
       "healthchecks": {
         "passive": {

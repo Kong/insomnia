@@ -65,7 +65,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_link-example.yaml"],
-      "name": "Link_Example",
+      "name": "Link_Example.upstream",
       "targets": [
         {
           "target": "backend.com:80",
