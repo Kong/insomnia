@@ -118,15 +118,9 @@ export class Toast extends PureComponent<{}, State> {
       allowNotificationRequests,
       disablePaidFeatureAds,
       disableUpdateNotification,
-      incognitoMode,
       updateAutomatically,
       updateChannel,
     } = await models.settings.getOrCreate();
-
-    if (incognitoMode) {
-      // if the user is running under incognito mode, then exit early
-      return;
-    }
 
     if (!allowNotificationRequests) {
       // if the user has specifically said they don't want to send notification requests, then exit early
