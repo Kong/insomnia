@@ -89,7 +89,7 @@ jobs:
           BUNDLE_ID: ${{ steps.inso-variables.outputs.bundle-id }}
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
-      # # We don't need to notarize and staple on every commit
+      # We don't need to notarize and staple on every commit
       # - name: Notarize installer package
       #   if: matrix.os == 'macos-latest'
       #   uses: devbotsxyz/xcode-notarize@v1
