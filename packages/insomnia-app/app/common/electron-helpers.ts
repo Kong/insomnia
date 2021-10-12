@@ -1,4 +1,5 @@
 import * as electron from 'electron';
+import { session } from 'electron';
 import mkdirp from 'mkdirp';
 import { join } from 'path';
 
@@ -80,7 +81,24 @@ export const setMenuBarVisibility = (visible: boolean) => {
  * This API is a no-op on macOS.
  */
 export const disableSpellcheckerDownload = () => {
-  electron.session.defaultSession.setSpellCheckerDictionaryDownloadURL(
+
+  session.defaultSession.on('spellcheck-dictionary-initialized', () => {
+    console.log('[Spellchecking] Initialized Spellchecking Dictionary');
+  });
+
+  session.defaultSession.on('spellcheck-dictionary-download-begin', () => {
+    console.log('[Spellchecking] Begin Spellchecking Dictionary');
+  });
+
+  session.defaultSession.on('spellcheck-dictionary-download-success', () => {
+    console.log('[Spellchecking] Success Spellchecking Dictionary');
+  });
+
+  session.defaultSession.on('spellcheck-dictionary-download-failure', () => {
+    console.log('[Spellchecking] Failed Spellchecking Dictionary');
+  });
+
+  session.defaultSession.setSpellCheckerDictionaryDownloadURL(
     'https://00.00/'
   );
 };

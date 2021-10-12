@@ -7,7 +7,7 @@ import * as home from '../modules/home';
 import * as migration from '../modules/migration';
 import * as onboarding from '../modules/onboarding';
 
-describe('Migration', function() {
+describe.skip('Migration', function() {
   jest.setTimeout(50000);
   let app: Application;
 

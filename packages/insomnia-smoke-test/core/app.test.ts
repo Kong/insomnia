@@ -268,4 +268,14 @@ describe('Application launch', function() {
 
     await debug.expectNotContainsText(await debug.getTimelineViewer(app), '> Authorization: Basic');
   });
+
+  it.only('should not download spellchecking dictionaries', async () => {
+    await client.correctlyLaunched(app);
+
+    const logs = await app.client.getMainProcessLogs();
+
+    const spellcheckLogs = logs.filter(line => line.includes('Spellchecking'));
+
+    expect(spellcheckLogs).toBe([]);
+  });
 });
