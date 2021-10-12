@@ -239,7 +239,8 @@ describe('getControlledSettings', () => {
     expect(result).toMatchObject({ enableAnalytics: true });
   });
 
-  it('config _and_ settings control gets highest possible priority', () => {
+  /** when the user settings say to do one thing [set enableAnalytics to false], but the config is saying something different [set enableAnalytics to true] but another value that is also in the config [incognitoMode] but which controls this setting [enableAnalytics] says to set it to a value [incognitoMode says to set enableAnalytics to false], then it's the controlling setting in the config that has final say on what the value is. Not the user settings, and not the literal value set in the config itself. */
+  it('should prioritize controlling setting from config file above all other settings', () => {
     getConfigSettings.mockReturnValue({
       incognitoMode: true,
       enableAnalytics: true, // this intentionally conflicts with incognitoMode, which should force it to false
