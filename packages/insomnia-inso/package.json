@@ -36,7 +36,8 @@
     "prepackage": "npm run build:production",
     "package": "ts-node src/scripts/pkg.ts",
     "pkg": "pkg .",
-    "postpackage": "ts-node src/scripts/verify-pkg.ts && ts-node src/scripts/compress.ts"
+    "postpackage": "ts-node src/scripts/verify-pkg.ts",
+    "compress": "ts-node src/scripts/compress.ts"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
