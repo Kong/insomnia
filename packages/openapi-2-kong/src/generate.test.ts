@@ -36,7 +36,6 @@ describe('top-level API exports', () => {
       } = await generate(dcFixtureFilepath, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
-      expect(dc.upstreams.length).toBe(1);
     });
 
     it('generates DC from file with extra tags', async () => {
@@ -94,7 +93,6 @@ describe('top-level API exports', () => {
       } = generateFromSpec(parsedSpec, 'kong-declarative-config') as DeclarativeConfigResult;
       expect(dc._format_version).toBe('1.1');
       expect(dc.services.length).toBe(1);
-      expect(dc.upstreams.length).toBe(1);
     });
 
     it('generates kubernetes from spec', async () => {

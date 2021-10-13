@@ -40,17 +40,5 @@
       "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"]
     }
   ],
-  "upstreams": [
-    {
-      "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
-      "name": "Swagger_Petstore.upstream",
-      "targets": [
-        {
-          "target": "petstore.swagger.io:80",
-          "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"]
-        }
-      ]
-    }
-  ],
   "_format_version": "1.1"
 }
