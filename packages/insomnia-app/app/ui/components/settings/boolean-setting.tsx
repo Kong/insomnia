@@ -45,7 +45,7 @@ export const BooleanSetting: FC<{
     throw new Error(`Invalid boolean setting name ${setting}`);
   }
 
-  const { isControlled } = getControlledStatus(settings)(setting);
+  const { isControlled, value } = getControlledStatus(settings)(setting);
 
   const onChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const { checked } = event.currentTarget;
@@ -66,7 +66,7 @@ export const BooleanSetting: FC<{
             </Tooltip>
           )}
           <input
-            checked={Boolean(settings[setting])}
+            checked={Boolean(value)}
             name={setting}
             onChange={onChange}
             type="checkbox"
