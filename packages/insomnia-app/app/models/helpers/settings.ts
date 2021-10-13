@@ -59,7 +59,7 @@ export const getConfigFile = () => {
       };
     }
   }
-  const fallbackEmptyConfig = { insomniaConfig: '1.0.0' };
+  const fallbackEmptyConfig: InsomniaConfig = { insomniaConfig: '1.0.0' };
   return {
     insomniaConfig: fallbackEmptyConfig,
     configPath: '<internal fallback insomnia config>',
