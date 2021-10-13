@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Swagger_Petstore",
+      "host": "Swagger_Petstore.upstream",
       "port": 80,
       "path": "/api",
       "name": "Swagger_Petstore",
@@ -43,7 +43,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_petstore-expanded.yaml"],
-      "name": "Swagger_Petstore",
+      "name": "Swagger_Petstore.upstream",
       "targets": [
         {
           "target": "petstore.swagger.io:80",
