@@ -25,6 +25,14 @@ const getTargets = () => {
   throw new Error(prefixPkgInso(`Unsupported OS: ${platform}`));
 };
 
+const getOutput = () => {
+  const outputDir = 'binaries';
+  const exeName = 'inso';
+  const exeExtension = isWindows() ? '.exe' : '';
+
+  return path.join(outputDir, `${exeName}${exeExtension}`);
+};
+
 const pkg = async () => {
   return new Promise<void>(resolve => {
     const cwd = path.join(__dirname, '../..');
@@ -37,7 +45,7 @@ const pkg = async () => {
         '--targets',
         getTargets(),
         '--output',
-        'binaries/inso',
+        getOutput(),
       ], {
         cwd,
         shell: true,
