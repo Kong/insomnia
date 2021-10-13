@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Simple_API_overview",
+      "host": "Simple_API_overview.upstream",
       "port": 80,
       "path": "/path",
       "name": "Simple_API_overview",
@@ -29,7 +29,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_no-targets-example.yaml"],
-      "name": "Simple_API_overview",
+      "name": "Simple_API_overview.upstream",
       "targets": []
     }
   ],
