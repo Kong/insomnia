@@ -57,3 +57,5 @@ plutil -lint "$ENTITLEMENTS_PATH"
 mkdir $ARTIFACT_LOCATION
 /usr/bin/pkgbuild --identifier "$BUNDLE_ID" --version "$VERSION" --sign "$INSTALL_IDENTITY" --keychain "$KEYCHAIN" --timestamp --root "$STAGING_AREA" --install-location "$INSTALL_LOCATION" "$ARTIFACT_LOCATION/$PKG_NAME.pkg"
 
+# Create a zip archive
+ditto -c -k --keepParent "$STAGING_AREA" "$ARTIFACT_LOCATION/$PKG_NAME.zip"
