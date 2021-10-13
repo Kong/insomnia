@@ -104,7 +104,7 @@ jobs:
         uses: devbotsxyz/xcode-notarize@v1
         with:
           product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.zip
-          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
+          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-zip
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
 
