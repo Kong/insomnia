@@ -22,7 +22,7 @@ const getTarArgs = () => {
   }
 
   if (isWindows()) {
-    return ['-czf', `inso-windows-${version}.zip`];
+    return ['-a -cf', `inso-windows-${version}.zip`];
   }
 
   throw new Error(prefixPkgArtifacts(`Unsupported OS: ${platform}`));
