@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "https",
-      "host": "USPTO_Data_Set_API",
+      "host": "USPTO_Data_Set_API.upstream",
       "port": 443,
       "path": "/ds-api",
       "name": "USPTO_Data_Set_API",

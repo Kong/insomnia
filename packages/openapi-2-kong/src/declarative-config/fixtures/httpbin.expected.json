@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "https",
-      "host": "httpbin",
+      "host": "httpbin.upstream",
       "port": 443,
       "path": "/",
       "name": "httpbin",
