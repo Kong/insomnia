@@ -13,13 +13,13 @@ import type { Workspace } from '../../../models/workspace';
 import { gitRollback } from '../../../sync/git/git-rollback';
 import { GIT_INSOMNIA_DIR, GIT_INSOMNIA_DIR_NAME, GitVCS } from '../../../sync/git/git-vcs';
 import parseGitPath from '../../../sync/git/parse-git-path';
-import IndeterminateCheckbox from '../base/indeterminate-checkbox';
-import Modal from '../base/modal';
+import { IndeterminateCheckbox } from '../base/indeterminate-checkbox';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
-import Tooltip from '../tooltip';
+import { PromptButton } from '../base/prompt-button';
+import { Tooltip } from '../tooltip';
 
 interface Item {
   path: string;
@@ -50,7 +50,7 @@ const INITIAL_STATE: State = {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitStagingModal extends PureComponent<Props, State> {
+export class GitStagingModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   statusNames: Record<string, string>;
   textarea: HTMLTextAreaElement | null = null;
@@ -442,5 +442,3 @@ class GitStagingModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GitStagingModal;

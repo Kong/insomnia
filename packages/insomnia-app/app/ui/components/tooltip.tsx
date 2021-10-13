@@ -26,7 +26,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Tooltip extends PureComponent<Props, State> {
+export class Tooltip extends PureComponent<Props, State> {
   _showTimeout: NodeJS.Timeout | null = null;
   _hideTimeout: NodeJS.Timeout | null = null;
   _tooltip: HTMLDivElement | null = null;
@@ -207,5 +207,3 @@ class Tooltip extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Tooltip;

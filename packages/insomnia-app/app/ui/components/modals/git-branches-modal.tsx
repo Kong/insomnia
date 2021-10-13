@@ -7,11 +7,11 @@ import { database as db } from '../../../common/database';
 import type { GitRepository } from '../../../models/git-repository';
 import { GitVCS } from '../../../sync/git/git-vcs';
 import { initialize as initializeEntities } from '../../redux/modules/entities';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 
 interface Props {
   vcs: GitVCS;
@@ -29,7 +29,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class GitBranchesModal extends PureComponent<Props, State> {
+export class GitBranchesModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   input: HTMLInputElement | null = null;
   _onHide: (() => void) | null;
@@ -299,5 +299,3 @@ class GitBranchesModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default GitBranchesModal;

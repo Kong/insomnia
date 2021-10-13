@@ -27,17 +27,17 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import Link from '../base/link';
-import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
+import { Link } from '../base/link';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showModal } from '../modals';
-import ErrorModal from '../modals/error-modal';
-import LoginModal from '../modals/login-modal';
-import SyncBranchesModal from '../modals/sync-branches-modal';
-import SyncDeleteModal from '../modals/sync-delete-modal';
-import SyncHistoryModal from '../modals/sync-history-modal';
-import SyncStagingModal from '../modals/sync-staging-modal';
-import Tooltip from '../tooltip';
+import { ErrorModal } from '../modals/error-modal';
+import { LoginModal } from '../modals/login-modal';
+import { SyncBranchesModal } from '../modals/sync-branches-modal';
+import { SyncDeleteModal } from '../modals/sync-delete-modal';
+import { SyncHistoryModal } from '../modals/sync-history-modal';
+import { SyncStagingModal } from '../modals/sync-staging-modal';
+import { Tooltip } from '../tooltip';
 
 // Stop refreshing if user hasn't been active in this long
 const REFRESH_USER_ACTIVITY = 1000 * 60 * 10;
@@ -430,7 +430,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
 
     return (
       <DropdownButton
-        className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced"
+        className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
         disabled={initializing}
       >
         <div className="ellipsis">
@@ -626,5 +626,4 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
   }
 }
 
-const SyncDropdown = connect(mapStateToProps, mapDispatchToProps)(UnconnectedSyncDropdown);
-export default SyncDropdown;
+export const SyncDropdown = connect(mapStateToProps, mapDispatchToProps)(UnconnectedSyncDropdown);

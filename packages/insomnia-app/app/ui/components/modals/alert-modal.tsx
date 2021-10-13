@@ -2,7 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -18,7 +18,7 @@ export interface AlertModalOptions {
 type State = Omit<AlertModalOptions, 'onConfirm'>;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AlertModal extends PureComponent<{}, State> {
+export class AlertModal extends PureComponent<{}, State> {
   state: State = {
     title: '',
     message: '',
@@ -99,5 +99,3 @@ class AlertModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default AlertModal;

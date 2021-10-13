@@ -13,13 +13,13 @@ import { clickLink } from '../../../common/electron-helpers';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { xmlDecode } from '../../../common/misc';
-import CodeEditor, { UnconnectedCodeEditor } from '../codemirror/code-editor';
-import KeydownBinder from '../keydown-binder';
-import CSVViewer from './response-csv-viewer';
-import { ResponseError } from './response-error';
-import MultipartViewer from './response-multipart';
-import PDFViewer from './response-pdf-viewer';
-import ResponseRaw from './response-raw';
+import { CodeEditor, UnconnectedCodeEditor } from '../codemirror/code-editor';
+import { KeydownBinder } from '../keydown-binder';
+import { ResponseCSVViewer } from './response-csv-viewer';
+import { ResponseErrorViewer } from './response-error-viewer';
+import { ResponseMultipartViewer } from './response-multipart-viewer';
+import { ResponsePDFViewer } from './response-pdf-viewer';
+import { ResponseRawViewer } from './response-raw-viewer';
 import { ResponseWebView } from './response-web-view';
 
 let alwaysShowLargeResponses = false;
@@ -53,8 +53,8 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseViewer extends Component<Props, State> {
-  _selectableView: ResponseRaw | UnconnectedCodeEditor | null;
+export class ResponseViewer extends Component<Props, State> {
+  _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
 
   state: State = {
     blockingBecauseTooLarge: false,
@@ -167,7 +167,7 @@ class ResponseViewer extends Component<Props, State> {
     return false;
   }
 
-  _setSelectableViewRef<T extends ResponseRaw | UnconnectedCodeEditor | null>(n: T) {
+  _setSelectableViewRef<T extends ResponseRawViewer | UnconnectedCodeEditor | null>(n: T) {
     this._selectableView = n;
   }
 
@@ -265,7 +265,7 @@ class ResponseViewer extends Component<Props, State> {
     if (error) {
       return (
         <div className="scrollable tall">
-          <ResponseError url={url} error={error} fontSize={editorFontSize} />
+          <ResponseErrorViewer url={url} error={error} fontSize={editorFontSize} />
         </div>
       );
     }
@@ -384,7 +384,7 @@ class ResponseViewer extends Component<Props, State> {
     if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
-          <PDFViewer body={bodyBuffer} uniqueKey={responseId} />
+          <ResponsePDFViewer body={bodyBuffer} uniqueKey={responseId} />
         </div>
       );
     }
@@ -392,14 +392,14 @@ class ResponseViewer extends Component<Props, State> {
     if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
-          <CSVViewer body={bodyBuffer} key={responseId} />
+          <ResponseCSVViewer body={bodyBuffer} key={responseId} />
         </div>
       );
     }
 
     if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
       return (
-        <MultipartViewer
+        <ResponseMultipartViewer
           bodyBuffer={bodyBuffer}
           contentType={contentType}
           disableHtmlPreviewJs={disableHtmlPreviewJs}
@@ -432,7 +432,7 @@ class ResponseViewer extends Component<Props, State> {
 
     if (previewMode === PREVIEW_MODE_RAW) {
       return (
-        <ResponseRaw
+        <ResponseRawViewer
           key={responseId}
           responseId={responseId}
           ref={this._setSelectableViewRef}
@@ -470,5 +470,3 @@ class ResponseViewer extends Component<Props, State> {
     return <KeydownBinder onKeydown={this._handleKeyDown}>{this._renderView()}</KeydownBinder>;
   }
 }
-
-export default ResponseViewer;

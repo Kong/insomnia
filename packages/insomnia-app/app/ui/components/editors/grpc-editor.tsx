@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react';
 
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { Settings } from '../../../models/settings';
-import CodeEditor from '../codemirror/code-editor';
+import { CodeEditor } from '../codemirror/code-editor';
 
 interface Props {
   content?: string;
@@ -14,7 +14,7 @@ interface Props {
   handleGetRenderContext?: HandleGetRenderContext;
 }
 
-const GRPCEditor: FunctionComponent<Props> = ({
+export const GRPCEditor: FunctionComponent<Props> = ({
   content,
   handleChange,
   readOnly,
@@ -41,5 +41,3 @@ const GRPCEditor: FunctionComponent<Props> = ({
     nunjucksPowerUserMode={settings.nunjucksPowerUserMode}
   />
 );
-
-export default GRPCEditor;

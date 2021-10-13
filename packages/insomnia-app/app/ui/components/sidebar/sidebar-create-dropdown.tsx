@@ -18,7 +18,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarCreateDropdown extends PureComponent<Props> {
+export class SidebarCreateDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   show(position: { x: number; y: number }) {
@@ -51,5 +51,3 @@ class SidebarCreateDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default SidebarCreateDropdown;

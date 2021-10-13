@@ -18,9 +18,9 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
 import { showModal } from '../modals/index';
-import WrapperModal from '../modals/wrapper-modal';
+import { WrapperModal } from '../modals/wrapper-modal';
 import { ResponseHeadersViewer } from './response-headers-viewer';
-import ResponseViewer from './response-viewer';
+import { ResponseViewer } from  './response-viewer';
 
 interface Part {
   name: string;
@@ -53,7 +53,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseMultipart extends PureComponent<Props, State> {
+export class ResponseMultipartViewer extends PureComponent<Props, State> {
   state: State = {
     activePart: -1,
     parts: [],
@@ -321,5 +321,3 @@ class ResponseMultipart extends PureComponent<Props, State> {
     );
   }
 }
-
-export default ResponseMultipart;

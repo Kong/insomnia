@@ -5,9 +5,9 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG } from '../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
-import Button from './base/button';
-import CodeEditor, { UnconnectedCodeEditor } from './codemirror/code-editor';
-import MarkdownPreview from './markdown-preview';
+import { Button } from './base/button';
+import { CodeEditor,  UnconnectedCodeEditor } from './codemirror/code-editor';
+import { MarkdownPreview } from './markdown-preview';
 
 interface Props {
   onChange: Function;
@@ -32,7 +32,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class MarkdownEditor extends PureComponent<Props, State> {
+export class MarkdownEditor extends PureComponent<Props, State> {
   _editor: UnconnectedCodeEditor | null = null;
 
   constructor(props: Props) {
@@ -124,5 +124,3 @@ class MarkdownEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default MarkdownEditor;

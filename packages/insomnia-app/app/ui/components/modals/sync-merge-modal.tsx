@@ -5,7 +5,7 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import type { Workspace } from '../../../models/workspace';
 import type { DocumentKey, MergeConflict, StatusCandidate } from '../../../sync/types';
 import { VCS } from '../../../sync/vcs/vcs';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
@@ -21,7 +21,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncMergeModal extends PureComponent<Props, State> {
+export class SyncMergeModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _handleDone: (arg0: MergeConflict[]) => void;
 
@@ -126,5 +126,3 @@ class SyncMergeModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default SyncMergeModal;

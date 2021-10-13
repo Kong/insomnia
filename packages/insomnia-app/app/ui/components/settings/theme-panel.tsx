@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { ColorScheme } from '../../../plugins';
 import { PluginTheme } from '../../../plugins/misc';
 import { useThemes } from '../../hooks/theme';
-import HelpTooltip from '../help-tooltip';
+import { HelpTooltip } from '../help-tooltip';
 
 const THEMES_PER_ROW = 5;
 

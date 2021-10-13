@@ -9,7 +9,7 @@ import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
 import deepEqual from 'deep-equal';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import { query as queryXPath } from 'insomnia-xpath';
-import jq from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import React, { Component, CSSProperties, ReactNode } from 'react';
 import { connect } from 'react-redux';
 import { unreachable } from 'ts-assert-unreachable';
@@ -34,8 +34,8 @@ import { selectSettings } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import KeydownBinder from '../keydown-binder';
-import FilterHelpModal from '../modals/filter-help-modal';
+import { KeydownBinder } from '../keydown-binder';
+import { FilterHelpModal } from '../modals/filter-help-modal';
 import { showModal } from '../modals/index';
 import { normalizeIrregularWhitespace } from './normalizeIrregularWhitespace';
 
@@ -675,7 +675,7 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       if (this.props.updateFilter && this.state.filter) {
         try {
           const codeObj = JSON.parse(code);
-          const results = jq.query(codeObj, this.state.filter.trim());
+          const results = JSONPath({ json: codeObj, path: this.state.filter.trim() });
           jsonString = JSON.stringify(results);
         } catch (err) {
           console.log('[jsonpath] Error: ', err);
@@ -1295,6 +1295,4 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
   }
 }
 
-const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedCodeEditor);
-
-export default CodeEditor;
+export const CodeEditor = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedCodeEditor);

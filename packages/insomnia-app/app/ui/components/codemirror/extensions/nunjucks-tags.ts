@@ -5,7 +5,7 @@ import { HandleGetRenderContext, HandleRender } from '../../../../common/render'
 import { getTagDefinitions } from '../../../../templating/index';
 import { tokenizeTag } from '../../../../templating/utils';
 import { showModal } from '../../modals/index';
-import NunjucksVariableModal from '../../modals/nunjucks-modal';
+import { NunjucksModal } from '../../modals/nunjucks-modal';
 
 CodeMirror.defineExtension('enableNunjucksTags', function(
   handleRender: HandleRender,
@@ -157,7 +157,7 @@ async function _highlightNunjucksTags(render, renderContext, isVariableUncovered
       activeMarks.push(mark);
       el.addEventListener('click', async () => {
         // Define the dialog HTML
-        showModal(NunjucksVariableModal, {
+        showModal(NunjucksModal, {
           template: mark.__template,
           onDone: template => {
             const pos = mark.find();

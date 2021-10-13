@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import React, { FC, PureComponent, ReactNode } from 'react';
+import { connect } from 'react-redux';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 import styled from 'styled-components';
 
@@ -8,18 +9,19 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import type { ApiSpec } from '../../../models/api-spec';
 import type { ClientCertificate } from '../../../models/client-certificate';
-import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import * as models from '../../../models/index';
 import type { Workspace } from '../../../models/workspace';
-import DebouncedInput from '../base/debounced-input';
-import FileInputButton from '../base/file-input-button';
-import Modal from '../base/modal';
+import { RootState } from '../../redux/modules';
+import { selectActiveWorkspaceName } from '../../redux/selectors';
+import { DebouncedInput } from '../base/debounced-input';
+import { FileInputButton } from '../base/file-input-button';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
-import HelpTooltip from '../help-tooltip';
-import MarkdownEditor from '../markdown-editor';
+import { PromptButton } from '../base/prompt-button';
+import { HelpTooltip } from '../help-tooltip';
+import { MarkdownEditor } from '../markdown-editor';
 import { PasswordViewer } from '../viewers/password-viewer';
 import { showWorkspaceDuplicateModal } from './workspace-duplicate-modal';
 
@@ -58,7 +60,9 @@ const CertificateField: FC<{
   );
 };
 
-interface Props {
+type ReduxProps = ReturnType<typeof mapStateToProps>;
+
+interface Props extends ReduxProps {
   clientCertificates: ClientCertificate[];
   workspace: Workspace;
   apiSpec: ApiSpec;
@@ -87,7 +91,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceSettingsModal extends PureComponent<Props, State> {
+export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
 
   state: State = {
@@ -127,8 +131,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
   }
 
   _handleDuplicateWorkspace() {
-    const { workspace, apiSpec } = this.props;
-    showWorkspaceDuplicateModal({ workspace, apiSpec, onDone: this.hide });
+    const { workspace } = this.props;
+    showWorkspaceDuplicateModal({ workspace, onDone: this.hide });
   }
 
   _handleToggleCertificateForm() {
@@ -292,7 +296,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
     const {
       clientCertificates,
       workspace,
-      apiSpec,
+      activeWorkspaceName,
       editorLineWrapping,
       editorFontSize,
       editorIndentSize,
@@ -333,7 +337,7 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
                   type="text"
                   delay={500}
                   placeholder="Awesome API"
-                  defaultValue={getWorkspaceName(workspace, apiSpec)}
+                  defaultValue={activeWorkspaceName}
                   onChange={this._handleRename}
                 />
               </label>
@@ -540,4 +544,8 @@ class WorkspaceSettingsModal extends PureComponent<Props, State> {
   }
 }
 
-export default WorkspaceSettingsModal;
+const mapStateToProps = (state: RootState) => ({
+  activeWorkspaceName: selectActiveWorkspaceName(state),
+});
+
+export const WorkspaceSettingsModal = connect(mapStateToProps, null, null, { forwardRef: true })(UnconnectedWorkspaceSettingsModal);

@@ -16,7 +16,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestGroupRow extends PureComponent<Props> {
+export class RequestGroupRow extends PureComponent<Props> {
   checkbox: HTMLInputElement;
 
   setCheckboxRef(checkbox: HTMLInputElement) {
@@ -75,5 +75,3 @@ class RequestGroupRow extends PureComponent<Props> {
     );
   }
 }
-
-export default RequestGroupRow;

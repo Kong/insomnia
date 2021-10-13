@@ -9,7 +9,7 @@ interface Props extends HTMLAttributes<HTMLInputElement> {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class IndeterminateCheckbox extends PureComponent<Props> {
+export class IndeterminateCheckbox extends PureComponent<Props> {
   input: HTMLInputElement | null = null;
 
   _setRef(n: HTMLInputElement) {
@@ -38,5 +38,3 @@ class IndeterminateCheckbox extends PureComponent<Props> {
     return <input ref={this._setRef} type="checkbox" {...otherProps} />;
   }
 }
-
-export default IndeterminateCheckbox;

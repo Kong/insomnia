@@ -25,7 +25,7 @@ const StyledSpecEditorSidebar = styled.div`
 `;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SpecEditorSidebar extends Component<Props, State> {
+export class SpecEditorSidebar extends Component<Props, State> {
   state: State = {
     error: '',
     specContentJSON: false,
@@ -121,5 +121,3 @@ class SpecEditorSidebar extends Component<Props, State> {
     );
   }
 }
-
-export default SpecEditorSidebar;

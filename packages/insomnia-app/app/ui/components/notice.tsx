@@ -18,7 +18,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Notice extends PureComponent<Props, State> {
+export class Notice extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
     const { dismissKey } = props;
@@ -67,5 +67,3 @@ class Notice extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Notice;

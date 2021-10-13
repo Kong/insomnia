@@ -19,7 +19,7 @@ export interface ButtonProps<T> {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Button<T> extends PureComponent<ButtonProps<T>> {
+export class Button<T> extends PureComponent<ButtonProps<T>> {
   _handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     const { onClick, onDisabledClick, disabled, value } = this.props;
     const fn = disabled ? onDisabledClick : onClick;
@@ -50,5 +50,3 @@ class Button<T> extends PureComponent<ButtonProps<T>> {
     );
   }
 }
-
-export default Button;

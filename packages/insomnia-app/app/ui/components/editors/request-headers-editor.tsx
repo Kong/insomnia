@@ -8,8 +8,8 @@ import allMimeTypes from '../../../datasets/content-types';
 import allEncodings from '../../../datasets/encodings';
 import allHeaderNames from '../../../datasets/header-names';
 import type { Request, RequestHeader } from '../../../models/request';
-import CodeEditor from '../codemirror/code-editor';
-import KeyValueEditor from '../key-value-editor/editor';
+import { CodeEditor } from '../codemirror/code-editor';
+import { KeyValueEditor } from '../key-value-editor/key-value-editor';
 
 interface Props {
   onChange: (r: Request, headers: RequestHeader[]) => Promise<Request>;
@@ -25,7 +25,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestHeadersEditor extends PureComponent<Props> {
+export class RequestHeadersEditor extends PureComponent<Props> {
   _handleBulkUpdate(headersString: string) {
     const { onChange, request } = this.props;
 
@@ -151,5 +151,3 @@ class RequestHeadersEditor extends PureComponent<Props> {
     );
   }
 }
-
-export default RequestHeadersEditor;

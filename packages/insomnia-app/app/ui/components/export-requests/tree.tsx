@@ -4,8 +4,8 @@ import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import type { Node } from '../modals/export-requests-modal';
-import RequestGroupRow from './request-group-row';
-import RequestRow from './request-row';
+import { RequestGroupRow } from './request-group-row';
+import { RequestRow } from './request-row';
 
 interface Props {
   root?: Node | null;
@@ -13,7 +13,7 @@ interface Props {
   handleSetItemSelected: (...args: any[]) => any;
 }
 
-class Tree extends PureComponent<Props> {
+export class Tree extends PureComponent<Props> {
   renderChildren(node?: Node | null) {
     if (node == null) {
       return null;
@@ -62,5 +62,3 @@ class Tree extends PureComponent<Props> {
     );
   }
 }
-
-export default Tree;

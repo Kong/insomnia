@@ -13,14 +13,15 @@ import {
 } from '../../../common/constants';
 import * as models from '../../../models/index';
 import { Request } from '../../../models/request';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import ContentTypeDropdown from '../dropdowns/content-type-dropdown';
-import MethodDropdown from '../dropdowns/method-dropdown';
+import { ContentTypeDropdown } from '../dropdowns/content-type-dropdown';
+import { MethodDropdown } from '../dropdowns/method-dropdown';
 import { showModal } from './index';
 import ProtoFilesModal from './proto-files-modal';
+
 interface RequestCreateModalOptions {
   parentId: string;
   onComplete: (arg0: string) => void;
@@ -33,7 +34,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestCreateModal extends PureComponent<{}, State> {
+export class RequestCreateModal extends PureComponent<{}, State> {
   state: State = {
     selectedContentType: null,
     selectedMethod: METHOD_GET,
@@ -208,5 +209,3 @@ class RequestCreateModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default RequestCreateModal;

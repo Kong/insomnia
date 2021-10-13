@@ -1,16 +1,20 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
-import React, { FC, PureComponent, ReactNode } from 'react';
+import React, { forwardRef, PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../common/constants';
-import ErrorBoundary from './error-boundary';
-import Sidebar from './sidebar/sidebar';
+import { ErrorBoundary } from './error-boundary';
+import { Sidebar } from './sidebar/sidebar';
 import type { WrapperProps } from './wrapper';
 
-const Pane: FC<{ position: string }> = ({ children, position }) => (
-  <section className={`pane-${position} theme--pane`}>
-    {children}
-  </section>
+const Pane = forwardRef<HTMLElement, { position: string; children: ReactNode }>(
+  function Pane({ children, position }, ref) {
+    return (
+      <section ref={ref} className={`pane-${position} theme--pane`}>
+        {children}
+      </section>
+    );
+  }
 );
 
 interface Props {
@@ -23,7 +27,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PageLayout extends PureComponent<Props> {
+export class PageLayout extends PureComponent<Props> {
   // Special request updaters
   _handleStartDragSidebar(e: React.MouseEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -47,9 +51,9 @@ class PageLayout extends PureComponent<Props> {
       handleInitializeEntities,
       handleResetDragSidebar,
       handleSetActiveEnvironment,
-      handleSetSidebarRef,
-      handleSetRequestPaneRef,
-      handleSetResponsePaneRef,
+      sidebarRef,
+      requestPaneRef,
+      responsePaneRef,
       handleStartDragPaneHorizontal,
       handleResetDragPaneHorizontal,
       handleStartDragPaneVertical,
@@ -113,9 +117,9 @@ class PageLayout extends PureComponent<Props> {
         {renderPageSidebar && (
           <ErrorBoundary showAlert>
             <Sidebar
-              // @ts-expect-error -- TSCONVERSION
-              ref={handleSetSidebarRef}
+              ref={sidebarRef}
               activeEnvironment={activeEnvironment}
+              // @ts-expect-error -- TSCONVERSION
               activeGitRepository={activeGitRepository}
               environmentHighlightColorStyle={settings.environmentHighlightColorStyle}
               handleInitializeEntities={handleInitializeEntities}
@@ -149,8 +153,7 @@ class PageLayout extends PureComponent<Props> {
               <ErrorBoundary showAlert>
                 <Pane
                   position="one"
-                  // @ts-expect-error -- TSCONVERSION
-                  ref={handleSetRequestPaneRef}
+                  ref={requestPaneRef}
                 >
                   {renderPaneOne()}
                 </Pane>
@@ -175,8 +178,7 @@ class PageLayout extends PureComponent<Props> {
                 <ErrorBoundary showAlert>
                   <Pane
                     position="two"
-                    // @ts-expect-error -- TSCONVERSION
-                    ref={handleSetResponsePaneRef}
+                    ref={responsePaneRef}
                   >
                     {paneTwo}
                   </Pane>
@@ -189,5 +191,3 @@ class PageLayout extends PureComponent<Props> {
     );
   }
 }
-
-export default PageLayout;

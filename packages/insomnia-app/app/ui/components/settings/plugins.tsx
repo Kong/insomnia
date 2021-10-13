@@ -19,8 +19,8 @@ import { getPlugins } from '../../../plugins/index';
 import installPlugin from '../../../plugins/install';
 import { reload } from '../../../templating/index';
 import { CopyButton } from '../base/copy-button';
-import Link from '../base/link';
-import HelpTooltip from '../help-tooltip';
+import { Link } from '../base/link';
+import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
 
 interface Props {
@@ -38,7 +38,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Plugins extends PureComponent<Props, State> {
+export class Plugins extends PureComponent<Props, State> {
   _isMounted: boolean;
 
   state: State = {
@@ -346,5 +346,3 @@ class Plugins extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Plugins;

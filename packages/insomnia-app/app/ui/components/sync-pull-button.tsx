@@ -21,7 +21,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SyncPullButton extends PureComponent<Props, State> {
+export class SyncPullButton extends PureComponent<Props, State> {
   _timeout: NodeJS.Timeout | null = null;
 
   state: State = {
@@ -84,5 +84,3 @@ class SyncPullButton extends PureComponent<Props, State> {
     );
   }
 }
-
-export default SyncPullButton;

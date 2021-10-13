@@ -13,7 +13,7 @@ interface Props {
   handleCreateRequest: () => void;
 }
 
-const PlaceholderRequestPane: FC<Props> = ({
+export const PlaceholderRequestPane: FC<Props> = ({
   hotKeyRegistry,
   handleCreateRequest,
 }) => {
@@ -77,5 +77,3 @@ const PlaceholderRequestPane: FC<Props> = ({
     </Pane>
   );
 };
-
-export default PlaceholderRequestPane;

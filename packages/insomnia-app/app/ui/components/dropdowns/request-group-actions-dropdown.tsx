@@ -19,9 +19,9 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 import { showError, showModal } from '../modals';
-import EnvironmentEditModal from '../modals/environment-edit-modal';
+import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 

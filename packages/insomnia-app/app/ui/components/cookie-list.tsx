@@ -10,8 +10,8 @@ import type { Cookie } from '../../models/cookie-jar';
 import { Dropdown } from './base/dropdown/dropdown';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownItem } from './base/dropdown/dropdown-item';
-import PromptButton from './base/prompt-button';
-import RenderedText from './rendered-text';
+import { PromptButton } from './base/prompt-button';
+import { RenderedText } from './rendered-text';
 
 export interface CookieListProps {
   handleCookieAdd: Function;
@@ -28,7 +28,7 @@ export interface CookieListProps {
 const MAX_TIME = 2147483647000;
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookieList extends PureComponent<CookieListProps> {
+export class CookieList extends PureComponent<CookieListProps> {
   _handleCookieAdd() {
     const newCookie: Cookie = {
       id: uuid.v4(),
@@ -139,5 +139,3 @@ class CookieList extends PureComponent<CookieListProps> {
     );
   }
 }
-
-export default CookieList;

@@ -26,6 +26,13 @@ describe('query()', () => {
     ]);
   });
 
+  it('handles text() query', () => {
+    expect(query('<book><title>Harry</title><title>Potter</title></book>', 'local-name(/book)'))
+      .toEqual([{ 'inner': 'book', 'outer': 'book' }]);
+    expect(query('<book><title>Harry</title><title>Potter</title></book>', '//title/text()'))
+      .toEqual([{ 'inner': 'Harry', 'outer': 'Harry' }, { 'inner': 'Potter', 'outer': 'Potter' }]);
+  });
+
   it('handles invalid query', () => {
     expect(() => {
       query('<hi>there</hi>', '//[]');

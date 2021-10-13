@@ -3,7 +3,7 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';
-import KeyValueEditor from '../../key-value-editor/editor';
+import { KeyValueEditor } from '../../key-value-editor/key-value-editor';
 
 interface Props {
   onChange: Function;
@@ -15,7 +15,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FormEditor extends PureComponent<Props> {
+export class FormEditor extends PureComponent<Props> {
   render() {
     const {
       parameters,
@@ -47,5 +47,3 @@ class FormEditor extends PureComponent<Props> {
     );
   }
 }
-
-export default FormEditor;

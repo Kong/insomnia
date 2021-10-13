@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import type { Request } from '../../../models/request';
-import GrpcTag from '../tags/grpc-tag';
+import { GrpcTag } from '../tags/grpc-tag';
 import { MethodTag } from '../tags/method-tag';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestRow extends PureComponent<Props> {
+export class RequestRow extends PureComponent<Props> {
   handleSelect(e: React.SyntheticEvent<HTMLInputElement>) {
     const el = e.currentTarget;
     const value = el.checked;
@@ -45,5 +45,3 @@ class RequestRow extends PureComponent<Props> {
     );
   }
 }
-
-export default RequestRow;
