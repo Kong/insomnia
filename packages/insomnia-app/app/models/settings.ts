@@ -121,7 +121,7 @@ export async function getOrCreate() {
   if (results.length === 0) {
     return create();
   } else {
-    return results[0];
+    return getControlledSettings(results[0]);
   }
 }
 
