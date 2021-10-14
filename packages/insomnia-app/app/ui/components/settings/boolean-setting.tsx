@@ -20,11 +20,6 @@ const Descriptions = styled.div({
   },
 });
 
-// would be nice to use RequireAllOrNone from type-fest when we can update to type-fest 2.0
-interface Overridden {
-  overrideValue?: boolean;
-}
-
 export const BooleanSetting: FC<{
   /** each element of this array will appear as a paragraph below the setting describing it */
   descriptions?: string[];
@@ -32,7 +27,7 @@ export const BooleanSetting: FC<{
   help?: string;
   label: string;
   setting: keyof Settings;
-} & Overridden> = ({
+}> = ({
   descriptions,
   forceRestart,
   help,
