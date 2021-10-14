@@ -4,6 +4,7 @@ import { InsomniaConfig, validate } from 'insomnia-config';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
+import { ValueOf } from 'type-fest';
 
 import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
@@ -137,16 +138,21 @@ export type SettingsControl<T extends keyof Settings> =
   | UncontrolledSetting
 ;
 
+const isSettingControlledByCondition = (condition: Condition, setting: keyof Settings, value: ValueOf<Settings>) => {
+  return condition.when === value
+    && Object.prototype.hasOwnProperty.call(condition.set, setting);
+};
+
 /**
  * checks whether a given setting is controlled by another setting.
  * if so, it will return that setting id.  otherwise it will return false.
  */
 export const isControlledByAnotherSetting = (settings: Settings) => (setting: keyof Settings) => {
   for (const [controller, controlledSettings] of settingControllers.entries()) {
-    for (const { when, set } of controlledSettings) {
-      if (when === settings[controller] && Object.prototype.hasOwnProperty.call(set, setting)) {
+    for (const condition of controlledSettings) {
+      if (isSettingControlledByCondition(condition, setting, settings[controller])) {
         const output: SettingControlledSetting<typeof setting> = {
-          controlledValue: set[setting],
+          controlledValue: condition.set[setting],
           controller,
           isControlled: true,
         };
