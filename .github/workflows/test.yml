@@ -90,29 +90,29 @@ jobs:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       # We don't need to notarize and staple on every commit
-      - name: Notarize installer
-        if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-notarize@v1
-        with:
-          product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
-          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
-          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+      # - name: Notarize installer
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-notarize@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
+      #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+      #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
 
-      - name: Staple installer
-        if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-staple@v1
-        with:
-          product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      # - name: Staple installer
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-staple@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
-      - name: Notarize binary
-        if: matrix.os == 'macos-latest'
-        uses: devbotsxyz/xcode-notarize@v1
-        with:
-          product-path: packages/insomnia-inso/binaries/inso
-          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-binary
-          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
-          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+      # - name: Notarize binary
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-notarize@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/binaries/inso
+      #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-binary
+      #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+      #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:artifacts
