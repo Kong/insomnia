@@ -8,7 +8,7 @@ import { generateServices } from './services';
 const getSpecResult = (): DCService =>
   JSON.parse(
     JSON.stringify({
-      host: 'My_API.upstream',
+      host: 'My_API',
       name: 'My_API',
       plugins: [],
       path: '/path',

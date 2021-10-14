@@ -8,7 +8,7 @@ import {
   pathVariablesToRegex,
 } from '../common';
 import { DCRoute, DCService } from '../types/declarative-config';
-import { xKongName, xKongServiceDefaults } from '../types/kong';
+import { xKongName, xKongServiceDefaults, xKongUpstreamDefaults } from '../types/kong';
 import { OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
 import {
   generateGlobalPlugins,
@@ -33,6 +33,13 @@ export function generateServices(api: OpenApi3Spec, tags: string[]) {
 export function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
+  let host = name;
+  const hasUpstreamDefaults = !!api[xKongUpstreamDefaults];
+  const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
+  if (hasUpstreamDefaults || hasMoreThanOneServer) {
+    host =  `${name}.upstream`;
+  }
+
   const parsedUrl = parseUrl(serverUrl);
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api, tags);
@@ -47,7 +54,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
     name,
     // remove semicolon i.e. convert `https:` to `https`
     protocol: parsedUrl?.protocol?.substring(0, parsedUrl.protocol.length - 1),
-    host: `${name}.upstream`,
+    host,
     // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
     path: parsedUrl.pathname,

@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Swagger_Petstore.upstream",
+      "host": "Swagger_Petstore",
       "port": 80,
       "path": "/v1",
       "name": "Swagger_Petstore",

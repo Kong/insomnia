@@ -18,9 +18,16 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
     throw new Error(`expected '${xKongUpstreamDefaults}' to be an object`);
   }
 
+  let name = getName(api);
+  const hasUpstreamDefaults = !!api[xKongUpstreamDefaults];
+  const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
+  if (hasUpstreamDefaults || hasMoreThanOneServer) {
+    name =  `${name}.upstream`;
+  }
+
   const upstream: DCUpstream = {
     ...upstreamDefaults,
-    name: `${getName(api)}.upstream`,
+    name,
     targets: [],
     tags,
   };

@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Callback_Example.upstream",
+      "host": "Callback_Example",
       "port": 80,
       "path": "/path",
       "name": "Callback_Example",

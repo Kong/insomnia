@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Security_Example.upstream",
+      "host": "Security_Example",
       "port": 80,
       "path": "/path",
       "name": "Security_Example",
