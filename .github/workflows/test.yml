@@ -69,7 +69,7 @@ jobs:
           echo ::set-output name=bundle-id::$BUNDLE_ID
           echo ::set-output name=inso-version::$INSO_VERSION
 
-      - name: Create Inso CLI binaries
+      - name: Package Inso CLI binary
         run: npm run inso-package
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
@@ -90,7 +90,7 @@ jobs:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       # We don't need to notarize and staple on every commit
-      # - name: Notarize installer package
+      # - name: Notarize installer
       #   if: matrix.os == 'macos-latest'
       #   uses: devbotsxyz/xcode-notarize@v1
       #   with:
@@ -99,13 +99,13 @@ jobs:
       #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
       #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
       
-      # - name: Staple installer package
+      # - name: Staple installer
       #   if: matrix.os == 'macos-latest'
       #   uses: devbotsxyz/xcode-staple@v1
       #   with:
       #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
-      - name: Notarize raw binary
+      - name: Notarize binary
         if: matrix.os == 'macos-latest'
         uses: devbotsxyz/xcode-notarize@v1
         with:
