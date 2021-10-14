@@ -43,17 +43,16 @@ security import certificate.p12 -k "$KEYCHAIN" -P "$MACOS_CERTIFICATE_PWD" -T /u
 # New requirement for MacOS 10.12+
 security set-key-partition-list -S apple-tool:,apple:,codesign:,pkgbuild: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
 
+# Sign the binary
+plutil -lint "$ENTITLEMENTS_PATH"
+/usr/bin/codesign --force --options=runtime --entitlements "$ENTITLEMENTS_PATH" --timestamp --sign "$APP_IDENTITY" "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME"
+
 # Create a staging area for the installer package.
 mkdir -p "$STAGING_AREA"
 
 # Copy the binary into the staging area.
 cp "$SOURCE_BINARY_DIR/$SOURCE_BINARY_NAME" "$STAGING_AREA"
 
-# Sign the binary
-plutil -lint "$ENTITLEMENTS_PATH"
-/usr/bin/codesign --force --options=runtime --entitlements "$ENTITLEMENTS_PATH" --timestamp --sign "$APP_IDENTITY" "$STAGING_AREA/$SOURCE_BINARY_NAME"
-
 # Build and sign the package
 mkdir $ARTIFACT_LOCATION
 /usr/bin/pkgbuild --identifier "$BUNDLE_ID" --version "$VERSION" --sign "$INSTALL_IDENTITY" --keychain "$KEYCHAIN" --timestamp --root "$STAGING_AREA" --install-location "$INSTALL_LOCATION" "$ARTIFACT_LOCATION/$PKG_NAME.pkg"
-
