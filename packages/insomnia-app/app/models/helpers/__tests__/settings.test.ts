@@ -15,7 +15,10 @@ import {
   omitControlledSettings,
 } from '../settings';
 
-jest.mock('../../../common/constants');
+jest.mock('../../../common/constants', () => ({
+  ...jest.requireActual<typeof _constants>('../../../common/constants'),
+  isDevelopment: jest.fn(),
+}));
 const { isDevelopment } = mocked(_constants);
 
 jest.mock('../settings');
