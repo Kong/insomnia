@@ -8,7 +8,6 @@ import { bindActionCreators } from 'redux';
 import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 import { database as db } from '../../common/database';
 import type { BaseModel } from '../../models';
-import { getControlledStatus } from '../../models/helpers/settings';
 import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importFile, importUri } from '../redux/modules/import';
@@ -125,25 +124,20 @@ class WrapperOnboarding extends PureComponent<Props, State> {
       settings: { enableAnalytics },
     } = this.props.wrapperProps;
 
-    const isControlledByInsomniaConfig = (
-      getControlledStatus(this.props.wrapperProps.settings)('enableAnalytics')?.controller === 'incognitoMode'
-    );
-
-    const analyticsMessage = enableAnalytics
-      ? `Thanks for helping make ${getAppName()} better!`
-      : `Opted out of analytics${isControlledByInsomniaConfig ? ' by Incognito Mode' : ''}`;
+    const lastStep = this.hasStep1() ? (
+      <p className="notice success text-left margin-top margin-bottom">
+        <a href="#" className="pull-right" onClick={this._handleBackStep}>
+          Back
+        </a>
+        {enableAnalytics
+          ? `Thanks for helping make ${getAppName()} better!`
+          : 'Opted out of analytics'}
+      </p>
+    ) : null;
 
     return (
       <Fragment>
-        <p className="notice success text-left margin-top margin-bottom">
-          {this.hasStep1() ? (
-            <a href="#" className="pull-right" onClick={this._handleBackStep}>
-              Back
-            </a>
-          ) : null}
-
-          {analyticsMessage}
-        </p>
+        {lastStep}
         <p>Import an OpenAPI spec to get started:</p>
         <button key="file" className="btn btn--clicky" onClick={this._handleImportFile}>
           From File
