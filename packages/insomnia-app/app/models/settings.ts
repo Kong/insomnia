@@ -8,7 +8,7 @@ import {
 } from '../common/constants';
 import { database as db } from '../common/database';
 import * as hotkeys from '../common/hotkeys';
-import { getControlledSettings, omitControlledSettings } from './helpers/settings';
+import { getMonkeyPatchedControlledSettings, omitControlledSettings } from './helpers/settings';
 import type { BaseModel } from './index';
 
 export type Settings = BaseModel & BaseSettings;
@@ -97,24 +97,24 @@ export async function all() {
     settingsList = [await getOrCreate()];
   }
 
-  return settingsList.map(getControlledSettings);
+  return settingsList.map(getMonkeyPatchedControlledSettings);
 }
 
 async function create() {
   const settings = await db.docCreate<Settings>(type);
-  return getControlledSettings(settings);
+  return getMonkeyPatchedControlledSettings(settings);
 }
 
 export async function update(settings: Settings, patch: Partial<Settings>) {
   const updatedSettings = await db.docUpdate<Settings>(settings, omitControlledSettings(settings, patch));
-  return getControlledSettings(updatedSettings);
+  return getMonkeyPatchedControlledSettings(updatedSettings);
 }
 
 export async function patch(patch: Partial<Settings>) {
   const settings = await getOrCreate();
   const sanitizedPatch = omitControlledSettings(settings, patch);
   const updatedSettings = await db.docUpdate<Settings>(settings, sanitizedPatch);
-  return getControlledSettings(updatedSettings);
+  return getMonkeyPatchedControlledSettings(updatedSettings);
 }
 
 export async function getOrCreate() {
@@ -123,7 +123,7 @@ export async function getOrCreate() {
   if (results.length === 0) {
     return create();
   } else {
-    return getControlledSettings(results[0]);
+    return getMonkeyPatchedControlledSettings(results[0]);
   }
 }
 

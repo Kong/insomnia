@@ -9,9 +9,9 @@ import * as settingsHelpers from '../settings';
 import {
   getConfigFile,
   getConfigSettings as _getConfigSettings,
-  getControlledSettings,
   getControlledStatus,
   getLocalDevConfigFilePath,
+  getMonkeyPatchedControlledSettings,
   omitControlledSettings,
 } from '../settings';
 
@@ -182,7 +182,7 @@ describe('omitControlledSettings', () => {
   });
 });
 
-describe('getControlledSettings', () => {
+describe('getMonkeyPatchedControlledSettings', () => {
   it('overwrites config controlled settings', () => {
     getConfigSettings.mockReturnValue({ disablePaidFeatureAds: true });
     const settings: Settings = {
@@ -190,7 +190,7 @@ describe('getControlledSettings', () => {
       disablePaidFeatureAds: false,
     };
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
@@ -199,7 +199,7 @@ describe('getControlledSettings', () => {
     getConfigSettings.mockReturnValue({});
     const settings = models.settings.init();
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject(settings);
   });
@@ -212,7 +212,7 @@ describe('getControlledSettings', () => {
       enableAnalytics: true,
     };
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({ enableAnalytics: false });
   });
@@ -224,7 +224,7 @@ describe('getControlledSettings', () => {
       disablePaidFeatureAds: true,
     };
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({ disablePaidFeatureAds: true });
   });
@@ -237,7 +237,7 @@ describe('getControlledSettings', () => {
       enableAnalytics: false,
     };
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({ enableAnalytics: true });
   });
@@ -254,7 +254,7 @@ describe('getControlledSettings', () => {
       enableAnalytics: false,
     };
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({
       incognitoMode: true,
@@ -271,7 +271,7 @@ describe('getControlledSettings', () => {
       allowNotificationRequests: true,
     };
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({
       incognitoMode: true,
@@ -291,7 +291,7 @@ describe('getControlledSettings', () => {
       allowNotificationRequests: true,
     };
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({
       incognitoMode: true,
@@ -310,7 +310,7 @@ describe('getControlledSettings', () => {
     });
     const settings = models.settings.init();
 
-    const result = getControlledSettings(settings);
+    const result = getMonkeyPatchedControlledSettings(settings);
 
     expect(result).toMatchObject({
       incognitoMode: true,

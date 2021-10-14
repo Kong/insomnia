@@ -223,7 +223,7 @@ export const omitControlledSettings = <
 };
 
 /** for any given setting, whether controlled by the insomnia config or whether controlled by another value, return the calculated value */
-export const getControlledSettings = <T extends Settings>(settings: T) => {
+export const getMonkeyPatchedControlledSettings = <T extends Settings>(settings: T) => {
   const override = mapObjIndexed((_value, setting: keyof Settings) => (
     getControlledStatus(settings)(setting).value
   ), settings) as T;

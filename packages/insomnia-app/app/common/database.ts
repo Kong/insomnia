@@ -8,7 +8,7 @@ import { mustGetModel } from '../models';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import { GitRepository } from '../models/git-repository';
-import { getControlledSettings } from '../models/helpers/settings';
+import { getMonkeyPatchedControlledSettings } from '../models/helpers/settings';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
 import { isSettings } from '../models/settings';
@@ -664,7 +664,7 @@ async function notifyOfChange<T extends BaseModel>(event: string, doc: T, fromSy
   // NOTE: this monkeypatching is temporary, and was determined to have the smallest blast radius if it exists here (rather than, say, a reducer or an action creator).
   // see: INS-1059
   if (isSettings(doc)) {
-    updatedDoc = getControlledSettings(doc);
+    updatedDoc = getMonkeyPatchedControlledSettings(doc);
   }
 
   changeBuffer.push([event, updatedDoc, fromSync]);
