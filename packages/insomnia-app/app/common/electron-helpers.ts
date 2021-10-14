@@ -17,6 +17,12 @@ export function getDesignerDataDir() {
   return process.env.DESIGNER_DATA_PATH || join(app.getPath('appData'), 'Insomnia Designer');
 }
 
+/**
+ * This environment variable is added by electron-builder.
+ * see: https://www.electron.build/configuration/nsis.html#portable\
+ */
+export const getPortableExecutableDir = () => process.env.PORTABLE_EXECUTABLE_DIR;
+
 export function getDataDirectory() {
   const { app } = electron.remote || electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');

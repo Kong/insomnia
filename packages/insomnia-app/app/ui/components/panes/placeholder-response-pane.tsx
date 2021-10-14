@@ -1,12 +1,12 @@
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { FunctionComponent } from 'react';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
-import * as hotkeys from '../../../common/hotkeys';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {
-  hotKeyRegistry: hotkeys.HotKeyRegistry;
+  hotKeyRegistry: HotKeyRegistry;
 }
 
 export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (

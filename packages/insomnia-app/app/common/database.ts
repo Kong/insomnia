@@ -8,8 +8,10 @@ import { mustGetModel } from '../models';
 import { CookieJar } from '../models/cookie-jar';
 import { Environment } from '../models/environment';
 import { GitRepository } from '../models/git-repository';
+import { getMonkeyPatchedControlledSettings } from '../models/helpers/settings';
 import type { BaseModel } from '../models/index';
 import * as models from '../models/index';
+import { isSettings } from '../models/settings';
 import type { Workspace } from '../models/workspace';
 import { DB_PERSIST_INTERVAL } from './constants';
 import { getDataDirectory } from './electron-helpers';
@@ -657,7 +659,15 @@ type ChangeListener = Function;
 let changeListeners: ChangeListener[] = [];
 
 async function notifyOfChange<T extends BaseModel>(event: string, doc: T, fromSync: boolean) {
-  changeBuffer.push([event, doc, fromSync]);
+  let updatedDoc = doc;
+
+  // NOTE: this monkeypatching is temporary, and was determined to have the smallest blast radius if it exists here (rather than, say, a reducer or an action creator).
+  // see: INS-1059
+  if (isSettings(doc)) {
+    updatedDoc = getMonkeyPatchedControlledSettings(doc);
+  }
+
+  changeBuffer.push([event, updatedDoc, fromSync]);
 
   // Flush right away if we're not buffering
   if (!bufferingChanges) {

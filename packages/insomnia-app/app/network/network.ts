@@ -2,6 +2,7 @@ import aws4 from 'aws4';
 import clone from 'clone';
 import crypto from 'crypto';
 import fs from 'fs';
+import { HttpVersions } from 'insomnia-common';
 import { cookiesFromJar, jarFromCookies } from 'insomnia-cookies';
 import {
   buildQueryStringFromParams,
@@ -31,7 +32,6 @@ import {
   CONTENT_TYPE_FORM_DATA,
   CONTENT_TYPE_FORM_URLENCODED,
   getAppVersion,
-  HttpVersions,
   STATUS_CODE_PLUGIN_ERROR,
 } from '../common/constants';
 import { database as db } from '../common/database';

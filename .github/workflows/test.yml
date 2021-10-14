@@ -24,9 +24,9 @@ jobs:
         uses: martinbeentjes/npm-get-version-action@master
         with:
           path: packages/insomnia-inso
-    
+
   OS:
-    needs: [ get_version ]
+    needs: [get_version]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -35,25 +35,25 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
-      
+
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      
+
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
-      
+
       - name: Bootstrap packages
         run: npm run bootstrap
-      
+
       - name: Lint
         run: npm run lint
-      
+
       - name: Lint Markdown
         run: npm run lint:markdown
-      
+
       - name: Run tests
         run: npm test
 
@@ -115,20 +115,23 @@ jobs:
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
       
-      - name: Run CLI smoke tests
-        run: npm run test:smoke:cli
+      # - name: Run CLI smoke tests
+      #   run: npm run test:smoke:cli
 
-      - name: Build for smoke tests
-        run: npm run app-build:smoke
+      # - name: Run CLI smoke tests
+      #   run: npm run test:smoke:cli
 
-      - name: Run smoke tests
-        timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
-        run: npm run test:smoke:build
-      
-      - name: Upload smoke test screenshots
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          if-no-files-found: ignore
-          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-          path: packages/insomnia-smoke-test/screenshots
+      # - name: Build for smoke tests
+      #   run: npm run app-build:smoke
+
+      # - name: Run smoke tests
+      #   timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
+      #   run: npm run test:smoke:build
+
+      # - name: Upload smoke test screenshots
+      #   uses: actions/upload-artifact@v2
+      #   if: always()
+      #   with:
+      #     if-no-files-found: ignore
+      #     name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
+      #     path: packages/insomnia-smoke-test/screenshots

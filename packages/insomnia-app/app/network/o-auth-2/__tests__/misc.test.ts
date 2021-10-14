@@ -79,7 +79,8 @@ describe('authorizeUserInWindow()', () => {
     // Arrange
     const mockCallback = getCertificateVerifyCallbackMock();
 
-    await models.settings.create({
+    const settings = await models.settings.getOrCreate();
+    await models.settings.update(settings, {
       validateAuthSSL: true,
     });
 
@@ -95,7 +96,8 @@ describe('authorizeUserInWindow()', () => {
     // Arrange
     const mockCallback = getCertificateVerifyCallbackMock();
 
-    await models.settings.create({
+    const settings = await models.settings.getOrCreate();
+    await models.settings.update(settings, {
       validateAuthSSL: false,
     });
 
