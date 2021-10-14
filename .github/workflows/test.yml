@@ -49,16 +49,16 @@ jobs:
       - name: Bootstrap packages
         run: npm run bootstrap
       
-      # - name: Lint
-      #   run: npm run lint
+      - name: Lint
+        run: npm run lint
       
-      # - name: Lint Markdown
-      #   run: npm run lint:markdown
+      - name: Lint markdown
+        run: npm run lint:markdown
       
-      # - name: Run tests
-      #   run: npm test
+      - name: Run tests
+        run: npm test
 
-      - name: Set Inso Variables
+      - name: Set Inso CLI variables
         id: inso-variables
         shell: bash
         run: |
@@ -70,12 +70,12 @@ jobs:
           echo ::set-output name=bundle-id::$BUNDLE_ID
           echo ::set-output name=inso-version::$INSO_VERSION
 
-      - name: Package Inso CLI
+      - name: Create Inso CLI binaries
         run: npm run inso-package
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
-      - name: Create macOS installer package
+      - name: Codesign & create macOS installer
         if: matrix.os == 'macos-latest'
         run: |
           chmod +x ./src/scripts/macos-pkg.sh
@@ -100,7 +100,13 @@ jobs:
       #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
       #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
       
-      - name: Notarize binary
+      # - name: Staple installer package
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-staple@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+
+      - name: Notarize raw binary
         if: matrix.os == 'macos-latest'
         uses: devbotsxyz/xcode-notarize@v1
         with:
@@ -108,12 +114,6 @@ jobs:
           primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-zip
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-
-      # - name: Staple installer package
-      #   if: matrix.os == 'macos-latest'
-      #   uses: devbotsxyz/xcode-staple@v1
-      #   with:
-      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
       - name: Create Inso CLI artifacts
         run: npm run inso-package:artifacts
@@ -127,20 +127,20 @@ jobs:
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
       
-      - name: Run CLI smoke tests
+      - name: Run Inso CLI smoke tests
         run: npm run test:smoke:cli
 
-      # - name: Build for smoke tests
-      #   run: npm run app-build:smoke
+      - name: Build app for smoke tests
+        run: npm run app-build:smoke
 
-      # - name: Run smoke tests
-      #   timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
-      #   run: npm run test:smoke:build
+      - name: Run app smoke tests
+        timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
+        run: npm run test:smoke:build
       
-      # - name: Upload smoke test screenshots
-      #   uses: actions/upload-artifact@v2
-      #   if: always()
-      #   with:
-      #     if-no-files-found: ignore
-      #     name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-      #     path: packages/insomnia-smoke-test/screenshots
+      - name: Upload smoke test screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/screenshots
