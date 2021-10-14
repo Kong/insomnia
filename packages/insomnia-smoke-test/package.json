@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "2.3.2",
+  "version": "2.3.3-alpha.2",
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx",
