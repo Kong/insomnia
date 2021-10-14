@@ -362,9 +362,9 @@ export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> 
     // Do this last so we don't block the sorting
     db.bufferChanges();
 
-    Promise.all(newSubEnvironments.map(environment => this._updateEnvironment(
+    Promise.all(newSubEnvironments.map((environment, idx) => this._updateEnvironment(
       environment,
-      { metaSortKey: 1 },
+      { metaSortKey: idx },
       false,
     ))).then(() => {
       db.flushChanges();

@@ -7,7 +7,7 @@ import { generateUpstreams } from './upstreams';
 const getSpecResult = (): DCUpstream =>
   JSON.parse(
     JSON.stringify({
-      name: 'My_API',
+      name: 'My_API.upstream',
       targets: [
         {
           target: 'server1.com:443',

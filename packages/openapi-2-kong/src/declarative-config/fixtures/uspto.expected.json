@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "https",
-      "host": "USPTO_Data_Set_API",
+      "host": "USPTO_Data_Set_API.upstream",
       "port": 443,
       "path": "/ds-api",
       "name": "USPTO_Data_Set_API",
@@ -36,7 +36,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_uspto.yaml"],
-      "name": "USPTO_Data_Set_API",
+      "name": "USPTO_Data_Set_API.upstream",
       "targets": [
         {
           "target": "developer.uspto.gov:443",
