@@ -11,7 +11,6 @@ import { Environment } from '../../../models/environment';
 import { GitRepository } from '../../../models/git-repository';
 import { GrpcRequest } from '../../../models/grpc-request';
 import { GrpcRequestMeta } from '../../../models/grpc-request-meta';
-import { getControlledSettings } from '../../../models/helpers/settings';
 import { OAuth2Token } from '../../../models/o-auth-2-token';
 import { PluginData } from '../../../models/plugin-data';
 import { Project } from '../../../models/project';
@@ -23,7 +22,7 @@ import { RequestGroupMeta } from '../../../models/request-group-meta';
 import { RequestMeta } from '../../../models/request-meta';
 import { RequestVersion } from '../../../models/request-version';
 import { Response } from '../../../models/response';
-import { isSettings, Settings } from '../../../models/settings';
+import { Settings } from '../../../models/settings';
 import { Stats } from '../../../models/stats';
 import { UnitTest } from '../../../models/unit-test';
 import { UnitTestResult } from '../../../models/unit-test-result';
@@ -109,11 +108,7 @@ export function reducer(state = initialEntitiesState, action) {
 
       for (const doc of docs) {
         const referenceName = getReducerName(doc.type);
-        if (isSettings(doc)) {
-          freshState[referenceName][doc._id] = getControlledSettings(doc);
-        } else {
-          freshState[referenceName][doc._id] = doc;
-        }
+        freshState[referenceName][doc._id] = doc;
       }
 
       return freshState;
@@ -130,11 +125,7 @@ export function reducer(state = initialEntitiesState, action) {
         switch (event) {
           case db.CHANGE_INSERT:
           case db.CHANGE_UPDATE:
-            if (isSettings(doc)) {
-              newState[referenceName][doc._id] = getControlledSettings(doc);
-            } else {
-              newState[referenceName][doc._id] = doc;
-            }
+            newState[referenceName][doc._id] = doc;
             break;
 
           case db.CHANGE_REMOVE:
