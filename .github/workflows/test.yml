@@ -98,6 +98,17 @@ jobs:
       #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
       #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
       #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+      #
+      # - name: Staple installer package
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-staple@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+
+      - name: Create Inso CLI artifacts
+        run: npm run inso-package:artifacts
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Notarize ditto archive
         if: matrix.os == 'macos-latest'
@@ -107,15 +118,6 @@ jobs:
           primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-zip
           appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
           appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
-
-      # - name: Staple installer package
-      #   if: matrix.os == 'macos-latest'
-      #   uses: devbotsxyz/xcode-staple@v1
-      #   with:
-      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
-
-      - name: Create Inso CLI artifacts
-        run: npm run inso-package:artifacts
 
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
