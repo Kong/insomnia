@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { CompilerOptions, generateSchema, getProgramFromFiles, PartialArgs } from 'typescript-json-schema';
 
 const settings: PartialArgs = {
-  // TODO: some day, it'd be ideal to do something like this. (when we do, remember to change the README for insomnia-config)
+  // TODO (INS-1033): some day, it'd be ideal to do something like this. (when we do, remember to change the README for insomnia-config)
   // id: 'https://schema.insomnia.rest/json/draft-07/config/v1.0.0/',
   noExtraProps: true,
   required: true,
