@@ -47,7 +47,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
     name,
     // remove semicolon i.e. convert `https:` to `https`
     protocol: parsedUrl?.protocol?.substring(0, parsedUrl.protocol.length - 1),
-    host: name,
+    host: `${name}.upstream`,
     // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
     path: parsedUrl.pathname,

@@ -11,7 +11,6 @@
 # PKG_NAME
 # VERSION
 # BUNDLE_ID
-# ARTIFACT_LOCATION
 
 # Assumed current working directory is packages/insomnia-inso
 
@@ -23,9 +22,9 @@ ENTITLEMENTS_PATH="src/scripts/codesign.entitlements"
 
 STAGING_AREA="macos-installer/bin"
 SOURCE_BINARY_DIR="binaries"
+ARTIFACT_LOCATION="artifacts"
 SOURCE_BINARY_NAME="inso"
 INSTALL_LOCATION="/usr/local/bin"
-
 KEYCHAIN="inso.keychain"
 KEYCHAIN_PASSWORD="inso"
 

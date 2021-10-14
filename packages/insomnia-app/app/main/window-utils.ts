@@ -20,18 +20,10 @@ import { clickLink, getDataDirectory, restartApp } from '../common/electron-help
 import * as log from '../common/log';
 import LocalStorage from './local-storage';
 
-const { app, Menu, shell, dialog, clipboard, session } = electron;
+const { app, Menu, shell, dialog, clipboard } = electron;
 // So we can use native modules in renderer
 // NOTE: This was (deprecated in Electron 10)[https://github.com/electron/electron/issues/18397] and (removed in Electron 14)[https://github.com/electron/electron/pull/26874]
 app.allowRendererProcessReuse = false;
-
-app.on('ready', () => {
-  // There's no option that prevents Electron from fetching spellcheck dictionaries from Chromium's CDN and passing a non-resolving URL is the only known way to prevent it from fetching.
-  // see: https://github.com/electron/electron/issues/22995
-  // On macOS the OS spellchecker is used and therefore we do not download any dictionary files.
-  // This API is a no-op on macOS.
-  session.defaultSession.setSpellCheckerDictionaryDownloadURL('https://00.00/');
-});
 
 const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 700;
