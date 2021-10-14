@@ -97,7 +97,7 @@ export async function all() {
     settingsList = [await getOrCreate()];
   }
 
-  return settingsList.map(settings => getControlledSettings(settings));
+  return settingsList.map(getControlledSettings);
 }
 
 async function create() {
