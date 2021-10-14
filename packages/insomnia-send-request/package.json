@@ -20,6 +20,8 @@
     "httpsnippet": "^1.22.0",
     "insomnia-importers": "2.3.3-alpha.3",
     "insomnia-testing": "2.3.3-alpha.3",
+    "insomnia-config": "2.3.3-alpha.3",
+    "insomnia-common": "2.3.3-alpha.3",
     "isomorphic-git": "^1.5.0",
     "jshint": "^2.11.1",
     "jsonlint": "^1.6.3",
