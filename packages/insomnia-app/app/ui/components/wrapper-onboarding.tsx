@@ -8,6 +8,7 @@ import { bindActionCreators } from 'redux';
 import { AUTOBIND_CFG, getAppLongName, getAppName, getAppSynopsis } from '../../common/constants';
 import { database as db } from '../../common/database';
 import type { BaseModel } from '../../models';
+import { getControlledStatus } from '../../models/helpers/settings';
 import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importFile, importUri } from '../redux/modules/import';
@@ -123,6 +124,15 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     const {
       settings: { enableAnalytics },
     } = this.props.wrapperProps;
+
+    const isControlledByInsomniaConfig = (
+      getControlledStatus(this.props.wrapperProps.settings)('enableAnalytics')?.controller === 'incognitoMode'
+    );
+
+    const analyticsMessage = enableAnalytics
+      ? `Thanks for helping make ${getAppName()} better!`
+      : `Opted out of analytics${isControlledByInsomniaConfig ? ' by Incognito Mode' : ''}`;
+
     return (
       <Fragment>
         <p className="notice success text-left margin-top margin-bottom">
@@ -132,9 +142,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
             </a>
           ) : null}
 
-          {enableAnalytics
-            ? `Thanks for helping make ${getAppName()} better!`
-            : 'Opted out of analytics'}
+          {analyticsMessage}
         </p>
         <p>Import an OpenAPI spec to get started:</p>
         <button key="file" className="btn btn--clicky" onClick={this._handleImportFile}>
