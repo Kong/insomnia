@@ -106,6 +106,10 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     this.props.wrapperProps.handleGoToNextActivity();
   }
 
+  hasStep1() {
+    return this.props.wrapperProps.settings.incognitoMode === false;
+  }
+
   renderStep1() {
     return (
       <Analytics
@@ -122,9 +126,12 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     return (
       <Fragment>
         <p className="notice success text-left margin-top margin-bottom">
-          <a href="#" className="pull-right" onClick={this._handleBackStep}>
-            Back
-          </a>
+          {this.hasStep1() ? (
+            <a href="#" className="pull-right" onClick={this._handleBackStep}>
+              Back
+            </a>
+          ) : null}
+
           {enableAnalytics
             ? `Thanks for helping make ${getAppName()} better!`
             : 'Opted out of analytics'}
@@ -147,7 +154,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     const { step } = this.state;
     let stepBody;
 
-    if (step === 1) {
+    if (step === 1 && this.hasStep1()) {
       stepBody = this.renderStep1();
     } else {
       stepBody = this.renderStep2();
