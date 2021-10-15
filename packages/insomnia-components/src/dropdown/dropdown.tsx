@@ -502,24 +502,23 @@ export class Dropdown extends PureComponent<DropdownProps, State> {
 
       if (isDropdownItem(child)) {
         const active = i === filterActiveIndex;
+        const hide = !visibleChildren.includes(child);
 
-        if (visibleChildren.includes(child)) {
-          dropdownItems.push(
-            <li
-              key={i}
-              data-filter-index={i}
-              className={classnames({ active })}
-            >
-              {child}
-            </li>,
-          );
-        }
+        dropdownItems.push(
+          <li
+            key={i}
+            data-filter-index={i}
+            className={classnames({ active, hide })}
+          >
+            {child}
+          </li>,
+        );
       } else if (isDropdownDivider(child)) {
         const currentIndex = visibleChildren.indexOf(child);
         const nextChild = visibleChildren[currentIndex + 1];
 
         // Only show the divider if the next child is a DropdownItem
-        if (isDropdownItem(nextChild)) {
+        if (nextChild && isDropdownItem(nextChild)) {
           dropdownItems.push(<li key={i}>{child}</li>);
         }
       }
