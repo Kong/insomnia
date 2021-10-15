@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-kong-portal",
-  "version": "2.3.2",
+  "version": "2.3.3-alpha.4",
   "main": "dist/index.js",
   "author": "Kong <office@konghq.com>",
   "license": "Apache-2.0",
@@ -30,7 +30,7 @@
     "@babel/preset-flow": "^7.9.0",
     "@babel/preset-react": "^7.9.4",
     "autobind-decorator": "^2.4.0",
-    "insomnia-components": "2.3.2",
+    "insomnia-components": "2.3.3-alpha.4",
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
     "styled-components": "^4.4.1",

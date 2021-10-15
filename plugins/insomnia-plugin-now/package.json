@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-now",
-  "version": "2.3.2",
+  "version": "2.3.3-alpha.4",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia now template tag",
   "license": "MIT",

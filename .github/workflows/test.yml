@@ -126,20 +126,20 @@ jobs:
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
       
-      # - name: Run Inso CLI smoke tests
-      #   run: npm run test:smoke:cli
+      - name: Run Inso CLI smoke tests
+        run: npm run test:smoke:cli
 
-      # - name: Build app for smoke tests
-      #   run: npm run app-build:smoke
+      - name: Build app for smoke tests
+        run: npm run app-build:smoke
 
-      # - name: Run app smoke tests
-      #   timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
-      #   run: npm run test:smoke:build
+      - name: Run app smoke tests
+        timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
+        run: npm run test:smoke:build
 
-      # - name: Upload smoke test screenshots
-      #   uses: actions/upload-artifact@v2
-      #   if: always()
-      #   with:
-      #     if-no-files-found: ignore
-      #     name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-      #     path: packages/insomnia-smoke-test/screenshots
+      - name: Upload smoke test screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/screenshots
