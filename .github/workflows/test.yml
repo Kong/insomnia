@@ -51,30 +51,30 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Lint Markdown
+      - name: Lint markdown
         run: npm run lint:markdown
 
       - name: Run tests
         run: npm test
 
-      - name: Set Inso Variables
+      - name: Set Inso CLI variables
         id: inso-variables
         shell: bash
         run: |
           INSO_VERSION="${{ needs.get_version.outputs.inso-version }}-run.${{ github.run_number }}"
           PKG_NAME="inso-${{ matrix.os }}-$INSO_VERSION"
-          BUNDLE_ID="com.insomnia.inso.app"
+          BUNDLE_ID="com.insomnia.inso"
 
           echo ::set-output name=pkg-name::$PKG_NAME
           echo ::set-output name=bundle-id::$BUNDLE_ID
           echo ::set-output name=inso-version::$INSO_VERSION
 
-      - name: Package Inso CLI
+      - name: Package Inso CLI binary
         run: npm run inso-package
         env:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
-      - name: Create macOS installer package
+      - name: Codesign & create macOS installer
         if: matrix.os == 'macos-latest'
         run: |
           chmod +x ./src/scripts/macos-pkg.sh
@@ -90,7 +90,7 @@ jobs:
           VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       # We don't need to notarize and staple on every commit
-      # - name: Notarize installer package
+      # - name: Notarize installer
       #   if: matrix.os == 'macos-latest'
       #   uses: devbotsxyz/xcode-notarize@v1
       #   with:
@@ -99,14 +99,25 @@ jobs:
       #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
       #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
 
-      # - name: Staple installer package
+      # - name: Staple installer
       #   if: matrix.os == 'macos-latest'
       #   uses: devbotsxyz/xcode-staple@v1
       #   with:
       #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
 
+      # - name: Notarize binary
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-notarize@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/binaries/inso
+      #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-binary
+      #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+      #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
       - name: Create Inso CLI artifacts
         run: npm run inso-package:artifacts
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
 
       - name: Upload Inso CLI artifacts
         uses: actions/upload-artifact@v2
@@ -115,23 +126,20 @@ jobs:
           name: ${{ steps.inso-variables.outputs.pkg-name }}
           path: packages/insomnia-inso/artifacts
       
-      # - name: Run CLI smoke tests
-      #   run: npm run test:smoke:cli
+      - name: Run Inso CLI smoke tests
+        run: npm run test:smoke:cli
 
-      # - name: Run CLI smoke tests
-      #   run: npm run test:smoke:cli
+      - name: Build app for smoke tests
+        run: npm run app-build:smoke
 
-      # - name: Build for smoke tests
-      #   run: npm run app-build:smoke
+      - name: Run app smoke tests
+        timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
+        run: npm run test:smoke:build
 
-      # - name: Run smoke tests
-      #   timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
-      #   run: npm run test:smoke:build
-
-      # - name: Upload smoke test screenshots
-      #   uses: actions/upload-artifact@v2
-      #   if: always()
-      #   with:
-      #     if-no-files-found: ignore
-      #     name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
-      #     path: packages/insomnia-smoke-test/screenshots
+      - name: Upload smoke test screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          if-no-files-found: ignore
+          name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
+          path: packages/insomnia-smoke-test/screenshots
