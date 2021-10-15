@@ -515,8 +515,7 @@ class App extends PureComponent<AppProps, State> {
    * @returns {Promise}
    * @private
    */
-  async _handleRenderText<T>(obj: T, contextCacheKey = null) {
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
+  async _handleRenderText<T>(obj: T, contextCacheKey: string | null = null) {
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
       // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index

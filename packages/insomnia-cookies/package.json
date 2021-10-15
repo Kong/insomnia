@@ -1,6 +1,6 @@
 {
   "name": "insomnia-cookies",
-  "version": "2.3.2",
+  "version": "2.3.3-alpha.4",
   "author": "Kong <office@konghq.com>",
   "description": "Cookie utilities",
   "license": "MIT",

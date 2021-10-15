@@ -1,0 +1,31 @@
+{
+  "name": "insomnia-common",
+  "version": "2.3.3-alpha.4",
+  "homepage": "https://insomnia.rest",
+  "description": "Top-level entities and utilities for Insomnia",
+  "author": "Kong <office@konghq.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kong/insomnia.git",
+    "directory": "packages/insomnia-config"
+  },
+  "bugs": {
+    "url": "https://github.com/kong/insomnia/issues"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "bootstrap": "npm run build",
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npm run lint -- --fix",
+    "clean": "tsc --build tsconfig.build.json --clean",
+    "prebuild": "npm run clean",
+    "build": "tsc --build tsconfig.build.json"
+  },
+  "devDependencies": {
+    "ajv": "^8.6.2",
+    "type-fest": "^1.0.2",
+    "typescript-json-schema": "^0.50.1"
+  }
+}

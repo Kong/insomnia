@@ -1,4 +1,5 @@
 import fs from 'fs';
+import type { PluginConfig, PluginConfigMap } from 'insomnia-common';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
@@ -9,7 +10,6 @@ import * as models from '../models';
 import { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import type { PluginConfig, PluginConfigMap } from '../models/settings';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
