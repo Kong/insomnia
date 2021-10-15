@@ -89,7 +89,7 @@ export const generateConfig = async (
     return false;
   }
 
-  const yamlDocs = result.documents.map((document: DeclarativeConfig | K8sManifest) => YAML.stringify(document));
+  const yamlDocs = result.documents.map((document: DeclarativeConfig | K8sManifest) => YAML.stringify(document, { schema: 'yaml-1.1' }));
   // Join the YAML docs with "---" and strip any extra newlines surrounding them
   const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
 
