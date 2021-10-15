@@ -131,6 +131,8 @@
     "jsonlint": "^1.6.3",
     "jsonpath-plus": "^6.0.1",
     "jwt-authentication": "^0.4.0",
+    "linux-ca": "^1.0.0",
+    "mac-ca": "^1.0.6",
     "marked": "^0.3.9",
     "mime-types": "^2.1.18",
     "mkdirp": "^0.5.1",
@@ -170,6 +172,7 @@
     "uuid": "^3.0.0",
     "vkbeautify": "^0.99.1",
     "whatwg-fetch": "^2.0.1",
+    "win-ca": "^3.4.5",
     "yaml": "^1.5.0",
     "yaml-source-map": "^2.1.1",
     "zprint-clj": "0.2.0"
