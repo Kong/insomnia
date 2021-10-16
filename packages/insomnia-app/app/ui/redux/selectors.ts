@@ -4,6 +4,7 @@ import { ValueOf } from 'type-fest';
 import { isWorkspaceActivity } from '../../common/constants';
 import * as models from '../../models';
 import { BaseModel } from '../../models';
+import { GrpcRequest, isGrpcRequest } from '../../models/grpc-request';
 import { getStatusCandidates } from '../../models/helpers/get-status-candidates';
 import { sortProjects } from '../../models/helpers/project';
 import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
@@ -71,6 +72,11 @@ export const selectSettings = createSelector(
 export const selectRequestMetas = createSelector(
   selectEntitiesLists,
   entities => entities.requestMetas,
+);
+
+export const selectGrpcRequestMetas = createSelector(
+  selectEntitiesLists,
+  entities => entities.grpcRequestMetas,
 );
 
 export const selectProjects = createSelector(
@@ -270,8 +276,8 @@ export const selectWorkspaceRequestsAndRequestGroups = createSelector(
   selectActiveWorkspaceEntities,
   entities => {
     return entities.filter(
-      e => isRequest(e) || isRequestGroup(e),
-    ) as (Request | RequestGroup)[];
+      e => isRequest(e) || isGrpcRequest(e) || isRequestGroup(e),
+    ) as (Request | GrpcRequest | RequestGroup)[];
   },
 );
 

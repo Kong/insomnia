@@ -12,12 +12,13 @@ import { keyboardKeys } from '../../../common/keyboard-keys';
 import { fuzzyMatchAll } from '../../../common/misc';
 import type { BaseModel } from '../../../models';
 import * as models from '../../../models';
+import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import { isRequestGroup } from '../../../models/request-group';
 import { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveRequest, selectActiveWorkspace, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
+import { selectActiveRequest, selectActiveWorkspace, selectGrpcRequestMetas, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
 import { Button } from '../base/button';
 import { Highlight } from '../base/highlight';
 import { Modal } from '../base/modal';
@@ -38,6 +39,7 @@ const mapStateToProps = (state: RootState) => {
     workspace: selectActiveWorkspace(state),
     workspaces: selectWorkspacesForActiveProject(state),
     requestMetas: selectRequestMetas(state),
+    grpcRequestMetas: selectGrpcRequestMetas(state),
     workspaceChildren: selectWorkspaceRequestsAndRequestGroups(state),
   };
 };
@@ -56,7 +58,7 @@ interface Props extends ReduxProps {
 interface State {
   searchString: string;
   workspaces: Workspace[];
-  matchedRequests: Request[];
+  matchedRequests: (Request | GrpcRequest)[];
   matchedWorkspaces: Workspace[];
   activeIndex: number;
   maxRequests: number;
@@ -179,7 +181,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
     this.modal?.hide();
   }
 
-  _activateRequest(request: Request) {
+  _activateRequest(request: Request | GrpcRequest) {
     if (!request) {
       return;
     }
@@ -243,17 +245,20 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
   }
 
   _handleChangeValue(searchString: string) {
-    const { workspace, workspaceChildren, workspaces, requestMetas, activeRequest } = this.props;
+    const { workspace, workspaceChildren, workspaces, requestMetas, grpcRequestMetas, activeRequest } = this.props;
     const { maxRequests, maxWorkspaces, hideNeverActiveRequests } = this.state;
     const lastActiveMap = {};
 
     for (const meta of requestMetas) {
       lastActiveMap[meta.parentId] = meta.lastActive;
     }
+    for (const meta of grpcRequestMetas) {
+      lastActiveMap[meta.parentId] = meta.lastActive;
+    }
 
     // OPTIMIZATION: This only filters if we have a filter
     let matchedRequests = workspaceChildren
-      .filter(isRequest)
+      .filter(child => isRequest(child) || isGrpcRequest(child))
       .sort((a, b) => {
         const aLA = lastActiveMap[a._id] || 0;
         const bLA = lastActiveMap[b._id] || 0;
@@ -468,7 +473,7 @@ class RequestSwitcherModal extends PureComponent<Props, State> {
                         <Highlight search={searchString} text={r.name} />
                       </div>
                       <div className="margin-left-xs faint">
-                        <MethodTag method={r.method} />
+                        { isRequest(r) ? <MethodTag method={r.method} /> : null }
                         <Highlight search={searchString} text={r.url} />
                       </div>
                     </Button>
