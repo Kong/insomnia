@@ -1,11 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
 import { database as db } from '../../../common/database';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
@@ -30,9 +30,9 @@ import { SettingsModal, TAB_INDEX_EXPORT } from '../modals/settings-modal';
 import { WorkspaceSettingsModal } from '../modals/workspace-settings-modal';
 
 interface Props {
-  displayName: string;
   activeEnvironment: Environment | null;
   activeWorkspace: Workspace;
+  activeWorkspaceName: string;
   activeApiSpec: ApiSpec;
   activeProject: Project;
   hotKeyRegistry: HotKeyRegistry;
@@ -131,7 +131,7 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
 
   render() {
     const {
-      displayName,
+      activeWorkspaceName,
       className,
       activeWorkspace,
       isLoading,
@@ -157,9 +157,9 @@ export class WorkspaceDropdown extends PureComponent<Props, State> {
               style={{
                 maxWidth: '400px',
               }}
-              title={displayName}
+              title={activeWorkspaceName}
             >
-              {displayName}
+              {activeWorkspaceName}
             </div>
             <i className="fa fa-caret-down space-left" />
             {isLoading ? <i className="fa fa-refresh fa-spin space-left" /> : null}

@@ -8,7 +8,7 @@ import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import { exportAllToFile } from '../../redux/modules/global';
 import { importClipBoard, importFile, importUri } from '../../redux/modules/import';
-import { selectActiveProjectName, selectActiveWorkspace } from '../../redux/selectors';
+import { selectActiveProjectName, selectActiveWorkspace, selectActiveWorkspaceName } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -64,6 +64,8 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
     hideSettingsModal();
   }, [hideSettingsModal, activeWorkspace, dispatch]);
 
+  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+
   return (
     <div>
       <div className="no-margin-top">
@@ -83,7 +85,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
           <DropdownDivider>Choose Export Type</DropdownDivider>
           {activeWorkspace && <DropdownItem onClick={showExportRequestsModal}>
             <i className="fa fa-home" />
-            Export the "{activeWorkspace.name}" {getWorkspaceLabel(activeWorkspace).singular}
+            Export the "{activeWorkspaceName}" {getWorkspaceLabel(activeWorkspace).singular}
           </DropdownItem>}
           <DropdownItem onClick={handleExportAllToFile}>
             <i className="fa fa-empty" />

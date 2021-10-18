@@ -1,4 +1,5 @@
 import fs from 'fs';
+import type { PluginConfig, PluginConfigMap } from 'insomnia-common';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
@@ -9,7 +10,6 @@ import * as models from '../models';
 import { GrpcRequest } from '../models/grpc-request';
 import type { Request } from '../models/request';
 import type { RequestGroup } from '../models/request-group';
-import type { PluginConfig, PluginConfigMap } from '../models/settings';
 import type { Workspace } from '../models/workspace';
 import type { PluginTemplateTag } from '../templating/extensions/index';
 import { showError } from '../ui/components/modals/index';
@@ -232,15 +232,19 @@ export async function getPlugins(force = false): Promise<Plugin[]> {
         continue;
       }
 
-      const pluginJson = global.require(`${p}/package.json`);
+      try {
+        const pluginJson = global.require(`${p}/package.json`);
 
-      if (ignorePlugins.includes(pluginJson.name)) {
-        continue;
+        if (ignorePlugins.includes(pluginJson.name)) {
+          continue;
+        }
+
+        const pluginModule = global.require(p);
+
+        pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
+      } catch (err) {
+        console.error(`[plugin] Failed to load plugin: ${p}`, err);
       }
-
-      const pluginModule = global.require(p);
-
-      pluginMap[pluginJson.name] = _initPlugin(pluginJson, pluginModule, allConfigs);
     }
 
     await _traversePluginPath(pluginMap, allPaths, allConfigs);

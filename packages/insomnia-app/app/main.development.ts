@@ -6,6 +6,7 @@ import appConfig from '../config/config.json';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
+import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
@@ -39,6 +40,8 @@ if (!isDevelopment()) {
 global.window = global.window || undefined;
 // When the app is first launched
 app.on('ready', async () => {
+  disableSpellcheckerDownload();
+
   if (isDevelopment()) {
     try {
       const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS];
@@ -220,7 +223,7 @@ async function _trackStats() {
     // Wait a bit before showing the user because the app just launched.
     setTimeout(() => {
       for (const window of BrowserWindow.getAllWindows()) {
-        // @ts-expect-error -- TSCONVERSION
+        // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
         window.send('show-notification', notification);
       }
     }, 5000);

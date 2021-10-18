@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/kong/insomnia/issues"
   },
-  "version": "2.3.2",
+  "version": "2.3.3-alpha.4",
   "scripts": {
     "bootstrap": "npm run build",
     "lint": "eslint . --ext .js,.ts,.tsx",
@@ -33,6 +33,7 @@
     "@types/express": "^4.17.11",
     "@types/faker": "^5.5.5",
     "@types/mkdirp": "^1.0.1",
+    "@types/ramda": "^0.27.45",
     "concurrently": "^5.3.0",
     "cross-env": "^7.0.2",
     "execa": "^5.0.0",
@@ -42,6 +43,8 @@
     "get-bin-path": "^5.1.0",
     "jest": "^26.6.3",
     "mkdirp": "^1.0.4",
+    "ramda": "^0.27.1",
+    "ramda-adjunct": "^2.34.0",
     "spectron": "^13.0.0",
     "spectron-keys": "0.0.1",
     "ts-node": "^9.1.1",

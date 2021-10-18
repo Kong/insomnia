@@ -3,7 +3,7 @@ import React, { Fragment, FunctionComponent, ReactNode, useCallback } from 'reac
 
 import { ACTIVITY_HOME, GlobalActivity } from '../../common/constants';
 import { strings } from '../../common/strings';
-import { isCollection, isDesign } from '../../models/workspace';
+import { isDesign } from '../../models/workspace';
 import coreLogo from '../images/insomnia-core-logo.png';
 import { ActivityToggle } from './activity-toggle';
 import SettingsButton from './buttons/settings-button';
@@ -23,6 +23,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
   wrapperProps: {
     activeApiSpec,
     activeWorkspace,
+    activeWorkspaceName,
     activeProject,
     activeEnvironment,
     settings,
@@ -35,18 +36,15 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
     [activeWorkspace, handleActivityChange],
   );
 
-  if (!activeWorkspace || !activeApiSpec || !activity) {
+  if (!activeWorkspace || !activeWorkspaceName || !activeApiSpec || !activity) {
     return null;
   }
 
-  const collection = isCollection(activeWorkspace);
-  const design = isDesign(activeWorkspace);
-
   const workspace = (
     <WorkspaceDropdown
-      displayName={collection ? activeWorkspace.name : activeApiSpec.fileName}
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
+      activeWorkspaceName={activeWorkspaceName}
       activeApiSpec={activeApiSpec}
       activeProject={activeProject}
       hotKeyRegistry={settings.hotKeyRegistry}
@@ -69,7 +67,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
         </Fragment>
       }
       gridCenter={
-        design && (
+        isDesign(activeWorkspace) && (
           <ActivityToggle
             activity={activity}
             handleActivityChange={handleActivityChange}

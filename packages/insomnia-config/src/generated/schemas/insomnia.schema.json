@@ -1,0 +1,49 @@
+{
+  "description": "Configuration for Insomnia.",
+  "title": "Insomnia Config",
+  "type": "object",
+  "properties": {
+    "insomniaConfig": {
+      "type": "string",
+      "enum": [
+        "1.0.0"
+      ]
+    },
+    "settings": {
+      "$ref": "#/definitions/Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "insomniaConfig"
+  ],
+  "definitions": {
+    "Partial<Pick<Settings,\"allowNotificationRequests\"|\"disableUpdateNotification\"|\"enableAnalytics\"|\"disablePaidFeatureAds\"|\"incognitoMode\">>": {
+      "type": "object",
+      "properties": {
+        "allowNotificationRequests": {
+          "description": "If false, Insomnia won't send requests to the api.insomnia.rest/notifications endpoint. This can have effects like: users won’t be notified in-app about billing issues, and they won’t receive tips about app usage.",
+          "type": "boolean"
+        },
+        "disableUpdateNotification": {
+          "description": "If true, Insomnia won’t show a notification when new updates are available. Users can still check for updates in Preferences.",
+          "type": "boolean"
+        },
+        "enableAnalytics": {
+          "description": "If true, Insomnia will send anonymous data about features and plugins used.",
+          "type": "boolean"
+        },
+        "disablePaidFeatureAds": {
+          "description": "If true, Insomnia won’t show any visual elements that recommend plan upgrades.",
+          "type": "boolean"
+        },
+        "incognitoMode": {
+          "description": "If true, won’t make any network requests other than the requests you ask it to send. This configuration controls Send Usage Stats (`enableAnalytics`) and Allow Notification Requests (`allowNotificationRequests`).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

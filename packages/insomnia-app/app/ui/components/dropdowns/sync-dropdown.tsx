@@ -430,7 +430,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
 
     return (
       <DropdownButton
-        className="btn--clicky-small btn-sync btn-utility wide text-left overflow-hidden row-spaced"
+        className="btn--clicky-small btn-sync wide text-left overflow-hidden row-spaced"
         disabled={initializing}
       >
         <div className="ellipsis">

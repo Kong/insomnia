@@ -20,7 +20,7 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
 
   const upstream: DCUpstream = {
     ...upstreamDefaults,
-    name: getName(api),
+    name: `${getName(api)}.upstream`,
     targets: [],
     tags,
   };

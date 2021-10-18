@@ -1,1 +1,6 @@
 dist
+binaries
+
+# compressed was the old artifacts directory. Leave it in .gitignore to ignore any artifacts created before the rename
+compressed
+artifacts

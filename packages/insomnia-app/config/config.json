@@ -1,5 +1,5 @@
 {
-  "version": "2021.5.3",
+  "version": "2021.6.0-alpha.4",
   "name": "insomnia",
   "executableName": "insomnia",
   "appId": "com.insomnia.app",
@@ -33,6 +33,8 @@
     "insomnia-plugin-jsonpath",
     "insomnia-plugin-cookie-jar",
     "insomnia-plugin-core-themes",
-    "insomnia-plugin-kong-bundle"
+    "insomnia-plugin-kong-declarative-config",
+    "insomnia-plugin-kong-kubernetes-config",
+    "insomnia-plugin-kong-portal"
   ]
 }

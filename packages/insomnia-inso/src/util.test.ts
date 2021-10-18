@@ -2,7 +2,7 @@ import * as packageJson from '../package.json';
 import { InsoError } from './errors';
 import { globalBeforeAll, globalBeforeEach } from './jest/before';
 import { logger } from './logger';
-import { exit, getDefaultAppName, getVersion, isDevelopment, logErrorExit1, noop } from './util';
+import { exit, getDefaultAppName, getVersion, logErrorExit1, noop } from './util';
 
 describe('exit()', () => {
   beforeAll(() => {
@@ -126,27 +126,11 @@ describe('getVersion()', () => {
     expect(getVersion()).toBe(packageJson.version);
   });
 
-  it('should return dev if running in development', () => {
-    const oldNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    expect(getVersion()).toBe('dev');
-    process.env.NODE_ENV = oldNodeEnv;
-  });
-});
-
-describe('isDevelopment()', () => {
-  it('should return true if NODE_ENV is development', () => {
-    const oldNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'development';
-    expect(isDevelopment()).toBe(true);
-    process.env.NODE_ENV = oldNodeEnv;
-  });
-
-  it('should return false if NODE_ENV is not development', () => {
-    const oldNodeEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = 'production';
-    expect(isDevelopment()).toBe(false);
-    process.env.NODE_ENV = oldNodeEnv;
+  it('should get version from env variable', () => {
+    const oldVersion = process.env.VERSION;
+    process.env.VERSION = '2.3.3-canary.1234';
+    expect(getVersion()).toBe('2.3.3-canary.1234');
+    process.env.VERSION = oldVersion;
   });
 });
 

@@ -1,6 +1,6 @@
+import { KeyBindings } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
-import type { KeyBindings } from '../../../../common/hotkeys';
 import { Hotkey } from '../../hotkey';
 
 interface Props {
