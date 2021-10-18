@@ -5,6 +5,12 @@ import * as dropdown from './dropdown';
 import * as modal from './modal';
 import { clickTabByText } from './tabs';
 
+export const openFromSettingsButton = async (app: Application) => {
+  await (await app.client.$('[data-testid="settings-button"]')).click();
+
+  await modal.waitUntilOpened(app, { modalName: 'SettingsModal' });
+};
+
 export const openWithKeyboardShortcut = async (app: Application) => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));
 

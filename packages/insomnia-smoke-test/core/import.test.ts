@@ -155,7 +155,7 @@ describe('Import', function() {
       const swagger2Text = buffer.toString();
       await app.electron.clipboard.writeText(swagger2Text);
 
-      await settings.openWithKeyboardShortcut(app);
+      await settings.openFromSettingsButton(app);
       await settings.goToDataTab(app);
       await settings.importFromClipboard(app);
 
@@ -192,7 +192,7 @@ describe('Import', function() {
 
       await home.createNewCollection(app);
 
-      await settings.openWithKeyboardShortcut(app);
+      await settings.openFromSettingsButton(app);
       await settings.goToDataTab(app);
       await settings.importFromClipboard(app);
 

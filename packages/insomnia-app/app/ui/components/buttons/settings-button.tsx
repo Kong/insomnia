@@ -24,7 +24,7 @@ const SettingsButton: FunctionComponent<Props> = ({ className, settings }) => (
       </>
     }
   >
-    <CircleButton className={className} onClick={showSettingsModal}>
+    <CircleButton data-testid="settings-button" className={className} onClick={showSettingsModal}>
       <SvgIcon icon="gear" />
     </CircleButton>
   </Tooltip>
