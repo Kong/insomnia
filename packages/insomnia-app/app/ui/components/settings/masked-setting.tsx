@@ -3,13 +3,13 @@ import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
 import * as models from '../../../models';
-import { BaseSettings } from '../../../models/settings';
+import { Settings } from '../../../models/settings';
 import { selectSettings } from '../../redux/selectors';
 import { HelpTooltip } from '../help-tooltip';
 
 export const MaskedSetting: FC<{
   label: string;
-  setting: keyof BaseSettings;
+  setting: keyof Settings;
   help?: string;
   props?: React.HTMLProps<HTMLInputElement>;
 }> = ({
