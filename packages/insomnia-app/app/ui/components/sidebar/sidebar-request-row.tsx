@@ -1,11 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 import { DragSource, DragSourceSpec, DropTarget, DropTargetSpec } from 'react-dnd';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_GRAPHQL } from '../../../common/constants';
-import { HotKeyRegistry } from '../../../common/hotkeys';
 import { getMethodOverrideHeader } from '../../../common/misc';
 import { HandleRender } from '../../../common/render';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
