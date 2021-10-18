@@ -52,7 +52,7 @@ import { Request, updateMimeType } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { RequestMeta } from '../../models/request-meta';
 import { Response } from '../../models/response';
-import { isCollection, isWorkspace } from '../../models/workspace';
+import { isWorkspace } from '../../models/workspace';
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import * as network from '../../network/network';
 import * as plugins from '../../plugins';
@@ -97,6 +97,7 @@ import {
 } from '../redux/modules/global';
 import { importUri } from '../redux/modules/import';
 import {
+  selectActiveApiSpec,
   selectActiveCookieJar,
   selectActiveEnvironment,
   selectActiveGitRepository,
@@ -113,6 +114,7 @@ import {
   selectActiveWorkspace,
   selectActiveWorkspaceClientCertificates,
   selectActiveWorkspaceMeta,
+  selectActiveWorkspaceName,
   selectEntitiesLists,
   selectSettings,
   selectSyncItems,
@@ -513,8 +515,7 @@ class App extends PureComponent<AppProps, State> {
    * @returns {Promise}
    * @private
    */
-  async _handleRenderText<T>(obj: T, contextCacheKey = null) {
-    // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
+  async _handleRenderText<T>(obj: T, contextCacheKey: string | null = null) {
     if (!contextCacheKey || !this._getRenderContextPromiseCache[contextCacheKey]) {
       // NOTE: We're caching promises here to avoid race conditions
       // @ts-expect-error -- TSCONVERSION contextCacheKey being null used as object index
@@ -1094,7 +1095,7 @@ class App extends PureComponent<AppProps, State> {
     const {
       activeWorkspace,
       activeProject,
-      activeApiSpec,
+      activeWorkspaceName,
       activeEnvironment,
       activeRequest,
       activity,
@@ -1103,9 +1104,9 @@ class App extends PureComponent<AppProps, State> {
 
     if (activity === ACTIVITY_HOME || activity === ACTIVITY_MIGRATION) {
       title = getAppName();
-    } else if (activeWorkspace && activeApiSpec) {
+    } else if (activeWorkspace && activeWorkspaceName) {
       title = activeProject.name;
-      title += ` - ${isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec.fileName}`;
+      title += ` - ${activeWorkspaceName}`;
 
       if (activeEnvironment) {
         title += ` (${activeEnvironment.name})`;
@@ -1590,6 +1591,7 @@ function mapStateToProps(state: RootState) {
   const workspaces = selectWorkspacesForActiveProject(state);
   const activeWorkspaceMeta = selectActiveWorkspaceMeta(state);
   const activeWorkspace = selectActiveWorkspace(state);
+  const activeWorkspaceName = selectActiveWorkspaceName(state);
   const activeWorkspaceClientCertificates = selectActiveWorkspaceClientCertificates(state);
   const activeGitRepository = selectActiveGitRepository(state);
 
@@ -1631,7 +1633,7 @@ function mapStateToProps(state: RootState) {
   const syncItems = selectSyncItems(state);
 
   // Api spec stuff
-  const activeApiSpec = apiSpecs.find(s => s.parentId === activeWorkspace?._id);
+  const activeApiSpec = selectActiveApiSpec(state);
 
   // Test stuff
   const activeUnitTests = selectActiveUnitTests(state);
@@ -1643,6 +1645,7 @@ function mapStateToProps(state: RootState) {
     activity: activeActivity,
     activeProject,
     activeApiSpec,
+    activeWorkspaceName,
     activeCookieJar,
     activeEnvironment,
     activeGitRepository,

@@ -9,11 +9,9 @@ env:
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GITHUB_REF: ${{ github.ref }}
   GITHUB_SHA: ${{ github.sha }}
-  NPM_CONFIG_TARGET: 11.2.3
-  NPM_CONFIG_DISTURL: https://electronjs.org/headers
-  NPM_CONFIG_RUNTIME: electron
 
 jobs:
+  # Run unit tests (excl smoke tests)
   test:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -26,13 +24,16 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
         run: npm run bootstrap
       - name: Run tests
         run: npm test
+  
+  # Publish to NPM
   npm:
     needs: [ test ]
     name: npm
@@ -43,7 +44,8 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
@@ -53,18 +55,165 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
           npm run release
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
-  Windows:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  
+  # Check if a GitHub Release for Inso already exists
+  inso_release_info:
     needs: [ npm ]
-    name: Windows
-    runs-on: windows-2016
+    name: Does Inso release exist?
+    runs-on: ubuntu-latest
+    outputs:
+      inso-version: ${{ steps.get-package-version.outputs.current-version }}
+      tag-name: ${{ steps.get-tag.outputs.tag-name }}
+      should-create-release: ${{ steps.check-release.outputs.should-create-release }}
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Get version
+        id: get-package-version
+        uses: martinbeentjes/npm-get-version-action@master
+        with:
+          path: packages/insomnia-inso
+      - name: Get tag for version
+        id: get-tag
+        run: echo "::set-output name=tag-name::lib@${{ steps.get-package-version.outputs.current-version }}"
+      - name: Find release by tag
+        # Finding a release by a particular tag will throw an error and fail if a release doesn't exist
+        continue-on-error: true
+        id: find-release
+        uses: kaliber5/action-get-release@v1
+        with:
+          token: ${{ github.token }}
+          tag_name: ${{ steps.get-tag.outputs.tag-name }}
+      - name: Check release exists
+        id: check-release
+        run: echo "::set-output name=should-create-release::${{ steps.find-release.outcome == 'failure' }}"
+  
+  # Create GitHub Release for Inso
+  create_inso_release:
+    needs: [ inso_release_info ]
+    if: needs.inso_release_info.outputs.should-create-release == 'true'
+    name: Create Inso Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.inso_release_info.outputs.tag-name }}
+          # The following is all taken from packages/insomnia-app/scripts/release.ts
+          name: "Inso CLI ${{ needs.inso_release_info.outputs.inso-version }} 📦"
+          body: Full changelog ⇒ https://insomnia.rest/changelog
+          draft: false
+          prerelease: true
+  
+  # Package and upload Inso release artifacts
+  upload_inso:
+    needs: [ inso_release_info, create_inso_release ]
+    name: Package & release Inso
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ steps.nvm.outputs.NVMRC }}
+      - name: Bootstrap packages
+        run: npm run bootstrap
+
+      - name: Set Inso Variables
+        id: inso-variables
+        shell: bash
+        run: |
+          PKG_NAME="inso-${{ matrix.os }}-${{ needs.inso_release_info.outputs.inso-version }}"
+          BUNDLE_ID="com.insomnia.inso"
+
+          echo ::set-output name=pkg-name::$PKG_NAME
+          echo ::set-output name=bundle-id::$BUNDLE_ID
+
+      - name: Package Inso CLI binary
+        run: npm run inso-package
+        env:
+          VERSION: ${{ needs.inso_release_info.outputs.inso-version }}
+
+      - name: Run CLI smoke tests
+        run: npm run test:smoke:cli
+
+      - name: Codesign & create macOS installer
+        if: matrix.os == 'macos-latest'
+        run: |
+          chmod +x ./src/scripts/macos-pkg.sh
+          ./src/scripts/macos-pkg.sh
+        shell: bash
+        working-directory: packages/insomnia-inso
+        continue-on-error: false
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+          PKG_NAME: ${{ steps.inso-variables.outputs.pkg-name }}
+          BUNDLE_ID: ${{ steps.inso-variables.outputs.bundle-id }}
+          VERSION: ${{ needs.inso_release_info.outputs.inso-version }}
+
+      - name: Notarize installer
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-notarize@v1
+        with:
+          product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
+          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
+      - name: Staple installer
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-staple@v1
+        with:
+          product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+
+      - name: Notarize binary
+        if: matrix.os == 'macos-latest'
+        uses: devbotsxyz/xcode-notarize@v1
+        with:
+          product-path: packages/insomnia-inso/binaries/inso
+          primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-binary
+          appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+          appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
+      - name: Create Inso CLI artifacts
+        run: npm run inso-package:artifacts
+        env:
+          VERSION: ${{ needs.inso_release_info.outputs.inso-version }}
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.inso_release_info.outputs.tag-name }}
+          files: packages/insomnia-inso/artifacts/*
+          fail_on_unmatched_files: true
+  
+  # Package and upload Insomnia Windows release artifacts
+  windows_app:
+    needs: [ npm ]
+    name: Windows
+    runs-on: windows-2016
+    env:
+      NPM_CONFIG_TARGET: 11.2.3
+      NPM_CONFIG_DISTURL: https://electronjs.org/headers
+      NPM_CONFIG_RUNTIME: electron
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Read Node version from .nvmrc
+        run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+        id: nvm
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
@@ -74,17 +223,24 @@ jobs:
         env:
           CSC_LINK: ${{ secrets.DESIGNER_WINDOWS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_WINDOWS_CSC_KEY_PASSWORD }}
-  Mac:
+  
+  # Package and upload Insomnia MacOS release artifacts
+  mac_app:
     needs: [ npm ]
     name: Mac
     runs-on: macos-latest
+    env:
+      NPM_CONFIG_TARGET: 11.2.3
+      NPM_CONFIG_DISTURL: https://electronjs.org/headers
+      NPM_CONFIG_RUNTIME: electron
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages
@@ -96,10 +252,16 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
           CSC_LINK: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
-  Linux:
+  
+  # Package and upload Insomnia Linux release artifacts
+  linux_app:
     needs: [ npm ]
     name: Linux
     runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_TARGET: 11.2.3
+      NPM_CONFIG_DISTURL: https://electronjs.org/headers
+      NPM_CONFIG_RUNTIME: electron
     steps:
       - name: Install Snapcraft
         run: |
@@ -110,7 +272,8 @@ jobs:
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
       - name: Bootstrap packages

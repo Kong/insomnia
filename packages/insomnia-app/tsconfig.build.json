@@ -12,6 +12,7 @@
   "include": [
     "**/*.d.ts",
     "app",
+    "**/insomnia.config.json",
     "package.json"
   ],
   "exclude": [

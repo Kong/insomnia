@@ -66,15 +66,6 @@ describe('cli', () => {
       logger.restoreAll();
     });
 
-    it.each(['-v', '--version'])('inso %s should print "dev" if running in development', args => {
-      const oldNodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
-      logger.wrapAll();
-      expect(() => inso(args)).toThrowError('dev');
-      logger.restoreAll();
-      process.env.NODE_ENV = oldNodeEnv;
-    });
-
     it('should print options', () => {
       inso('generate config file.yaml -t declarative --printOptions --verbose');
 

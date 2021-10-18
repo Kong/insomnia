@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Security_Example",
+      "host": "Security_Example.upstream",
       "port": 80,
       "path": "/path",
       "name": "Security_Example",
@@ -102,7 +102,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_security.yaml"],
-      "name": "Security_Example",
+      "name": "Security_Example.upstream",
       "targets": [
         {
           "target": "backend.com:80",

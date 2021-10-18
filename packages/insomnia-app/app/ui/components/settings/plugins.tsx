@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
+import { PluginConfig } from 'insomnia-common';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
 import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
@@ -12,7 +13,7 @@ import {
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { delay } from '../../../common/misc';
-import type { PluginConfig, Settings } from '../../../models/settings';
+import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';

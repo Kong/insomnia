@@ -1,4 +1,4 @@
-const jq = require('jsonpath');
+const { JSONPath } = require('jsonpath-plus');
 const iconv = require('iconv-lite');
 const { query: queryXPath } = require('insomnia-xpath');
 
@@ -234,7 +234,7 @@ function matchJSONPath(bodyStr, query) {
   }
 
   try {
-    results = jq.query(body, query);
+    results = JSONPath({json: body, path: query});
   } catch (err) {
     throw new Error(`Invalid JSONPath query: ${query}`);
   }

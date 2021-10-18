@@ -54,7 +54,7 @@
   input[type='checkbox'] {
     height: 1rem;
     float: left;
-    margin-top: var(--padding-xxs);
+    margin-top: 1px;  // This is a magic number, yes, but there's some deeper problems at play with form styling and this is a hold-over until the DOM design is simplified.  Before this fix it looked pretty bad, so this is at least a big improvement in one respect.
     margin-right: var(--padding-xs);
   }
 
