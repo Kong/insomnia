@@ -19,3 +19,5 @@ fixtures/inso-nedb/insomnia.GitRepository.db
 fixtures/inso-nedb/insomnia.OAuth2Token.db
 fixtures/inso-nedb/insomnia.PluginData.db
 
+# ignore new database models added since designer
+fixtures/basic-designer/insomnia.Project.db
