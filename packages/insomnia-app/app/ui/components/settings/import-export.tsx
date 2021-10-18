@@ -70,7 +70,7 @@ export const ImportExport: FC<Props> = ({ hideSettingsModal }) => {
   const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
 
   return (
-    <div>
+    <div data-testid="import-export-tab">
       <div className="no-margin-top">
         Import format will be automatically detected.
         <HelpTooltip className="space-left">

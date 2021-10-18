@@ -1,20 +1,21 @@
+import { Application } from 'spectron';
 import { mapAccelerator } from 'spectron-keys';
 
 import * as dropdown from './dropdown';
 import * as modal from './modal';
 import { clickTabByText } from './tabs';
 
-export const openWithKeyboardShortcut = async app => {
+export const openWithKeyboardShortcut = async (app: Application) => {
   await app.client.keys(mapAccelerator('CommandOrControl+,'));
 
   await modal.waitUntilOpened(app, { modalName: 'SettingsModal' });
 };
 
-export const closeModal = async app => {
+export const closeModal = async (app: Application) => {
   await modal.close(app, 'SettingsModal');
 };
 
-export const goToPluginsTab = async app => {
+export const goToPluginsTab = async (app: Application) => {
   // Click on the plugins tab
   await app.client.react$('SettingsModal').then(e => clickTabByText(e, 'Plugins'));
 
@@ -22,14 +23,14 @@ export const goToPluginsTab = async app => {
   await app.client.react$('Plugins').then(e => e.waitForDisplayed());
 };
 
-export const goToDataTab = async app => {
+export const goToDataTab = async (app: Application) => {
   await app.client.react$('SettingsModal').then(e => clickTabByText(e, 'Data'));
 
-  await app.client.react$('ImportExport').then(e => e.waitForDisplayed());
+  await app.client.$('[data-testid="import-export-tab"]').then(e => e.waitForDisplayed());
 };
 
-export const importFromClipboard = async app => {
-  const importExport = await app.client.react$('ImportExport');
+export const importFromClipboard = async (app: Application) => {
+  const importExport = await app.client.$('[data-testid="import-export-tab"]');
   await importExport.waitForDisplayed();
 
   await importExport.$('button*=Import Data').then(e => e.click());
