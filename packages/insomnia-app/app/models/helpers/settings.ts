@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
-import { InsomniaConfig, validate, ValidationResult } from 'insomnia-config/dist';
+import { ErrorResult, InsomniaConfig, validate } from 'insomnia-config/dist';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
@@ -71,7 +71,8 @@ interface ConfigError {
   error: {
     configPath?: string;
     insomniaConfig: unknown;
-    errors: ValidationResult['errors'];
+    errors: ErrorResult['errors'];
+    humanErrors: ErrorResult['humanErrors'];
   };
 }
 
@@ -83,19 +84,21 @@ interface ConfigError {
 export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError) = once(() => {
   const { configPath, insomniaConfig } = getConfigFile();
 
-  const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
+  const { valid, errors, humanErrors } = validate(insomniaConfig as InsomniaConfig);
   if (!valid) {
     const resolvedConfigPath = resolve(configPath);
     console.error('invalid insomnia config', {
       configPath: resolvedConfigPath,
       insomniaConfig,
       errors,
+      humanErrors,
     });
     return {
       error: {
         configPath: resolvedConfigPath,
         insomniaConfig,
-        errors,
+        errors: errors as ErrorResult['errors'],
+        humanErrors: humanErrors  as ErrorResult['humanErrors'],
       },
     };
   }

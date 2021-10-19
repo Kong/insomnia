@@ -1,3 +1,4 @@
+import { betterAjvErrors, BetterAjvErrorsOptions, ValidationError } from '@apideck/better-ajv-errors';
 import Ajv, { ErrorObject } from 'ajv';
 
 import { InsomniaConfig } from './entities';
@@ -22,12 +23,13 @@ export const ingest = (input: string | InsomniaConfig | unknown) => {
 export interface ValidResult {
   valid: true;
   errors: null;
-  humanError: null;
+  humanErrors: null;
 }
 
 export interface ErrorResult {
   valid: false;
   errors: ErrorObject[];
+  humanErrors: ValidationError[];
 }
 
 export type ValidationResult = ValidResult | ErrorResult;
@@ -41,7 +43,7 @@ export const validate = (input: string | InsomniaConfig | unknown): ValidationRe
     const validResult: ValidResult = {
       valid: true,
       errors: null,
-      humanError: null,
+      humanErrors: null,
     };
     return validResult;
   }
@@ -55,6 +57,12 @@ export const validate = (input: string | InsomniaConfig | unknown): ValidationRe
   const errorResult: ErrorResult = {
     valid: false,
     errors,
+    humanErrors: betterAjvErrors({
+      basePath: '',
+      data,
+      errors,
+      schema: (schema as BetterAjvErrorsOptions['schema']),
+    }),
   };
   return errorResult;
 };
