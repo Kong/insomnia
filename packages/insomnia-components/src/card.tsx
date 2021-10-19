@@ -183,9 +183,13 @@ const CardBody = styled.div`
   color: var(--font-color);
   margin-top: var(--padding-md);
   padding-left: var(--padding-md);
+  overflow-y: auto;
+
   .title {
     font-size: var(--font-size-md);
     padding-right: var(--padding-md);
+    overflow-x: hidden;
+    text-overflow: ellipsis;
   }
 
   .version {
@@ -197,6 +201,7 @@ const CardBody = styled.div`
 const CardFooter = styled.div`
   margin-top: auto;
   padding-left: var(--padding-md);
+  padding-top: var(--padding-sm);
   padding-bottom: var(--padding-sm);
   color: var(--hl-xl);
 
