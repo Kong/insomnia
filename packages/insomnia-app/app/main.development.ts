@@ -223,7 +223,7 @@ async function _trackStats() {
     // Wait a bit before showing the user because the app just launched.
     setTimeout(() => {
       for (const window of BrowserWindow.getAllWindows()) {
-        // @ts-expect-error -- TSCONVERSION
+        // @ts-expect-error -- TSCONVERSION likely needs to be window.webContents.send instead
         window.send('show-notification', notification);
       }
     }, 5000);

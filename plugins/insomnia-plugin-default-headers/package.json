@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-default-headers",
-  "version": "2.3.2",
+  "version": "2.3.3-alpha.4",
   "author": "Kong <office@konghq.com>",
   "description": "Various data importers for Insomnia",
   "license": "MIT",

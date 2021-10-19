@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-core-themes",
-  "version": "2.3.2",
+  "version": "2.3.3-alpha.4",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia core themes",
   "license": "MIT",

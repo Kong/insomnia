@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { ProcessEnvOptions, spawn } from 'child_process';
 import mkdirp from 'mkdirp';
 import path from 'path';
 
@@ -11,18 +11,52 @@ const isMac = () => platform === 'darwin';
 const isLinux = () => platform === 'linux';
 const isWindows = () => platform === 'win32';
 
-const getTarArgs = () => {
+const getName = () => {
   const version = getVersion();
   if (isMac()) {
-    return ['-czf', `inso-macos-${version}.zip`];
+    return `inso-macos-${version}.zip`;
   }
 
   if (isLinux()) {
-    return ['-cJf', `inso-linux-${version}.tar.xz`];
+    return `inso-linux-${version}.tar.xz`;
   }
 
   if (isWindows()) {
-    return ['-czf', `inso-windows-${version}.zip`];
+    return `inso-windows-${version}.zip`;
+  }
+
+  throw new Error(prefixPkgArtifacts(`Unsupported OS: ${platform}`));
+};
+
+const startProcess = (cwd: ProcessEnvOptions['cwd']) => {
+  const name = getName();
+
+  if (isMac()) {
+    return spawn('ditto',
+      [
+        '-c',
+        '-k',
+        '../binaries/inso',
+        name,
+      ], {
+        cwd,
+        shell: true,
+      });
+  }
+
+  if (isWindows() || isLinux()) {
+
+    return spawn('tar',
+      [
+        '-C',
+        '../binaries',
+        isWindows() ? '-a -cf' : '-cjf',
+        name,
+        '.',
+      ], {
+        cwd,
+        shell: true,
+      });
   }
 
   throw new Error(prefixPkgArtifacts(`Unsupported OS: ${platform}`));
@@ -33,17 +67,7 @@ const artifacts = async () => {
     const cwd = path.join(__dirname, '../../artifacts');
     mkdirp.sync(cwd);
 
-    const tarName = isWindows() ? 'tar.exe' : 'tar';
-    const process = spawn(tarName,
-      [
-        '-C',
-        '../binaries',
-        ...getTarArgs(),
-        '.',
-      ], {
-        cwd,
-        shell: true,
-      });
+    const process = startProcess(cwd);
 
     process.stdout.on('data', data => {
       console.log(data.toString());

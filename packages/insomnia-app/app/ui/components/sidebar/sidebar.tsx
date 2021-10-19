@@ -1,11 +1,11 @@
 import classnames from 'classnames';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { forwardRef, memo, ReactNode } from 'react';
 
 import {
   COLLAPSE_SIDEBAR_REMS,
   SIDEBAR_SKINNY_REMS,
 } from '../../../common/constants';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
 
