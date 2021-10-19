@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FC, useState } from 'react';
+import React, { ChangeEvent, FC } from 'react';
 import { useSelector } from 'react-redux';
 import { useToggle } from 'react-use';
 
@@ -27,13 +27,9 @@ export const MaskedSetting: FC<{
     throw new Error(`Invalid masked setting name ${setting}`);
   }
 
-  const [input, setInput] = useState(String(settings[setting]));
-
   const onChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    // Update the input as soon as possible for lag-free experience
-    setInput(event.currentTarget.value);
     // Meanwhile we wait the update
-    return models.settings.patch({
+    await models.settings.patch({
       [setting]: event.currentTarget.value,
     });
   };
@@ -46,7 +42,7 @@ export const MaskedSetting: FC<{
       </label>
       <div className="form-control form-control--outlined form-control--btn-right">
         <input
-          value={input}
+          defaultValue={String(settings[setting])}
           type={!settings.showPasswords && isHidden ? 'password' : 'text'}
           name={setting}
           onChange={onChange}
