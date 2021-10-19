@@ -39,6 +39,7 @@ describe('validateInsomniaConfig', () => {
     validateInsomniaConfig();
 
     // Assert
-    expect(electronAppExit).not.toHaveBeenCalledWith();
+    expect(electronShowErrorBox).not.toHaveBeenCalled();
+    expect(electronAppExit).not.toHaveBeenCalled();
   });
 });
