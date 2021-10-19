@@ -25,10 +25,7 @@ module.exports = {
       };
     }
 
-    const yamlDocs = result.documents.map(d => YAML.stringify(d));
-
-    // Join the YAML docs with "---" and strip any extra newlines surrounding them
-    const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
+    const document = JSON.stringify(result.documents?.[0], null, '\t');
 
     return {
       document,
