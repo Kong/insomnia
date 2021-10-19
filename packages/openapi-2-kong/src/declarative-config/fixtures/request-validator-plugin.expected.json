@@ -3,7 +3,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Example",
+      "host": "backend.com",
       "port": 80,
       "path": "/path",
       "name": "Example",

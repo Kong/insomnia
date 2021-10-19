@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Simple_API_overview",
+      "host": "localhost",
       "port": 80,
       "path": "/path",
       "name": "Simple_API_overview",

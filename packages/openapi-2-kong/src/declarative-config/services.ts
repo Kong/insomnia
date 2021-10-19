@@ -32,15 +32,15 @@ export function generateServices(api: OpenApi3Spec, tags: string[]) {
 
 export function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
   const serverUrl = fillServerVariables(server);
+  const parsedUrl = parseUrl(serverUrl);
   const name = getName(api);
-  let host = name;
+  let host = parsedUrl.hostname || 'localhost';
   const hasUpstreamDefaults = !!api[xKongUpstreamDefaults];
   const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
   if (hasUpstreamDefaults || hasMoreThanOneServer) {
     host =  `${name}.upstream`;
   }
 
-  const parsedUrl = parseUrl(serverUrl);
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api, tags);
   const serviceDefaults = api[xKongServiceDefaults] || {};
