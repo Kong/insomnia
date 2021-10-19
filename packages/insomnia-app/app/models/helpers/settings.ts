@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
 import { InsomniaConfig, validate } from 'insomnia-config';
+import { ValidationResult } from 'insomnia-config/dist/validate';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
@@ -53,7 +54,7 @@ export const getConfigFile = () => {
   // The paths above are in priority order such that if we already found what we're looking for, there's no reason to keep reading other files.
   for (const configPath of configPaths) {
     const insomniaConfig = readConfigFile(configPath);
-    if (insomniaConfig !== undefined) {
+    if (insomniaConfig !== undefined && configPath !== undefined) {
       return {
         insomniaConfig,
         configPath,
@@ -67,22 +68,37 @@ export const getConfigFile = () => {
   };
 };
 
+interface ConfigError {
+  error: {
+    configPath?: string;
+    insomniaConfig: unknown;
+    errors: ValidationResult['errors'];
+  };
+}
+
 /**
  * gets settings from the `insomnia.config.json`
  *
  * note that it is a business rule that the config is never read again after startup, hence the `once` usage.
  */
-export const getConfigSettings = once(() => {
+export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError) = once(() => {
   const { configPath, insomniaConfig } = getConfigFile();
 
   const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
   if (!valid) {
+    const resolvedConfigPath = resolve(configPath);
     console.error('invalid insomnia config', {
-      configPath,
+      configPath: resolvedConfigPath,
       insomniaConfig,
       errors,
     });
-    return {};
+    return {
+      error: {
+        configPath: resolvedConfigPath,
+        insomniaConfig,
+        errors,
+      },
+    };
   }
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return (insomniaConfig as InsomniaConfig).settings || {};
