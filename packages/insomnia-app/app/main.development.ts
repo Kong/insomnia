@@ -1,20 +1,19 @@
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
-import { omit } from 'ramda';
 
 import appConfig from '../config/config.json';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
-import { disableSpellcheckerDownload, exitApp } from './common/electron-helpers';
+import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
+import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
-import { getConfigSettings } from './models/helpers/settings';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
 import type { ToastNotification } from './ui/components/toast';
@@ -40,24 +39,6 @@ if (!isDevelopment()) {
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
-
-export const validateInsomniaConfig = () => {
-  const configSettings = getConfigSettings();
-  if ('error' in configSettings) {
-    const errors = configSettings.error.errors?.map(omit(['parentSchema', 'data']));
-
-    electron.dialog.showErrorBox('Invalid Insomnia Config',
-      [
-        `Invalid Insomnia Config found at "${configSettings.error.configPath}"`,
-        '',
-        'errors:',
-        `${JSON.stringify(errors, null, 2)}`,
-      ].join('\n'),
-    );
-
-    exitApp();
-  }
-};
 
 // When the app is first launched
 app.on('ready', async () => {
