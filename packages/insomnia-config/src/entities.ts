@@ -1,8 +1,8 @@
 import { Settings } from 'insomnia-common';
 
-type ConfigVersion = '1.0.0';
+export type ConfigVersion = '1.0.0';
 
-type AllowedSettings = Partial<Pick<Settings,
+export type AllowedSettings = Partial<Pick<Settings,
   | 'allowNotificationRequests'
   | 'disableUpdateNotification'
   | 'enableAnalytics'
