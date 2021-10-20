@@ -72,8 +72,10 @@ describe('importRaw()', () => {
     const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
     const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
+    const existingWorkspace = await workspace.create();
+
     const importConfig: importUtil.ImportRawConfig = {
-      getWorkspaceId: () => null,
+      getWorkspaceId: () => existingWorkspace._id,
       getProjectId: async () => DEFAULT_PROJECT_ID,
       getWorkspaceScope: () => 'design',
     };
@@ -84,11 +86,8 @@ describe('importRaw()', () => {
     );
 
     const workspacesCount = await workspace.count();
-    const projectWorkspaces = await workspace.findByParentId(
-      DEFAULT_PROJECT_ID
-    );
 
-    const curlRequests = await request.findByParentId(projectWorkspaces[0]._id);
+    const curlRequests = await request.findByParentId(existingWorkspace._id);
 
     expect(source).toBe('curl');
     expect(error).toBe(null);
