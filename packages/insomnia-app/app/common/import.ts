@@ -174,8 +174,8 @@ export async function importRaw(
   if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
     data.resources.push({
       ...models.workspace.init(),
-      _id: '__WORKSPACE_ID__',
-      _type: 'workspace',
+      _id: WORKSPACE_ID_KEY,
+      _type: EXPORT_TYPE_WORKSPACE,
     });
   }
 
