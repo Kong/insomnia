@@ -1,8 +1,11 @@
 import { Settings } from 'insomnia-common';
 
-type ConfigVersion = '1.0.0';
+/** While, by design, there is presently no specific restriction in the validation that _requires_ that the file have a particular filename, this is the canonical name of the file that we use in all current use-cases. */
+export const INSOMNIA_CONFIG_FILENAME = 'insomnia.config.json';
 
-type AllowedSettings = Partial<Pick<Settings,
+export type ConfigVersion = '1.0.0';
+
+export type AllowedSettings = Partial<Pick<Settings,
   | 'allowNotificationRequests'
   | 'disableUpdateNotification'
   | 'enableAnalytics'

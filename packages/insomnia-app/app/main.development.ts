@@ -8,6 +8,7 @@ import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/cons
 import { database } from './common/database';
 import { disableSpellcheckerDownload } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
+import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
 import * as grpcIpcMain from './main/grpc-ipc-main';
 import { checkIfRestartNeeded } from './main/squirrel-startup';
@@ -38,8 +39,10 @@ if (!isDevelopment()) {
 
 // So if (window) checks don't throw
 global.window = global.window || undefined;
+
 // When the app is first launched
 app.on('ready', async () => {
+  validateInsomniaConfig();
   disableSpellcheckerDownload();
 
   if (isDevelopment()) {
@@ -62,6 +65,7 @@ app.on('ready', async () => {
   const updatedStats = await _trackStats();
   await _updateFlags(updatedStats);
   await _launchApp();
+
   // Init the rest
   await updates.init();
   grpcIpcMain.init();

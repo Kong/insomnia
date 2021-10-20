@@ -3,7 +3,7 @@ import fs from 'fs';
 import { getConfigSettings } from '../settings';
 
 // This test exists outside of settings.test.ts because we need an unmocked `../settings` module
-describe('getConfigSettings', () => {
+describe('getConfigSettings once', () => {
   it('only reads the config once on startup and then never again', () => {
     // Arrange
     const configOne = {
