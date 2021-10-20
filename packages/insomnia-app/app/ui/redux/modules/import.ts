@@ -12,7 +12,7 @@ import * as models from '../../../models';
 import { Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showError, showModal } from '../../components/modals';
 import { AlertModal } from '../../components/modals/alert-modal';
-import { selectActiveProject, selectProjects, selectWorkspacesForActiveProject } from '../selectors';
+import { selectActiveProject, selectProjects, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';
 import { askToImportIntoProject, askToImportIntoWorkspace, askToSetWorkspaceScope, ForceToWorkspace } from './helpers';
@@ -50,7 +50,7 @@ const convertToRawConfig = ({
 }: ImportOptions,
 state: RootState): ImportRawConfig => {
   const activeProject = selectActiveProject(state);
-  const activeProjectWorkspaces = selectWorkspacesForActiveProject(state);
+  const activeProjectWorkspaces = selectWorkspacesWithResolvedNameForActiveProject(state);
   const projects = selectProjects(state);
 
   return ({

@@ -1,10 +1,10 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
-import { ACTIVITY_DEBUG } from '../../../common/constants';
+import { ACTIVITY_DEBUG, ACTIVITY_HOME } from '../../../common/constants';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
 import { WorkspaceScopeKeys } from '../../../models/workspace';
-import { selectActiveApiSpec, selectActiveProject, selectActiveWorkspaceName } from '../selectors';
+import { selectActiveApiSpec, selectActiveProject, selectActiveWorkspaceName, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
 
 describe('selectors', () => {
   beforeEach(globalBeforeEach);
@@ -138,6 +138,52 @@ describe('selectors', () => {
       });
 
       expect(selectActiveWorkspaceName(state)).toBe(undefined);
+    });
+  });
+
+  describe('selectWorkspacesWithResolvedNameForActiveProject', () => {
+    it('returns the workspaces with resolved names for the active project', async () => {
+      const newCollectionWorkspace = await models.workspace.create({
+        name: 'collectionWorkspace.name',
+        scope: WorkspaceScopeKeys.collection,
+      });
+
+      const newWorkspace = await models.workspace.create({
+        name: 'designWorkspace.name',
+        scope: WorkspaceScopeKeys.design,
+      });
+
+      const newApiSpec = await models.apiSpec.getOrCreateForParentId(
+        newWorkspace._id
+      );
+
+      // The database will update the api spec with the workspace name
+      // That's why we need to explicitly update the ApiSpec name
+      await models.apiSpec.update(newApiSpec, {
+        fileName: 'apiSpec.name',
+      });
+
+      const state = await reduxStateForTest({
+        activeActivity: ACTIVITY_HOME,
+        activeWorkspaceId: null,
+      });
+
+      expect(
+        selectWorkspacesWithResolvedNameForActiveProject(state)
+      ).toMatchObject([
+        {
+          _id: newCollectionWorkspace._id,
+          name: 'collectionWorkspace.name',
+          scope: 'collection',
+          type: 'Workspace',
+        },
+        {
+          _id: newWorkspace._id,
+          name: 'apiSpec.name',
+          scope: 'design',
+          type: 'Workspace',
+        },
+      ]);
     });
   });
 });
