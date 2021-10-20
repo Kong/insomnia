@@ -1,13 +1,12 @@
 import electron from 'electron';
 
 import { getConfigSettings, isConfigError, isParseError } from '../models/helpers/settings';
-import { exitApp } from './electron-helpers';
 
 export const validateInsomniaConfig = () => {
   const configSettings = getConfigSettings();
 
   if (!('error' in configSettings)) {
-    return;
+    return true;
   }
 
   if (isParseError(configSettings)) {
@@ -44,5 +43,5 @@ export const validateInsomniaConfig = () => {
     );
   }
 
-  exitApp();
+  return false;
 };

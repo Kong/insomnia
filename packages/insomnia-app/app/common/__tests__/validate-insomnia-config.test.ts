@@ -43,9 +43,10 @@ describe('validateInsomniaConfig', () => {
     getConfigSettings.mockReturnValue(errorReturn);
 
     // Act
-    validateInsomniaConfig();
+    const result = validateInsomniaConfig();
 
     // Assert
+    expect(result).toBe(false);
     expect(electronShowErrorBox).toHaveBeenCalled();
     expect(electronAppExit).toHaveBeenCalled();
   });
@@ -56,9 +57,10 @@ describe('validateInsomniaConfig', () => {
     getConfigSettings.mockReturnValue(validReturn);
 
     // Act
-    validateInsomniaConfig();
+    const result = validateInsomniaConfig();
 
     // Assert
+    expect(result).toBe(true);
     expect(electronShowErrorBox).not.toHaveBeenCalled();
     expect(electronAppExit).not.toHaveBeenCalled();
   });
