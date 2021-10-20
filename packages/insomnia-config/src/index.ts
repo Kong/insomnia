@@ -1,2 +1,12 @@
-export { validate } from './validate';
-export { InsomniaConfig } from './entities';
+export {
+  validate,
+  ErrorResult,
+  ValidResult,
+  ValidationResult,
+} from './validate';
+
+export {
+  InsomniaConfig,
+  AllowedSettings,
+  ConfigVersion,
+} from './entities';
