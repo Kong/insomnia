@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
-import { InsomniaConfig, validate } from 'insomnia-config';
-import { ValidationResult } from 'insomnia-config/dist/validate';
+import { InsomniaConfig, validate, ValidationResult } from 'insomnia-config';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
