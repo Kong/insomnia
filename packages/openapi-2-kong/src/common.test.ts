@@ -287,9 +287,9 @@ describe('common', () => {
       expect(result.pathname).toBe('/');
     });
 
-    it('returns no host if not given', () => {
+    it('returns localhost if not given', () => {
       const result = parseUrl('/just/a/path');
-      expect(result.host).toBe(null);
+      expect(result.host).toBe('localhost');
     });
 
     it('returns no port in host if neither port nor recognized protocol given', () => {

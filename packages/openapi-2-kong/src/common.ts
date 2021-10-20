@@ -113,10 +113,12 @@ export function parseUrl(urlStr: string) {
   }
 
   parsed.protocol = parsed.protocol || 'http:';
+  // fallback to locahost: https://swagger.io/docs/specification/api-host-and-base-path/#relative-urls
+  parsed.hostname = parsed.hostname || 'localhost';
 
-  if (parsed.hostname && parsed.port) {
+  if (parsed.port) {
     parsed.host = `${parsed.hostname}:${parsed.port}`;
-  } else if (parsed.hostname) {
+  } else {
     parsed.host = parsed.hostname;
   }
 
