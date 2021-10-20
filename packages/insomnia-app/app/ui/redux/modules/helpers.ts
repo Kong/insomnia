@@ -23,7 +23,21 @@ export function askToSelectExistingWorkspace(workspaces: Workspace[]): SelectExi
       value: options[0]?.value,
       noEscape: true,
       onDone: workspaceId => {
-        resolve(workspaceId || null);
+        resolve(workspaceId);
+      },
+    });
+  });
+}
+
+async function askToImportIntoNewWorkspace(): Promise<boolean> {
+  return new Promise(resolve => {
+    showModal(AskModal, {
+      title: 'Import',
+      message: `Do you want to import into an existing ${strings.workspace.singular.toLowerCase()} or a new one?`,
+      yesText: 'Existing',
+      noText: 'New',
+      onDone: (yes: boolean) => {
+        resolve(yes);
       },
     });
   });
@@ -39,20 +53,6 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
         return null;
       }
 
-      function askToImportIntoNewWorkspace() {
-        return new Promise(resolve => {
-          showModal(AskModal, {
-            title: 'Import',
-            message: 'Do you want to import into an existing workspace or a new one?',
-            yesText: 'Existing',
-            noText: 'New Workspace',
-            onDone: (yes: boolean) => {
-              resolve(yes);
-            },
-          });
-        });
-      }
-
       return new Promise(async resolve => {
         const yes = await askToImportIntoNewWorkspace();
         if (yes) {
@@ -63,6 +63,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
         }
       });
     }
+
     if (!workspaceId) {
       return null;
     }
@@ -72,7 +73,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
         return null;
 
       case ForceToWorkspace.current:
-        return workspaceId ?? null;
+        return workspaceId;
       default:
         return new Promise(resolve => {
           showModal(AskModal, {
@@ -80,7 +81,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
             message: 'Do you want to import into the current workspace or a new one?',
             yesText: 'Current',
             noText: 'New Workspace',
-            onDone: yes => {
+            onDone: (yes: boolean) => {
               resolve(yes ? workspaceId : null);
             },
           });
