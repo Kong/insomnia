@@ -1,5 +1,4 @@
 import electron from 'electron';
-import { join } from 'path';
 
 import { getConfigSettings } from '../models/helpers/settings';
 import { exitApp } from './electron-helpers';
@@ -9,7 +8,7 @@ export const validateInsomniaConfig = () => {
   if ('error' in configSettings) {
     const errors = configSettings.error.humanErrors?.map(({ message, path, suggestion }, index) => ([
       `[Error ${index + 1}]`,
-      `Path: ${join(path, 'insomnia.config.json')}`,
+      `Path: ${path}`,
       `${message}.${suggestion ? `  ${suggestion}` : ''}`,
     ]).join('\n')).join('\n\n');
 

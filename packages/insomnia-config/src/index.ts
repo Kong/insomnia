@@ -11,4 +11,5 @@ export {
   InsomniaConfig,
   AllowedSettings,
   ConfigVersion,
+  INSOMNIA_CONFIG_FILENAME,
 } from './entities';

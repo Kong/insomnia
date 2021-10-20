@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
-import { ErrorResult, InsomniaConfig, isErrorResult, validate } from 'insomnia-config/dist';
+import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config/dist';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
@@ -17,8 +17,7 @@ export const readConfigFile = (filePath?: string) => {
 
   let fileContents = '';
   try {
-    const resolvedFilePath = resolve(filePath, 'insomnia.config.json');
-    fileContents = readFileSync(resolvedFilePath, 'utf-8');
+    fileContents = readFileSync(filePath, 'utf-8');
   } catch (error: unknown) {
     return undefined;
   }
@@ -39,6 +38,10 @@ export const getLocalDevConfigFilePath = () => (
   isDevelopment() ? '../../packages/insomnia-app/app' as string : undefined
 );
 
+const addConfigFileToPath = (path: string | undefined) => (
+  path ? resolve(path, INSOMNIA_CONFIG_FILENAME) : undefined
+);
+
 export const getConfigFile = () => {
   const portableExecutable = getPortableExecutableDir();
   const insomniaDataDirectory = getDataDirectory();
@@ -47,7 +50,7 @@ export const getConfigFile = () => {
     portableExecutable,
     insomniaDataDirectory,
     localDev,
-  ];
+  ].map(addConfigFileToPath);
 
   // note: this is written as to avoid unnecessary (synchronous) reads from disk.
   // The paths above are in priority order such that if we already found what we're looking for, there's no reason to keep reading other files.
@@ -88,10 +91,8 @@ export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> |
 
   if (isErrorResult(validationResult)) {
     const { errors, humanErrors } = validationResult;
-    const resolvedConfigPath = resolve(configPath);
-
     const error = {
-      configPath: resolvedConfigPath,
+      configPath,
       insomniaConfig,
       errors,
       humanErrors,
