@@ -148,7 +148,7 @@ describe('Import', function() {
       await home.expectTotalDocuments(app, 1);
     });
 
-    it('should update the existing workspace (e.g. Insomnia Exports)', async () => {
+    it('should import an existing workspace to the project instead of the current workspace (e.g. Insomnia Exports)', async () => {
       await client.correctlyLaunched(app);
       await onboarding.skipOnboardingFlow(app);
 
