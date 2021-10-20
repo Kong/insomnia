@@ -93,6 +93,7 @@ export const generateConfig = async (
 
   let document = '';
   if (isListOfDeclarativeConfigs(result.documents)){
+    // We know for certain the result.documents has only one entry for declarative config: packages/openapi-2-kong/src/declarative-config/generate.ts#L20
     document = JSON.stringify(result.documents?.[0]);
   } else {
     const yamlDocs = result.documents.map((document: K8sManifest) => YAML.stringify(document));

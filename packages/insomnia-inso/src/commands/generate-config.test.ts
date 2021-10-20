@@ -25,9 +25,10 @@ const mockConversionResult: KongForKubernetesResult = {
 
 const mockDeclarativeConversionResult: DeclarativeConfigResult = {
   documents: [
-    // @ts-expect-error -- TSCONVERSION the tests seem to suggest that this is valid, yet it is not allowed by the types.
     {
       '_format_version': '1.1',
+      services: [],
+      upstreams: [],
     },
   ],
   type: 'kong-declarative-config',
@@ -190,7 +191,7 @@ describe('generateConfig()', () => {
     );
     expect(result).toBe(true);
     expect(logger.__getLogs().log).toEqual([
-      '{"_format_version":"1.1"}',
+      '{"_format_version":"1.1","services":[],"upstreams":[]}',
     ]);
   });
 });
