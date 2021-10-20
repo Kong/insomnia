@@ -111,3 +111,7 @@ export const takeScreenshot = async (app, name) => {
   const buffer = await app.browserWindow.capturePage();
   await fs.promises.writeFile(path.join('screenshots', `${name}.png`), buffer);
 };
+
+export const writeTextToClipboard = async (app, text) => {
+  app.electron.clipboard.writeText(text);
+};

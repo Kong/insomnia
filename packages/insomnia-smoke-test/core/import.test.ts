@@ -1,9 +1,9 @@
-import fs from 'fs';
 import { Application } from 'spectron';
 
-import { launchApp, stop } from '../modules/application';
+import { launchApp, stop, writeTextToClipboard } from '../modules/application';
 import * as client from '../modules/client';
 import * as debug from '../modules/debug';
+import { getFixtureContent } from '../modules/fixtures';
 import * as home from '../modules/home';
 import * as modal from '../modules/modal';
 import * as onboarding from '../modules/onboarding';
@@ -12,29 +12,26 @@ import * as settings from '../modules/settings';
 describe('Import', function() {
   jest.setTimeout(50000);
 
+  let app: Application;
+
+  beforeEach(async () => {
+    app = await launchApp();
+  });
+
+  afterEach(async () => {
+    await stop(app);
+  });
+
   describe('from the Dashboard', () => {
-    let app: Application;
-
-    beforeEach(async () => {
-      app = await launchApp();
-    });
-
-    afterEach(async () => {
-      await stop(app);
-    });
-
     it('should create a new workspace if there are no available workspaces', async () => {
       await client.correctlyLaunched(app);
       await onboarding.skipOnboardingFlow(app);
 
       await home.documentListingShown(app);
       await home.expectTotalDocuments(app, 0);
+      const swagger2Text = await getFixtureContent('swagger2.yaml');
 
-      const buffer = await fs.promises.readFile(
-        `${__dirname}/../fixtures/swagger2.yaml`
-      );
-      const swagger2Text = buffer.toString();
-      await app.electron.clipboard.writeText(swagger2Text);
+      writeTextToClipboard(app, swagger2Text);
 
       await home.importFromClipboard(app);
 
@@ -54,17 +51,14 @@ describe('Import', function() {
 
       await home.expectTotalDocuments(app, 1);
 
-      const buffer = await fs.promises.readFile(
-        `${__dirname}/../fixtures/swagger2.yaml`
-      );
-      const swagger2Text = buffer.toString();
+      const swagger2Text = await getFixtureContent('swagger2.yaml');
 
-      await app.electron.clipboard.writeText(swagger2Text);
+      writeTextToClipboard(app, swagger2Text);
 
       await home.importFromClipboard(app);
 
       await modal.waitUntilOpened(app, { title: 'Import' });
-      await modal.clickModalFooterByText(app, 'New Workspace');
+      await modal.clickModalFooterByText(app, 'New');
 
       await modal.waitUntilOpened(app, { title: 'Import As' });
       await modal.clickModalFooterByText(app, 'Design Document');
@@ -82,12 +76,9 @@ describe('Import', function() {
 
       await home.expectTotalDocuments(app, 1);
 
-      const buffer = await fs.promises.readFile(
-        `${__dirname}/../fixtures/swagger2.yaml`
-      );
+      const swagger2Text = await getFixtureContent('swagger2.yaml');
 
-      const swagger2Text = buffer.toString();
-      await app.electron.clipboard.writeText(swagger2Text);
+      writeTextToClipboard(app, swagger2Text);
 
       await home.importFromClipboard(app);
 
@@ -109,11 +100,9 @@ describe('Import', function() {
       await home.expectTotalDocuments(app, 0);
 
       // Import the insomnia spec
-      const buffer = await fs.promises.readFile(
-        `${__dirname}/../fixtures/insomnia4.yaml`
-      );
-      const insomnia4Text = buffer.toString();
-      await app.electron.clipboard.writeText(insomnia4Text);
+      const insomnia4Text = await getFixtureContent('insomnia4.yaml');
+
+      writeTextToClipboard(app, insomnia4Text);
 
       await home.importFromClipboard(app);
 
@@ -130,16 +119,6 @@ describe('Import', function() {
   });
 
   describe('from Preferences', () => {
-    let app: Application;
-
-    beforeEach(async () => {
-      app = await launchApp();
-    });
-
-    afterEach(async () => {
-      await stop(app);
-    });
-
     it('should directly import to the active workspace', async () => {
       await client.correctlyLaunched(app);
       await onboarding.skipOnboardingFlow(app);
@@ -148,12 +127,9 @@ describe('Import', function() {
       await home.expectTotalDocuments(app, 0);
       await home.createNewCollection(app);
 
-      const buffer = await fs.promises.readFile(
-        `${__dirname}/../fixtures/swagger2.yaml`
-      );
+      const swagger2Text = await getFixtureContent('swagger2.yaml');
 
-      const swagger2Text = buffer.toString();
-      await app.electron.clipboard.writeText(swagger2Text);
+      writeTextToClipboard(app, swagger2Text);
 
       await settings.openFromSettingsButton(app);
       await settings.goToDataTab(app);
@@ -180,11 +156,10 @@ describe('Import', function() {
       await home.expectTotalDocuments(app, 0);
 
       // Import the insomnia spec
-      const buffer = await fs.promises.readFile(
-        `${__dirname}/../fixtures/insomnia4.yaml`
-      );
-      const insomnia4Text = buffer.toString();
-      await app.electron.clipboard.writeText(insomnia4Text);
+      const insomnia4Text = await getFixtureContent('insomnia4.yaml');
+
+      writeTextToClipboard(app, insomnia4Text);
+
       await home.importFromClipboard(app);
 
       await modal.waitUntilOpened(app, { title: 'Import As' });
