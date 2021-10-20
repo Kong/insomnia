@@ -16,8 +16,9 @@ describe('validateInsomniaConfig', () => {
     const errorReturn = {
       error: {
         errors: [],
-        insomniaConfig: 'abc',
-        configPath: 'configPath',
+        humanReadableErrors: [],
+        insomniaConfig: '{ "mock": ["insomnia", "config"] }',
+        configPath: '/mock/insomnia/config/path',
       },
     };
     getConfigSettings.mockReturnValue(errorReturn);

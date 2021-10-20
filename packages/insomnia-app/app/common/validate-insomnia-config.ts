@@ -1,5 +1,4 @@
 import electron from 'electron';
-import { omit } from 'ramda';
 
 import { getConfigSettings } from '../models/helpers/settings';
 import { exitApp } from './electron-helpers';
@@ -7,17 +6,22 @@ import { exitApp } from './electron-helpers';
 export const validateInsomniaConfig = () => {
   const configSettings = getConfigSettings();
   if ('error' in configSettings) {
-    const errors = configSettings.error.errors?.map(omit(['parentSchema', 'data']));
+    const errors = configSettings.error.humanReadableErrors?.map(({ message, path, suggestion }, index) => ([
+      `[Error ${index + 1}]`,
+      `Path: ${path}`,
+      `${message}.${suggestion ? `  ${suggestion}` : ''}`,
+    ]).join('\n')).join('\n\n');
 
     electron.dialog.showErrorBox('Invalid Insomnia Config',
       [
-        `Invalid Insomnia Config found at "${configSettings.error.configPath}"`,
+        `Your Insomnia Config was found to be invalid.  Please check the path below for the following error${configSettings.error.humanReadableErrors?.length > 1 ? 's' : ''}:`,
         '',
-        'errors:',
-        `${JSON.stringify(errors, null, 2)}`,
+        '[Path]',
+        configSettings.error.configPath,
+        '',
+        errors,
       ].join('\n'),
     );
-
     exitApp();
   }
 };

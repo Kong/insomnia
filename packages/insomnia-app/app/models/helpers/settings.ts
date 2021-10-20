@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
-import { InsomniaConfig, validate, ValidationResult } from 'insomnia-config/dist';
+import { ErrorResult, INSOMNIA_CONFIG_FILENAME, InsomniaConfig, isErrorResult, validate } from 'insomnia-config/dist';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
@@ -17,8 +17,7 @@ export const readConfigFile = (filePath?: string) => {
 
   let fileContents = '';
   try {
-    const resolvedFilePath = resolve(filePath, 'insomnia.config.json');
-    fileContents = readFileSync(resolvedFilePath, 'utf-8');
+    fileContents = readFileSync(filePath, 'utf-8');
   } catch (error: unknown) {
     return undefined;
   }
@@ -39,6 +38,10 @@ export const getLocalDevConfigFilePath = () => (
   isDevelopment() ? '../../packages/insomnia-app/app' as string : undefined
 );
 
+const addConfigFileToPath = (path: string | undefined) => (
+  path ? resolve(path, INSOMNIA_CONFIG_FILENAME) : undefined
+);
+
 export const getConfigFile = () => {
   const portableExecutable = getPortableExecutableDir();
   const insomniaDataDirectory = getDataDirectory();
@@ -47,7 +50,7 @@ export const getConfigFile = () => {
     portableExecutable,
     insomniaDataDirectory,
     localDev,
-  ];
+  ].map(addConfigFileToPath);
 
   // note: this is written as to avoid unnecessary (synchronous) reads from disk.
   // The paths above are in priority order such that if we already found what we're looking for, there's no reason to keep reading other files.
@@ -71,7 +74,8 @@ interface ConfigError {
   error: {
     configPath?: string;
     insomniaConfig: unknown;
-    errors: ValidationResult['errors'];
+    errors: ErrorResult['errors'];
+    humanReadableErrors: ErrorResult['humanReadableErrors'];
   };
 }
 
@@ -83,22 +87,21 @@ interface ConfigError {
 export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError) = once(() => {
   const { configPath, insomniaConfig } = getConfigFile();
 
-  const { valid, errors } = validate(insomniaConfig as InsomniaConfig);
-  if (!valid) {
-    const resolvedConfigPath = resolve(configPath);
-    console.error('invalid insomnia config', {
-      configPath: resolvedConfigPath,
+  const validationResult = validate(insomniaConfig as InsomniaConfig);
+
+  if (isErrorResult(validationResult)) {
+    const { errors, humanReadableErrors } = validationResult;
+    const error = {
+      configPath,
       insomniaConfig,
       errors,
-    });
-    return {
-      error: {
-        configPath: resolvedConfigPath,
-        insomniaConfig,
-        errors,
-      },
+      humanReadableErrors,
     };
+
+    console.error('invalid insomnia config', error);
+    return { error };
   }
+
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return (insomniaConfig as InsomniaConfig).settings || {};
 });
