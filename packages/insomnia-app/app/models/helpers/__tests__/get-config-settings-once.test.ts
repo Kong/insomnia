@@ -3,7 +3,7 @@ import fs from 'fs';
 import { getConfigSettings } from '../settings';
 
 // This test exists outside of settings.test.ts because we need an unmocked `../settings` module
-describe('getConfigSettings', () => {
+describe('getConfigSettings once', () => {
   it('only reads the config once on startup and then never again', () => {
     // Arrange
     const configOne = {
@@ -19,7 +19,8 @@ describe('getConfigSettings', () => {
       },
     };
 
-    const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(configOne));
+    const readFileSyncSpy = jest.spyOn(fs, 'readFileSync');
+    readFileSyncSpy.mockReturnValue(JSON.stringify(configOne));
 
     // Act
     const settingsFirstLoad = getConfigSettings();
@@ -43,6 +44,9 @@ describe('getConfigSettings', () => {
     // Cleanup
     readFileSyncSpy.mockRestore();
   });
+});
+
+describe('abc', () => {
 
   it('returns an error if validation result has errors', () => {
     // Arrange
