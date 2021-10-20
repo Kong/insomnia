@@ -75,7 +75,7 @@ interface ConfigError {
     configPath?: string;
     insomniaConfig: unknown;
     errors: ErrorResult['errors'];
-    humanErrors: ErrorResult['humanErrors'];
+    humanReadableErrors: ErrorResult['humanReadableErrors'];
   };
 }
 
@@ -90,12 +90,12 @@ export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> |
   const validationResult = validate(insomniaConfig as InsomniaConfig);
 
   if (isErrorResult(validationResult)) {
-    const { errors, humanErrors } = validationResult;
+    const { errors, humanReadableErrors } = validationResult;
     const error = {
       configPath,
       insomniaConfig,
       errors,
-      humanErrors,
+      humanReadableErrors,
     };
 
     console.error('invalid insomnia config', error);

@@ -23,13 +23,13 @@ export const ingest = (input: string | InsomniaConfig | unknown) => {
 export interface ValidResult {
   valid: true;
   errors: null;
-  humanErrors: null;
+  humanReadableErrors: null;
 }
 
 export interface ErrorResult {
   valid: false;
   errors: ErrorObject[];
-  humanErrors: ValidationError[];
+  humanReadableErrors: ValidationError[];
 }
 
 export type ValidationResult = ValidResult | ErrorResult;
@@ -46,7 +46,7 @@ export const validate = (input: string | InsomniaConfig | unknown): ValidationRe
     const validResult: ValidResult = {
       valid: true,
       errors: null,
-      humanErrors: null,
+      humanReadableErrors: null,
     };
     return validResult;
   }
@@ -60,7 +60,7 @@ export const validate = (input: string | InsomniaConfig | unknown): ValidationRe
   const errorResult: ErrorResult = {
     valid: false,
     errors,
-    humanErrors: betterAjvErrors({
+    humanReadableErrors: betterAjvErrors({
       basePath: '',
       data,
       errors,

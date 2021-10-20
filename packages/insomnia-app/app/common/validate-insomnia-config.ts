@@ -6,7 +6,7 @@ import { exitApp } from './electron-helpers';
 export const validateInsomniaConfig = () => {
   const configSettings = getConfigSettings();
   if ('error' in configSettings) {
-    const errors = configSettings.error.humanErrors?.map(({ message, path, suggestion }, index) => ([
+    const errors = configSettings.error.humanReadableErrors?.map(({ message, path, suggestion }, index) => ([
       `[Error ${index + 1}]`,
       `Path: ${path}`,
       `${message}.${suggestion ? `  ${suggestion}` : ''}`,
@@ -14,7 +14,7 @@ export const validateInsomniaConfig = () => {
 
     electron.dialog.showErrorBox('Invalid Insomnia Config',
       [
-        `Your Insomnia Config was found to be invalid.  Please check the path below for the following error${configSettings.error.humanErrors?.length > 1 ? 's' : ''}:`,
+        `Your Insomnia Config was found to be invalid.  Please check the path below for the following error${configSettings.error.humanReadableErrors?.length > 1 ? 's' : ''}:`,
         '',
         '[Path]',
         configSettings.error.configPath,
