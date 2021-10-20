@@ -1,4 +1,4 @@
-import { fillServerVariables, getName, parseUrl } from '../common';
+import { fillServerVariables, getName, hasUpstreams, parseUrl } from '../common';
 import { DCUpstream } from '../types/declarative-config';
 import { xKongUpstreamDefaults } from '../types/kong';
 import { OpenApi3Spec } from '../types/openapi3';
@@ -19,9 +19,8 @@ export function generateUpstreams(api: OpenApi3Spec, tags: string[]) {
   }
 
   let name = getName(api);
-  const hasUpstreamDefaults = !!api[xKongUpstreamDefaults];
-  const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
-  if (hasUpstreamDefaults || hasMoreThanOneServer) {
+
+  if (hasUpstreams(api)) {
     name =  `${name}.upstream`;
   }
 

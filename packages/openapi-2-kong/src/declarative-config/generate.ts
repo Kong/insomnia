@@ -1,5 +1,5 @@
+import { hasUpstreams } from '../common';
 import { DeclarativeConfig } from '../types/declarative-config';
-import { xKongUpstreamDefaults } from '../types/kong';
 import { OpenApi3Spec } from '../types/openapi3';
 import { DeclarativeConfigResult } from '../types/outputs';
 import { generateServices } from './services';
@@ -14,9 +14,8 @@ export function generateDeclarativeConfigFromSpec(
       _format_version: '1.1',
       services: generateServices(api, tags),
     };
-    const hasUpstreamDefaults = !!api[xKongUpstreamDefaults];
-    const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
-    if (hasUpstreamDefaults || hasMoreThanOneServer) {
+
+    if (hasUpstreams(api)) {
       document.upstreams = generateUpstreams(api, tags);
     }
 

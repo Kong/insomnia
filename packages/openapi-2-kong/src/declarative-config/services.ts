@@ -3,12 +3,13 @@ import {
   generateSlug,
   getAllServers,
   getName,
+  hasUpstreams,
   HttpMethod,
   parseUrl,
   pathVariablesToRegex,
 } from '../common';
 import { DCRoute, DCService } from '../types/declarative-config';
-import { xKongName, xKongServiceDefaults, xKongUpstreamDefaults } from '../types/kong';
+import { xKongName, xKongServiceDefaults } from '../types/kong';
 import { OA3PathItem, OA3Server, OpenApi3Spec } from '../types/openapi3';
 import {
   generateGlobalPlugins,
@@ -32,12 +33,11 @@ export function generateServices(api: OpenApi3Spec, tags: string[]) {
 
 export function generateService(server: OA3Server, api: OpenApi3Spec, tags: string[]) {
   const serverUrl = fillServerVariables(server);
-  const parsedUrl = parseUrl(serverUrl);
   const name = getName(api);
-  let host = parsedUrl.hostname || 'localhost';
-  const hasUpstreamDefaults = !!api[xKongUpstreamDefaults];
-  const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
-  if (hasUpstreamDefaults || hasMoreThanOneServer) {
+  const parsedUrl = parseUrl(serverUrl);
+
+  let host = parsedUrl.hostname;
+  if (hasUpstreams(api)) {
     host =  `${name}.upstream`;
   }
 
