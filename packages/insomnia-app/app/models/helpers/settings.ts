@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { Settings } from 'insomnia-common';
-import { ErrorResult, InsomniaConfig, validate } from 'insomnia-config/dist';
+import { ErrorResult, InsomniaConfig, isErrorResult, validate } from 'insomnia-config';
 import { resolve } from 'path';
 import { mapObjIndexed, once } from 'ramda';
 import { omitBy } from 'ramda-adjunct';
@@ -84,23 +84,21 @@ interface ConfigError {
 export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError) = once(() => {
   const { configPath, insomniaConfig } = getConfigFile();
 
-  const { valid, errors, humanErrors } = validate(insomniaConfig as InsomniaConfig);
-  if (!valid) {
+  const validationResult = validate(insomniaConfig as InsomniaConfig);
+
+  if (isErrorResult(validationResult)) {
+    const { errors, humanErrors } = validationResult;
     const resolvedConfigPath = resolve(configPath);
-    console.error('invalid insomnia config', {
+
+    const error = {
       configPath: resolvedConfigPath,
       insomniaConfig,
       errors,
       humanErrors,
-    });
-    return {
-      error: {
-        configPath: resolvedConfigPath,
-        insomniaConfig,
-        errors: errors as ErrorResult['errors'],
-        humanErrors: humanErrors  as ErrorResult['humanErrors'],
-      },
     };
+
+    console.error('invalid insomnia config', error);
+    return { error };
   }
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return (insomniaConfig as InsomniaConfig).settings || {};

@@ -34,6 +34,9 @@ export interface ErrorResult {
 
 export type ValidationResult = ValidResult | ErrorResult;
 
+export const isValidResult = (result: ValidationResult): result is ValidResult => result.valid === true;
+export const isErrorResult = (result: ValidationResult): result is ErrorResult => result.valid === false;
+
 export const validate = (input: string | InsomniaConfig | unknown): ValidationResult => {
   const data = ingest(input);
   const validator = ajv.compile<InsomniaConfig>(schema);

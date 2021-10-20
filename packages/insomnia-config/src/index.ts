@@ -3,6 +3,8 @@ export {
   ErrorResult,
   ValidResult,
   ValidationResult,
+  isErrorResult,
+  isValidResult,
 } from './validate';
 
 export {
