@@ -129,7 +129,7 @@ describe('Import', function() {
     });
   });
 
-  describe('from the Settings View', () => {
+  describe('from Preferences', () => {
     let app: Application;
 
     beforeEach(async () => {
