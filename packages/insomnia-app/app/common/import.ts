@@ -173,7 +173,6 @@ export async function importRaw(
   // Add a workspace to the resources if it doesn't exist
   if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
     data.resources.push({
-      ...models.workspace.init(),
       _id: WORKSPACE_ID_KEY,
       _type: EXPORT_TYPE_WORKSPACE,
     });
