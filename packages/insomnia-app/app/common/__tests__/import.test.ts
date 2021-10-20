@@ -21,12 +21,9 @@ describe('isApiSpecImport()', () => {
 });
 
 describe('isInsomniaV4Import()', () => {
-  it.each(['insomnia-4'])(
-    'should return true if spec id is %o',
-    (id: string) => {
-      expect(importUtil.isInsomniaV4Import({ id })).toBe(true);
-    }
-  );
+  it.each(['insomnia-4'])('should return true if spec id is %o', (id: string) => {
+    expect(importUtil.isInsomniaV4Import({ id })).toBe(true);
+  });
 
   it('should return false if spec id is not valid', () => {
     const id = 'invalid-id';
@@ -38,12 +35,8 @@ describe('importRaw()', () => {
   beforeEach(globalBeforeEach);
 
   it('should import a curl request to a new workspace', async () => {
-    const rawFixture = fs
-      .readFileSync(
-        path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh'),
-        'utf8'
-      )
-      .toString();
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
+    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const importConfig: importUtil.ImportRawConfig = {
       getWorkspaceId: () => null,
@@ -76,12 +69,8 @@ describe('importRaw()', () => {
   });
 
   it('should import a curl request to an existing workspace', async () => {
-    const rawFixture = fs
-      .readFileSync(
-        path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh'),
-        'utf8'
-      )
-      .toString();
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'curl', 'complex-input.sh');
+    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const importConfig: importUtil.ImportRawConfig = {
       getWorkspaceId: () => null,
@@ -114,12 +103,8 @@ describe('importRaw()', () => {
   });
 
   it('should import a postman collection to a new workspace', async () => {
-    const rawFixture = fs
-      .readFileSync(
-        path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json'),
-        'utf8'
-      )
-      .toString();
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
+    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const importConfig: importUtil.ImportRawConfig = {
       getWorkspaceId: () => null,
@@ -151,12 +136,8 @@ describe('importRaw()', () => {
   });
 
   it('should import a postman collection to an existing workspace', async () => {
-    const rawFixture = fs
-      .readFileSync(
-        path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json'),
-        'utf8'
-      )
-      .toString();
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'postman', 'aws-signature-auth-v2_0-input.json');
+    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const existingWorkspace = await workspace.create();
 
@@ -187,12 +168,8 @@ describe('importRaw()', () => {
   });
 
   it('should import an openapi collection to an existing workspace with scope design', async () => {
-    const rawFixture = fs
-      .readFileSync(
-        path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml'),
-        'utf8'
-      )
-      .toString();
+    const fixturePath = path.join(__dirname, '..', '__fixtures__', 'openapi', 'endpoint-security-input.yaml');
+    const rawFixture = fs.readFileSync(fixturePath, 'utf8').toString();
 
     const existingWorkspace = await workspace.create({ scope: 'design' });
 
