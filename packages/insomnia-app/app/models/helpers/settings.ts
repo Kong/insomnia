@@ -9,27 +9,49 @@ import { ValueOf } from 'type-fest';
 import { isDevelopment } from '../../common/constants';
 import { getDataDirectory, getPortableExecutableDir } from '../../common/electron-helpers';
 
+interface FailedParseResult {
+  syntaxError: SyntaxError;
+  fileContents: string;
+  configPath: string;
+}
+
+const isFailedParseResult = (input: any): input is FailedParseResult => (
+  input ? input.syntaxError instanceof SyntaxError : false
+);
+
 /** takes an unresolved (or resolved will work fine too) filePath of the insomnia config and reads the insomniaConfig from disk */
-export const readConfigFile = (filePath?: string) => {
-  if (!filePath) {
+export const readConfigFile = (configPath?: string): unknown | FailedParseResult | undefined => {
+  if (!configPath) {
     return undefined;
   }
 
   let fileContents = '';
   try {
-    fileContents = readFileSync(filePath, 'utf-8');
+    fileContents = readFileSync(configPath, 'utf-8');
   } catch (error: unknown) {
+    // file not found
     return undefined;
   }
 
-  if (!fileContents) {
+  const fileIsFoundButEmpty = fileContents === '';
+  if (fileIsFoundButEmpty) {
     return undefined;
   }
 
   try {
     return JSON.parse(fileContents) as unknown;
-  } catch (error: unknown) {
-    console.error('failed to parse insomnia config', { filePath, fileContents }, error);
+  } catch (syntaxError: unknown) {
+    // note: all JSON.parse errors are SyntaxErrors
+    // see: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/JSON_bad_parse
+    if (syntaxError instanceof SyntaxError) {
+      console.error('failed to parse insomnia config', { configPath, fileContents, syntaxError });
+      const failedParseResult: FailedParseResult = {
+        syntaxError,
+        fileContents,
+        configPath: configPath,
+      };
+      return failedParseResult;
+    }
     return undefined;
   }
 };
@@ -55,10 +77,14 @@ export const getConfigFile = () => {
   // note: this is written as to avoid unnecessary (synchronous) reads from disk.
   // The paths above are in priority order such that if we already found what we're looking for, there's no reason to keep reading other files.
   for (const configPath of configPaths) {
-    const insomniaConfig = readConfigFile(configPath);
-    if (insomniaConfig !== undefined && configPath !== undefined) {
+    const fileReadResult = readConfigFile(configPath);
+    if (isFailedParseResult(fileReadResult)) {
+      return fileReadResult;
+    }
+
+    if (fileReadResult !== undefined && configPath !== undefined) {
       return {
-        insomniaConfig,
+        insomniaConfig: fileReadResult,
         configPath,
       };
     }
@@ -79,14 +105,33 @@ interface ConfigError {
   };
 }
 
+export const isConfigError = (input: any): input is ConfigError => (
+  input ? input.humanErrors?.length > 0 : false
+);
+
+interface ParseError {
+  error: FailedParseResult;
+}
+
+export const isParseError = (input: any): input is ParseError => (
+  input ? isFailedParseResult(input.error) : false
+);
+
 /**
  * gets settings from the `insomnia.config.json`
  *
  * note that it is a business rule that the config is never read again after startup, hence the `once` usage.
  */
-export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError) = once(() => {
-  const { configPath, insomniaConfig } = getConfigFile();
+export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> | ConfigError | ParseError) = once(() => {
+  const configFileResult = getConfigFile();
 
+  if (isFailedParseResult(configFileResult)) {
+    return {
+      error: configFileResult,
+    };
+  }
+
+  const { insomniaConfig, configPath } = configFileResult;
   const validationResult = validate(insomniaConfig as InsomniaConfig);
 
   if (isErrorResult(validationResult)) {
