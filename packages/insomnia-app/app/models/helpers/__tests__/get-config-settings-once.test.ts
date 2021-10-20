@@ -19,8 +19,7 @@ describe('getConfigSettings once', () => {
       },
     };
 
-    const readFileSyncSpy = jest.spyOn(fs, 'readFileSync');
-    readFileSyncSpy.mockReturnValue(JSON.stringify(configOne));
+    const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockReturnValue(JSON.stringify(configOne));
 
     // Act
     const settingsFirstLoad = getConfigSettings();
