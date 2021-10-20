@@ -5,7 +5,7 @@ import { getConfigSettings as _getConfigSettings  } from '../../models/helpers/s
 import { validateInsomniaConfig } from '../validate-insomnia-config';
 
 jest.mock('electron');
-jest.mock('../models/helpers/settings');
+jest.mock('../../models/helpers/settings');
 const electronAppExit = mocked(electron.app.exit);
 const electronShowErrorBox = mocked(electron.dialog.showErrorBox);
 const getConfigSettings = mocked(_getConfigSettings);
