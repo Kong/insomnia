@@ -66,6 +66,11 @@ export function restartApp() {
   app.exit();
 }
 
+export const exitApp = () => {
+  const { app } = electron.remote || electron;
+  app.exit();
+};
+
 export const setMenuBarVisibility = (visible: boolean) => {
   const { BrowserWindow } = electron.remote || electron;
   BrowserWindow.getAllWindows()
