@@ -47,34 +47,41 @@ async function askToImportIntoNewWorkspace(): Promise<boolean> {
 export type ImportToWorkspacePrompt = () => null | string | Promise<null | string>;
 export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, activeProjectWorkspaces }: { workspaceId?: string; forceToWorkspace?: ForceToWorkspace; activeProjectWorkspaces: Workspace[] }): ImportToWorkspacePrompt {
   return function() {
-    if (forceToWorkspace === ForceToWorkspace.existing) {
-      // Return null if there are no available workspaces to chose from.
-      if (activeProjectWorkspaces.length === 0) {
+    switch (forceToWorkspace) {
+      case ForceToWorkspace.new: {
         return null;
       }
 
-      return new Promise(async resolve => {
-        const yes = await askToImportIntoNewWorkspace();
-        if (yes) {
-          const workspaceId = await askToSelectExistingWorkspace(activeProjectWorkspaces);
-          resolve(workspaceId);
-        } else {
-          resolve(null);
+      case ForceToWorkspace.current: {
+        if (!workspaceId) {
+          return null;
         }
-      });
-    }
 
-    if (!workspaceId) {
-      return null;
-    }
-
-    switch (forceToWorkspace) {
-      case ForceToWorkspace.new:
-        return null;
-
-      case ForceToWorkspace.current:
         return workspaceId;
-      default:
+      }
+
+      case ForceToWorkspace.existing: {
+        // Return null if there are no available workspaces to chose from.
+        if (activeProjectWorkspaces.length === 0) {
+          return null;
+        }
+
+        return new Promise(async resolve => {
+          const yes = await askToImportIntoNewWorkspace();
+          if (yes) {
+            const workspaceId = await askToSelectExistingWorkspace(activeProjectWorkspaces);
+            resolve(workspaceId);
+          } else {
+            resolve(null);
+          }
+        });
+      }
+
+      default: {
+        if (!workspaceId) {
+          return null;
+        }
+
         return new Promise(resolve => {
           showModal(AskModal, {
             title: 'Import',
@@ -86,6 +93,7 @@ export function askToImportIntoWorkspace({ workspaceId, forceToWorkspace, active
             },
           });
         });
+      }
     }
   };
 }
