@@ -162,6 +162,9 @@ export async function importRaw(
     return baseEnvironment._id;
   };
 
+  // NOTE: Although the order of the imported resources is not guaranteed,
+  // all current importers will produce resources in this order:
+  // Workspace > Environment > RequestGroup > Request
   // Import everything backwards so they get inserted in the correct order
   data.resources.reverse();
   const importedDocs = {};
@@ -171,6 +174,7 @@ export async function importRaw(
   }
 
   // Add a workspace to the resources if it doesn't exist
+  // NOTE: The workspace should be the last item of the resources
   if (!data.resources.some(resource => resource._type === EXPORT_TYPE_WORKSPACE)) {
     data.resources.push({
       _id: WORKSPACE_ID_KEY,
