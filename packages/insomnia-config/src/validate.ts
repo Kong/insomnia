@@ -22,8 +22,6 @@ export const ingest = (input: string | InsomniaConfig | unknown) => {
 
 export interface ValidResult {
   valid: true;
-  errors: null;
-  humanErrors: null;
 }
 
 export interface ErrorResult {
@@ -45,8 +43,6 @@ export const validate = (input: string | InsomniaConfig | unknown): ValidationRe
   if (valid) {
     const validResult: ValidResult = {
       valid: true,
-      errors: null,
-      humanErrors: null,
     };
     return validResult;
   }

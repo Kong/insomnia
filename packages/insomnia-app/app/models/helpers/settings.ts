@@ -100,6 +100,7 @@ export const getConfigSettings: () => (NonNullable<InsomniaConfig['settings']> |
     console.error('invalid insomnia config', error);
     return { error };
   }
+
   // This cast is important for testing intentionally bad values (the above validation will catch it, anyway)
   return (insomniaConfig as InsomniaConfig).settings || {};
 });
