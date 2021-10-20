@@ -12,7 +12,7 @@ import * as settings from '../modules/settings';
 describe('Import', function() {
   jest.setTimeout(50000);
 
-  describe('from the Project View', () => {
+  describe('from the Dashboard', () => {
     let app: Application;
 
     beforeEach(async () => {
