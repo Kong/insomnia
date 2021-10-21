@@ -42,9 +42,12 @@ global.window = global.window || undefined;
 
 // When the app is first launched
 app.on('ready', async () => {
-  if (!validateInsomniaConfig()) {
-    exitApp();
+  const { error } = validateInsomniaConfig();
+
+  if (error) {
+    electron.dialog.showErrorBox(error.title, error.message);
     console.log('[config] Insomnia config is invalid, preventing app initialization');
+    exitApp();
     return;
   }
 
