@@ -1,6 +1,6 @@
 {
   "name": "insomnia-config",
-  "version": "2.3.3-alpha.4",
+  "version": "2.4.0-alpha.0",
   "homepage": "https://insomnia.rest",
   "description": "Configuration for Insomnia",
   "author": "Kong <office@konghq.com>",
@@ -27,8 +27,8 @@
     "build": "tsc --build tsconfig.build.json"
   },
   "dependencies": {
-    "ajv": "^8.6.2",
     "@apideck/better-ajv-errors": "^0.2.6",
+    "ajv": "^8.6.2",
     "insomnia-common": "2.3.3-alpha.4"
   },
   "devDependencies": {
