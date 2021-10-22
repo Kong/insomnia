@@ -6,7 +6,7 @@ import appConfig from '../config/config.json';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
-import { disableSpellcheckerDownload, exitApp } from './common/electron-helpers';
+import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
@@ -47,7 +47,7 @@ app.on('ready', async () => {
   if (error) {
     electron.dialog.showErrorBox(error.title, error.message);
     console.log('[config] Insomnia config is invalid, preventing app initialization');
-    exitApp();
+    exitAppFailure();
     return;
   }
 
