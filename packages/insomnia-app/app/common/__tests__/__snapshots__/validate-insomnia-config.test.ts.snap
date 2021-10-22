@@ -1,5 +1,16 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`validateInsomniaConfig should return error if there is a config error 1`] = `
+"Your Insomnia Config was found to be invalid.  Please check the path below for the following error:
+
+[Path]
+/mock/insomnia/config/path
+
+[Error 1]
+Path: path
+message.  suggestion"
+`;
+
 exports[`validateInsomniaConfig should return error if there is a parse error 1`] = `
 "Failed to parse JSON file for Insomnia Config.
 
@@ -11,14 +22,3 @@ mock syntax error"
 `;
 
 exports[`validateInsomniaConfig should return error if there is an unexpected error 1`] = `"{\\"error\\":{\\"errors\\":[],\\"humanReadableErrors\\":[],\\"insomniaConfig\\":\\"{ \\\\\\"mock\\\\\\": [\\\\\\"insomnia\\\\\\", \\\\\\"config\\\\\\"] }\\",\\"configPath\\":\\"/mock/insomnia/config/path\\"}}"`;
-
-exports[`validateInsomniaConfig should show error box and exit if there is a config error 1`] = `
-"Your Insomnia Config was found to be invalid.  Please check the path below for the following error:
-
-[Path]
-/mock/insomnia/config/path
-
-[Error 1]
-Path: path
-message.  suggestion"
-`;

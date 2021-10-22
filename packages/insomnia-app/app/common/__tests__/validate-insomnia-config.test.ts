@@ -26,7 +26,7 @@ describe('validateInsomniaConfig', () => {
     expect(result.error?.message).toMatchSnapshot();
   });
 
-  it('should show error box and exit if there is a config error', () => {
+  it('should return error if there is a config error', () => {
   // Arrange
     const errorReturn: ConfigError = {
       error: {
