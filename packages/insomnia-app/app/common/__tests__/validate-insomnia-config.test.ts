@@ -8,7 +8,7 @@ const getConfigSettings = mocked(_getConfigSettings);
 
 describe('validateInsomniaConfig', () => {
   it('should return error if there is a parse error', () => {
-  // Arrange
+    // Arrange
     const errorReturn = {
       error: {
         syntaxError: new SyntaxError('mock syntax error'),
@@ -27,7 +27,7 @@ describe('validateInsomniaConfig', () => {
   });
 
   it('should return error if there is a config error', () => {
-  // Arrange
+    // Arrange
     const errorReturn: ConfigError = {
       error: {
         errors: [],
@@ -52,7 +52,7 @@ describe('validateInsomniaConfig', () => {
   });
 
   it('should return error if there is an unexpected error', () => {
-  // Arrange
+    // Arrange
     const errorReturn = {
       error: {
         errors: [],
@@ -72,7 +72,7 @@ describe('validateInsomniaConfig', () => {
   });
 
   it('should not return any errors', () => {
-  // Arrange
+    // Arrange
     const validReturn = { enableAnalytics: true };
     getConfigSettings.mockReturnValue(validReturn);
 
