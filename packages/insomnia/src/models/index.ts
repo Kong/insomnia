@@ -13,6 +13,7 @@ import {
 } from '../common/constants';
 import { generateId, pluralize } from '../common/misc';
 import * as _apiSpec from './api-spec';
+import * as _apiSpecRuleset from './api-spec-ruleset';
 import * as _clientCertificate from './client-certificate';
 import * as _cookieJar from './cookie-jar';
 import * as _environment from './environment';
@@ -53,6 +54,7 @@ export interface BaseModel {
 
 // Reference to each model
 export const apiSpec = _apiSpec;
+export const apiSpecRuleset = _apiSpecRuleset;
 export const clientCertificate = _clientCertificate;
 export const cookieJar = _cookieJar;
 export const environment = _environment;
@@ -92,6 +94,7 @@ export function all() {
     gitRepository,
     cookieJar,
     apiSpec,
+    apiSpecRuleset,
     requestGroup,
     requestGroupMeta,
     request,
