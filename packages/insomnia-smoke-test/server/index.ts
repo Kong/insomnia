@@ -16,6 +16,10 @@ app.get('/pets/:id', (req, res) => {
   res.status(200).send({ id: req.params.id });
 });
 
+app.get('/sleep', (_req, res) => {
+  res.status(200).send({ sleep: true });
+});
+
 app.use('/file', express.static('fixtures/files'));
 
 const { utf8, latin1 } = basicAuthCreds;
