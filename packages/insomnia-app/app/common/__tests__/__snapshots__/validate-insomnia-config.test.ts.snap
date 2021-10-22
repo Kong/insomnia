@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`validateInsomniaConfig should return error if there is a config error 1`] = `"{\\"error\\":{\\"errors\\":[],\\"humanReadableErrors\\":[],\\"insomniaConfig\\":\\"{ \\\\\\"mock\\\\\\": [\\\\\\"insomnia\\\\\\", \\\\\\"config\\\\\\"] }\\",\\"configPath\\":\\"/mock/insomnia/config/path\\"}}"`;
+
+exports[`validateInsomniaConfig should return error if there is a parse error 1`] = `
+"Failed to parse JSON file for Insomnia Config.
+
+[Path]
+/mock/insomnia/config/path
+
+[Syntax Error]
+mock syntax error"
+`;

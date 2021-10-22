@@ -1,17 +1,13 @@
-import electron from 'electron';
 import { mocked } from 'ts-jest/utils';
 
 import { getConfigSettings as _getConfigSettings  } from '../../models/helpers/settings';
 import { validateInsomniaConfig } from '../validate-insomnia-config';
 
-jest.mock('electron');
 jest.mock('../../models/helpers/settings');
-const electronAppExit = mocked(electron.app.exit);
-const electronShowErrorBox = mocked(electron.dialog.showErrorBox);
 const getConfigSettings = mocked(_getConfigSettings);
 
 describe('validateInsomniaConfig', () => {
-  it('should show error box and exit if there is a parse error', () => {
+  it('should return error if there is a parse error', () => {
     // Arrange
     const errorReturn = {
       error: {
@@ -23,14 +19,14 @@ describe('validateInsomniaConfig', () => {
     getConfigSettings.mockReturnValue(errorReturn);
 
     // Act
-    validateInsomniaConfig();
+    const result = validateInsomniaConfig();
 
     // Assert
-    expect(electronShowErrorBox).toHaveBeenCalled();
-    expect(electronAppExit).toHaveBeenCalled();
+    expect(result.error?.title).toBe('Invalid Insomnia Config');
+    expect(result.error?.message).toMatchSnapshot();
   });
 
-  it('should show error box and exit if there is a config error', () => {
+  it('should return error if there is a config error', () => {
     // Arrange
     const errorReturn = {
       error: {
@@ -43,23 +39,22 @@ describe('validateInsomniaConfig', () => {
     getConfigSettings.mockReturnValue(errorReturn);
 
     // Act
-    validateInsomniaConfig();
+    const result = validateInsomniaConfig();
 
     // Assert
-    expect(electronShowErrorBox).toHaveBeenCalled();
-    expect(electronAppExit).toHaveBeenCalled();
+    expect(result.error?.title).toBe('An unexpected error occured while parsing Insomnia Config');
+    expect(result.error?.message).toMatchSnapshot();
   });
 
-  it('should not exit if there are no errors', () => {
+  it('should not return any errors', () => {
     // Arrange
     const validReturn = { enableAnalytics: true };
     getConfigSettings.mockReturnValue(validReturn);
 
     // Act
-    validateInsomniaConfig();
+    const result = validateInsomniaConfig();
 
     // Assert
-    expect(electronShowErrorBox).not.toHaveBeenCalled();
-    expect(electronAppExit).not.toHaveBeenCalled();
+    expect(result.error).not.toBeDefined();
   });
 });
