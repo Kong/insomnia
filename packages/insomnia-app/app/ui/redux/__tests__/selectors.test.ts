@@ -169,7 +169,7 @@ describe('selectors', () => {
       });
 
       expect(
-        selectWorkspacesWithResolvedNameForActiveProject(state)
+        selectWorkspacesWithResolvedNameForActiveProject(state).sort()
       ).toMatchObject([
         {
           _id: newCollectionWorkspace._id,
@@ -183,7 +183,7 @@ describe('selectors', () => {
           scope: 'design',
           type: 'Workspace',
         },
-      ]);
+      ].sort());
     });
   });
 });
