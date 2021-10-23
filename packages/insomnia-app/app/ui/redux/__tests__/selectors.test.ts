@@ -3,7 +3,7 @@ import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_HOME } from '../../../common/constants';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
-import { WorkspaceScopeKeys } from '../../../models/workspace';
+import { Workspace, WorkspaceScopeKeys } from '../../../models/workspace';
 import { selectActiveApiSpec, selectActiveProject, selectActiveWorkspaceName, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
 
 describe('selectors', () => {
@@ -148,13 +148,13 @@ describe('selectors', () => {
         scope: WorkspaceScopeKeys.collection,
       });
 
-      const newWorkspace = await models.workspace.create({
+      const newDesignWorkspace = await models.workspace.create({
         name: 'designWorkspace.name',
         scope: WorkspaceScopeKeys.design,
       });
 
       const newApiSpec = await models.apiSpec.getOrCreateForParentId(
-        newWorkspace._id
+        newDesignWorkspace._id
       );
 
       // The database will update the api spec with the workspace name
@@ -168,8 +168,14 @@ describe('selectors', () => {
         activeWorkspaceId: null,
       });
 
+      // NOTE: Sometimes the order of the entities loaded by the db is different.
+      const sortWorkspacesByName = (
+        workspaceA: Workspace,
+        workspaceB: Workspace
+      ) => workspaceA.created - workspaceB.created;
+
       expect(
-        selectWorkspacesWithResolvedNameForActiveProject(state).sort()
+        selectWorkspacesWithResolvedNameForActiveProject(state).sort(sortWorkspacesByName)
       ).toMatchObject([
         {
           _id: newCollectionWorkspace._id,
@@ -178,12 +184,12 @@ describe('selectors', () => {
           type: 'Workspace',
         },
         {
-          _id: newWorkspace._id,
+          _id: newDesignWorkspace._id,
           name: 'apiSpec.name',
           scope: 'design',
           type: 'Workspace',
         },
-      ].sort());
+      ].sort(sortWorkspacesByName));
     });
   });
 });
