@@ -1,6 +1,6 @@
 import { mocked } from 'ts-jest/utils';
 
-import { getConfigSettings as _getConfigSettings  } from '../../models/helpers/settings';
+import { ConfigError, getConfigSettings as _getConfigSettings  } from '../../models/helpers/settings';
 import { validateInsomniaConfig } from '../validate-insomnia-config';
 
 jest.mock('../../models/helpers/settings');
@@ -27,6 +27,31 @@ describe('validateInsomniaConfig', () => {
   });
 
   it('should return error if there is a config error', () => {
+    // Arrange
+    const errorReturn: ConfigError = {
+      error: {
+        errors: [],
+        humanReadableErrors: [{
+          message: 'message',
+          path: 'path',
+          suggestion: 'suggestion',
+          context: { errorType: 'const' },
+        }],
+        insomniaConfig: '{ "mock": ["insomnia", "config"] }',
+        configPath: '/mock/insomnia/config/path',
+      },
+    };
+    getConfigSettings.mockReturnValue(errorReturn);
+
+    // Act
+    const result = validateInsomniaConfig();
+
+    // Assert
+    expect(result.error?.title).toBe('Invalid Insomnia Config');
+    expect(result.error?.message).toMatchSnapshot();
+  });
+
+  it('should return error if there is an unexpected error', () => {
     // Arrange
     const errorReturn = {
       error: {
