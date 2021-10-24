@@ -8,7 +8,7 @@ import { generateServices } from './services';
 const getSpecResult = (): DCService =>
   JSON.parse(
     JSON.stringify({
-      host: 'My_API.upstream',
+      host: 'server1.com',
       name: 'My_API',
       plugins: [],
       path: '/path',
@@ -352,6 +352,7 @@ describe('services', () => {
       ];
       const specResult = getSpecResult();
       specResult.port = 8443;
+      specResult.host = 'demo.saas-app.com';
       specResult.path = '/v2';
       expect(generateServices(spec, tags)).toEqual([specResult]);
     });
