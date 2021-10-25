@@ -1,7 +1,6 @@
 import slugify from 'slugify';
-import url from 'url';
 
-import { xKongName } from './types/kong';
+import { xKongName, xKongUpstreamDefaults } from './types/kong';
 import {
   OA3Operation,
   OA3PathItem,
@@ -103,24 +102,20 @@ export function getMethodAnnotationName(method: HttpMethodType) {
   return `${method}-method`.toLowerCase();
 }
 
+const protocolToPort = (protocol: unknown) => protocol === 'https:' ? '443' : protocol === 'http:' ? '80' : '';
+
 export function parseUrl(urlStr: string) {
-  const parsed = url.parse(urlStr);
-
-  if (!parsed.port && parsed.protocol === 'https:') {
-    parsed.port = '443';
-  } else if (!parsed.port && parsed.protocol === 'http:') {
-    parsed.port = '80';
-  }
-
-  parsed.protocol = parsed.protocol || 'http:';
-
-  if (parsed.hostname && parsed.port) {
-    parsed.host = `${parsed.hostname}:${parsed.port}`;
-  } else if (parsed.hostname) {
-    parsed.host = parsed.hostname;
-  }
-
-  return parsed;
+  // fallback to locahost: https://swagger.io/docs/specification/api-host-and-base-path/#relative-urls
+  const { port, protocol, hostname, pathname } = new URL(urlStr, 'http://localhost');
+  // fallback to protocol derived port
+  const updatedPort = port || protocolToPort(protocol);
+  return {
+    port: updatedPort,
+    host: updatedPort ? `${hostname}:${updatedPort}` : hostname,
+    protocol,
+    hostname,
+    pathname,
+  };
 }
 
 export function fillServerVariables(server: OA3Server) {
@@ -164,3 +159,9 @@ export function distinctByProperty<T>(arr: T[], propertySelector: (item: T) => a
 
   return result;
 }
+
+export const hasUpstreams = (api: OpenApi3Spec) => {
+  const hasUpstreamDefaults = !!api[xKongUpstreamDefaults];
+  const hasMoreThanOneServer = (api.servers?.length || 0) > 1;
+  return hasUpstreamDefaults || hasMoreThanOneServer;
+};

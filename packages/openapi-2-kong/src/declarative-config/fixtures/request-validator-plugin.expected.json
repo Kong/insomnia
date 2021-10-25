@@ -3,7 +3,7 @@
   "services": [
     {
       "protocol": "http",
-      "host": "Example.upstream",
+      "host": "backend.com",
       "port": 80,
       "path": "/path",
       "name": "Example",
@@ -110,18 +110,6 @@
         }
       ],
       "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
-    }
-  ],
-  "upstreams": [
-    {
-      "name": "Example.upstream",
-      "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"],
-      "targets": [
-        {
-          "target": "backend.com:80",
-          "tags": ["OAS3_import", "OAS3file_request-validator-plugin.yaml"]
-        }
-      ]
     }
   ]
 }
