@@ -34,6 +34,7 @@
         "httpUsername": "username",
         "oauth2ClientId": "clientId",
         "oauth2ClientSecret": "clientSecret",
+        "oauth2RedirectUrl": "http://localhost/",
         "oauth2Username": "username",
         "oauth2Password": "password",
         "key": "key",
@@ -174,6 +175,7 @@
       "authentication": {
           "clientId": "{{ oauth2ClientId }}",
           "clientSecret": "{{ oauth2ClientSecret }}",
+          "redirectUrl": "{{ oauth2RedirectUrl }}",
           "accessTokenUrl": "https://api.server.test/v1/token",
           "authorizationUrl": "https://api.server.test/v1/auth",
           "grantType": "authorization_code",
@@ -193,6 +195,7 @@
       "_type": "request",
       "authentication": {
           "clientId": "{{ oauth2ClientId }}",
+          "redirectUrl": "{{ oauth2RedirectUrl }}",
           "authorizationUrl": "https://api.server.test/v1/auth",
           "grantType": "implicit",
           "scope": "read:something write:something",
