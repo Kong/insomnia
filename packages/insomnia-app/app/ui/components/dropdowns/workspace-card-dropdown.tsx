@@ -1,12 +1,12 @@
 import { SvgIcon } from 'insomnia-components';
 import React, { FC, useCallback, useState } from 'react';
-import { useSelector } from 'react-redux';
 
 import { parseApiSpec } from '../../../common/api-specs';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
 import type { ApiSpec } from '../../../models/api-spec';
+import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import { Project } from '../../../models/project';
 import type { Workspace } from '../../../models/workspace';
@@ -15,7 +15,6 @@ import type { DocumentAction } from '../../../plugins';
 import { getDocumentActions } from '../../../plugins';
 import * as pluginContexts from '../../../plugins/context';
 import { useLoadingRecord } from '../../hooks/use-loading-record';
-import { selectActiveWorkspaceName } from '../../redux/selectors';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
@@ -34,15 +33,15 @@ const spinner = <i className="fa fa-refresh fa-spin" />;
 
 const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
   const handleDuplicate = useCallback(() => {
-    showWorkspaceDuplicateModal({ workspace });
-  }, [workspace]);
+    showWorkspaceDuplicateModal({ workspace, apiSpec });
+  }, [workspace, apiSpec]);
 
-  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+  const workspaceName = getWorkspaceName(workspace, apiSpec);
 
   const handleRename = useCallback(() => {
     showPrompt({
       title: `Rename ${getWorkspaceLabel(workspace).singular}`,
-      defaultValue: activeWorkspaceName,
+      defaultValue: workspaceName,
       submitName: 'Rename',
       selectText: true,
       label: 'Name',
@@ -50,13 +49,13 @@ const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
         await workspaceOperations.rename(workspace, apiSpec, name);
       },
     });
-  }, [apiSpec, workspace, activeWorkspaceName]);
+  }, [apiSpec, workspace, workspaceName]);
 
   const handleDelete = useCallback(() => {
     const label = getWorkspaceLabel(workspace);
     showModal(AskModal, {
       title: `Delete ${label.singular}`,
-      message: `Do you really want to delete "${activeWorkspaceName}"?`,
+      message: `Do you really want to delete "${workspaceName}"?`,
       yesText: 'Yes',
       noText: 'Cancel',
       onDone: async (isYes: boolean) => {
@@ -68,7 +67,7 @@ const useWorkspaceHandlers = ({ workspace, apiSpec }: Props) => {
         await models.workspace.remove(workspace);
       },
     });
-  }, [workspace, activeWorkspaceName]);
+  }, [workspace, workspaceName]);
 
   return { handleDelete, handleDuplicate, handleRename };
 };

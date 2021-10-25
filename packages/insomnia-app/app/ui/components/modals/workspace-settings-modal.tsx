@@ -131,8 +131,8 @@ export class UnconnectedWorkspaceSettingsModal extends PureComponent<Props, Stat
   }
 
   _handleDuplicateWorkspace() {
-    const { workspace } = this.props;
-    showWorkspaceDuplicateModal({ workspace, onDone: this.hide });
+    const { workspace, apiSpec } = this.props;
+    showWorkspaceDuplicateModal({ workspace, apiSpec, onDone: this.hide });
   }
 
   _handleToggleCertificateForm() {
