@@ -658,6 +658,44 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
       : new Array((this.codeMirror?.getOption?.('indentUnit') || 0) + 1).join(' ');
   }
 
+  _minify() {
+    let code = this.codeMirror?.getValue();
+    if (typeof code !== 'string') {
+      console.warn('Code editor was passed non-string value', code);
+      return;
+    }
+    const { mode } = this.props;
+
+    if (CodeEditor._isJSON(mode)) {
+      code = CodeEditor._minifyJSON(code);
+    } else if (CodeEditor._isXML(mode)) {
+      code = this._minifyXML(code);
+    }
+
+    const currentCode = this.codeMirror?.getValue();
+    if (currentCode === code) {
+      return;
+    }
+
+    this.codeMirror?.setValue(code || '');
+  }
+
+  static _minifyJSON(code: string) {
+    try {
+      return JSON.stringify(JSON.parse(code));
+    } catch (e) {
+      return code;
+    }
+  }
+
+  _minifyXML(code: string) {
+    try {
+      return vkBeautify.xmlmin(code);
+    } catch (e) {
+      return code;
+    }
+  }
+
   _prettify() {
     const canPrettify = this._canPrettify();
     if (!canPrettify) {
@@ -1250,6 +1288,19 @@ export class UnconnectedCodeEditor extends Component<Props, State> {
           Beautify {contentTypeName}
         </button>,
       );
+
+      if (CodeEditor._isJSON(mode) || CodeEditor._isXML(mode)) {
+        toolbarChildren.push(
+          <button
+            key="minify"
+            className="btn btn--compact"
+            title="Auto-format request body whitespace"
+            onClick={this._minify}
+          >
+            Minify {contentTypeName}
+          </button>,
+        );
+      }
     }
 
     let toolbar: ReactNode = null;
