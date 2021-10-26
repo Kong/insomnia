@@ -11,13 +11,33 @@ const electronShowErrorBox = mocked(electron.dialog.showErrorBox);
 const getConfigSettings = mocked(_getConfigSettings);
 
 describe('validateInsomniaConfig', () => {
-  it('should show error box and exit if there is an error', () => {
+  it('should show error box and exit if there is a parse error', () => {
+    // Arrange
+    const errorReturn = {
+      error: {
+        syntaxError: new SyntaxError('mock syntax error'),
+        fileContents: '{ "mock": ["insomnia", "config"] }',
+        configPath: '/mock/insomnia/config/path',
+      },
+    };
+    getConfigSettings.mockReturnValue(errorReturn);
+
+    // Act
+    validateInsomniaConfig();
+
+    // Assert
+    expect(electronShowErrorBox).toHaveBeenCalled();
+    expect(electronAppExit).toHaveBeenCalled();
+  });
+
+  it('should show error box and exit if there is a config error', () => {
     // Arrange
     const errorReturn = {
       error: {
         errors: [],
-        insomniaConfig: 'abc',
-        configPath: 'configPath',
+        humanReadableErrors: [],
+        insomniaConfig: '{ "mock": ["insomnia", "config"] }',
+        configPath: '/mock/insomnia/config/path',
       },
     };
     getConfigSettings.mockReturnValue(errorReturn);

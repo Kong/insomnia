@@ -50,7 +50,8 @@ describe('getConfigFile', () => {
 
     const result = getConfigFile();
 
-    expect(result).toMatchObject({ configPath: 'portableExecutable' });
+    expect(result.configPath).toContain('portableExecutable');
+    expect(result.configPath).toContain('insomnia.config.json');
   });
 
   it('prioritizes insomnia data directory over local dev when portable config is not found', () => {
@@ -60,7 +61,8 @@ describe('getConfigFile', () => {
 
     const result = getConfigFile();
 
-    expect(result).toMatchObject({ configPath: 'insomniaDataDirectory' });
+    expect(result.configPath).toContain('insomniaDataDirectory');
+    expect(result.configPath).toContain('insomnia.config.json');
   });
 
   it('returns the local dev config file if no others are found', () => {
@@ -71,7 +73,8 @@ describe('getConfigFile', () => {
 
     const result = getConfigFile();
 
-    expect(result).toMatchObject({ configPath: 'localDev' });
+    expect(result.configPath).toContain('localDev');
+    expect(result.configPath).toContain('insomnia.config.json');
   });
 
   it('returns an internal fallback if no configs are found (in production mode)', () => {
