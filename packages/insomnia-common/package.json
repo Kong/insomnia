@@ -1,6 +1,6 @@
 {
   "name": "insomnia-common",
-  "version": "2.4.0-alpha.1",
+  "version": "2.4.0",
   "homepage": "https://insomnia.rest",
   "description": "Top-level entities and utilities for Insomnia",
   "author": "Kong <office@konghq.com>",

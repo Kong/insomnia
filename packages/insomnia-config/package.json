@@ -1,6 +1,6 @@
 {
   "name": "insomnia-config",
-  "version": "2.4.0-alpha.1",
+  "version": "2.4.0",
   "homepage": "https://insomnia.rest",
   "description": "Configuration for Insomnia",
   "author": "Kong <office@konghq.com>",
@@ -29,7 +29,7 @@
   "dependencies": {
     "@apideck/better-ajv-errors": "^0.2.6",
     "ajv": "^8.6.2",
-    "insomnia-common": "2.4.0-alpha.1"
+    "insomnia-common": "2.4.0"
   },
   "devDependencies": {
     "jest": "^26.6.3",
