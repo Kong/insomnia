@@ -2,15 +2,13 @@ import 'swagger-ui-react/swagger-ui.css';
 
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import {
-  Breadcrumb,
   Button,
   CardContainer,
   Dropdown,
   DropdownDivider,
   DropdownItem,
-  Header,
 } from 'insomnia-components';
-import React, { Fragment, PureComponent } from 'react';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { unreachableCase } from 'ts-assert-unreachable';
@@ -31,15 +29,13 @@ import { isDesign, Workspace, WorkspaceScopeKeys } from '../../models/workspace'
 import { WorkspaceMeta } from '../../models/workspace-meta';
 import { MemClient } from '../../sync/git/mem-client';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../sync/vcs/initialize-backend-project';
-import coreLogo from '../images/insomnia-core-logo.png';
 import { cloneGitRepository } from '../redux/modules/git';
 import { setDashboardSortOrder } from '../redux/modules/global';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importClipBoard, importFile, importUri } from '../redux/modules/import';
 import { activateWorkspace, createWorkspace } from '../redux/modules/workspace';
 import { selectDashboardSortOrder } from '../redux/selectors';
-import SettingsButton from './buttons/settings-button';
-import { AccountDropdown } from './dropdowns/account-dropdown';
+import { AppHeader } from './app-header';
 import { DashboardSortDropdown } from './dropdowns/dashboard-sort-dropdown';
 import { ProjectDropdown } from './dropdowns/project-dropdown';
 import { RemoteWorkspacesDropdown } from './dropdowns/remote-workspaces-dropdown';
@@ -352,29 +348,16 @@ class WrapperHome extends PureComponent<Props, State> {
       <PageLayout
         wrapperProps={this.props.wrapperProps}
         renderPageHeader={() => (
-          <Header
-            gridLeft={
-              <Fragment>
-                <img src={coreLogo} alt="Insomnia" width="24" height="24" />
-                <Breadcrumb
-                  crumbs={[
-                    {
-                      id: 'project',
-                      node: <ProjectDropdown vcs={vcs || undefined} />,
-                    },
-                  ]}
-                />
-                {isLoading ? (
-                  <i className="fa fa-refresh fa-spin space-left" />
-                ) : null}
-              </Fragment>
-            }
-            gridRight={
-              <>
-                <SettingsButton className="margin-left" />
-                <AccountDropdown className="margin-left" />
-              </>
-            }
+          <AppHeader
+            breadcrumbProps={{
+              crumbs: [
+                {
+                  id: 'project',
+                  node: <ProjectDropdown vcs={vcs || undefined} />,
+                },
+              ],
+              isLoading,
+            }}
           />
         )}
         renderPageBody={() => (

@@ -1,7 +1,7 @@
-import React, { FC, ReactNode } from 'react';
+import React, { FC, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
 
-interface CrumbProps {
+export interface CrumbProps {
   id: string;
   node: ReactNode;
   onClick?: React.MouseEventHandler<HTMLAnchorElement>;
@@ -10,6 +10,7 @@ interface CrumbProps {
 export interface BreadcrumbProps {
   crumbs: CrumbProps[];
   className?: string;
+  isLoading?: boolean;
 }
 
 const StyledBreadcrumb = styled.ul`
@@ -50,8 +51,13 @@ const Crumb: FC<CrumbProps> = ({ id, node, onClick }) => <li key={id}>
   {onClick ? <a href="#" onClick={onClick}>{node}</a> : node}
 </li>;
 
-export const Breadcrumb: FC<BreadcrumbProps> = ({ crumbs, className }) => (
-  <StyledBreadcrumb className={className}>
-    {crumbs.map(Crumb)}
-  </StyledBreadcrumb>
+export const Breadcrumb: FC<BreadcrumbProps> = ({ crumbs, className, isLoading }) => (
+  <Fragment>
+    <StyledBreadcrumb className={className}>
+      {crumbs.map(Crumb)}
+    </StyledBreadcrumb>
+    {isLoading ? (
+      <i className="fa fa-refresh fa-spin space-left" />
+    ) : null}
+  </Fragment>
 );
