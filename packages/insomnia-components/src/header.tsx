@@ -11,7 +11,7 @@ export interface HeaderProps {
 
 const StyledHeader = styled.div`
   border-bottom: 1px solid var(--hl-md);
-  padding: var(--padding-md);
+  padding: var(--padding-xxs) var(--padding-sm);
   display: grid;
   grid-template-columns: 2fr 1.5fr 2fr;
   grid-template-rows: 1fr;
