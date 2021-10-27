@@ -186,12 +186,12 @@ export function createWindow() {
       {
         label: `${MNEMONIC_SYM}Undo`,
         accelerator: 'CmdOrCtrl+Z',
-        selector: 'undo:',
+        role: 'undo',
       },
       {
         label: `${MNEMONIC_SYM}Redo`,
         accelerator: 'Shift+CmdOrCtrl+Z',
-        selector: 'redo:',
+        role: 'redo',
       },
       {
         type: 'separator',
@@ -199,22 +199,22 @@ export function createWindow() {
       {
         label: `Cu${MNEMONIC_SYM}t`,
         accelerator: 'CmdOrCtrl+X',
-        selector: 'cut:',
+        role: 'cut',
       },
       {
         label: `${MNEMONIC_SYM}Copy`,
         accelerator: 'CmdOrCtrl+C',
-        selector: 'copy:',
+        role: 'copy',
       },
       {
         label: `${MNEMONIC_SYM}Paste`,
         accelerator: 'CmdOrCtrl+V',
-        selector: 'paste:',
+        role: 'paste',
       },
       {
         label: `Select ${MNEMONIC_SYM}All`,
         accelerator: 'CmdOrCtrl+A',
-        selector: 'selectAll:',
+        role: 'selectAll',
       },
     ],
   };
