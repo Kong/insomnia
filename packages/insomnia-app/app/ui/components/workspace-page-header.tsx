@@ -44,6 +44,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
 
   const workspace = (
     <WorkspaceDropdown
+      key="workspace-dd"
       activeEnvironment={activeEnvironment}
       activeWorkspace={activeWorkspace}
       activeWorkspaceName={activeWorkspaceName}
@@ -56,7 +57,7 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
 
   const crumbs = [
     { id: 'project', node: activeProjectName, onClick: homeCallback },
-    { id: 'workspace', node: <Fragment key="workspace-dd">{workspace}</Fragment> },
+    { id: 'workspace', node: workspace },
   ];
 
   return (
