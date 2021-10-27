@@ -62,7 +62,6 @@ export const WorkspacePageHeader: FunctionComponent<Props> = ({
 
   return (
     <Header
-      className="app-header theme--app-header"
       gridLeft={
         <Fragment>
           <img src={coreLogo} alt="Insomnia" width="24" height="24" />
