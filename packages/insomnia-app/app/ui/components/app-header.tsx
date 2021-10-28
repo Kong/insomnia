@@ -1,9 +1,22 @@
 import { Breadcrumb, BreadcrumbProps, Header } from 'insomnia-components';
 import React, { FC, Fragment, ReactNode } from 'react';
+import styled from 'styled-components';
 
 import coreLogo from '../images/insomnia-core-logo.png';
-import SettingsButton from './buttons/settings-button';
-import { AccountDropdown } from './dropdowns/account-dropdown';
+import { SettingsButton } from './buttons/settings-button';
+import { AccountDropdownButton } from './dropdowns/account-dropdown';
+
+const RightWrapper = styled.div({
+  transformOrigin: 'right',
+  transform: 'scale(0.85)',
+  display: 'flex',
+  justifySelf: 'flex-end',
+  alignItems: 'center',
+  '& .tooltip': {
+    display: 'flex',
+    alignItems: 'center',
+  },
+});
 
 export interface AppHeaderProps {
   breadcrumbProps: BreadcrumbProps;
@@ -26,11 +39,11 @@ export const AppHeader: FC<AppHeaderProps> = ({
       )}
       gridCenter={gridCenter}
       gridRight={(
-        <Fragment>
+        <RightWrapper>
           {gridRight}
-          <SettingsButton className="margin-left" />
-          <AccountDropdown className="margin-left" />
-        </Fragment>
+          <SettingsButton />
+          <AccountDropdownButton />
+        </RightWrapper>
       )}
     />
   );
