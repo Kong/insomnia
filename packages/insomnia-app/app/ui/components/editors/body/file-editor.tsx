@@ -1,9 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import electron from 'electron';
 import fs from 'fs';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../../common/constants';
+import electron from '../../../../common/electron-everywhere';
 import * as misc from '../../../../common/misc';
 import { FileInputButton } from '../../base/file-input-button';
 import { PromptButton } from '../../base/prompt-button';

@@ -77,6 +77,7 @@
     "zprint-clj"
   ],
   "dependencies": {
+    "@electron/remote": "^2.0.1",
     "@hapi/hawk": "^8.0.0",
     "@hot-loader/react-dom": "^16.8.6",
     "@stoplight/spectral": "^5.9.0",

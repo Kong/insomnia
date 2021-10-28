@@ -3,7 +3,7 @@ import classnames from 'classnames';
 import { EditorFromTextArea, LintOptions, ShowHintOptions, TextMarker } from 'codemirror';
 import { GraphQLInfoOptions } from 'codemirror-graphql/info';
 import { ModifiedGraphQLJumpOptions } from 'codemirror-graphql/jump';
-import electron, { OpenDialogOptions } from 'electron';
+import { OpenDialogOptions } from 'electron';
 import { readFileSync } from 'fs';
 import { DefinitionNode, DocumentNode, GraphQLNonNull, GraphQLSchema, NonNullTypeNode, OperationDefinitionNode } from 'graphql';
 import { parse, typeFromAST } from 'graphql';
@@ -18,6 +18,7 @@ import { SetRequired } from 'type-fest';
 
 import { AUTOBIND_CFG, CONTENT_TYPE_JSON, DEBOUNCE_MILLIS } from '../../../../common/constants';
 import { database as db } from '../../../../common/database';
+import electron from '../../../../common/electron-everywhere';
 import { markdownToHTML } from '../../../../common/markdown-to-html';
 import { jsonParseOr } from '../../../../common/misc';
 import { HandleGetRenderContext, HandleRender } from '../../../../common/render';

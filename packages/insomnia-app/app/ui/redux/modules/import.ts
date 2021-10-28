@@ -1,7 +1,8 @@
-import electron, { OpenDialogOptions } from 'electron';
+import { OpenDialogOptions } from 'electron';
 import { AnyAction } from 'redux';
 import { ThunkAction } from 'redux-thunk';
 
+import electron from '../../../common/electron-everywhere';
 import {
   importRaw,
   ImportRawConfig,

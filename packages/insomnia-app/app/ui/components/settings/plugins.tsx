@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as electron from 'electron';
 import { PluginConfig } from 'insomnia-common';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
@@ -12,6 +11,7 @@ import {
   PLUGIN_PATH,
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
+import electron from '../../../common/electron-everywhere';
 import { delay } from '../../../common/misc';
 import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';

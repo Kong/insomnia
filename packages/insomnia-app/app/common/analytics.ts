@@ -1,5 +1,4 @@
 import Analytics from 'analytics-node';
-import * as electron from 'electron';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import * as uuid from 'uuid';
 
@@ -18,6 +17,7 @@ import {
   getSegmentWriteKey,
   isDevelopment,
 } from './constants';
+import electron from './electron-everywhere';
 import { getScreenResolution, getUserLanguage, getViewportSize } from './electron-helpers';
 
 const DIMENSION_PLATFORM = 1;

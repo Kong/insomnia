@@ -1,6 +1,6 @@
-import electron from 'electron';
 import EventEmitter from 'events';
 
+import electron from '../../../common/electron-everywhere';
 interface Options {
   redirectTo?: string;
   setCertificateVerifyProc?: Electron.Session['setCertificateVerifyProc'];
