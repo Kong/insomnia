@@ -14,8 +14,7 @@ export interface BreadcrumbProps {
 }
 
 const StyledBreadcrumb = styled.ul`
-  font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-size: var(--font-size-md);
   color: var(--color-font);
   grid-area: breadcrumbs;
   display: flex;
@@ -25,7 +24,7 @@ const StyledBreadcrumb = styled.ul`
   a,
   a::before,
   li > ::before {
-    color: var(--color-font);
+    color: var(--color-font) !important;
   }
 
   li {
@@ -33,11 +32,20 @@ const StyledBreadcrumb = styled.ul`
     flex-direction: row;
 
     a {
+      font-weight: 400 !important;
       cursor: pointer;
+      opacity: 0.5;
+      &:hover {
+        color: var(--color-font);
+        opacity: 1;
+        text-decoration: none;
+      }
     }
 
     &::before {
       margin: 0 var(--padding-xs);
+      font-weight: 300;
+      opacity: 0.5;
       content: '/';
     }
 

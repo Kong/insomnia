@@ -1,10 +1,14 @@
-import { Breadcrumb, BreadcrumbProps, Header } from 'insomnia-components';
+import { Breadcrumb, BreadcrumbProps, Header as _Header } from 'insomnia-components';
 import React, { FC, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
 
 import coreLogo from '../images/insomnia-core-logo.png';
 import { SettingsButton } from './buttons/settings-button';
 import { AccountDropdownButton } from './dropdowns/account-dropdown';
+
+const Header = styled(_Header)({
+  whiteSpace: 'nowrap',
+});
 
 const RightWrapper = styled.div({
   transformOrigin: 'right',
@@ -33,7 +37,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
     <Header
       gridLeft={(
         <Fragment>
-          <img src={coreLogo} alt="Insomnia" width="24" height="24" />
+          <img src={coreLogo} alt="Insomnia" width="28" height="28" />
           <Breadcrumb crumbs={crumbs} isLoading={isLoading}/>
         </Fragment>
       )}
