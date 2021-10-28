@@ -94,7 +94,8 @@ export function createWindow() {
       disableBlinkFeatures: 'Auxclick',
     },
   });
-
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('@electron/remote/main').enable(mainWindow.webContents);
   // BrowserWindow doesn't have an option for this, so we have to do it manually :(
   if (maximize) {
     mainWindow?.maximize();

@@ -1,7 +1,7 @@
-import electron from 'electron';
 import querystring from 'querystring';
 import * as uuid from 'uuid';
 
+import electron from '../../common/electron-everywhere';
 import * as models from '../../models/index';
 
 export enum ChromiumVerificationResult {

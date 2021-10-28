@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import electron, { SaveDialogOptions } from 'electron';
+import { SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import mimes from 'mime-types';
 import moment from 'moment';
@@ -13,6 +13,7 @@ import {
   getContentTypeFromHeaders,
   PREVIEW_MODE_FRIENDLY,
 } from '../../../common/constants';
+import electron from '../../../common/electron-everywhere';
 import type { ResponseHeader } from '../../../models/response';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
@@ -160,7 +161,6 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
 
     // Save the file
     try {
-      // @ts-expect-error -- TSCONVERSION if filePath is undefined, don't try to write anything
       await fs.promises.writeFile(filePath, part.value);
     } catch (err) {
       console.warn('Failed to save multipart to file', err);

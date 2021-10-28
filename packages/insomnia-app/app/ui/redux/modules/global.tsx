@@ -1,4 +1,3 @@
-import electron from 'electron';
 import fs, { NoParamCallback } from 'fs';
 import moment from 'moment';
 import path from 'path';
@@ -18,6 +17,7 @@ import {
   isValidActivity,
 } from '../../../common/constants';
 import { database } from '../../../common/database';
+import electron from '../../../common/electron-everywhere';
 import { getDesignerDataDir } from '../../../common/electron-helpers';
 import {
   exportRequestsData,
