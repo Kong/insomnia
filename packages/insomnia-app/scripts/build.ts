@@ -218,8 +218,8 @@ export const start = async ({ forceFromGitRef }: { forceFromGitRef: boolean }) =
   console.log(`[build] npm: ${childProcess.spawnSync('npm', ['--version']).stdout}`.trim());
   console.log(`[build] node: ${childProcess.spawnSync('node', ['--version']).stdout}`.trim());
 
-  if (process.version.indexOf('v12.') !== 0) {
-    console.log('[build] Node v12.x.x is required to build');
+  if (process.version.indexOf('v14.') !== 0) {
+    console.log('[build] Node v14.x.x is required to build');
     process.exit(1);
   }
 
