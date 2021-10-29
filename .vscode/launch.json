@@ -46,6 +46,56 @@
       },
       "webRoot": "${workspaceFolder}/packages/insomnia-app/app",
       "timeout": 60000
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "protocol": "inspector",
+      "smartStep": true,
+      "name": "Inso",
+      "cwd": "${workspaceFolder}/packages/insomnia-inso",
+      "program": "${workspaceFolder}/packages/insomnia-inso/bin/debug_inso",
+      "sourceMaps": true,
+      "autoAttachChildProcesses": true,
+      "trace": true,
+      "preLaunchTask": "Inso: Compile (Watch)",
+      "sourceMapPathOverrides": {
+        "webpack://insomniacli/./*": "${workspaceFolder}/packages/insomnia-inso/*"
+      },
+      "args": ["${input:insoCommand}", "${input:insoCommandArgs}"],
+      "console": "integratedTerminal"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "insoCommandArgs",
+      "description": "Add an additional argument to inso",
+      "type": "promptString"
+    },
+    {
+      "id": "insoCommand",
+      "description": "Pick an inso command to run",
+      "type": "pickString",
+      "options": [
+        {
+          "value": "generate config"
+        },
+        {
+          "value": "run test"
+        },
+        {
+          "value": "lint spec"
+        },
+        {
+          "value": "export spec"
+        },
+        {
+          "value": "script"
+        },
+        {
+          "value": "help"
+        },
+      ]
     }
   ],
   "compounds": [
@@ -59,8 +109,8 @@
       "preLaunchTask": "Insomnia: Compile (Watch)",
       "configurations": [
         "Electron: main",
-        "Electron: renderer",
-      ],
+        "Electron: renderer"
+      ]
     }
   ]
 }
