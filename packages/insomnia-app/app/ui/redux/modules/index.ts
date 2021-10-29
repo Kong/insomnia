@@ -1,4 +1,4 @@
-import { bindActionCreators, combineReducers } from 'redux';
+import { bindActionCreators, combineReducers, Store } from 'redux';
 
 import * as fetch from '../../../account/fetch';
 import { isLoggedIn, onLoginLogout } from '../../../account/session';
@@ -8,7 +8,7 @@ import configureStore from '../create';
 import * as entities from './entities';
 import * as global from './global';
 
-export async function init() {
+export async function init(): Promise<Store> {
   const store = configureStore();
   // Do things that must happen before initial render
   const { addChanges, initializeWith: initEntities } = bindActionCreators({ addChanges: entities.addChanges, initializeWith: entities.initializeWith }, store.dispatch);

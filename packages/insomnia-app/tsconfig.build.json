@@ -7,7 +7,8 @@
     "strict": false,
     "strictNullChecks": true,
     "jsx": "react",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "skipLibCheck": true
   },
   "include": [
     "**/*.d.ts",
@@ -26,7 +27,9 @@
     "**/main.min.js",
     "__jest__",
     "assets",
+    ".babelrc.js",
     "bin",
+    "build",
     "config",
     "jest.config.js",
     "node_modules",

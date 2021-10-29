@@ -15,6 +15,7 @@
     "**/@types/mocha",
     "**/main.min.js",
     "bin",
+    "build",
     "config",
     "node_modules"
   ]
