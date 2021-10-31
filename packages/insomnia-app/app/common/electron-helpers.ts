@@ -66,9 +66,9 @@ export function restartApp() {
   app.exit();
 }
 
-export const exitApp = () => {
+export const exitAppFailure = () => {
   const { app } = electron.remote || electron;
-  app.exit();
+  app.exit(1);
 };
 
 export const setMenuBarVisibility = (visible: boolean) => {
