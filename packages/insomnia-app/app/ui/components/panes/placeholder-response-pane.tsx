@@ -1,15 +1,15 @@
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { FunctionComponent } from 'react';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
-import * as hotkeys from '../../../common/hotkeys';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {
-  hotKeyRegistry: hotkeys.HotKeyRegistry;
+  hotKeyRegistry: HotKeyRegistry;
 }
 
-const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
+export const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, children }) => (
   <Pane type="response">
     <PaneHeader />
     <PaneBody placeholder>
@@ -67,5 +67,3 @@ const PlaceholderResponsePane: FunctionComponent<Props> = ({ hotKeyRegistry, chi
     {children}
   </Pane>
 );
-
-export default PlaceholderResponsePane;

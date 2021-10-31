@@ -14,7 +14,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponsePDFViewer extends PureComponent<Props, State> {
+export class ResponsePDFViewer extends PureComponent<Props, State> {
   container: HTMLDivElement | null = null;
   debounceTimeout: NodeJS.Timeout | null = null;
 
@@ -110,5 +110,3 @@ class ResponsePDFViewer extends PureComponent<Props, State> {
     );
   }
 }
-
-export default ResponsePDFViewer;

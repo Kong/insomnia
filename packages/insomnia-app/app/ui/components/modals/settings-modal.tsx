@@ -1,24 +1,24 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HotKeyRegistry } from 'insomnia-common';
 import { Curl } from 'node-libcurl';
 import React, { PureComponent } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import * as session from '../../../account/session';
 import { AUTOBIND_CFG, getAppName, getAppVersion } from '../../../common/constants';
-import { HotKeyRegistry } from '../../../common/hotkeys';
 import * as models from '../../../models/index';
 import { Settings } from '../../../models/settings';
-import Button from '../base/button';
-import Modal from '../base/modal';
+import { Button } from '../base/button';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import Account from '../settings/account';
+import { Account } from '../settings/account';
 import General from '../settings/general';
 import { ImportExport } from '../settings/import-export';
-import Plugins from '../settings/plugins';
+import { Plugins } from '../settings/plugins';
 import { Shortcuts } from '../settings/shortcuts';
 import { ThemePanel } from '../settings/theme-panel';
-import Tooltip from '../tooltip';
+import { Tooltip } from '../tooltip';
 import { showModal } from './index';
 
 export const TAB_INDEX_EXPORT = 1;
@@ -35,7 +35,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SettingsModal extends PureComponent<Props, State> {
+export class SettingsModal extends PureComponent<Props, State> {
   state: State = {
     currentTabIndex: null,
   };
@@ -146,5 +146,3 @@ class SettingsModal extends PureComponent<Props, State> {
 }
 
 export const showSettingsModal = () => showModal(SettingsModal);
-
-export default SettingsModal;

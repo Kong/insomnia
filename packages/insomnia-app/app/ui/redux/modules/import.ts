@@ -11,7 +11,7 @@ import {
 import * as models from '../../../models';
 import { Workspace, WorkspaceScope } from '../../../models/workspace';
 import { showError, showModal } from '../../components/modals';
-import AlertModal from '../../components/modals/alert-modal';
+import { AlertModal } from '../../components/modals/alert-modal';
 import { selectActiveProject, selectProjects } from '../selectors';
 import { RootState } from '.';
 import { loadStart, loadStop } from './global';

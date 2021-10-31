@@ -13,7 +13,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Analytics extends PureComponent<Props> {
+export class Analytics extends PureComponent<Props> {
   async _handleAnalyticsSetting(enableAnalytics: boolean) {
     const { settings } = this.props.wrapperProps;
     // Update settings with analytics preferences
@@ -63,5 +63,3 @@ class Analytics extends PureComponent<Props> {
     );
   }
 }
-
-export default Analytics;

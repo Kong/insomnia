@@ -7,17 +7,17 @@ import { isRemoteProject } from '../../models/project';
 import { Request, RequestAuthentication, RequestBody, RequestHeader, RequestParameter } from '../../models/request';
 import { Settings } from '../../models/settings';
 import { isCollection, isDesign } from '../../models/workspace';
-import EnvironmentsDropdown from './dropdowns/environments-dropdown';
-import SyncDropdown from './dropdowns/sync-dropdown';
-import ErrorBoundary from './error-boundary';
-import PageLayout from './page-layout';
-import GrpcRequestPane from './panes/grpc-request-pane';
-import GrpcResponsePane from './panes/grpc-response-pane';
-import RequestPane from './panes/request-pane';
-import ResponsePane from './panes/response-pane';
+import { EnvironmentsDropdown } from './dropdowns/environments-dropdown';
+import { SyncDropdown } from './dropdowns/sync-dropdown';
+import { ErrorBoundary } from './error-boundary';
+import { PageLayout } from './page-layout';
+import { GrpcRequestPane } from './panes/grpc-request-pane';
+import { GrpcResponsePane } from './panes/grpc-response-pane';
+import { RequestPane } from './panes/request-pane';
+import { ResponsePane } from './panes/response-pane';
 import { SidebarChildren } from './sidebar/sidebar-children';
-import SidebarFilter from './sidebar/sidebar-filter';
-import WorkspacePageHeader from './workspace-page-header';
+import { SidebarFilter } from './sidebar/sidebar-filter';
+import { WorkspacePageHeader } from './workspace-page-header';
 import type { WrapperProps } from './wrapper';
 
 interface Props {
@@ -53,7 +53,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WrapperDebug extends PureComponent<Props> {
+export class WrapperDebug extends PureComponent<Props> {
   _renderPageHeader() {
     const { wrapperProps, gitSyncDropdown, handleActivityChange } = this.props;
     const { vcs, activeWorkspace, activeWorkspaceMeta, activeProject, syncItems, isLoggedIn } = this.props.wrapperProps;
@@ -347,5 +347,3 @@ class WrapperDebug extends PureComponent<Props> {
     );
   }
 }
-
-export default WrapperDebug;

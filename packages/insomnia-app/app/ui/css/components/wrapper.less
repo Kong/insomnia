@@ -16,26 +16,8 @@
     color: var(--hl-xl);
   }
 
-  .btn-utility {
-    color: #fff;
-    background-color: var(--color-surprise);
-  }
-
   .btn-create {
     padding: var(--padding-sm) var(--padding-md);
-  }
-
-  .btn-utility-reverse {
-    color: var(--color-text);
-    background-color: var(--hl-xs);
-    border: none;
-  }
-
-  .btn-utility,
-  .btn-utility-reverse {
-    &:hover {
-      filter: brightness(0.8);
-    }
   }
 
   .btn-sync {
@@ -49,6 +31,13 @@
     align-items: center !important;
     padding-left: var(--padding-md);
     padding-right: var(--padding-md);
+
+    color: var(--color-font-surprise);
+    background-color: var(--color-surprise);
+
+    &:hover {
+      filter: brightness(0.8);
+    }
   }
 
   height: 100%;
@@ -93,9 +82,10 @@
     }
   }
 
-  .pane-one, .pane-two {
+  .pane-one,
+  .pane-two {
     min-width: 0;
-    max-height:100%;
+    max-height: 100%;
     background: inherit;
     border-left: 1px solid var(--hl-md);
     background: var(--color-bg);
@@ -139,7 +129,7 @@
 
 .drag--sidebar {
   grid-column-start: 3;
-  z-index: 1000;
+  z-index: 999;
   grid-column-end: span 1;
 }
 

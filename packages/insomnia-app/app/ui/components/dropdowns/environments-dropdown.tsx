@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { executeHotKey } from '../../../common/hotkeys-listener';
 import type { Environment } from '../../../models/environment';
@@ -12,10 +12,10 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import KeydownBinder from '../keydown-binder';
+import { KeydownBinder } from '../keydown-binder';
 import { showModal } from '../modals/index';
-import EnvironmentsModal from '../modals/workspace-environments-edit-modal';
-import Tooltip from '../tooltip';
+import { WorkspaceEnvironmentsEditModal } from '../modals/workspace-environments-edit-modal';
+import { Tooltip } from '../tooltip';
 
 interface Props {
   handleChangeEnvironment: Function;
@@ -28,7 +28,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class EnvironmentsDropdown extends PureComponent<Props> {
+export class EnvironmentsDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   _handleActivateEnvironment(environmentId: string) {
@@ -36,7 +36,7 @@ class EnvironmentsDropdown extends PureComponent<Props> {
   }
 
   _handleShowEnvironmentModal() {
-    showModal(EnvironmentsModal, this.props.workspace);
+    showModal(WorkspaceEnvironmentsEditModal, this.props.workspace);
   }
 
   _setDropdownRef(n: Dropdown) {
@@ -142,5 +142,3 @@ class EnvironmentsDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default EnvironmentsDropdown;

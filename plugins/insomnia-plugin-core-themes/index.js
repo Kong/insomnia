@@ -15,4 +15,5 @@ module.exports.themes = [
   require('./themes/solarized'),
   require('./themes/solarized-dark'),
   require('./themes/high-contrast-light'),
+  require('./themes/dark-colorblind')
 ];

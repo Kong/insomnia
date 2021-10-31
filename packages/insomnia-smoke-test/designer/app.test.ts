@@ -31,17 +31,17 @@ xdescribe('Application launch', function() {
     // Install plugin
     await settings.openWithKeyboardShortcut(app);
     await settings.goToPlugins(app);
-    await settings.installPlugin(app, 'insomnia-plugin-kong-bundle');
+    await settings.installPlugin(app, 'insomnia-plugin-kong-portal');
     await settings.closeModal(app);
 
     // Open card dropdown for any card
     const dd = await home.openWorkspaceCardDropdown(app);
 
-    // Click the "Deploy to Portal" button, installed from that plugin
-    await dropdown.clickDropdownItemByText(dd, 'Deploy to Portal');
+    // Click the "Deploy to Dev Portal" button, installed from that plugin
+    await dropdown.clickDropdownItemByText(dd, 'Deploy to Dev Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
-    await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
+    await modal.waitUntilOpened(app, { title: 'Deploy to Dev Portal' });
     await modal.close(app);
   });
 });

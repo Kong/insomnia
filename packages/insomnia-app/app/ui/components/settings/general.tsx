@@ -1,10 +1,11 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as fontScanner from 'font-scanner';
+import { HttpVersion, HttpVersions } from 'insomnia-common';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
-import type { GlobalActivity, HttpVersion } from '../../../common/constants';
+import type { GlobalActivity } from '../../../common/constants';
 import {
   ACTIVITY_MIGRATION,
   AUTOBIND_CFG,
@@ -12,7 +13,6 @@ import {
   EDITOR_KEY_MAP_EMACS,
   EDITOR_KEY_MAP_SUBLIME,
   EDITOR_KEY_MAP_VIM,
-  HttpVersions,
   isDevelopment,
   isMac,
   MAX_EDITOR_FONT_SIZE,
@@ -31,9 +31,9 @@ import type { Settings } from '../../../models/settings';
 import { initNewOAuthSession } from '../../../network/o-auth-2/misc';
 import { setFont } from '../../../plugins/misc';
 import * as globalActions from '../../redux/modules/global';
-import Link from '../base/link';
-import CheckForUpdatesButton from '../check-for-updates-button';
-import HelpTooltip from '../help-tooltip';
+import { Link } from '../base/link';
+import { CheckForUpdatesButton } from '../check-for-updates-button';
+import { HelpTooltip } from '../help-tooltip';
 import { BooleanSetting } from './boolean-setting';
 
 // Font family regex to match certain monospace fonts that don't get
@@ -261,10 +261,12 @@ class General extends PureComponent<Props, State> {
               setting="editorLineWrapping"
             />
           </div>
-          <div><BooleanSetting
-            label="Font ligatures"
-            setting="fontVariantLigatures"
-          /></div>
+          <div>
+            <BooleanSetting
+              label="Font ligatures"
+              setting="fontVariantLigatures"
+            />
+          </div>
         </div>
 
         <div className="form-row pad-top-sm">
@@ -553,16 +555,18 @@ class General extends PureComponent<Props, State> {
           </Fragment>
         )}
 
+        <hr className="pad-top" />
+        <h2>Notifications</h2>
         {!updatesSupported() && (
-          <Fragment>
-            <hr className="pad-top" />
-            <h2>Software Updates</h2>
-            <BooleanSetting
-              label="Do not notify of new releases"
-              setting="disableUpdateNotification"
-            />
-          </Fragment>
+          <BooleanSetting
+            label="Do not notify of new releases"
+            setting="disableUpdateNotification"
+          />
         )}
+        <BooleanSetting
+          label="Do not tell me about premium features"
+          setting="disablePaidFeatureAds"
+        />
 
         <hr className="pad-top" />
         <h2>Plugins</h2>
@@ -576,25 +580,31 @@ class General extends PureComponent<Props, State> {
           },
         )}
 
-        <br />
-
         <hr className="pad-top" />
-        <h2>Data Sharing</h2>
-        <div className="form-control form-control--thin">
-          <BooleanSetting
-            label="Send Usage Statistics"
-            setting="enableAnalytics"
-          />
-          <p className="txt-sm faint">
-            Help Kong improve its products by sending anonymous data about features and plugins
-            used, hardware and software configuration, statistics on number of requests,{' '}
-            {strings.collection.plural.toLowerCase()}, {strings.document.plural.toLowerCase()}, etc.
-          </p>
-          <p className="txt-sm faint">
-            Please note that this will not include personal data or any sensitive information, such
-            as request data, names, etc.
-          </p>
-        </div>
+        <h2>Network Activity</h2>
+        <BooleanSetting
+          descriptions={[
+            'In incognito mode, Insomnia will not make any network requests other than the requests you ask it to send.  You\'ll still be able to log in and manually sync collections, but any background network requests that are not the direct result of your actions will be disabled.',
+            'Note that, similar to incognito mode in Chrome, Insomnia cannot control the network behavior of any plugins you have installed.',
+          ]}
+          label="Incognito Mode"
+          setting="incognitoMode"
+        />
+
+        <BooleanSetting
+          descriptions={[
+            `Help Kong improve its products by sending anonymous data about features and plugins used, hardware and software configuration, statistics on number of requests, ${strings.collection.plural.toLowerCase()}, ${strings.document.plural.toLowerCase()}, etc.`,
+            'Please note that this will not include personal data or any sensitive information, such as request data, names, etc.',
+          ]}
+          label="Send Usage Statistics"
+          setting="enableAnalytics"
+        />
+
+        <BooleanSetting
+          descriptions={['Insomnia periodically makes background requests to api.insomnia.rest/notifications for things like email verification, out-of-date billing information, trial information.']}
+          label="Allow Notification Requests"
+          setting="allowNotificationRequests"
+        />
 
         <hr className="pad-top" />
 

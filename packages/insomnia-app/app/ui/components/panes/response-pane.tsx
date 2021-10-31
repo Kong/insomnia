@@ -2,6 +2,7 @@ import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
 import { clipboard, remote } from 'electron';
 import fs from 'fs';
+import { HotKeyRegistry } from 'insomnia-common';
 import { json as jsonPrettify } from 'insomnia-prettify';
 import mime from 'mime-types';
 import React, { PureComponent } from 'react';
@@ -9,7 +10,6 @@ import { Tab, TabList, TabPanel, Tabs } from 'react-tabs';
 
 import { AUTOBIND_CFG, PREVIEW_MODE_SOURCE } from '../../../common/constants';
 import { exportHarCurrentRequest } from '../../../common/har';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { getSetCookieHeaders } from '../../../common/misc';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
@@ -18,22 +18,22 @@ import type { RequestVersion } from '../../../models/request-version';
 import type { Response } from '../../../models/response';
 import type { UnitTestResult } from '../../../models/unit-test-result';
 import { cancelRequestById } from '../../../network/network';
-import Button from '../base/button';
-import PreviewModeDropdown from '../dropdowns/preview-mode-dropdown';
-import ResponseHistoryDropdown from '../dropdowns/response-history-dropdown';
-import ErrorBoundary from '../error-boundary';
+import { Button } from '../base/button';
+import { PreviewModeDropdown } from '../dropdowns/preview-mode-dropdown';
+import { ResponseHistoryDropdown } from '../dropdowns/response-history-dropdown';
+import { ErrorBoundary } from '../error-boundary';
 import { showError } from '../modals';
 import { ResponseTimer } from '../response-timer';
 import { SizeTag } from '../tags/size-tag';
 import { StatusTag } from '../tags/status-tag';
 import { TimeTag } from '../tags/time-tag';
-import ResponseCookiesViewer from '../viewers/response-cookies-viewer';
+import { ResponseCookiesViewer } from '../viewers/response-cookies-viewer';
 import { ResponseHeadersViewer } from '../viewers/response-headers-viewer';
-import ResponseTimelineViewer from '../viewers/response-timeline-viewer';
-import ResponseViewer from '../viewers/response-viewer';
-import BlankPane from './blank-pane';
+import { ResponseTimelineViewer } from '../viewers/response-timeline-viewer';
+import { ResponseViewer } from  '../viewers/response-viewer';
+import { BlankPane } from './blank-pane';
 import { Pane, paneBodyClasses, PaneHeader } from './pane';
-import PlaceholderResponsePane from './placeholder-response-pane';
+import { PlaceholderResponsePane } from './placeholder-response-pane';
 
 interface Props {
   handleSetFilter: (filter: string) => void;
@@ -63,7 +63,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponsePane extends PureComponent<Props> {
+export class ResponsePane extends PureComponent<Props> {
   _responseViewer: ResponseViewer | null = null;
 
   _setResponseViewerRef(n: ResponseViewer) {
@@ -390,5 +390,3 @@ class ResponsePane extends PureComponent<Props> {
     );
   }
 }
-
-export default ResponsePane;

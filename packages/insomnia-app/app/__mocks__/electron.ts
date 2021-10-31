@@ -16,6 +16,8 @@ const remote = {
     getLocale() {
       return 'en-US';
     },
+
+    exit: jest.fn(),
   },
   net: {
     request() {
@@ -55,9 +57,14 @@ const remote = {
   },
 };
 
+const dialog = {
+  showErrorBox: jest.fn(),
+};
+
 const electron = {
   ...remote,
   remote,
+  dialog,
   ipcMain: {
     on: jest.fn(),
 

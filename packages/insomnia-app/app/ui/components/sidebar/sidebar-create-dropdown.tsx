@@ -1,8 +1,8 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RequestGroup } from '../../../models/request-group';
 import { Dropdown } from '../base/dropdown/dropdown';
@@ -18,7 +18,7 @@ interface Props {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class SidebarCreateDropdown extends PureComponent<Props> {
+export class SidebarCreateDropdown extends PureComponent<Props> {
   _dropdown: Dropdown | null = null;
 
   show(position: { x: number; y: number }) {
@@ -51,5 +51,3 @@ class SidebarCreateDropdown extends PureComponent<Props> {
     );
   }
 }
-
-export default SidebarCreateDropdown;

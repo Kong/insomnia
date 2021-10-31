@@ -1,17 +1,17 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { Fragment, PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { HandleRender } from '../../../common/render';
 import { GrpcRequest, isGrpcRequest } from '../../../models/grpc-request';
 import { isRequest, Request } from '../../../models/request';
 import type { RequestGroup } from '../../../models/request-group';
 import { RootState } from '../../redux/modules';
 import { selectActiveRequest, selectActiveWorkspace } from '../../redux/selectors';
-import SidebarCreateDropdown from './sidebar-create-dropdown';
+import { SidebarCreateDropdown } from './sidebar-create-dropdown';
 import { SidebarRequestGroupRow } from './sidebar-request-group-row';
 import { SidebarRequestRow } from './sidebar-request-row';
 

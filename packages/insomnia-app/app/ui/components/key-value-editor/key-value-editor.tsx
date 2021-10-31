@@ -8,9 +8,9 @@ import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import Lazy from '../base/lazy';
-import PromptButton from '../base/prompt-button';
-import KeyValueEditorRow from './row';
+import { Lazy } from '../base/lazy';
+import { PromptButton } from '../base/prompt-button';
+import { Row } from './row';
 
 const NAME = 'name';
 const VALUE = 'value';
@@ -54,11 +54,11 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Editor extends PureComponent<Props, State> {
+export class KeyValueEditor extends PureComponent<Props, State> {
   _focusedPairId: string | null = null;
   _focusedField: string | null = NAME;
   // @ts-expect-error -- TSCONVERSION being imported as a value but should be usable as a type
-  private _rows: KeyValueEditorRow[] = [];
+  private _rows: Row[] = [];
   _triggerTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -80,7 +80,7 @@ class Editor extends PureComponent<Props, State> {
   }
 
   // @ts-expect-error -- TSCONVERSION being imported as a value but should be usable as a type
-  private _setRowRef(n?: KeyValueEditorRow) {
+  private _setRowRef(n?: Row) {
     // NOTE: We're not handling unmounting (may lead to a bug)
     if (n) {
       this._rows[n.props.pair.id] = n;
@@ -448,7 +448,7 @@ class Editor extends PureComponent<Props, State> {
       <Lazy delay={pairs.length > 20 ? 50 : -1}>
         <ul className={classes}>
           {pairs.map((pair, i) => (
-            <KeyValueEditorRow
+            <Row
               noDelete={disableDelete}
               key={pair.id || 'no-id'}
               index={i} // For dragging
@@ -482,7 +482,7 @@ class Editor extends PureComponent<Props, State> {
           ))}
 
           {!maxPairs || pairs.length < maxPairs ? (
-            <KeyValueEditorRow
+            <Row
               key="empty-row"
               hideButtons
               sortable
@@ -526,5 +526,3 @@ class Editor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Editor;

@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import React from 'react';
 
-import GrpcMethodDropdownButton from '../grpc-method-dropdown-button';
+import { GrpcMethodDropdownButton } from '../grpc-method-dropdown-button';
 
 describe('<GrpcMethodDropdownButton />', () => {
   it('should show "Select Method" when nothing is selected', () => {

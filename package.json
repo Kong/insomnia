@@ -16,12 +16,15 @@
     "lint:markdown": "markdownlint-cli2 \"**/*.md\" \"#**/node_modules\"",
     "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
-    "version": "lerna version --exact --preid beta",
+    "version": "lerna version --exact --preid alpha",
+    "version:all": "npm run version -- --force-publish",
     "version:dry": "npm run version -- --no-git-tag-version",
-    "release": "lerna publish from-git --pre-dist-tag beta --no-verify-access --yes",
+    "release": "lerna publish from-git --pre-dist-tag alpha --no-verify-access --yes",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
     "test": "lerna run --stream --parallel test",
     "inso-start": "npm start --prefix packages/insomnia-inso",
+    "inso-package": "npm run build:sr --prefix packages/insomnia-app && npm run package --prefix packages/insomnia-inso",
+    "inso-package:artifacts": "npm run artifacts --prefix packages/insomnia-inso",
     "app-start": "npm start --prefix packages/insomnia-app",
     "app-build": "npm run build --prefix packages/insomnia-app",
     "app-package": "npm run package --prefix packages/insomnia-app",
@@ -76,5 +79,8 @@
     "ts-jest": "^26.5.6",
     "type-fest": "^1.0.2",
     "typescript": "^4.2.3"
+  },
+  "dependencies": {
+    "immer": "^9.0.6"
   }
 }

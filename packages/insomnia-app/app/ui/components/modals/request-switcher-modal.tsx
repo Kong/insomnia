@@ -18,12 +18,12 @@ import { Workspace } from '../../../models/workspace';
 import { RootState } from '../../redux/modules';
 import { activateWorkspace } from '../../redux/modules/workspace';
 import { selectActiveRequest, selectActiveWorkspace, selectRequestMetas, selectWorkspaceRequestsAndRequestGroups, selectWorkspacesForActiveProject } from '../../redux/selectors';
-import Button from '../base/button';
-import Highlight from '../base/highlight';
-import Modal from '../base/modal';
+import { Button } from '../base/button';
+import { Highlight } from '../base/highlight';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import KeydownBinder from '../keydown-binder';
+import { KeydownBinder } from '../keydown-binder';
 import { MethodTag } from '../tags/method-tag';
 
 type ReduxProps = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>;

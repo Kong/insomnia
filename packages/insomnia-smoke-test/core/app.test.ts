@@ -10,6 +10,7 @@ import * as home from '../modules/home';
 import * as modal from '../modules/modal';
 import * as onboarding from '../modules/onboarding';
 import * as settings from '../modules/settings';
+import { waitUntilTextDisappears } from '../modules/text';
 
 describe('Application launch', function() {
   jest.setTimeout(50000);
@@ -86,7 +87,7 @@ describe('Application launch', function() {
     },
   );
 
-  it('sends CSV request and shows rich response', async () => {
+  it('sends dummy.csv request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.csv';
 
     await client.correctlyLaunched(app);
@@ -105,7 +106,37 @@ describe('Application launch', function() {
     await expect(csvViewer.getText()).resolves.toBe('a b c\n1 2 3');
   });
 
-  it('sends PDF request and shows rich response', async () => {
+  it('sends dummy.xml request and shows raw response', async () => {
+    const url = 'http://127.0.0.1:4010/file/dummy.xml';
+
+    await client.correctlyLaunched(app);
+    await onboarding.skipOnboardingFlow(app);
+
+    await home.documentListingShown(app);
+    await home.createNewCollection(app);
+    await debug.pageDisplayed(app);
+
+    await debug.createNewRequest(app, 'xml');
+    await debug.typeInUrlBar(app, url);
+    await debug.clickSendRequest(app);
+
+    await debug.expect200(app);
+
+    const responseViewer = await debug.getResponseViewer(app);
+    const partialExpectedResponse = '<LoginResult>xxx-777-xxx-123</LoginResult>';
+
+    await debug.expectContainsText(responseViewer, partialExpectedResponse);
+
+    await debug.typeInResponseFilter(app, "//*[local-name(.)='LoginResult']/text()");
+    await waitUntilTextDisappears(app, responseViewer, partialExpectedResponse);
+
+    await debug.expectContainsText(
+      responseViewer,
+      '<result>xxx-777-xxx-123</result>',
+    );
+  });
+
+  it('sends dummy.pdf request and shows rich response', async () => {
     const url = 'http://127.0.0.1:4010/file/dummy.pdf';
 
     await client.correctlyLaunched(app);
@@ -125,7 +156,9 @@ describe('Application launch', function() {
     await expect(pdfCanvas.isExisting()).resolves.toBe(true);
   });
 
-  it('shows deploy to portal for design documents', async () => {
+  // NOTE: skipped because plugins are pulled from npm in CI rather than read from this repo
+  // TODO: unskip this test after ticket INS-502 corrects the above
+  it.skip('shows deploy to dev portal for design documents', async () => {
     await client.correctlyLaunched(app);
     await onboarding.skipOnboardingFlow(app);
 
@@ -137,11 +170,11 @@ describe('Application launch', function() {
     const card = await home.findCardWithTitle(app, docName);
     await home.openWorkspaceCardDropdown(card);
 
-    // Click the "Deploy to Portal" button, installed from that plugin
-    await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Portal');
+    // Click the "Deploy to Dev Portal" button, installed from that plugin
+    await dropdown.clickOpenDropdownItemByText(app, 'Deploy to Dev Portal');
 
     // Ensure a modal opens, then close it - the rest is plugin behavior
-    await modal.waitUntilOpened(app, { title: 'Deploy to Portal' });
+    await modal.waitUntilOpened(app, { title: 'Deploy to Dev Portal' });
     await modal.close(app);
   });
 

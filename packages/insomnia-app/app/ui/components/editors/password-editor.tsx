@@ -4,8 +4,8 @@ import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import Button from '../base/button';
-import OneLineEditor from '../codemirror/one-line-editor';
+import { Button } from '../base/button';
+import { OneLineEditor } from '../codemirror/one-line-editor';
 
 interface Props {
   handleRender: HandleRender;
@@ -23,7 +23,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PasswordEditor extends PureComponent<Props, State> {
+export class PasswordEditor extends PureComponent<Props, State> {
   state: State = {
     showPassword: false,
   };
@@ -77,5 +77,3 @@ class PasswordEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default PasswordEditor;

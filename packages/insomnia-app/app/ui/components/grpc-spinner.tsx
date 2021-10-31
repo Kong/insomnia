@@ -8,9 +8,7 @@ interface Props {
   requestId: string;
 }
 
-const GrpcSpinner: FunctionComponent<Props> = ({ className, requestId }) => {
+export const GrpcSpinner: FunctionComponent<Props> = ({ className, requestId }) => {
   const { running } = useGrpcRequestState(requestId);
   return running ? <i className={classnames('fa fa-refresh fa-spin', className)} /> : null;
 };
-
-export default GrpcSpinner;

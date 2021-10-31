@@ -1,10 +1,10 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { HotKeyRegistry } from '../../../common/hotkeys';
 import { hotKeyRefs } from '../../../common/hotkeys';
 import { RENDER_PURPOSE_NO_RENDER } from '../../../common/render';
 import * as models from '../../../models';
@@ -19,9 +19,9 @@ import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownHint } from '../base/dropdown/dropdown-hint';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 import { showError, showModal } from '../modals';
-import EnvironmentEditModal from '../modals/environment-edit-modal';
+import { EnvironmentEditModal } from '../modals/environment-edit-modal';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 

@@ -27,8 +27,8 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import FileInputButton from '../base/file-input-button';
-import HelpTooltip from '../help-tooltip';
+import { FileInputButton } from '../base/file-input-button';
+import { HelpTooltip } from '../help-tooltip';
 
 interface Props {
   handleRender: HandleRender;
@@ -54,7 +54,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class TagEditor extends PureComponent<Props, State> {
+export class TagEditor extends PureComponent<Props, State> {
   _select: HTMLSelectElement | null = null;
 
   state: State = {
@@ -834,5 +834,3 @@ class TagEditor extends PureComponent<Props, State> {
     );
   }
 }
-
-export default TagEditor;

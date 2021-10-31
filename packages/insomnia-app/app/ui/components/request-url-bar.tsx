@@ -1,9 +1,9 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import { OpenDialogOptions, remote } from 'electron';
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG, DEBOUNCE_MILLIS, isMac } from '../../common/constants';
-import type { HotKeyRegistry } from '../../common/hotkeys';
 import { hotKeyRefs } from '../../common/hotkeys';
 import { executeHotKey } from '../../common/hotkeys-listener';
 import { HandleGetRenderContext, HandleRender } from '../../common/render';
@@ -13,10 +13,10 @@ import { DropdownButton } from './base/dropdown/dropdown-button';
 import { DropdownDivider } from './base/dropdown/dropdown-divider';
 import { DropdownHint } from './base/dropdown/dropdown-hint';
 import { DropdownItem } from './base/dropdown/dropdown-item';
-import PromptButton from './base/prompt-button';
-import OneLineEditor from './codemirror/one-line-editor';
-import MethodDropdown from './dropdowns/method-dropdown';
-import KeydownBinder from './keydown-binder';
+import { PromptButton } from './base/prompt-button';
+import { OneLineEditor } from './codemirror/one-line-editor';
+import { MethodDropdown } from './dropdowns/method-dropdown';
+import { KeydownBinder } from './keydown-binder';
 import { showPrompt } from './modals/index';
 
 interface Props {
@@ -44,7 +44,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestUrlBar extends PureComponent<Props, State> {
+export class RequestUrlBar extends PureComponent<Props, State> {
   _urlChangeDebounceTimeout: NodeJS.Timeout | null = null;
   _sendTimeout: NodeJS.Timeout | null = null;
   _sendInterval: NodeJS.Timeout | null = null;
@@ -393,5 +393,3 @@ class RequestUrlBar extends PureComponent<Props, State> {
     );
   }
 }
-
-export default RequestUrlBar;

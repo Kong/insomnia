@@ -5,8 +5,8 @@ import ReactDOM from 'react-dom';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { HandleGetRenderContext, HandleRender } from '../../../common/render';
-import Input from '../base/debounced-input';
-import CodeEditor, { CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
+import { DebouncedInput } from '../base/debounced-input';
+import { CodeEditor,  CodeEditorOnChange, UnconnectedCodeEditor } from './code-editor';
 const MODE_INPUT = 'input';
 const MODE_EDITOR = 'editor';
 const TYPE_TEXT = 'text';
@@ -41,9 +41,9 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class OneLineEditor extends PureComponent<Props, State> {
+export class OneLineEditor extends PureComponent<Props, State> {
   _editor: UnconnectedCodeEditor | null = null;
-  _input: Input | null = null;
+  _input: DebouncedInput | null = null;
   _mouseEnterTimeout: NodeJS.Timeout | null = null;
 
   constructor(props: Props) {
@@ -328,7 +328,7 @@ class OneLineEditor extends PureComponent<Props, State> {
     this._editor = n;
   }
 
-  _setInputRef(n: Input) {
+  _setInputRef(n: DebouncedInput) {
     this._input = n;
   }
 
@@ -398,7 +398,7 @@ class OneLineEditor extends PureComponent<Props, State> {
       );
     } else {
       return (
-        <Input
+        <DebouncedInput
           ref={this._setInputRef}
           // @ts-expect-error -- TSCONVERSION
           id={id}
@@ -423,5 +423,3 @@ class OneLineEditor extends PureComponent<Props, State> {
     }
   }
 }
-
-export default OneLineEditor;

@@ -11,7 +11,22 @@ on:
       - synchronize
 
 jobs:
+  get_version:
+    name: Get version
+    runs-on: ubuntu-latest
+    outputs:
+      inso-version: ${{ steps.get-package-version.outputs.current-version }}
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v1
+      - name: Get version
+        id: get-package-version
+        uses: martinbeentjes/npm-get-version-action@master
+        with:
+          path: packages/insomnia-inso
+
   OS:
+    needs: [get_version]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -20,25 +35,107 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v1
+
       - name: Read Node version from .nvmrc
         run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
         id: nvm
-      - uses: actions/setup-node@v1
+
+      - name: Setup Node
+        uses: actions/setup-node@v1
         with:
           node-version: ${{ steps.nvm.outputs.NVMRC }}
+
       - name: Bootstrap packages
         run: npm run bootstrap
+
       - name: Lint
         run: npm run lint
-      - name: Lint Markdown
+
+      - name: Lint markdown
         run: npm run lint:markdown
+
       - name: Run tests
         run: npm test
-      - name: Build for smoke tests
+
+      - name: Set Inso CLI variables
+        id: inso-variables
+        shell: bash
+        run: |
+          INSO_VERSION="${{ needs.get_version.outputs.inso-version }}-run.${{ github.run_number }}"
+          PKG_NAME="inso-${{ matrix.os }}-$INSO_VERSION"
+          BUNDLE_ID="com.insomnia.inso"
+
+          echo ::set-output name=pkg-name::$PKG_NAME
+          echo ::set-output name=bundle-id::$BUNDLE_ID
+          echo ::set-output name=inso-version::$INSO_VERSION
+
+      - name: Package Inso CLI binary
+        run: npm run inso-package
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+
+      - name: Codesign & create macOS installer
+        if: matrix.os == 'macos-latest'
+        run: |
+          chmod +x ./src/scripts/macos-pkg.sh
+          ./src/scripts/macos-pkg.sh
+        shell: bash
+        working-directory: packages/insomnia-inso
+        continue-on-error: true
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.DESIGNER_MAC_CSC_LINK }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.DESIGNER_MAC_CSC_KEY_PASSWORD }}
+          PKG_NAME: ${{ steps.inso-variables.outputs.pkg-name }}
+          BUNDLE_ID: ${{ steps.inso-variables.outputs.bundle-id }}
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+
+      # We don't need to notarize and staple on every commit
+      # - name: Notarize installer
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-notarize@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+      #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}
+      #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+      #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
+      # - name: Staple installer
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-staple@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/artifacts/${{ steps.inso-variables.outputs.pkg-name }}.pkg
+
+      # - name: Notarize binary
+      #   if: matrix.os == 'macos-latest'
+      #   uses: devbotsxyz/xcode-notarize@v1
+      #   with:
+      #     product-path: packages/insomnia-inso/binaries/inso
+      #     primary-bundle-id: ${{ steps.inso-variables.outputs.bundle-id }}-binary
+      #     appstore-connect-username: ${{ secrets.DESIGNER_APPLE_ID }}
+      #     appstore-connect-password: ${{ secrets.DESIGNER_APPLE_ID_PASSWORD }}
+
+      - name: Create Inso CLI artifacts
+        run: npm run inso-package:artifacts
+        env:
+          VERSION: ${{ steps.inso-variables.outputs.inso-version }}
+
+      - name: Upload Inso CLI artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: ignore
+          name: ${{ steps.inso-variables.outputs.pkg-name }}
+          path: packages/insomnia-inso/artifacts
+      
+      - name: Run Inso CLI smoke tests
+        run: npm run test:smoke:cli
+
+      - name: Build app for smoke tests
         run: npm run app-build:smoke
-      - name: Run smoke tests
+
+      - name: Run app smoke tests
         timeout-minutes: 10 # sometimes jest fails to exit - https://github.com/facebook/jest/issues/6423#issuecomment-620407580
         run: npm run test:smoke:build
+
       - name: Upload smoke test screenshots
         uses: actions/upload-artifact@v2
         if: always()
@@ -46,5 +143,3 @@ jobs:
           if-no-files-found: ignore
           name: ${{ matrix.os }}-smoke-test-screenshots-${{ github.run_number }}
           path: packages/insomnia-smoke-test/screenshots
-      - name: Run CLI smoke tests
-        run: npm run test:smoke:cli

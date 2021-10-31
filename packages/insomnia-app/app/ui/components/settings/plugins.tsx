@@ -1,5 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as electron from 'electron';
+import { PluginConfig } from 'insomnia-common';
 import { Button, ToggleSwitch } from 'insomnia-components';
 import * as path from 'path';
 import React, { ChangeEvent, FormEvent, PureComponent } from 'react';
@@ -12,15 +13,15 @@ import {
 } from '../../../common/constants';
 import { docsPlugins } from '../../../common/documentation';
 import { delay } from '../../../common/misc';
-import type { PluginConfig, Settings } from '../../../models/settings';
+import type { Settings } from '../../../models/settings';
 import { createPlugin } from '../../../plugins/create';
 import type { Plugin } from '../../../plugins/index';
 import { getPlugins } from '../../../plugins/index';
 import installPlugin from '../../../plugins/install';
 import { reload } from '../../../templating/index';
 import { CopyButton } from '../base/copy-button';
-import Link from '../base/link';
-import HelpTooltip from '../help-tooltip';
+import { Link } from '../base/link';
+import { HelpTooltip } from '../help-tooltip';
 import { showAlert, showPrompt } from '../modals';
 
 interface Props {
@@ -38,7 +39,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Plugins extends PureComponent<Props, State> {
+export class Plugins extends PureComponent<Props, State> {
   _isMounted: boolean;
 
   state: State = {
@@ -346,5 +347,3 @@ class Plugins extends PureComponent<Props, State> {
     );
   }
 }
-
-export default Plugins;

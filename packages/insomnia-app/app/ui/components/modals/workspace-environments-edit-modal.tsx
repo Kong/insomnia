@@ -10,20 +10,20 @@ import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Environment } from '../../../models/environment';
 import type { Workspace } from '../../../models/workspace';
-import Button, { ButtonProps } from '../base/button';
+import { Button, ButtonProps } from '../base/button';
 import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import Editable from '../base/editable';
-import Link from '../base/link';
-import Modal, { ModalProps } from '../base/modal';
+import { Editable } from '../base/editable';
+import { Link } from '../base/link';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
-import EnvironmentEditor from '../editors/environment-editor';
-import HelpTooltip from '../help-tooltip';
-import Tooltip from '../tooltip';
+import { PromptButton } from '../base/prompt-button';
+import { EnvironmentEditor } from '../editors/environment-editor';
+import { HelpTooltip } from '../help-tooltip';
+import { Tooltip } from '../tooltip';
 const ROOT_ENVIRONMENT_NAME = 'Base Environment';
 
 interface Props extends ModalProps {
@@ -141,7 +141,7 @@ const SidebarList = SortableContainer<SidebarListProps>(
 );
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
+export class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
   environmentEditorRef: EnvironmentEditor | null = null;
   environmentColorInputRef: HTMLInputElement | null = null;
   saveTimeout: NodeJS.Timeout | null = null;
@@ -362,9 +362,9 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     // Do this last so we don't block the sorting
     db.bufferChanges();
 
-    Promise.all(newSubEnvironments.map(environment => this._updateEnvironment(
+    Promise.all(newSubEnvironments.map((environment, idx) => this._updateEnvironment(
       environment,
-      { metaSortKey: 1 },
+      { metaSortKey: idx },
       false,
     ))).then(() => {
       db.flushChanges();
@@ -616,5 +616,3 @@ class WorkspaceEnvironmentsEditModal extends PureComponent<Props, State> {
     );
   }
 }
-
-export default WorkspaceEnvironmentsEditModal;

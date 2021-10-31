@@ -6,11 +6,9 @@ interface Props {
   type: 'request' | 'response';
 }
 
-const BlankPane: FunctionComponent<Props> = ({ type }) => (
+export const BlankPane: FunctionComponent<Props> = ({ type }) => (
   <Pane type={type}>
     <PaneHeader />
     <PaneBody placeholder />
   </Pane>
 );
-
-export default BlankPane;

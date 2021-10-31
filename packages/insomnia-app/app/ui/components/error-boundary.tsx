@@ -1,6 +1,6 @@
 import React, { PureComponent, ReactNode } from 'react';
 
-import Mailto from './base/mailto';
+import { Mailto } from './base/mailto';
 import { showError } from './modals/index';
 
 interface Props {
@@ -93,7 +93,7 @@ class SingleErrorBoundary extends PureComponent<Props, State> {
   }
 }
 
-class ErrorBoundary extends PureComponent<Props> {
+export class ErrorBoundary extends PureComponent<Props> {
   render() {
     const { children, ...extraProps } = this.props;
 
@@ -110,5 +110,3 @@ class ErrorBoundary extends PureComponent<Props> {
     ));
   }
 }
-
-export default ErrorBoundary;

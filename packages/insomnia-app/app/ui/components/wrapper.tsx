@@ -1,6 +1,6 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import * as importers from 'insomnia-importers';
-import React, { Fragment, PureComponent } from 'react';
+import React, { Fragment, PureComponent, Ref } from 'react';
 
 import { trackPageView } from '../../common/analytics';
 import type { GlobalActivity } from '../../common/constants';
@@ -34,58 +34,58 @@ import { RequestGroup } from '../../models/request-group';
 import type { Response } from '../../models/response';
 import { GitVCS } from '../../sync/git/git-vcs';
 import { VCS } from '../../sync/vcs/vcs';
-import CookieModifyModal from '../components/modals/cookie-modify-modal';
+import { CookieModifyModal } from '../components/modals/cookie-modify-modal';
 import { AppProps } from '../containers/app';
 import { GrpcDispatchModalWrapper } from '../context/grpc';
 import { DropdownButton } from './base/dropdown/dropdown-button';
 import GitSyncDropdown from './dropdowns/git-sync-dropdown';
-import ErrorBoundary from './error-boundary';
-import AddKeyCombinationModal from './modals/add-key-combination-modal';
-import AlertModal from './modals/alert-modal';
-import AskModal from './modals/ask-modal';
-import CodePromptModal from './modals/code-prompt-modal';
-import CookiesModal from './modals/cookies-modal';
-import EnvironmentEditModal from './modals/environment-edit-modal';
-import ErrorModal from './modals/error-modal';
-import ExportRequestsModal from './modals/export-requests-modal';
-import FilterHelpModal from './modals/filter-help-modal';
-import GenerateCodeModal from './modals/generate-code-modal';
-import GenerateConfigModal from './modals/generate-config-modal';
-import GitBranchesModal from './modals/git-branches-modal';
-import GitLogModal from './modals/git-log-modal';
-import GitRepositorySettingsModal from './modals/git-repository-settings-modal';
-import GitStagingModal from './modals/git-staging-modal';
+import { ErrorBoundary } from './error-boundary';
+import { AddKeyCombinationModal } from './modals/add-key-combination-modal';
+import { AlertModal } from './modals/alert-modal';
+import { AskModal } from './modals/ask-modal';
+import { CodePromptModal } from './modals/code-prompt-modal';
+import { CookiesModal } from './modals/cookies-modal';
+import { EnvironmentEditModal } from './modals/environment-edit-modal';
+import { ErrorModal } from './modals/error-modal';
+import { ExportRequestsModal } from './modals/export-requests-modal';
+import { FilterHelpModal } from './modals/filter-help-modal';
+import { GenerateCodeModal } from './modals/generate-code-modal';
+import { GenerateConfigModal } from './modals/generate-config-modal';
+import { GitBranchesModal } from './modals/git-branches-modal';
+import { GitLogModal } from './modals/git-log-modal';
+import { GitRepositorySettingsModal } from './modals/git-repository-settings-modal';
+import { GitStagingModal } from './modals/git-staging-modal';
 import { registerModal, showModal } from './modals/index';
-import LoginModal from './modals/login-modal';
-import NunjucksModal from './modals/nunjucks-modal';
-import PaymentNotificationModal from './modals/payment-notification-modal';
+import { LoginModal } from './modals/login-modal';
+import { NunjucksModal } from './modals/nunjucks-modal';
+import { PaymentNotificationModal } from './modals/payment-notification-modal';
 import ProjectSettingsModal from './modals/project-settings-modal';
-import PromptModal from './modals/prompt-modal';
+import { PromptModal } from './modals/prompt-modal';
 import ProtoFilesModal from './modals/proto-files-modal';
-import RequestCreateModal from './modals/request-create-modal';
-import RequestGroupSettingsModal from './modals/request-group-settings-modal';
-import RequestRenderErrorModal from './modals/request-render-error-modal';
-import RequestSettingsModal from './modals/request-settings-modal';
+import { RequestCreateModal } from './modals/request-create-modal';
+import { RequestGroupSettingsModal } from './modals/request-group-settings-modal';
+import { RequestRenderErrorModal } from './modals/request-render-error-modal';
+import { RequestSettingsModal } from './modals/request-settings-modal';
 import RequestSwitcherModal from './modals/request-switcher-modal';
-import ResponseDebugModal from './modals/response-debug-modal';
+import { ResponseDebugModal } from './modals/response-debug-modal';
 import { SelectModal } from './modals/select-modal';
-import SettingsModal from './modals/settings-modal';
-import SyncBranchesModal from './modals/sync-branches-modal';
-import SyncDeleteModal from './modals/sync-delete-modal';
-import SyncHistoryModal from './modals/sync-history-modal';
-import SyncMergeModal from './modals/sync-merge-modal';
-import SyncStagingModal from './modals/sync-staging-modal';
+import { SettingsModal } from './modals/settings-modal';
+import { SyncBranchesModal } from './modals/sync-branches-modal';
+import { SyncDeleteModal } from './modals/sync-delete-modal';
+import { SyncHistoryModal } from './modals/sync-history-modal';
+import { SyncMergeModal } from './modals/sync-merge-modal';
+import { SyncStagingModal } from './modals/sync-staging-modal';
 import { WorkspaceDuplicateModal } from './modals/workspace-duplicate-modal';
-import WorkspaceEnvironmentsEditModal from './modals/workspace-environments-edit-modal';
-import WorkspaceSettingsModal from './modals/workspace-settings-modal';
-import WrapperModal from './modals/wrapper-modal';
-import WrapperAnalytics from './wrapper-analytics';
-import WrapperDebug from './wrapper-debug';
-import WrapperDesign from './wrapper-design';
+import { WorkspaceEnvironmentsEditModal } from './modals/workspace-environments-edit-modal';
+import { WorkspaceSettingsModal } from './modals/workspace-settings-modal';
+import { WrapperModal } from './modals/wrapper-modal';
+import { WrapperAnalytics } from './wrapper-analytics';
+import { WrapperDebug } from './wrapper-debug';
+import { WrapperDesign } from './wrapper-design';
 import WrapperHome from './wrapper-home';
-import WrapperMigration from './wrapper-migration';
+import { WrapperMigration } from './wrapper-migration';
 import WrapperOnboarding from './wrapper-onboarding';
-import WrapperUnitTest from './wrapper-unit-test';
+import { WrapperUnitTest } from './wrapper-unit-test';
 
 const spectral = initializeSpectral();
 
@@ -102,14 +102,14 @@ export type WrapperProps = AppProps & {
   handleGenerateCode: Function;
   handleCopyAsCurl: Function;
   handleCreateRequestForWorkspace: () => void;
-  handleSetRequestPaneRef: Function;
-  handleSetResponsePaneRef: Function;
+  requestPaneRef: Ref<HTMLElement>;
+  responsePaneRef: Ref<HTMLElement>;
   handleSetResponsePreviewMode: Function;
   handleRender: HandleRender;
   handleGetRenderContext: HandleGetRenderContext;
   handleSetResponseFilter: Function;
   handleSetActiveResponse: Function;
-  handleSetSidebarRef: Function;
+  sidebarRef: Ref<HTMLElement>;
   handleSidebarSort: (sortOrder: SortOrder) => void;
   handleStartDragSidebar: React.MouseEventHandler;
   handleResetDragSidebar: React.MouseEventHandler;
@@ -147,7 +147,7 @@ const requestUpdate = (request: Request, patch: Partial<Request>) => {
 };
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Wrapper extends PureComponent<WrapperProps, State> {
+export class Wrapper extends PureComponent<WrapperProps, State> {
   state: State = {
     forceRefreshKey: Date.now(),
     activeGitBranch: 'no-vcs',
@@ -504,14 +504,12 @@ class Wrapper extends PureComponent<WrapperProps, State> {
         <GitSyncDropdown
           className="margin-left"
           workspace={activeWorkspace}
-          // @ts-expect-error -- TSCONVERSION this prop is unused
-          dropdownButtonClassName="btn--clicky-small btn-sync btn-utility"
           gitRepository={activeGitRepository}
           vcs={gitVCS}
           handleInitializeEntities={handleInitializeEntities}
           handleGitBranchChanged={this._handleGitBranchChanged}
           renderDropdownButton={children => (
-            <DropdownButton className="btn--clicky-small btn-sync btn-utility">
+            <DropdownButton className="btn--clicky-small btn-sync">
               {children}
             </DropdownButton>
           )}
@@ -810,5 +808,3 @@ class Wrapper extends PureComponent<WrapperProps, State> {
     );
   }
 }
-
-export default Wrapper;

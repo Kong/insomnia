@@ -4,8 +4,8 @@ import React, { FunctionComponent } from 'react';
 import { ProtoDirectory } from '../../../models/proto-directory';
 import type { ProtoFile } from '../../../models/proto-file';
 import type { ExpandedProtoDirectory } from '../../redux/proto-selectors';
-import ProtoDirectoryListItem from './proto-directory-list-item';
-import ProtoFileListItem from './proto-file-list-item';
+import { ProtoDirectoryListItem } from './proto-directory-list-item';
+import { ProtoFileListItem } from './proto-file-list-item';
 
 export type SelectProtoFileHandler = (id: string) => void;
 export type DeleteProtoFileHandler = (protofile: ProtoFile) => Promise<void>;
@@ -60,7 +60,7 @@ const recursiveRender = (
   return [dirNode, ...fileNodes, ...subDirNodes];
 };
 
-const ProtoFileList: FunctionComponent<Props> = props => (
+export const ProtoFileList: FunctionComponent<Props> = props => (
   <ListGroup bordered>
     {!props.protoDirectories.length && (
       <ListGroupItem>No proto files exist for this workspace</ListGroupItem>
@@ -68,5 +68,3 @@ const ProtoFileList: FunctionComponent<Props> = props => (
     {props.protoDirectories.map(dir => recursiveRender(dir, props, 0))}
   </ListGroup>
 );
-
-export default ProtoFileList;

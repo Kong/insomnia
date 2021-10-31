@@ -1,13 +1,14 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
+import { HotKeyRegistry, KeyCombination } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { HotKeyDefinition, HotKeyRegistry, KeyCombination } from '../../../common/hotkeys';
 import {
   areKeyBindingsSameAsDefault,
   areSameKeyCombinations,
   constructKeyCombinationDisplay,
   getPlatformKeyCombinations,
+  HotKeyDefinition,
   hotKeyRefs,
   newDefaultKeyBindings,
   newDefaultRegistry,
@@ -16,10 +17,10 @@ import { Dropdown } from '../base/dropdown/dropdown';
 import { DropdownButton } from '../base/dropdown/dropdown-button';
 import { DropdownDivider } from '../base/dropdown/dropdown-divider';
 import { DropdownItem } from '../base/dropdown/dropdown-item';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 import { Hotkey } from '../hotkey';
 import { showModal } from '../modals';
-import AddKeyCombinationModal from '../modals/add-key-combination-modal';
+import { AddKeyCombinationModal } from '../modals/add-key-combination-modal';
 
 interface Props {
   hotKeyRegistry: HotKeyRegistry;

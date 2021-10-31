@@ -15,7 +15,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class ResponseCSVViewer extends PureComponent<Props, State> {
+export class ResponseCSVViewer extends PureComponent<Props, State> {
   state: State = {
     result: null,
   };
@@ -71,5 +71,3 @@ class ResponseCSVViewer extends PureComponent<Props, State> {
     );
   }
 }
-
-export default ResponseCSVViewer;

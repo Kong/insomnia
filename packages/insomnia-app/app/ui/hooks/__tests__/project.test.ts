@@ -128,4 +128,75 @@ describe('useRemoteProjects', () => {
       }),
     ]));
   });
+
+  it('should load teams on mount if not in incognitoMode', async () => {
+    await models.settings.patch({ incognitoMode: false });
+    const store = mockStore(await reduxStateForTest({ isLoggedIn: true }));
+
+    const vcs = newMockedVcs();
+    vcs.teams.mockResolvedValue([]);
+
+    // Render hook first time
+    const { result } = renderHook(() => useRemoteProjects(vcs), { wrapper: withReduxStore(store) });
+
+    // Refresh manually
+    await act(() => result.current.refresh());
+
+    // Called twice - once manually and once on mount
+    expect(vcs.teams).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not load teams on mount if in incognitoMode', async () => {
+    // Set up in incognito mode
+    await models.settings.patch({ incognitoMode: true });
+    const store = mockStore(await reduxStateForTest({ isLoggedIn: true }));
+
+    const vcs = newMockedVcs();
+    vcs.teams.mockResolvedValue([]);
+
+    // Render hook first time
+    const { result } = renderHook(() => useRemoteProjects(vcs), { wrapper: withReduxStore(store) });
+
+    // Refresh manually
+    await act(() => result.current.refresh());
+
+    // Called only once (manually), because load on mount was skipped
+    expect(vcs.teams).toHaveBeenCalledTimes(1);
+  });
+
+  it('should load teams on mount if incognitoMode goes from on to off', async () => {
+    // Set up in incognito mode
+    await models.settings.patch({ incognitoMode: true });
+    let state = await reduxStateForTest({ isLoggedIn: true });
+    const store = mockStore(() => state);
+
+    const vcs = newMockedVcs();
+    vcs.teams.mockResolvedValue([]);
+
+    // Render hook first time
+    const { result, rerender } = renderHook(() => useRemoteProjects(vcs), { wrapper: withReduxStore(store) });
+
+    // Refresh manually
+    await act(() => result.current.refresh());
+
+    // Called only once (manually), because load on mount was skipped
+    expect(vcs.teams).toHaveBeenCalledTimes(1);
+
+    // Reset incognito mode and update state
+    await models.settings.patch({ incognitoMode: false });
+    vcs.teams.mockClear();
+
+    // Force the store to update
+    state = await reduxStateForTest({ isLoggedIn: true });
+    store.dispatch({ type: 'ANY_ACTION' });
+
+    // Render the hook again with updated redux store
+    rerender();
+
+    // Refresh manually
+    await act(() => result.current.refresh());
+
+    // Called twice - once manually and once on mount
+    expect(vcs.teams).toHaveBeenCalledTimes(2);
+  });
 });

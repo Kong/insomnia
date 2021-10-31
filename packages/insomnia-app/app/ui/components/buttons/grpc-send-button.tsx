@@ -19,7 +19,7 @@ const buttonProps: ButtonProps = {
   radius: '0',
 };
 
-const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
+export const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleStart, handleCancel }) => {
   if (running) {
     return (
       <Button {...buttonProps} onClick={handleCancel}>
@@ -42,5 +42,3 @@ const GrpcSendButton: FunctionComponent<Props> = ({ running, methodType, handleS
     </Button>
   );
 };
-
-export default GrpcSendButton;

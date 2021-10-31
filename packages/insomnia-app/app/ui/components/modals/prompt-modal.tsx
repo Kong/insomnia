@@ -3,12 +3,12 @@ import classnames from 'classnames';
 import React, { PureComponent, ReactNode } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import Button from '../base/button';
-import Modal from '../base/modal';
+import { Button } from '../base/button';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import PromptButton from '../base/prompt-button';
+import { PromptButton } from '../base/prompt-button';
 
 interface State {
   title: string;
@@ -51,7 +51,7 @@ export interface PromptModalOptions {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class PromptModal extends PureComponent<{}, State> {
+export class PromptModal extends PureComponent<{}, State> {
   modal: Modal | null = null;
   _input: HTMLInputElement | null = null;
 
@@ -299,5 +299,3 @@ class PromptModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default PromptModal;

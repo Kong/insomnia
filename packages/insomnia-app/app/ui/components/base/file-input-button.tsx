@@ -16,7 +16,7 @@ interface Props extends Omit<HTMLAttributes<HTMLButtonElement>, 'onChange'> {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class FileInputButton extends PureComponent<Props> {
+export class FileInputButton extends PureComponent<Props> {
   _button: HTMLButtonElement | null = null;
 
   focus() {
@@ -63,5 +63,3 @@ class FileInputButton extends PureComponent<Props> {
     );
   }
 }
-
-export default FileInputButton;

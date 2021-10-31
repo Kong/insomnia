@@ -13,11 +13,11 @@ import { grpcActions, sendGrpcIpcMultiple } from '../../context/grpc';
 import { RootState } from '../../redux/modules';
 import { selectExpandedActiveProtoDirectories } from '../../redux/proto-selectors';
 import { selectActiveWorkspace } from '../../redux/selectors';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import ProtoFileList from '../proto-file/proto-file-list';
+import { ProtoFileList } from '../proto-file/proto-file-list';
 
 type ReduxProps = ReturnType<typeof mapStateToProps>;
 

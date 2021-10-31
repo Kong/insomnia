@@ -1,14 +1,14 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import jq from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
 import { docsTemplateTags } from '../../../common/documentation';
-import Link from '../base/link';
-import Modal from '../base/modal';
+import { Link } from '../base/link';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
-import RequestSettingsModal from '../modals/request-settings-modal';
+import { RequestSettingsModal } from '../modals/request-settings-modal';
 import { showModal } from './index';
 
 interface State {
@@ -17,7 +17,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class RequestRenderErrorModal extends PureComponent<{}, State> {
+export class RequestRenderErrorModal extends PureComponent<{}, State> {
   state: State = {
     error: null,
     request: null,
@@ -47,7 +47,7 @@ class RequestRenderErrorModal extends PureComponent<{}, State> {
 
   renderModalBody(request, error) {
     const fullPath = `Request.${error.path}`;
-    const result = jq.query(request, `$.${error.path}`);
+    const result = JSONPath({ json: request, path: `$.${error.path}` });
     const template = result && result.length ? result[0] : null;
     const locationLabel =
       template?.includes('\n') ? `line ${error.location.line} of` : null;
@@ -97,5 +97,3 @@ class RequestRenderErrorModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default RequestRenderErrorModal;

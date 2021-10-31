@@ -11,9 +11,9 @@ import type { BaseModel } from '../../models';
 import { isWorkspace, WorkspaceScopeKeys } from '../../models/workspace';
 import { ForceToWorkspace } from '../redux/modules/helpers';
 import { importFile, importUri } from '../redux/modules/import';
-import Analytics from './analytics';
+import { Analytics } from './analytics';
 import { showPrompt } from './modals';
-import OnboardingContainer from './onboarding-container';
+import { OnboardingContainer } from './onboarding-container';
 import type { WrapperProps } from './wrapper';
 
 type ReduxProps = ReturnType<typeof mapDispatchToProps>;
@@ -106,6 +106,10 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     this.props.wrapperProps.handleGoToNextActivity();
   }
 
+  hasStep1() {
+    return this.props.wrapperProps.settings.incognitoMode === false;
+  }
+
   renderStep1() {
     return (
       <Analytics
@@ -119,16 +123,21 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     const {
       settings: { enableAnalytics },
     } = this.props.wrapperProps;
+
+    const lastStep = this.hasStep1() ? (
+      <p className="notice success text-left margin-top margin-bottom">
+        <a href="#" className="pull-right" onClick={this._handleBackStep}>
+          Back
+        </a>
+        {enableAnalytics
+          ? `Thanks for helping make ${getAppName()} better!`
+          : 'Opted out of analytics'}
+      </p>
+    ) : null;
+
     return (
       <Fragment>
-        <p className="notice success text-left margin-top margin-bottom">
-          <a href="#" className="pull-right" onClick={this._handleBackStep}>
-            Back
-          </a>
-          {enableAnalytics
-            ? `Thanks for helping make ${getAppName()} better!`
-            : 'Opted out of analytics'}
-        </p>
+        {lastStep}
         <p>Import an OpenAPI spec to get started:</p>
         <button key="file" className="btn btn--clicky" onClick={this._handleImportFile}>
           From File
@@ -147,7 +156,7 @@ class WrapperOnboarding extends PureComponent<Props, State> {
     const { step } = this.state;
     let stepBody;
 
-    if (step === 1) {
+    if (step === 1 && this.hasStep1()) {
       stepBody = this.renderStep1();
     } else {
       stepBody = this.renderStep2();

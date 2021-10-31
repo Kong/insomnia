@@ -10,11 +10,11 @@ import { HandleGetRenderContext, HandleRender } from '../../../common/render';
 import * as models from '../../../models';
 import type { Cookie, CookieJar } from '../../../models/cookie-jar';
 import type { Workspace } from '../../../models/workspace';
-import Modal, { ModalProps } from '../base/modal';
+import { Modal, ModalProps } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
 import { ModalHeader } from '../base/modal-header';
-import OneLineEditor from '../codemirror/one-line-editor';
+import { OneLineEditor } from '../codemirror/one-line-editor';
 
 interface Props extends ModalProps {
   handleRender: HandleRender;
@@ -31,7 +31,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class CookieModifyModal extends PureComponent<Props, State> {
+export class CookieModifyModal extends PureComponent<Props, State> {
   modal: Modal | null = null;
   _rawTimeout: NodeJS.Timeout | null = null;
   _cookieUpdateTimeout: NodeJS.Timeout | null = null;
@@ -288,6 +288,4 @@ class CookieModifyModal extends PureComponent<Props, State> {
       </Modal>
     );
   }
-} // export CookieModifyModal;
-
-export default CookieModifyModal;
+}

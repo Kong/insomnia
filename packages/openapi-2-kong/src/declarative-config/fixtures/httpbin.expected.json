@@ -2,7 +2,7 @@
   "services": [
     {
       "protocol": "https",
-      "host": "httpbin",
+      "host": "httpbin.upstream",
       "port": 443,
       "path": "/",
       "name": "httpbin",
@@ -246,7 +246,7 @@
   "upstreams": [
     {
       "tags": ["OAS3_import", "OAS3file_httpbin.yaml"],
-      "name": "httpbin",
+      "name": "httpbin.upstream",
       "targets": [
         {
           "target": "httpbin.org:443",

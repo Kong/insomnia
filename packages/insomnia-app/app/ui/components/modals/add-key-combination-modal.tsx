@@ -1,13 +1,13 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import classnames from 'classnames';
+import { KeyCombination } from 'insomnia-common';
 import React, { PureComponent } from 'react';
 
 import { AUTOBIND_CFG } from '../../../common/constants';
-import type { KeyCombination } from '../../../common/hotkeys';
 import { constructKeyCombinationDisplay, isModifierKeyCode } from '../../../common/hotkeys';
 import { keyboardKeys } from '../../../common/keyboard-keys';
 import * as misc from '../../../common/misc';
-import Modal from '../base/modal';
+import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalHeader } from '../base/modal-header';
 
@@ -19,7 +19,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class AddKeyCombinationModal extends PureComponent<{}, State> {
+export class AddKeyCombinationModal extends PureComponent<{}, State> {
   _modal: Modal | null = null;
 
   state: State = {
@@ -143,5 +143,3 @@ class AddKeyCombinationModal extends PureComponent<{}, State> {
     );
   }
 }
-
-export default AddKeyCombinationModal;

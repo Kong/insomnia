@@ -16,8 +16,9 @@ import {
 } from '../../common/constants';
 import * as models from '../../models/index';
 import imgSrcCore from '../images/insomnia-core-logo.png';
-import Link from './base/link';
-const LOCALSTORAGE_KEY = 'insomnia::notifications::seen';
+import { Link } from './base/link';
+
+const INSOMNIA_NOTIFICATIONS_SEEN = 'insomnia::notifications::seen';
 
 export interface ToastNotification {
   key: string;
@@ -57,8 +58,10 @@ const StyledFooter = styled.footer`
   width: 100%;
 `;
 
+type SeenNotifications = Record<string, boolean>;
+
 @autoBindMethodsForReact(AUTOBIND_CFG)
-class Toast extends PureComponent<{}, State> {
+export class Toast extends PureComponent<{}, State> {
   _interval: NodeJS.Timeout | null = null;
 
   state: State = {
@@ -67,7 +70,7 @@ class Toast extends PureComponent<{}, State> {
     appName: getAppName(),
   };
 
-  _handlePostCTACleanup() {
+  _cancel() {
     const { notification } = this.state;
 
     if (!notification) {
@@ -77,20 +80,31 @@ class Toast extends PureComponent<{}, State> {
     this._dismissNotification();
   }
 
-  _handleCancelClick() {
-    const { notification } = this.state;
-
+  _handleNotification(notification: ToastNotification | null | undefined) {
     if (!notification) {
       return;
     }
 
-    this._dismissNotification();
-  }
-
-  _hasSeenNotification(notification: ToastNotification) {
     const seenNotifications = this._loadSeen();
 
-    return seenNotifications[notification.key];
+    console.log(`[toast] Received notification ${notification.key}`);
+
+    if (seenNotifications[notification.key]) {
+      console.log(`[toast] Not showing notification ${notification.key} because has already been seen`);
+      return;
+    }
+
+    seenNotifications[notification.key] = true;
+    const obj = JSON.stringify(seenNotifications, null, 2);
+    window.localStorage.setItem(INSOMNIA_NOTIFICATIONS_SEEN, obj);
+
+    this.setState({
+      notification,
+      visible: false,
+    });
+
+    // Fade the notification in
+    setTimeout(() => { this.setState({ visible: true }); }, 1000);
   }
 
   async _checkForNotifications() {
@@ -100,64 +114,51 @@ class Toast extends PureComponent<{}, State> {
     }
 
     const stats = await models.stats.get();
-    const settings = await models.settings.getOrCreate();
-    let notification: ToastNotification;
+    const {
+      allowNotificationRequests,
+      disablePaidFeatureAds,
+      disableUpdateNotification,
+      updateAutomatically,
+      updateChannel,
+    } = await models.settings.getOrCreate();
+
+    if (!allowNotificationRequests) {
+      // if the user has specifically said they don't want to send notification requests, then exit early
+      return;
+    }
+
+    let notification: ToastNotification | null = null;
 
     // Try fetching user notification
     try {
       const data = {
-        firstLaunch: stats.created,
-        // Used for account verification notifications
-        launches: stats.launches,
-        // Used for CTAs / Informational notifications
-        platform: getAppPlatform(),
         app: getAppId(),
-        version: getAppVersion(),
+        autoUpdatesDisabled: !updateAutomatically,
+        disablePaidFeatureAds,
+        disableUpdateNotification,
+        firstLaunch: stats.created,
+        launches: stats.launches, // Used for account verification notifications
+        platform: getAppPlatform(), // Used for CTAs / Informational notifications
+        updateChannel,
         updatesNotSupported: !updatesSupported(),
-        autoUpdatesDisabled: !settings.updateAutomatically,
-        disableUpdateNotification: settings.disableUpdateNotification,
-        updateChannel: settings.updateChannel,
+        version: getAppVersion(),
       };
       notification = await fetch.post('/notification', data, session.getCurrentSessionId());
     } catch (err) {
       console.warn('[toast] Failed to fetch user notifications', err);
     }
 
-    // @ts-expect-error -- TSCONVERSION
     this._handleNotification(notification);
-  }
-
-  _handleNotification(notification: ToastNotification | null | undefined) {
-    // No new notifications
-    if (!notification || this._hasSeenNotification(notification)) {
-      return;
-    }
-
-    // Remember that we've seen it
-    const seenNotifications = this._loadSeen();
-
-    seenNotifications[notification.key] = true;
-    const obj = JSON.stringify(seenNotifications, null, 2);
-    window.localStorage.setItem(LOCALSTORAGE_KEY, obj);
-    // Show the notification
-    this.setState({
-      notification,
-      visible: false,
-    });
-    // Fade the notification in
-    setTimeout(
-      () =>
-        this.setState({
-          visible: true,
-        }),
-      1000,
-    );
   }
 
   _loadSeen() {
     try {
-      // @ts-expect-error -- TSCONVERSION
-      return JSON.parse(window.localStorage.getItem(LOCALSTORAGE_KEY)) || {};
+      const storedKeys = window.localStorage.getItem(INSOMNIA_NOTIFICATIONS_SEEN);
+      if (!storedKeys) {
+        return {};
+      }
+
+      return JSON.parse(storedKeys) as SeenNotifications || {};
     } catch (e) {
       return {};
     }
@@ -171,25 +172,15 @@ class Toast extends PureComponent<{}, State> {
     }
 
     // Hide the currently showing notification
-    this.setState({
-      visible: false,
-    });
+    this.setState({ visible: false });
+
     // Give time for toast to fade out, then remove it
     setTimeout(() => {
-      this.setState(
-        {
-          notification: null,
-        },
-        async () => {
-          await this._checkForNotifications();
-        },
-      );
+      this.setState({ notification: null }, this._checkForNotifications);
     }, 1000);
   }
 
   _listenerShowNotification(_e, notification: ToastNotification) {
-    console.log('[toast] Received notification ' + notification.key);
-
     this._handleNotification(notification);
   }
 
@@ -223,11 +214,11 @@ class Toast extends PureComponent<{}, State> {
           <img src={imgSrcCore} alt={appName} />
         </StyledLogo>
         <StyledContent>
-          <p>{notification ? notification.message : 'Unknown'}</p>
+          <p>{notification?.message || 'Unknown'}</p>
           <StyledFooter>
             <button
               className="btn btn--super-duper-compact btn--outlined"
-              onClick={this._handleCancelClick}
+              onClick={this._cancel}
             >
               Dismiss
             </button>
@@ -235,7 +226,7 @@ class Toast extends PureComponent<{}, State> {
             <Link
               button
               className="btn btn--super-duper-compact btn--outlined no-wrap"
-              onClick={this._handlePostCTACleanup}
+              onClick={this._cancel}
               href={notification.url}
             >
               {notification.cta}
@@ -246,5 +237,3 @@ class Toast extends PureComponent<{}, State> {
     );
   }
 }
-
-export default Toast;

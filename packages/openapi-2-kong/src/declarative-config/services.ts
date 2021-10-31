@@ -3,6 +3,7 @@ import {
   generateSlug,
   getAllServers,
   getName,
+  hasUpstreams,
   HttpMethod,
   parseUrl,
   pathVariablesToRegex,
@@ -34,6 +35,12 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
   const serverUrl = fillServerVariables(server);
   const name = getName(api);
   const parsedUrl = parseUrl(serverUrl);
+
+  let host = parsedUrl.hostname;
+  if (hasUpstreams(api)) {
+    host =  `${name}.upstream`;
+  }
+
   // Service plugins
   const globalPlugins = generateGlobalPlugins(api, tags);
   const serviceDefaults = api[xKongServiceDefaults] || {};
@@ -47,7 +54,7 @@ export function generateService(server: OA3Server, api: OpenApi3Spec, tags: stri
     name,
     // remove semicolon i.e. convert `https:` to `https`
     protocol: parsedUrl?.protocol?.substring(0, parsedUrl.protocol.length - 1),
-    host: name,
+    host,
     // not a hostname, but the Upstream name
     port: Number(parsedUrl.port || '80'),
     path: parsedUrl.pathname,

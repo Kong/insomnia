@@ -1,19 +1,19 @@
+import { HotKeyRegistry } from 'insomnia-common';
 import React, { FC, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { hotKeyRefs } from '../../../common/hotkeys';
-import * as hotkeys from '../../../common/hotkeys';
 import { importFile } from '../../redux/modules/import';
 import { selectActiveWorkspace } from '../../redux/selectors';
 import { Hotkey } from '../hotkey';
 import { Pane, PaneBody, PaneHeader } from './pane';
 
 interface Props {
-  hotKeyRegistry: hotkeys.HotKeyRegistry;
+  hotKeyRegistry: HotKeyRegistry;
   handleCreateRequest: () => void;
 }
 
-const PlaceholderRequestPane: FC<Props> = ({
+export const PlaceholderRequestPane: FC<Props> = ({
   hotKeyRegistry,
   handleCreateRequest,
 }) => {
@@ -77,5 +77,3 @@ const PlaceholderRequestPane: FC<Props> = ({
     </Pane>
   );
 };
-
-export default PlaceholderRequestPane;

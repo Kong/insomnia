@@ -11,6 +11,7 @@ module.exports = merge(base, {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.DEFAULT_APP_NAME': JSON.stringify('Insomnia'),
+      'process.env.VERSION': JSON.stringify(process.env.VERSION),
     }),
   ],
 });

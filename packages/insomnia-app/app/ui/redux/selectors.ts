@@ -10,6 +10,7 @@ import { DEFAULT_PROJECT_ID, isRemoteProject } from '../../models/project';
 import { isRequest, Request } from '../../models/request';
 import { isRequestGroup, RequestGroup } from '../../models/request-group';
 import { UnitTestResult } from '../../models/unit-test-result';
+import { isCollection } from '../../models/workspace';
 import { RootState } from './modules';
 
 type EntitiesLists = {
@@ -100,15 +101,10 @@ export const selectAllWorkspaces = createSelector(
   entities => entities.workspaces,
 );
 
-export const selectAllApiSpecs = createSelector(
-  selectEntitiesLists,
-  entities => entities.apiSpecs,
-);
-
 export const selectWorkspacesForActiveProject = createSelector(
   selectAllWorkspaces,
   selectActiveProject,
-  (workspaces, activeProject) => workspaces.filter(w => w.parentId === activeProject._id),
+  (workspaces, activeProject) => workspaces.filter(workspace => workspace.parentId === activeProject._id),
 );
 
 export const selectActiveWorkspace = createSelector(
@@ -118,7 +114,7 @@ export const selectActiveWorkspace = createSelector(
   (workspaces, activeWorkspaceId, activeActivity) => {
     // Only return an active workspace if we're in an activity
     if (activeActivity && isWorkspaceActivity(activeActivity)) {
-      const workspace = workspaces.find(w => w._id === activeWorkspaceId);
+      const workspace = workspaces.find(workspace => workspace._id === activeWorkspaceId);
       return workspace;
     }
 
@@ -133,6 +129,43 @@ export const selectActiveWorkspaceMeta = createSelector(
     const id = activeWorkspace ? activeWorkspace._id : 'n/a';
     return entities.workspaceMetas.find(m => m.parentId === id);
   },
+);
+
+export const selectAllApiSpecs = createSelector(
+  selectEntitiesLists,
+  entities => entities.apiSpecs,
+);
+
+export const selectActiveApiSpec = createSelector(
+  selectAllApiSpecs,
+  selectActiveWorkspace,
+  (apiSpecs, activeWorkspace) => {
+    if (!activeWorkspace) {
+      // There should never be an active api spec without an active workspace
+      return undefined;
+    }
+    const activeSpec = apiSpecs.find(apiSpec => apiSpec.parentId === activeWorkspace._id);
+
+    if (!activeSpec) {
+      // This case should never be reached; an api spec should always exist for a given workspace.
+      throw new Error(`an api spec not found for the workspace ${activeWorkspace._id} (${activeWorkspace.name})`);
+    }
+
+    return activeSpec;
+  }
+);
+
+export const selectActiveWorkspaceName = createSelector(
+  selectActiveWorkspace,
+  selectActiveApiSpec,
+  (activeWorkspace, activeApiSpec) => {
+    if (!activeWorkspace) {
+      // see above, but since the selectActiveWorkspace selector really can return undefined, we need to handle it here.
+      return undefined;
+    }
+
+    return isCollection(activeWorkspace) ? activeWorkspace.name : activeApiSpec?.fileName;
+  }
 );
 
 export const selectActiveEnvironment = createSelector(

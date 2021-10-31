@@ -1,8 +1,7 @@
 import path from 'path';
-import { ValueOf } from 'type-fest';
 
 import appConfig from '../../config/config.json';
-import { getDataDirectory } from './electron-helpers';
+import { getDataDirectory, getPortableExecutableDir } from './electron-helpers';
 
 // App Stuff
 export const getAppVersion = () => appConfig.version;
@@ -37,7 +36,7 @@ export function updatesSupported() {
   }
 
   // Updates are not supported for Windows portable binaries
-  if (isWindows() && process.env.PORTABLE_EXECUTABLE_DIR) {
+  if (isWindows() && getPortableExecutableDir()) {
     return false;
   }
 
@@ -266,16 +265,6 @@ export const HAWK_ALGORITHM_SHA1 = 'sha1';
 // json-order constants
 export const JSON_ORDER_PREFIX = '&';
 export const JSON_ORDER_SEPARATOR = '~|';
-
-// HTTP version codes
-export const HttpVersions = {
-  V1_0: 'V1_0',
-  V1_1: 'V1_1',
-  V2_0: 'V2_0',
-  v3: 'v3',
-  default: 'default',
-} as const;
-export type HttpVersion = ValueOf<typeof HttpVersions>;
 
 const authTypesMap = {
   [AUTH_BASIC]: ['Basic', 'Basic Auth'],
