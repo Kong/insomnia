@@ -24,6 +24,8 @@ interface InsomniaPlugin {
       cover?: string;
     };
 
+    unlisted?: boolean;
+
     publisher?: {
       name: string;
       // absolute URL
