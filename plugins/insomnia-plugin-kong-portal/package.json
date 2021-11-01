@@ -19,7 +19,8 @@
   },
   "insomnia": {
     "name": "kong-portal",
-    "description": "Deploy API specifications to Kong Portal"
+    "description": "Deploy API specifications to Kong Portal",
+    "unlisted": true
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",

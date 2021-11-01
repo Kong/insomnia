@@ -14,7 +14,8 @@
   },
   "insomnia": {
     "name": "kong-declarative-config",
-    "description": "Generate Kong Declarative Config"
+    "description": "Generate Kong Declarative Config",
+    "unlisted": true
   },
   "dependencies": {
     "openapi-2-kong": "2.4.0",
