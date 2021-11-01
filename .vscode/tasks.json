@@ -60,8 +60,7 @@
       "detail": "Compile Renderer (Watch) | Compile Main",
       "dependsOn": [
         "Insomnia: Compile Renderer (Watch)",
-        "Insomnia: Compile Main",
-        "Components: Compile (Watch)"
+        "Insomnia: Compile Main"
       ]
     },
     {
