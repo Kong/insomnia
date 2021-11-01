@@ -51,7 +51,7 @@
           "endsPattern": {
             "regexp": "Compiled"
           }
-        },
+        }
       },
       "command": "${workspaceRoot}/packages/insomnia-app/node_modules/.bin/webpack-dev-server --config webpack/webpack.config.development.ts"
     },
@@ -60,8 +60,50 @@
       "detail": "Compile Renderer (Watch) | Compile Main",
       "dependsOn": [
         "Insomnia: Compile Renderer (Watch)",
-        "Insomnia: Compile Main",
+        "Insomnia: Compile Main"
       ]
+    },
+    {
+      "label": "Inso: Compile (Watch)",
+      "detail": "npm start",
+      "type": "shell",
+      "promptOnClose": false,
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "webpack",
+        "severity": "error",
+        "fileLocation": "absolute",
+        "pattern": [
+          {
+            "regexp": "ERROR in (.*)",
+            "file": 1
+          },
+          {
+            "regexp": "\\((\\d+),(\\d+)\\):(.*)",
+            "line": 1,
+            "column": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": {
+            "regexp": "watching"
+          },
+          "endsPattern": {
+            "regexp": "Built at\\:"
+          }
+        }
+      },
+      "command": "npm run inso-start"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "inso_args",
+      "type": "promptString",
+      "description": "Arguments to pass to inso",
+      "default": "-v"
     }
   ]
 }
