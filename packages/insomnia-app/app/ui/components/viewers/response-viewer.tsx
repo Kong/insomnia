@@ -197,9 +197,50 @@ export class ResponseViewer extends Component<Props, State> {
     });
   }
 
+  _getContentType() {
+    const { contentType: originalContentType } = this.props;
+    const { bodyBuffer } = this.state;
+
+    const lowercasedOriginalContentType = originalContentType.toLowerCase();
+
+    if (!bodyBuffer || bodyBuffer.length === 0) {
+      return lowercasedOriginalContentType;
+    }
+
+    // Try to detect JSON in all cases (even if a different header is set).
+    // Apparently users often send JSON with weird content-types like text/plain.
+    try {
+      if (bodyBuffer && bodyBuffer.length > 0) {
+        JSON.parse(bodyBuffer.toString('utf8'));
+        return 'application/json';
+      }
+    } catch (e) {
+      // Nothing
+    }
+
+    // Try to detect HTML in all cases (even if header is set).
+    // It is fairly common for webservers to send errors in HTML by default.
+    // NOTE: This will probably never throw but I'm not 100% so wrap anyway
+    try {
+      const isProbablyHTML = bodyBuffer
+        .slice(0, 100)
+        .toString()
+        .trim()
+        .match(/^<!doctype html.*>/i);
+
+      if (lowercasedOriginalContentType.indexOf('text/html') !== 0 && isProbablyHTML) {
+        return 'text/html';
+      }
+    } catch (e) {
+      // Nothing
+    }
+
+    return lowercasedOriginalContentType;
+  }
+
   _getBody() {
     const { bodyBuffer } = this.state;
-    const { contentType } = this.props;
+    const contentType = this._getContentType();
 
     if (!bodyBuffer) {
       return '';
@@ -220,7 +261,7 @@ export class ResponseViewer extends Component<Props, State> {
 
   /** Try to detect content-types if there isn't one */
   _getMode() {
-    const { contentType } = this.props;
+    const contentType = this._getContentType();
     const body = this._getBody();
     if (body?.match(/^\s*<\?xml [^?]*\?>/)) {
       return 'application/xml';
@@ -257,8 +298,7 @@ export class ResponseViewer extends Component<Props, State> {
       updateFilter,
       url,
     } = this.props;
-    // WARNING: props should never be overwritten!
-    let { contentType } = this.props;
+    const contentType = this._getContentType();
     const { bodyBuffer, error: parseError } = this.state;
     const error = responseError || parseError;
 
@@ -321,35 +361,7 @@ export class ResponseViewer extends Component<Props, State> {
       return <div className="pad faint">No body returned for response</div>;
     }
 
-    // Try to detect JSON in all cases (even if header is set). Apparently users
-    // often send JSON with weird content-types like text/plain
-    try {
-      JSON.parse(bodyBuffer.toString('utf8'));
-      contentType = 'application/json';
-    } catch (e) {
-      // Nothing
-    }
-
-    // Try to detect HTML in all cases (even if header is set). It is fairly
-    // common for webservers to send errors in HTML by default.
-    // NOTE: This will probably never throw but I'm not 100% so wrap anyway
-    try {
-      const isProbablyHTML = bodyBuffer
-        .slice(0, 100)
-        .toString()
-        .trim()
-        .match(/^<!doctype html.*>/i);
-
-      if (contentType.indexOf('text/html') !== 0 && isProbablyHTML) {
-        contentType = 'text/html';
-      }
-    } catch (e) {
-      // Nothing
-    }
-
-    const ct = contentType.toLowerCase();
-
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('image/') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
@@ -369,7 +381,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.includes('html')) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.includes('html')) {
       return (
         <ResponseWebView
           body={this._getBody()}
@@ -381,7 +393,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('application/pdf') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('application/pdf') === 0) {
       return (
         <div className="tall wide scrollable">
           <ResponsePDFViewer body={bodyBuffer} uniqueKey={responseId} />
@@ -389,7 +401,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('text/csv') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('text/csv') === 0) {
       return (
         <div className="tall wide scrollable">
           <ResponseCSVViewer body={bodyBuffer} key={responseId} />
@@ -397,7 +409,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('multipart/') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('multipart/') === 0) {
       return (
         <ResponseMultipartViewer
           bodyBuffer={bodyBuffer}
@@ -418,7 +430,7 @@ export class ResponseViewer extends Component<Props, State> {
       );
     }
 
-    if (previewMode === PREVIEW_MODE_FRIENDLY && ct.indexOf('audio/') === 0) {
+    if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('audio/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
       return (
