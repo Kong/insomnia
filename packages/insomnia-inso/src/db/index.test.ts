@@ -59,7 +59,7 @@ describe('loadDb()', () => {
   });
 
   it('should load nedb from src', async () => {
-    gitAdapter.mockResolvedValue(emptyDb());
+    gitAdapter.mockResolvedValue(null);
     neDbAdapter.mockResolvedValue(emptyDb());
     await loadDb({
       src: 'dir',
@@ -68,7 +68,7 @@ describe('loadDb()', () => {
     expect(logger.__getLogs().debug).toEqual([
       `Data store configured from app data directory at \`${path.resolve('dir')}\``,
     ]);
-    expect(gitAdapter).not.toHaveBeenCalled();
+    expect(gitAdapter).toHaveBeenCalledWith('dir', ['Environment']);
     expect(neDbAdapter).toHaveBeenCalledWith('dir', ['Environment']);
   });
 
@@ -94,7 +94,7 @@ describe('loadDb()', () => {
     expect(logger.__getLogs().debug).toEqual([
       `Data store configured from app data directory at \`${path.resolve('dir')}\``,
     ]);
-    expect(gitAdapter).not.toHaveBeenCalled();
+    expect(gitAdapter).toHaveBeenCalled();
     expect(neDbAdapter).toHaveBeenCalled();
   });
 

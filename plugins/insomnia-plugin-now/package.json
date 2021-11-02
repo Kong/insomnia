@@ -15,7 +15,6 @@
   "main": "index.js",
   "insomnia": {
     "name": "now",
-    "core": true,
     "unlisted": true
   },
   "scripts": {
