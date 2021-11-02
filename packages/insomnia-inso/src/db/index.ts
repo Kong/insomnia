@@ -56,14 +56,14 @@ export const loadDb = async ({
   let db: Database | null = null;
 
   // try load from git
-  if (!appDataDir && !src) {
-    const dir = workingDir || '.';
+  if (!appDataDir) {
+    const dir = src || workingDir || '.';
     db = await gitAdapter(dir, filterTypes);
     db && logger.debug(`Data store configured from git repository at \`${path.resolve(dir)}\``);
   }
 
   // try load from file (higher priority)
-  if (src) {
+  if (!db && src) {
     db = await insomniaAdapter(src, filterTypes);
     db && logger.debug(`Data store configured from file at \`${path.resolve(src)}\``);
   }
