@@ -14,7 +14,6 @@
   },
   "main": "index.js",
   "insomnia": {
-    "core": true,
     "unlisted": true,
     "name": "base64",
     "description": "Encode/Decode base64 strings"

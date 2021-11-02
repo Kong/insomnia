@@ -5,6 +5,7 @@ const base = require('./webpack.config.base');
 /** @type { import('webpack').Configuration } */
 module.exports = merge(base, {
   mode: 'development',
+  devtool: 'inline-source-map',
   plugins: [
     new webpack.DefinePlugin({
       __DEV__: true,
