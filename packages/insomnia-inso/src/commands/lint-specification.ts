@@ -38,6 +38,7 @@ export async function lintSpecification(
       try {
         specContent = (await fs.promises.readFile(fileName)).toString();
       } catch (e) {
+        // @ts-ignore: weird docker build fail with TS2345
         throw new InsoError(`Failed to read "${fileName}"`, e);
       }
     } else {
@@ -45,6 +46,7 @@ export async function lintSpecification(
       return false;
     }
   } catch (e) {
+    // @ts-ignore: weird docker build fail with TS2571
     logger.fatal(e.message);
     return false;
   }

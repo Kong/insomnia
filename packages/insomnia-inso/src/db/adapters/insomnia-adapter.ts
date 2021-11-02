@@ -86,6 +86,7 @@ const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
   try {
     parsed = YAML.parse(content);
   } catch (e) {
+    // @ts-ignore: weird docker build fail with TS2345
     throw new InsoError(`Failed to parse ${fileName}.`, e);
   }
 
