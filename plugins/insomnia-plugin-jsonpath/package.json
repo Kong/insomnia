@@ -16,7 +16,6 @@
   "insomnia": {
     "name": "json-path",
     "description": "Template tag to pull data out of JSON strings",
-    "core": true,
     "unlisted": true
   },
   "dependencies": {
