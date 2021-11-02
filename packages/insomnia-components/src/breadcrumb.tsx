@@ -1,7 +1,7 @@
-import React, { FC, ReactNode } from 'react';
+import React, { FC, Fragment, ReactNode } from 'react';
 import styled from 'styled-components';
 
-interface CrumbProps {
+export interface CrumbProps {
   id: string;
   node: ReactNode;
   onClick?: React.MouseEventHandler<HTMLAnchorElement>;
@@ -10,11 +10,11 @@ interface CrumbProps {
 export interface BreadcrumbProps {
   crumbs: CrumbProps[];
   className?: string;
+  isLoading?: boolean;
 }
 
 const StyledBreadcrumb = styled.ul`
-  font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-size: var(--font-size-md);
   color: var(--color-font);
   grid-area: breadcrumbs;
   display: flex;
@@ -24,7 +24,7 @@ const StyledBreadcrumb = styled.ul`
   a,
   a::before,
   li > ::before {
-    color: var(--color-font);
+    color: var(--color-font) !important;
   }
 
   li {
@@ -32,11 +32,20 @@ const StyledBreadcrumb = styled.ul`
     flex-direction: row;
 
     a {
+      font-weight: 400 !important;
       cursor: pointer;
+      opacity: 0.5;
+      &:hover {
+        color: var(--color-font);
+        opacity: 1;
+        text-decoration: none;
+      }
     }
 
     &::before {
       margin: 0 var(--padding-xs);
+      font-weight: 300;
+      opacity: 0.5;
       content: '/';
     }
 
@@ -50,8 +59,13 @@ const Crumb: FC<CrumbProps> = ({ id, node, onClick }) => <li key={id}>
   {onClick ? <a href="#" onClick={onClick}>{node}</a> : node}
 </li>;
 
-export const Breadcrumb: FC<BreadcrumbProps> = ({ crumbs, className }) => (
-  <StyledBreadcrumb className={className}>
-    {crumbs.map(Crumb)}
-  </StyledBreadcrumb>
+export const Breadcrumb: FC<BreadcrumbProps> = ({ crumbs, className, isLoading }) => (
+  <Fragment>
+    <StyledBreadcrumb className={className}>
+      {crumbs.map(Crumb)}
+    </StyledBreadcrumb>
+    {isLoading ? (
+      <i className="fa fa-refresh fa-spin space-left" />
+    ) : null}
+  </Fragment>
 );

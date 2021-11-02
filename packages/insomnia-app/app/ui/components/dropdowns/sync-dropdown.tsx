@@ -437,7 +437,7 @@ class UnconnectedSyncDropdown extends PureComponent<Props, State> {
           <i className="fa fa-code-fork space-right" />{' '}
           {initializing ? 'Initializing...' : currentBranch}
         </div>
-        <div className="space-left">
+        <div className="flex space-left">
           <Tooltip message={snapshotToolTipMsg} delay={800} position="bottom">
             <i
               className={classnames('fa fa-cube fa--fixed-width', {
