@@ -24,7 +24,7 @@ import { ResponseWebView } from './response-web-view';
 
 let alwaysShowLargeResponses = false;
 
-interface Props {
+export interface ResponseViewerProps {
   bytes: number;
   contentType: string;
   disableHtmlPreviewJs: boolean;
@@ -53,7 +53,7 @@ interface State {
 }
 
 @autoBindMethodsForReact(AUTOBIND_CFG)
-export class ResponseViewer extends Component<Props, State> {
+export class ResponseViewer extends Component<ResponseViewerProps, State> {
   _selectableView: ResponseRawViewer | UnconnectedCodeEditor | null;
 
   state: State = {
@@ -86,7 +86,7 @@ export class ResponseViewer extends Component<Props, State> {
     this._handleDismissBlocker();
   }
 
-  _maybeLoadResponseBody(props: Props, forceShow?: boolean) {
+  _maybeLoadResponseBody(props: ResponseViewerProps, forceShow?: boolean) {
     const { bytes } = props;
     const largeResponse = bytes > LARGE_RESPONSE_MB * 1024 * 1024;
     const hugeResponse = bytes > HUGE_RESPONSE_MB * 1024 * 1024;
@@ -117,11 +117,11 @@ export class ResponseViewer extends Component<Props, State> {
   }
 
   // eslint-disable-next-line camelcase
-  UNSAFE_componentWillReceiveProps(nextProps: Props) {
+  UNSAFE_componentWillReceiveProps(nextProps: ResponseViewerProps) {
     this._maybeLoadResponseBody(nextProps);
   }
 
-  shouldComponentUpdate(nextProps: Props, nextState: State) {
+  shouldComponentUpdate(nextProps: ResponseViewerProps, nextState: State) {
     for (const k of Object.keys(nextProps)) {
       const next = nextProps[k];
       const current = this.props[k];
