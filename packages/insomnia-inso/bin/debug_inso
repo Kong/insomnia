@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+/**
+ * This file is only used by the vscode launch config.
+ * It allows us to provide a free text prompt to the user to pass any inso extra arguments.
+ * https://github.com/microsoft/vscode/issues/83678
+ */
+let args = process.argv;
+
+if (args.length >= 2 && require('inspector').url()) {
+  args = process.argv.reduce((allArgs, arg) => [...allArgs, ...arg.split(/\s/)], []);
+}
+
+// This should always be the same as bin/inso
+global.require = require;
+const insomniacli = require('../dist/index.js');
+insomniacli.go(args);

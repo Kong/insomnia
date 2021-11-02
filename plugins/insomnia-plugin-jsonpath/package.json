@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-jsonpath",
-  "version": "2.3.3-alpha.4",
+  "version": "2.4.0",
   "author": "Kong <office@konghq.com>",
   "description": "Template tag to pull data from JSON strings",
   "license": "MIT",
@@ -16,7 +16,6 @@
   "insomnia": {
     "name": "json-path",
     "description": "Template tag to pull data out of JSON strings",
-    "core": true,
     "unlisted": true
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-prompt",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia prompt template tag",
   "license": "MIT",
@@ -15,7 +15,6 @@
   "main": "index.js",
   "insomnia": {
     "name": "prompt",
-    "core": true,
     "unlisted": true
   },
   "scripts": {
