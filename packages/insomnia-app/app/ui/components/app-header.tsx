@@ -29,7 +29,7 @@ export interface AppHeaderProps {
 }
 
 export const AppHeader: FC<AppHeaderProps> = ({
-  breadcrumbProps: { crumbs, isLoading },
+  breadcrumbProps,
   gridCenter,
   gridRight,
 }) => {
@@ -38,7 +38,7 @@ export const AppHeader: FC<AppHeaderProps> = ({
       gridLeft={(
         <Fragment>
           <img src={coreLogo} alt="Insomnia" width="28" height="28" />
-          <Breadcrumb crumbs={crumbs} isLoading={isLoading}/>
+          <Breadcrumb {...breadcrumbProps} />
         </Fragment>
       )}
       gridCenter={gridCenter}
