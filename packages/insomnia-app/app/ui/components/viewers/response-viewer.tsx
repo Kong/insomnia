@@ -240,13 +240,12 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
 
   _getBody() {
     const { bodyBuffer } = this.state;
-    const contentType = this._getContentType();
-
     if (!bodyBuffer) {
       return '';
     }
 
     // Show everything else as "source"
+    const contentType = this._getContentType();
     const match = contentType.match(/charset=([\w-]+)/);
     const charset = match && match.length >= 2 ? match[1] : 'utf-8';
 
