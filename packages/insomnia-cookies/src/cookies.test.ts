@@ -56,16 +56,4 @@ describe('cookiesFromJar()', () => {
     expect(cookies[0].creation).toMatch(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/);
     expect(cookies[0].expires).toEqual(d.toISOString());
   });
-
-  it('handles bad jar', async () => {
-    const jar = CookieJar.fromJSON({ cookies: [] });
-
-    // MemoryStore never actually throws errors, so lets mock the function to force it to this time.
-    // @ts-expect-error intentionally invalid value
-    jar.store.getAllCookies = cb => cb(new Error('Dummy Error'));
-    const cookies = await cookiesFromJar(jar);
-
-    // Cookies failed to parse
-    expect(cookies.length).toBe(0);
-  });
 });
