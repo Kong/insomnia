@@ -20,6 +20,8 @@
     "postclean": "rimraf build app/main.min.js",
     "test": "jest",
     "test:watch": "jest --watch",
+    "type-check": "tsc --noEmit -p tsconfig.build.json",
+    "type-check:watch": "npm run type-check -- --watch",
     "start:electron": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" cross-env NODE_ENV=development webpack --config webpack/webpack.config.electron.ts && electron .",
     "start:dev-server": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack-dev-server --config webpack/webpack.config.development.ts",
     "start": "concurrently -n dev,app --kill-others \"npm run start:dev-server\" \"npm run start:electron\"",
@@ -175,6 +177,9 @@
     "zprint-clj": "0.2.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.15.8",
+    "@babel/preset-react": "^7.14.5",
+    "@babel/preset-typescript": "^7.15.0",
     "@develohpanda/fluent-builder": "^2.1.2",
     "@grpc/grpc-js": "^1.1.8",
     "@grpc/proto-loader": "^0.5.5",
@@ -246,7 +251,6 @@
     "redux-mock-store": "^1.5.4",
     "source-map-loader": "^1.0.0",
     "style-loader": "^0.23.1",
-    "ts-loader": "^8.2.0",
     "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0",
     "type-fest": "^1.0.2",

@@ -54,6 +54,9 @@ jobs:
       - name: Lint markdown
         run: npm run lint:markdown
 
+      - name: Type checks
+        run: npm run type-check
+
       - name: Run tests
         run: npm test
 
