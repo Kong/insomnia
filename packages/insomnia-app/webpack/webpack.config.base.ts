@@ -9,6 +9,7 @@ import pkg from '../package.json';
 
 const configuration: Configuration = {
   devtool: 'source-map',
+  stats: 'minimal',
   context: path.join(__dirname, '../app'),
   entry: ['./renderer.ts', './renderer.html'],
   output: {
