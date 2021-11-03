@@ -1,4 +1,4 @@
-import * as Hawk from 'hawk';
+import * as Hawk from '@hapi/hawk';
 import jwtAuthentication from 'jwt-authentication';
 
 import {
@@ -87,11 +87,10 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       headerOptions = Object.assign({}, payloadValidationFields, headerOptions);
     }
 
-    const header = Hawk.client.header(url, method, headerOptions);
+    const { header } = Hawk.client.header(url, method, headerOptions);
     return {
       name: 'Authorization',
-      // @ts-expect-error -- TSCONVERSION need to update hawk, types only exist for the latest version (v9) and we need those types in order to successfully build
-      value: header.field,
+      value: header,
     };
   }
 

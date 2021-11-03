@@ -11,6 +11,7 @@ const configuration: Configuration = {
   target: 'node',
   mode: 'production',
   devtool: 'source-map',
+  stats: 'minimal',
   optimization: {
     minimize: false,
   },
