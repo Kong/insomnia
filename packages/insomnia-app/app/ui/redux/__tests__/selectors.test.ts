@@ -1,9 +1,10 @@
 import { globalBeforeEach } from '../../../__jest__/before-each';
 import { reduxStateForTest } from '../../../__jest__/redux-state-for-test';
 import { ACTIVITY_DEBUG, ACTIVITY_HOME } from '../../../common/constants';
+import { sortMethodMap } from '../../../common/sorting';
 import * as models from '../../../models';
 import { DEFAULT_PROJECT_ID, Project } from '../../../models/project';
-import { Workspace, WorkspaceScopeKeys } from '../../../models/workspace';
+import { WorkspaceScopeKeys } from '../../../models/workspace';
 import { selectActiveApiSpec, selectActiveProject, selectActiveWorkspaceName, selectWorkspacesWithResolvedNameForActiveProject } from '../selectors';
 
 describe('selectors', () => {
@@ -168,14 +169,9 @@ describe('selectors', () => {
         activeWorkspaceId: null,
       });
 
-      // NOTE: Sometimes the order of the entities loaded by the db is different.
-      const sortWorkspacesByName = (
-        workspaceA: Workspace,
-        workspaceB: Workspace
-      ) => workspaceA.created - workspaceB.created;
-
+      // NOTE: Sometimes the order of the entities loaded by the db is different so we need to sort them.
       expect(
-        selectWorkspacesWithResolvedNameForActiveProject(state).sort(sortWorkspacesByName)
+        selectWorkspacesWithResolvedNameForActiveProject(state).sort(sortMethodMap['created-asc'])
       ).toMatchObject([
         {
           _id: newCollectionWorkspace._id,
@@ -189,7 +185,7 @@ describe('selectors', () => {
           scope: 'design',
           type: 'Workspace',
         },
-      ].sort(sortWorkspacesByName));
+      ]);
     });
   });
 });
