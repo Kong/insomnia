@@ -16,7 +16,6 @@ export async function writeFileWithCliOptions(
     await fs.promises.writeFile(outputPath, contents);
     return outputPath;
   } catch (e) {
-    // @ts-ignore: weird docker build fail with TS2345
     throw new InsoError(`Failed to write to "${outputPath}"`, e);
   }
 }
