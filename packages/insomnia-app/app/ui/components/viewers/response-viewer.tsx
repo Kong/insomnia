@@ -261,13 +261,11 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
 
   /** Try to detect content-types if there isn't one */
   _getMode() {
-    const contentType = this._getContentType();
-    const body = this._getBody();
-    if (body?.match(/^\s*<\?xml [^?]*\?>/)) {
+    if (this._getBody()?.match(/^\s*<\?xml [^?]*\?>/)) {
       return 'application/xml';
-    } else {
-      return contentType;
     }
+
+    return this._getContentType();
   }
 
   _handleClickLink(url: string) {
