@@ -45,6 +45,7 @@ export const openDocumentWithTitle = async (app: Application, text: string) => {
   if (isCollection) {
     await debug.pageDisplayed(app);
   } else {
+    await design.goToActivity(app, 'spec');
     await design.pageDisplayed(app);
   }
 };
