@@ -3,7 +3,7 @@ export * from './dropdown';
 export * from './sidebar';
 export * from './list-group';
 
-export { Breadcrumb, BreadcrumbProps } from './breadcrumb';
+export { Breadcrumb, BreadcrumbProps, CrumbProps } from './breadcrumb';
 export { CardContainer } from './card-container';
 export { Card, CardProps } from './card';
 export { Header, HeaderProps } from './header';
