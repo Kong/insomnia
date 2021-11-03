@@ -87,10 +87,10 @@ export async function getAuthHeader(renderedRequest: RenderedRequest, url: strin
       headerOptions = Object.assign({}, payloadValidationFields, headerOptions);
     }
 
-    const header = Hawk.client.header(url, method, headerOptions);
+    const { header } = Hawk.client.header(url, method, headerOptions);
     return {
       name: 'Authorization',
-      value: header.field,
+      value: header,
     };
   }
 

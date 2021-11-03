@@ -198,7 +198,7 @@
     "@types/events": "^1.2.0",
     "@types/file-loader": "^5.0.0",
     "@types/fs-extra": "^5.1.0",
-    "@types/hawk": "^9.0.0",
+    "@types/hapi__hawk": "^8.0.2",
     "@types/js-yaml": "^4.0.1",
     "@types/less": "^3.0.2",
     "@types/license-checker": "^25.0.1",
