@@ -1,3 +1,4 @@
+import { hasUpstreams } from '../common';
 import { DeclarativeConfig } from '../types/declarative-config';
 import { OpenApi3Spec } from '../types/openapi3';
 import { DeclarativeConfigResult } from '../types/outputs';
@@ -12,8 +13,12 @@ export function generateDeclarativeConfigFromSpec(
     const document: DeclarativeConfig = {
       _format_version: '1.1',
       services: generateServices(api, tags),
-      upstreams: generateUpstreams(api, tags),
     };
+
+    if (hasUpstreams(api)) {
+      document.upstreams = generateUpstreams(api, tags);
+    }
+
     const declarativeConfigResult: DeclarativeConfigResult = {
       type: 'kong-declarative-config',
       label: 'Kong Declarative Config',

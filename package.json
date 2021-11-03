@@ -17,6 +17,7 @@
     "lint:fix": "lerna run lint:fix --stream --no-bail",
     "bootstrap": "npm install && lerna bootstrap && lerna run --stream bootstrap",
     "version": "lerna version --exact --preid alpha",
+    "version:all": "npm run version -- --force-publish",
     "version:dry": "npm run version -- --no-git-tag-version",
     "release": "lerna publish from-git --pre-dist-tag alpha --no-verify-access --yes",
     "clean": "lerna run clean --parallel --stream && lerna clean --yes && rimraf node_modules",
@@ -36,7 +37,8 @@
     "test:smoke:build": "npm run test:build --prefix packages/insomnia-smoke-test",
     "test:smoke:package": "npm run test:package --prefix packages/insomnia-smoke-test",
     "test:smoke:cli": "npm run test:cli --prefix packages/insomnia-smoke-test",
-    "hard-reset": "npm run clean && npm run bootstrap && npm run app-start"
+    "hard-reset": "npm run clean && npm run bootstrap && npm run app-start",
+    "type-check": "lerna run type-check"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

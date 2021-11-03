@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-hash",
-  "version": "2.3.3-alpha.4",
+  "version": "2.4.0",
   "author": "Kong <office@konghq.com>",
   "description": "Insomnia hash template tag",
   "license": "MIT",
@@ -15,7 +15,6 @@
   "main": "index.js",
   "insomnia": {
     "name": "hash",
-    "core": true,
     "unlisted": true
   },
   "scripts": {

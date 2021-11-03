@@ -11,6 +11,7 @@ const configuration: Configuration = {
   target: 'node',
   mode: 'production',
   devtool: 'source-map',
+  stats: 'minimal',
   optimization: {
     minimize: false,
   },
@@ -26,11 +27,8 @@ const configuration: Configuration = {
     rules: [
       {
         test: /\.tsx?$/,
-        loader: 'ts-loader',
-        exclude: [/node_modules/],
-        options: {
-          configFile: 'tsconfig.build.sr.json',
-        },
+        exclude: /node_modules/,
+        loader: 'babel-loader',
       },
       {
         test: require.resolve('../app/network/ca-certs.js'),

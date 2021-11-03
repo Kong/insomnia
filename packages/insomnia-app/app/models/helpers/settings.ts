@@ -15,9 +15,13 @@ interface FailedParseResult {
   configPath: string;
 }
 
-const isFailedParseResult = (input: any): input is FailedParseResult => (
-  input ? input.syntaxError instanceof SyntaxError : false
-);
+const isFailedParseResult = (input: any): input is FailedParseResult => {
+  const typesafeInput = input as FailedParseResult;
+
+  return (
+    typesafeInput ? typesafeInput.syntaxError instanceof SyntaxError : false
+  );
+};
 
 /** takes an unresolved (or resolved will work fine too) filePath of the insomnia config and reads the insomniaConfig from disk */
 export const readConfigFile = (configPath?: string): unknown | FailedParseResult | undefined => {
@@ -96,7 +100,7 @@ export const getConfigFile = () => {
   };
 };
 
-interface ConfigError {
+export interface ConfigError {
   error: {
     configPath?: string;
     insomniaConfig: unknown;
@@ -105,16 +109,17 @@ interface ConfigError {
   };
 }
 
-export const isConfigError = (input: any): input is ConfigError => (
-  input ? input.humanErrors?.length > 0 : false
+export const isConfigError = (input: ConfigError | ParseError): input is ConfigError => (
+  // Cast for typesafety
+  (input as ConfigError).error?.humanReadableErrors?.length > 0
 );
 
-interface ParseError {
+export interface ParseError {
   error: FailedParseResult;
 }
 
-export const isParseError = (input: any): input is ParseError => (
-  input ? isFailedParseResult(input.error) : false
+export const isParseError = (input: ConfigError | ParseError): input is ParseError => (
+  isFailedParseResult(input.error)
 );
 
 /**
