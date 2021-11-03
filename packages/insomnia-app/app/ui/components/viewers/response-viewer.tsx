@@ -296,7 +296,6 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
       updateFilter,
       url,
     } = this.props;
-    const contentType = this._getContentType();
     const { bodyBuffer, error: parseError } = this.state;
     const error = responseError || parseError;
 
@@ -359,6 +358,7 @@ export class ResponseViewer extends Component<ResponseViewerProps, State> {
       return <div className="pad faint">No body returned for response</div>;
     }
 
+    const contentType = this._getContentType();
     if (previewMode === PREVIEW_MODE_FRIENDLY && contentType.indexOf('image/') === 0) {
       const justContentType = contentType.split(';')[0];
       const base64Body = bodyBuffer.toString('base64');
