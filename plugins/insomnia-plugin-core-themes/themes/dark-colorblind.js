@@ -7,7 +7,7 @@ module.exports = {
 			success:    '#0080FF', 	// POST request, 200 OK, parameter names
 			notice:     '#E8F086', 	// SEND button, GET request
 			warning:    '#A691AE', 	// PUT request
-			danger:     '#FF4242', 	// DELETE request
+			danger:     '#CC5500', 	// DELETE request
 			surprise:   '#FFC20A', 	// accent (Dashboard link, branch button, add plugin button)
 			info:       '#58A6FF' 	// OPTIONS AND HEAD request
 		},
