@@ -11,6 +11,10 @@ module.exports = function(context) {
       console.log(`[header] Skip setting default header ${name}. Already set to ${value}`);
       continue;
     }
+    else if (context.request.hasHeader("DEFAULT-HEADER-IGNORE")) {
+      console.log(`[header] Skip setting default header ${name}. DEFAULT-HEADER-IGNORE found`);
+      continue;
+    }
 
     if (value==="null") {
       context.request.removeHeader(name);
