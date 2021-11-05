@@ -1,3 +1,4 @@
+import { AxiosResponse } from 'axios';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
 import crypto from 'crypto';
 import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
@@ -856,6 +857,7 @@ class App extends PureComponent<AppProps, State> {
       const responsesDir = path.join(getDataDirectory(), 'responses');
       mkdirp.sync(responsesDir);
       const responseBodyPath = path.join(responsesDir, uuid.v4() + '.response');
+      // TODO get some debug logging
       const timeline = ['some logs'];
       const timelineStr = JSON.stringify(timeline, null, '\t');
       const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
@@ -864,9 +866,7 @@ class App extends PureComponent<AppProps, State> {
       console.log(request);
       // TODO transform and check request options
       // TODO handle large files
-      // TODO get some debug logging
-
-      const response = await ipcRenderer.invoke('request', { url: request.url, method: request.method });
+      const response: AxiosResponse = await ipcRenderer.invoke('request', { url: request.url, method: request.method });
       console.log('response', response);
       fs.writeFile(responseBodyPath,
         response.data, function(err) {
@@ -890,7 +890,7 @@ class App extends PureComponent<AppProps, State> {
         elapsedTime: endTime - startTime,
         environmentId,
         headers,
-        httpVersion: response.httpVersion,
+        httpVersion: 'HTTP/2', // TODO
         parentId: requestId,
         settingSendCookies: request.settingSendCookies,
         settingStoreCookies: request.settingStoreCookies,
@@ -899,7 +899,8 @@ class App extends PureComponent<AppProps, State> {
         timelinePath,
         url: request.url,
       };
-
+      console.log(responsePatch);
+      // const responsePatch = await network.send(requestId, environmentId);
       models.response.create(responsePatch, settings.maxHistoryResponses);
 
     } catch (err) {

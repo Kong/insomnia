@@ -222,7 +222,7 @@ async function _trackStats() {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
   ipcMain.handle('request', async (_, axios_request) => {
-    const { data, status, statusText, headers } = await axios(axios_request);
+    const { data, status, statusText, headers } = await axios({ ...axios_request, validateStatus:() => true });
 
     return { data, status, statusText, headers };
   });
