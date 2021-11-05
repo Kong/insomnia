@@ -1,17 +1,13 @@
-import { AxiosResponse } from 'axios';
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import crypto from 'crypto';
 import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import HTTPSnippet from 'httpsnippet';
 import * as mime from 'mime-types';
-import mkdirp from 'mkdirp';
 import * as path from 'path';
 import React, { createRef, PureComponent } from 'react';
 import { connect } from 'react-redux';
 import { Action, bindActionCreators, Dispatch } from 'redux';
 import { parse as urlParse } from 'url';
-import uuid from 'uuid';
 
 import { SegmentEvent, trackSegmentEvent } from '../../common/analytics';
 import {
@@ -854,40 +850,20 @@ class App extends PureComponent<AppProps, State> {
     handleStartLoading(requestId);
 
     try {
-      const responsesDir = path.join(getDataDirectory(), 'responses');
-      mkdirp.sync(responsesDir);
-      const responseBodyPath = path.join(responsesDir, uuid.v4() + '.response');
-      // TODO get some debug logging
-      const timeline = ['some logs'];
-      const timelineStr = JSON.stringify(timeline, null, '\t');
-      const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
-      const timelinePath = path.join(responsesDir, timelineHash + '.timeline');
-      const startTime = performance.now();
-      console.log(request);
-      // TODO transform and check request options
-      // TODO handle large files
-      const response: AxiosResponse = await ipcRenderer.invoke('request', { url: request.url, method: request.method });
-      console.log('response', response);
-      fs.writeFile(responseBodyPath,
-        response.data, function(err) {
-          if (err) throw err;
-          console.log('Saved!');
-        });
 
-      fs.writeFile(timelinePath,
-        timelineStr, function(err) {
-          if (err) throw err;
-          console.log('Saved!');
-        });
-      const endTime = performance.now();
+      console.log(request);
+      // TODO transform and check request options https://axios-http.com/docs/req_config
+      // headers, params, timeout
+      const response = await ipcRenderer.invoke('request', { url: request.url, method: request.method, auth: request.authentication, data: request.body });
+
       const headers = Object.entries(response.headers).map(([key, value]) => ({ name: key, value })) as [];
       const responsePatch: network.ResponsePatch = {
         bodyCompression: null,
-        bodyPath: responseBodyPath,
+        bodyPath: response.bodyPath,
         bytesContent: 169, // TODO
         bytesRead: 169, // TODO
         contentType: response.headers['content-type'],
-        elapsedTime: endTime - startTime,
+        elapsedTime: response.elapsedTime,
         environmentId,
         headers,
         httpVersion: 'HTTP/2', // TODO
@@ -896,7 +872,7 @@ class App extends PureComponent<AppProps, State> {
         settingStoreCookies: request.settingStoreCookies,
         statusCode: response.status,
         statusMessage: response.statusText,
-        timelinePath,
+        timelinePath: response.timelinePath,
         url: request.url,
       };
       console.log(responsePatch);

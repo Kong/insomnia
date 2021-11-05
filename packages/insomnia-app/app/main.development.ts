@@ -2,15 +2,20 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
 import axios from 'axios';
+import crypto from 'crypto';
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
+import fs from 'fs';
+import mkdirp from 'mkdirp';
 import path from 'path';
+import { performance } from 'perf_hooks';
+import uuid from 'uuid';
 
 import appConfig from '../config/config.json';
 import { trackNonInteractiveEventQueueable } from './common/analytics';
 import { changelogUrl, getAppVersion, isDevelopment, isMac } from './common/constants';
 import { database } from './common/database';
-import { disableSpellcheckerDownload, exitAppFailure } from './common/electron-helpers';
+import { disableSpellcheckerDownload, exitAppFailure, getDataDirectory } from './common/electron-helpers';
 import log, { initializeLogging } from './common/log';
 import { validateInsomniaConfig } from './common/validate-insomnia-config';
 import * as errorHandling from './main/error-handling';
@@ -222,9 +227,32 @@ async function _trackStats() {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
   ipcMain.handle('request', async (_, axios_request) => {
+    // TODO handle large files
+    const startTime = performance.now();
     const { data, status, statusText, headers } = await axios({ ...axios_request, validateStatus:() => true });
+    const elapsedTime = performance.now() - startTime;
 
-    return { data, status, statusText, headers };
+    const responsesDir = path.join(getDataDirectory(), 'responses');
+    mkdirp.sync(responsesDir);
+    const bodyPath = path.join(responsesDir, uuid.v4() + '.response');
+    // TODO get some debug logging
+    const timeline = ['some logs'];
+    const timelineStr = JSON.stringify(timeline, null, '\t');
+    const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
+    const timelinePath = path.join(responsesDir, timelineHash + '.timeline');
+
+    fs.writeFile(bodyPath,
+      data, function(err) {
+        if (err) throw err;
+        console.log('Saved!');
+      });
+
+    fs.writeFile(timelinePath,
+      timelineStr, function(err) {
+        if (err) throw err;
+        console.log('Saved!');
+      });
+    return { data, status, statusText, headers, elapsedTime, bodyPath, timelinePath };
   });
 
   ipcMain.once('window-ready', () => {
