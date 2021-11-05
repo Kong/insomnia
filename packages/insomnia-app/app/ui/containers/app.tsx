@@ -862,58 +862,46 @@ class App extends PureComponent<AppProps, State> {
       const timelinePath = path.join(responsesDir, timelineHash + '.timeline');
       const startTime = performance.now();
       console.log(request);
-      // TODO evaluate other request libs, this one has content length 0 and no content type in the header
-      const req = remote.net.request({ url: request.url, method: request.method });
-      req.on('response', response => {
-        const headers = Object.entries(response.headers).map(([key, value]) => ({ name: key, value })) as [];
-        console.log(response.headers, headers);
-        response.on('data', chunk => {
-          console.log(`BODY: ${chunk}`);
+      // TODO transform and check request options
+      // TODO handle large files
+      // TODO get some debug logging
 
-          fs.writeFile(responseBodyPath,
-            chunk, function(err) {
-              if (err) throw err;
-              console.log('Saved!');
-            });
-
-          fs.writeFile(timelinePath,
-            timelineStr, function(err) {
-              if (err) throw err;
-              console.log('Saved!');
-            });
-          const endTime = performance.now();
-          const responsePatch: network.ResponsePatch = {
-            bodyCompression: null,
-            bodyPath: responseBodyPath,
-            bytesContent: 169, // TODO
-            bytesRead: 169, // TODO
-            contentType: response.headers['content-type'] as string || 'application/json; charset=utf-8',
-            elapsedTime: endTime - startTime,
-            environmentId,
-            headers,
-            httpVersion: response.httpVersion,
-            parentId: requestId,
-            settingSendCookies: request.settingSendCookies,
-            settingStoreCookies: request.settingStoreCookies,
-            statusCode: response.statusCode,
-            statusMessage: response.statusMessage,
-            timelinePath,
-            url: request.url,
-          };
-          console.log('responsePatch:', responsePatch, headers, response.httpVersion, response.httpVersionMajor, response.httpVersionMinor, response.statusMessage);
-
-          models.response.create(responsePatch, settings.maxHistoryResponses);
+      const response = await ipcRenderer.invoke('request', { url: request.url, method: request.method });
+      console.log('response', response);
+      fs.writeFile(responseBodyPath,
+        response.data, function(err) {
+          if (err) throw err;
+          console.log('Saved!');
         });
-        response.on('end', test => {
-          console.log('No more data in response.', test);
+
+      fs.writeFile(timelinePath,
+        timelineStr, function(err) {
+          if (err) throw err;
+          console.log('Saved!');
         });
-      });
-      req.end();
+      const endTime = performance.now();
+      const headers = Object.entries(response.headers).map(([key, value]) => ({ name: key, value })) as [];
+      const responsePatch: network.ResponsePatch = {
+        bodyCompression: null,
+        bodyPath: responseBodyPath,
+        bytesContent: 169, // TODO
+        bytesRead: 169, // TODO
+        contentType: response.headers['content-type'],
+        elapsedTime: endTime - startTime,
+        environmentId,
+        headers,
+        httpVersion: response.httpVersion,
+        parentId: requestId,
+        settingSendCookies: request.settingSendCookies,
+        settingStoreCookies: request.settingStoreCookies,
+        statusCode: response.status,
+        statusMessage: response.statusText,
+        timelinePath,
+        url: request.url,
+      };
 
-      // const responsePatch = await network.send(requestId, environmentId);
-      // console.log(responsePatch);
+      models.response.create(responsePatch, settings.maxHistoryResponses);
 
-      // await models.response.create(responsePatch, settings.maxHistoryResponses);
     } catch (err) {
       if (err.type === 'render') {
         showModal(RequestRenderErrorModal, {

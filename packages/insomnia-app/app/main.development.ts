@@ -1,6 +1,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
+import axios from 'axios';
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import path from 'path';
@@ -220,6 +221,11 @@ async function _trackStats() {
   } else {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
+  ipcMain.handle('request', async (_, axios_request) => {
+    const { data, status, statusText, headers } = await axios(axios_request);
+
+    return { data, status, statusText, headers };
+  });
 
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
