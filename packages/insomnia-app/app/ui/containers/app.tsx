@@ -850,34 +850,10 @@ class App extends PureComponent<AppProps, State> {
     handleStartLoading(requestId);
 
     try {
+      const responsePatch = await ipcRenderer.invoke('request', request);
 
-      console.log(request);
-      // TODO transform and check request options https://axios-http.com/docs/req_config
-      // headers, params, timeout
-      const response = await ipcRenderer.invoke('request', { url: request.url, method: request.method, auth: request.authentication, data: request.body });
-
-      const headers = Object.entries(response.headers).map(([key, value]) => ({ name: key, value })) as [];
-      const responsePatch: network.ResponsePatch = {
-        bodyCompression: null,
-        bodyPath: response.bodyPath,
-        bytesContent: 169, // TODO
-        bytesRead: 169, // TODO
-        contentType: response.headers['content-type'],
-        elapsedTime: response.elapsedTime,
-        environmentId,
-        headers,
-        httpVersion: 'HTTP/2', // TODO
-        parentId: requestId,
-        settingSendCookies: request.settingSendCookies,
-        settingStoreCookies: request.settingStoreCookies,
-        statusCode: response.status,
-        statusMessage: response.statusText,
-        timelinePath: response.timelinePath,
-        url: request.url,
-      };
-      console.log(responsePatch);
       // const responsePatch = await network.send(requestId, environmentId);
-      models.response.create(responsePatch, settings.maxHistoryResponses);
+      models.response.create({ ...responsePatch, environmentId }, settings.maxHistoryResponses);
 
     } catch (err) {
       if (err.type === 'render') {

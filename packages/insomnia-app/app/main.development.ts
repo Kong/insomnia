@@ -1,7 +1,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import crypto from 'crypto';
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
@@ -24,7 +24,9 @@ import { checkIfRestartNeeded } from './main/squirrel-startup';
 import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
+import { Request } from './models/request';
 import type { Stats } from './models/stats';
+import { ResponsePatch } from './network/network';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -226,10 +228,17 @@ async function _trackStats() {
   } else {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
-  ipcMain.handle('request', async (_, axios_request) => {
+  ipcMain.handle('request', async (_, request: Request): Promise<ResponsePatch> => {
+    // TODO transform and check request options https://axios-http.com/docs/req_config
+    // headers, params, timeout
+    const axiosRequest: AxiosRequestConfig = {
+      ...request,
+      auth: request.authentication,
+      data: request.body,
+    };
     // TODO handle large files
     const startTime = performance.now();
-    const { data, status, statusText, headers } = await axios({ ...axios_request, validateStatus:() => true });
+    const { data, status, statusText, headers } = await axios({ ...axiosRequest, validateStatus:() => true });
     const elapsedTime = performance.now() - startTime;
 
     const responsesDir = path.join(getDataDirectory(), 'responses');
@@ -252,7 +261,24 @@ async function _trackStats() {
         if (err) throw err;
         console.log('Saved!');
       });
-    return { data, status, statusText, headers, elapsedTime, bodyPath, timelinePath };
+
+    return {
+      bodyCompression: null,
+      bodyPath,
+      bytesContent: 169, // TODO
+      bytesRead: 169, // TODO
+      contentType: headers['content-type'],
+      elapsedTime,
+      headers: Object.entries(headers).map(([key, value]) => ({ name: key, value })) as [],
+      httpVersion: 'HTTP/2', // NOTE axios doesn't support changing http version
+      parentId: request._id,
+      settingSendCookies: request.settingSendCookies,
+      settingStoreCookies: request.settingStoreCookies,
+      statusCode: status,
+      statusMessage: statusText,
+      timelinePath: timelinePath,
+      url: request.url,
+    };
   });
 
   ipcMain.once('window-ready', () => {
