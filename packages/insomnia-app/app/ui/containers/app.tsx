@@ -851,7 +851,6 @@ class App extends PureComponent<AppProps, State> {
 
     try {
       const responsePatch = await ipcRenderer.invoke('request', request);
-
       // const responsePatch = await network.send(requestId, environmentId);
       models.response.create({ ...responsePatch, environmentId }, settings.maxHistoryResponses);
 

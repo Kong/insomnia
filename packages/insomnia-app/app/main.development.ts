@@ -5,7 +5,8 @@ import axios, { AxiosRequestConfig } from 'axios';
 import crypto from 'crypto';
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
-import fs, { createWriteStream } from 'fs';
+import fs, { createWriteStream, statSync } from 'fs';
+import * as https from 'https';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { performance } from 'perf_hooks';
@@ -27,6 +28,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import { Request } from './models/request';
+import { Settings } from './models/settings';
 import type { Stats } from './models/stats';
 import { ResponsePatch } from './network/network';
 import type { ToastNotification } from './ui/components/toast';
@@ -231,7 +233,7 @@ async function _trackStats() {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
 
-  const transformInsoRequestToAxiosRequest = (request: Request): AxiosRequestConfig => {
+  const transformInsoRequestToAxiosRequest = (request: Request, settings: Settings): AxiosRequestConfig => {
     // TODO transform and check request options https://axios-http.com/docs/req_config
     // headers, params, timeout
     return {
@@ -242,6 +244,9 @@ async function _trackStats() {
       validateStatus: () => true,
       // allows us to write the chunks to file
       responseType: 'stream',
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: settings.validateSSL,
+      }),
     };
   };
 
@@ -257,10 +262,15 @@ async function _trackStats() {
     const writer = createWriteStream(bodyPath);
 
     const startTime = performance.now();
-    const axiosRequest = transformInsoRequestToAxiosRequest(request);
+    const settings = await models.settings.getOrCreate();
+
+    const axiosRequest = transformInsoRequestToAxiosRequest(request, settings);
+    console.log(axiosRequest);
     const response = await axios(axiosRequest);
     response.data.pipe(writer);
     await promisify(stream.finished)(writer);
+    const size = statSync(bodyPath).size;
+
     const { status, statusText, headers } = response;
 
     fs.writeFile(timelinePath,
@@ -268,12 +278,11 @@ async function _trackStats() {
         if (err) throw err;
         console.log('Saved!');
       });
-
     return {
       bodyCompression: null,
       bodyPath,
-      bytesContent: 169, // TODO
-      bytesRead: 169, // TODO
+      bytesContent: size,
+      bytesRead: size,
       contentType: headers['content-type'],
       elapsedTime: performance.now() - startTime,
       headers: Object.entries(headers).map(([key, value]) => ({ name: key, value })) as [],
