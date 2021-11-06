@@ -1,7 +1,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosBasicCredentials, AxiosRequestConfig, Method } from 'axios';
 import crypto from 'crypto';
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
@@ -233,46 +233,72 @@ async function _trackStats() {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
 
-  const transformInsoRequestToAxiosRequest = (request: Request, settings: Settings): AxiosRequestConfig => {
+  const transformInsomniaRequestToAxiosRequest = (request: Request): AxiosRequestConfig => {
     // TODO transform and check request options https://axios-http.com/docs/req_config
-    // headers, params, timeout
+    // headers, params, other auth types
     return {
-      ...request,
-      auth: request.authentication,
+      url: request.url,
+      method: request.method as Method,
+      auth: request.authentication as AxiosBasicCredentials,
       data: request.body,
+
+    };
+  };
+
+  const initializeTimeline = (request: Request, settings: Settings) => {
+    const timeline = [
+      { value: `Preparing request to ${request.url}`, timestamp: Date.now(), name: 'TEXT' },
+      { value: `Current time is ${new Date().toISOString()}`, timestamp: Date.now(), name: 'TEXT' },
+      { value: 'Using axios 0.21.1', timestamp: Date.now(), name: 'TEXT' },
+    ];
+    if (settings.timeout > 0) {
+      timeline.push({ value: `Enable timeout of ${settings.timeout}ms`, timestamp: Date.now(), name: 'TEXT' });
+    } else {
+      timeline.push({ value: 'Disable timeout', timestamp: Date.now(), name: 'TEXT' });
+    }
+    if (request.settingEncodeUrl) {
+      timeline.push({ value: 'Enable automatic URL encoding', timestamp: Date.now(), name: 'TEXT' });
+    } else {
+      timeline.push({ value: 'Disable automatic URL encoding', timestamp: Date.now(), name: 'TEXT' });
+    }
+    if (settings.validateSSL) {
+      timeline.push({ value: 'Enable SSL validation', timestamp: Date.now(), name: 'TEXT' });
+    } else {
+      timeline.push({ value: 'Disable SSL validation', timestamp: Date.now(), name: 'TEXT' });
+    }
+    return timeline;
+  };
+
+  ipcMain.handle('request', async (_, request: Request): Promise<ResponsePatch> => {
+    const settings = await models.settings.getOrCreate();
+    const responsesDir = path.join(getDataDirectory(), 'responses');
+    mkdirp.sync(responsesDir);
+    const bodyPath = path.join(responsesDir, uuid.v4() + '.response');
+    const timeline = initializeTimeline(request, settings);
+    const startTime = performance.now();
+    const axiosRequest = transformInsomniaRequestToAxiosRequest(request);
+    const axiosRequestConfig: AxiosRequestConfig = {
+      ...axiosRequest,
       // ensures an error is not thrown by 4xx and 5xx status code responses
       validateStatus: () => true,
       // allows us to write the chunks to file
       responseType: 'stream',
+      // TODO: should default to zero
+      timeout: settings.timeout,
       httpsAgent: new https.Agent({
         rejectUnauthorized: settings.validateSSL,
       }),
     };
-  };
-
-  ipcMain.handle('request', async (_, request: Request): Promise<ResponsePatch> => {
-    const responsesDir = path.join(getDataDirectory(), 'responses');
-    mkdirp.sync(responsesDir);
-    const bodyPath = path.join(responsesDir, uuid.v4() + '.response');
-    // TODO get some debug logging
-    const timeline = ['some logs'];
-    const timelineStr = JSON.stringify(timeline, null, '\t');
-    const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
-    const timelinePath = path.join(responsesDir, timelineHash + '.timeline');
+    // TODO cancellation
+    const response = await axios(axiosRequestConfig);
     const writer = createWriteStream(bodyPath);
-
-    const startTime = performance.now();
-    const settings = await models.settings.getOrCreate();
-
-    const axiosRequest = transformInsoRequestToAxiosRequest(request, settings);
-    console.log(axiosRequest);
-    const response = await axios(axiosRequest);
     response.data.pipe(writer);
     await promisify(stream.finished)(writer);
     const size = statSync(bodyPath).size;
-
     const { status, statusText, headers } = response;
-
+    const timelineStr = JSON.stringify(timeline, null, '\t');
+    const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
+    const timelinePath = path.join(responsesDir, timelineHash + '.timeline');
     fs.writeFile(timelinePath,
       timelineStr, function(err) {
         if (err) throw err;
