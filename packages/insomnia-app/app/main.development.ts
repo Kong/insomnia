@@ -5,10 +5,12 @@ import axios, { AxiosRequestConfig } from 'axios';
 import crypto from 'crypto';
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
-import fs from 'fs';
+import fs, { createWriteStream } from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import { performance } from 'perf_hooks';
+import * as stream from 'stream';
+import { promisify } from 'util';
 import uuid from 'uuid';
 
 import appConfig from '../config/config.json';
@@ -228,19 +230,22 @@ async function _trackStats() {
   } else {
     trackNonInteractiveEventQueueable('General', 'Launched', stats.currentVersion);
   }
-  ipcMain.handle('request', async (_, request: Request): Promise<ResponsePatch> => {
+
+  const transformInsoRequestToAxiosRequest = (request: Request): AxiosRequestConfig => {
     // TODO transform and check request options https://axios-http.com/docs/req_config
     // headers, params, timeout
-    const axiosRequest: AxiosRequestConfig = {
+    return {
       ...request,
       auth: request.authentication,
       data: request.body,
+      // ensures an error is not thrown by 4xx and 5xx status code responses
+      validateStatus: () => true,
+      // allows us to write the chunks to file
+      responseType: 'stream',
     };
-    // TODO handle large files
-    const startTime = performance.now();
-    const { data, status, statusText, headers } = await axios({ ...axiosRequest, validateStatus:() => true });
-    const elapsedTime = performance.now() - startTime;
+  };
 
+  ipcMain.handle('request', async (_, request: Request): Promise<ResponsePatch> => {
     const responsesDir = path.join(getDataDirectory(), 'responses');
     mkdirp.sync(responsesDir);
     const bodyPath = path.join(responsesDir, uuid.v4() + '.response');
@@ -249,12 +254,14 @@ async function _trackStats() {
     const timelineStr = JSON.stringify(timeline, null, '\t');
     const timelineHash = crypto.createHash('sha1').update(timelineStr).digest('hex');
     const timelinePath = path.join(responsesDir, timelineHash + '.timeline');
+    const writer = createWriteStream(bodyPath);
 
-    fs.writeFile(bodyPath,
-      data, function(err) {
-        if (err) throw err;
-        console.log('Saved!');
-      });
+    const startTime = performance.now();
+    const axiosRequest = transformInsoRequestToAxiosRequest(request);
+    const response = await axios(axiosRequest);
+    response.data.pipe(writer);
+    await promisify(stream.finished)(writer);
+    const { status, statusText, headers } = response;
 
     fs.writeFile(timelinePath,
       timelineStr, function(err) {
@@ -268,7 +275,7 @@ async function _trackStats() {
       bytesContent: 169, // TODO
       bytesRead: 169, // TODO
       contentType: headers['content-type'],
-      elapsedTime,
+      elapsedTime: performance.now() - startTime,
       headers: Object.entries(headers).map(([key, value]) => ({ name: key, value })) as [],
       httpVersion: 'HTTP/2', // NOTE axios doesn't support changing http version
       parentId: request._id,
