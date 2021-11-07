@@ -35,6 +35,9 @@ interface Window {
   app: {
     getPath: (name: string) => string;
   };
+  shell: {
+    showItemInFolder: (fullPath: string) => void;
+  };
 }
 
 // needed for @hot-loader/react-dom in order for TypeScript to build
