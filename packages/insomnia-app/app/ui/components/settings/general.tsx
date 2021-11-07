@@ -1,5 +1,4 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import * as fontScanner from 'font-scanner';
 import { HttpVersion, HttpVersions } from 'insomnia-common';
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'react-redux';
@@ -67,7 +66,7 @@ class General extends PureComponent<Props, State> {
   };
 
   async componentDidMount() {
-    const allFonts = await fontScanner.getAvailableFonts();
+    const allFonts = await window.main.getAvailableFonts();
     // Find regular fonts
     const fonts = allFonts
       .filter(i => ['regular', 'book'].includes(i.style.toLowerCase()) && !i.italic)

@@ -85,6 +85,7 @@ export function createWindow() {
     acceptFirstMouse: true,
     icon: path.resolve(__dirname, appLogo),
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       zoomFactor: zoomFactor,
       nodeIntegration: true,
       webviewTag: true,
