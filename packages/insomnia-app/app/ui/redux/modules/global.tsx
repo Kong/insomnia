@@ -1,4 +1,3 @@
-import electron from 'electron';
 import fs, { NoParamCallback } from 'fs';
 import moment from 'moment';
 import path from 'path';
@@ -469,7 +468,7 @@ const showSaveExportedFileDialog = async ({
   const date = moment().format('YYYY-MM-DD');
   const name = exportedFileNamePrefix.replace(/ /g, '-');
   const lastDir = window.localStorage.getItem('insomnia.lastExportPath');
-  const dir = lastDir || electron.remote.app.getPath('desktop');
+  const dir = lastDir || window.app.getPath('desktop');
   const options = {
     title: 'Export Insomnia Data',
     buttonLabel: 'Export',

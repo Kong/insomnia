@@ -234,6 +234,10 @@ async function _trackStats() {
     return { filePath, canceled };
   });
 
+  ipcMain.handle('getPath', (_, name) => {
+    return electron.app.getPath(name);
+  });
+
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
 

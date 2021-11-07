@@ -32,6 +32,9 @@ interface Window {
     showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue>;
     showSaveDialog: (options: Electron.SaveDialogOptions) => Promise<Electron.SaveDialogReturnValue>;
   };
+  app: {
+    getPath: (name: string) => string;
+  };
 }
 
 // needed for @hot-loader/react-dom in order for TypeScript to build

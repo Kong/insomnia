@@ -26,7 +26,7 @@ export class FileEditor extends PureComponent<Props> {
   render() {
     const { path } = this.props;
     // Replace home path with ~/ to make the path shorter
-    const homeDirectory = electron.remote.app.getPath('home');
+    const homeDirectory = window.app.getPath('home');
     const pathDescription = path.replace(homeDirectory, '~');
     let sizeDescription = '';
 
