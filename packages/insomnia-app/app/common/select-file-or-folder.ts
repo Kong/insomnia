@@ -48,10 +48,8 @@ export const selectFileOrFolder = async ({ itemTypes, extensions }: Options) => 
       extensions: (extensions?.length ? extensions : ['*']),
     }],
   };
-  console.log('test');
 
   const { canceled, filePaths } = await window.dialog.showOpenDialog(options);
-  console.log('test2', filePaths);
 
   const fileSelection: FileSelection = {
     filePath: filePaths[0],

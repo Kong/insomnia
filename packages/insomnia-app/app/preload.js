@@ -7,6 +7,7 @@ try {
   });
   contextBridge.exposeInMainWorld('dialog', {
     showOpenDialog: options => ipcRenderer.invoke('showOpenDialog', options),
+    showSaveDialog: options => ipcRenderer.invoke('showSaveDialog', options),
   });
 
 } catch (e) {}
@@ -16,3 +17,4 @@ window.main = window.main || {};
 window.main.getAvailableFonts = () => ipcRenderer.invoke('getAvailableFonts');
 window.dialog = window.dialog || {};
 window.dialog.showOpenDialog = options => ipcRenderer.invoke('showOpenDialog', options);
+window.dialog.showSaveDialog = options => ipcRenderer.invoke('showSaveDialog', options);

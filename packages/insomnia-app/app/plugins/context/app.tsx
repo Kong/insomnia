@@ -172,7 +172,7 @@ export function init(renderPurpose: RenderPurpose = RENDER_PURPOSE_GENERAL): {
           buttonLabel: 'Save',
           defaultPath: options.defaultPath,
         };
-        const { filePath } = await electron.remote.dialog.showSaveDialog(
+        const { filePath } = await window.dialog.showSaveDialog(
           saveOptions
         );
         return filePath || null;

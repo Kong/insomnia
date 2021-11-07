@@ -224,9 +224,14 @@ async function _trackStats() {
 
   ipcMain.handle('getAvailableFonts', () => fontScanner.getAvailableFonts());
 
-  ipcMain.handle('showOpenDialog', async (_, options) => {
+  ipcMain.handle('showOpenDialog', async (_, options: Electron.OpenDialogOptions) => {
     const { filePaths, canceled } = await electron.dialog.showOpenDialog(options);
     return { filePaths, canceled };
+  });
+
+  ipcMain.handle('showSaveDialog', async (_, options: Electron.SaveDialogOptions) => {
+    const { filePath, canceled } = await electron.dialog.showSaveDialog(options);
+    return { filePath, canceled };
   });
 
   ipcMain.once('window-ready', () => {

@@ -149,7 +149,7 @@ export class ResponseMultipartViewer extends PureComponent<Props, State> {
         },
       ],
     };
-    const { canceled, filePath } = await electron.remote.dialog.showSaveDialog(options);
+    const { canceled, filePath } = await window.dialog.showSaveDialog(options);
 
     if (canceled) {
       return;
