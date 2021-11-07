@@ -181,9 +181,21 @@ class General extends PureComponent<Props, State> {
     return this.renderTextSetting(label, name, help, { ...props, type: 'number' });
   }
 
+  formFontstring(fonts:{family:string}[]):string {
+    let fontsList = '';
+    for (const font of fonts){
+      fontsList += (font.family.includes(' ')) ? `\'${font.family}\'` : font.family;
+      fontsList += ' , ';
+    }
+    return fontsList;
+  }
+
   render() {
     const { settings } = this.props;
-    const { fonts, fontsMono } = this.state;
+    const { fontsMono } = this.state;
+
+    const fontsMonoString:string | null = (fontsMono) ? this.formFontstring(fontsMono) : null;
+
     return (
       <div className="pad-bottom">
         <div className="row-fill row-fill--top">
@@ -270,62 +282,36 @@ class General extends PureComponent<Props, State> {
         </div>
 
         <div className="form-row pad-top-sm">
-          <div className="form-control form-control--outlined">
-            <label>
-              Interface Font
-              {fonts ? (
-                <select
-                  name="fontInterface"
-                  value={settings.fontInterface || '__NULL__'}
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}
-                >
-                  <option value="__NULL__">-- System Default --</option>
-                  {fonts.map((item, index) => (
-                    <option key={index} value={item.family}>
-                      {item.family}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <select disabled>
-                  <option value="__NULL__">-- Unsupported Platform --</option>
-                </select>
-              )}
-            </label>
+          <div className="form-row">
+
+            {this.renderTextSetting(
+              'Interface Font',
+              'fontInterface',
+              'Comma-separated list of fonts. if empty - takes system defaults',
+              {
+                placeholder: '-- System Default --',
+                onChange:this._handleFontChange,
+              },
+            )}
+            {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
+              min: MIN_INTERFACE_FONT_SIZE,
+              max: MAX_INTERFACE_FONT_SIZE,
+              onBlur: this._handleFontChange,
+            })}
           </div>
-          {this.renderNumberSetting('Interface Font Size (px)', 'fontSize', '', {
-            min: MIN_INTERFACE_FONT_SIZE,
-            max: MAX_INTERFACE_FONT_SIZE,
-            onBlur: this._handleFontChange,
-          })}
         </div>
 
         <div className="form-row">
-          <div className="form-control form-control--outlined">
-            <label>
-              Text Editor Font
-              {fontsMono ? (
-                <select
-                  name="fontMonospace"
-                  value={settings.fontMonospace || '__NULL__'}
-                  // @ts-expect-error -- TSCONVERSION
-                  onChange={this._handleFontChange}
-                >
-                  <option value="__NULL__">-- System Default --</option>
-                  {fontsMono.map((item, index) => (
-                    <option key={index} value={item.family}>
-                      {item.family}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <select disabled>
-                  <option value="__NULL__">-- Unsupported Platform --</option>
-                </select>
-              )}
-            </label>
-          </div>
+
+          {this.renderTextSetting(
+            'Text Editor Font',
+            'fontMonospace',
+            `Comma-separated list of monospase fonts. if empty - takes system defaults. There is list of Monospace fonts in your system: ${fontsMonoString}`,
+            {
+              placeholder: '-- System Default --',
+              onChange:this._handleFontChange,
+            },
+          )}
           {this.renderNumberSetting('Editor Font Size (px)', 'editorFontSize', '', {
             min: MIN_EDITOR_FONT_SIZE,
             max: MAX_EDITOR_FONT_SIZE,
