@@ -28,6 +28,7 @@ interface Font {
 interface Window {
   __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: Function;
   main: { getAvailableFonts: () => Promise<Font[]> };
+  dialog: { showOpenDialog: (options: Electron.OpenDialogOptions) => Promise<Electron.OpenDialogReturnValue> };
 }
 
 // needed for @hot-loader/react-dom in order for TypeScript to build

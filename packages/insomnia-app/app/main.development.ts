@@ -224,6 +224,11 @@ async function _trackStats() {
 
   ipcMain.handle('getAvailableFonts', () => fontScanner.getAvailableFonts());
 
+  ipcMain.handle('showOpenDialog', async (_, options) => {
+    const { filePaths, canceled } = await electron.dialog.showOpenDialog(options);
+    return { filePaths, canceled };
+  });
+
   ipcMain.once('window-ready', () => {
     const { currentVersion } = stats;
 
