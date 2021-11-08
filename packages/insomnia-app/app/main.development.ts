@@ -249,7 +249,7 @@ async function _trackStats() {
       });
   });
 
-  ipcMain.on('getAnalytics', event => {
+  ipcMain.on('analytics', event => {
     const { BrowserWindow, screen, app } = electron;
     const browserWindow = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
 
