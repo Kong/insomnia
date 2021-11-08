@@ -1,5 +1,5 @@
 import { autoBindMethodsForReact } from 'class-autobind-decorator';
-import { clipboard, ipcRenderer, remote, SaveDialogOptions } from 'electron';
+import { clipboard, ipcRenderer, SaveDialogOptions } from 'electron';
 import fs from 'fs';
 import HTTPSnippet from 'httpsnippet';
 import * as mime from 'mime-types';
