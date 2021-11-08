@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { CircleButton, SvgIcon, Tooltip } from 'insomnia-components';
 import React, { Fragment, FunctionComponent } from 'react';
 import { useSelector } from 'react-redux';
@@ -12,24 +13,30 @@ import { Link } from '../base/link';
 import { PromptButton } from '../base/prompt-button';
 import { showLoginModal } from '../modals/login-modal';
 
-interface Props {
-  className?: string;
+const Wrapper = styled.div({
+  display: 'flex',
+  marginLeft: 'var(--padding-md)',
+});
+
+interface StyledIconProps {
+  faIcon: string;
 }
 
-const StyledIconContainer = styled.div`
-  display: flex;
-  align-items: center;
-  padding-left: var(--padding-xs);
-  padding-right: var(--padding-md);
-  i {
-    width: unset !important;
-  }
-`;
+const StyledIcon = styled.i.attrs<StyledIconProps>(props => ({
+  className: classNames('fa', props.faIcon),
+}))<StyledIconProps>({
+  marginleft: 'var(--padding-md)',
+  display: 'flex',
+  alignItems: 'center',
+  paddingLeft: 'var(--padding-xs)',
+  paddingRight: 'var(--padding-md)',
+  width: 'unset !important',
+});
 
-export const AccountDropdown: FunctionComponent<Props> = ({ className }) => {
+export const AccountDropdownButton: FunctionComponent = () => {
   const { disablePaidFeatureAds } = useSelector(selectSettings);
   return (
-    <div className={className}>
+    <Wrapper>
       <Dropdown>
         <DropdownButton noWrap>
           <Tooltip delay={1000} position="bottom" message="Account">
@@ -45,18 +52,12 @@ export const AccountDropdown: FunctionComponent<Props> = ({ className }) => {
             buttonClass={PromptButton}
             onClick={session.logout}
           >
-            <StyledIconContainer>
-              <i className="fa fa-sign-out" />
-            </StyledIconContainer>
-            Logout
+            <StyledIcon faIcon="fa-sign-out" />Logout
           </DropdownItem>
         ) : (
           <Fragment>
             <DropdownItem key="login" onClick={showLoginModal}>
-              <StyledIconContainer>
-                <i className="fa fa-sign-in" />
-              </StyledIconContainer>
-              Log In
+              <StyledIcon faIcon="fa-sign-in" />Log In
             </DropdownItem>
             {!disablePaidFeatureAds && (
               <DropdownItem
@@ -66,16 +67,13 @@ export const AccountDropdown: FunctionComponent<Props> = ({ className }) => {
                 href="https://insomnia.rest/pricing"
                 button
               >
-                <StyledIconContainer>
-                  <i className="fa fa-users" />
-                </StyledIconContainer>{' '}
-                Upgrade to Plus
+                <StyledIcon faIcon="fa-users" />{' '}Upgrade to Plus
                 <i className="fa fa-star surprise fa-outline" />
               </DropdownItem>
             )}
           </Fragment>
         )}
       </Dropdown>
-    </div>
+    </Wrapper>
   );
 };

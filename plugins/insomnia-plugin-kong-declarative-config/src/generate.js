@@ -24,11 +24,9 @@ module.exports = {
         error: err.message,
       };
     }
-
-    const yamlDocs = result.documents.map(d => YAML.stringify(d));
-
-    // Join the YAML docs with "---" and strip any extra newlines surrounding them
-    const document = yamlDocs.join('\n---\n').replace(/\n+---\n+/g, '\n---\n');
+    
+    // We know for certain the result.documents has only one entry for declarative config: packages/openapi-2-kong/src/declarative-config/generate.ts#L20
+    const document = JSON.stringify(result.documents?.[0], null, '\t');
 
     return {
       document,

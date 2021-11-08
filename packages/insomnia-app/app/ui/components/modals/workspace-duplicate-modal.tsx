@@ -8,13 +8,15 @@ import { AUTOBIND_CFG } from '../../../common/constants';
 import { getWorkspaceLabel } from '../../../common/get-workspace-label';
 import { strings } from '../../../common/strings';
 import * as models from '../../../models';
+import { ApiSpec } from '../../../models/api-spec';
+import getWorkspaceName from '../../../models/helpers/get-workspace-name';
 import * as workspaceOperations from '../../../models/helpers/workspace-operations';
 import { isDefaultProject, isLocalProject, isRemoteProject, Project } from '../../../models/project';
 import { Workspace } from '../../../models/workspace';
 import { initializeLocalBackendProjectAndMarkForSync } from '../../../sync/vcs/initialize-backend-project';
 import { VCS } from '../../../sync/vcs/vcs';
 import { activateWorkspace } from '../../redux/modules/workspace';
-import { selectActiveProject, selectActiveWorkspaceName, selectIsLoggedIn, selectProjects } from '../../redux/selectors';
+import { selectActiveProject, selectIsLoggedIn, selectProjects } from '../../redux/selectors';
 import { Modal } from '../base/modal';
 import { ModalBody } from '../base/modal-body';
 import { ModalFooter } from '../base/modal-footer';
@@ -23,6 +25,7 @@ import { showModal } from '.';
 
 interface Options {
   workspace: Workspace;
+  apiSpec: ApiSpec;
   onDone?: () => void;
 }
 
@@ -41,7 +44,7 @@ const ProjectOption: FC<Project> = project => (
   </option>
 );
 
-const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, InnerProps> = ({ workspace, onDone, hide, vcs }, ref) => {
+const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, InnerProps> = ({ workspace, apiSpec, onDone, hide, vcs }, ref) => {
   const dispatch = useDispatch();
 
   const projects = useSelector(selectProjects);
@@ -49,7 +52,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
   const isLoggedIn = useSelector(selectIsLoggedIn);
 
   const title = `Duplicate ${getWorkspaceLabel(workspace).singular}`;
-  const activeWorkspaceName = useSelector(selectActiveWorkspaceName);
+  const defaultWorkspaceName = getWorkspaceName(workspace, apiSpec);
 
   const {
     register,
@@ -59,7 +62,7 @@ const WorkspaceDuplicateModalInternalWithRef: ForwardRefRenderFunction<Modal, In
       errors,
     } } = useForm<FormFields>({
       defaultValues: {
-        newName: activeWorkspaceName,
+        newName: defaultWorkspaceName,
         projectId: activeProject._id,
       },
     });

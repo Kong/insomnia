@@ -65,7 +65,7 @@ const parseRaw = ({ _type, ...rest }: RawTypeModel): ParsedTypeModel => ({
 });
 
 const insomniaAdapter: DbAdapter = async (filePath, filterTypes) => {
-  // Sanity check - do db files exist and is it a file?
+  // Determine whether path exists, and if it is a file
   const existsAndIsFile = fs.existsSync(filePath) && fs.lstatSync(filePath).isFile();
 
   if (!existsAndIsFile) {

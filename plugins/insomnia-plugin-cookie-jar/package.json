@@ -1,6 +1,6 @@
 {
   "name": "insomnia-plugin-cookie-jar",
-  "version": "2.3.3-alpha.4",
+  "version": "2.4.0",
   "author": "Kong <office@konghq.com>",
   "contributors": [
     {
@@ -21,14 +21,13 @@
   "main": "index.js",
   "insomnia": {
     "name": "cookieJar",
-    "core": true,
     "unlisted": true
   },
   "scripts": {
     "test": "jest --silent"
   },
   "dependencies": {
-    "insomnia-cookies": "2.3.3-alpha.4"
+    "insomnia-cookies": "2.4.0"
   },
   "gitHead": "e46bf021cf4b4379e31d2b2d9025d476d6839fa1"
 }

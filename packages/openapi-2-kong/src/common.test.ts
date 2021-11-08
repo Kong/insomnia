@@ -8,6 +8,7 @@ import {
   getPluginNameFromKey,
   getSecurity,
   getServers,
+  hasUpstreams,
   HttpMethodType,
   isHttpMethodKey,
   isPluginKey,
@@ -287,9 +288,9 @@ describe('common', () => {
       expect(result.pathname).toBe('/');
     });
 
-    it('returns no host if not given', () => {
+    it('returns localhost if not given', () => {
       const result = parseUrl('/just/a/path');
-      expect(result.host).toBe(null);
+      expect(result.host).toBe('localhost:80');
     });
 
     it('returns no port in host if neither port nor recognized protocol given', () => {
@@ -305,6 +306,21 @@ describe('common', () => {
     it('returns pathname if defined in url', () => {
       const result = parseUrl('http://api.insomnia.rest/api/v1');
       expect(result.pathname).toBe('/api/v1');
+    });
+  });
+
+  describe('hasUpstreams()', () => {
+    it('given no server.url item should have no upstreams', () => {
+      expect(hasUpstreams({ servers:[] } as any)).toBe(false);
+    });
+    it('given one server.url item should have no upstreams', () => {
+      expect(hasUpstreams({ servers:[{ url:'/test1' }] } as any)).toBe(false);
+    });
+    it('given one server.url item and x-kong-upstream-defaults should have upstreams', () => {
+      expect(hasUpstreams({ servers:[{ url:'/test1' }], 'x-kong-upstream-defaults':{} } as any)).toBe(true);
+    });
+    it('given multiple server.url items should have upstreams', () => {
+      expect(hasUpstreams({ servers:[{ url:'/test1' }, { url:'/test2' }] } as any)).toBe(true);
     });
   });
 

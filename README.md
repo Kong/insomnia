@@ -108,7 +108,6 @@ You can use any editor you'd like, but make sure to have support/plugins for the
 
 - [ESLint](http://eslint.org/) – For catching syntax problems and common errors
 - [JSX Syntax](https://facebook.github.io/react/docs/jsx-in-depth.html) – For React components
-- [Flow](https://flow.org/) – For type annotations
 
 </details>
 
