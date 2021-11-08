@@ -1,5 +1,4 @@
 import Analytics from 'analytics-node';
-import * as electron from 'electron';
 import { buildQueryStringFromParams, joinUrlAndQueryString } from 'insomnia-url';
 import * as uuid from 'uuid';
 
@@ -363,8 +362,7 @@ async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
     ? 'https://www.google-analytics.com/debug/collect'
     : 'https://www.google-analytics.com/collect';
   const url = joinUrlAndQueryString(baseUrl, qs);
-  const net = (process.type === 'renderer' ? window : electron).net;
-  const res = net.request(url);
+  const res = window.net.request(url);
   if (res.error)
     console.warn('[ga] Network error', res.error);
 

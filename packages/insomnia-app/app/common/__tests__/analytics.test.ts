@@ -1,6 +1,3 @@
-import * as electron from 'electron';
-import { EventEmitter } from 'events';
-
 import { globalBeforeEach } from '../../__jest__/before-each';
 import * as models from '../../models/index';
 import { _trackEvent, _trackPageView } from '../analytics';
@@ -14,19 +11,16 @@ import {
   getGoogleAnalyticsLocation,
 } from '../constants';
 
-window.main = {
-  analytics: { viewportSize: '1900x1060', screenResolution: '1920x1080', locale: 'en-US' },
-};
-
 describe('init()', () => {
   beforeEach(async () => {
     await globalBeforeEach();
-    electron.net.request = jest.fn(() => {
-      const req = new EventEmitter();
+    window.main = {
+      analytics: { viewportSize: '1900x1060', screenResolution: '1920x1080', locale: 'en-US' },
+    };
+    window.net = {};
 
-      req.end = function() {};
-
-      return req;
+    window.net.request = jest.fn(() => {
+      return { headers: {} };
     });
     jest.useFakeTimers();
   });
@@ -37,10 +31,10 @@ describe('init()', () => {
       deviceId: 'device',
     });
     expect(settings.enableAnalytics).toBe(false);
-    expect(electron.net.request.mock.calls).toEqual([]);
+    expect(window.net.request).toHaveBeenCalledTimes(0);
     await _trackEvent(true, 'Foo', 'Bar');
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([]);
+    expect(window.net.request).toHaveBeenCalledTimes(0);
   });
 
   it('works with tracking enabled', async () => {
@@ -49,12 +43,11 @@ describe('init()', () => {
       deviceId: 'device',
     });
     expect(settings.enableAnalytics).toBe(true);
-    expect(electron.net.request.mock.calls).toEqual([]);
+    expect(window.net.request).toHaveBeenCalledTimes(0);
     await _trackEvent(true, 'Foo', 'Bar');
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([
-      [
-        'https://www.google-analytics.com/collect?' +
+    expect(window.net.request).toHaveBeenCalledWith(
+      'https://www.google-analytics.com/collect?' +
           'v=1&' +
           `tid=${getGoogleAnalyticsId()}&` +
           'cid=device&' +
@@ -74,8 +67,7 @@ describe('init()', () => {
           't=event&' +
           'ec=Foo&' +
           'ea=Bar',
-      ],
-    ]);
+    );
   });
 
   it('tracks non-interactive event', async () => {
@@ -85,9 +77,8 @@ describe('init()', () => {
     });
     await _trackEvent(false, 'Foo', 'Bar');
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([
-      [
-        'https://www.google-analytics.com/collect?' +
+    expect(window.net.request).toHaveBeenCalledWith(
+      'https://www.google-analytics.com/collect?' +
           'v=1&' +
           `tid=${getGoogleAnalyticsId()}&` +
           'cid=device&' +
@@ -107,9 +98,8 @@ describe('init()', () => {
           't=event&' +
           'ec=Foo&' +
           'ea=Bar&' +
-          'ni=1',
-      ],
-    ]);
+          'ni=1'
+    );
   });
 
   it('tracks page view', async () => {
@@ -119,9 +109,8 @@ describe('init()', () => {
     });
     await _trackPageView('/my/path');
     jest.runAllTimers();
-    expect(electron.net.request.mock.calls).toEqual([
-      [
-        'https://www.google-analytics.com/collect?' +
+    expect(window.net.request).toHaveBeenCalledWith(
+      'https://www.google-analytics.com/collect?' +
           'v=1&' +
           `tid=${getGoogleAnalyticsId()}&` +
           'cid=device&' +
@@ -139,8 +128,7 @@ describe('init()', () => {
           'vp=1900x1060&' +
           'de=UTF-8&' +
           't=pageview',
-      ],
-    ]);
+    );
   });
 
   it('tracking page view remembers path', async () => {
@@ -151,9 +139,8 @@ describe('init()', () => {
     await _trackPageView('/my/path');
     jest.runAllTimers();
     await _trackEvent(true, 'cat', 'act', 'lab', 'val');
-    expect(electron.net.request.mock.calls).toEqual([
-      [
-        'https://www.google-analytics.com/collect?' +
+    expect(window.net.request).toHaveBeenNthCalledWith(1,
+      'https://www.google-analytics.com/collect?' +
           'v=1&' +
           `tid=${getGoogleAnalyticsId()}&` +
           'cid=device&' +
@@ -170,10 +157,9 @@ describe('init()', () => {
           `av=${getAppVersion()}&` +
           'vp=1900x1060&' +
           'de=UTF-8&' +
-          't=pageview',
-      ],
-      [
-        'https://www.google-analytics.com/collect?' +
+          't=pageview');
+    expect(window.net.request).toHaveBeenNthCalledWith(2,
+      'https://www.google-analytics.com/collect?' +
           'v=1&' +
           `tid=${getGoogleAnalyticsId()}&` +
           'cid=device&' +
@@ -194,8 +180,6 @@ describe('init()', () => {
           'ec=cat&' +
           'ea=act&' +
           'el=lab&' +
-          'ev=val',
-      ],
-    ]);
+          'ev=val');
   });
 });
