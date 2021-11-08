@@ -234,8 +234,12 @@ async function _trackStats() {
     return { filePath, canceled };
   });
 
-  ipcMain.handle('getPath', (_, name) => {
-    return electron.app.getPath(name);
+  ipcMain.handle('showItemInFolder', (_, name) => {
+    electron.shell.showItemInFolder(name);
+  });
+
+  ipcMain.on('getPath', (event, name) => {
+    return event.returnValue = electron.app.getPath(name);
   });
 
   ipcMain.once('window-ready', () => {

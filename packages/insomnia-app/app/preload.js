@@ -13,7 +13,7 @@ try {
     getPath: options => ipcRenderer.sendSync('getPath', options),
   });
   contextBridge.exposeInMainWorld('shell', {
-    showItemInFolder: options => ipcRenderer.invoke('showItemInFolder', options),
+    showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
   });
 
 } catch (e) {}
@@ -27,4 +27,4 @@ window.dialog.showSaveDialog = options => ipcRenderer.invoke('showSaveDialog', o
 window.app = window.app || {};
 window.app.getPath = options => ipcRenderer.sendSync('getPath', options);
 window.shell = window.shell || {};
-window.shell.showItemInFolder = options => ipcRenderer.invoke('showItemInFolder', options);
+window.shell.showItemInFolder = options => ipcRenderer.send('showItemInFolder', options);

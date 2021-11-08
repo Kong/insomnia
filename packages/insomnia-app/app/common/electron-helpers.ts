@@ -13,7 +13,7 @@ export function clickLink(href: string) {
 }
 
 export function getDesignerDataDir() {
-  const { app } = electron.remote || electron;
+  const { app } = process.type === 'renderer' ? window : electron;
   return process.env.DESIGNER_DATA_PATH || join(app.getPath('appData'), 'Insomnia Designer');
 }
 
@@ -24,7 +24,7 @@ export function getDesignerDataDir() {
 export const getPortableExecutableDir = () => process.env.PORTABLE_EXECUTABLE_DIR;
 
 export function getDataDirectory() {
-  const { app } = electron.remote || electron;
+  const { app } = process.type === 'renderer' ? window : electron;
   return process.env.INSOMNIA_DATA_PATH || app.getPath('userData');
 }
 
@@ -54,7 +54,7 @@ export function getUserLanguage() {
 
 export function getTempDir() {
   // NOTE: Using a fairly unique name here because "insomnia" is a common word
-  const { app } = electron.remote || electron;
+  const { app } = process.type === 'renderer' ? window : electron;
   const dir = join(app.getPath('temp'), `insomnia_${appConfig.version}`);
   mkdirp.sync(dir);
   return dir;
