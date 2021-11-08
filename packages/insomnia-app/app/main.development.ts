@@ -53,7 +53,7 @@ app.on('ready', async () => {
   if (error) {
     electron.dialog.showErrorBox(error.title, error.message);
     console.log('[config] Insomnia config is invalid, preventing app initialization');
-    exitAppFailure();
+    app.exit(1);
     return;
   }
 

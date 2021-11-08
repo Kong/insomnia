@@ -89,7 +89,8 @@ export function createWindow() {
       zoomFactor: zoomFactor,
       nodeIntegration: true,
       webviewTag: true,
-      enableRemoteModule: false,
+      // TODO: required to be true by spectron
+      enableRemoteModule: true,
       // TODO: enable context isolation
       contextIsolation: false,
       disableBlinkFeatures: 'Auxclick',
