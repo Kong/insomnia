@@ -363,51 +363,34 @@ async function _sendToGoogle(params: RequestParameter, queueable: boolean) {
     ? 'https://www.google-analytics.com/debug/collect'
     : 'https://www.google-analytics.com/collect';
   const url = joinUrlAndQueryString(baseUrl, qs);
-  const net = (electron.remote || electron).net;
-  const request = net.request(url);
-  request.once('error', err => {
-    console.warn('[ga] Network error', err);
-  });
-  request.once('response', response => {
-    const { statusCode } = response;
+  const net = (process.type === 'renderer' ? window : electron).net;
+  const res = net.request(url);
+  if (res.error)
+    console.warn('[ga] Network error', res.error);
 
-    if (statusCode < 200 && statusCode >= 300) {
-      console.warn('[ga] Bad status code ' + statusCode);
-    }
-
-    const chunks: Buffer[] = [];
-    const [contentType] = response.headers['content-type'] || [];
-
-    if (contentType !== 'application/json') {
-      // Production GA API returns a Gif to use for tracking
+  if (res.status < 200 && res.status >= 300) {
+    console.warn('[ga] Bad status code ' + res.status);
+  }
+  const [contentType] = res.headers['content-type'] || [];
+  if (contentType !== 'application/json') {
+    // Production GA API returns a Gif to use for tracking
+    return;
+  }
+  try {
+    const data = JSON.parse(res.data);
+    const { hitParsingResult } = data;
+    if (hitParsingResult.valid) {
       return;
     }
 
-    response.on('end', () => {
-      const jsonStr = Buffer.concat(chunks).toString('utf8');
-
-      try {
-        const data = JSON.parse(jsonStr);
-        const { hitParsingResult } = data;
-
-        if (hitParsingResult.valid) {
-          return;
-        }
-
-        for (const result of hitParsingResult || []) {
-          for (const msg of result.parserMessage || []) {
-            console.warn(`[ga] Error ${msg.description}`);
-          }
-        }
-      } catch (err) {
-        console.warn('[ga] Failed to parse response', err);
+    for (const result of hitParsingResult || []) {
+      for (const msg of result.parserMessage || []) {
+        console.warn(`[ga] Error ${msg.description}`);
       }
-    });
-    response.on('data', chunk => {
-      chunks.push(chunk);
-    });
-  });
-  request.end();
+    }
+  } catch (err) {
+    console.warn('[ga] Failed to parse response', err);
+  }
 }
 
 /**

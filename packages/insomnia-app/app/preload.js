@@ -14,9 +14,13 @@ try {
   });
   contextBridge.exposeInMainWorld('app', {
     getPath: options => ipcRenderer.sendSync('getPath', options),
+    getAppPath: options => ipcRenderer.sendSync('getAppPath', options),
   });
   contextBridge.exposeInMainWorld('shell', {
     showItemInFolder: options => ipcRenderer.send('showItemInFolder', options),
+  });
+  contextBridge.exposeInMainWorld('net', {
+    request: options => ipcRenderer.send('request', options),
   });
 
 } catch (e) {}
@@ -31,5 +35,8 @@ window.dialog.showOpenDialog = options => ipcRenderer.invoke('showOpenDialog', o
 window.dialog.showSaveDialog = options => ipcRenderer.invoke('showSaveDialog', options);
 window.app = window.app || {};
 window.app.getPath = options => ipcRenderer.sendSync('getPath', options);
+window.app.getAppPath = () => ipcRenderer.sendSync('getAppPath');
 window.shell = window.shell || {};
 window.shell.showItemInFolder = options => ipcRenderer.send('showItemInFolder', options);
+window.net = window.net || {};
+window.net.request = options => ipcRenderer.invoke('request', options);

@@ -1,6 +1,7 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 
+import { AxiosRequestConfig } from 'axios';
 import * as electron from 'electron';
 import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from 'electron-devtools-installer';
 import fontScanner from 'font-scanner';
@@ -20,6 +21,7 @@ import * as updates from './main/updates';
 import * as windowUtils from './main/window-utils';
 import * as models from './models/index';
 import type { Stats } from './models/stats';
+import { axiosRequest } from './network/axios-request';
 import type { ToastNotification } from './ui/components/toast';
 
 // Handle potential auto-update
@@ -234,7 +236,16 @@ async function _trackStats() {
     return { filePath, canceled };
   });
 
-  ipcMain.handle('showItemInFolder', (_, name) => {
+  ipcMain.handle('request', async (_, options: AxiosRequestConfig) => {
+    try {
+      const { data, status, statusText, headers } = await axiosRequest(options);
+      return { data, status, statusText, headers };
+    } catch (err){
+      return err;
+    }
+  });
+
+  ipcMain.on('showItemInFolder', (_, name) => {
     electron.shell.showItemInFolder(name);
   });
 
@@ -261,7 +272,11 @@ async function _trackStats() {
   });
 
   ipcMain.on('getPath', (event, name) => {
-    return event.returnValue = electron.app.getPath(name);
+    event.returnValue = electron.app.getPath(name);
+  });
+
+  ipcMain.on('getAppPath', event => {
+    event.returnValue = electron.app.getAppPath();
   });
 
   ipcMain.once('window-ready', () => {

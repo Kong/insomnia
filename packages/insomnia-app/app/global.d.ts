@@ -38,9 +38,13 @@ interface Window {
   };
   app: {
     getPath: (name: string) => string;
+    getAppPath: () => string;
   };
   shell: {
     showItemInFolder: (fullPath: string) => void;
+  };
+  net: {
+    request: (options: AxiosRequestConfig) => AxiosResponse;
   };
 }
 
